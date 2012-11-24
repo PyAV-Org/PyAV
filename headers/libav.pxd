@@ -6,7 +6,22 @@ cdef extern from "libavutil/error.h":
 
 
 cdef extern from "libavcodec/avcodec.h":
-    pass
+    
+    cdef enum AVCodecID:
+        pass
+    
+    # See: http://ffmpeg.org/doxygen/trunk/structAVCodec.html
+    cdef struct AVCodec:
+        pass
+    
+    # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
+    cdef struct AVCodecContext:
+        
+        AVMediaType codec_type
+        char codec_name[32]
+        AVCodecID codec_id
+        
+    cdef AVCodec* avcodec_find_decoder(AVCodecID id)
 
 
 cdef extern from "libavformat/avformat.h":
@@ -14,9 +29,23 @@ cdef extern from "libavformat/avformat.h":
     # Initialize libavformat.
     cdef void av_register_all()
     
+    cdef enum AVMediaType:
+        AVMEDIA_TYPE_VIDEO
+        AVMEDIA_TYPE_AUDIO
+        # There are a few more...
+        
+    # See: http://ffmpeg.org/doxygen/trunk/structAVStream.html
+    cdef struct AVStream:
+        
+        AVCodecContext *codec
+    
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
-        pass
+        
+        # Streams.
+        unsigned int nb_streams
+        AVStream **streams
+    
     
     # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
     cdef struct AVInputFormat:
