@@ -1,6 +1,7 @@
 from distutils.core import setup, Extension
 import subprocess
 
+
 def pkg_config(*packages, **kw):
     
     flag_map = {
@@ -16,15 +17,16 @@ def pkg_config(*packages, **kw):
     
     return kw
 
-ffmpeg = Extension(
-    'ffmpeg',
-    sources=['ffmpegmodule.c'],
-    **pkg_config('libavformat', 'libavcodec', 'libswscale', 'libavutil')
-)
 
 setup(
-    name='FFMPy',
-    version='1.0',
-    description='This is a demo package',
-    ext_modules=[ffmpeg],
+    name='PyAV',
+    version='0.1',
+    description='Python wrapper around libav.',
+    ext_modules=[
+        Extension(
+            'av.tutorial',
+            sources=['build/av/tutorial.c'],
+            **pkg_config('libavformat', 'libavcodec', 'libswscale', 'libavutil')
+        ),
+    ],
 )

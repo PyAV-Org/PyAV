@@ -1,0 +1,13 @@
+# General.
+.DS_Store
+/venv
+
+# Libraries.
+/ffmpeg
+
+# Build products.
+/build
+*.c
+*.so
+*.pyc
+
