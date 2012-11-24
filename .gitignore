@@ -4,6 +4,7 @@
 
 # Libraries.
 /ffmpeg
+/tutorial
 
 # Build products.
 /build
