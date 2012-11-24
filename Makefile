@@ -20,7 +20,7 @@ build: cythonize
 	python setup.py build_ext --inplace
 
 test: build
-	python -m examples.tutorial
+	python -m examples.tutorial sandbox/GOPR0015.MP4
 
 clean:
 	- rm -rf build

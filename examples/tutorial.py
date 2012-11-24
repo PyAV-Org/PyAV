@@ -1,3 +1,3 @@
-
+import sys
 import av.tutorial
-av.tutorial.main()
+av.tutorial.main(sys.argv)
