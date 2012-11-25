@@ -79,7 +79,7 @@ def main(argv):
     
     print 'Allocating buffer...'
     cdef int buffer_size = lib.avpicture_get_size(
-        lib.PIX_FMT_RGB24,
+        lib.PIX_FMT_RGBA,
         codec_ctx.width,
         codec_ctx.height,
     )
@@ -93,7 +93,7 @@ def main(argv):
         codec_ctx.pix_fmt,
         codec_ctx.width,
         codec_ctx.height,
-        lib.PIX_FMT_RGB24,
+        lib.PIX_FMT_RGBA,
         lib.SWS_BILINEAR,
         NULL,
         NULL,
@@ -110,7 +110,7 @@ def main(argv):
     lib.avpicture_fill(
         <lib.AVPicture *>rgb_frame,
         buffer,
-        lib.PIX_FMT_RGB24,
+        lib.PIX_FMT_RGBA,
         codec_ctx.width,
         codec_ctx.height
     )
@@ -119,12 +119,12 @@ def main(argv):
     cdef lib.AVPacket packet
     cdef int frame_i = 0
     cdef bint finished = False
-    while frame_i < 5:
+    while True: #frame_i < 5:
         
         errcheck(lib.av_read_frame(format_ctx, &packet))
         
         # Is it from the right stream?
-        print '\tindex_stream', packet.stream_index
+        # print '\tindex_stream', packet.stream_index
         if packet.stream_index != video_stream_i:
             continue
         
@@ -133,7 +133,7 @@ def main(argv):
         if not finished:
             continue
         
-        print '\tfinished!'
+        # print '\tfinished!'
         frame_i += 1
         
         lib.sws_scale(
@@ -147,12 +147,14 @@ def main(argv):
         )
         
         # Save the frame.
-        print raw_frame.linesize[0]
-        print raw_frame.width
-        print raw_frame.height
+        # print raw_frame.linesize[0]
+        # print raw_frame.width
+        # print raw_frame.height
         
-        img = Image.fromstring("RGB", (codec_ctx.width, codec_ctx.height), rgb_frame.data[0][:buffer_size])
-        img.save('frame_%04d.jpg' % frame_i)
+        # Create a Python buffer object so PIL doesn't need to copy the image.
+        buf = lib.PyBuffer_FromMemory(rgb_frame.data[0], buffer_size)
+        img = Image.frombuffer("RGBA", (codec_ctx.width, codec_ctx.height), buf, "raw", "RGBA", 0, 1)
+        img.save('sandbox/frames/%04d.jpg' % frame_i, quality=20)
         
         lib.av_free_packet(&packet)
         

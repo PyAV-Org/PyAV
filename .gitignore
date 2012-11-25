@@ -12,3 +12,7 @@
 *.so
 *.pyc
 
+# Testing.
+/sandbox
+
+

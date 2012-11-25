@@ -1,5 +1,10 @@
 
 
+cdef extern from "Python.h":
+    
+    cdef object PyBuffer_FromMemory(void *ptr, size_t size)
+    
+    
 cdef extern from "libavutil/avutil.h":
     cdef int AV_ERROR_MAX_STRING_SIZE
     cdef int av_strerror(int errno, char *output, size_t output_size)
@@ -19,6 +24,7 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef enum AVPixelFormat:
         PIX_FMT_RGB24
+        PIX_FMT_RGBA
             
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     cdef struct AVCodecContext:
