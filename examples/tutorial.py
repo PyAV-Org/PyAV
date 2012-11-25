@@ -35,6 +35,7 @@ def go():
         raise
     
     img = QtGui.QImage(frame_buffer, 640, 360, QtGui.QImage.Format_ARGB32)
+    img = img.rgbSwapped() # <- Eww.
     pixmap = QtGui.QPixmap(img)
     label.setPixmap(pixmap)
 

@@ -21,9 +21,9 @@ build: cythonize
 	python setup.py build_ext --inplace
 
 test: build
-	python -m examples.tutorial $(TEST_MOV)
+	python -m examples.decode $(TEST_MOV)
 test-fail: build
-	python -m examples.tutorial dne-$(TEST_MOV)
+	python -m examples.decode dne-$(TEST_MOV)
 
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)

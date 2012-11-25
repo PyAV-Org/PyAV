@@ -34,7 +34,7 @@ def iter_frames(argv):
     err_check(lib.avformat_find_stream_info(format_ctx, NULL))
     
     print 'Dumping to stderr.'
-    lib.av_dump_format(format_ctx, 0, filename, 0);
+    lib.av_dump_format(format_ctx, 0, filename, 0)
     
     print format_ctx.nb_streams, 'streams.'
     print 'Finding first video stream...'
@@ -156,7 +156,7 @@ def iter_frames(argv):
     lib.avcodec_close(codec_ctx);
 
     # Close the video file.
-    lib.av_close_input_file(format_ctx);
+    lib.avformat_close_input(&format_ctx);
         
     print 'Done.'
 
