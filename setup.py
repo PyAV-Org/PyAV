@@ -21,7 +21,7 @@ def pkg_config(*packages, **kw):
 setup(
     name='PyAV',
     version='0.1',
-    description='Python wrapper around libav.',
+    description='Pythonic bindings for libav.',
     ext_modules=[
         Extension(
             'av.tutorial',
