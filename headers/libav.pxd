@@ -10,6 +10,7 @@ cdef extern from "libavutil/avutil.h":
     cdef int av_strerror(int errno, char *output, size_t output_size)
 
     cdef void* av_malloc(size_t size)
+    cdef void av_free(void* ptr)
 
 
 cdef extern from "libavcodec/avcodec.h":
@@ -46,6 +47,7 @@ cdef extern from "libavcodec/avcodec.h":
         AVCodec *codec,
         AVDictionary **options,
     )
+    cdef int avcodec_close(AVCodecContext *ctx)
     
     cdef struct AVPicture:
         pass
@@ -131,6 +133,8 @@ cdef extern from "libavformat/avformat.h":
         AVInputFormat *format, # Can be NULL.
         AVDictionary **options # Can be NULL.
     )
+    
+    cdef int av_close_input_file(AVFormatContext *ctx)
     
     cdef int avformat_find_stream_info(
         AVFormatContext *ctx,

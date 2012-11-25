@@ -1,12 +1,12 @@
 import os
 
-import Image
-
 cimport libav as lib
 
 
 class LibError(ValueError):
-    pass
+    def __init__(self, msg, code=0):
+        super(LibError, self).__init__(msg, code)
+        self.code = code
 
 
 cdef int errcheck(int res) except -1:
@@ -16,11 +16,11 @@ cdef int errcheck(int res) except -1:
         py_buffer = b"\0" * lib.AV_ERROR_MAX_STRING_SIZE
         c_buffer = py_buffer
         lib.av_strerror(res, c_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
-        raise LibError('%s (%d)' % (str(c_buffer), res))
+        raise LibError('%s (%d)' % (str(c_buffer), res), res)
     return res
 
 
-def main(argv):
+def iter_frames(argv):
     
     print 'Starting.'
     
@@ -119,9 +119,12 @@ def main(argv):
     cdef lib.AVPacket packet
     cdef int frame_i = 0
     cdef bint finished = False
-    while True: #frame_i < 5:
+    while True:
         
-        errcheck(lib.av_read_frame(format_ctx, &packet))
+        try:
+            errcheck(lib.av_read_frame(format_ctx, &packet))
+        except LibError:
+            break
         
         # Is it from the right stream?
         # print '\tindex_stream', packet.stream_index
@@ -133,8 +136,8 @@ def main(argv):
         if not finished:
             continue
         
-        # print '\tfinished!'
         frame_i += 1
+        # print '\t', frame_i
         
         lib.sws_scale(
             sws_ctx,
@@ -152,12 +155,20 @@ def main(argv):
         # print raw_frame.height
         
         # Create a Python buffer object so PIL doesn't need to copy the image.
-        buf = lib.PyBuffer_FromMemory(rgb_frame.data[0], buffer_size)
-        img = Image.frombuffer("RGBA", (codec_ctx.width, codec_ctx.height), buf, "raw", "RGBA", 0, 1)
-        img.save('sandbox/frames/%04d.jpg' % frame_i, quality=20)
+        yield lib.PyBuffer_FromMemory(rgb_frame.data[0], buffer_size)
         
         lib.av_free_packet(&packet)
-        
+    
+    # Free the RGB image.
+    lib.av_free(buffer)
+    lib.av_free(rgb_frame)
+    lib.av_free(raw_frame)
+
+    # Close the codec.
+    lib.avcodec_close(codec_ctx);
+
+    # Close the video file.
+    lib.av_close_input_file(format_ctx);
         
     print 'Done.'
 
