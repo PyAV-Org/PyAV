@@ -19,9 +19,16 @@ def pkg_config(*packages, **kw):
 
 
 setup(
-    name='PyAV',
+
+    name='av',
     version='0.1',
     description='Pythonic bindings for libav.',
+    
+    author="Mike Boers",
+    author_email="pyav@mikeboers.com",
+    
+    url="https://github.com/mikeboers/PyAV",
+    
     ext_modules=[
         Extension(
             'av.tutorial',
