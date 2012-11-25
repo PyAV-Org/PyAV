@@ -31,9 +31,16 @@ setup(
     
     ext_modules=[
         Extension(
-            'av.tutorial',
-            sources=['build/av/tutorial.c'],
+            name,
+            sources=['build/%s.c' % name.replace('.', '/')],
             **pkg_config('libavformat', 'libavcodec', 'libswscale', 'libavutil')
-        ),
+        )
+        for name in
+        (
+            'av.codec',
+            'av.format',
+            'av.tutorial',
+            'av.utils',
+        )
     ],
 )

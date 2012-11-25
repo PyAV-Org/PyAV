@@ -1,23 +1,11 @@
 import os
 
 cimport libav as lib
+from .utils import LibError
+from .utils cimport err_check
 
 
-class LibError(ValueError):
-    def __init__(self, msg, code=0):
-        super(LibError, self).__init__(msg, code)
-        self.code = code
 
-
-cdef int errcheck(int res) except -1:
-    cdef bytes py_buffer
-    cdef char *c_buffer
-    if res < 0:
-        py_buffer = b"\0" * lib.AV_ERROR_MAX_STRING_SIZE
-        c_buffer = py_buffer
-        lib.av_strerror(res, c_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
-        raise LibError('%s (%d)' % (str(c_buffer), res), res)
-    return res
 
 
 def iter_frames(argv):
@@ -40,10 +28,10 @@ def iter_frames(argv):
     lib.av_register_all()
         
     print 'Opening', repr(filename)
-    errcheck(lib.avformat_open_input(&format_ctx, filename, NULL, NULL))
+    err_check(lib.avformat_open_input(&format_ctx, filename, NULL, NULL))
     
     print 'Getting stream info.'
-    errcheck(lib.avformat_find_stream_info(format_ctx, NULL))
+    err_check(lib.avformat_find_stream_info(format_ctx, NULL))
     
     print 'Dumping to stderr.'
     lib.av_dump_format(format_ctx, 0, filename, 0);
@@ -68,7 +56,7 @@ def iter_frames(argv):
     print 'Codec is %r (%r)' % (codec.name, codec.long_name)
     
     print '"Opening" the codec.'
-    errcheck(lib.avcodec_open2(codec_ctx, codec, &options))
+    err_check(lib.avcodec_open2(codec_ctx, codec, &options))
     
     print 'Allocating frames.'
     cdef lib.AVFrame *raw_frame = lib.avcodec_alloc_frame()
@@ -122,7 +110,7 @@ def iter_frames(argv):
     while True:
         
         try:
-            errcheck(lib.av_read_frame(format_ctx, &packet))
+            err_check(lib.av_read_frame(format_ctx, &packet))
         except LibError:
             break
         
@@ -132,7 +120,7 @@ def iter_frames(argv):
             continue
         
         # Decode the frame.
-        errcheck(lib.avcodec_decode_video2(codec_ctx, raw_frame, &finished, &packet))
+        err_check(lib.avcodec_decode_video2(codec_ctx, raw_frame, &finished, &packet))
         if not finished:
             continue
         

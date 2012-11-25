@@ -1,7 +1,8 @@
-
-CYTHON_SRC = av/tutorial.pyx
+CYTHON_SRC = $(shell find av -name "*.pyx")
 C_SRC = $(CYTHON_SRC:%.pyx=build/%.c)
 MOD_SOS = $(CYTHON_SRC:%.pyx=%.so)
+
+TEST_MOV = sandbox/640x360.mp4
 
 .PHONY: default build cythonize clean info test
 
@@ -14,18 +15,20 @@ cythonize: $(C_SRC)
 
 build/%.c: %.pyx
 	@ mkdir -p $(shell dirname $@)
-	cython -I headers -o $@ $<
+	cython -I. -Iheaders -o $@ $<
 
 build: cythonize
 	python setup.py build_ext --inplace
 
 test: build
-	python -m examples.tutorial sandbox/GOPR0015-small.MP4
+	python -m examples.tutorial $(TEST_MOV)
+test-fail: build
+	python -m examples.tutorial dne-$(TEST_MOV)
 
 debug: build
-	gdb python --args python -m examples.tutorial sandbox/GOPR0015.MP4
+	gdb python --args python -m examples.tutorial $(TEST_MOV)
 
 clean:
 	- rm -rf build
-	- rm $(MOD_SOS)
+	- find av -name '*.so' -delete
 
