@@ -1,5 +1,4 @@
-PyAV
-====
+# PyAV
 
 Pythonic bindinds for libav.
 
@@ -8,8 +7,7 @@ At least, they will be eventually. For now I'm working my way through some ffmpe
 In the future, I hope to represent the majority of libav in a Pythonic manner.
 
 
-Hacking
--------
+## Hacking
 
     $ git clone git@github.com:mikeboers/PyAV.git
     $ cd PyAV
@@ -19,8 +17,7 @@ Hacking
     $ make test
 
 
-FFmpeg Version Info
-^^^^^^^^^^^^^^^^^^^
+### FFmpeg Version Info
 
 I am developing this with the current (as of this writing) ffmpeg via homebrew:
 
