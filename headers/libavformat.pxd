@@ -1,3 +1,6 @@
+from libc.stdint cimport int64_t
+
+
 cdef extern from "libavformat/avformat.h":
     
     # Initialize libavformat.
@@ -7,11 +10,33 @@ cdef extern from "libavformat/avformat.h":
         AVMEDIA_TYPE_VIDEO
         AVMEDIA_TYPE_AUDIO
         # There are a few more...
-        
+    
+    # See: http://ffmpeg.org/doxygen/trunk/structAVFrac.html
+    cdef struct AVFrac:
+        int64_t val
+        int64_t num
+        int64_t den
+    
     # See: http://ffmpeg.org/doxygen/trunk/structAVStream.html
     cdef struct AVStream:
         
+        int index
+        int id
+        
+        
         AVCodecContext *codec
+        
+        AVRational r_frame_rate
+        AVRational time_base
+        
+        int64_t start_time
+        int64_t duration
+        int64_t nb_frames
+        
+        AVDictionary *metadata
+        
+        AVRational avg_frame_rate
+        
     
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
@@ -19,14 +44,12 @@ cdef extern from "libavformat/avformat.h":
         # Streams.
         unsigned int nb_streams
         AVStream **streams
-    
+        
+        AVDictionary *metadata
+        
     
     # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
     cdef struct AVInputFormat:
-        pass
-        
-    # http://ffmpeg.org/doxygen/trunk/structAVDictionary.html
-    cdef struct AVDictionary:
         pass
     
     # Once called av_open_input_file, but no longer.

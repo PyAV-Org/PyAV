@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 cimport libav as lib
 
 
@@ -30,3 +32,23 @@ cdef int err_check(int res) except -1:
         lib.av_strerror(res, c_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
         raise LibError(c_buffer, res)
     return res
+
+
+cdef dict avdict_to_dict(lib.AVDictionary *input):
+    
+    cdef lib.AVDictionaryEntry *element = NULL
+    cdef dict output = {}
+    while True:
+        element = lib.av_dict_get(input, "", element, lib.AV_DICT_IGNORE_SUFFIX)
+        if element == NULL:
+            break
+        output[element.key] = element.value
+    return output
+
+
+cdef object avrational_to_faction(lib.AVRational *input):
+    return Fraction(input.num, input.den)
+
+
+cdef object av_frac_to_fraction(lib.AVFrac *input):
+    return Fraction(input.val * input.num, input.den)
