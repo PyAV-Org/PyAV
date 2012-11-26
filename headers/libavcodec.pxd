@@ -24,6 +24,8 @@ cdef extern from "libavcodec/avcodec.h":
         
         AVPixelFormat pix_fmt
         
+        AVCodec *codec
+        
         
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     

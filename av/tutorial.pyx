@@ -1,11 +1,10 @@
 import os
 
+from cpython.oldbuffer cimport PyBuffer_FromMemory
+
 cimport libav as lib
 from .utils import LibError
 from .utils cimport err_check
-
-
-
 
 
 def iter_frames(argv):
@@ -143,7 +142,7 @@ def iter_frames(argv):
         # print raw_frame.height
         
         # Create a Python buffer object so PIL doesn't need to copy the image.
-        yield lib.PyBuffer_FromMemory(rgb_frame.data[0], buffer_size)
+        yield PyBuffer_FromMemory(rgb_frame.data[0], buffer_size)
         
         lib.av_free_packet(&packet)
     
