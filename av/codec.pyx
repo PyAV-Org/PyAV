@@ -1,3 +1,5 @@
+from cpython.oldbuffer cimport PyBuffer_FromMemory
+
 cimport libav as lib
 
 cimport av.format
@@ -141,7 +143,27 @@ cdef class SubtitleRect(object):
         def __get__(self): return self.ptr.nb_colors
     property text:
         def __get__(self): return self.ptr.text
+        
     property ass:
         def __get__(self): return self.ptr.ass
+
+    property pict_line_sizes:
+        def __get__(self):
+            if self.ptr.type != lib.SUBTITLE_BITMAP:
+                return ()
+            else:
+                # return self.ptr.nb_colors
+                return tuple(self.ptr.pict.linesize[i] for i in range(4))
+    
+    property pict_buffers:
+        def __get__(self):
+            if self.ptr.type != lib.SUBTITLE_BITMAP:
+                return ()
+            else:
+                return tuple(
+                    PyBuffer_FromMemory(self.ptr.pict.data[i], self.width * self.height)
+                    if width else None
+                    for i, width in enumerate(self.pict_line_sizes)
+                )
     
     

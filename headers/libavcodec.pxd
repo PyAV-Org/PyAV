@@ -29,7 +29,6 @@ cdef extern from "libavcodec/avcodec.h":
         
         AVCodec *codec
         
-        
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     
     cdef int avcodec_open2(
