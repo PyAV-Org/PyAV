@@ -14,26 +14,31 @@ cdef class Codec(object):
         # Keep these pointer alive with this reference.
         self.format_ctx = stream.ctx_proxy
         
+        if stream.type == 'attachment':
+            return
+        
         # We don't need to free this later since it is a static part of the lib.
         self.ptr = lib.avcodec_find_decoder(self.ctx.codec_id)
+        if self.ptr == NULL:
+            return
         
-        # "Open" the codec.
-        # TODO: Do we have to deallocate this?
-        cdef lib.AVDictionary *options = NULL
         try:
-            err_check(lib.avcodec_open2(self.ctx, self.ptr, &options))
+            err_check(lib.avcodec_open2(self.ctx, self.ptr, &self.options))
         except:
+            # Signal that we don't need to close it.
             self.ptr = NULL
             raise
     
     def __dealloc__(self):
         if self.ptr != NULL:
             lib.avcodec_close(self.ctx);
+        if self.options != NULL:
+            lib.av_dict_free(&self.options)
     
     property name:
-        def __get__(self): return bytes(self.ptr.name)
+        def __get__(self): return bytes(self.ptr.name) if self.ptr else None
     property long_name:
-        def __get__(self): return bytes(self.ptr.long_name)
+        def __get__(self): return bytes(self.ptr.long_name) if self.ptr else None
     
 
 cdef class Packet(object):

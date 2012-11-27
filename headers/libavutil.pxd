@@ -10,6 +10,8 @@ cdef extern from "libavutil/avutil.h":
     ctypedef struct AVDictionary:
         pass
     
+    cdef void av_dict_free(AVDictionary **)
+    
     # See: http://ffmpeg.org/doxygen/trunk/structAVDictionaryEntry.html
     ctypedef struct AVDictionaryEntry:
         char *key
