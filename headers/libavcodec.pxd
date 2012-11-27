@@ -1,4 +1,4 @@
-from libc.stdint cimport int64_t
+from libc.stdint cimport uint16_t, uint32_t, int64_t
 
 
 cdef extern from "libavcodec/avcodec.h":
@@ -91,3 +91,41 @@ cdef extern from "libavcodec/avcodec.h":
     )
     
     cdef void av_free_packet(AVPacket*)
+    
+    cdef enum AVSubtitleType:
+        SUBTITLE_NONE
+        SUBTITLE_BITMAP
+        SUBTITLE_TEXT
+        SUBTITLE_ASS
+    
+    cdef struct AVSubtitleRect:
+        int x
+        int y
+        int w
+        int h
+        int nb_colors
+        AVPicture pict
+        AVSubtitleType type
+        char *text
+        char *ass
+        int flags
+    
+    cdef struct AVSubtitle:
+        uint16_t format
+        uint32_t start_display_time
+        uint32_t end_display_time
+        unsigned int num_rects
+        AVSubtitleRect **rects
+        int64_t pts
+    
+    cdef int avcodec_decode_subtitle2(
+        AVCodecContext *ctx,
+        AVSubtitle *sub,
+        int *done,
+        AVPacket *pkt,
+    )
+    
+    cdef void avsubtitle_free(AVSubtitle*)
+
+    
+    

@@ -13,5 +13,26 @@ cdef class Codec(object):
 cdef class Packet(object):
 
     cdef readonly av.format.Stream stream
-    cdef lib.AVPacket packet
+    cdef lib.AVPacket struct
+    
+    cpdef decode(self)
+
+
+cdef class SubtitleProxy(object):
+
+    cdef lib.AVSubtitle struct
+
+
+cdef class Subtitle(object):
+    
+    cdef readonly av.format.Stream stream
+    cdef SubtitleProxy proxy
+    cdef readonly tuple rects
+
+
+cdef class SubtitleRect(object):
+
+    cdef SubtitleProxy proxy
+    cdef lib.AVSubtitleRect *ptr
+    cdef readonly bytes type
     

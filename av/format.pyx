@@ -67,12 +67,12 @@ cdef class Context(object):
             while True:
             
                 try:
-                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.packet))
+                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
                 except LibError:
                     break
                     
-                if include_stream[packet.packet.stream_index]:
-                    packet.stream = self.streams[packet.packet.stream_index]
+                if include_stream[packet.struct.stream_index]:
+                    packet.stream = self.streams[packet.struct.stream_index]
                     yield packet
             
                 # Need to free it anyways.
@@ -142,6 +142,9 @@ cdef class Stream(object):
     property duration:
         def __get__(self): return self.ptr.duration
     
+    cpdef decode(self, av.codec.Packet packet):
+        return None
+    
 
 
 cdef class VideoStream(Stream):
@@ -151,7 +154,15 @@ cdef class AudioStream(Stream):
     pass
 
 cdef class SubtitleStream(Stream):
-    pass
+    
+    cpdef decode(self, av.codec.Packet packet):
+        cdef av.codec.SubtitleProxy proxy = av.codec.SubtitleProxy()
+        cdef av.codec.Subtitle sub = None
+        cdef int done = 0
+        err_check(lib.avcodec_decode_subtitle2(self.codec.ctx, &proxy.struct, &done, &packet.struct))
+        if done:
+            return av.codec.Subtitle(self, proxy)
+        
 
 cdef class DataStream(Stream):
     pass

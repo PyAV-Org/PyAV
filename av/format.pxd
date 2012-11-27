@@ -37,5 +37,7 @@ cdef class Stream(object):
     
     cdef av.codec.Codec codec
     cdef readonly dict metadata
+    
+    cpdef decode(self, av.codec.Packet packet)
 
 
