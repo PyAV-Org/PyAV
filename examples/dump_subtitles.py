@@ -11,9 +11,12 @@ if not streams:
     print 'no subtitles'
     exit(1)
 
-for i, packet in enumerate(video.demux([streams[0]])):
+for packet in video.demux([streams[0]]):
     
     subtitle = packet.decode()
+    if not subtitle:
+        continue
+    
     for rect in subtitle.rects:
         if rect.type == 'ass':
             print rect.ass.rstrip('\n')

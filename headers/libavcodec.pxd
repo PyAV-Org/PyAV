@@ -1,4 +1,4 @@
-from libc.stdint cimport uint16_t, uint32_t, int64_t
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, int64_t
 
 
 cdef extern from "libavcodec/avcodec.h":
@@ -39,22 +39,24 @@ cdef extern from "libavcodec/avcodec.h":
     )
     cdef int avcodec_close(AVCodecContext *ctx)
     
+    # See: http://ffmpeg.org/doxygen/trunk/structAVPicture.html
     cdef struct AVPicture:
-        pass
+        uint8_t **data
+        int *linesize
     
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
     # This is a strict superset of AVPicture.
     cdef struct AVFrame:
-        unsigned char **data
+        uint8_t **data
         int *linesize
-        unsigned char **extended_data
+        uint8_t **extended_data
         int width
         int height
         int nb_samples
         int format
         int key_frame # 0 or 1.
         
-        unsigned char *base
+        uint8_t **base
 
     cdef AVFrame* avcodec_alloc_frame()
     
@@ -66,7 +68,7 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef int avpicture_fill(
         AVPicture *picture,
-        unsigned char *buffer,
+        uint8_t *buffer,
         AVPixelFormat format,
         int width,
         int height
