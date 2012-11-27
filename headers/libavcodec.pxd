@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t, uint16_t, uint32_t, int64_t
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 
 
 cdef extern from "libavcodec/avcodec.h":
@@ -55,6 +55,8 @@ cdef extern from "libavcodec/avcodec.h":
         int format
         int key_frame # 0 or 1.
         
+        uint64_t pts
+        
         uint8_t **base
 
     cdef AVFrame* avcodec_alloc_frame()
@@ -75,8 +77,8 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef struct AVPacket:
         
-        int64_t pts
-        int64_t dts
+        uint64_t pts
+        uint64_t dts
         
         int size
         int stream_index

@@ -166,4 +166,35 @@ cdef class SubtitleRect(object):
                     for i, width in enumerate(self.pict_line_sizes)
                 )
     
+
+cdef class Frame(object):
+
+    def __init__(self, av.format.Stream stream):
+        self.stream = stream
     
+    def __dealloc__(self):
+        # These are all NULL safe.
+        lib.av_free(self.raw_ptr)
+        lib.av_free(self.rgb_ptr)
+        lib.av_free(self.buffer_)
+    
+    def __repr__(self):
+        return '<%s.%s %dx%d at 0x%x>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.width,
+            self.height,
+            id(self),
+        )
+    
+    property pts:
+        def __get__(self): return self.raw_ptr.pts
+    
+    property width:
+        def __get__(self): return self.stream.codec.ctx.width
+    property height:
+        def __get__(self): return self.stream.codec.ctx.height
+        
+    property rgba:
+        def __get__(self):
+            return PyBuffer_FromMemory(self.rgb_ptr.data[0], self.stream.buffer_size)

@@ -1,3 +1,5 @@
+from libc.stdint cimport uint8_t
+
 cimport libav as lib
 
 cimport av.format
@@ -36,4 +38,12 @@ cdef class SubtitleRect(object):
     cdef SubtitleProxy proxy
     cdef lib.AVSubtitleRect *ptr
     cdef readonly bytes type
+
+
+cdef class Frame(object):
     
+    cdef av.format.Stream stream
+    
+    cdef lib.AVFrame *raw_ptr
+    cdef lib.AVFrame *rgb_ptr
+    cdef uint8_t *buffer_

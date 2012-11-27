@@ -1,3 +1,5 @@
+from libc.stdint cimport uint8_t
+
 cimport libav as lib
 
 cimport av.codec
@@ -40,4 +42,14 @@ cdef class Stream(object):
     
     cpdef decode(self, av.codec.Packet packet)
 
+
+cdef class VideoStream(Stream):
+    
+    cdef readonly int buffer_size
+    
+    # Hold onto the frames that we will decode until we have a full one.
+    cdef lib.AVFrame *raw_frame
+    cdef lib.AVFrame *rgb_frame
+    cdef uint8_t *buffer_
+    cdef lib.SwsContext *sws_ctx
 

@@ -33,3 +33,6 @@ cdef extern from "libswscale/swscale.h":
         unsigned char **dst_slice,
         int *dst_stride,
     )
+    
+    cdef void sws_freeContext(SwsContext *ctx)
+    

@@ -1,3 +1,4 @@
+from libc.stdint cimport uint8_t
 from libc.stdlib cimport malloc, free
 
 cimport libav as lib
@@ -6,6 +7,9 @@ from .utils cimport err_check, avdict_to_dict, avrational_to_faction
 from .utils import Error, LibError
 
 cimport av.codec
+
+
+time_base = lib.AV_TIME_BASE
 
 
 cdef class ContextProxy(object):
@@ -80,6 +84,13 @@ cdef class Context(object):
         
         finally:
             free(include_stream)
+    
+    property start_time:
+        def __get__(self): return self.proxy.ptr.start_time
+    property duration:
+        def __get__(self): return self.proxy.ptr.duration
+    property bit_rate:
+        def __get__(self): return self.proxy.ptr.bit_rate
             
 
 
@@ -148,7 +159,81 @@ cdef class Stream(object):
 
 
 cdef class VideoStream(Stream):
-    pass
+    
+    def __init__(self, *args):
+        super(VideoStream, self).__init__(*args)
+        self.buffer_size = lib.avpicture_get_size(
+            lib.PIX_FMT_RGBA,
+            self.codec.ctx.width,
+            self.codec.ctx.height,
+        )
+    
+    def __dealloc__(self):
+        # These are all NULL safe.
+        lib.av_free(self.raw_frame)
+        lib.av_free(self.rgb_frame)
+        lib.av_free(self.buffer_)
+        lib.sws_freeContext(self.sws_ctx)
+        
+    cpdef decode(self, av.codec.Packet packet):
+        
+        if not self.raw_frame:
+            self.raw_frame = lib.avcodec_alloc_frame()
+            self.rgb_frame = lib.avcodec_alloc_frame()
+            self.buffer_ = <uint8_t *>lib.av_malloc(self.buffer_size * sizeof(uint8_t))
+            
+            # Assign the buffer to the image planes.
+            lib.avpicture_fill(
+                <lib.AVPicture *>self.rgb_frame,
+                self.buffer_,
+                lib.PIX_FMT_RGBA,
+                self.codec.ctx.width,
+                self.codec.ctx.height
+            )
+        
+        if not self.sws_ctx:
+            self.sws_ctx = lib.sws_getContext(
+                self.codec.ctx.width,
+                self.codec.ctx.height,
+                self.codec.ctx.pix_fmt,
+                self.codec.ctx.width,
+                self.codec.ctx.height,
+                lib.PIX_FMT_RGBA,
+                lib.SWS_BILINEAR,
+                NULL,
+                NULL,
+                NULL
+            )
+
+        cdef int done = 0
+        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
+        if not done:
+            return
+        
+        # Scale and convert.
+        lib.sws_scale(
+            self.sws_ctx,
+            self.raw_frame.data,
+            self.raw_frame.linesize,
+            0, # slice Y
+            self.codec.ctx.height,
+            self.rgb_frame.data,
+            self.rgb_frame.linesize,
+        )
+        
+        cdef av.codec.Frame frame = av.codec.Frame(self)
+        
+        # Copy the pointers over.
+        frame.buffer_ = self.buffer_
+        frame.raw_ptr = self.raw_frame
+        frame.rgb_ptr = self.rgb_frame
+        
+        # Null out ours.
+        self.buffer_ = NULL
+        self.raw_frame = NULL
+        self.rgb_frame = NULL
+        
+        return frame
 
 cdef class AudioStream(Stream):
     pass
@@ -156,12 +241,16 @@ cdef class AudioStream(Stream):
 cdef class SubtitleStream(Stream):
     
     cpdef decode(self, av.codec.Packet packet):
+        
         cdef av.codec.SubtitleProxy proxy = av.codec.SubtitleProxy()
         cdef av.codec.Subtitle sub = None
+        
         cdef int done = 0
         err_check(lib.avcodec_decode_subtitle2(self.codec.ctx, &proxy.struct, &done, &packet.struct))
-        if done:
-            return av.codec.Subtitle(self, proxy)
+        if not done:
+            return
+        
+        return av.codec.Subtitle(self, proxy)
         
 
 cdef class DataStream(Stream):

@@ -3,6 +3,8 @@ from libc.stdint cimport int64_t, uint64_t
 
 cdef extern from "libavformat/avformat.h":
     
+    cdef int AV_TIME_BASE
+    
     # Initialize libavformat.
     cdef void av_register_all()
     
@@ -34,9 +36,9 @@ cdef extern from "libavformat/avformat.h":
         AVRational r_frame_rate
         AVRational time_base
         
-        uint64_t start_time
-        uint64_t duration
-        uint64_t nb_frames
+        int64_t start_time
+        int64_t duration
+        int64_t nb_frames
         
         AVDictionary *metadata
         
@@ -51,6 +53,10 @@ cdef extern from "libavformat/avformat.h":
         AVStream **streams
         
         AVDictionary *metadata
+        
+        int64_t start_time
+        int64_t duration
+        int bit_rate
         
     
     # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
