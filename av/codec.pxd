@@ -10,3 +10,8 @@ cdef class Codec(object):
     cdef lib.AVCodec *ptr
     
 
+cdef class Packet(object):
+
+    cdef readonly av.format.Stream stream
+    cdef lib.AVPacket packet
+    

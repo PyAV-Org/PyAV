@@ -30,3 +30,15 @@ for i, stream in enumerate(video.streams):
         print '            %s: %r' % (k, v)
 
 
+subtitles = [s for s in video.streams if s.type == b'subtitle']
+subtitles = [subtitles[0]]
+print 'demoxing', subtitles
+
+for i, packet in enumerate(video.demux(subtitles)):
+    
+    print '%4d %r' % (i, packet)
+    print '    pts: %.3f' % float(packet.stream.time_base * packet.pts)
+    print '    dts: %.3f' % float(packet.stream.time_base * packet.dts)
+    
+    if i > 10:
+        break

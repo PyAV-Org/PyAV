@@ -47,7 +47,7 @@ cdef dict avdict_to_dict(lib.AVDictionary *input):
 
 
 cdef object avrational_to_faction(lib.AVRational *input):
-    return Fraction(input.num, input.den)
+    return Fraction(input.num, input.den) if input.den else Fraction(0, 1)
 
 
 cdef object av_frac_to_fraction(lib.AVFrac *input):

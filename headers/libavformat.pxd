@@ -1,4 +1,4 @@
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint64_t
 
 
 cdef extern from "libavformat/avformat.h":
@@ -7,8 +7,13 @@ cdef extern from "libavformat/avformat.h":
     cdef void av_register_all()
     
     cdef enum AVMediaType:
+        AVMEDIA_TYPE_UNKNOWN
         AVMEDIA_TYPE_VIDEO
         AVMEDIA_TYPE_AUDIO
+        AVMEDIA_TYPE_DATA
+        AVMEDIA_TYPE_SUBTITLE
+        AVMEDIA_TYPE_ATTACHMENT
+        AVMEDIA_TYPE_NB
         # There are a few more...
     
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrac.html
@@ -29,9 +34,9 @@ cdef extern from "libavformat/avformat.h":
         AVRational r_frame_rate
         AVRational time_base
         
-        int64_t start_time
-        int64_t duration
-        int64_t nb_frames
+        uint64_t start_time
+        uint64_t duration
+        uint64_t nb_frames
         
         AVDictionary *metadata
         

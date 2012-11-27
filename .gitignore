@@ -1,6 +1,9 @@
 # General.
 .DS_Store
 /venv
+/bin
+/include
+/lib
 
 # Libraries.
 /ffmpeg

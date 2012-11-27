@@ -38,3 +38,4 @@ cdef class Stream(object):
     cdef av.codec.Codec codec
     cdef readonly dict metadata
 
+

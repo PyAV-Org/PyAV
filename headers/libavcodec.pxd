@@ -1,3 +1,6 @@
+from libc.stdint cimport int64_t
+
+
 cdef extern from "libavcodec/avcodec.h":
     
     cdef enum AVCodecID:
@@ -70,7 +73,15 @@ cdef extern from "libavcodec/avcodec.h":
     )
     
     cdef struct AVPacket:
+        
+        int64_t pts
+        int64_t dts
+        
+        int size
         int stream_index
+        int flags
+        
+        int duration
     
     cdef int avcodec_decode_video2(
         AVCodecContext *ctx,

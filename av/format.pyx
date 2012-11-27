@@ -1,7 +1,9 @@
+from libc.stdlib cimport malloc, free
+
 cimport libav as lib
 
 from .utils cimport err_check, avdict_to_dict, avrational_to_faction
-from .utils import Error
+from .utils import Error, LibError
 
 cimport av.codec
 
@@ -39,27 +41,78 @@ cdef class Context(object):
             err_check(lib.avformat_open_input(&self.proxy.ptr, name, NULL, NULL))
             err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
         
-        self.streams = tuple(Stream(self, i) for i in range(self.proxy.ptr.nb_streams))
+        self.streams = tuple(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
     
     def dump(self):
-        lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w');
+        lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w')
+    
+    def demux(self, streams=None):
+        
+        cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
+        if include_stream == NULL:
+            raise MemoryError()
+        
+        cdef int i
+        cdef av.codec.Packet packet
+        
+        try:
+            
+            for i in range(self.proxy.ptr.nb_streams):
+                include_stream[i] = False
+            for stream in streams or self.streams:
+                include_stream[stream.index] = True
+        
+            packet = av.codec.Packet()
+            while True:
+            
+                try:
+                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.packet))
+                except LibError:
+                    break
+                    
+                if include_stream[packet.packet.stream_index]:
+                    packet.stream = self.streams[packet.packet.stream_index]
+                    yield packet
+            
+                # Need to free it anyways.
+                packet = av.codec.Packet()
+        
+        finally:
+            free(include_stream)
+            
+
+
+cdef Stream stream_factory(Context ctx, int index):
+    
+    cdef lib.AVStream *ptr = ctx.proxy.ptr.streams[index]
+    
+    if ptr.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        return VideoStream(ctx, index, 'video')
+    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+        return AudioStream(ctx, index, 'audio')
+    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_DATA:
+        return DataStream(ctx, index, 'data')
+    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
+        return SubtitleStream(ctx, index, 'subtitle')
+    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
+        return AttachmentStream(ctx, index, 'attachment')
+    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_NB:
+        return NBStream(ctx, index, 'nb')
+    else:
+        return Stream(ctx, index)
 
 
 cdef class Stream(object):
     
-    def __init__(self, Context ctx, int index):
+    def __init__(self, Context ctx, int index, bytes type=b'unknown'):
         
         if index < 0 or index > ctx.proxy.ptr.nb_streams:
             raise ValueError('stream index out of range')
         
         self.ctx_proxy = ctx.proxy
         self.ptr = self.ctx_proxy.ptr.streams[index]
-        
-        if self.ptr.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-            self.type = b'video'
-        else:
-            self.type = b'unknown'
+        self.type = type
 
         self.codec = av.codec.Codec(self)
         self.metadata = avdict_to_dict(self.ptr.metadata)
@@ -89,7 +142,25 @@ cdef class Stream(object):
     property duration:
         def __get__(self): return self.ptr.duration
     
-        
+
+
+cdef class VideoStream(Stream):
+    pass
+
+cdef class AudioStream(Stream):
+    pass
+
+cdef class SubtitleStream(Stream):
+    pass
+
+cdef class DataStream(Stream):
+    pass
+
+cdef class AttachmentStream(Stream):
+    pass
+
+cdef class NBStream(Stream):
+    pass
 
 
 # Handy alias.

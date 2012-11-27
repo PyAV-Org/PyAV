@@ -24,6 +24,7 @@ cdef extern from "libavutil/avutil.h":
         int flags,
     )
     
+    # See: http://ffmpeg.org/doxygen/trunk/structAVRational.html
     ctypedef struct AVRational:
         int num
         int den
