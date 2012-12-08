@@ -3,10 +3,9 @@ language: python
 python:
     - "2.6"
     - "2.7"
-    - "3.2"
 
 # Install FFmpeg.
-before_script: sudo aptitude -y -q install libvlc-dev
+before_script: sudo apt-get install -qq vlc libvlc-dev
 
 # Install build requirements.
 install: pip install --use-mirrors cython
