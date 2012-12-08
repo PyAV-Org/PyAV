@@ -194,7 +194,17 @@ cdef class Frame(object):
         def __get__(self): return self.stream.codec.ctx.width
     property height:
         def __get__(self): return self.stream.codec.ctx.height
-        
-    property rgba:
-        def __get__(self):
-            return PyBuffer_FromMemory(self.rgb_ptr.data[0], self.stream.buffer_size)
+
+    # Legacy buffer support.
+    # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
+
+    def __getsegcount__(self, Py_ssize_t *len_out):
+        if len_out != NULL:
+            len_out[0] = <Py_ssize_t> self.stream.buffer_size
+        return 1
+
+    def __getreadbuffer__(self, Py_ssize_t index, void **data):
+        if index:
+            raise RuntimeError("accessing non-existent buffer segment")
+        data[0] = <void*> self.rgb_ptr.data[0]
+        return <Py_ssize_t> self.stream.buffer_size

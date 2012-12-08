@@ -7,8 +7,8 @@ import Image
 from av import open
 
 
-frames = 1024
-per_bucket = 40
+frames = 512
+per_bucket = 5
 
 filmstrip = None
 bucket = []
@@ -28,8 +28,7 @@ for packet in video.demux(streams):
     if filmstrip is None:
         filmstrip = Image.new("RGBA", (frames, frame.height))
     
-    
-    img = Image.frombuffer("RGBA", (frame.width, frame.height), frame.rgba, "raw", "RGBA", 0, 1)
+    img = Image.frombuffer("RGBA", (frame.width, frame.height), frame, "raw", "RGBA", 0, 1)
     img = img.resize((1, frame.height), Image.ANTIALIAS)
     bucket.append(img)
     

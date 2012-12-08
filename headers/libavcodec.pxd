@@ -51,7 +51,7 @@ cdef extern from "libavcodec/avcodec.h":
         uint8_t **extended_data
         int width
         int height
-        int nb_samples
+        int nb_samples # Audio samples
         int format
         int key_frame # 0 or 1.
         
