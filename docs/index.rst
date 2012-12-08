@@ -39,12 +39,13 @@ I am developing this with the current (as of this writing) FFmpeg on OS X (via h
     libpostproc    52.  0.100 / 52.  0.100
 
 
+API Reference
+=============
 
-..
-	Contents:
+.. toctree::
+   :maxdepth: 2
 
-	.. toctree::
-	   :maxdepth: 2
+   api/format
 
 
 ..

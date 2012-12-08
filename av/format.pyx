@@ -1,3 +1,5 @@
+"""Autodoc module test."""
+
 from libc.stdint cimport uint8_t
 from libc.stdlib cimport malloc, free
 
@@ -24,7 +26,9 @@ cdef class ContextProxy(object):
 
 
 cdef class Context(object):
-    
+
+    """Autodoc class test."""
+
     def __init__(self, name, mode='r'):
         
         if mode == 'r':
