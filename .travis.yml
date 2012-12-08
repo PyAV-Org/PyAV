@@ -5,7 +5,7 @@ python:
     - "2.7"
 
 # Install FFmpeg.
-before_script: sudo apt-get install -qq vlc libvlc-dev
+before_install: sudo apt-get install -qq ffmpeg
 
 # Install build requirements.
 install: pip install --use-mirrors cython
