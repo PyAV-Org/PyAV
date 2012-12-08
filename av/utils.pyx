@@ -7,6 +7,12 @@ class Error(ValueError):
     pass
 
 
+# Would love to use the built-in constant, but it doesn't appear to
+# exist on Travis, or my Linux workstation. Could this be because they
+# are actually libav?
+cdef int AV_ERROR_MAX_STRING_SIZE = 64
+
+
 class LibError(Error):
     
     def __init__(self, msg, code=0):
@@ -27,9 +33,9 @@ cdef int err_check(int res) except -1:
     cdef bytes py_buffer
     cdef char *c_buffer
     if res < 0:
-        py_buffer = b"\0" * lib.AV_ERROR_MAX_STRING_SIZE
+        py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
         c_buffer = py_buffer
-        lib.av_strerror(res, c_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
+        lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
         raise LibError(c_buffer, res)
     return res
 
