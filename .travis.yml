@@ -5,7 +5,7 @@ python:
     - "2.7"
 
 # Install FFmpeg.
-before_install: sudo apt-get install -qq ffmpeg
+before_install: sudo apt-get install -qq libavformat-dev libavcodec-dev libswscale-dev libavutil-dev
 
 # Install build requirements.
 install: pip install --use-mirrors cython
