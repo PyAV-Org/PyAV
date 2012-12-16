@@ -1,4 +1,5 @@
 from cpython.oldbuffer cimport PyBuffer_FromMemory
+from cpython cimport array
 
 cimport libav as lib
 
@@ -157,6 +158,7 @@ cdef class SubtitleRect(object):
     
     property pict_buffers:
         def __get__(self):
+            cdef float [:] buffer_
             if self.ptr.type != lib.SUBTITLE_BITMAP:
                 return ()
             else:
@@ -189,6 +191,8 @@ cdef class Frame(object):
     
     property pts:
         def __get__(self): return self.raw_ptr.pts
+    property timestamp:
+        def __get__(self): return lib.av_frame_get_best_effort_timestamp(self.raw_ptr)
     
     property width:
         def __get__(self): return self.stream.codec.ctx.width
@@ -208,3 +212,14 @@ cdef class Frame(object):
             raise RuntimeError("accessing non-existent buffer segment")
         data[0] = <void*> self.rgb_ptr.data[0]
         return <Py_ssize_t> self.stream.buffer_size
+
+
+
+
+
+
+
+
+
+
+

@@ -10,3 +10,5 @@
 
 - red and green channels are swapped when going to Qt
 
+https://groups.google.com/forum/?fromgroups=#!topic/cython-users/qFo8kco_XXE
+http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
