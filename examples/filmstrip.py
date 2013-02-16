@@ -1,15 +1,14 @@
 import os
 import sys
 import pprint
+import itertools
 
 import Image
 
 from av import open
 
 
-filmstrip = None
-
-video = open(sys.argv[1])
+max_size = 24 * 60 # One minute's worth.
 
 
 def frame_iter(video):
@@ -20,21 +19,40 @@ def frame_iter(video):
         if frame:
             yield frame
 
-for frame_i, frame in enumerate(frame_iter(video)):
 
-    if filmstrip is None:
-        filmstrip = Image.new("RGBA", (512, frame.height))
+for src_path in sys.argv[1:]:
 
-    # Double the width.
-    if frame_i >= filmstrip.size[0]:
-        filmstrip = filmstrip.crop((0, 0, filmstrip.size[0] * 2, filmstrip.size[1]))
-        print 'Resized to', filmstrip.size[0]
-    
-    img = Image.frombuffer("RGBA", (frame.width, frame.height), frame, "raw", "RGBA", 0, 1)
-    img = img.resize((1, frame.height), Image.ANTIALIAS)
-    
-    filmstrip.paste(img, (frame_i, 0))
+    print src_path
+
+    basename = os.path.splitext(os.path.basename(src_path))[0]
+    dir_name = os.path.join('sandbox', basename)
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+
+    video = open(src_path)
+    frames = frame_iter(video)
+
+    for chunk_i in itertools.count(1):
+
+        chunk = None
+
+        for frame_i, frame in itertools.izip(xrange(max_size), frames):
+
+            if chunk is None:
+                chunk = Image.new("RGBA", (max_size, frame.height))
+
+            img = Image.frombuffer("RGBA", (frame.width, frame.height), frame, "raw", "RGBA", 0, 1)
+            img = img.resize((1, frame.height), Image.ANTIALIAS)
+            chunk.paste(img, (frame_i, 0))
+
+        if chunk is None:
+            # We are done here.
+            break
+
+        else:
+            print 'Saved chunk', chunk_i
+            if chunk.size[0] != (chunk_i + 1):
+                chunk = chunk.crop((0, 0, frame_i + 1, chunk.size[1]))
+            chunk.save(os.path.join(dir_name, '%s.%03d.jpg' % (basename, chunk_i)), quality=90)
 
 
-filmstrip = filmstrip.crop((0, 0, frame_i + 1, filmstrip.size[1]))
-filmstrip.save('sandbox/%s.jpg' % os.path.basename(sys.argv[1]), quality=90)
