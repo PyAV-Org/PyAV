@@ -26,7 +26,9 @@ ext_sources = ['build/av/' + x for x in ext_basenames]
 ext_modules = [Extension(
     name,
     sources=[source],
-    **pkg_config('libavformat', 'libavcodec', 'libswscale', 'libavutil')
+    **pkg_config('libavformat', 'libavcodec', 'libswscale', 'libavutil',
+        include_dirs=['headers'],
+    )
 ) for name, source in zip(ext_names, ext_sources)]
 
 

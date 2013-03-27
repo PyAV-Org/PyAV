@@ -1,8 +1,0 @@
-
-#ifdef LIBSWRESAMPLE_VERSION_MAJOR
-    #define PYAV_USING_FFMPEG
-#endif
-
-#ifdef LIBAVRESAMPLE_VERSION_MAJOR
-    #define PYAV_USING_LIBAV
-#endif
