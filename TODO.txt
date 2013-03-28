@@ -13,8 +13,9 @@
 https://groups.google.com/forum/?fromgroups=#!topic/cython-users/qFo8kco_XXE
 http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 
-- Figure out how to grab FFmpeg samples (or start my own repo of them)
-- Figure out how to determine if it is ffmpeg or libav
-- Add source files that are conditional on if it is libav or ffmpeg
+- Figure out how to grab FFmpeg samples.
+
+- Move calling `configure` into an extension of the build command so that it
+  does not run until it needs to.
 
 
