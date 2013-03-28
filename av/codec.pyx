@@ -46,6 +46,13 @@ cdef class Codec(object):
 
 cdef class Packet(object):
     
+    """A packet of encoded data within a :class:`~av.format.Stream`.
+
+    This may, or may not include a complete object within a stream.
+    :meth:`decode` must be called to extract encoded data.
+
+    """
+
     def __dealloc__(self):
         lib.av_free_packet(&self.struct)
     
@@ -58,6 +65,14 @@ cdef class Packet(object):
         )
     
     cpdef decode(self):
+        """Decode the data in this packet.
+
+        May return ``None`` if this packet does not contain enough information.
+
+        .. warning:: Very soon the API for this function will change to return an
+            iterator which yields decoded information.
+        """
+
         return self.stream.decode(self)
     
     property pts:
@@ -171,6 +186,8 @@ cdef class SubtitleRect(object):
 
 cdef class Frame(object):
 
+    """A frame of video."""
+
     def __init__(self, av.format.Stream stream):
         self.stream = stream
     
@@ -190,6 +207,7 @@ cdef class Frame(object):
         )
     
     property pts:
+        """Presentation time stamp of this frame."""
         def __get__(self):
             if self.raw_ptr.pts != lib.AV_NOPTS_VALUE:
                 return self.raw_ptr.pts
@@ -197,8 +215,11 @@ cdef class Frame(object):
                 return self.raw_ptr.pkt_pts
     
     property width:
+        """Width of the image, in pixels."""
         def __get__(self): return self.stream.codec.ctx.width
+
     property height:
+        """Height of the image, in pixels."""
         def __get__(self): return self.stream.codec.ctx.height
 
     # Legacy buffer support.

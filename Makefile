@@ -31,7 +31,7 @@ test-fail: build
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)
 
-docs:
+docs: build
 	make -C docs html
 
 clean:
