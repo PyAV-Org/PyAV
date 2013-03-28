@@ -1,6 +1,6 @@
 - FFmpeg tutorial: http://dranger.com/ffmpeg/
 	- also has function reference: http://dranger.com/ffmpeg/functions.html
-	- updated tutorial code: https://github.com/mpenkov/ffmpeg-tutorial
+	- updated tutorial code: https://github.com/chelyaev/ffmpeg-tutorial
 
 - Examples:
     - output: http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/output-example_8c-source.html
@@ -13,12 +13,13 @@
 https://groups.google.com/forum/?fromgroups=#!topic/cython-users/qFo8kco_XXE
 http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 
+- Even out more of the differences:
+    - See README of https://github.com/chelyaev/ffmpeg-tutorial
+
 - Packet.decode may yield multiple frames.
 
 - Figure out how to grab FFmpeg samples.
 
 - Move calling `configure` into an extension of the build command so that it
   does not run until it needs to.
-
-- Replicate av_frame_get_best_effort_timestamp
 
