@@ -6,10 +6,10 @@ cimport libav as lib
 cimport av.format
 from .utils cimport err_check
 
+
 cdef class Codec(object):
     
     def __init__(self, av.format.Stream stream):
-        
         
         # Our pointer.
         self.ctx = stream.ptr.codec
@@ -92,8 +92,8 @@ cdef class SubtitleProxy(object):
 
 cdef class Subtitle(object):
     
-    def __init__(self, av.format.Stream stream, SubtitleProxy proxy):
-        self.stream = stream
+    def __init__(self, Packet packet, SubtitleProxy proxy):
+        self.packet = packet
         self.proxy = proxy
         cdef int i
         self.rects = tuple(SubtitleRect(self, i) for i in range(self.proxy.struct.num_rects))
@@ -102,7 +102,7 @@ cdef class Subtitle(object):
         return '<%s.%s of %s at 0x%x>' % (
             self.__class__.__module__,
             self.__class__.__name__,
-            self.stream,
+            self.packet.stream,
             id(self),
         )
     
@@ -184,12 +184,12 @@ cdef class SubtitleRect(object):
                 )
     
 
-cdef class Frame(object):
+cdef class VideoFrame(object):
 
     """A frame of video."""
 
-    def __init__(self, av.format.Stream stream):
-        self.stream = stream
+    def __init__(self, Packet packet):
+        self.packet = packet
     
     def __dealloc__(self):
         # These are all NULL safe.
@@ -216,33 +216,30 @@ cdef class Frame(object):
     
     property width:
         """Width of the image, in pixels."""
-        def __get__(self): return self.stream.codec.ctx.width
+        def __get__(self): return self.packet.stream.codec.ctx.width
 
     property height:
         """Height of the image, in pixels."""
-        def __get__(self): return self.stream.codec.ctx.height
+        def __get__(self): return self.packet.stream.codec.ctx.height
 
     # Legacy buffer support.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
 
     def __getsegcount__(self, Py_ssize_t *len_out):
         if len_out != NULL:
-            len_out[0] = <Py_ssize_t> self.stream.buffer_size
+            len_out[0] = <Py_ssize_t> self.packet.stream.buffer_size
         return 1
 
     def __getreadbuffer__(self, Py_ssize_t index, void **data):
         if index:
             raise RuntimeError("accessing non-existent buffer segment")
         data[0] = <void*> self.rgb_ptr.data[0]
-        return <Py_ssize_t> self.stream.buffer_size
+        return <Py_ssize_t> self.packet.stream.buffer_size
 
 
+cdef class AudioFrame(object):
 
+    """A frame of audio."""
 
-
-
-
-
-
-
-
+    def __init__(self, Packet packet):
+        self.packet = packet

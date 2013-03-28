@@ -23,3 +23,6 @@ http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 - Move calling `configure` into an extension of the build command so that it
   does not run until it needs to.
 
+- VideoFrame and AudioFrame inherit from Frame.
+
+- VideoStream.setup_conversion(size, format, etc.)

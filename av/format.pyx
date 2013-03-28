@@ -225,7 +225,7 @@ cdef class VideoStream(Stream):
             self.rgb_frame.linesize,
         )
         
-        cdef av.codec.Frame frame = av.codec.Frame(self)
+        cdef av.codec.VideoFrame frame = av.codec.VideoFrame(packet)
         
         # Copy the pointers over.
         frame.buffer_ = self.buffer_
@@ -254,7 +254,7 @@ cdef class SubtitleStream(Stream):
         if not done:
             return
         
-        return av.codec.Subtitle(self, proxy)
+        return av.codec.Subtitle(packet, proxy)
         
 
 cdef class DataStream(Stream):

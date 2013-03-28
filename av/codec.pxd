@@ -28,7 +28,7 @@ cdef class SubtitleProxy(object):
 
 cdef class Subtitle(object):
     
-    cdef readonly av.format.Stream stream
+    cdef readonly Packet packet
     cdef SubtitleProxy proxy
     cdef readonly tuple rects
 
@@ -40,10 +40,16 @@ cdef class SubtitleRect(object):
     cdef readonly bytes type
 
 
-cdef class Frame(object):
+cdef class VideoFrame(object):
     
-    cdef av.format.Stream stream
+    cdef readonly Packet packet
     
     cdef lib.AVFrame *raw_ptr
     cdef lib.AVFrame *rgb_ptr
     cdef uint8_t *buffer_
+
+
+cdef class AudioFrame(object):
+    
+    cdef readonly Packet packet
+

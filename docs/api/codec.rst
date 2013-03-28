@@ -15,6 +15,9 @@
     .. autoclass:: SubtitleRect
         :members:
 
-    .. autoclass:: Frame
+    .. autoclass:: VideoFrame
+        :members:
+
+    .. autoclass:: AudioFrame
         :members:
 
