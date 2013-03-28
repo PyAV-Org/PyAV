@@ -190,7 +190,11 @@ cdef class Frame(object):
         )
     
     property pts:
-        def __get__(self): return self.raw_ptr.pts
+        def __get__(self):
+            if self.raw_ptr.pts != lib.AV_NOPTS_VALUE:
+                return self.raw_ptr.pts
+            else:
+                return self.raw_ptr.pkt_pts
     
     property width:
         def __get__(self): return self.stream.codec.ctx.width

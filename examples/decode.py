@@ -38,6 +38,8 @@ streams = [s for s in video.streams if s.type == b'video']
 streams = [streams[0]]
 
 
+frame_count = 0
+
 for i, packet in enumerate(video.demux(streams)):
     
     print '%4d %r' % (i, packet)
@@ -46,15 +48,15 @@ for i, packet in enumerate(video.demux(streams)):
     print '    dts: %.3f' % float(packet.stream.time_base * packet.dts)
     
     if packet.stream.type == 'video':
+        
         frame = packet.decode()
         if not frame:
             continue
+
+        frame_count += 1
+
         print '    decoded:', frame
-        print '               pts:', frame.pts
-        # print '               bts:', frame.timestamp
-        
-        # img = Image.frombuffer("RGBA", (frame.width, frame.height), frame.rgba, "raw", "RGBA", 0, 1)
-        # img.save('sandbox/frame_%04d.jpg' % video_count)
+        print '               pts: %.3f' % float(packet.stream.time_base * frame.pts)
     
     elif packet.stream.type == 'subtitle':
         
@@ -73,5 +75,5 @@ for i, packet in enumerate(video.demux(streams)):
             if rect.type == 'ass':
                 print '                ass: %r' % rect.ass
     
-    if i > 10:
+    if frame_count > 5:
         break
