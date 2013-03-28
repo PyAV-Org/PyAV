@@ -13,6 +13,8 @@
 https://groups.google.com/forum/?fromgroups=#!topic/cython-users/qFo8kco_XXE
 http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 
+- Packet.decode may yield multiple frames.
+
 - Figure out how to grab FFmpeg samples.
 
 - Move calling `configure` into an extension of the build command so that it

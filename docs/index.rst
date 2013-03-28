@@ -21,22 +21,15 @@ Building From Source
     $ make test
 
 
-FFmpeg Version Info
-^^^^^^^^^^^^^^^^^^^
+FFmpeg vs. Libav
+^^^^^^^^^^^^^^^^
 
-I am developing this with the current (as of this writing) FFmpeg on OS X (via homebrew)::
+I am attempting to write this wrapper to work with either FFmpeg_ or Libav_. I am using autoconf to detect the differences that I have descerned exist as this wrapper is being developed.
 
-    ffmpeg version 1.0
-    built on Oct  7 2012 15:12:28 with Apple clang version 4.0 (tags/Apple/clang-421.0.57) (based on LLVM 3.1svn)
-    configuration: --prefix=/usr/local/Cellar/ffmpeg/1.0 --enable-shared --enable-gpl --enable-version3 --enable-nonfree --enable-hardcoded-tables --cc=cc --host-cflags= --host-ldflags= --enable-libx264 --enable-libfaac --enable-libmp3lame --enable-libxvid
-    libavutil      51. 73.101 / 51. 73.101
-    libavcodec     54. 59.100 / 54. 59.100
-    libavformat    54. 29.104 / 54. 29.104
-    libavdevice    54.  2.101 / 54.  2.101
-    libavfilter     3. 17.100 /  3. 17.100
-    libswscale      2.  1.101 /  2.  1.101
-    libswresample   0. 15.100 /  0. 15.100
-    libpostproc    52.  0.100 / 52.  0.100
+This is a fairly trial-and-error process, so please let me know if there are any odd compiler errors or something won't link due to missing functions.
+
+.. _FFmpeg: http://ffmpeg.org/
+.. _Libav: http://libav.org/
 
 
 API Reference

@@ -4,7 +4,7 @@ MOD_SOS = $(CYTHON_SRC:%.pyx=%.so)
 
 TEST_MOV = sandbox/640x360.mp4
 
-.PHONY: default build cythonize clean clean-all info test
+.PHONY: default build cythonize clean clean-all info test docs
 
 default: build
 
@@ -31,9 +31,13 @@ test-fail: build
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)
 
+docs:
+	make -C docs html
+
 clean:
 	- rm -rf build
 	- find av -name '*.so' -delete
 
 clean-all: clean
 	- rm configure config.py
+	- make -C docs clean
