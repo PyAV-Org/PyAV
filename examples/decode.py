@@ -51,7 +51,7 @@ for i, packet in enumerate(video.demux(streams)):
             continue
         print '    decoded:', frame
         print '               pts:', frame.pts
-        print '               bts:', frame.timestamp
+        # print '               bts:', frame.timestamp
         
         # img = Image.frombuffer("RGBA", (frame.width, frame.height), frame.rgba, "raw", "RGBA", 0, 1)
         # img.save('sandbox/frame_%04d.jpg' % video_count)

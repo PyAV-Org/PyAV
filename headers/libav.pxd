@@ -3,4 +3,4 @@ include "libavcodec.pxd"
 include "libavformat.pxd"
 include "libswscale.pxd"
 
-include "compat.pxd"
+include "project_fork_shim.pxd"

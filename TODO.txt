@@ -18,4 +18,5 @@ http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 - Move calling `configure` into an extension of the build command so that it
   does not run until it needs to.
 
+- Replicate av_frame_get_best_effort_timestamp
 

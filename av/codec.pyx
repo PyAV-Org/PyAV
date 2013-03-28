@@ -191,8 +191,6 @@ cdef class Frame(object):
     
     property pts:
         def __get__(self): return self.raw_ptr.pts
-    property timestamp:
-        def __get__(self): return lib.av_frame_get_best_effort_timestamp(self.raw_ptr)
     
     property width:
         def __get__(self): return self.stream.codec.ctx.width

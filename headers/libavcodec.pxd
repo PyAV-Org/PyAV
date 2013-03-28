@@ -59,8 +59,6 @@ cdef extern from "libavcodec/avcodec.h":
         
         uint8_t **base
 
-    int64_t av_frame_get_best_effort_timestamp(AVFrame*)
-
     cdef AVFrame* avcodec_alloc_frame()
     
     cdef int avpicture_get_size(

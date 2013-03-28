@@ -1,5 +1,5 @@
 
-cdef extern from "compat.h":
+cdef extern from "project_fork_shim.h":
     pass
 
     # Don't need to bother defining the methods in here since the libraries
