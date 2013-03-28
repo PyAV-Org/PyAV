@@ -8,6 +8,15 @@
 # Libraries.
 /ffmpeg
 /tutorial
+/src/ffmpeg
+/src/libav
+
+# Autoconf.
+/autom4te.cache
+/config.py
+/config.log
+/config.status
+/configure
 
 # Build products.
 /build
@@ -15,6 +24,7 @@
 *.so
 *.pyc
 _build
+
 
 # Testing.
 /sandbox

@@ -1,3 +1,5 @@
-cflags = '''@AV_CFLAGS@'''
-ldflags = '''@AV_LDFLAGS@'''
-defs = '''@DEFS@'''
+autoconf_flags = '''
+    @AV_CFLAGS@
+    @AV_LDFLAGS@
+    @DEFS@
+'''
