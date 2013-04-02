@@ -30,6 +30,10 @@ cdef extern from "libavcodec/avcodec.h":
         AVPixelFormat pix_fmt
         
         AVCodec *codec
+
+        # Audio.
+        int sample_rate
+        int channels
         
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     
@@ -92,8 +96,15 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef int avcodec_decode_video2(
         AVCodecContext *ctx,
-        AVFrame *picture,
-        int *got_picture,
+        AVFrame *frame,
+        int *got_frame,
+        AVPacket *packet,
+    )
+
+    cdef int avcodec_decode_audio4(
+        AVCodecContext *ctx,
+        AVFrame *frame,
+        int *got_frame,
         AVPacket *packet,
     )
     

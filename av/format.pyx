@@ -239,8 +239,42 @@ cdef class VideoStream(Stream):
         
         return frame
 
+
 cdef class AudioStream(Stream):
-    pass
+    
+    property sample_rate:
+        def __get__(self):
+            return self.codec.ctx.sample_rate
+
+    property channels:
+        def __get__(self):
+            return self.codec.ctx.channels
+
+    def __dealloc__(self):
+        # These are all NULL safe.
+        lib.av_free(self.frame)
+        
+    cpdef decode(self, av.codec.Packet packet):
+        
+        if not self.frame:
+            self.frame = lib.avcodec_alloc_frame()
+
+        cdef int done = 0
+        err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.frame, &done, &packet.struct))
+        if not done:
+            return
+        
+        cdef av.codec.AudioFrame frame = av.codec.AudioFrame(packet)
+        
+        # Copy the pointers over.
+        frame.ptr = self.frame
+        
+        # Null out ours.
+        self.frame = NULL
+        
+        return frame
+
+
 
 cdef class SubtitleStream(Stream):
     

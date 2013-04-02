@@ -16,13 +16,16 @@ http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 - Even out more of the differences:
     - See README of https://github.com/chelyaev/ffmpeg-tutorial
 
-- Packet.decode may yield multiple frames.
+- Can Packet.decode yield multiple frames, or is that the old API?
 
 - Figure out how to grab FFmpeg samples.
 
 - Move calling `configure` into an extension of the build command so that it
   does not run until it needs to.
 
-- VideoFrame and AudioFrame inherit from Frame.
-
 - VideoStream.setup_conversion(size, format, etc.)
+
+- How to interpret raw audio?
+    http://ffmpeg.org/doxygen/trunk/doc_2examples_2filtering_audio_8c-example.html#a84
+
+- Move decoding into Packet from Stream?

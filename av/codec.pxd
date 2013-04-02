@@ -53,3 +53,5 @@ cdef class AudioFrame(object):
     
     cdef readonly Packet packet
 
+    cdef lib.AVFrame *ptr
+

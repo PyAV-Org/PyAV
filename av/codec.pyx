@@ -20,11 +20,13 @@ cdef class Codec(object):
         if stream.type == 'attachment':
             return
         
+        # Find the decoder.
         # We don't need to free this later since it is a static part of the lib.
         self.ptr = lib.avcodec_find_decoder(self.ctx.codec_id)
         if self.ptr == NULL:
             return
         
+        # Open the codec.
         try:
             err_check(lib.avcodec_open2(self.ctx, self.ptr, &self.options))
         except:
@@ -243,3 +245,8 @@ cdef class AudioFrame(object):
 
     def __init__(self, Packet packet):
         self.packet = packet
+    
+    def __dealloc__(self):
+        # These are all NULL safe.
+        lib.av_free(self.ptr)
+

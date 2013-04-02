@@ -53,3 +53,9 @@ cdef class VideoStream(Stream):
     cdef uint8_t *buffer_
     cdef lib.SwsContext *sws_ctx
 
+
+cdef class AudioStream(Stream):
+
+    # Hold onto the frames that we will decode until we have a full one.
+    cdef lib.AVFrame *frame
+

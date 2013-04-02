@@ -29,13 +29,18 @@ for i, stream in enumerate(video.streams):
     print '        duration: %r' % stream.duration
     print '        base_frame_rate: %.3f - %r' % (float(stream.base_frame_rate), stream.base_frame_rate)
     print '        avg_frame_rate: %.3f' % float(stream.avg_frame_rate)
+
+    if stream.type == b'audio':
+        print '        audio:'
+        print '            sample_rate: %s' % stream.sample_rate
+        print '            channels: %s' % stream.channels
+
     print '        metadata:'
     for k, v in sorted(stream.metadata.iteritems()):
         print '            %s: %r' % (k, v)
 
 
-streams = [s for s in video.streams if s.type == b'video']
-streams = [streams[0]]
+streams = [s for s in video.streams if s.type in (b'video', b'audio')]
 
 
 frame_count = 0
