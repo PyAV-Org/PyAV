@@ -1,5 +1,5 @@
 CYTHON_SRC = $(shell find av -name "*.pyx")
-C_SRC = $(CYTHON_SRC:%.pyx=build/%.c)
+C_SRC = $(CYTHON_SRC:%.pyx=build/cython/%.c)
 MOD_SOS = $(CYTHON_SRC:%.pyx=%.so)
 
 TEST_MOV = sandbox/640x360.mp4
@@ -13,7 +13,7 @@ info:
 
 cythonize: $(C_SRC)
 
-build/%.c: %.pyx
+build/cython/%.c: %.pyx
 	@ mkdir -p $(shell dirname $@)
 	cython -I. -Iheaders -o $@ $<
 

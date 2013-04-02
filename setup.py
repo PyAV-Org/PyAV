@@ -24,15 +24,22 @@ for chunk in autoconf_flags.strip().split():
             ext_extra.setdefault('define_macros', []).append((name, None))
 
 
-# Construct the modules that we find in the "build/av" directory.
-ext_basenames = os.listdir(os.path.abspath(os.path.join(__file__, '..', 'build', 'av')))
-ext_names = ['av.' + x[:-2] for x in ext_basenames]
-ext_sources = ['build/av/' + x for x in ext_basenames]
-ext_modules = [Extension(
-    name,
-    sources=[source],
-    **ext_extra
-) for name, source in zip(ext_names, ext_sources)]
+# Construct the modules that we find in the "build/cython" directory.
+ext_modules = []
+build_dir = os.path.abspath(os.path.join(__file__, '..', 'build', 'cython'))
+for dirname, dirnames, filenames in os.walk(build_dir):
+    for filename in filenames:
+        if filename.startswith('.') or os.path.splitext(filename)[1] != '.c':
+            continue
+
+        path = os.path.join(dirname, filename)
+        name = os.path.splitext(os.path.relpath(path, build_dir))[0].replace('/', '.')
+
+        ext_modules.append(Extension(
+            name,
+            sources=[path],
+            **ext_extra
+        ))
 
 
 setup(
