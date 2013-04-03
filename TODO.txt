@@ -17,6 +17,8 @@ http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
     - See README of https://github.com/chelyaev/ffmpeg-tutorial
 
 - Can Packet.decode yield multiple frames, or is that the old API?
+    See: http://ffmpeg.mplayerhq.hu/doxygen/trunk/group__lavf__decoding.html#ga4fdb3084415a82e3810de6ee60e46a61
+    Video packets contain exactly one frame. Audio packets can contain an integer number of frames.
 
 - Figure out how to grab FFmpeg samples.
 
@@ -35,10 +37,16 @@ http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 
 - Stop mimicking the underlying project structure, and break into (many) more
   modules:
-    - av.format -> Context
+    - av.format.context/input/output
     - av.stream.core/video/audio/subtitle/etc.
     - av.codec
     - av.packet
     - av.frame.core/video/audio
     - av.subtitle.frame/rect
-    
+
+- Skip the packet stage altogether?
+    - av.format.Context.demux() could directly yield frames.
+
+- Move away from generator from av.format.Context.demux(), so that the API makes
+  more sense when we get around to adding Context.seek(time)?
+
