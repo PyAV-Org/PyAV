@@ -166,11 +166,8 @@ cdef class VideoStream(Stream):
     
     def __init__(self, *args):
         super(VideoStream, self).__init__(*args)
-        self.buffer_size = lib.avpicture_get_size(
-            lib.PIX_FMT_RGBA,
-            self.codec.ctx.width,
-            self.codec.ctx.height,
-        )
+        self.last_w = 0
+        self.last_h = 0
     
     def __dealloc__(self):
         # These are all NULL safe.
@@ -184,18 +181,27 @@ cdef class VideoStream(Stream):
         if not self.raw_frame:
             self.raw_frame = lib.avcodec_alloc_frame()
             self.rgb_frame = lib.avcodec_alloc_frame()
-            self.buffer_ = <uint8_t *>lib.av_malloc(self.buffer_size * sizeof(uint8_t))
+
+        cdef int done = 0
+        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
+        if not done:
+            return
+        
+        # Check if the frame size has change
+        if not (self.last_w,self.last_h) == (self.codec.ctx.width,self.codec.ctx.height):
             
-            # Assign the buffer to the image planes.
-            lib.avpicture_fill(
-                <lib.AVPicture *>self.rgb_frame,
-                self.buffer_,
+            self.last_w = self.codec.ctx.width
+            self.last_h = self.codec.ctx.height
+
+            self.buffer_size = lib.avpicture_get_size(
                 lib.PIX_FMT_RGBA,
                 self.codec.ctx.width,
-                self.codec.ctx.height
+                self.codec.ctx.height,
             )
-        
-        if not self.sws_ctx:
+            
+            if self.sws_ctx:
+                lib.sws_freeContext(self.sws_ctx)
+            
             self.sws_ctx = lib.sws_getContext(
                 self.codec.ctx.width,
                 self.codec.ctx.height,
@@ -208,12 +214,18 @@ cdef class VideoStream(Stream):
                 NULL,
                 NULL
             )
-
-        cdef int done = 0
-        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
-        if not done:
-            return
+            
+        self.buffer_ = <uint8_t *>lib.av_malloc(self.buffer_size * sizeof(uint8_t))
         
+        # Assign the buffer to the image planes.
+        lib.avpicture_fill(
+                <lib.AVPicture *>self.rgb_frame,
+                self.buffer_,
+                lib.PIX_FMT_RGBA,
+                self.codec.ctx.width,
+                self.codec.ctx.height
+            )
+
         # Scale and convert.
         lib.sws_scale(
             self.sws_ctx,
