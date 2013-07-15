@@ -63,7 +63,7 @@ cdef class Context(object):
         
         cdef int i
         cdef av.codec.Packet packet
-        
+
         try:
             
             for i in range(self.proxy.ptr.nb_streams):
@@ -71,9 +71,8 @@ cdef class Context(object):
             for stream in streams or self.streams:
                 include_stream[stream.index] = True
         
-            packet = av.codec.Packet()
             while True:
-            
+                packet = av.codec.Packet()
                 try:
                     err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
                 except LibError:
@@ -82,10 +81,21 @@ cdef class Context(object):
                 if include_stream[packet.struct.stream_index]:
                     packet.stream = self.streams[packet.struct.stream_index]
                     yield packet
+
+            # Some codecs will cause frames to be buffered up in the decoding process.
+            # These codecs should have a CODEC CAP_DELAY capability set.
+            # This sends a special packet with data set to NULL and size set to 0
+            # This tells the Packet Object that its the last packet
             
-                # Need to free it anyways.
-                packet = av.codec.Packet()
-        
+            for i in range(self.proxy.ptr.nb_streams):
+
+                if include_stream[i]:
+                    packet = av.codec.Packet()
+                    packet.struct.data= NULL
+                    packet.struct.size = 0
+                    packet.stream = stream
+                    
+                    yield packet
         finally:
             free(include_stream)
     
