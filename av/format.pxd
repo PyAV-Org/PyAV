@@ -43,6 +43,8 @@ cdef class Stream(object):
     
     cdef flush_buffers(self)
     
+    cpdef frame_to_pts(self, int frame)
+    cpdef pts_to_frame(self, int64_t timestamp)
     cpdef seek(self, int64_t timestamp, mode=*)
     cpdef decode(self, av.codec.Packet packet)
 

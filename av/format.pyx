@@ -160,6 +160,27 @@ cdef class Stream(object):
 
         lib.avcodec_flush_buffers(self.codec.ctx)
         
+    cpdef frame_to_pts(self, int frame):
+        fps = self.base_frame_rate
+        time_base = self.time_base
+        
+        cdef int64_t pts
+        
+        pts = self.start_time + (frame * fps.denominator * time_base.denominator) \
+                                 / (fps.numerator *time_base.numerator)
+        return pts
+    
+    cpdef pts_to_frame(self, int64_t timestamp):
+        fps = self.base_frame_rate
+        time_base = self.time_base
+        
+        cdef int frame
+        
+        frame = ((timestamp - self.start_time) * time_base.numerator * fps.numerator) \
+                                      / (time_base.denominator * fps.denominator)
+                                      
+        return frame
+        
     cpdef seek(self,lib.int64_t timestamp,mode=None):
 
         cdef int flags = 0
@@ -179,6 +200,8 @@ cdef class Stream(object):
         self.flush_buffers()
         
         err_check(lib.av_seek_frame(self.ctx_proxy.ptr, self.ptr.index, timestamp,flags))
+        
+        
 
     property index:
         def __get__(self): return self.ptr.index
