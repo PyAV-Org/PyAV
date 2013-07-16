@@ -63,12 +63,14 @@ cdef class Context(object):
         
         cdef int i
         cdef av.codec.Packet packet
+        cdef av.format.Stream stream
 
         try:
             
             for i in range(self.proxy.ptr.nb_streams):
                 include_stream[i] = False
             for stream in streams or self.streams:
+                stream.flush_buffers()
                 include_stream[stream.index] = True
         
             while True:
@@ -153,7 +155,31 @@ cdef class Stream(object):
             self.codec.name,
             id(self),
         )
-    
+        
+    cdef flush_buffers(self):
+
+        lib.avcodec_flush_buffers(self.codec.ctx)
+        
+    cpdef seek(self,lib.int64_t timestamp,mode=None):
+
+        cdef int flags = 0
+        
+        if mode:
+            if mode.lower() == "backward":
+                flags = lib.AVSEEK_FLAG_BACKWARD
+            elif mode.lower() == "frame":
+                flags = lib.AVSEEK_FLAG_FRAME
+            elif mode.lower() == "byte":
+                flags = lib.AVSEEK_FLAG_BYTE
+            elif mode.lower() == 'any':
+                flags = lib.AVSEEK_FLAG_ANY
+            else:
+                raise ValueError("Invalid mode %s" % str(mode))
+        
+        self.flush_buffers()
+        
+        err_check(lib.av_seek_frame(self.ctx_proxy.ptr, self.ptr.index, timestamp,flags))
+
     property index:
         def __get__(self): return self.ptr.index
     property id:

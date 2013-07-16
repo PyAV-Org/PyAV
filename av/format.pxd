@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t, int64_t
 
 cimport libav as lib
 
@@ -41,6 +41,9 @@ cdef class Stream(object):
     cdef av.codec.Codec codec
     cdef readonly dict metadata
     
+    cdef flush_buffers(self)
+    
+    cpdef seek(self, int64_t timestamp, mode=*)
     cpdef decode(self, av.codec.Packet packet)
 
 
