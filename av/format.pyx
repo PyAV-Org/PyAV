@@ -137,6 +137,7 @@ cdef class Stream(object):
             raise ValueError('stream index out of range')
         
         self.ctx_proxy = ctx.proxy
+        self.ctx = ctx
         self.ptr = self.ctx_proxy.ptr.streams[index]
         self.type = type
 
