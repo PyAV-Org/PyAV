@@ -54,6 +54,8 @@ cdef class Packet(object):
     :meth:`decode` must be called to extract encoded data.
 
     """
+    def __init__(self):
+        lib.av_init_packet(&self.struct)
 
     def __dealloc__(self):
         lib.av_free_packet(&self.struct)
@@ -66,17 +68,29 @@ cdef class Packet(object):
             id(self),
         )
     
-    cpdef decode(self):
+    def decode(self):
         """Decode the data in this packet.
 
-        May return ``None`` if this packet does not contain enough information.
-
-        .. warning:: Very soon the API for this function will change to return an
-            iterator which yields decoded information.
+       yields frame.
+       
+       Note.
+       Some codecs will cause frames to be buffered up in the decoding process. If Packets Data
+       is NULL and size is 0 the packet will try and retrieve those frames. Context.demux will 
+       yeild a NULL Packet as its last packet.
         """
 
-        return self.stream.decode(self)
-    
+        if not self.struct.data:
+            while True:
+                frame = self.stream.decode(self)
+                if frame:
+                    yield frame
+                else:
+                    break
+        else:
+            frame = self.stream.decode(self)
+            if frame:
+                yield frame
+                
     property pts:
         def __get__(self): return self.struct.pts
     property dts:

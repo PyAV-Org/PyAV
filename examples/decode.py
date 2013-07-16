@@ -52,33 +52,27 @@ for i, packet in enumerate(video.demux(streams)):
     print '    pts: %.3f' % float(packet.stream.time_base * packet.pts)
     print '    dts: %.3f' % float(packet.stream.time_base * packet.dts)
     
-    if packet.stream.type == 'video':
-        
-        frame = packet.decode()
-        if not frame:
-            continue
+    for frame in packet.decode():
+        if packet.stream.type == 'video':
 
-        frame_count += 1
+            frame_count += 1
+    
+            print '    decoded:', frame
+            print '               pts: %.3f' % float(packet.stream.time_base * frame.pts)
+        
+        elif packet.stream.type == 'subtitle':
+            
+            sub = frame
 
-        print '    decoded:', frame
-        print '               pts: %.3f' % float(packet.stream.time_base * frame.pts)
-    
-    elif packet.stream.type == 'subtitle':
+            print '        format:', sub.format
+            print '        start_display_time: %.3f' % float(packet.stream.time_base * sub.start_display_time)
+            print '        end_display_time: %.3f' % float(packet.stream.time_base * sub.end_display_time)
+            print '        pts: %.3f' % float(packet.stream.time_base * sub.pts)
+            print '        rects: %d' % len(sub.rects)
+            for rect in sub.rects:
+                print '            %r' % rect
+                if rect.type == 'ass':
+                    print '                ass: %r' % rect.ass
         
-        sub = packet.decode()
-        print '    decoded:', sub
-        if not sub:
-            continue
-        
-        print '        format:', sub.format
-        print '        start_display_time: %.3f' % float(packet.stream.time_base * sub.start_display_time)
-        print '        end_display_time: %.3f' % float(packet.stream.time_base * sub.end_display_time)
-        print '        pts: %.3f' % float(packet.stream.time_base * sub.pts)
-        print '        rects: %d' % len(sub.rects)
-        for rect in sub.rects:
-            print '            %r' % rect
-            if rect.type == 'ass':
-                print '                ass: %r' % rect.ass
-    
-    if frame_count > 5:
-        break
+        if frame_count > 5:
+            break

@@ -63,7 +63,7 @@ cdef class Context(object):
         
         cdef int i
         cdef av.codec.Packet packet
-        
+
         try:
             
             for i in range(self.proxy.ptr.nb_streams):
@@ -71,9 +71,8 @@ cdef class Context(object):
             for stream in streams or self.streams:
                 include_stream[stream.index] = True
         
-            packet = av.codec.Packet()
             while True:
-            
+                packet = av.codec.Packet()
                 try:
                     err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
                 except LibError:
@@ -82,10 +81,22 @@ cdef class Context(object):
                 if include_stream[packet.struct.stream_index]:
                     packet.stream = self.streams[packet.struct.stream_index]
                     yield packet
+
+            # Some codecs will cause frames to be buffered up in the decoding process.
+            # These codecs should have a CODEC CAP_DELAY capability set.
+            # This sends a special packet with data set to NULL and size set to 0
+            # This tells the Packet Object that its the last packet
             
-                # Need to free it anyways.
-                packet = av.codec.Packet()
-        
+            for i in range(self.proxy.ptr.nb_streams):
+
+                if include_stream[i]:
+                    packet = av.codec.Packet()
+                    packet.struct.data= NULL
+                    packet.struct.size = 0
+                    stream = self.streams[i]
+                    packet.stream = stream
+                    
+                    yield packet
         finally:
             free(include_stream)
     
@@ -166,11 +177,8 @@ cdef class VideoStream(Stream):
     
     def __init__(self, *args):
         super(VideoStream, self).__init__(*args)
-        self.buffer_size = lib.avpicture_get_size(
-            lib.PIX_FMT_RGBA,
-            self.codec.ctx.width,
-            self.codec.ctx.height,
-        )
+        self.last_w = 0
+        self.last_h = 0
     
     def __dealloc__(self):
         # These are all NULL safe.
@@ -184,18 +192,27 @@ cdef class VideoStream(Stream):
         if not self.raw_frame:
             self.raw_frame = lib.avcodec_alloc_frame()
             self.rgb_frame = lib.avcodec_alloc_frame()
-            self.buffer_ = <uint8_t *>lib.av_malloc(self.buffer_size * sizeof(uint8_t))
+
+        cdef int done = 0
+        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
+        if not done:
+            return
+        
+        # Check if the frame size has change
+        if not (self.last_w,self.last_h) == (self.codec.ctx.width,self.codec.ctx.height):
             
-            # Assign the buffer to the image planes.
-            lib.avpicture_fill(
-                <lib.AVPicture *>self.rgb_frame,
-                self.buffer_,
+            self.last_w = self.codec.ctx.width
+            self.last_h = self.codec.ctx.height
+
+            self.buffer_size = lib.avpicture_get_size(
                 lib.PIX_FMT_RGBA,
                 self.codec.ctx.width,
-                self.codec.ctx.height
+                self.codec.ctx.height,
             )
-        
-        if not self.sws_ctx:
+            
+            if self.sws_ctx:
+                lib.sws_freeContext(self.sws_ctx)
+            
             self.sws_ctx = lib.sws_getContext(
                 self.codec.ctx.width,
                 self.codec.ctx.height,
@@ -208,12 +225,18 @@ cdef class VideoStream(Stream):
                 NULL,
                 NULL
             )
-
-        cdef int done = 0
-        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
-        if not done:
-            return
+            
+        self.buffer_ = <uint8_t *>lib.av_malloc(self.buffer_size * sizeof(uint8_t))
         
+        # Assign the buffer to the image planes.
+        lib.avpicture_fill(
+                <lib.AVPicture *>self.rgb_frame,
+                self.buffer_,
+                lib.PIX_FMT_RGBA,
+                self.codec.ctx.width,
+                self.codec.ctx.height
+            )
+
         # Scale and convert.
         lib.sws_scale(
             self.sws_ctx,

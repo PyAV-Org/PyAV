@@ -15,8 +15,7 @@ def frame_iter(video):
     streams = [s for s in video.streams if s.type == b'video']
     streams = [streams[0]]
     for packet in video.demux(streams):
-        frame = packet.decode()
-        if frame:
+        for frame in packet.decode():
             yield frame
 
 
