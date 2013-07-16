@@ -93,6 +93,7 @@ cdef class Context(object):
                     packet = av.codec.Packet()
                     packet.struct.data= NULL
                     packet.struct.size = 0
+                    stream = self.streams[i]
                     packet.stream = stream
                     
                     yield packet
