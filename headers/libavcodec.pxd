@@ -38,6 +38,8 @@ cdef extern from "libavcodec/avcodec.h":
         
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     
+    cdef void avcodec_flush_buffers(AVCodecContext *ctx)
+    
     cdef int avcodec_open2(
         AVCodecContext *ctx,
         AVCodec *codec,
