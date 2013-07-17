@@ -200,15 +200,17 @@ cdef class Stream(object):
  
         err_check(lib.av_seek_frame(self.ctx_proxy.ptr, self.ptr.index, timestamp,flags))
         self.flush_buffers()
+        
     def __len__(self):
         return self.frames
+    
     def __getitem__(self,int x):
         
         if x < 0:
             x = self.frames + x
         
         pts = self.frame_to_pts(x)
-        print x, pts
+        
         if pts < self.start_time or pts > self.duration:
             raise IndexError("invalid index")
         
@@ -219,6 +221,17 @@ cdef class Stream(object):
                 #print frame.pts
                 if frame.pts == pts:
                     return frame
+                
+        #Very Slow Method this sucks But should always works
+        
+        self.seek(self.start_time)
+        
+        for packet in self.ctx.demux([self]):
+            for frame in packet.decode():
+                if frame.pts == pts:
+                    return frame
+                elif frame.pts > pts:
+                    break
                 
         
         raise ValueError("Unable to find frame: %i pts: %i" % ( x,pts))
