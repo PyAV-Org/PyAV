@@ -67,6 +67,9 @@ cdef extern from "libavcodec/avcodec.h":
         
         uint64_t pts
         uint64_t pkt_pts
+        uint64_t pkt_dts
+        int coded_picture_number
+        int display_picture_number
         
         uint8_t **base
 
