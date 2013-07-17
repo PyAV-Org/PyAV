@@ -31,6 +31,9 @@ cdef extern from "libavcodec/avcodec.h":
         AVPixelFormat pix_fmt
         
         AVCodec *codec
+        
+        int get_buffer(AVCodecContext *ctx, AVFrame *frame)
+        void release_buffer(AVCodecContext *ctx, AVFrame *frame)
 
         # Audio.
         int sample_rate
@@ -39,6 +42,9 @@ cdef extern from "libavcodec/avcodec.h":
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
+    
+    cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
+    cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
     
     cdef int avcodec_open2(
         AVCodecContext *ctx,
@@ -70,6 +76,8 @@ cdef extern from "libavcodec/avcodec.h":
         uint64_t pkt_dts
         int coded_picture_number
         int display_picture_number
+        
+        uint64_t *opaque
         
         uint8_t **base
 
