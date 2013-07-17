@@ -99,6 +99,12 @@ cdef class Packet(object):
         def __get__(self): return self.struct.size
     property duration:
         def __get__(self): return self.struct.duration
+    
+    property best_ts:
+        def __get__(self):
+            if self.pts == lib.AV_NOPTS_VALUE:
+                return self.dts
+            return self.pts
 
 
 cdef class SubtitleProxy(object):
