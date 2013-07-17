@@ -166,8 +166,9 @@ cdef class Stream(object):
         
         cdef int64_t pts
         
-        pts = self.start_time + (frame * fps.denominator * time_base.denominator) \
-                                 / (fps.numerator *time_base.numerator)
+        pts = self.start_time + ((frame * fps.denominator * time_base.denominator) \
+                                 / (fps.numerator *time_base.numerator))
+
         return pts
     
     cpdef pts_to_frame(self, int64_t timestamp):
@@ -199,7 +200,29 @@ cdef class Stream(object):
  
         err_check(lib.av_seek_frame(self.ctx_proxy.ptr, self.ptr.index, timestamp,flags))
         self.flush_buffers()
+    def __len__(self):
+        return self.frames
+    def __getitem__(self,int x):
         
+        if x < 0:
+            x = self.frames + x
+        
+        pts = self.frame_to_pts(x)
+        print x, pts
+        if pts < self.start_time or pts > self.duration:
+            raise IndexError("invalid index")
+        
+        self.seek(pts,'backward')
+        
+        for packet in self.ctx.demux([self]):
+            for frame in packet.decode():
+                #print frame.pts
+                if frame.pts == pts:
+                    return frame
+                
+        
+        raise ValueError("Unable to find frame: %i pts: %i" % ( x,pts))
+                
 
     property index:
         def __get__(self): return self.ptr.index
