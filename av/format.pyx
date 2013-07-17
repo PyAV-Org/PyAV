@@ -215,6 +215,8 @@ cdef class Stream(object):
         def __get__(self): return self.ptr.start_time
     property duration:
         def __get__(self): return self.ptr.duration
+    property frames:
+        def __get__(self): return self.ptr.nb_frames
     
     cpdef decode(self, av.codec.Packet packet):
         return None
