@@ -196,11 +196,9 @@ cdef class Stream(object):
                 flags = lib.AVSEEK_FLAG_ANY
             else:
                 raise ValueError("Invalid mode %s" % str(mode))
-        
-        self.flush_buffers()
-        
+ 
         err_check(lib.av_seek_frame(self.ctx_proxy.ptr, self.ptr.index, timestamp,flags))
-        
+        self.flush_buffers()
         
 
     property index:
