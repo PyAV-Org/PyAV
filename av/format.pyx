@@ -79,6 +79,14 @@ cdef class Context(object):
                     err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
                 except LibError:
                     break
+                
+                pts = packet.pts
+                if packet.pts == lib.AV_NOPTS_VALUE:
+                    pts = packet.dts
+
+                stream = self.streams[packet.struct.stream_index]
+                stream.last_pts = pts
+                
                     
                 if include_stream[packet.struct.stream_index]:
                     packet.stream = self.streams[packet.struct.stream_index]
@@ -216,23 +224,29 @@ cdef class Stream(object):
         
         self.seek(pts,'backward')
         
+        frame = None
         for packet in self.ctx.demux([self]):
             for frame in packet.decode():
-                #print frame.pts
+                #print '++', frame.pts,pts
                 if frame.pts == pts:
                     return frame
+            if frame:
+                if frame.pts > pts:
+                    break
                 
         #Very Slow Method this sucks But should always works
         
         self.seek(self.start_time)
         
+        frame = None
         for packet in self.ctx.demux([self]):
             for frame in packet.decode():
+                #print '---',frame.pts
                 if frame.pts == pts:
                     return frame
-                elif frame.pts > pts:
+            if frame:
+                if frame.pts > pts:
                     break
-                
         
         raise ValueError("Unable to find frame: %i pts: %i" % ( x,pts))
                 

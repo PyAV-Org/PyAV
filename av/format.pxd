@@ -41,6 +41,8 @@ cdef class Stream(object):
     cdef av.codec.Codec codec
     cdef readonly dict metadata
     
+    cdef int64_t last_pts
+    
     cdef flush_buffers(self)
     
     cpdef frame_to_pts(self, int frame)
