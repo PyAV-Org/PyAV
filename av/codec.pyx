@@ -56,6 +56,7 @@ cdef class Packet(object):
     """
     def __init__(self):
         lib.av_init_packet(&self.struct)
+        self.is_null = False
 
     def __dealloc__(self):
         lib.av_free_packet(&self.struct)
@@ -249,6 +250,10 @@ cdef class VideoFrame(object):
     property height:
         """Height of the image, in pixels."""
         def __get__(self): return self.packet.stream.codec.ctx.height
+        
+    property key_frame:
+        def __get__(self):
+            return self.raw_ptr.key_frame
 
     # Legacy buffer support.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs

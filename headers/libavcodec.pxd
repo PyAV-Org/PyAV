@@ -4,6 +4,7 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 cdef extern from "libavcodec/avcodec.h":
     
     cdef uint64_t AV_NOPTS_VALUE
+    cdef int AV_PKT_FLAG_KEY
 
     cdef enum AVCodecID:
         pass

@@ -91,7 +91,6 @@ cdef class Context(object):
             for i in range(self.proxy.ptr.nb_streams):
                 include_stream[i] = False
             for stream in streams or self.streams:
-                stream.flush_buffers()
                 include_stream[stream.index] = True
         
             while True:
@@ -116,6 +115,7 @@ cdef class Context(object):
                     packet = av.codec.Packet()
                     packet.struct.data= NULL
                     packet.struct.size = 0
+                    packet.is_null = True
                     stream = self.streams[i]
                     packet.stream = stream
                     
@@ -169,7 +169,7 @@ cdef class Stream(object):
         
         self.codec.ctx.get_buffer = pyav_get_buffer
         self.codec.ctx.release_buffer = pyav_release_buffer
-
+        
     def __repr__(self):
         return '<%s.%s #%d %s/%s at 0x%x>' % (
             self.__class__.__module__,
@@ -247,7 +247,7 @@ cdef class VideoStream(Stream):
         elif packet.struct.dts != lib.AV_NOPTS_VALUE:
             pts = packet.struct.dts
         
-        print lib.av_q2d(self.ptr.time_base)
+        #print lib.av_q2d(self.ptr.time_base)
         #pts *= <lib.uint64_t>lib.av_q2d(self.ptr.time_base)
         #print "best pts =", pts
         
