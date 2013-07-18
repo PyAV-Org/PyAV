@@ -45,6 +45,7 @@ cdef class VideoFrame(object):
     cdef lib.AVFrame *raw_ptr
     cdef lib.AVFrame *rgb_ptr
     cdef uint8_t *buffer_
+    cdef lib.int64_t pts_
 
 
 cdef class AudioFrame(object):

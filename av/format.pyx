@@ -14,6 +14,27 @@ cimport av.codec
 time_base = lib.AV_TIME_BASE
 
 
+cdef lib.uint64_t global_video_pkt_pts = lib.AV_NOPTS_VALUE
+
+cdef int pyav_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
+    #print 'get buffer',global_video_pkt_pts
+    cdef int ret
+    ret = lib.avcodec_default_get_buffer(ctx, frame)
+    cdef lib.uint64_t *pts = <lib.uint64_t*>lib.av_malloc(sizeof(lib.uint64_t))
+    
+    pts[0] = global_video_pkt_pts
+    frame.opaque = pts
+    
+    return ret
+
+cdef void pyav_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
+    #print 'release buffer'
+    
+    if frame:
+        lib.av_freep(&frame.opaque)
+    
+    lib.avcodec_default_release_buffer(ctx, frame)
+
 cdef class ContextProxy(object):
 
     def __init__(self, bint is_input):
@@ -79,14 +100,6 @@ cdef class Context(object):
                     err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
                 except LibError:
                     break
-                
-                pts = packet.pts
-                if packet.pts == lib.AV_NOPTS_VALUE:
-                    pts = packet.dts
-
-                stream = self.streams[packet.struct.stream_index]
-                stream.last_pts = pts
-                
                     
                 if include_stream[packet.struct.stream_index]:
                     packet.stream = self.streams[packet.struct.stream_index]
@@ -153,7 +166,10 @@ cdef class Stream(object):
 
         self.codec = av.codec.Codec(self)
         self.metadata = avdict_to_dict(self.ptr.metadata)
-    
+        
+        self.codec.ctx.get_buffer = pyav_get_buffer
+        self.codec.ctx.release_buffer = pyav_release_buffer
+
     def __repr__(self):
         return '<%s.%s #%d %s/%s at 0x%x>' % (
             self.__class__.__module__,
@@ -163,93 +179,6 @@ cdef class Stream(object):
             self.codec.name,
             id(self),
         )
-        
-    cdef flush_buffers(self):
-
-        lib.avcodec_flush_buffers(self.codec.ctx)
-        
-    cpdef frame_to_pts(self, int frame):
-        fps = self.base_frame_rate
-        time_base = self.time_base
-        
-        cdef int64_t pts
-        
-        pts = self.start_time + ((frame * fps.denominator * time_base.denominator) \
-                                 / (fps.numerator *time_base.numerator))
-
-        return pts
-    
-    cpdef pts_to_frame(self, int64_t timestamp):
-        fps = self.base_frame_rate
-        time_base = self.time_base
-        
-        cdef int frame
-        
-        frame = ((timestamp - self.start_time) * time_base.numerator * fps.numerator) \
-                                      / (time_base.denominator * fps.denominator)
-                                      
-        return frame
-        
-    cpdef seek(self,lib.int64_t timestamp,mode=None):
-
-        cdef int flags = 0
-        
-        if mode:
-            if mode.lower() == "backward":
-                flags = lib.AVSEEK_FLAG_BACKWARD
-            elif mode.lower() == "frame":
-                flags = lib.AVSEEK_FLAG_FRAME
-            elif mode.lower() == "byte":
-                flags = lib.AVSEEK_FLAG_BYTE
-            elif mode.lower() == 'any':
-                flags = lib.AVSEEK_FLAG_ANY
-            else:
-                raise ValueError("Invalid mode %s" % str(mode))
- 
-        err_check(lib.av_seek_frame(self.ctx_proxy.ptr, self.ptr.index, timestamp,flags))
-        self.flush_buffers()
-        
-    def __len__(self):
-        return self.frames
-    
-    def __getitem__(self,int x):
-        
-        if x < 0:
-            x = self.frames + x
-        
-        pts = self.frame_to_pts(x)
-        
-        if pts < self.start_time or pts > self.duration:
-            raise IndexError("invalid index")
-        
-        self.seek(pts,'backward')
-        
-        frame = None
-        for packet in self.ctx.demux([self]):
-            for frame in packet.decode():
-                #print '++', frame.pts,pts
-                if frame.pts == pts:
-                    return frame
-            if frame:
-                if frame.pts > pts:
-                    break
-                
-        #Very Slow Method this sucks But should always works
-        
-        self.seek(self.start_time)
-        
-        frame = None
-        for packet in self.ctx.demux([self]):
-            for frame in packet.decode():
-                #print '---',frame.pts
-                if frame.pts == pts:
-                    return frame
-            if frame:
-                if frame.pts > pts:
-                    break
-        
-        raise ValueError("Unable to find frame: %i pts: %i" % ( x,pts))
-                
 
     property index:
         def __get__(self): return self.ptr.index
@@ -294,9 +223,33 @@ cdef class VideoStream(Stream):
             self.rgb_frame = lib.avcodec_alloc_frame()
 
         cdef int done = 0
+        
+        global global_video_pkt_pts
+        
+        global_video_pkt_pts = packet.struct.pts
+        #print "global pts", packet.struct.pts
+        
         err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
         if not done:
             return
+        
+        cdef lib.uint64_t *opaque_pts
+        cdef lib.uint64_t pts = 0
+        
+        opaque_pts = <lib.uint64_t*>self.raw_frame.opaque
+        
+        
+        if packet.struct.dts == lib.AV_NOPTS_VALUE and \
+                                        opaque_pts and \
+                                        opaque_pts[0] != lib.AV_NOPTS_VALUE:
+            pts = opaque_pts[0]
+        
+        elif packet.struct.dts != lib.AV_NOPTS_VALUE:
+            pts = packet.struct.dts
+        
+        print lib.av_q2d(self.ptr.time_base)
+        #pts *= <lib.uint64_t>lib.av_q2d(self.ptr.time_base)
+        #print "best pts =", pts
         
         # Check if the frame size has change
         if not (self.last_w,self.last_h) == (self.codec.ctx.width,self.codec.ctx.height):
@@ -326,6 +279,8 @@ cdef class VideoStream(Stream):
                 NULL
             )
             
+            
+            
         self.buffer_ = <uint8_t *>lib.av_malloc(self.buffer_size * sizeof(uint8_t))
         
         # Assign the buffer to the image planes.
@@ -354,6 +309,7 @@ cdef class VideoStream(Stream):
         frame.buffer_ = self.buffer_
         frame.raw_ptr = self.raw_frame
         frame.rgb_ptr = self.rgb_frame
+        frame.pts_ = pts
         
         # Null out ours.
         self.buffer_ = NULL

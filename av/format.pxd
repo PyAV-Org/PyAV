@@ -3,7 +3,7 @@ from libc.stdint cimport uint8_t, int64_t
 cimport libav as lib
 
 cimport av.codec
-
+cimport av.seek
 
 # Since there are multiple objects that need to refer to a valid context, we
 # need this intermediate proxy object so that there aren't any reference cycles
@@ -35,19 +35,13 @@ cdef class Stream(object):
     
     cdef ContextProxy ctx_proxy
     cdef Context ctx
+    cdef av.seek.SeekTable table
     
     cdef lib.AVStream *ptr
     
     cdef av.codec.Codec codec
     cdef readonly dict metadata
     
-    cdef int64_t last_pts
-    
-    cdef flush_buffers(self)
-    
-    cpdef frame_to_pts(self, int frame)
-    cpdef pts_to_frame(self, int64_t timestamp)
-    cpdef seek(self, int64_t timestamp, mode=*)
     cpdef decode(self, av.codec.Packet packet)
 
 

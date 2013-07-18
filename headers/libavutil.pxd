@@ -32,4 +32,5 @@ cdef extern from "libavutil/avutil.h":
         int num
         int den
     
+    double av_q2d(AVRational a)
 
