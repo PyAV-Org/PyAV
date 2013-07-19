@@ -84,6 +84,7 @@ cdef class SeekContext(object):
         self.active = True
         self.frame_available =True
         self.null_packet = False
+        self.seeking = False
         
         self.current_frame_index = FIRST_FRAME_INDEX -1
         self.current_dts = lib.AV_NOPTS_VALUE
@@ -123,7 +124,7 @@ cdef class SeekContext(object):
         cdef SeekEntry entry
         
         cdef av.codec.VideoFrame video_frame
-        
+        #print "**",self.current_frame_index
         while True:
 
             packet = next(self.ctx.demux([self.stream]))
@@ -156,13 +157,9 @@ cdef class SeekContext(object):
                     entry.display_index = self.current_frame_index
                     entry.first_packet_dts = frame.first_pkt_dts
                     entry.last_packet_dts = self.current_dts
-                    
-                    #if self.get_frame_index() == FIRST_FRAME_INDEX:
-                        #entry.first_packet_dts = self.first_dts
-                        
+
                     self.table.append(entry)
                     
-                
                 video_frame =frame
                 video_frame.frame_index = self.current_frame_index
                     
@@ -194,13 +191,16 @@ cdef class SeekContext(object):
         if target_frame == self.current_frame_index:
             return self.frame
         
+        # seek to the nearet keyframe
         self.to_nearest_keyframe(target_frame)
         
+        # something went wrong 
         if self.current_frame_index > target_frame:
             raise IndexError("error advancing to key frame before seek (index isn't right)")
         
         frame = self.frame
         
+        # step forward from keyframe until we get to the frame
         while self.current_frame_index < target_frame:
             if self.frame_available:
                 frame = self.forward()
@@ -213,50 +213,59 @@ cdef class SeekContext(object):
     def to_nearest_keyframe(self, int target_frame,int offset = 0):
         
         cdef int flags = 0
-        seek_entry = self.table.get_nearest_entry(target_frame)
         
-        #print "nearst keyframe", seek_entry, "frame:",self.current_frame_index
+        # first find the nearest known keyframe from the seek table
+        # if the seek table to small return the current frame.
+        # if there is only one entry in the seek table and the target frame
+        # is smaller then the current frame seek to first index which should
+        # be the first frame. 
         
+        if not self.table.entries:
+            return self.frame
         
-        
+        if len(self.table.entries) == 1:
+            
+            if target_frame >= self.current_frame_index:
+                return self.frame
+            else:
+                seek_entry = self.table.entries[0]
+        else:
+            seek_entry = self.table.get_nearest_entry(target_frame)
+            
+        # If seek frame is the current frame no need to seek
         if seek_entry.display_index == self.current_frame_index:
             return self.frame
         
-        # if something goes terribly wrong, return bad current_frame_index
+        # If something goes terribly wrong, return bad current_frame_index
         self.current_frame_index = -2
         self.frame_available = True
         
-        
+        # If the seek frame is less then the current frame we need to seek backwards
         if seek_entry.first_packet_dts <= self.current_dts:
             flags = 0
             flags = lib.AVSEEK_FLAG_BACKWARD 
         
+        # Seek
         self.seek(seek_entry.first_packet_dts, flags)
-
+        # Move forward to get frame info
         self.forward()
-        #print "nearst keyframe", seek_entry, "frame:",self.current_frame_index
-        #print self.table.entries
-        #print self,flags
-        #raise Exception()
         
+        # Keep moving till we hit the keyframe
         while self.current_dts < seek_entry.last_packet_dts:
             self.forward()
-            
-        
-            
+
+
         if self.current_dts != seek_entry.last_packet_dts:
             #seek to last key-frame, but look for this one
             print "missed keyframe, trying previous keyframe"
-            print 'cur_dts', self.current_dts, 'offset',offset,
-            print 'seek_last_packet',seek_entry.last_packet_dts,"target=",target_frame
-            print self.table.entries
-            #raise Exception("what the fuck")
             return self.to_nearest_keyframe(target_frame,  offset + 1)
             
             
         if not self.frame.key_frame and seek_entry.display_index != 0:
             print "found keyframe, but not labeled as keyframe, so trying previous keyframe."
             return self.to_nearest_keyframe(seek_entry.display_index - 1)
+        
+        # Update the current frame
         
         self.current_frame_index = seek_entry.display_index
         
