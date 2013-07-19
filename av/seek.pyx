@@ -133,16 +133,16 @@ cdef class SeekContext(object):
             
                 self.previous_dts = self.current_dts
                 
-                self.current_dts = packet.dts
+                self.current_dts = packet.struct.dts
             
             #set first dts
             if self.first_dts == lib.AV_NOPTS_VALUE:
-                self.first_dts = packet.dts
+                self.first_dts = packet.struct.dts
                 
             if packet.struct.flags & lib.AV_PKT_FLAG_KEY:
                 #print "keyframe!",self.current_frame_index, packet.pts, packet.dts
                 if self.previous_dts == lib.AV_NOPTS_VALUE:
-                    self.keyframe_packet_dts = packet.dts
+                    self.keyframe_packet_dts = packet.struct.dts
                 else:
                     self.keyframe_packet_dts = self.previous_dts
             
@@ -193,7 +193,7 @@ cdef class SeekContext(object):
         
         # seek to the nearet keyframe
         self.to_nearest_keyframe(target_frame)
-        
+
         # something went wrong 
         if self.current_frame_index > target_frame:
             raise IndexError("error advancing to key frame before seek (index isn't right)")
@@ -221,10 +221,9 @@ cdef class SeekContext(object):
         # be the first frame. 
         
         if not self.table.entries:
-            return self.frame
+            return self.forward()
         
         if len(self.table.entries) == 1:
-            
             if target_frame >= self.current_frame_index:
                 return self.frame
             else:
@@ -265,11 +264,14 @@ cdef class SeekContext(object):
             print "found keyframe, but not labeled as keyframe, so trying previous keyframe."
             return self.to_nearest_keyframe(seek_entry.display_index - 1)
         
-        # Update the current frame
-        
+        # Update the current frame and make sure frame_index of frame is correct
+        cdef av.codec.VideoFrame video_frame
         self.current_frame_index = seek_entry.display_index
         
-        return self.frame
+        video_frame = self.frame
+        video_frame.frame_index = self.current_frame_index
+        
+        return video_frame
 
     cpdef frame_to_pts(self, int frame):
         fps = self.stream.base_frame_rate
