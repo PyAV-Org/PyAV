@@ -152,7 +152,7 @@ cdef class SeekContext(object):
             if frame:
                 
                 
-                if not packet.is_null and frame.key_frame:
+                if frame.key_frame and not self.seeking and not packet.is_null:
                     entry = SeekEntry()
                     entry.display_index = self.current_frame_index
                     entry.first_packet_dts = frame.first_pkt_dts
@@ -238,6 +238,7 @@ cdef class SeekContext(object):
         # If something goes terribly wrong, return bad current_frame_index
         self.current_frame_index = -2
         self.frame_available = True
+        self.seeking = True
         
         # If the seek frame is less then the current frame we need to seek backwards
         if seek_entry.first_packet_dts <= self.current_dts:
@@ -267,6 +268,7 @@ cdef class SeekContext(object):
         # Update the current frame and make sure frame_index of frame is correct
         cdef av.codec.VideoFrame video_frame
         self.current_frame_index = seek_entry.display_index
+        self.seeking = False
         
         video_frame = self.frame
         video_frame.frame_index = self.current_frame_index
