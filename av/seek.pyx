@@ -290,7 +290,7 @@ cdef class SeekContext(object):
         
         cdef int frame
         
-        frame = ((timestamp - self.start_time) * time_base.numerator * fps.numerator) \
+        frame = ((timestamp - self.stream.start_time) * time_base.numerator * fps.numerator) \
                                       / (time_base.denominator * fps.denominator)
                                       
         return frame
