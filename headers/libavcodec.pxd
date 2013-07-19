@@ -78,7 +78,7 @@ cdef extern from "libavcodec/avcodec.h":
         int coded_picture_number
         int display_picture_number
         
-        uint64_t *opaque
+        void *opaque
         
         uint8_t **base
 

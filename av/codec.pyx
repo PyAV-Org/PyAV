@@ -95,12 +95,7 @@ cdef class Packet(object):
     property pts:
         def __get__(self): return self.struct.pts
     property dts:
-        def __get__(self): return self.struct.dts
-    property best_pts:
-        def __get__(self):
-            if self.pts == lib.AV_NOPTS_VALUE:
-                return self.dts
-            return self.pts
+        def __get__(self): return self.struct.dts 
     property size:
         def __get__(self): return self.struct.size
     property duration:
@@ -218,7 +213,6 @@ cdef class VideoFrame(object):
 
     def __init__(self, Packet packet):
         self.packet = packet
-        self.pts_ = lib.AV_NOPTS_VALUE
         
     def __dealloc__(self):
         # These are all NULL safe.
@@ -234,14 +228,6 @@ cdef class VideoFrame(object):
             self.height,
             id(self),
         )
-    
-    property pts:
-        """Presentation time stamp of this frame."""
-        def __get__(self):
-            if self.raw_ptr.pts != lib.AV_NOPTS_VALUE:
-                return self.raw_ptr.pts
-            else:
-                return self.raw_ptr.pkt_pts
     
     property width:
         """Width of the image, in pixels."""

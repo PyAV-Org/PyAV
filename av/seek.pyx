@@ -20,7 +20,7 @@ cdef class SeekEntry(object):
             self.__class__.__name__,
             self.display_index,
             self.first_packet_dts,
-            self.first_packet_dts,
+            self.last_packet_dts,
             id(self),
         )
 
@@ -61,8 +61,6 @@ cdef class SeekTable(object):
             
         #pick the index before
         i = i -1
-        
-        print "***",i
         
         if i < offset:
             raise IndexError("target index out of table range (too small)")
@@ -124,6 +122,8 @@ cdef class SeekContext(object):
         cdef av.codec.Packet packet
         cdef SeekEntry entry
         
+        cdef av.codec.VideoFrame video_frame
+        
         while True:
 
             packet = next(self.ctx.demux([self.stream]))
@@ -149,10 +149,12 @@ cdef class SeekContext(object):
             frame = self.stream.decode(packet)
             
             if frame:
+                
+                
                 if not packet.is_null and frame.key_frame:
                     entry = SeekEntry()
                     entry.display_index = self.current_frame_index
-                    entry.first_packet_dts = frame.first_packet_dts
+                    entry.first_packet_dts = frame.first_pkt_dts
                     entry.last_packet_dts = self.current_dts
                     
                     #if self.get_frame_index() == FIRST_FRAME_INDEX:
@@ -160,8 +162,12 @@ cdef class SeekContext(object):
                         
                     self.table.append(entry)
                     
-                self.frame = frame
-                return frame
+                
+                video_frame =frame
+                video_frame.frame_index = self.current_frame_index
+                    
+                self.frame = video_frame
+                return video_frame
             else:
                 if packet.is_null:
                     self.frame_available = False
@@ -178,7 +184,9 @@ cdef class SeekContext(object):
         return self.current_frame_index
     
     def print_table(self):
-        print self.table.entries
+        for key, item in sorted(self.table.entries.items()):
+            print key, '=',item
+            
 
     
     def to_frame(self, int target_frame):
@@ -198,6 +206,8 @@ cdef class SeekContext(object):
                 frame = self.forward()
             else:
                 raise IndexError("error advancing to request frame (probably out of range)")
+            
+        return self.frame
         
         
     def to_nearest_keyframe(self, int target_frame,int offset = 0):
@@ -205,15 +215,14 @@ cdef class SeekContext(object):
         cdef int flags = 0
         seek_entry = self.table.get_nearest_entry(target_frame)
         
-        print "nearst keyframe", seek_entry, "frame:",self.current_frame_index
+        #print "nearst keyframe", seek_entry, "frame:",self.current_frame_index
         
         
         
         if seek_entry.display_index == self.current_frame_index:
             return self.frame
         
-        print self
-        #// if something goes terribly wrong, return bad current_frame_index
+        # if something goes terribly wrong, return bad current_frame_index
         self.current_frame_index = -2
         self.frame_available = True
         
@@ -231,7 +240,6 @@ cdef class SeekContext(object):
         #raise Exception()
         
         while self.current_dts < seek_entry.last_packet_dts:
-            'print wee'
             self.forward()
             
         

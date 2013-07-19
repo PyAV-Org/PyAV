@@ -1,6 +1,6 @@
 """Autodoc module test."""
 
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t,uint64_t
 from libc.stdlib cimport malloc, free
 
 cimport libav as lib
@@ -13,24 +13,34 @@ cimport av.codec
 
 time_base = lib.AV_TIME_BASE
 
+cdef struct PacketInfo:
+    uint64_t pts
+    uint64_t dts
 
-cdef lib.uint64_t global_video_pkt_pts = lib.AV_NOPTS_VALUE
+cdef PacketInfo global_video_pkt_info
 
-cdef int pyav_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
-    #print 'get buffer',global_video_pkt_pts
+global_video_pkt_info.pts = lib.AV_NOPTS_VALUE
+global_video_pkt_info.dts = lib.AV_NOPTS_VALUE
+
+cdef int pyav_video_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
+    
+    # get the buffer the way it would normally get it
     cdef int ret
     ret = lib.avcodec_default_get_buffer(ctx, frame)
-    cdef lib.uint64_t *pts = <lib.uint64_t*>lib.av_malloc(sizeof(lib.uint64_t))
     
-    pts[0] = global_video_pkt_pts
-    frame.opaque = pts
+    # allocate a PacketInfo and copy the current global_video_pkt_info
+    # so the new AVFrame can store this pts and dts of the first packet
+    # needed to create it 
+    
+    cdef PacketInfo *pkt_info = <PacketInfo*>lib.av_malloc(sizeof(PacketInfo))    
+    pkt_info[0] = global_video_pkt_info
+    frame.opaque = pkt_info
     
     return ret
 
-cdef void pyav_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
-    #print 'release buffer'
-    
+cdef void pyav_video_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
     if frame:
+        #Free AVFrame PacketInfo
         lib.av_freep(&frame.opaque)
     
     lib.avcodec_default_release_buffer(ctx, frame)
@@ -167,8 +177,6 @@ cdef class Stream(object):
         self.codec = av.codec.Codec(self)
         self.metadata = avdict_to_dict(self.ptr.metadata)
         
-        self.codec.ctx.get_buffer = pyav_get_buffer
-        self.codec.ctx.release_buffer = pyav_release_buffer
         
     def __repr__(self):
         return '<%s.%s #%d %s/%s at 0x%x>' % (
@@ -208,6 +216,12 @@ cdef class VideoStream(Stream):
         super(VideoStream, self).__init__(*args)
         self.last_w = 0
         self.last_h = 0
+        
+        # Override the codec get_buffer and relase_buffer with our own
+        # custom functions that will store global_video_pkt_info.
+        
+        self.codec.ctx.get_buffer = pyav_video_get_buffer
+        self.codec.ctx.release_buffer = pyav_video_release_buffer
     
     def __dealloc__(self):
         # These are all NULL safe.
@@ -224,32 +238,25 @@ cdef class VideoStream(Stream):
 
         cdef int done = 0
         
-        global global_video_pkt_pts
+        # Update global_video_pkt_info so any AVFrame allocated on the next
+        # decode_video will store the first packet pts and dts that created it
+        # pyav_video_get_buffer will assign this value to AVFrame.opaque 
         
-        global_video_pkt_pts = packet.struct.dts
-        #print "global pts", packet.struct.pts
-        
+        global global_video_pkt_info
+
+        global_video_pkt_info.pts = packet.struct.pts
+        global_video_pkt_info.dts = packet.struct.dts
+
         err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
         if not done:
             return
         
-        cdef lib.uint64_t *opaque_pts
-        cdef lib.uint64_t pts = 0
+        # Retrieve the packet info for the first packet need to create the current self.raw_frame
+        # from its opaque variable. It is set in pyav_video_get_buffer when 
+        # the AVFrame buffer is allocated
         
-        opaque_pts = <lib.uint64_t*>self.raw_frame.opaque
-        
-        
-        if packet.struct.dts == lib.AV_NOPTS_VALUE and \
-                                        opaque_pts and \
-                                        opaque_pts[0] != lib.AV_NOPTS_VALUE:
-            pts = opaque_pts[0]
-        
-        elif packet.struct.dts != lib.AV_NOPTS_VALUE:
-            pts = packet.struct.dts
-        
-        #print lib.av_q2d(self.ptr.time_base)
-        #pts *= <lib.uint64_t>lib.av_q2d(self.ptr.time_base)
-        #print "best pts =", pts
+        cdef PacketInfo *first_pkt_info
+        first_pkt_info = <PacketInfo *>self.raw_frame.opaque
         
         # Check if the frame size has change
         if not (self.last_w,self.last_h) == (self.codec.ctx.width,self.codec.ctx.height):
@@ -309,7 +316,14 @@ cdef class VideoStream(Stream):
         frame.buffer_ = self.buffer_
         frame.raw_ptr = self.raw_frame
         frame.rgb_ptr = self.rgb_frame
-        frame.first_packet_dts = opaque_pts[0]
+        
+        #Copy packet pts and dts info
+        
+        frame.first_pkt_pts = first_pkt_info.pts
+        frame.first_pkt_dts = first_pkt_info.dts
+        
+        frame.last_pkt_pts = packet.struct.pts
+        frame.last_pkt_dts = packet.struct.dts
         
         # Null out ours.
         self.buffer_ = NULL

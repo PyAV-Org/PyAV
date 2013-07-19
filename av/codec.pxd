@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t,int64_t
 from cpython cimport bool
 
 cimport libav as lib
@@ -47,9 +47,17 @@ cdef class VideoFrame(object):
     cdef lib.AVFrame *raw_ptr
     cdef lib.AVFrame *rgb_ptr
     cdef uint8_t *buffer_
-    cdef lib.int64_t pts_
-    cdef readonly lib.int64_t first_packet_dts
-
+    
+    #pts and dts used for timing and frame count
+    
+    cdef readonly int64_t first_pkt_pts
+    cdef readonly int64_t first_pkt_dts
+    
+    cdef readonly int64_t last_pkt_pts
+    cdef readonly int64_t last_pkt_dts
+    
+    #set by seek module
+    cdef readonly int frame_index
 
 cdef class AudioFrame(object):
     
