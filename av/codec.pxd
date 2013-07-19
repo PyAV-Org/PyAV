@@ -48,6 +48,7 @@ cdef class VideoFrame(object):
     cdef lib.AVFrame *rgb_ptr
     cdef uint8_t *buffer_
     cdef lib.int64_t pts_
+    cdef readonly lib.int64_t first_packet_dts
 
 
 cdef class AudioFrame(object):

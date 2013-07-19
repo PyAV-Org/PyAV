@@ -226,7 +226,7 @@ cdef class VideoStream(Stream):
         
         global global_video_pkt_pts
         
-        global_video_pkt_pts = packet.struct.pts
+        global_video_pkt_pts = packet.struct.dts
         #print "global pts", packet.struct.pts
         
         err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
@@ -309,7 +309,7 @@ cdef class VideoStream(Stream):
         frame.buffer_ = self.buffer_
         frame.raw_ptr = self.raw_frame
         frame.rgb_ptr = self.rgb_frame
-        frame.pts_ = pts
+        frame.first_packet_dts = opaque_pts[0]
         
         # Null out ours.
         self.buffer_ = NULL
