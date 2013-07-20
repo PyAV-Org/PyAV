@@ -35,6 +35,7 @@ cdef class SeekContext(object):
     cdef bool frame_available
     cdef bool null_packet
     cdef bool seeking
+    cdef public bool fast_seeking
     
     cdef readonly int current_frame_index
     

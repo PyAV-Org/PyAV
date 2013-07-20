@@ -14,8 +14,8 @@ cimport av.codec
 time_base = lib.AV_TIME_BASE
 
 cdef struct PacketInfo:
-    uint64_t pts
-    uint64_t dts
+    int64_t pts
+    int64_t dts
 
 cdef PacketInfo global_video_pkt_info
 

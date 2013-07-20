@@ -1,4 +1,4 @@
-
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 cimport libav as lib
 
 cimport av.format
@@ -85,6 +85,7 @@ cdef class SeekContext(object):
         self.frame_available =True
         self.null_packet = False
         self.seeking = False
+        self.fast_seeking = True
         
         self.current_frame_index = FIRST_FRAME_INDEX -1
         self.current_dts = lib.AV_NOPTS_VALUE
@@ -188,11 +189,15 @@ cdef class SeekContext(object):
     
     def to_frame(self, int target_frame):
         
+        # seek to the nearet keyframe
+        
+        if self.fast_seeking:
+            self.to_nearest_keyframe_fast(target_frame)
+        else:
+            self.to_nearest_keyframe(target_frame)
+        
         if target_frame == self.current_frame_index:
             return self.frame
-        
-        # seek to the nearet keyframe
-        self.to_nearest_keyframe(target_frame)
 
         # something went wrong 
         if self.current_frame_index > target_frame:
@@ -230,10 +235,18 @@ cdef class SeekContext(object):
                 seek_entry = self.table.entries[0]
         else:
             seek_entry = self.table.get_nearest_entry(target_frame)
+        
+        if not self.seeking:
+            #optimizations
+            if target_frame == self.current_frame_index:
+                return self.frame
             
-        # If seek frame is the current frame no need to seek
-        if seek_entry.display_index == self.current_frame_index:
-            return self.frame
+            if target_frame == self.current_frame_index +1:
+                return self.forward()
+            
+            # If seek frame is the current frame no need to seek
+            if seek_entry.display_index == self.current_frame_index:
+                return self.frame
         
         # If something goes terribly wrong, return bad current_frame_index
         self.current_frame_index = -2
@@ -274,6 +287,65 @@ cdef class SeekContext(object):
         video_frame.frame_index = self.current_frame_index
         
         return video_frame
+    
+    def to_nearest_keyframe_fast(self,int target_frame):
+        
+
+        if not self.table.entries:
+            self.forward()
+        
+        #optimizations
+        if not self.seeking:
+            if target_frame == self.current_frame_index:
+                return self.frame
+            
+            if target_frame == self.current_frame_index + 1:
+                return self.forward()
+
+        cdef int flags = 0
+        cdef int64_t target_pts = lib.AV_NOPTS_VALUE
+        cdef int64_t current_pts = lib.AV_NOPTS_VALUE
+        
+        self.seeking = True
+        
+        target_pts  = self.frame_to_pts(target_frame)
+        
+        #if target_dts <= self.current_dts:
+        flags = lib.AVSEEK_FLAG_BACKWARD 
+        
+        self.seek(target_pts,flags)
+        
+        while current_pts == lib.AV_NOPTS_VALUE:
+            frame  = self.forward()
+            current_pts = frame.first_pkt_pts
+            
+            
+        if current_pts > target_pts:
+            print "went to far", current_pts,target_pts
+            self.to_nearest_keyframe_fast(target_frame-1)
+        
+        #print "pts found!",current_pts,target_pts,self.pts_to_frame(current_pts)
+        
+        self.current_frame_index = self.pts_to_frame(current_pts)
+        
+        cdef av.codec.VideoFrame video_frame
+        
+        video_frame = self.frame
+        video_frame.frame_index = self.current_frame_index
+
+        #this is just for debuging doesn't put valid dts 
+        if video_frame.key_frame:
+            entry = SeekEntry()
+            entry.display_index = self.current_frame_index
+            entry.first_packet_dts = video_frame.first_pkt_dts
+            entry.last_packet_dts = self.current_dts
+            self.table.append(entry)
+        
+        #raise Exception("stop")
+        self.seeking = False
+        
+        return video_frame
+    
 
     cpdef frame_to_pts(self, int frame):
         fps = self.stream.base_frame_rate
