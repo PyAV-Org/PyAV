@@ -18,6 +18,8 @@ cdef class SeekTable(object):
     cdef int nb_frames
     cdef int nb_entries
     
+    cdef reset(self)
+    
     cpdef append(self, SeekEntry item)
     cpdef get_nearest_entry(self,int display_index, int offset=*)
     

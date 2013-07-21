@@ -31,16 +31,18 @@ cdef class SeekTable(object):
         self.completed = False
         self.nb_entries =0 
         
+    cdef reset(self):
+        self.entries = {}
+        
     cpdef append(self,SeekEntry item):
     
         index =item.display_index
         if index < 0:
             #print "ignore negatived", item
             return
-            #raise Exception("negative index")
-        self.entries[index] = item
-        #self.entries.append(item)
         
+        self.entries[index] = item
+
     cpdef get_nearest_entry(self,int display_index, int offset=0):
         
         
@@ -66,7 +68,10 @@ cdef class SeekTable(object):
             raise IndexError("target index out of table range (too small)")
         
         entry = self.entries[keys[i]]
-        entry.first_packet_dts = self.entries[keys[i-offset]].first_packet_dts
+        if offset:
+            print "using offset"
+            #entry = self.entries[keys[i-offset]]
+            entry.first_packet_dts = self.entries[keys[i-offset]].first_packet_dts
                 
         return entry
     
@@ -113,6 +118,10 @@ cdef class SeekContext(object):
         self.flush_buffers()
         err_check(lib.av_seek_frame(self.ctx.proxy.ptr, self.stream.ptr.index, timestamp,flags))
         
+    def reset(self):
+        self.table.reset()
+        self.seek(0,0)
+        self.current_frame_index = FIRST_FRAME_INDEX -1
         
     cpdef forward(self):
         
@@ -125,23 +134,30 @@ cdef class SeekContext(object):
         cdef SeekEntry entry
         
         cdef av.codec.VideoFrame video_frame
-        #print "**",self.current_frame_index
-        while True:
-
-            packet = next(self.ctx.demux([self.stream]))
-            #print "packet.dts",packet.dts
-            if not packet.is_null:
+        
+        #if self.current_frame_index % 100 == 0:
+        #    print "**",self.current_frame_index
             
-                self.previous_dts = self.current_dts
-                
-                self.current_dts = packet.struct.dts
+        count = 0
+        while True:
+            
+            
+            packet = next(self.ctx.demux([self.stream]))
+            #print count, 'dts', packet.struct.dts
+            
+            count += 1
+            #print "packet.dts",packet.dts
+            #if not packet.is_null:
+            
+            self.previous_dts = self.current_dts
+            self.current_dts = packet.struct.dts
             
             #set first dts
             if self.first_dts == lib.AV_NOPTS_VALUE:
                 self.first_dts = packet.struct.dts
                 
             if packet.struct.flags & lib.AV_PKT_FLAG_KEY:
-                #print "keyframe!",self.current_frame_index, packet.pts, packet.dts
+ 
                 if self.previous_dts == lib.AV_NOPTS_VALUE:
                     self.keyframe_packet_dts = packet.struct.dts
                 else:
@@ -149,7 +165,6 @@ cdef class SeekContext(object):
             
             
             frame = self.stream.decode(packet)
-            
             if frame:
                 
                 
@@ -157,8 +172,7 @@ cdef class SeekContext(object):
                     entry = SeekEntry()
                     entry.display_index = self.current_frame_index
                     entry.first_packet_dts = frame.first_pkt_dts
-                    entry.last_packet_dts = self.current_dts
-
+                    entry.last_packet_dts = frame.last_pkt_dts
                     self.table.append(entry)
                     
                 video_frame =frame
@@ -169,12 +183,18 @@ cdef class SeekContext(object):
             else:
                 if packet.is_null:
                     self.frame_available = False
+                    self.seek(0,0)
+                    self.current_frame_index = FIRST_FRAME_INDEX -1
+                    self.forward()
                     raise IndexError("No more Frames")
             
     
     def __getitem__(self,x):
 
         return self.to_frame(x)
+    
+    def __len__(self):
+        return self.stream.frames
     
                 
     def get_frame_index(self):
@@ -232,7 +252,8 @@ cdef class SeekContext(object):
             if target_frame >= self.current_frame_index:
                 return self.frame
             else:
-                seek_entry = self.table.entries[0]
+                seek_entry = self.table.entries.values()[0]
+                print "using first entry", seek_entry
         else:
             seek_entry = self.table.get_nearest_entry(target_frame)
         
@@ -270,7 +291,7 @@ cdef class SeekContext(object):
 
         if self.current_dts != seek_entry.last_packet_dts:
             #seek to last key-frame, but look for this one
-            print "missed keyframe, trying previous keyframe"
+            print "missed keyframe, trying previous keyframe",target_frame,offset
             return self.to_nearest_keyframe(target_frame,  offset + 1)
             
             
@@ -290,7 +311,6 @@ cdef class SeekContext(object):
     
     def to_nearest_keyframe_fast(self,int target_frame):
         
-
         if not self.table.entries:
             self.forward()
         
@@ -305,27 +325,43 @@ cdef class SeekContext(object):
         cdef int flags = 0
         cdef int64_t target_pts = lib.AV_NOPTS_VALUE
         cdef int64_t current_pts = lib.AV_NOPTS_VALUE
-        
         self.seeking = True
         
         target_pts  = self.frame_to_pts(target_frame)
         
-        #if target_dts <= self.current_dts:
         flags = lib.AVSEEK_FLAG_BACKWARD 
         
         self.seek(target_pts,flags)
         
+        retry = 10
         while current_pts == lib.AV_NOPTS_VALUE:
             frame  = self.forward()
-            current_pts = frame.first_pkt_pts
             
+            if frame.key_frame:
+                current_pts = frame.first_pkt_pts
+                #print "first_pts", current_pts,"first_dts",frame.first_pkt_dts,"last_dts", frame.last_pkt_dts,"last_pts",frame.last_pkt_pts
+                if current_pts == lib.AV_NOPTS_VALUE:
+                    print 'using dts'
+                    current_pts = frame.first_pkt_dts
+            retry -= 1
+            #print frame.first_pkt_dts, self.current_dts,frame.key_frame
+            if retry < 0:
+                break
+            
+            
+        if retry < 0:
+            print "giving up using slow seek"
+            print 'target',target_frame
+            print frame.first_pkt_pts,frame.first_pkt_dts
+            raise Exception()
+            self.fast_seeking = False
+            self.reset()
+            return self.to_nearest_keyframe(target_frame)
             
         if current_pts > target_pts:
             print "went to far", current_pts,target_pts
-            self.to_nearest_keyframe_fast(target_frame-1)
-        
-        #print "pts found!",current_pts,target_pts,self.pts_to_frame(current_pts)
-        
+            return self.to_nearest_keyframe_fast(target_frame-1)
+            
         self.current_frame_index = self.pts_to_frame(current_pts)
         
         cdef av.codec.VideoFrame video_frame
@@ -339,11 +375,10 @@ cdef class SeekContext(object):
             entry.display_index = self.current_frame_index
             entry.first_packet_dts = video_frame.first_pkt_dts
             entry.last_packet_dts = self.current_dts
+            #print "*", entry
             self.table.append(entry)
-        
-        #raise Exception("stop")
+
         self.seeking = False
-        
         return video_frame
     
 
@@ -357,10 +392,14 @@ cdef class SeekContext(object):
         return pts
     
     cpdef pts_to_frame(self, int64_t timestamp):
+        
+        if timestamp == lib.AV_NOPTS_VALUE:
+            raise Exception("time stamp AV_NOPTS_VALUE")
+        
         fps = self.stream.base_frame_rate
         time_base = self.stream.time_base
         
-        cdef int frame
+        cdef int64_t frame
         
         frame = ((timestamp - self.stream.start_time) * time_base.numerator * fps.numerator) \
                                       / (time_base.denominator * fps.denominator)
