@@ -2,9 +2,17 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 cimport libav as lib
 
 cimport av.format
+
 from .utils cimport err_check
 
+
 FIRST_FRAME_INDEX = 0
+
+class SeekError(ValueError):
+    pass
+
+class SeekEnd(SeekError):
+    pass
 
 cdef class SeekEntry(object):
     def __init__(self):
@@ -136,7 +144,7 @@ cdef class SeekContext(object):
         cdef av.codec.VideoFrame video_frame
         
         if not self.frame_available:
-            raise IndexError("No more frames")
+            raise SeekEnd("No more frames")
         
         self.current_frame_index += 1
         
@@ -201,10 +209,10 @@ cdef class SeekContext(object):
             else:
                 if packet.is_null:
                     self.frame_available = False
-                    self.seek(0,0)
-                    self.current_frame_index = FIRST_FRAME_INDEX -1
-                    self.forward()
-                    raise IndexError("No more Frames")
+                    #self.seek(0,0)
+                    #self.current_frame_index = FIRST_FRAME_INDEX -1
+                    #self.forward()
+                    raise SeekEnd("No more frames")
             
     
     def __getitem__(self,x):
@@ -212,7 +220,44 @@ cdef class SeekContext(object):
         return self.to_frame(x)
     
     def __len__(self):
-        return self.stream.frames
+        if not self.nb_frames:
+            
+            if self.stream.frames:
+                self.nb_frames = self.stream.frames
+            else:
+                self.nb_frames = self.get_length_seek()
+                #raise Exception("unable to get length")
+            
+        return self.nb_frames
+    
+    
+    def get_length_seek(self):
+        """Get the last frame by seeking to the end of the stream
+        """
+        
+        if not self.table.entries:
+            self.forward()
+        
+        cur_frame = self.current_frame_index
+        
+        #seek ot a very large frame
+        self.to_nearest_keyframe(2<<29)
+
+        #keep stepping forward until we hit the end
+        
+        while True:
+            try:
+                self.forward()
+            except SeekEnd as e:
+                break
+            
+        length =  self.current_frame_index
+        
+        #seek back to where we originally where
+        self.to_frame(cur_frame)
+
+        return length
+       
     
                 
     def get_frame_index(self):
@@ -349,11 +394,14 @@ cdef class SeekContext(object):
             
             if target_frame == self.current_frame_index + 1:
                 return self.forward()
-
+        
         cdef int flags = 0
         cdef int64_t target_pts = lib.AV_NOPTS_VALUE
         cdef int64_t current_pts = lib.AV_NOPTS_VALUE
+        
         self.seeking = True
+        self.frame_available = True
+        self.current_frame_index = -2
         
         target_pts  = self.frame_to_pts(target_frame)
         
