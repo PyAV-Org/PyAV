@@ -27,18 +27,23 @@ cdef class SeekEntry(object):
 cdef class SeekTable(object):
     def __init__(self):
         self.entries = {}
-        self.nb_frames = 0
-        self.completed = False
-        self.nb_entries =0 
+        self.bad_keyframes = []
         
     cdef reset(self):
         self.entries = {}
+        self.bad_keyframes = []
+        
+    cpdef mark_bad_keyframe(self,display_index):
+        self.bad_keyframes.append(display_index)
         
     cpdef append(self,SeekEntry item):
     
         index =item.display_index
         if index < 0:
             #print "ignore negatived", item
+            return
+        
+        if index in self.bad_keyframes:
             return
         
         self.entries[index] = item
@@ -71,7 +76,7 @@ cdef class SeekTable(object):
         if offset:
             print "using offset"
             #entry = self.entries[keys[i-offset]]
-            entry.first_packet_dts = self.entries[keys[i-offset]].first_packet_dts
+            entry = self.entries[keys[i-offset]]
                 
         return entry
     
@@ -89,8 +94,10 @@ cdef class SeekContext(object):
         self.active = True
         self.frame_available =True
         self.null_packet = False
+        self.pts_seen = False
         self.seeking = False
         self.fast_seeking = True
+        self.sync = True
         
         self.current_frame_index = FIRST_FRAME_INDEX -1
         self.current_dts = lib.AV_NOPTS_VALUE
@@ -121,28 +128,46 @@ cdef class SeekContext(object):
     def reset(self):
         self.table.reset()
         self.seek(0,0)
+        self.frame =None
         self.current_frame_index = FIRST_FRAME_INDEX -1
         
     cpdef forward(self):
-        
-        if not self.frame_available:
-            raise IndexError("No more frames")
-        
-        self.current_frame_index += 1
-        
         cdef av.codec.Packet packet
         cdef SeekEntry entry
         
         cdef av.codec.VideoFrame video_frame
         
-        #if self.current_frame_index % 100 == 0:
-        #    print "**",self.current_frame_index
-            
+        if not self.frame_available:
+            raise IndexError("No more frames")
+        
+        self.current_frame_index += 1
+        #check last frame sync
+        if self.sync and self.frame and not self.seeking:
+            pts = self.frame.first_pkt_pts
+            if not self.pts_seen:
+                pts = self.frame.first_pkt_dts
+                
+            if pts != lib.AV_NOPTS_VALUE:
+                pts_frame_num = self.pts_to_frame(pts)
+                
+                if self.current_frame_index -1 < pts_frame_num:
+                    #print  "dup frame",self.current_frame_index, "!=",self.pts_to_frame(pts)
+                    video_frame = self.frame
+                    video_frame.frame_index = self.current_frame_index
+                    return video_frame
+
+        
+        
+        
         count = 0
         while True:
             
             
             packet = next(self.ctx.demux([self.stream]))
+            
+            if packet.struct.pts != lib.AV_NOPTS_VALUE:
+                self.pts_seen = True
+            
             #print count, 'dts', packet.struct.dts
             
             count += 1
@@ -167,11 +192,23 @@ cdef class SeekContext(object):
             frame = self.stream.decode(packet)
             if frame:
                 
-                
+                #check sync to see if we need to drop the frame
+                if self.sync and not self.seeking:
+                    pts = frame.first_pkt_pts
+                    if not self.pts_seen:
+                        pts = frame.first_pkt_dts
+                        
+                    if pts != lib.AV_NOPTS_VALUE:
+                        pts_frame_num = self.pts_to_frame(pts)
+                        
+                        if self.current_frame_index > pts_frame_num:
+                            print "need drop frame out of sync", self.current_frame_index, "!=",self.pts_to_frame(pts)
+                            raise Exception()
+                        
                 if frame.key_frame and not self.seeking and not packet.is_null:
                     entry = SeekEntry()
                     entry.display_index = self.current_frame_index
-                    entry.first_packet_dts = frame.first_pkt_dts
+                    entry.first_packet_dts = frame.last_pkt_dts
                     entry.last_packet_dts = frame.last_pkt_dts
                     self.table.append(entry)
                     
@@ -211,17 +248,15 @@ cdef class SeekContext(object):
         
         # seek to the nearet keyframe
         
-        if self.fast_seeking:
-            self.to_nearest_keyframe_fast(target_frame)
-        else:
-            self.to_nearest_keyframe(target_frame)
+        self.to_nearest_keyframe(target_frame)
         
         if target_frame == self.current_frame_index:
             return self.frame
 
         # something went wrong 
         if self.current_frame_index > target_frame:
-            raise IndexError("error advancing to key frame before seek (index isn't right)")
+            self.to_nearest_keyframe(target_frame-1)
+            #raise IndexError("error advancing to key frame before seek (index isn't right)")
         
         frame = self.frame
         
@@ -233,9 +268,16 @@ cdef class SeekContext(object):
                 raise IndexError("error advancing to request frame (probably out of range)")
             
         return self.frame
+    
+    def to_nearest_keyframe(self,int target_frame):
         
+        #fast seeking doesn't work properly if 
+        if self.fast_seeking and self.sync:
+            self.to_nearest_keyframe_fast(target_frame)
+        else:
+            self.to_nearest_keyframe_slow(target_frame)
         
-    def to_nearest_keyframe(self, int target_frame,int offset = 0):
+    def to_nearest_keyframe_slow(self, int target_frame,int offset = 0):
         
         cdef int flags = 0
         
@@ -290,14 +332,19 @@ cdef class SeekContext(object):
 
 
         if self.current_dts != seek_entry.last_packet_dts:
-            #seek to last key-frame, but look for this one
-            print "missed keyframe, trying previous keyframe",target_frame,offset
-            return self.to_nearest_keyframe(target_frame,  offset + 1)
+            #remove bad entry and try again
+            print "bad keyframe, removing bad entry, trying previous keyframe"
+            del self.table.entries[seek_entry.display_index]
+            self.table.mark_bad_keyframe(seek_entry.display_index)
+            return self.to_nearest_keyframe_slow(seek_entry.display_index)
             
             
         if not self.frame.key_frame and seek_entry.display_index != 0:
-            print "found keyframe, but not labeled as keyframe, so trying previous keyframe."
-            return self.to_nearest_keyframe(seek_entry.display_index - 1)
+            #remove bad entry and try again
+            print "not on a keyframe, removing bad entry,trying previous keyframe"
+            del self.table.entries[seek_entry.display_index]
+            self.table.mark_bad_keyframe(seek_entry.display_index)
+            return self.to_nearest_keyframe_slow(seek_entry.display_index)
         
         # Update the current frame and make sure frame_index of frame is correct
         cdef av.codec.VideoFrame video_frame

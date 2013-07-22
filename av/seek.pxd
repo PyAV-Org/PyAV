@@ -13,13 +13,11 @@ cdef class SeekEntry(object):
 cdef class SeekTable(object):
 
     cdef object entries
-    
-    cdef bool completed
-    cdef int nb_frames
-    cdef int nb_entries
+    cdef object bad_keyframes
     
     cdef reset(self)
     
+    cpdef mark_bad_keyframe(self, display_index)
     cpdef append(self, SeekEntry item)
     cpdef get_nearest_entry(self,int display_index, int offset=*)
     
@@ -37,7 +35,10 @@ cdef class SeekContext(object):
     cdef bool frame_available
     cdef bool null_packet
     cdef bool seeking
+    cdef bool pts_seen
+    
     cdef public bool fast_seeking
+    cdef public bool sync
     
     cdef readonly int current_frame_index
     

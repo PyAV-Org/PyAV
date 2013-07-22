@@ -29,6 +29,8 @@ cdef extern from "libavcodec/avcodec.h":
         int width
         int height
         
+        int frame_number
+        
         AVPixelFormat pix_fmt
         
         AVCodec *codec
