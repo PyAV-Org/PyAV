@@ -34,6 +34,7 @@ cdef class SeekContext(object):
     cdef bool frame_available
     cdef bool seeking
     cdef bool pts_seen
+    cdef int nb_frames
     
     cdef public bool fast_seeking
     cdef public bool sync

@@ -90,6 +90,7 @@ cdef class SeekContext(object):
         self.codec = stream.codec
         
         self.frame = None
+        self.nb_frames = 0
         
         self.frame_available =True
         
@@ -367,7 +368,7 @@ cdef class SeekContext(object):
             if frame.key_frame:
                 current_pts = frame.first_pkt_pts
                 #print "first_pts", current_pts,"first_dts",frame.first_pkt_dts,"last_dts", frame.last_pkt_dts,"last_pts",frame.last_pkt_pts
-                if current_pts == lib.AV_NOPTS_VALUE and not self.pts_seen:
+                if current_pts == lib.AV_NOPTS_VALUE:
                     print 'using dts'
                     current_pts = frame.first_pkt_dts
             retry -= 1
@@ -387,6 +388,10 @@ cdef class SeekContext(object):
             
         if current_pts > target_pts:
             print "went to far", current_pts,target_pts
+            
+            if target_pts < self.stream.start_time:
+                raise Exception("cannot seek before first frame")
+            
             return self.to_nearest_keyframe_fast(target_frame-1)
             
         self.current_frame_index = self.pts_to_frame(current_pts)
