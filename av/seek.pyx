@@ -187,9 +187,11 @@ cdef class SeekContext(object):
                         #pts = frame.first_pkt_dts
                         
                     if pts != lib.AV_NOPTS_VALUE:
-                        pts_frame_num = self.pts_to_frame(pts)
                         
-                        if self.current_frame_index > pts_frame_num:
+                        pts_frame_num = self.pts_to_frame(pts)
+                        #print self.current_frame_index,pts_frame_num
+                        #allow one frame error mkv off by pts ?!!! 
+                        if self.current_frame_index > pts_frame_num + 1:
                             print "need drop frame out of sync", self.current_frame_index, ">",self.pts_to_frame(pts)
                             continue
                             #raise Exception()
@@ -209,9 +211,6 @@ cdef class SeekContext(object):
             else:
                 if packet.is_null:
                     self.frame_available = False
-                    #self.seek(0,0)
-                    #self.current_frame_index = FIRST_FRAME_INDEX -1
-                    #self.forward()
                     raise SeekEnd("No more frames")
             
     
