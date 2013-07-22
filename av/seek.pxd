@@ -30,10 +30,8 @@ cdef class SeekContext(object):
     cdef object frame
     
     #state info
-    
-    cdef bool active
+
     cdef bool frame_available
-    cdef bool null_packet
     cdef bool seeking
     cdef bool pts_seen
     
@@ -44,8 +42,6 @@ cdef class SeekContext(object):
     
     cdef int64_t current_dts
     cdef int64_t previous_dts
-    cdef int64_t keyframe_packet_dts
-    cdef int64_t first_dts
     
     cdef flush_buffers(self)
     cdef seek(self, int64_t timestamp, int flags)

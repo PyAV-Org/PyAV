@@ -91,9 +91,8 @@ cdef class SeekContext(object):
         
         self.frame = None
         
-        self.active = True
         self.frame_available =True
-        self.null_packet = False
+        
         self.pts_seen = False
         self.seeking = False
         self.fast_seeking = True
@@ -102,9 +101,7 @@ cdef class SeekContext(object):
         self.current_frame_index = FIRST_FRAME_INDEX -1
         self.current_dts = lib.AV_NOPTS_VALUE
         self.previous_dts = lib.AV_NOPTS_VALUE
-        self.keyframe_packet_dts = lib.AV_NOPTS_VALUE
-        self.first_dts = lib.AV_NOPTS_VALUE
-        
+
     def __repr__(self):
         return '<%s.%s curr_frame: %i curr_dts: %i prev_dts: %i key_dts: %i first_dts: %i at 0x%x>' % (
             self.__class__.__module__,
@@ -141,12 +138,11 @@ cdef class SeekContext(object):
             raise IndexError("No more frames")
         
         self.current_frame_index += 1
+        
         #check last frame sync
         if self.sync and self.frame and not self.seeking:
             pts = self.frame.first_pkt_pts
-            if not self.pts_seen:
-                pts = self.frame.first_pkt_dts
-                
+
             if pts != lib.AV_NOPTS_VALUE:
                 pts_frame_num = self.pts_to_frame(pts)
                 
@@ -156,10 +152,6 @@ cdef class SeekContext(object):
                     video_frame.frame_index = self.current_frame_index
                     return video_frame
 
-        
-        
-        
-        count = 0
         while True:
             
             
@@ -169,41 +161,29 @@ cdef class SeekContext(object):
                 self.pts_seen = True
             
             #print count, 'dts', packet.struct.dts
-            
-            count += 1
+
             #print "packet.dts",packet.dts
             #if not packet.is_null:
-            
+        
             self.previous_dts = self.current_dts
             self.current_dts = packet.struct.dts
-            
-            #set first dts
-            if self.first_dts == lib.AV_NOPTS_VALUE:
-                self.first_dts = packet.struct.dts
                 
-            if packet.struct.flags & lib.AV_PKT_FLAG_KEY:
- 
-                if self.previous_dts == lib.AV_NOPTS_VALUE:
-                    self.keyframe_packet_dts = packet.struct.dts
-                else:
-                    self.keyframe_packet_dts = self.previous_dts
-            
-            
             frame = self.stream.decode(packet)
             if frame:
                 
                 #check sync to see if we need to drop the frame
                 if self.sync and not self.seeking:
                     pts = frame.first_pkt_pts
-                    if not self.pts_seen:
-                        pts = frame.first_pkt_dts
+                    #if not self.pts_seen:
+                        #pts = frame.first_pkt_dts
                         
                     if pts != lib.AV_NOPTS_VALUE:
                         pts_frame_num = self.pts_to_frame(pts)
                         
                         if self.current_frame_index > pts_frame_num:
-                            print "need drop frame out of sync", self.current_frame_index, "!=",self.pts_to_frame(pts)
-                            raise Exception()
+                            print "need drop frame out of sync", self.current_frame_index, ">",self.pts_to_frame(pts)
+                            continue
+                            #raise Exception()
                         
                 if frame.key_frame and not self.seeking and not packet.is_null:
                     entry = SeekEntry()
@@ -387,7 +367,7 @@ cdef class SeekContext(object):
             if frame.key_frame:
                 current_pts = frame.first_pkt_pts
                 #print "first_pts", current_pts,"first_dts",frame.first_pkt_dts,"last_dts", frame.last_pkt_dts,"last_pts",frame.last_pkt_pts
-                if current_pts == lib.AV_NOPTS_VALUE:
+                if current_pts == lib.AV_NOPTS_VALUE and not self.pts_seen:
                     print 'using dts'
                     current_pts = frame.first_pkt_dts
             retry -= 1
