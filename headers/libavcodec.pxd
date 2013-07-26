@@ -12,6 +12,7 @@ cdef extern from "libavcodec/avcodec.h":
     cdef struct AVCodec:
         char *name
         char *long_name
+        int capabilities
     
     cdef enum AVPixelFormat:
         PIX_FMT_RGB24
@@ -87,6 +88,7 @@ cdef extern from "libavcodec/avcodec.h":
         
         uint64_t pts
         uint64_t dts
+        uint8_t *data
         
         int size
         int stream_index
@@ -109,6 +111,7 @@ cdef extern from "libavcodec/avcodec.h":
     )
     
     cdef void av_free_packet(AVPacket*)
+    cdef void av_init_packet(AVPacket*)
     
     cdef enum AVSubtitleType:
         SUBTITLE_NONE

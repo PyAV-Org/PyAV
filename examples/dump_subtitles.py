@@ -21,31 +21,29 @@ if not streams:
 count = 0
 for packet in video.demux([streams[0]]):
     
-    subtitle = packet.decode()
-    if not subtitle:
-        continue
+    for subtitle in packet.decode():
+        
+        for rect in subtitle.rects:
+            if rect.type == 'ass':
+                print rect.ass.rstrip('\n')
+            if rect.type == 'bitmap':
+                print rect.width, rect.height, rect.pict_buffers
+                buffers = [b for b in rect.pict_buffers if b is not None]
+                if buffers:
+                    imgs = [
+                        Image.frombuffer('L', (rect.width, rect.height), buffer, "raw", "L", 0, 1)
+                        for buffer in buffers
+                    ]
+                    if len(imgs) == 1:
+                        img = imgs[0]
+                    elif len(imgs) == 2:
+                        img = Image.merge('LA', imgs)
+                    else:
+                        img = Image.merge('RGBA', imgs)
+                    img.save('subtitles/%04d.png' % count)
     
-    for rect in subtitle.rects:
-        if rect.type == 'ass':
-            print rect.ass.rstrip('\n')
-        if rect.type == 'bitmap':
-            print rect.width, rect.height, rect.pict_buffers
-            buffers = [b for b in rect.pict_buffers if b is not None]
-            if buffers:
-                imgs = [
-                    Image.frombuffer('L', (rect.width, rect.height), buffer, "raw", "L", 0, 1)
-                    for buffer in buffers
-                ]
-                if len(imgs) == 1:
-                    img = imgs[0]
-                elif len(imgs) == 2:
-                    img = Image.merge('LA', imgs)
-                else:
-                    img = Image.merge('RGBA', imgs)
-                img.save('subtitles/%04d.png' % count)
-
-        count += 1
-        if count > 10:
-            pass
-            # exit()
-
+            count += 1
+            if count > 10:
+                pass
+                # exit()
+    
