@@ -1,3 +1,4 @@
+    
 - FFmpeg tutorial: http://dranger.com/ffmpeg/
 	- also has function reference: http://dranger.com/ffmpeg/functions.html
 	- updated tutorial code: https://github.com/chelyaev/ffmpeg-tutorial
@@ -49,4 +50,12 @@ http://code.google.com/p/petsc4py/source/browse/src/PETSc/petscvec.pxi#364
 
 - Move away from generator from av.format.Context.demux(), so that the API makes
   more sense when we get around to adding Context.seek(time)?
+
+- ./configure --with-ffmpeg=/path/to/ffmpeg
+  ./configure --with-libav=/path/to/libav
+
+- Replicate av_frame_get_best_effort_timestamp
+    http://ffmpeg.org/pipermail/ffmpeg-devel/2011-February/104327.html
+    http://pastebin.com/Aq8eDZw3/
+    http://web.archiveorange.com/archive/v/yR2T4bybpYnYCUXmzAI5
 
