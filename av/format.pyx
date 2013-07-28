@@ -10,40 +10,7 @@ from .utils import Error, LibError
 
 cimport av.codec
 
-
 time_base = lib.AV_TIME_BASE
-
-cdef struct PacketInfo:
-    int64_t pts
-    int64_t dts
-
-cdef PacketInfo global_video_pkt_info
-
-global_video_pkt_info.pts = lib.AV_NOPTS_VALUE
-global_video_pkt_info.dts = lib.AV_NOPTS_VALUE
-
-cdef int pyav_video_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
-    
-    # get the buffer the way it would normally get it
-    cdef int ret
-    ret = lib.avcodec_default_get_buffer(ctx, frame)
-    
-    # allocate a PacketInfo and copy the current global_video_pkt_info
-    # so the new AVFrame can store this pts and dts of the first packet
-    # needed to create it 
-    
-    cdef PacketInfo *pkt_info = <PacketInfo*>lib.av_malloc(sizeof(PacketInfo))    
-    pkt_info[0] = global_video_pkt_info
-    frame.opaque = pkt_info
-    
-    return ret
-
-cdef void pyav_video_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
-    if frame:
-        #Free AVFrame PacketInfo
-        lib.av_freep(&frame.opaque)
-    
-    lib.avcodec_default_release_buffer(ctx, frame)
 
 cdef class ContextProxy(object):
 
@@ -216,12 +183,6 @@ cdef class VideoStream(Stream):
         super(VideoStream, self).__init__(*args)
         self.last_w = 0
         self.last_h = 0
-        
-        # Override the codec get_buffer and relase_buffer with our own
-        # custom functions that will store global_video_pkt_info.
-        
-        self.codec.ctx.get_buffer = pyav_video_get_buffer
-        self.codec.ctx.release_buffer = pyav_video_release_buffer
     
     def __dealloc__(self):
         # These are all NULL safe.
@@ -238,14 +199,12 @@ cdef class VideoStream(Stream):
 
         cdef int done = 0
         
-        # Update global_video_pkt_info so any AVFrame allocated on the next
+        # Update codec.cur_pkt_info so any AVFrame allocated on the next
         # decode_video will store the first packet pts and dts that created it
-        # pyav_video_get_buffer will assign this value to AVFrame.opaque 
+        # pyav_get_buffer will assign this value to AVFrame.opaque 
         
-        global global_video_pkt_info
-
-        global_video_pkt_info.pts = packet.struct.pts
-        global_video_pkt_info.dts = packet.struct.dts
+        self.codec.cur_pkt_info.pts = packet.struct.pts
+        self.codec.cur_pkt_info.dts = packet.struct.dts
 
         err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
         if not done:
@@ -255,8 +214,8 @@ cdef class VideoStream(Stream):
         # from its opaque variable. It is set in pyav_video_get_buffer when 
         # the AVFrame buffer is allocated
         
-        cdef PacketInfo *first_pkt_info
-        first_pkt_info = <PacketInfo *>self.raw_frame.opaque
+        cdef av.codec.PacketInfo *first_pkt_info
+        first_pkt_info = <av.codec.PacketInfo *>self.raw_frame.opaque
         
         # Check if the frame size has change
         if not (self.last_w,self.last_h) == (self.codec.ctx.width,self.codec.ctx.height):

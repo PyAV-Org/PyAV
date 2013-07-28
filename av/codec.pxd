@@ -5,6 +5,9 @@ cimport libav as lib
 
 cimport av.format
 
+cdef struct PacketInfo:
+    int64_t pts
+    int64_t dts
 
 cdef class Codec(object):
     
@@ -12,6 +15,7 @@ cdef class Codec(object):
     cdef lib.AVCodecContext *ctx
     cdef lib.AVCodec *ptr
     cdef lib.AVDictionary *options
+    cdef PacketInfo cur_pkt_info
     
 
 cdef class Packet(object):

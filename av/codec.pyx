@@ -6,6 +6,42 @@ cimport libav as lib
 cimport av.format
 from .utils cimport err_check
 
+cdef int pyav_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
+    
+    # Get the buffer the way it would normally get it
+    cdef int ret
+    ret = lib.avcodec_default_get_buffer(ctx, frame)
+    
+    # Allocate a PacketInfo and copy the current cur_pkt_info stored in 
+    # AVCodecContext.opaque, which is a pointer to Codec.cur_pkt_info.
+    # Codec.cur_pkt_info should be set in the decode method of format.Stream.
+    # this is done so the new AVFrame can store this pts and dts of the first packet
+    # needed to create it. This is need for timing purposes see
+    # http://dranger.com/ffmpeg/tutorial05.html. this is the done the same way but
+    # we use AVCodecContext.opaque so we don't need a global variable.
+    
+    # Allocate a new PacketInfo to be stored in AVFrame
+    cdef PacketInfo *pkt_info = <PacketInfo*>lib.av_malloc(sizeof(PacketInfo))
+    
+    # Get the PacketInfo of the Current packet thats is being decoded
+    cdef PacketInfo *cur_pkt_info = <PacketInfo*> ctx.opaque
+    
+    # Copy PacketInfo
+    pkt_info[0] = cur_pkt_info[0]
+    
+    # Assign AVFrame.opaque pointer to new PacketInfo
+    frame.opaque = pkt_info
+    
+    #return the result of avcodec_default_get_buffer
+    return ret
+
+cdef void pyav_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
+    if frame:
+        #Free AVFrame PacketInfo
+        lib.av_freep(&frame.opaque)
+
+    lib.avcodec_default_release_buffer(ctx, frame)
+
 
 cdef class Codec(object):
     
@@ -33,6 +69,21 @@ cdef class Codec(object):
             # Signal that we don't need to close it.
             self.ptr = NULL
             raise
+        
+        # Setup cur_pkt_info
+        self.cur_pkt_info.pts = lib.AV_NOPTS_VALUE
+        self.cur_pkt_info.dts = lib.AV_NOPTS_VALUE
+        
+        # Point CodecConext.opaque ot self.cur_pkt_info.pts
+        # so pyav_release_buffer get cur_pkt_info
+        
+        self.ctx.opaque = &self.cur_pkt_info
+        
+        # Override the codec get_buffer and relase_buffer with our own
+        # custom functions that will store self.cur_pkt_info in the AVFrame.
+        
+        self.ctx.get_buffer = pyav_get_buffer
+        self.ctx.release_buffer = pyav_release_buffer
     
     def __dealloc__(self):
         if self.ptr != NULL:

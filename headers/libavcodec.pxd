@@ -42,6 +42,9 @@ cdef extern from "libavcodec/avcodec.h":
         int sample_rate
         int channels
         
+        #User Data
+        void *opaque
+        
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
