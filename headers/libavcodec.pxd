@@ -35,7 +35,9 @@ cdef extern from "libavcodec/avcodec.h":
         
         AVCodec *codec
         
+        # TODO: get_buffer is deprecated for get_buffer2 in newer versions of FFmpeg
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
+        
         void release_buffer(AVCodecContext *ctx, AVFrame *frame)
 
         # Audio.
@@ -49,6 +51,7 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
     
+     # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
     cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
     cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
     
