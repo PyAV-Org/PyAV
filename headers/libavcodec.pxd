@@ -77,9 +77,9 @@ cdef extern from "libavcodec/avcodec.h":
         int format
         int key_frame # 0 or 1.
         
-        uint64_t pts
-        uint64_t pkt_pts
-        uint64_t pkt_dts
+        int64_t pts
+        int64_t pkt_pts
+        int64_t pkt_dts
         int coded_picture_number
         int display_picture_number
         
@@ -105,8 +105,8 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef struct AVPacket:
         
-        uint64_t pts
-        uint64_t dts
+        int64_t pts
+        int64_t dts
         uint8_t *data
         
         int size
