@@ -1,7 +1,7 @@
 from libc.stdint cimport uint8_t
 
 cimport libav as lib
-
+from cpython cimport bool
 cimport av.format
 
 
@@ -17,7 +17,7 @@ cdef class Packet(object):
 
     cdef readonly av.format.Stream stream
     cdef lib.AVPacket struct
-
+    cdef readonly bool is_null
 
 cdef class SubtitleProxy(object):
 

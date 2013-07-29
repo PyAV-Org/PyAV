@@ -8,6 +8,10 @@ cdef extern from "libavformat_shim.h":
 cdef extern from "libavformat/avformat.h":
     
     cdef int AV_TIME_BASE
+    cdef int AVSEEK_FLAG_BACKWARD
+    cdef int AVSEEK_FLAG_BYTE 
+    cdef int AVSEEK_FLAG_ANY 
+    cdef int AVSEEK_FLAG_FRAME
     
     # Initialize libavformat.
     cdef void av_register_all()

@@ -93,6 +93,7 @@ cdef class Context(object):
                     packet = av.codec.Packet()
                     packet.struct.data= NULL
                     packet.struct.size = 0
+                    packet.is_null = True
                     stream = self.streams[i]
                     packet.stream = stream
                     
@@ -167,6 +168,8 @@ cdef class Stream(object):
         def __get__(self): return self.ptr.start_time
     property duration:
         def __get__(self): return self.ptr.duration
+    property frames:
+        def __get__(self): return self.ptr.nb_frames
     
     cpdef decode(self, av.codec.Packet packet):
         return None
