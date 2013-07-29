@@ -225,11 +225,8 @@ cdef class VideoFrame(object):
     property pts:
         """Presentation time stamp of this frame."""
         def __get__(self):
-            if self.raw_ptr.pts != lib.AV_NOPTS_VALUE:
-                return self.raw_ptr.pts
-            else:
-                return self.raw_ptr.pkt_pts
-    
+            return lib.av_frame_get_best_effort_timestamp(self.raw_ptr)
+        
     property width:
         """Width of the image, in pixels."""
         def __get__(self): return self.packet.stream.codec.ctx.width
