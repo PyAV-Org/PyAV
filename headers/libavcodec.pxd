@@ -149,5 +149,6 @@ cdef extern from "libavcodec/avcodec.h":
     cdef void avsubtitle_free(AVSubtitle*)
     
     cdef int64_t av_frame_get_best_effort_timestamp(AVFrame *frame)
+    cdef void avcodec_flush_buffers(AVCodecContext *ctx)
     
     

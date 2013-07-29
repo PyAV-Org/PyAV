@@ -93,3 +93,10 @@ cdef extern from "libavformat/avformat.h":
         AVFormatContext *ctx,
         AVPacket *packet,
     )
+    
+    cdef int av_seek_frame(
+        AVFormatContext *ctx,
+        int stream_index,
+        int64_t timestamp,
+        int flags
+    )
