@@ -3,7 +3,7 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 
 cdef extern from "libavcodec/avcodec.h":
     
-    cdef uint64_t AV_NOPTS_VALUE
+    cdef int64_t AV_NOPTS_VALUE
 
     cdef enum AVCodecID:
         pass
@@ -63,8 +63,8 @@ cdef extern from "libavcodec/avcodec.h":
         int format
         int key_frame # 0 or 1.
         
-        uint64_t pts
-        uint64_t pkt_pts
+        int64_t pts
+        int64_t pkt_pts
         
         uint8_t **base
 
@@ -86,8 +86,8 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef struct AVPacket:
         
-        uint64_t pts
-        uint64_t dts
+        int64_t pts
+        int64_t dts
         uint8_t *data
         
         int size
@@ -147,6 +147,7 @@ cdef extern from "libavcodec/avcodec.h":
     )
     
     cdef void avsubtitle_free(AVSubtitle*)
-
+    
+    cdef int64_t av_frame_get_best_effort_timestamp(AVFrame *frame)
     
     
