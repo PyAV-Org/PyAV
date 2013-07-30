@@ -1,3 +1,5 @@
+from libc.stdint cimport int64_t
+
 cdef extern from "libavutil/avutil.h":
     
     cdef int AV_ERROR_MAX_STRING_SIZE
@@ -30,5 +32,14 @@ cdef extern from "libavutil/avutil.h":
     ctypedef struct AVRational:
         int num
         int den
+        
+    cdef AVRational AV_TIME_BASE_Q
+    
+    # Rescales from one time base to another
+    cdef int64_t av_rescale_q(
+        int64_t a, # time stamp
+        AVRational bq, # source time base
+        AVRational cq  # target time base
+    )
     
 
