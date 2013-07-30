@@ -216,10 +216,10 @@ cdef class SeekContext(object):
                 return self.step_forward()
 
         if target_frame - offset < 0:
-            raise Exception("cannot seek before first frame")
+            raise SeekError("cannot seek before first frame")
         
         cdef int flags = 0
-        cdef int64_t target_pts = lib.AV_NOPTS_VALUE
+        cdef int64_t seek_pts = lib.AV_NOPTS_VALUE
         cdef int64_t current_pts = lib.AV_NOPTS_VALUE
         
         self.seeking = True
@@ -233,17 +233,24 @@ cdef class SeekContext(object):
         self.seek(seek_ts,flags)
         
         retry = 10
+        
+        # Keep stepping forward until we find a valid pts. Seek should land 
+        # on a key frame and the next decoded frame should have a valid pts
+        # a retry limit is here just in case so we don't end up decoding every frame.
+        
         while current_pts == lib.AV_NOPTS_VALUE:
             frame  = self.step_forward()
             current_pts = frame.pts
             retry -= 1
             if retry < 0:
-                raise Exception("Connnot find keyframe %i %i" % (target_pts, target_frame) )
+                raise SeekError("Connnot find keyframe %i %i" % (seek_pts, target_frame) )
             
         current_frame = self.ts_to_frame(current_pts)
-            
+        
+        #if we seek too far increment the offset and try seeking again  
         if current_frame > target_frame:
-            print "went to far seeking backwards", current_frame,target_frame, target_frame-offset
+            print "seeked too far trying again with offset"
+            print  "offset=%i current_frame=%i target_frame=%i seek_target=%i" % (offset, current_frame,target_frame, target_frame- offset)
             return self.to_nearest_keyframe(target_frame, offset + 1)
             
         self.current_frame_index = self.ts_to_frame(current_pts)
