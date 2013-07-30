@@ -58,7 +58,7 @@ cdef class SeekContext(object):
         self.frame =None
         self.current_frame_index = FIRST_FRAME_INDEX -1
         
-    cpdef forward(self):
+    cpdef step_forward(self):
         cdef av.codec.Packet packet
                 
         cdef av.codec.VideoFrame video_frame
@@ -164,7 +164,7 @@ cdef class SeekContext(object):
 
         while True:
             try:
-                frame = self.forward()
+                frame = self.step_forward()
             except SeekEnd as e:
                 break
             
@@ -192,9 +192,9 @@ cdef class SeekContext(object):
         
         frame = self.frame
         
-        # step forward from current frame until we get to the frame
+        # step step_forward from current frame until we get to the frame
         while self.current_frame_index < target_frame:
-            frame = self.forward()
+            frame = self.step_forward()
 
         return self.frame
     
@@ -214,7 +214,7 @@ cdef class SeekContext(object):
                 return self.frame
             
             if target_frame == self.current_frame_index + 1:
-                return self.forward()
+                return self.step_forward()
         
         cdef int flags = 0
         cdef int64_t target_pts = lib.AV_NOPTS_VALUE
@@ -232,7 +232,7 @@ cdef class SeekContext(object):
         
         retry = 10
         while current_pts == lib.AV_NOPTS_VALUE:
-            frame  = self.forward()
+            frame  = self.step_forward()
             
             #if frame.key_frame:
             current_pts = frame.pts

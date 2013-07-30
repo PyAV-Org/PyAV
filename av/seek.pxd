@@ -27,7 +27,7 @@ cdef class SeekContext(object):
     cdef flush_buffers(self)
     cdef seek(self, int64_t timestamp, int flags)
     
-    cpdef forward(self)
+    cpdef step_forward(self)
 
     cpdef frame_to_ts(self, int frame)
     cpdef ts_to_frame(self, int64_t timestamp)
