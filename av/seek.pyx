@@ -73,10 +73,10 @@ cdef class SeekContext(object):
             pts = self.frame.pts
 
             if pts != lib.AV_NOPTS_VALUE:
-                pts_frame_num = self.pts_to_frame(pts)
+                pts_frame_num = self.ts_to_frame(pts)
                 
                 if self.current_frame_index -1 < pts_frame_num:
-                    #print  "dup frame",self.current_frame_index, "!=",self.pts_to_frame(pts)
+                    #print  "dup frame",self.current_frame_index, "!=",self.ts_to_frame(pts)
                     video_frame = self.frame
                     video_frame.frame_index = self.current_frame_index
                     return video_frame
@@ -97,11 +97,11 @@ cdef class SeekContext(object):
                     
                     if pts != lib.AV_NOPTS_VALUE:
                         
-                        pts_frame_num = self.pts_to_frame(pts)
+                        pts_frame_num = self.ts_to_frame(pts)
                         #print self.current_frame_index,pts_frame_num
                         #allow one frame error mkv off by pts ?!!! 
                         if self.current_frame_index > pts_frame_num + 1:
-                            print "need drop frame out of sync", self.current_frame_index, ">",self.pts_to_frame(pts)
+                            print "need drop frame out of sync", self.current_frame_index, ">",self.ts_to_frame(pts)
                             continue
                             #raise Exception()
 
@@ -132,7 +132,7 @@ cdef class SeekContext(object):
     
     
     def get_length_seek(self):
-        """Get the last frame by seeking to the end of the stream
+        """Get the last frame by seeking to the end of the stream. returns length
         """
         
         cur_frame = self.current_frame_index
@@ -159,7 +159,7 @@ cdef class SeekContext(object):
                                         stream_time_base)
         
 
-        last_frame = self.pts_to_frame(duration + self.stream.start_time)
+        last_frame = self.ts_to_frame(duration + self.stream.start_time)
         self.to_nearest_keyframe(last_frame)
 
         while True:
@@ -174,6 +174,9 @@ cdef class SeekContext(object):
         return length
 
     def to_frame(self, int target_frame):
+        
+        """Seek to frame and return it
+        """
         
         # seek to the nearet keyframe
         
@@ -198,6 +201,13 @@ cdef class SeekContext(object):
 
     def to_nearest_keyframe(self,int target_frame,offset=0):
         
+        """Seek to as close as the target frame as possible without additional frame decoding.
+        Sometimes seeking will go too far (current frame > targer_frame), thats what offset is for.
+        The offset arg will try seeking too target_frame - offset, while still trying to get the 
+        current frame <= target_frame.
+        
+        """
+        
         #optimizations
         if not self.seeking:
             if target_frame == self.current_frame_index:
@@ -214,7 +224,7 @@ cdef class SeekContext(object):
         self.frame_available = True
         self.current_frame_index = -2
         
-        seek_pts  = self.frame_to_pts(target_frame - offset)
+        seek_pts  = self.frame_to_ts(target_frame - offset)
         
         flags = lib.AVSEEK_FLAG_BACKWARD 
         
@@ -230,18 +240,18 @@ cdef class SeekContext(object):
             retry -= 1
             if retry < 0:
                 raise Exception("Connnot find keyframe %i %i" % (target_pts, target_frame) )
-        current_frame = self.pts_to_frame(current_pts)
+        current_frame = self.ts_to_frame(current_pts)
         #print target_frame,current_frame
         #raise Exception()
             
         if current_frame > target_frame:
             print "went to far seeking backwards", current_pts,target_pts, current_frame,target_frame
-            if target_frame - offset < self.pts_to_frame(self.stream.start_time):
+            if target_frame - offset < self.ts_to_frame(self.stream.start_time):
                 raise Exception("cannot seek before first frame")
             
             return self.to_nearest_keyframe(target_frame, offset + 1)
             
-        self.current_frame_index = self.pts_to_frame(current_pts)
+        self.current_frame_index = self.ts_to_frame(current_pts)
         
         cdef av.codec.VideoFrame video_frame
         
@@ -251,7 +261,10 @@ cdef class SeekContext(object):
         self.seeking = False
         return video_frame
 
-    cpdef frame_to_pts(self, int frame):
+    cpdef frame_to_ts(self, int frame):
+    
+        """convert frame number to time stamp using stream's time base
+        """
         fps = self.stream.base_frame_rate
         time_base = self.stream.time_base
         
@@ -262,7 +275,10 @@ cdef class SeekContext(object):
 
         return pts
     
-    cpdef pts_to_frame(self, int64_t timestamp):
+    cpdef ts_to_frame(self, int64_t timestamp):
+    
+        """convert time stamp to frame number using streams timebase
+        """
         
         if timestamp == lib.AV_NOPTS_VALUE:
             raise Exception("time stamp AV_NOPTS_VALUE")

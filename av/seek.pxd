@@ -29,6 +29,6 @@ cdef class SeekContext(object):
     
     cpdef forward(self)
 
-    cpdef frame_to_pts(self, int frame)
-    cpdef pts_to_frame(self, int64_t timestamp)
+    cpdef frame_to_ts(self, int frame)
+    cpdef ts_to_frame(self, int64_t timestamp)
     
