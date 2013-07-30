@@ -79,8 +79,14 @@ cdef class Context(object):
                     break
                     
                 if include_stream[packet.struct.stream_index]:
-                    packet.stream = self.streams[packet.struct.stream_index]
-                    yield packet
+                    # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams 
+                    # may also appear in av_read_frame().
+                    # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
+                    # TODO: find better way to handle this 
+                    if packet.struct.stream_index < len(self.streams):
+                        packet.stream = self.streams[packet.struct.stream_index]
+                        yield packet
+
 
             # Some codecs will cause frames to be buffered up in the decoding process.
             # These codecs should have a CODEC CAP_DELAY capability set.
