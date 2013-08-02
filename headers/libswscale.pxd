@@ -10,6 +10,7 @@ cdef extern from "libswscale/swscale.h":
     
     # Flags.
     cdef int SWS_BILINEAR
+    cdef int SWS_BICUBIC
     
     cdef SwsContext* sws_getContext(
         int src_width,

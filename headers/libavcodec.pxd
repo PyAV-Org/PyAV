@@ -4,19 +4,22 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 cdef extern from "libavcodec/avcodec.h":
     
     cdef int64_t AV_NOPTS_VALUE
+    cdef int CODEC_FLAG_GLOBAL_HEADER
+    cdef int CODEC_CAP_VARIABLE_FRAME_SIZE
+    
+    cdef int AV_PKT_FLAG_KEY
 
     cdef enum AVCodecID:
-        pass
+        AV_CODEC_ID_NONE
+        AV_CODEC_ID_MPEG2VIDEO
+        AV_CODEC_ID_MPEG1VIDEO
     
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodec.html
     cdef struct AVCodec:
         char *name
         char *long_name
         int capabilities
-    
-    cdef enum AVPixelFormat:
-        PIX_FMT_RGB24
-        PIX_FMT_RGBA
+        AVMediaType type
             
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     cdef struct AVCodecContext:
@@ -24,19 +27,42 @@ cdef extern from "libavcodec/avcodec.h":
         AVMediaType codec_type
         char codec_name[32]
         AVCodecID codec_id
+        int flags
+        
+        AVFrame* coded_frame
         
         int width
         int height
+        int bit_rate
+        int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 
+        int max_b_frames
+        int mb_decision
         
+        int qmin
+        int qmax
+        int rc_max_rate
+        int rc_min_rate
+        int rc_buffer_size
+        int bit_rate_tolerance
+        float rc_max_available_vbv_use
+        float rc_min_vbv_overflow_use
+        
+        AVRational time_base
         AVPixelFormat pix_fmt
         
         AVCodec *codec
 
         # Audio.
+        AVSampleFormat sample_fmt
         int sample_rate
         int channels
+        int frame_size
+        int channel_layout
         
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
+    cdef AVCodec* avcodec_find_encoder(AVCodecID id)
+    
+    cdef char* avcodec_get_name(AVCodecID id)
     
     cdef int avcodec_open2(
         AVCodecContext *ctx,
@@ -60,6 +86,7 @@ cdef extern from "libavcodec/avcodec.h":
         int width
         int height
         int nb_samples # Audio samples
+        int channel_layout # Audio channel_layout
         int format
         int key_frame # 0 or 1.
         
@@ -69,6 +96,13 @@ cdef extern from "libavcodec/avcodec.h":
         uint8_t **base
 
     cdef AVFrame* avcodec_alloc_frame()
+    
+    cdef int avpicture_alloc(
+        AVPicture *picture, 
+        AVPixelFormat pix_fmt, 
+        int width, 
+        int height
+    )
     
     cdef int avpicture_get_size(
         AVPixelFormat format,
@@ -110,6 +144,31 @@ cdef extern from "libavcodec/avcodec.h":
         AVPacket *packet,
     )
     
+    cdef int avcodec_encode_audio2(
+        AVCodecContext *ctx,
+        AVPacket *avpkt,
+        AVFrame *frame,
+        int *got_packet_ptr
+    )
+     
+    cdef int avcodec_encode_video2(
+        AVCodecContext *ctx,
+        AVPacket *avpkt,
+        AVFrame *frame,
+        int *got_packet_ptr
+    )
+    
+    cdef int avcodec_fill_audio_frame(
+        AVFrame *frame,
+        int nb_channels,
+        AVSampleFormat sample_fmt,
+        uint8_t *buf,
+        int buf_size,
+        int align
+    )
+    
+    cdef void avcodec_free_frame(AVFrame **frame)
+    
     cdef void av_free_packet(AVPacket*)
     cdef void av_init_packet(AVPacket*)
     
@@ -144,6 +203,13 @@ cdef extern from "libavcodec/avcodec.h":
         AVSubtitle *sub,
         int *done,
         AVPacket *pkt,
+    )
+
+    cdef int avcodec_encode_subtitle(
+        AVCodecContext *avctx,
+        uint8_t *buf,
+        int buf_size,
+        AVSubtitle *sub
     )
     
     cdef void avsubtitle_free(AVSubtitle*)
