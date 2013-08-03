@@ -247,6 +247,11 @@ cdef class SubtitleRect(object):
                     if width else None
                     for i, width in enumerate(self.pict_line_sizes)
                 )
+
+cdef class SwsContextProxy(object):
+    def __dealloc__(self):
+        lib.sws_freeContext(self.ptr)
+                
 cdef class Frame(object):
 
     """Frame Base Class"""
@@ -256,7 +261,12 @@ cdef class Frame(object):
         
     def __dealloc__(self):
         # These are all NULL safe.
-        lib.av_free(self.ptr)
+        lib.avcodec_free_frame(&self.ptr)
+        
+    property pts:
+        """Presentation time stamp of this frame."""
+        def __get__(self):
+            return lib.av_frame_get_best_effort_timestamp(self.ptr)
 
 cdef class VideoFrame(Frame):
 
@@ -265,9 +275,7 @@ cdef class VideoFrame(Frame):
     def __dealloc__(self):
         
         # These are all NULL safe.
-        lib.av_free(self.ptr)
-        lib.av_free(self.raw_ptr)
-        lib.av_free(self.rgb_ptr)
+        lib.avcodec_free_frame(&self.rgb_ptr)
         lib.av_free(self.buffer_)
     
     def __repr__(self):
@@ -278,23 +286,85 @@ cdef class VideoFrame(Frame):
             self.height,
             id(self),
         )
-    
-    property pts:
-        """Presentation time stamp of this frame."""
-        def __get__(self):
-            return lib.av_frame_get_best_effort_timestamp(self.raw_ptr)
+        
+    def to_rgba(self):
+        
+        return self.reformat(self.width,self.height, "rgba")
+        
+    cpdef reformat(self, int width, int height, char* pix_fmt):
+        
+        cdef lib.AVPixelFormat dst_pix_fmt = lib.av_get_pix_fmt(pix_fmt)
+        if dst_pix_fmt == lib.AV_PIX_FMT_NONE:
+            raise ValueError("invalid destination pix_fmt %s" % pix_fmt)
+        
+        if self.ptr.format < 0:
+            raise ValueError("invalid source pix_fmt")
+        
+        cdef lib.AVPixelFormat src_pix_fmt = <lib.AVPixelFormat> self.ptr.format
+        
+        if not self.sws_proxy:
+            self.sws_proxy = SwsContextProxy()
+        
+        self.sws_proxy.ptr = lib.sws_getCachedContext(
+            self.sws_proxy.ptr,
+            self.ptr.width,
+            self.ptr.height,
+            src_pix_fmt,
+            width,
+            height,
+            dst_pix_fmt,
+            lib.SWS_BILINEAR,
+            NULL,
+            NULL,
+            NULL
+        )
+        
+        cdef VideoFrame frame = VideoFrame(self.packet)
+        
+        frame.ptr= lib.avcodec_alloc_frame()
+        frame.buffer_size = lib.avpicture_get_size(
+            dst_pix_fmt,
+            width,
+            height,
+            )
+        
+        frame.buffer_ = <uint8_t *>lib.av_malloc(frame.buffer_size * sizeof(uint8_t))
+        
+        lib.avpicture_fill(
+                <lib.AVPicture *>frame.ptr,
+                frame.buffer_,
+                dst_pix_fmt,
+                width,
+                height
+        )
+        
+        lib.sws_scale(
+            self.sws_proxy.ptr,
+            self.ptr.data,
+            self.ptr.linesize,
+            0, # slice Y
+            self.ptr.height,
+            frame.ptr.data,
+            frame.ptr.linesize,
+        )
+        
+        frame.ptr.width = width
+        frame.ptr.height = height
+        frame.ptr.format = dst_pix_fmt
+        
+        return frame
         
     property width:
         """Width of the image, in pixels."""
-        def __get__(self): return self.raw_ptr.width
+        def __get__(self): return self.ptr.width
 
     property height:
         """Height of the image, in pixels."""
-        def __get__(self): return self.raw_ptr.height
+        def __get__(self): return self.ptr.height
         
     property key_frame:
         """return 1 if frame is a key frame"""
-        def __get__(self): return self.raw_ptr.key_frame
+        def __get__(self): return self.ptr.key_frame
 
     # Legacy buffer support.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs

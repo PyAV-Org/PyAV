@@ -255,13 +255,13 @@ cdef class VideoStream(Stream):
         super(VideoStream, self).__init__(*args)
         self.last_w = 0
         self.last_h = 0
+        self.sws_proxy = av.codec.SwsContextProxy()
     
     def __dealloc__(self):
         # These are all NULL safe.
-        lib.av_free(self.raw_frame)
-        lib.av_free(self.rgb_frame)
+        lib.avcodec_free_frame(&self.raw_frame)
+        lib.avcodec_free_frame(&self.rgb_frame)
         lib.av_free(self.buffer_)
-        lib.sws_freeContext(self.sws_ctx)
         
     cpdef decode(self, av.codec.Packet packet):
         
@@ -286,10 +286,10 @@ cdef class VideoStream(Stream):
                 self.codec.ctx.height,
             )
             
-            if self.sws_ctx:
-                lib.sws_freeContext(self.sws_ctx)
+            #create a new SwsContextProxy
+            self.sws_proxy = av.codec.SwsContextProxy()
             
-            self.sws_ctx = lib.sws_getContext(
+            self.sws_proxy.ptr = lib.sws_getContext(
                 self.codec.ctx.width,
                 self.codec.ctx.height,
                 self.codec.ctx.pix_fmt,
@@ -315,7 +315,7 @@ cdef class VideoStream(Stream):
 
         # Scale and convert.
         lib.sws_scale(
-            self.sws_ctx,
+            self.sws_proxy.ptr,
             self.raw_frame.data,
             self.raw_frame.linesize,
             0, # slice Y
@@ -327,9 +327,12 @@ cdef class VideoStream(Stream):
         cdef av.codec.VideoFrame frame = av.codec.VideoFrame(packet)
         
         # Copy the pointers over.
+        frame.buffer_size = self.buffer_size
         frame.buffer_ = self.buffer_
-        frame.raw_ptr = self.raw_frame
+        frame.ptr = self.raw_frame
         frame.rgb_ptr = self.rgb_frame
+        
+        frame.sws_proxy = self.sws_proxy
         
         # Null out ours.
         self.buffer_ = NULL

@@ -54,7 +54,7 @@ cdef class VideoStream(Stream):
     cdef lib.AVFrame *raw_frame
     cdef lib.AVFrame *rgb_frame
     cdef uint8_t *buffer_
-    cdef lib.SwsContext *sws_ctx
+    cdef av.codec.SwsContextProxy sws_proxy
     cdef int last_w
     cdef int last_h
 

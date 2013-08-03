@@ -36,6 +36,10 @@ cdef class SubtitleRect(object):
     cdef SubtitleProxy proxy
     cdef lib.AVSubtitleRect *ptr
     cdef readonly bytes type
+    
+cdef class SwsContextProxy(object):
+
+    cdef lib.SwsContext *ptr
 
 cdef class Frame(object):
     cdef readonly Packet packet
@@ -43,10 +47,13 @@ cdef class Frame(object):
 
 cdef class VideoFrame(Frame):
 
-    cdef lib.AVFrame *raw_ptr
     cdef lib.AVFrame *rgb_ptr
+    cdef int buffer_size
     cdef uint8_t *buffer_
     cdef readonly int frame_index
+    
+    cdef SwsContextProxy sws_proxy
+    cpdef reformat(self, int width, int height, char* pix_fmt)
 
 
 cdef class AudioFrame(Frame):
