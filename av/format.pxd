@@ -52,8 +52,6 @@ cdef class VideoStream(Stream):
     
     # Hold onto the frames that we will decode until we have a full one.
     cdef lib.AVFrame *raw_frame
-    cdef lib.AVFrame *rgb_frame
-    cdef uint8_t *buffer_
     cdef av.codec.SwsContextProxy sws_proxy
     cdef int last_w
     cdef int last_h

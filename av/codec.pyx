@@ -350,10 +350,12 @@ cdef class VideoFrame(Frame):
             frame.ptr.linesize,
         )
         
+        # Set new frame properties
         frame.ptr.width = width
         frame.ptr.height = height
         frame.ptr.format = dst_pix_fmt
         
+        # Copy pts
         frame.ptr.pts = self.ptr.pts
         
         return frame

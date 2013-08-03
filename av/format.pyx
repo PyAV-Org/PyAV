@@ -260,14 +260,11 @@ cdef class VideoStream(Stream):
     def __dealloc__(self):
         # These are all NULL safe.
         lib.avcodec_free_frame(&self.raw_frame)
-        lib.avcodec_free_frame(&self.rgb_frame)
-        lib.av_free(self.buffer_)
         
     cpdef decode(self, av.codec.Packet packet):
         
         if not self.raw_frame:
             self.raw_frame = lib.avcodec_alloc_frame()
-            self.rgb_frame = lib.avcodec_alloc_frame()
 
         cdef int done = 0
         err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
@@ -281,65 +278,28 @@ cdef class VideoStream(Stream):
             self.last_h = self.codec.ctx.height
 
             self.buffer_size = lib.avpicture_get_size(
-                lib.PIX_FMT_RGBA,
+                self.codec.ctx.pix_fmt,
                 self.codec.ctx.width,
                 self.codec.ctx.height,
             )
             
             #create a new SwsContextProxy
             self.sws_proxy = av.codec.SwsContextProxy()
-            
-            self.sws_proxy.ptr = lib.sws_getContext(
-                self.codec.ctx.width,
-                self.codec.ctx.height,
-                self.codec.ctx.pix_fmt,
-                self.codec.ctx.width,
-                self.codec.ctx.height,
-                lib.PIX_FMT_RGBA,
-                lib.SWS_BILINEAR,
-                NULL,
-                NULL,
-                NULL
-            )
-            
-        self.buffer_ = <uint8_t *>lib.av_malloc(self.buffer_size * sizeof(uint8_t))
-        
-        # Assign the buffer to the image planes.
-        lib.avpicture_fill(
-                <lib.AVPicture *>self.rgb_frame,
-                self.buffer_,
-                lib.PIX_FMT_RGBA,
-                self.codec.ctx.width,
-                self.codec.ctx.height
-            )
 
-        # Scale and convert.
-        lib.sws_scale(
-            self.sws_proxy.ptr,
-            self.raw_frame.data,
-            self.raw_frame.linesize,
-            0, # slice Y
-            self.codec.ctx.height,
-            self.rgb_frame.data,
-            self.rgb_frame.linesize,
-        )
-        
         cdef av.codec.VideoFrame frame = av.codec.VideoFrame(packet)
         
         # Copy the pointers over.
         frame.buffer_size = self.buffer_size
-        frame.buffer_ = self.buffer_
         frame.ptr = self.raw_frame
 
         # Calculate best timestamp    
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         
+        # Copy SwsContextProxy
         frame.sws_proxy = self.sws_proxy
         
         # Null out ours.
-        self.buffer_ = NULL
         self.raw_frame = NULL
-        self.rgb_frame = NULL
         
         return frame
 
