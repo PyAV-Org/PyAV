@@ -264,6 +264,7 @@ cdef class VideoStream(Stream):
         
         if not self.raw_frame:
             self.raw_frame = lib.avcodec_alloc_frame()
+            lib.avcodec_get_frame_defaults(self.raw_frame)
 
         cdef int done = 0
         err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))

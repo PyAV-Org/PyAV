@@ -284,9 +284,17 @@ cdef class VideoFrame(Frame):
         
     def to_rgba(self):
         
+        """ Returns a new VideoFrame object that is converted from what every pix_fmt is 
+        currently is to rgba pix_fmt
+        """
+        
         return self.reformat(self.width,self.height, "rgba")
         
     cpdef reformat(self, int width, int height, char* pix_fmt):
+    
+        """ Returns a new VideoFrame object scaled to width and height and converted to 
+        specified pix_fmt
+        """
         
         cdef lib.AVPixelFormat dst_pix_fmt = lib.av_get_pix_fmt(pix_fmt)
         if dst_pix_fmt == lib.AV_PIX_FMT_NONE:
@@ -297,8 +305,13 @@ cdef class VideoFrame(Frame):
         
         cdef lib.AVPixelFormat src_pix_fmt = <lib.AVPixelFormat> self.ptr.format
         
+        # If VideoFrame doesn't have a SwsContextProxy create one
         if not self.sws_proxy:
             self.sws_proxy = SwsContextProxy()
+        
+        # Try and reuse existing SwsContextProxy
+        # VideoStream.decode will copy its SwsContextProxy to VideoFrame
+        # So all Video frames from the same VideoStream should have the same one
         
         self.sws_proxy.ptr = lib.sws_getCachedContext(
             self.sws_proxy.ptr,
@@ -314,19 +327,24 @@ cdef class VideoFrame(Frame):
             NULL
         )
         
+        # Create a new VideoFrame
+        
         cdef VideoFrame frame = VideoFrame()
-        
         frame.ptr= lib.avcodec_alloc_frame()
-        
         lib.avcodec_get_frame_defaults(frame.ptr)
         
+        # Calculate buffer size needed for new image
         frame.buffer_size = lib.avpicture_get_size(
             dst_pix_fmt,
             width,
             height,
             )
         
+        # Allocate the new Buffer
         frame.buffer_ = <uint8_t *>lib.av_malloc(frame.buffer_size * sizeof(uint8_t))
+        
+        if not frame.buffer_:
+            raise MemoryError("Cannot allocate reformatted VideoFrame buffer")
         
         lib.avpicture_fill(
                 <lib.AVPicture *>frame.ptr,
@@ -336,6 +354,7 @@ cdef class VideoFrame(Frame):
                 height
         )
         
+        # Finally Scale the image
         lib.sws_scale(
             self.sws_proxy.ptr,
             self.ptr.data,
@@ -351,7 +370,7 @@ cdef class VideoFrame(Frame):
         frame.ptr.height = height
         frame.ptr.format = dst_pix_fmt
         
-        # Copy pts
+        # Copy over pts
         frame.ptr.pts = self.ptr.pts
         
         return frame
