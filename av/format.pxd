@@ -25,8 +25,10 @@ cdef class Context(object):
     
     cdef ContextProxy proxy
     
-    cdef readonly tuple streams
+    cdef readonly list streams
     cdef readonly dict metadata
+    
+    cpdef add_stream(self, char* codec_name)
 
 
 cdef class Stream(object):
@@ -37,10 +39,11 @@ cdef class Stream(object):
     
     cdef lib.AVStream *ptr
     
-    cdef av.codec.Codec codec
+    cdef readonly av.codec.Codec codec
     cdef readonly dict metadata
     
     cpdef decode(self, av.codec.Packet packet)
+    cpdef encode(self, av.codec.Frame)
 
 
 cdef class VideoStream(Stream):

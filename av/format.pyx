@@ -31,26 +31,90 @@ cdef class Context(object):
 
     def __init__(self, name, mode='r'):
         
+        cdef lib.AVOutputFormat* fmt
+        
         if mode == 'r':
             self.is_input = True
             self.is_output = False
         elif mode == 'w':
             self.is_input = False
             self.is_output = True
-            raise NotImplementedError('no output yet')
+            #raise NotImplementedError('no output yet')
         else:
             raise ValueError('mode must be "r" or "w"')
         
         self.name = name
         self.mode = mode
+        
         self.proxy = ContextProxy(self.is_input)
         
         if self.is_input:
             err_check(lib.avformat_open_input(&self.proxy.ptr, name, NULL, NULL))
             err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
+            self.streams = list(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
+            self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
+            
+        if self.is_output:
+            
+            fmt = lib.av_guess_format(NULL, name, NULL)
+            if not fmt:
+                raise ValueError("Could not deduce output format")
+            
+            err_check(lib.avformat_alloc_output_context2(&self.proxy.ptr, fmt,NULL, name))
+            self.streams = []
+            self.metadata = {}
+            
+    cpdef add_stream(self, char* codec_name):
+
+        cdef lib.AVCodec *codec
+        cdef lib.AVCodecContext *codec_ctx
+        cdef lib.AVCodecDescriptor *desc
+  
+        cdef lib.AVStream *stream
         
-        self.streams = tuple(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
-        self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
+        # Find encoder
+        codec = lib.avcodec_find_encoder_by_name(codec_name)
+        
+        if not codec:
+            desc = lib.avcodec_descriptor_get_by_name(codec_name)
+            if desc:
+                codec = lib.avcodec_find_encoder(desc.id)
+                
+        if not codec:
+            raise ValueError("Unknown encoder %s" % codec_name)
+        
+        # Check if format supports codec
+        ret = lib.avformat_query_codec(self.proxy.ptr.oformat,
+                                       codec.id,
+                                       lib.FF_COMPLIANCE_NORMAL)
+        if not ret:
+            raise ValueError("Codec is not supported in this format")
+        
+        # Create new stream
+        stream = lib.avformat_new_stream(self.proxy.ptr, codec)
+        if not stream:
+            raise MemoryError("Could not allocate stream")
+        
+        # Set Stream ID
+        stream.id = self.proxy.ptr.nb_streams -1
+        codec_ctx = stream.codec
+        # Set Codecs defaults
+        lib.avcodec_get_context_defaults3(codec_ctx, codec)
+        
+        # Now lets set some more sane defaults
+        
+        if codec_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+            codec_ctx.time_base.den = 25
+            codec_ctx.time_base.num = 1
+            codec_ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
+            codec_ctx.width = 640
+            codec_ctx.height = 480
+        
+        # And steam object to self.streams
+        stream_obj = stream_factory(self,stream.id)
+        self.streams.append(stream_obj)
+        
+        return stream_obj
     
     def dump(self):
         lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w')
@@ -178,6 +242,9 @@ cdef class Stream(object):
         def __get__(self): return self.ptr.nb_frames
     
     cpdef decode(self, av.codec.Packet packet):
+        return None
+    
+    cpdef encode(self, av.codec.Frame packet):
         return None
     
 

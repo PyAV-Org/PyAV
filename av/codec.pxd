@@ -37,20 +37,18 @@ cdef class SubtitleRect(object):
     cdef lib.AVSubtitleRect *ptr
     cdef readonly bytes type
 
-
-cdef class VideoFrame(object):
-    
+cdef class Frame(object):
     cdef readonly Packet packet
-    
+    cdef lib.AVFrame *ptr
+
+cdef class VideoFrame(Frame):
+
     cdef lib.AVFrame *raw_ptr
     cdef lib.AVFrame *rgb_ptr
     cdef uint8_t *buffer_
     cdef readonly int frame_index
 
 
-cdef class AudioFrame(object):
-    
-    cdef readonly Packet packet
-
-    cdef lib.AVFrame *ptr
+cdef class AudioFrame(Frame):
+    pass
 

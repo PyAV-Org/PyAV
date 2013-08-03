@@ -4,7 +4,7 @@ from cpython cimport array
 cimport libav as lib
 
 cimport av.format
-from .utils cimport err_check
+from .utils cimport err_check,avrational_to_faction
 
 
 cdef class Codec(object):
@@ -20,19 +20,24 @@ cdef class Codec(object):
         if stream.type == 'attachment':
             return
         
-        # Find the decoder.
-        # We don't need to free this later since it is a static part of the lib.
-        self.ptr = lib.avcodec_find_decoder(self.ctx.codec_id)
-        if self.ptr == NULL:
-            return
-        
-        # Open the codec.
-        try:
-            err_check(lib.avcodec_open2(self.ctx, self.ptr, &self.options))
-        except:
-            # Signal that we don't need to close it.
-            self.ptr = NULL
-            raise
+        if self.format_ctx.is_input:
+            # Find the decoder.
+            # We don't need to free this later since it is a static part of the lib.
+            self.ptr = lib.avcodec_find_decoder(self.ctx.codec_id)
+            if self.ptr == NULL:
+                return
+            
+            # Open the codec.
+            try:
+                err_check(lib.avcodec_open2(self.ctx, self.ptr, &self.options))
+            except:
+                # Signal that we don't need to close it.
+                self.ptr = NULL
+                raise
+        else:
+            self.ptr = self.ctx.codec
+            print "encoder"
+            pass
     
     def __dealloc__(self):
         if self.ptr != NULL:
@@ -44,6 +49,50 @@ cdef class Codec(object):
         def __get__(self): return bytes(self.ptr.name) if self.ptr else None
     property long_name:
         def __get__(self): return bytes(self.ptr.long_name) if self.ptr else None
+        
+    property bit_rate:
+        def __get__(self): return self.ctx.bit_rate if self.ctx else None
+        def __set__(self, int value):
+            self.ctx.bit_rate = value
+            
+    property bit_rate_tolerance:
+        def __get__(self): return self.ctx.bit_rate_tolerance if self.ctx else None
+        def __set__(self, int value):
+            self.ctx.bit_rate_tolerance = value
+            
+    property time_base:
+        def __get__(self): return avrational_to_faction(&self.ctx.time_base) if self.ctx else None
+            
+    property gop_size:
+        def __get__(self): return self.ctx.gop_size if self.ctx else None
+        def __set__(self, int value):
+            self.ctx.gop_size = value
+            
+    property pix_fmt:
+        def __get__(self):
+            if not self.ctx:
+                return None
+            result = lib.av_get_pix_fmt_name(self.ctx.pix_fmt)
+            if result == NULL:
+                return None
+            return result
+        def __set__(self, char* value):
+            cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(value)
+            if pix_fmt == lib.AV_PIX_FMT_NONE:
+                raise ValueError("invalid pix_fmt %s" % value)
+            self.ctx.pix_fmt = pix_fmt
+            
+    property width:
+        def __get__(self): return self.ctx.width if self.ctx else None
+        def __set__(self, int value):
+            self.ctx.width = value
+            
+    property height:
+        def __get__(self): return self.ctx.height if self.ctx else None
+        def __set__(self, int value):
+            self.ctx.height = value
+            
+    
     
 
 cdef class Packet(object):
@@ -198,17 +247,25 @@ cdef class SubtitleRect(object):
                     if width else None
                     for i, width in enumerate(self.pict_line_sizes)
                 )
-    
+cdef class Frame(object):
 
-cdef class VideoFrame(object):
+    """Frame Base Class"""
+    
+    def __init__(self, Packet packet):
+        self.packet = packet
+        
+    def __dealloc__(self):
+        # These are all NULL safe.
+        lib.av_free(self.ptr)
+
+cdef class VideoFrame(Frame):
 
     """A frame of video."""
 
-    def __init__(self, Packet packet):
-        self.packet = packet
-    
     def __dealloc__(self):
+        
         # These are all NULL safe.
+        lib.av_free(self.ptr)
         lib.av_free(self.raw_ptr)
         lib.av_free(self.rgb_ptr)
         lib.av_free(self.buffer_)
@@ -229,11 +286,11 @@ cdef class VideoFrame(object):
         
     property width:
         """Width of the image, in pixels."""
-        def __get__(self): return self.packet.stream.codec.ctx.width
+        def __get__(self): return self.raw_ptr.width
 
     property height:
         """Height of the image, in pixels."""
-        def __get__(self): return self.packet.stream.codec.ctx.height
+        def __get__(self): return self.raw_ptr.height
         
     property key_frame:
         """return 1 if frame is a key frame"""
@@ -251,17 +308,14 @@ cdef class VideoFrame(object):
         if index:
             raise RuntimeError("accessing non-existent buffer segment")
         data[0] = <void*> self.rgb_ptr.data[0]
+        #print "buff_size",self.packet.stream.buffer_size, lib.av_get_pix_fmt_name(<lib.AVPixelFormat>self.raw_ptr.format),
+
         return <Py_ssize_t> self.packet.stream.buffer_size
 
 
-cdef class AudioFrame(object):
+cdef class AudioFrame(Frame):
 
     """A frame of audio."""
 
-    def __init__(self, Packet packet):
-        self.packet = packet
-    
-    def __dealloc__(self):
-        # These are all NULL safe.
-        lib.av_free(self.ptr)
+    pass
 
