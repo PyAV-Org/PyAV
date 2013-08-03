@@ -382,6 +382,14 @@ cdef class VideoFrame(Frame):
     property height:
         """Height of the image, in pixels."""
         def __get__(self): return self.ptr.height
+    
+    property pix_fmt:
+        """Pixel format of the image."""
+        def __get__(self):
+            result = lib.av_get_pix_fmt_name(<lib.AVPixelFormat > self.ptr.format)
+            if result == NULL:
+                return None
+            return result
         
     property key_frame:
         """return 1 if frame is a key frame"""
