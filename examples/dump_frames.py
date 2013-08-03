@@ -22,6 +22,6 @@ for packet in video.demux(streams):
 
         frame_count += 1
         
-        img = Image.frombuffer("RGBA", (frame.width, frame.height), frame, "raw", "RGBA", 0, 1)
+        img = Image.frombuffer("RGBA", (frame.width, frame.height), frame.to_rgba(), "raw", "RGBA", 0, 1)
         img.save('sandbox/%04d.jpg' % frame_count)
         
