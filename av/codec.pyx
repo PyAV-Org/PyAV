@@ -370,6 +370,8 @@ cdef class VideoFrame(Frame):
         frame.ptr.height = height
         frame.ptr.format = dst_pix_fmt
         
+        frame.frame_index = self.frame_index
+        
         # Copy over pts
         frame.ptr.pts = self.ptr.pts
         
