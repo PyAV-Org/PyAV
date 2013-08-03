@@ -122,6 +122,18 @@ cdef extern from "libavformat/avformat.h":
         int flags
     )
     
+    cdef AVOutputFormat* av_guess_format(
+        char *short_name,
+        char *filename,
+        char *mime_type 
+    )
+    
+    cdef int avformat_query_codec(
+        AVOutputFormat *ofmt,
+        AVCodecID codec_id,
+        int std_compliance
+    )
+         
     cdef int avio_close(AVIOContext *s)
     
     cdef int avformat_find_stream_info(
@@ -162,9 +174,5 @@ cdef extern from "libavformat/avformat.h":
         int flags
     )
     
-    cdef AVOutputFormat* av_guess_format(
-        char *short_name,
-        char *filename,
-        char *mime_type 
-    )
+
     

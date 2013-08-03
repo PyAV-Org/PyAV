@@ -8,6 +8,12 @@ cdef extern from "libavcodec/avcodec.h":
     cdef int CODEC_CAP_VARIABLE_FRAME_SIZE
     
     cdef int AV_PKT_FLAG_KEY
+    
+    cdef int FF_COMPLIANCE_VERY_STRICT
+    cdef int FF_COMPLIANCE_STRICT
+    cdef int FF_COMPLIANCE_NORMAL
+    cdef int FF_COMPLIANCE_UNOFFICIAL
+    cdef int FF_COMPLIANCE_EXPERIMENTAL
 
     cdef enum AVCodecID:
         AV_CODEC_ID_NONE
@@ -18,8 +24,10 @@ cdef extern from "libavcodec/avcodec.h":
     cdef struct AVCodec:
         char *name
         char *long_name
-        int capabilities
         AVMediaType type
+        AVCodecID id
+        int capabilities
+        
             
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     cdef struct AVCodecContext:
@@ -34,6 +42,7 @@ cdef extern from "libavcodec/avcodec.h":
         int width
         int height
         int bit_rate
+        int bit_rate_tolerance
         int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 
         int max_b_frames
         int mb_decision
@@ -43,7 +52,6 @@ cdef extern from "libavcodec/avcodec.h":
         int rc_max_rate
         int rc_min_rate
         int rc_buffer_size
-        int bit_rate_tolerance
         float rc_max_available_vbv_use
         float rc_min_vbv_overflow_use
         
@@ -59,8 +67,21 @@ cdef extern from "libavcodec/avcodec.h":
         int frame_size
         int channel_layout
         
+    cdef struct AVCodecDescriptor:
+        AVCodecID id
+        AVMediaType type
+        char *name
+        char *long_name
+        int props
+        
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     cdef AVCodec* avcodec_find_encoder(AVCodecID id)
+    
+    cdef AVCodec* avcodec_find_decoder_by_name(char *name)
+    cdef AVCodec* avcodec_find_encoder_by_name(char *name)
+    
+    cdef AVCodecDescriptor* avcodec_descriptor_get (AVCodecID id)
+    cdef AVCodecDescriptor* avcodec_descriptor_get_by_name (char *name)
     
     cdef char* avcodec_get_name(AVCodecID id)
     
@@ -92,6 +113,8 @@ cdef extern from "libavcodec/avcodec.h":
         
         int64_t pts
         int64_t pkt_pts
+        
+        int pkt_size
         
         uint8_t **base
 
@@ -213,6 +236,11 @@ cdef extern from "libavcodec/avcodec.h":
     )
     
     cdef void avsubtitle_free(AVSubtitle*)
+    
+    cdef int avcodec_get_context_defaults3(
+        AVCodecContext *ctx, 
+        AVCodec *codec
+     )
     
     cdef int64_t av_frame_get_best_effort_timestamp(AVFrame *frame)
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)

@@ -69,7 +69,10 @@ cdef extern from "libavutil/avutil.h":
         AVRational bq, # source time base
         AVRational cq  # target time base
     )
-    
+
+cdef extern from "libavutil/pixdesc.h":
+    cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
+    cdef AVPixelFormat av_get_pix_fmt(char* name)
 
     
 
