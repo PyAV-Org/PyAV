@@ -266,7 +266,7 @@ cdef class Frame(object):
     property pts:
         """Presentation time stamp of this frame."""
         def __get__(self):
-            return lib.av_frame_get_best_effort_timestamp(self.ptr)
+            return self.ptr.pts
 
 cdef class VideoFrame(Frame):
 
@@ -275,7 +275,6 @@ cdef class VideoFrame(Frame):
     def __dealloc__(self):
         
         # These are all NULL safe.
-        lib.avcodec_free_frame(&self.rgb_ptr)
         lib.av_free(self.buffer_)
     
     def __repr__(self):
@@ -322,6 +321,9 @@ cdef class VideoFrame(Frame):
         cdef VideoFrame frame = VideoFrame(self.packet)
         
         frame.ptr= lib.avcodec_alloc_frame()
+        
+        lib.avcodec_get_frame_defaults(frame.ptr)
+        
         frame.buffer_size = lib.avpicture_get_size(
             dst_pix_fmt,
             width,
@@ -352,6 +354,8 @@ cdef class VideoFrame(Frame):
         frame.ptr.height = height
         frame.ptr.format = dst_pix_fmt
         
+        frame.ptr.pts = self.ptr.pts
+        
         return frame
         
     property width:
@@ -371,16 +375,14 @@ cdef class VideoFrame(Frame):
 
     def __getsegcount__(self, Py_ssize_t *len_out):
         if len_out != NULL:
-            len_out[0] = <Py_ssize_t> self.packet.stream.buffer_size
+            len_out[0] = <Py_ssize_t> self.buffer_size
         return 1
 
     def __getreadbuffer__(self, Py_ssize_t index, void **data):
         if index:
             raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = <void*> self.rgb_ptr.data[0]
-        #print "buff_size",self.packet.stream.buffer_size, lib.av_get_pix_fmt_name(<lib.AVPixelFormat>self.raw_ptr.format),
-
-        return <Py_ssize_t> self.packet.stream.buffer_size
+        data[0] = <void*> self.ptr.data[0]
+        return <Py_ssize_t> self.buffer_size
 
 
 cdef class AudioFrame(Frame):

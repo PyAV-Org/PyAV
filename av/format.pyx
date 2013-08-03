@@ -330,7 +330,9 @@ cdef class VideoStream(Stream):
         frame.buffer_size = self.buffer_size
         frame.buffer_ = self.buffer_
         frame.ptr = self.raw_frame
-        frame.rgb_ptr = self.rgb_frame
+
+        # Calculate best timestamp    
+        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         
         frame.sws_proxy = self.sws_proxy
         

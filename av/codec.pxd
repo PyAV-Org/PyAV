@@ -47,7 +47,6 @@ cdef class Frame(object):
 
 cdef class VideoFrame(Frame):
 
-    cdef lib.AVFrame *rgb_ptr
     cdef int buffer_size
     cdef uint8_t *buffer_
     cdef readonly int frame_index

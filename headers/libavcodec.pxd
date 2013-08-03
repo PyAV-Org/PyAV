@@ -237,6 +237,8 @@ cdef extern from "libavcodec/avcodec.h":
     
     cdef void avsubtitle_free(AVSubtitle*)
     
+    cdef void avcodec_get_frame_defaults(AVFrame* frame)
+    
     cdef int avcodec_get_context_defaults3(
         AVCodecContext *ctx, 
         AVCodec *codec
