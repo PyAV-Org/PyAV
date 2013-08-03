@@ -37,3 +37,18 @@ cdef extern from "libswscale/swscale.h":
     
     cdef void sws_freeContext(SwsContext *ctx)
     
+    cdef SwsContext *sws_getCachedContext(
+        SwsContext *context,
+        int src_width,
+        int src_height,
+        AVPixelFormat src_format,
+        int dst_width,
+        int dst_height,
+        AVPixelFormat dst_format,
+        int flags,
+        SwsFilter *src_filter,
+        SwsFilter *dst_filter,
+        double *param,
+    )
+        
+    
