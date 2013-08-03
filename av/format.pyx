@@ -255,7 +255,6 @@ cdef class VideoStream(Stream):
         super(VideoStream, self).__init__(*args)
         self.last_w = 0
         self.last_h = 0
-        self.sws_proxy = av.codec.SwsContextProxy()
     
     def __dealloc__(self):
         # These are all NULL safe.
@@ -276,29 +275,30 @@ cdef class VideoStream(Stream):
             
             self.last_w = self.codec.ctx.width
             self.last_h = self.codec.ctx.height
-
+            
+            # Recalculate buffer size
             self.buffer_size = lib.avpicture_get_size(
                 self.codec.ctx.pix_fmt,
                 self.codec.ctx.width,
                 self.codec.ctx.height,
             )
             
-            #create a new SwsContextProxy
+            # Create a new SwsContextProxy
             self.sws_proxy = av.codec.SwsContextProxy()
 
-        cdef av.codec.VideoFrame frame = av.codec.VideoFrame(packet)
+        cdef av.codec.VideoFrame frame = av.codec.VideoFrame()
         
         # Copy the pointers over.
         frame.buffer_size = self.buffer_size
         frame.ptr = self.raw_frame
 
-        # Calculate best timestamp    
+        # Calculate best effort time stamp    
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         
-        # Copy SwsContextProxy
+        # Copy SwsContextProxy so frames share the same one
         frame.sws_proxy = self.sws_proxy
         
-        # Null out ours.
+        # Null out our frame.
         self.raw_frame = NULL
         
         return frame
@@ -328,7 +328,7 @@ cdef class AudioStream(Stream):
         if not done:
             return
         
-        cdef av.codec.AudioFrame frame = av.codec.AudioFrame(packet)
+        cdef av.codec.AudioFrame frame = av.codec.AudioFrame()
         
         # Copy the pointers over.
         frame.ptr = self.frame

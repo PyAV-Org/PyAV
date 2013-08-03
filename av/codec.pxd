@@ -42,7 +42,6 @@ cdef class SwsContextProxy(object):
     cdef lib.SwsContext *ptr
 
 cdef class Frame(object):
-    cdef readonly Packet packet
     cdef lib.AVFrame *ptr
 
 cdef class VideoFrame(Frame):

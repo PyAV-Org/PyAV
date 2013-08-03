@@ -255,9 +255,6 @@ cdef class SwsContextProxy(object):
 cdef class Frame(object):
 
     """Frame Base Class"""
-    
-    def __init__(self, Packet packet):
-        self.packet = packet
         
     def __dealloc__(self):
         # These are all NULL safe.
@@ -273,7 +270,6 @@ cdef class VideoFrame(Frame):
     """A frame of video."""
 
     def __dealloc__(self):
-        
         # These are all NULL safe.
         lib.av_free(self.buffer_)
     
@@ -318,7 +314,7 @@ cdef class VideoFrame(Frame):
             NULL
         )
         
-        cdef VideoFrame frame = VideoFrame(self.packet)
+        cdef VideoFrame frame = VideoFrame()
         
         frame.ptr= lib.avcodec_alloc_frame()
         
