@@ -423,7 +423,28 @@ cdef class AudioStream(Stream):
         self.frame = NULL
         
         return frame
-
+    
+    cpdef encode(self, av.codec.AudioFrame frame):
+        
+        cdef av.codec.Packet packet = av.codec.Packet()
+        cdef int got_output
+        
+        ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, frame.ptr, &got_output)
+        
+        if ret < 0:
+            raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
+        
+        if got_output:
+            
+            packet.struct.stream_index = self.ptr.index
+            
+            ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+        else:
+            ret = 0
+            
+        
+        if ret != 0:
+            raise Exception("Error while writing audio frame: %s" % lib.av_err2str(ret))
 
 
 cdef class SubtitleStream(Stream):

@@ -40,6 +40,10 @@ cdef class SubtitleRect(object):
 cdef class SwsContextProxy(object):
 
     cdef lib.SwsContext *ptr
+    
+cdef class SwrContextProxy(object):
+
+    cdef lib.SwrContext *ptr
 
 cdef class Frame(object):
     cdef lib.AVFrame *ptr

@@ -251,7 +251,11 @@ cdef class SubtitleRect(object):
 cdef class SwsContextProxy(object):
     def __dealloc__(self):
         lib.sws_freeContext(self.ptr)
-                
+
+cdef class SwrContextProxy(object):
+    def __dealloc__(self):
+        lib.swr_free(&self.ptr)
+                         
 cdef class Frame(object):
 
     """Frame Base Class"""

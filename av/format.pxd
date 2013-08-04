@@ -59,7 +59,7 @@ cdef class VideoStream(Stream):
     
     cdef int encoded_frame_count
     
-    cpdef encode(self, av.codec.VideoFrame)
+    cpdef encode(self, av.codec.VideoFrame frame)
     
     cpdef flush_encoder(self)
 
@@ -68,4 +68,6 @@ cdef class AudioStream(Stream):
 
     # Hold onto the frames that we will decode until we have a full one.
     cdef lib.AVFrame *frame
+    
+    cpdef encode(self, av.codec.AudioFrame frame)
 
