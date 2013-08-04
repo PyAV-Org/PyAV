@@ -408,11 +408,11 @@ def main():
                 
     lib.av_dump_format(oc, 0, filename, 1)
     
-    #if fmt.flags & lib.AVFMT_NOFILE:
-    print "need to open out file"
-    ret = lib.avio_open(&oc.pb, filename, lib.AVIO_FLAG_WRITE)
-    if ret <0:
-        raise Exception("Could not open '%s' %s" % (filename,lib.av_err2str(ret)))
+    if not fmt.flags & lib.AVFMT_NOFILE:
+        print "need to open out file"
+        ret = lib.avio_open(&oc.pb, filename, lib.AVIO_FLAG_WRITE)
+        if ret <0:
+            raise Exception("Could not open '%s' %s" % (filename,lib.av_err2str(ret)))
     
     
     print "writing header"
@@ -474,8 +474,9 @@ def main():
     
     if audio_st:
         close_audio(oc, video_st)
-
-    lib.avio_close(oc.pb)
+        
+    if not fmt.flags & lib.AVFMT_NOFILE:
+        lib.avio_close(oc.pb)
     
     # free the stream
     lib.avformat_free_context(oc)

@@ -102,8 +102,8 @@ cdef class Context(object):
         lib.avcodec_get_context_defaults3(codec_ctx, codec)
         
         codec_ctx.codec = codec
-        # Now lets set some more sane defaults
         
+        # Now lets set some more sane defaults
         if codec_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
             codec_ctx.time_base.den = 25
             codec_ctx.time_base.num = 1
@@ -136,10 +136,12 @@ cdef class Context(object):
                 
         filename = self.name
         
-        ret = lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE)
-        if ret <0:
-            raise Exception("Could not open '%s' %s" % (filename,lib.av_err2str(ret)))
-                
+        # open the output file, if needed
+        if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
+            ret = lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE)
+            if ret <0:
+                raise Exception("Could not open '%s' %s" % (filename,lib.av_err2str(ret)))
+
         ret = lib.avformat_write_header(self.proxy.ptr, NULL)
         if ret < 0:
             raise Exception("Error occurred when opening output file: %s" %  lib.av_err2str(ret))
@@ -156,7 +158,9 @@ cdef class Context(object):
             for stream in self.streams:
                 
                 lib.avcodec_close(stream.codec.ctx)
-            
+                
+            if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
+                lib.avio_close(self.proxy.ptr.pb)
         
     
     def dump(self):
