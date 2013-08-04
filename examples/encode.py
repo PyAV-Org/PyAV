@@ -4,10 +4,10 @@ import av
 
 source = sys.argv[1]
 
-encode_video = av.open("./sandbox/encode_example.avi", 'w')
+encode_video = av.open("./sandbox/encode_example.mp4", 'w')
 
 
-stream = encode_video.add_stream("mpeg4")
+stream = encode_video.add_stream("h264")
 
 codec = stream.codec
 print "name", codec.name

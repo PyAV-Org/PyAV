@@ -110,6 +110,10 @@ cdef class Context(object):
             codec_ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_ctx.width = 640
             codec_ctx.height = 480
+            
+        # Some formats want stream headers to be separate
+        if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+            codec_ctx.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
         
         # And steam object to self.streams
         stream_obj = stream_factory(self,stream.id)
