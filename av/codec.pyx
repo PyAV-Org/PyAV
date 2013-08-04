@@ -76,11 +76,27 @@ cdef class Codec(object):
             if result == NULL:
                 return None
             return result
+        # Note should check if codec supports pix_fmt
         def __set__(self, char* value):
             cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(value)
             if pix_fmt == lib.AV_PIX_FMT_NONE:
                 raise ValueError("invalid pix_fmt %s" % value)
             self.ctx.pix_fmt = pix_fmt
+            
+    property sample_fmt:
+        def __get__(self):
+            if not self.ctx:
+                return None
+            result = lib.av_get_sample_fmt_name(self.ctx.sample_fmt)
+            if result == NULL:
+                return None
+            return result
+        # Note should check if codec supports sample_fmt
+        def __set__(self, char* value):
+            cdef lib.AVSampleFormat pix_fmt = lib.av_get_sample_fmt(value)
+            if pix_fmt == lib.AV_SAMPLE_FMT_NONE:
+                raise ValueError("invalid sample_fmt %s" % value)
+            self.ctx.sample_fmt = pix_fmt
             
     property width:
         def __get__(self): return self.ctx.width if self.ctx else None

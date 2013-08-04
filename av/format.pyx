@@ -103,13 +103,22 @@ cdef class Context(object):
         
         codec_ctx.codec = codec
         
-        # Now lets set some more sane defaults
+        # Now lets set some more sane video defaults
         if codec_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
             codec_ctx.time_base.den = 25
             codec_ctx.time_base.num = 1
             codec_ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_ctx.width = 640
             codec_ctx.height = 480
+        
+        # Some Sane audio defaults
+        elif codec_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+            #choose codecs first availbe sample format
+            codec_ctx.sample_fmt = codec.sample_fmts[0]
+            codec_ctx.bit_rate = 64000
+            codec_ctx.sample_rate = 44100
+            codec_ctx.channels = 2
+            codec_ctx.channel_layout = lib.AV_CH_LAYOUT_STEREO
             
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:

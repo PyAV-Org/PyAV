@@ -28,6 +28,8 @@ cdef extern from "libavcodec/avcodec.h":
         AVCodecID id
         int capabilities
         
+        AVSampleFormat* sample_fmts
+        
             
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     cdef struct AVCodecContext:

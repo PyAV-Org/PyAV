@@ -75,5 +75,9 @@ cdef extern from "libavutil/pixdesc.h":
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(char* name)
 
+cdef extern from "libavutil/samplefmt.h":
+    cdef char * av_get_sample_fmt_name(AVSampleFormat sample_fmt)
+    cdef AVSampleFormat av_get_sample_fmt(char* name)
+    
     
 

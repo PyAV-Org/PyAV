@@ -39,7 +39,6 @@ cdef int err_check(int res) except -1:
         raise LibError(c_buffer, res)
     return res
 
-
 cdef dict avdict_to_dict(lib.AVDictionary *input):
     
     cdef lib.AVDictionaryEntry *element = NULL
