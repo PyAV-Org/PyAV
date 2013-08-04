@@ -1,10 +1,11 @@
 from cpython.oldbuffer cimport PyBuffer_FromMemory
 from cpython cimport array
+from libc.stdint cimport int64_t, uint8_t, uint64_t
 
 cimport libav as lib
 
 cimport av.format
-from .utils cimport err_check,avrational_to_faction
+from .utils cimport err_check,avrational_to_faction, channel_layout_name
 
 
 cdef class Codec(object):
@@ -97,6 +98,34 @@ cdef class Codec(object):
             if pix_fmt == lib.AV_SAMPLE_FMT_NONE:
                 raise ValueError("invalid sample_fmt %s" % value)
             self.ctx.sample_fmt = pix_fmt
+    
+    property channels:
+        """Number of Audio Channels"""
+        def __get__(self):
+            return self.ctx.channels
+        def __set__(self, int value):
+            
+            self.ctx.channels = value
+            # set channel layout to default layout for that many channels
+            self.ctx.channel_layout = lib.av_get_default_channel_layout(value)
+            
+    property channel_layout:
+        """Audio channel layout"""
+        def __get__(self):
+            result = channel_layout_name(self.ctx.channels, self.ctx.channel_layout)
+            if result == NULL:
+                return None
+            return result
+        
+        def __set__(self, char* value):
+            
+            cdef uint64_t channel_layout = lib.av_get_channel_layout(value)
+            
+            if channel_layout == 0:
+                raise ValueError("invalid channel layout %s" % value)
+            
+            self.ctx.channel_layout = channel_layout
+            self.ctx.channels = lib.av_get_channel_layout_nb_channels(channel_layout)
             
     property width:
         def __get__(self): return self.ctx.width if self.ctx else None
@@ -436,5 +465,23 @@ cdef class AudioFrame(Frame):
 
     """A frame of audio."""
 
-    pass
+    property sample_fmt:
+        """Audio Sample Format"""
+        def __get__(self):
+            result = lib.av_get_sample_fmt_name(<lib.AVSampleFormat > self.ptr.format)
+            if result == NULL:
+                return None
+            return result
+        
+    property channels:
+        """Number of audio channels"""
+        def __get__(self): return self.ptr.channels
+        
+    property channel_layout:
+        """Audio channel layout"""
+        def __get__(self):
+            result = channel_layout_name(self.ptr.channels, self.ptr.channel_layout)
+            if result == NULL:
+                return None
+            return result
 

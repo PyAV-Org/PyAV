@@ -1,4 +1,4 @@
-from libc.stdint cimport int64_t,uint8_t
+from libc.stdint cimport int64_t, uint8_t, uint64_t
 
 cdef extern from "libavutil/avutil.h":
 
@@ -78,6 +78,23 @@ cdef extern from "libavutil/pixdesc.h":
 cdef extern from "libavutil/samplefmt.h":
     cdef char * av_get_sample_fmt_name(AVSampleFormat sample_fmt)
     cdef AVSampleFormat av_get_sample_fmt(char* name)
+    
+cdef extern from "libavutil/channel_layout.h":
+    cdef char* av_get_channel_name(uint64_t channel)
+    
+    cdef uint64_t av_get_channel_layout(char* name)
+    
+    cdef int av_get_channel_layout_nb_channels(uint64_t channel_layout)
+    
+    # Returns default channel layout for a given number of channels
+    cdef int64_t av_get_default_channel_layout(int nb_channels)
+    
+    cdef void av_get_channel_layout_string(
+        char* buff,
+        int buf_size,
+        int nb_channels,
+        uint64_t channel_layout
+    )
     
     
 

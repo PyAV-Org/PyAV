@@ -1,5 +1,5 @@
 from fractions import Fraction
-
+from libc.stdint cimport int64_t, uint8_t, uint64_t
 cimport libav as lib
 
 
@@ -38,6 +38,13 @@ cdef int err_check(int res) except -1:
         lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
         raise LibError(c_buffer, res)
     return res
+
+cdef char* channel_layout_name(int nb_channels, uint64_t channel_layout):
+
+    cdef char c_buffer[1024]    
+    lib.av_get_channel_layout_string(c_buffer, 1024, nb_channels, channel_layout)
+
+    return c_buffer
 
 cdef dict avdict_to_dict(lib.AVDictionary *input):
     

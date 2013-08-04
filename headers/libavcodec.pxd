@@ -111,6 +111,7 @@ cdef extern from "libavcodec/avcodec.h":
         int width
         int height
         int nb_samples # Audio samples
+        int channels # Audio channels
         int channel_layout # Audio channel_layout
         int format
         int key_frame # 0 or 1.
