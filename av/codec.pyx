@@ -83,8 +83,18 @@ cdef class Codec(object):
             if pix_fmt == lib.AV_PIX_FMT_NONE:
                 raise ValueError("invalid pix_fmt %s" % value)
             self.ctx.pix_fmt = pix_fmt
-            
+    
+    property frame_size:
+        """Number of samples per channel in an audio frame."""
+        def __get__(self): return self.ctx.frame_size
+        
+    property sample_rate:
+        """samples per second """
+        def __get__(self): return self.ctx.sample_rate
+        def __set__(self, int value): self.ctx.sample_rate = value
+
     property sample_fmt:
+        """Audio sample format"""
         def __get__(self):
             if not self.ctx:
                 return None
@@ -100,7 +110,7 @@ cdef class Codec(object):
             self.ctx.sample_fmt = pix_fmt
     
     property channels:
-        """Number of Audio Channels"""
+        """Number of audio channels"""
         def __get__(self):
             return self.ctx.channels
         def __set__(self, int value):
@@ -464,6 +474,38 @@ cdef class VideoFrame(Frame):
 cdef class AudioFrame(Frame):
 
     """A frame of audio."""
+    
+    cpdef resample(self, char* channel_layout, char* sample_fmt, int sample_rate):
+        
+        
+        cdef int64_t out_ch_layout = lib.AV_CH_LAYOUT_STEREO
+        cdef lib.AVSampleFormat out_sample_fmt = lib.AV_SAMPLE_FMT_S16
+        
+        if not self.swr_proxy:
+            self.swr_proxy = SwrContextProxy()
+            
+        self.swr_proxy.ptr = lib.swr_alloc_set_opts(
+            self.swr_proxy.ptr,
+            out_ch_layout,
+            out_sample_fmt,
+            sample_rate,
+            self.ptr.channel_layout,
+            <lib.AVSampleFormat > self.ptr.format,
+            self.ptr.sample_rate,
+            0,
+            NULL
+        )
+        
+        
+    property samples:
+        """Number of audio samples (per channel) """
+        def __get__(self):
+            return self.ptr.nb_samples
+    
+    property sample_rate:
+        """Sample rate of the audio data. """
+        def __get__(self):
+            return self.ptr.sample_rate
 
     property sample_fmt:
         """Audio Sample Format"""
