@@ -1,7 +1,7 @@
 AC_INIT([PyAV], [1.0], [pyav@mikeboers.com])
 
 # The libraries we will link against.
-AV_LIBS="libavformat libavcodec libavutil libswscale"
+AV_LIBS="libavformat libavcodec libavutil libswscale libswresample"
 
 # Grab the CFLAGS and LDFLAGS for those libraries.
 AV_CFLAGS=`pkg-config --cflags ${AV_LIBS}`
