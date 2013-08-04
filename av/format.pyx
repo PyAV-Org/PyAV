@@ -289,6 +289,8 @@ cdef class VideoStream(Stream):
         super(VideoStream, self).__init__(*args)
         self.last_w = 0
         self.last_h = 0
+        
+        self.encoded_frame_count = 0
     
     def __dealloc__(self):
         # These are all NULL safe.
@@ -345,11 +347,17 @@ cdef class VideoStream(Stream):
         frame.sws_proxy = self.sws_proxy
 
         cdef av.codec.VideoFrame formated_frame
+        
         formated_frame = frame.reformat(self.codec.width,self.codec.height, self.codec.pix_fmt)
+        
+        pts_step = lib.av_rescale_q(1, self.ptr.codec.time_base, self.ptr.time_base)
+        formated_frame.ptr.pts = pts_step * self.encoded_frame_count
+        
+        self.encoded_frame_count += 1
         
         cdef av.codec.Packet packet = av.codec.Packet()
         cdef int got_output
-
+        
         packet.struct.data = NULL #packet data will be allocated by the encoder
         packet.struct.size = 0
         

@@ -57,6 +57,8 @@ cdef class VideoStream(Stream):
     cdef int last_w
     cdef int last_h
     
+    cdef int encoded_frame_count
+    
     cpdef encode(self, av.codec.VideoFrame)
     
     cpdef flush_encoder(self)

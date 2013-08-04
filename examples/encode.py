@@ -28,10 +28,16 @@ source_video = av.open(source)
 streams = [s for s in source_video.streams if s.type == b'video']
 streams = [streams[0]]
 
+frame_count = 0
 
 for packet in source_video.demux(streams):
     for frame in packet.decode():
         
+        
+        frame_count += 1
         stream.encode(frame)
+        
+    if frame_count > 1000:
+        break
         
 encode_video.close()
