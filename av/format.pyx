@@ -101,6 +101,7 @@ cdef class Context(object):
         # Set Codecs defaults
         lib.avcodec_get_context_defaults3(codec_ctx, codec)
         
+        codec_ctx.codec = codec
         # Now lets set some more sane defaults
         
         if codec_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
@@ -115,6 +116,44 @@ cdef class Context(object):
         self.streams.append(stream_obj)
         
         return stream_obj
+    
+    cpdef begin_encoding(self):
+        print "encoding starting"
+        
+        cdef Stream stream
+        
+        for stream in self.streams:
+            # Open Codec if its not open
+            if not lib.avcodec_is_open(stream.codec.ctx):
+                ret = lib.avcodec_open2(stream.codec.ctx, stream.codec.ptr, NULL)
+                if ret <0:
+                    raise Exception("Could not open video codec: %s" % lib.av_err2str(ret))
+                print "opened codec for", stream
+                
+        filename = self.name
+        
+        ret = lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE)
+        if ret <0:
+            raise Exception("Could not open '%s' %s" % (filename,lib.av_err2str(ret)))
+                
+        ret = lib.avformat_write_header(self.proxy.ptr, NULL)
+        if ret < 0:
+            raise Exception("Error occurred when opening output file: %s" %  lib.av_err2str(ret))
+        
+    def close(self):
+        cdef Stream stream
+        
+        if self.is_output:
+            lib.av_write_trailer(self.proxy.ptr)
+            
+            for stream in self.streams:
+                stream.flush_encoder()
+                
+            for stream in self.streams:
+                
+                lib.avcodec_close(stream.codec.ctx)
+            
+        
     
     def dump(self):
         lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w')
@@ -243,11 +282,6 @@ cdef class Stream(object):
     
     cpdef decode(self, av.codec.Packet packet):
         return None
-    
-    cpdef encode(self, av.codec.Frame packet):
-        return None
-    
-
 
 cdef class VideoStream(Stream):
     
@@ -303,7 +337,42 @@ cdef class VideoStream(Stream):
         self.raw_frame = NULL
         
         return frame
+    
+    cpdef encode(self, av.codec.VideoFrame frame):
 
+        if not self.sws_proxy:
+            self.sws_proxy =  av.codec.SwsContextProxy() 
+        frame.sws_proxy = self.sws_proxy
+
+        cdef av.codec.VideoFrame formated_frame
+        formated_frame = frame.reformat(self.codec.width,self.codec.height, self.codec.pix_fmt)
+        
+        cdef av.codec.Packet packet = av.codec.Packet()
+        cdef int got_output
+
+        packet.struct.data = NULL #packet data will be allocated by the encoder
+        packet.struct.size = 0
+        
+        ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output)
+        if ret <0:
+            raise Exception("Error encoding video frame: %s" % lib.av_err2str(ret))
+        
+        if got_output:
+            if self.codec.ctx.coded_frame.key_frame:
+                packet.struct.flags |= lib.AV_PKT_FLAG_KEY
+                
+            packet.struct.stream_index = self.ptr.index
+            ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+        else:
+            ret = 0
+        
+        if ret != 0:
+            raise Exception("Error while writing video frame: %s" % lib.av_err2str(ret))
+        
+    cpdef flush_encoder(self):
+        pass
+
+        
 
 cdef class AudioStream(Stream):
     

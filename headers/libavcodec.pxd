@@ -90,6 +90,8 @@ cdef extern from "libavcodec/avcodec.h":
         AVCodec *codec,
         AVDictionary **options,
     )
+    
+    cdef int avcodec_is_open(AVCodecContext *ctx )
     cdef int avcodec_close(AVCodecContext *ctx)
     
     # See: http://ffmpeg.org/doxygen/trunk/structAVPicture.html

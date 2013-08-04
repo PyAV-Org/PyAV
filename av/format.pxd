@@ -29,6 +29,8 @@ cdef class Context(object):
     cdef readonly dict metadata
     
     cpdef add_stream(self, char* codec_name)
+    
+    cpdef begin_encoding(self)
 
 
 cdef class Stream(object):
@@ -43,7 +45,6 @@ cdef class Stream(object):
     cdef readonly dict metadata
     
     cpdef decode(self, av.codec.Packet packet)
-    cpdef encode(self, av.codec.Frame)
 
 
 cdef class VideoStream(Stream):
@@ -55,6 +56,10 @@ cdef class VideoStream(Stream):
     cdef av.codec.SwsContextProxy sws_proxy
     cdef int last_w
     cdef int last_h
+    
+    cpdef encode(self, av.codec.VideoFrame)
+    
+    cpdef flush_encoder(self)
 
 
 cdef class AudioStream(Stream):
