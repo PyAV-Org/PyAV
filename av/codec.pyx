@@ -480,7 +480,16 @@ cdef class AudioFrame(Frame):
         if self.buffer_:
             lib.av_freep(&self.buffer_[0])
         lib.av_freep(&self.buffer_)
-
+    
+    def __repr__(self):
+        return '<%s.%s %s samples %dhz %s at 0x%x>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.samples,
+            self.sample_rate,
+            self.channel_layout,
+            id(self),
+        )
     
     cpdef resample(self, char* channel_layout, char* sample_fmt, int sample_rate):
         #print channel_layout, sample_fmt, sample_rate
@@ -535,8 +544,6 @@ cdef class AudioFrame(Frame):
         
         cdef int dst_samples_linesize
         
-        #cdef uint8_t ** buffer  = &frame.buffer_
-        
         ret = samples_alloc_array_and_samples(&frame.buffer_, 
                                               &dst_samples_linesize,
                                               dst_nb_channels,
@@ -551,14 +558,6 @@ cdef class AudioFrame(Frame):
                                                                    dst_nb_samples,
                                                                    out_sample_fmt,0)
         
-       # print "samples", self.ptr.nb_samples,self.ptr.sample_rate, "->", dst_nb_samples,dst_samples_size,sample_rate
-        print "|-swr delay;", lib.swr_get_delay(self.swr_proxy.ptr, sample_rate)
-        
-        print "|-samples", src_nb_samples, '->',dst_nb_samples
-        print "|-channel_layout", self.channel_layout, '->', channel_layout
-        print "|-sample_rate", self.sample_rate, '->', sample_rate
-        
-        print ""
         
         ret = lib.swr_convert(self.swr_proxy.ptr,
                               frame.buffer_,dst_nb_samples,
@@ -570,6 +569,9 @@ cdef class AudioFrame(Frame):
         
         frame.ptr.nb_samples = dst_nb_samples
         frame.ptr.format = out_sample_fmt
+        frame.ptr.channels = dst_nb_channels
+        frame.ptr.sample_rate = sample_rate
+        frame.ptr.channel_layout = out_ch_layout
         frame.frame_index = self.frame_index
         
         frame.buffer_size = dst_samples_size

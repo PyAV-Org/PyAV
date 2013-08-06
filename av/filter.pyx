@@ -60,6 +60,10 @@ cdef class FilterContext(object):
         if ret < 0:
             raise Exception("Cannot create audio buffer source")
         
+        #print self.codec.ctx.frame_size
+        #raise Exception("wee")
+        #lib.av_buffersink_set_frame_size(self.buffersink_ctx, self.codec.ctx.frame_size)
+        
         self.abuffersink_params = lib.av_abuffersink_params_alloc()
         
         
@@ -71,6 +75,7 @@ cdef class FilterContext(object):
                                                NULL,
                                                self.abuffersink_params,
                                                self.filter_graph)
+        
         
         
         lib.av_free(self.abuffersink_params)
@@ -102,4 +107,43 @@ cdef class FilterContext(object):
         if ret < 0:
             raise Exception("Cannot avfilter_graph_config")
         
+        lib.av_buffersink_set_frame_size(self.buffersink_ctx, self.codec.ctx.frame_size)
+
+    def add_frame(self, av.codec.AudioFrame frame):
+
+        ret = lib.av_buffersrc_add_frame(self.buffersrc_ctx, frame.ptr, 0)
+        
+        if ret < 0:
+            raise Exception("Error while feeding the audio filtergraph")
+
+    def get_frames(self):
+        
+    
+        cdef lib.AVFilterBufferRef *samplesref
+        
+        cdef av.codec.AudioFrame frame
+    
+        
+        while True:
+            ret = lib.av_buffersink_get_buffer_ref(self.buffersink_ctx, &samplesref, 0)
+    
+            if ret == lib.AVERROR(lib.EAGAIN) or ret == lib.AVERROR_EOF:
+                break
+            
+            if ret <0:
+                
+                print 'sink exited with', ret
+                break
+                raise Exception("errer geting buffer reference %s" % lib.av_err2str(ret))
+            
+            if samplesref:
+                
+                frame = av.codec.AudioFrame()
+                frame.ptr =  lib.avcodec_alloc_frame()
+                #print "reffernec!!"
+                ret = lib.avfilter_copy_buf_props(frame.ptr, samplesref)
+                if ret < 0:
+                    raise  Exception("error copying buffer props")
+                lib.avfilter_unref_bufferp(&samplesref)
+                yield frame
         

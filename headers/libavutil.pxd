@@ -23,10 +23,13 @@ cdef extern from "libavutil/avutil.h":
         AV_ROUND_PASS_MINMAX
     
     cdef int AV_ERROR_MAX_STRING_SIZE
+    cdef int AVERROR_EOF
     
     cdef int AV_CH_LAYOUT_STEREO
     
     cdef int ENOMEM
+    
+    cdef int EAGAIN
     
     cdef double M_PI
     

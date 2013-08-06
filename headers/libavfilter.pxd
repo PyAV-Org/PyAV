@@ -1,5 +1,4 @@
 
-
 cdef extern from "libavfilter/avfiltergraph.h":
     pass
     
@@ -7,6 +6,9 @@ cdef extern from "libavfilter/buffersink.h":
     pass
     
 cdef extern from "libavfilter/buffersrc.h":
+    pass
+    
+cdef extern from "libavfilter/avcodec.h":
     pass
 
 cdef extern from "libavfilter/avfilter.h":
@@ -34,7 +36,11 @@ cdef extern from "libavfilter/avfilter.h":
     # http://ffmpeg.org/doxygen/trunk/structAVABufferSinkParams.html
     ctypedef struct AVABufferSinkParams:
         AVSampleFormat *sample_fmts
-         
+        
+    # https://www.ffmpeg.org/doxygen/trunk/structAVFilterBufferRef.html
+    
+    cdef struct AVFilterBufferRef:
+        pass
          
     cdef AVABufferSinkParams* av_abuffersink_params_alloc()
     
@@ -67,5 +73,27 @@ cdef extern from "libavfilter/avfilter.h":
         void* log_ctx
     )
     
+    cdef void av_buffersink_set_frame_size(
+        AVFilterContext *ctx,
+        unsigned frame_size
+    )
     
+    cdef int av_buffersrc_add_frame(
+        AVFilterContext *ctx, 
+        AVFrame *frame,
+        int flags
+    )
+    
+    cdef int av_buffersink_get_buffer_ref(
+        AVFilterContext* buffer_sink,
+        AVFilterBufferRef** bufref,
+        int flags
+    )
+    
+    cdef void avfilter_unref_bufferp(AVFilterBufferRef **ref)
+    
+    cdef int avfilter_copy_buf_props(
+        AVFrame *dst, 
+        AVFilterBufferRef *src
+    )
     
