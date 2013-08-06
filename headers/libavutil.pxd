@@ -92,6 +92,8 @@ cdef extern from "libavutil/avutil.h":
         int64_t c,
         AVRounding r
     )
+    
+    cdef char* av_strdup(char *s)
 
 cdef extern from "libavutil/pixdesc.h":
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)

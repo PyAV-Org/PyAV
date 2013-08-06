@@ -2,6 +2,8 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 
 
 cdef extern from "libavcodec/avcodec.h":
+
+    cdef void avcodec_register_all()
     
     cdef int64_t AV_NOPTS_VALUE
     cdef int CODEC_FLAG_GLOBAL_HEADER
