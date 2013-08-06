@@ -5,7 +5,7 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 cimport libav as lib
 
 cimport av.format
-from .utils cimport err_check,avrational_to_faction, channel_layout_name
+from .utils cimport err_check,avrational_to_faction, channel_layout_name,samples_alloc_array_and_samples
 
 
 cdef class Codec(object):
@@ -104,10 +104,10 @@ cdef class Codec(object):
             return result
         # Note should check if codec supports sample_fmt
         def __set__(self, char* value):
-            cdef lib.AVSampleFormat pix_fmt = lib.av_get_sample_fmt(value)
-            if pix_fmt == lib.AV_SAMPLE_FMT_NONE:
+            cdef lib.AVSampleFormat sample_fmt = lib.av_get_sample_fmt(value)
+            if sample_fmt == lib.AV_SAMPLE_FMT_NONE:
                 raise ValueError("invalid sample_fmt %s" % value)
-            self.ctx.sample_fmt = pix_fmt
+            self.ctx.sample_fmt = sample_fmt
     
     property channels:
         """Number of audio channels"""
@@ -330,7 +330,7 @@ cdef class VideoFrame(Frame):
 
     def __dealloc__(self):
         # These are all NULL safe.
-        lib.av_free(self.buffer_)
+        lib.av_freep(&self.buffer_)
     
     def __repr__(self):
         return '<%s.%s %dx%d at 0x%x>' % (
@@ -475,15 +475,27 @@ cdef class AudioFrame(Frame):
 
     """A frame of audio."""
     
+    def __dealloc__(self):
+        # These are all NULL safe.
+        if self.buffer_:
+            lib.av_freep(&self.buffer_[0])
+        lib.av_freep(&self.buffer_)
+
+    
     cpdef resample(self, char* channel_layout, char* sample_fmt, int sample_rate):
-        
-        
-        cdef int64_t out_ch_layout = lib.AV_CH_LAYOUT_STEREO
-        cdef lib.AVSampleFormat out_sample_fmt = lib.AV_SAMPLE_FMT_S16
+        #print channel_layout, sample_fmt, sample_rate
+        cdef uint64_t out_ch_layout = lib.av_get_channel_layout(channel_layout)
+        if out_ch_layout == 0:
+            raise ValueError("invalid channel layout %s" % channel_layout)
+            
+        cdef lib.AVSampleFormat out_sample_fmt = lib.av_get_sample_fmt(sample_fmt)
+        if out_sample_fmt == lib.AV_SAMPLE_FMT_NONE:
+            raise ValueError("invalid sample_fmt %s" % sample_fmt)
         
         if not self.swr_proxy:
             self.swr_proxy = SwrContextProxy()
-            
+        
+        # setup SwrContext
         self.swr_proxy.ptr = lib.swr_alloc_set_opts(
             self.swr_proxy.ptr,
             out_ch_layout,
@@ -496,7 +508,88 @@ cdef class AudioFrame(Frame):
             NULL
         )
         
+        if lib.swr_init(self.swr_proxy.ptr) < 0:
+            raise Exception("Failed to initialize the resampling context")
         
+        
+        # Calculate buffer size needed for new audio frame
+
+        # compute the number of converted samples
+        cdef int src_nb_samples = self.ptr.nb_samples
+        
+        
+        
+        
+        
+        
+        cdef int dst_nb_samples = lib.av_rescale_rnd(src_nb_samples,
+                                                 sample_rate, #dst sample rate
+                                                 self.ptr.sample_rate, # src sample rate
+                                                 lib.AV_ROUND_UP)
+        
+        cdef AudioFrame frame = AudioFrame()
+        frame.ptr= lib.avcodec_alloc_frame()
+        lib.avcodec_get_frame_defaults(frame.ptr)
+        
+        cdef int dst_nb_channels = lib.av_get_channel_layout_nb_channels(out_ch_layout)
+        
+        cdef int dst_samples_linesize
+        
+        #cdef uint8_t ** buffer  = &frame.buffer_
+        
+        ret = samples_alloc_array_and_samples(&frame.buffer_, 
+                                              &dst_samples_linesize,
+                                              dst_nb_channels,
+                                              dst_nb_samples,
+                                              out_sample_fmt,0)
+        if ret <0:
+            raise Exception("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
+
+        
+        cdef int dst_samples_size = lib.av_samples_get_buffer_size(NULL,
+                                                                   dst_nb_channels,
+                                                                   dst_nb_samples,
+                                                                   out_sample_fmt,0)
+        
+       # print "samples", self.ptr.nb_samples,self.ptr.sample_rate, "->", dst_nb_samples,dst_samples_size,sample_rate
+        print "|-swr delay;", lib.swr_get_delay(self.swr_proxy.ptr, sample_rate)
+        
+        print "|-samples", src_nb_samples, '->',dst_nb_samples
+        print "|-channel_layout", self.channel_layout, '->', channel_layout
+        print "|-sample_rate", self.sample_rate, '->', sample_rate
+        
+        print ""
+        
+        ret = lib.swr_convert(self.swr_proxy.ptr,
+                              frame.buffer_,dst_nb_samples,
+                              self.ptr.extended_data, src_nb_samples)
+        
+        #print ret,"dst_samples_size", dst_samples_size, 'linesize', dst_samples_linesize
+        if ret <0:
+            raise Exception("error swr_convert: %s" % lib.av_err2str(ret))
+        
+        frame.ptr.nb_samples = dst_nb_samples
+        frame.ptr.format = out_sample_fmt
+        frame.frame_index = self.frame_index
+        
+        frame.buffer_size = dst_samples_size
+        
+        # Associate buffer with frame
+        lib.avcodec_fill_audio_frame(frame.ptr, 
+                                     dst_nb_channels, 
+                                     out_sample_fmt,
+                                     frame.buffer_[0],
+                                     dst_samples_size, 0)
+
+        # Copy over pts
+        frame.ptr.pts = self.ptr.pts
+        
+        #frame.ptr.pts = lib.AV_NOPTS_VALUE
+        
+        
+        return frame
+        
+
     property samples:
         """Number of audio samples (per channel) """
         def __get__(self):

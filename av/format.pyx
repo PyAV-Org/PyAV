@@ -117,9 +117,10 @@ cdef class Context(object):
             codec_ctx.sample_fmt = codec.sample_fmts[0]
             codec_ctx.bit_rate = 64000
             codec_ctx.sample_rate = 44100
+            #codec_ctx.sample_rate = 48000
             codec_ctx.channels = 2
             codec_ctx.channel_layout = lib.AV_CH_LAYOUT_STEREO
-            
+
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_ctx.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
@@ -400,6 +401,10 @@ cdef class VideoStream(Stream):
         
 
 cdef class AudioStream(Stream):
+
+    def __init__(self, *args):
+        super(AudioStream, self).__init__(*args)
+        self.encoded_frame_count = 0
     
     property sample_rate:
         def __get__(self):
@@ -414,7 +419,6 @@ cdef class AudioStream(Stream):
         lib.av_free(self.frame)
         
     cpdef decode(self, av.codec.Packet packet):
-        
         if not self.frame:
             self.frame = lib.avcodec_alloc_frame()
 
@@ -423,10 +427,16 @@ cdef class AudioStream(Stream):
         if not done:
             return
         
+        if not self.swr_proxy:
+            self.swr_proxy =  av.codec.SwrContextProxy() 
+
         cdef av.codec.AudioFrame frame = av.codec.AudioFrame()
         
         # Copy the pointers over.
         frame.ptr = self.frame
+        frame.swr_proxy = self.swr_proxy
+        
+        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         
         # Null out ours.
         self.frame = NULL
@@ -434,19 +444,62 @@ cdef class AudioStream(Stream):
         return frame
     
     cpdef encode(self, av.codec.AudioFrame frame):
+    
+        if not self.swr_proxy:
+            self.swr_proxy =  av.codec.SwrContextProxy() 
+        frame.swr_proxy = self.swr_proxy
+
+        channel_layout = self.codec.channel_layout
+        sample_fmt =  self.codec.sample_fmt
+        
+        cdef av.codec.AudioFrame resampled_frame
+        resampled_frame = frame.resample(channel_layout, sample_fmt, self.codec.sample_rate)
+        
+        
+        
+        
+        
+        pts_step = lib.av_rescale_q(frame.samples, self.ptr.codec.time_base, self.ptr.time_base)
+        
+        #print pts_step * self.encoded_frame_count
+        
+        #print self.ptr.pts.val
+        
+        resampled_frame.ptr.pts = self.encoded_frame_count
+        
+        if resampled_frame.ptr.nb_samples != self.codec.ctx.frame_size:
+            pass
+            #raise Exception("invaild frame size %i != %i" %  (self.codec.ctx.frame_size, resampled_frame.ptr.nb_samples))
+        
+        
+        self.encoded_frame_count += resampled_frame.samples
+        
+        print 'frame pts', resampled_frame.ptr.pts
+        #resampled_frame.ptr.pts = lib.AV_NOPTS_VALUE
+        
+        #print resampled_frame.ptr.pts
+        
         
         cdef av.codec.Packet packet = av.codec.Packet()
         cdef int got_output
         
-        ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, frame.ptr, &got_output)
+        packet.struct.pts = pts_step * self.encoded_frame_count
+        
+        ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, resampled_frame.ptr, &got_output)
         
         if ret < 0:
             raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
         
         if got_output:
+        
+            print "packet", packet.struct.pts, packet.struct.dts
+
             
             packet.struct.stream_index = self.ptr.index
             
+            #packet.struct.pts = self.ptr.pts.val
+            #packet.struct.dts = self.ptr.cur_dts
+
             ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
         else:
             ret = 0
@@ -454,6 +507,9 @@ cdef class AudioStream(Stream):
         
         if ret != 0:
             raise Exception("Error while writing audio frame: %s" % lib.av_err2str(ret))
+        
+    cpdef flush_encoder(self):
+        pass
 
 
 cdef class SubtitleStream(Stream):
