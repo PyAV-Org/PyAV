@@ -9,6 +9,7 @@ from .utils cimport err_check, avdict_to_dict, avrational_to_faction
 from .utils import Error, LibError
 
 cimport av.codec
+cimport av.filter
 
 
 time_base = lib.AV_TIME_BASE
@@ -442,11 +443,20 @@ cdef class AudioStream(Stream):
         self.frame = NULL
         
         return frame
+    def setup_filters(self):
+        
+        self.filter = av.filter.FilterContext()
+        self.filter.codec = self.codec
+        self.filter.setup("asetnsamples=n=%i:p=0" % self.codec.ctx.frame_size)
+        
+        raise Exception()
     
     cpdef encode(self, av.codec.AudioFrame frame):
     
         if not self.swr_proxy:
             self.swr_proxy =  av.codec.SwrContextProxy() 
+        if not self.filter:
+            self.setup_filters()
         frame.swr_proxy = self.swr_proxy
 
         channel_layout = self.codec.channel_layout
