@@ -14,16 +14,29 @@ cdef extern from "libavutil/avutil.h":
         AV_SAMPLE_FMT_S16
         AV_SAMPLE_FMT_FLTP
         
+    cdef enum AVRounding:
+        AV_ROUND_ZERO
+        AV_ROUND_INF
+        AV_ROUND_DOWN
+        AV_ROUND_UP
+        AV_ROUND_NEAR_INF
+        AV_ROUND_PASS_MINMAX
+    
     cdef int AV_ERROR_MAX_STRING_SIZE
     
     cdef int AV_CH_LAYOUT_STEREO
     
+    cdef int ENOMEM
+    
     cdef double M_PI
     
+    cdef int AVERROR(int error)
     cdef int av_strerror(int errno, char *output, size_t output_size)
     cdef char* av_err2str(int errnum)
 
     cdef void* av_malloc(size_t size)
+    cdef void *av_calloc(size_t nmemb, size_t size)
+    
     cdef void av_free(void* ptr)
     cdef void av_freep(void *ptr)
     
@@ -70,6 +83,15 @@ cdef extern from "libavutil/avutil.h":
         AVRational bq, # source time base
         AVRational cq  # target time base
     )
+    
+    # Rescale a 64-bit integer with specified rounding.
+    # A simple a*b/c isn't possible as it can overflow
+    cdef int64_t av_rescale_rnd(
+        int64_t a,
+        int64_t b, 
+        int64_t c,
+        AVRounding r
+    )
 
 cdef extern from "libavutil/pixdesc.h":
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
@@ -78,6 +100,26 @@ cdef extern from "libavutil/pixdesc.h":
 cdef extern from "libavutil/samplefmt.h":
     cdef char * av_get_sample_fmt_name(AVSampleFormat sample_fmt)
     cdef AVSampleFormat av_get_sample_fmt(char* name)
+    
+    cdef int av_sample_fmt_is_planar(AVSampleFormat sample_fmt)
+    
+    cdef int av_samples_alloc(
+        uint8_t** audio_data,
+        int* linesize,
+        int nb_channels,
+        int nb_samples,
+        AVSampleFormat sample_fmt,
+        int align
+    )
+    
+    cdef int av_samples_get_buffer_size(
+        int *linesize,
+        int nb_channels,
+        int nb_samples,
+        AVSampleFormat sample_fmt,
+        int align
+    )
+        
     
 cdef extern from "libavutil/channel_layout.h":
     cdef char* av_get_channel_name(uint64_t channel)

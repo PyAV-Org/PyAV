@@ -53,6 +53,7 @@ cdef extern from "libavformat/avformat.h":
         int64_t start_time
         int64_t duration
         int64_t nb_frames
+        int64_t cur_dts
         
         AVDictionary *metadata
         

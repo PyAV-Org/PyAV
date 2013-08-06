@@ -14,7 +14,7 @@ cdef extern from "libswresample/swresample.h":
         AVSampleFormat in_sample_fmt,
         int in_sample_rate,
         int log_offset,
-        void *log_ctx
+        void *log_ctx #logging context, can be NULL
     )
     
     cdef int swr_convert(
@@ -23,7 +23,10 @@ cdef extern from "libswresample/swresample.h":
         int out_count,
         uint8_t **in_buffer,
         int in_count 
-    )   
+    )  
+    # Gets the delay the next input sample will 
+    # experience relative to the next output sample. 
+    cdef int64_t swr_get_delay(SwrContext *s, int64_t base)
 
     cdef SwrContext* swr_alloc()
     cdef int swr_init(SwrContext* ctx)
