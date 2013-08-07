@@ -64,5 +64,5 @@ cdef class AudioFrame(Frame):
     cdef readonly int frame_index
     
     cdef SwrContextProxy swr_proxy
-    cpdef resample(self, char* channel_layout, char* sample_fmt, int sample_rate)
+    #cpdef resample(self, char* channel_layout, char* sample_fmt, int sample_rate)
 

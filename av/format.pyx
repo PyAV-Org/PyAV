@@ -468,48 +468,48 @@ cdef class AudioStream(Stream):
         cdef int got_output
         
         cdef av.codec.AudioFrame resampled_frame
-        resampled_frame = frame.resample(channel_layout, sample_fmt, self.codec.sample_rate)
+        for resampled_frame in frame.resample(channel_layout, sample_fmt, self.codec.sample_rate):
         
-        print "original", frame
-        print "resampled", resampled_frame
+            print "original", frame
+            print "resampled", resampled_frame
+            
+            self.filter.add_frame(resampled_frame)
+            
+            for filtered_frame in self.filter.get_frames():
+                print "filtered", filtered_frame
+    
+                pts_step = lib.av_rescale_q(filtered_frame.samples, self.ptr.codec.time_base, self.ptr.time_base)
         
-        self.filter.add_frame(resampled_frame)
-        
-        for filtered_frame in self.filter.get_frames():
-            print "filtered", filtered_frame
-
-            pts_step = lib.av_rescale_q(filtered_frame.samples, self.ptr.codec.time_base, self.ptr.time_base)
-    
-            filtered_frame.ptr.pts = self.encoded_frame_count
-            
-            if filtered_frame.ptr.nb_samples != self.codec.ctx.frame_size:
-                pass
-    
-            self.encoded_frame_count += filtered_frame.samples
-            
-            print 'frame pts', filtered_frame.ptr.pts
-    
-            
-            packet = av.codec.Packet()
-            #packet.struct.pts = pts_step * self.encoded_frame_count
-            
-            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, filtered_frame.ptr, &got_output)
-            
-            if ret < 0:
-                raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
-            
-            if got_output:
-    
-                packet.struct.stream_index = self.ptr.index
-    
-                ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
-            else:
-                ret = 0
+                filtered_frame.ptr.pts = self.encoded_frame_count
                 
-            
-            if ret != 0:
-                raise Exception("Error while writing audio frame: %s" % lib.av_err2str(ret))
+                if filtered_frame.ptr.nb_samples != self.codec.ctx.frame_size:
+                    pass
         
+                self.encoded_frame_count += filtered_frame.samples
+                
+                print 'frame pts', filtered_frame.ptr.pts
+        
+                
+                packet = av.codec.Packet()
+                #packet.struct.pts = pts_step * self.encoded_frame_count
+                
+                ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, filtered_frame.ptr, &got_output)
+                
+                if ret < 0:
+                    raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
+                
+                if got_output:
+        
+                    packet.struct.stream_index = self.ptr.index
+        
+                    ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+                else:
+                    ret = 0
+                    
+                
+                if ret != 0:
+                    raise Exception("Error while writing audio frame: %s" % lib.av_err2str(ret))
+            
     cpdef flush_encoder(self):
         pass
 
