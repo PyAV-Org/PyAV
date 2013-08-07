@@ -547,17 +547,9 @@ cdef class AudioFrame(Frame):
         
         while True:
             frame = AudioFrame()
-            frame.ptr= lib.avcodec_alloc_frame()
-            lib.avcodec_get_frame_defaults(frame.ptr)
             
-            ret = samples_alloc_array_and_samples(&frame.buffer_, 
-                                                  &dst_samples_linesize,
-                                                  dst_nb_channels,
-                                                  dst_nb_samples,
-                                                  out_sample_fmt,0)
-            if ret <0:
-                raise Exception("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
-           
+            frame.alloc_frame( dst_nb_channels, out_sample_fmt, dst_nb_samples)
+
             # Note: swr_convert returns number of samples output per channel,
             # negative value on error
             
@@ -578,10 +570,9 @@ cdef class AudioFrame(Frame):
                 break
         
             dst_nb_samples = ret
-            dst_samples_size = lib.av_samples_get_buffer_size(&dst_samples_linesize,
-                                                                       dst_nb_channels,
-                                                                       dst_nb_samples,
-                                                                       out_sample_fmt,0)
+            
+
+            frame.fill_frame(dst_nb_samples)
             
             frame.ptr.nb_samples = dst_nb_samples
             frame.ptr.format = out_sample_fmt
@@ -592,12 +583,6 @@ cdef class AudioFrame(Frame):
             
             frame.buffer_size = dst_samples_size
             
-            # Associate buffer with frame
-            lib.avcodec_fill_audio_frame(frame.ptr, 
-                                         dst_nb_channels, 
-                                         out_sample_fmt,
-                                         frame.buffer_[0],
-                                         dst_samples_size, 0)
             # Copy over pts
             frame.ptr.pts = self.ptr.pts
             
