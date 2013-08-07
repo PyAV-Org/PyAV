@@ -491,6 +491,54 @@ cdef class AudioFrame(Frame):
             self.sample_fmt,
             id(self),
         )
+        
+    cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
+     
+        if self.ptr:
+            if self.buffer_:
+                lib.av_freep(&self.buffer_[0])
+            lib.av_freep(&self.buffer_)
+            lib.avcodec_free_frame(&self.ptr)
+        cdef int ret
+        cdef int linesize
+        
+        self.ptr= lib.avcodec_alloc_frame()
+        lib.avcodec_get_frame_defaults(self.ptr)
+        
+        ret = samples_alloc_array_and_samples(&self.buffer_, 
+                                              &linesize,
+                                              channels,
+                                              nb_samples,
+                                              sample_fmt,0)
+        if ret < 0:
+            raise MemoryError("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
+
+        self.ptr.channels = channels
+        self.ptr.format = sample_fmt
+        
+        self.ptr.nb_samples = nb_samples
+        
+        
+    cdef fill_frame(self, int nb_samples):
+        if not self.ptr:
+            raise Exception("Frame Not allocated")
+
+        samples_size = lib.av_samples_get_buffer_size(NULL,
+                                                       self.ptr.channels,
+                                                       self.ptr.nb_samples,
+                                                       <lib.AVSampleFormat>self.ptr.format,0)
+        
+        self.ptr.nb_samples = nb_samples
+        ret =lib.avcodec_fill_audio_frame(self.ptr, 
+                                             self.ptr.channels, 
+                                             <lib.AVSampleFormat> self.ptr.format,
+                                             self.buffer_[0],
+                                             samples_size, 0)
+
+        if ret < 0:
+            raise Exception("avcodec_fill_audio_frame failed")
+        
+        self.buffer_size = samples_size
     
     def resample(self, char* channel_layout, char* sample_fmt, int out_sample_rate):
         #print channel_layout, sample_fmt, sample_rate
@@ -604,56 +652,6 @@ cdef class AudioFrame(Frame):
             if result == NULL:
                 return None
             return result
-        
-    cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
-     
-        if self.ptr:
-            if self.buffer_:
-                lib.av_freep(&self.buffer_[0])
-            lib.av_freep(&self.buffer_)
-            lib.avcodec_free_frame(&self.ptr)
-        cdef int ret
-        cdef int linesize
-        
-        self.ptr= lib.avcodec_alloc_frame()
-        lib.avcodec_get_frame_defaults(self.ptr)
-        
-        ret = samples_alloc_array_and_samples(&self.buffer_, 
-                                              &linesize,
-                                              channels,
-                                              nb_samples,
-                                              sample_fmt,0)
-        if ret < 0:
-            raise Exception("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
-        
-        
-        self.ptr.channels = channels
-        self.ptr.format = sample_fmt
-        
-        self.ptr.nb_samples = nb_samples
-        
-        
-    cdef fill_frame(self, int nb_samples):
-        if not self.ptr:
-            raise Exception("Frame Not allocated")
-
-        samples_size = lib.av_samples_get_buffer_size(NULL,
-                                                       self.ptr.channels,
-                                                       self.ptr.nb_samples,
-                                                       <lib.AVSampleFormat>self.ptr.format,0)
-        
-        self.ptr.nb_samples = nb_samples
-        ret =lib.avcodec_fill_audio_frame(self.ptr, 
-                                             self.ptr.channels, 
-                                             <lib.AVSampleFormat> self.ptr.format,
-                                             self.buffer_[0],
-                                             samples_size, 0)
-        
-        
-        if ret < 0:
-            raise Exception("avcodec_fill_audio_frame failed")
-        
-        self.buffer_size = samples_size
             
         
 cdef class AudioFifo:
