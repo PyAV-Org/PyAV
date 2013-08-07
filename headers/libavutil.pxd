@@ -144,4 +144,31 @@ cdef extern from "libavutil/channel_layout.h":
     )
     
     
-
+cdef extern from "libavutil/audio_fifo.h":
+    
+    cdef struct AVAudioFifo:
+        pass
+    
+    cdef void av_audio_fifo_free(AVAudioFifo *af)
+    
+    cdef AVAudioFifo* av_audio_fifo_alloc(
+         AVSampleFormat sample_fmt,
+         int channels,
+         int nb_samples
+    )
+    
+    cdef int av_audio_fifo_write(
+        AVAudioFifo *af, 
+        void **data, 
+        int nb_samples
+    )
+    
+    cdef int av_audio_fifo_read(
+        AVAudioFifo *af,
+        void **data, 
+        int nb_samples
+    )
+    
+    cdef int av_audio_fifo_size(AVAudioFifo *af)
+    cdef int av_audio_fifo_space (AVAudioFifo *af)
+    
