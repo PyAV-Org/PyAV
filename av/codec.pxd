@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t,uint64_t
 
 cimport libav as lib
 from cpython cimport bool
@@ -63,6 +63,19 @@ cdef class AudioFrame(Frame):
     cdef uint8_t **buffer_
     cdef readonly int frame_index
     
+    cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples)
+    cdef fill_frame(self, int nb_samples)
     cdef SwrContextProxy swr_proxy
     #cpdef resample(self, char* channel_layout, char* sample_fmt, int sample_rate)
+    
+cdef class AudioFifo:
+    cdef lib.AVAudioFifo *ptr
+    
+    cdef uint64_t channel_layout_
+    cdef int channels_
+    
+    cdef lib.AVSampleFormat sample_fmt_
+    cdef int sample_rate_
+    
+    
 

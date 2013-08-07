@@ -482,7 +482,7 @@ cdef class AudioFrame(Frame):
         lib.av_freep(&self.buffer_)
     
     def __repr__(self):
-        return '<%s.%s %s samples %dhz %s %s at 0x%x>' % (
+        return '<%s.%s nb_samples:%d %dhz %s %s at 0x%x>' % (
             self.__class__.__module__,
             self.__class__.__name__,
             self.samples,
@@ -576,8 +576,7 @@ cdef class AudioFrame(Frame):
             
             if ret == 0:
                 break
-            
-            print ">>>",ret
+        
             dst_nb_samples = ret
             dst_samples_size = lib.av_samples_get_buffer_size(&dst_samples_linesize,
                                                                        dst_nb_channels,
@@ -636,4 +635,177 @@ cdef class AudioFrame(Frame):
             if result == NULL:
                 return None
             return result
+        
+    cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
+     
+        if self.ptr:
+            if self.buffer_:
+                lib.av_freep(&self.buffer_[0])
+            lib.av_freep(&self.buffer_)
+            lib.avcodec_free_frame(&self.ptr)
+        cdef int ret
+        cdef int linesize
+        
+        self.ptr= lib.avcodec_alloc_frame()
+        lib.avcodec_get_frame_defaults(self.ptr)
+        
+        ret = samples_alloc_array_and_samples(&self.buffer_, 
+                                              &linesize,
+                                              channels,
+                                              nb_samples,
+                                              sample_fmt,0)
+        if ret < 0:
+            raise Exception("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
+        
+        
+        self.ptr.channels = channels
+        self.ptr.format = sample_fmt
+        
+        self.ptr.nb_samples = nb_samples
+        
+        
+    cdef fill_frame(self, int nb_samples):
+        if not self.ptr:
+            raise Exception("Frame Not allocated")
+        cdef int ret
+        samples_size = lib.av_samples_get_buffer_size(NULL,
+                                                       self.ptr.channels,
+                                                       self.ptr.nb_samples,
+                                                       <lib.AVSampleFormat>self.ptr.format,0)
+        
+        self.ptr.nb_samples = nb_samples
+        ret =lib.avcodec_fill_audio_frame(self.ptr, 
+                                             self.ptr.channels, 
+                                             <lib.AVSampleFormat> self.ptr.format,
+                                             self.buffer_[0],
+                                             samples_size, 0)
+        
+        
+        if ret < 0:
+            raise Exception("avcodec_fill_audio_frame failed")
+        
+        
+            
+        
+cdef class AudioFifo:
+
+    def __dealloc__(self):
+        lib.av_audio_fifo_free(self.ptr)
+        
+    def __repr__(self):
+        return '<%s.%s nb_samples:%s %dhz %s %s at 0x%x>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.samples,
+            self.sample_rate,
+            self.channel_layout,
+            self.sample_fmt,
+            id(self),
+        )
+     
+    def __init__(self, char* channel_layout,char* sample_fmt, 
+                            int sample_rate, int nb_samples):
+         
+        cdef uint64_t ch_layout = lib.av_get_channel_layout(channel_layout)
+        if ch_layout == 0:
+            raise ValueError("invalid channel layout %s" % channel_layout)
+            
+        cdef lib.AVSampleFormat fmt = lib.av_get_sample_fmt(sample_fmt)
+        if fmt == lib.AV_SAMPLE_FMT_NONE:
+            raise ValueError("invalid sample_fmt %s" % sample_fmt)
+        
+        cdef int channels = lib.av_get_channel_layout_nb_channels(ch_layout)
+        
+        self.ptr = lib.av_audio_fifo_alloc(fmt, channels, nb_samples)
+        if not self.ptr:
+            raise MemoryError("Unable to allocate AVAudioFifo")
+        
+        self.sample_fmt_ = fmt
+        self.sample_rate_ = sample_rate
+        self.channel_layout_ = ch_layout
+        self.channels_ = channels
+
+        
+    def write(self, AudioFrame frame):
+        cdef AudioFrame resampled_frame
+        for resampled_frame in frame.resample(self.channel_layout, self.sample_fmt, self.sample_rate):
+            
+            ret = lib.av_audio_fifo_write(self.ptr, 
+                                          <void **> resampled_frame.ptr.extended_data,
+                                          resampled_frame.samples)
+            if ret != resampled_frame.samples:
+                raise Exception("error writing to AudioFifo")
+            
+    def read(self, int nb_samples=-1):
+        
+        if nb_samples < 1 or nb_samples > self.samples:
+            nb_samples = self.samples
+            
+        if not nb_samples:
+            raise Exception("Fifo is Empty")
+            
+        
+        cdef int ret
+        cdef int linesize
+        cdef int sample_size
+        cdef AudioFrame frame = AudioFrame()
+        
+        frame.alloc_frame(self.channels_,self.sample_fmt_,nb_samples)
+        
+        if ret <0:
+            raise Exception("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
+        
+        ret = lib.av_audio_fifo_read(self.ptr,
+                                     <void **> frame.buffer_,
+                                     nb_samples)
+        
+        if ret != nb_samples:
+            raise Exception("Fifo read Error")
+        
+        frame.fill_frame(nb_samples)
+        
+        frame.ptr.sample_rate = self.sample_rate_
+        frame.ptr.channel_layout = self.channel_layout_
+        
+        
+        return frame
+    
+    def get_frames(self, int nb_samples):
+        
+        while self.samples > nb_samples:
+            
+            yield self.read(nb_samples)
+        
+        
+    property samples:
+        """Number of audio samples (per channel) """
+        def __get__(self):
+            return lib.av_audio_fifo_size(self.ptr)
+    
+    property sample_rate:
+        """Sample rate of the audio data. """
+        def __get__(self):
+            return self.sample_rate_
+
+    property sample_fmt:
+        """Audio Sample Format"""
+        def __get__(self):
+            result = lib.av_get_sample_fmt_name(self.sample_fmt_)
+            if result == NULL:
+                return None
+            return result
+        
+    property channels:
+        """Number of audio channels"""
+        def __get__(self): return self.channels_
+        
+    property channel_layout:
+        """Audio channel layout"""
+        def __get__(self):
+            result = channel_layout_name(self.channels_, self.channel_layout_)
+            if result == NULL:
+                return None
+            return result
+        
+        
 
