@@ -3,7 +3,6 @@ from libc.stdint cimport uint8_t
 cimport libav as lib
 
 cimport av.codec
-cimport av.filter
 
 
 # Since there are multiple objects that need to refer to a valid context, we
@@ -70,7 +69,7 @@ cdef class AudioStream(Stream):
     # Hold onto the frames that we will decode until we have a full one.
     cdef lib.AVFrame *frame
     cdef av.codec.SwrContextProxy swr_proxy
-    cdef av.filter.FilterContext filter
+    cdef av.codec.AudioFifo fifo
     cdef int encoded_frame_count
     
     cpdef encode(self, av.codec.AudioFrame frame)

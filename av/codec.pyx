@@ -771,9 +771,12 @@ cdef class AudioFifo:
         return frame
     
     def get_frames(self, int nb_samples):
-        
-        while self.samples > nb_samples:
+        print "asking for", nb_samples, "have", self.samples
+        while True:
             
+            if self.samples < nb_samples:
+                break
+
             yield self.read(nb_samples)
         
         
