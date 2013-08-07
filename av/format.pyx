@@ -447,41 +447,38 @@ cdef class AudioStream(Stream):
     cpdef encode(self, av.codec.AudioFrame frame):
     
         if not self.swr_proxy:
-            self.swr_proxy =  av.codec.SwrContextProxy() 
+            self.swr_proxy =  av.codec.SwrContextProxy()
+        
+        # setup audio fifo
         if not self.fifo:
             self.fifo = av.codec.AudioFifo(self.codec.channel_layout,
-                                       self.codec.sample_fmt,
-                                       self.codec.sample_rate,
-                                       self.codec.frame_size)
+                                           self.codec.sample_fmt,
+                                           self.codec.sample_rate,
+                                           self.codec.frame_size)
         frame.swr_proxy = self.swr_proxy
 
         channel_layout = self.codec.channel_layout
         sample_fmt =  self.codec.sample_fmt
         
         cdef av.codec.Packet packet
-        cdef av.codec.AudioFrame filtered_frame
+        cdef av.codec.AudioFrame fifo_frame
         cdef int got_output
         
         self.fifo.write(frame)
 
-        for filtered_frame in self.fifo.get_frames(self.codec.frame_size):
+        for fifo_frame in self.fifo.get_frames(self.codec.frame_size):
 
-            print "filtered", filtered_frame
+            print "fifo_frame", fifo_frame
 
-            filtered_frame.ptr.pts = self.encoded_frame_count
+            fifo_frame.ptr.pts = self.encoded_frame_count
+
+            self.encoded_frame_count += fifo_frame.samples
             
-            if filtered_frame.ptr.nb_samples != self.codec.ctx.frame_size:
-                pass
-    
-            self.encoded_frame_count += filtered_frame.samples
-            
-            print 'frame pts', filtered_frame.ptr.pts
-    
-            
+            print 'frame pts', fifo_frame.ptr.pts
+                
             packet = av.codec.Packet()
-            #packet.struct.pts = pts_step * self.encoded_frame_count
             
-            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, filtered_frame.ptr, &got_output)
+            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
             
             if ret < 0:
                 raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))

@@ -541,7 +541,8 @@ cdef class AudioFrame(Frame):
         self.buffer_size = samples_size
     
     def resample(self, char* channel_layout, char* sample_fmt, int out_sample_rate):
-        #print channel_layout, sample_fmt, sample_rate
+        
+        # Check params
         cdef uint64_t out_ch_layout = lib.av_get_channel_layout(channel_layout)
         if out_ch_layout == 0:
             raise ValueError("invalid channel layout %s" % channel_layout)
@@ -597,6 +598,8 @@ cdef class AudioFrame(Frame):
                 ret = lib.swr_convert(self.swr_proxy.ptr,
                                       frame.buffer_,dst_nb_samples,
                                       self.ptr.extended_data, src_nb_samples)
+                
+            # Flush any remaining samples out
             else:         
                  ret =lib.swr_convert(self.swr_proxy.ptr,
                                        frame.buffer_,dst_nb_samples,
