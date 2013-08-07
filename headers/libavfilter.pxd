@@ -36,6 +36,7 @@ cdef extern from "libavfilter/avfilter.h":
     # http://ffmpeg.org/doxygen/trunk/structAVABufferSinkParams.html
     ctypedef struct AVABufferSinkParams:
         AVSampleFormat *sample_fmts
+        int *sample_rates
         
     # https://www.ffmpeg.org/doxygen/trunk/structAVFilterBufferRef.html
     
@@ -50,6 +51,8 @@ cdef extern from "libavfilter/avfilter.h":
     
     cdef AVFilterGraph* avfilter_graph_alloc()
     cdef void avfilter_graph_free(AVFilterGraph **graph)
+    
+    cdef void avfilter_inout_free(AVFilterInOut **inout)
     
     cdef int avfilter_graph_create_filter(
         AVFilterContext **filt_ctx,
@@ -66,6 +69,13 @@ cdef extern from "libavfilter/avfilter.h":
         AVFilterInOut **inputs,
         AVFilterInOut **outputs,
         void* log_ctx 
+    )
+    
+    cdef int avfilter_graph_parse2(
+        AVFilterGraph *graph,
+        char *filters,
+        AVFilterInOut **inputs,
+        AVFilterInOut **outputs,
     )
     
     cdef int avfilter_graph_config(
