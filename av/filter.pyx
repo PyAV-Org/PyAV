@@ -125,6 +125,14 @@ cdef class FilterContext(object):
     
         
         while True:
+            
+            
+            frames_avaiable = lib.av_buffersink_poll_frame(self.buffersink_ctx)
+            
+            print frames_avaiable, "aval"
+            if not frames_avaiable:
+                break
+            
             ret = lib.av_buffersink_get_buffer_ref(self.buffersink_ctx, &samplesref, 0)
     
             if ret == lib.AVERROR(lib.EAGAIN) or ret == lib.AVERROR_EOF:
@@ -133,6 +141,8 @@ cdef class FilterContext(object):
             if ret <0:
                 
                 print 'sink exited with', ret
+                
+                print lib.EAGAIN, lib.AVERROR_EOF,lib.AVERROR(lib.EAGAIN)
                 break
                 raise Exception("errer geting buffer reference %s" % lib.av_err2str(ret))
             

@@ -107,3 +107,5 @@ cdef extern from "libavfilter/avfilter.h":
         AVFilterBufferRef *src
     )
     
+    cdef int av_buffersink_poll_frame(AVFilterContext *ctx)
+    
