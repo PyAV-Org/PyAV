@@ -521,26 +521,17 @@ cdef class AudioFrame(Frame):
         if lib.swr_init(self.swr_proxy.ptr) < 0:
             raise Exception("Failed to initialize the resampling context")
 
-        # Calculate buffer size needed for new audio frame
-
-        # compute the number of converted samples
+        # helper names, just so I remember what they are       
         cdef int src_nb_samples = self.ptr.nb_samples
         cdef int src_rate = self.ptr.sample_rate
         
-        print src_rate, '->', out_sample_rate
+        # compute the number of converted samples
         cdef int dst_nb_samples = lib.av_rescale_rnd(src_nb_samples,
                                                  out_sample_rate, #dst sample rate
                                                  src_rate, # src sample rate
                                                  lib.AV_ROUND_UP) + 50
-        
-        print "****", lib.swr_get_delay(self.swr_proxy.ptr, src_rate), src_nb_samples, "->",dst_nb_samples
-        
-        
+
         cdef int dst_nb_channels = lib.av_get_channel_layout_nb_channels(out_ch_layout)
-        
-        cdef int dst_samples_linesize
-        cdef int dst_samples_size
-        
         cdef AudioFrame frame
         
         flush = False
@@ -548,6 +539,7 @@ cdef class AudioFrame(Frame):
         while True:
             frame = AudioFrame()
             
+            # allocate the correct frame size
             frame.alloc_frame( dst_nb_channels, out_sample_fmt, dst_nb_samples)
 
             # Note: swr_convert returns number of samples output per channel,
@@ -562,7 +554,6 @@ cdef class AudioFrame(Frame):
                                        frame.buffer_,dst_nb_samples,
                                        NULL, 0)
     
-            #print ret,"dst_samples_size", dst_samples_size, 'linesize', dst_samples_linesize
             if ret <0:
                 raise Exception("error swr_convert: %s" % lib.av_err2str(ret))
             
@@ -570,23 +561,16 @@ cdef class AudioFrame(Frame):
                 break
         
             dst_nb_samples = ret
-            
 
             frame.fill_frame(dst_nb_samples)
-            
-            frame.ptr.nb_samples = dst_nb_samples
-            frame.ptr.format = out_sample_fmt
-            frame.ptr.channels = dst_nb_channels
+
             frame.ptr.sample_rate = out_sample_rate
             frame.ptr.channel_layout = out_ch_layout
             frame.frame_index = self.frame_index
+
+            # not sure what to do with the pts yet
+            frame.ptr.pts = lib.AV_NOPTS_VALUE
             
-            frame.buffer_size = dst_samples_size
-            
-            # Copy over pts
-            frame.ptr.pts = self.ptr.pts
-            
-            #frame.ptr.pts = lib.AV_NOPTS_VALUE
             yield frame
             flush = True
         
@@ -652,7 +636,7 @@ cdef class AudioFrame(Frame):
     cdef fill_frame(self, int nb_samples):
         if not self.ptr:
             raise Exception("Frame Not allocated")
-        cdef int ret
+
         samples_size = lib.av_samples_get_buffer_size(NULL,
                                                        self.ptr.channels,
                                                        self.ptr.nb_samples,
@@ -669,7 +653,7 @@ cdef class AudioFrame(Frame):
         if ret < 0:
             raise Exception("avcodec_fill_audio_frame failed")
         
-        
+        self.buffer_size = samples_size
             
         
 cdef class AudioFifo:
