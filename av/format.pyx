@@ -368,9 +368,7 @@ cdef class VideoStream(Stream):
         cdef av.codec.VideoFrame formated_frame
         
         formated_frame = frame.reformat(self.codec.width,self.codec.height, self.codec.pix_fmt)
-        
-        pts_step = lib.av_rescale_q(1, self.ptr.codec.time_base, self.ptr.time_base)
-        formated_frame.ptr.pts = pts_step * self.encoded_frame_count
+        formated_frame.ptr.pts = self.encoded_frame_count
         
         self.encoded_frame_count += 1
         
@@ -385,6 +383,15 @@ cdef class VideoStream(Stream):
             raise Exception("Error encoding video frame: %s" % lib.av_err2str(ret))
         
         if got_output:
+
+            if packet.struct.pts != lib.AV_NOPTS_VALUE:
+                packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
+                                                         self.codec.ctx.time_base,
+                                                         self.ptr.time_base)
+            if packet.struct.dts != lib.AV_NOPTS_VALUE:
+                packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
+                                                     self.codec.ctx.time_base,
+                                                     self.ptr.time_base)
             if self.codec.ctx.coded_frame.key_frame:
                 packet.struct.flags |= lib.AV_PKT_FLAG_KEY
                 
@@ -468,25 +475,35 @@ cdef class AudioStream(Stream):
 
         for fifo_frame in self.fifo.get_frames(self.codec.frame_size):
 
-            print "fifo_frame", fifo_frame
-
             fifo_frame.ptr.pts = self.encoded_frame_count
-
             self.encoded_frame_count += fifo_frame.samples
-            
-            print 'frame pts', fifo_frame.ptr.pts
-                
+ 
             packet = av.codec.Packet()
-            
             ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
             
             if ret < 0:
                 raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
             
             if got_output:
+            
+                if packet.struct.pts != lib.AV_NOPTS_VALUE:
+                    packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
+                                                         self.codec.ctx.time_base,
+                                                         self.ptr.time_base)
+                if packet.struct.dts != lib.AV_NOPTS_VALUE:
+                    packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
+                                                         self.codec.ctx.time_base,
+                                                         self.ptr.time_base)
+
+                if packet.struct.duration > 0:
+                    packet.struct.duration = lib.av_rescale_q(packet.struct.duration, 
+                                                         self.codec.ctx.time_base,
+                                                         self.ptr.time_base)
+                    
+                if self.codec.ctx.coded_frame.key_frame:
+                    packet.struct.flags |= lib.AV_PKT_FLAG_KEY
     
                 packet.struct.stream_index = self.ptr.index
-    
                 ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
             else:
                 ret = 0

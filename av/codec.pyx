@@ -698,6 +698,7 @@ cdef class AudioFifo:
         
     def write(self, AudioFrame frame):
         cdef AudioFrame resampled_frame
+        cdef int ret
         for resampled_frame in frame.resample(self.channel_layout, self.sample_fmt, self.sample_rate):
             
             ret = lib.av_audio_fifo_write(self.ptr, 
@@ -741,7 +742,7 @@ cdef class AudioFifo:
         return frame
     
     def get_frames(self, int nb_samples):
-        print "asking for", nb_samples, "have", self.samples
+        #print "asking for", nb_samples, "have", self.samples
         while True:
             
             if self.samples < nb_samples:
