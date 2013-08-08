@@ -176,6 +176,16 @@ cdef class Context(object):
     
     def dump(self):
         lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w')
+        
+    def mux(self, av.codec.Packet packet):
+        cdef int ret
+        if self.is_input:
+            raise ValueError("not a output file")
+        #None and Null check
+        if not packet:
+            raise TypeError("argument must be a av.codec.Packet, not 'NoneType' or 'NULL'")
+        
+        err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
     
     def demux(self, streams=None):
         
@@ -396,7 +406,9 @@ cdef class VideoStream(Stream):
                 packet.struct.flags |= lib.AV_PKT_FLAG_KEY
                 
             packet.struct.stream_index = self.ptr.index
-            ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+            #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+            
+            return packet
         else:
             ret = 0
         
@@ -504,7 +516,9 @@ cdef class AudioStream(Stream):
                     packet.struct.flags |= lib.AV_PKT_FLAG_KEY
     
                 packet.struct.stream_index = self.ptr.index
-                ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+                
+                return packet
+                #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
             else:
                 ret = 0
                 
