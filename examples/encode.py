@@ -66,7 +66,7 @@ for packet in source_video.demux(streams):
                 encode_video.mux(encoded_packet)
             #print frame_count
         
-    if frame_count > 16000:
+    if frame_count > 500:
         break
     
 #         

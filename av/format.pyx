@@ -407,13 +407,7 @@ cdef class VideoStream(Stream):
                 
             packet.struct.stream_index = self.ptr.index
             #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
-            
             return packet
-        else:
-            ret = 0
-        
-        if ret != 0:
-            raise Exception("Error while writing video frame: %s" % lib.av_err2str(ret))
         
     cpdef flush_encoder(self):
         pass
@@ -491,6 +485,9 @@ cdef class AudioStream(Stream):
             self.encoded_frame_count += fifo_frame.samples
  
             packet = av.codec.Packet()
+            packet.struct.data = NULL #packet data will be allocated by the encoder
+            packet.struct.size = 0
+            
             ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
             
             if ret < 0:
@@ -519,13 +516,7 @@ cdef class AudioStream(Stream):
                 
                 return packet
                 #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
-            else:
-                ret = 0
-                
-            
-            if ret != 0:
-                raise Exception("Error while writing audio frame: %s" % lib.av_err2str(ret))
-            
+
     cpdef flush_encoder(self):
         pass
 
