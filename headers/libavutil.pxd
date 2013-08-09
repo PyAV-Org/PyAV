@@ -124,6 +124,14 @@ cdef extern from "libavutil/samplefmt.h":
         AVSampleFormat sample_fmt,
         int align
     )
+    
+    cdef int av_samples_set_silence(
+        uint8_t **audio_data,
+        int offset,
+        int nb_samples,
+        int nb_channels,
+        AVSampleFormat sample_fmt
+     )
         
     
 cdef extern from "libavutil/channel_layout.h":

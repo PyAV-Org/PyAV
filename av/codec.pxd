@@ -73,6 +73,7 @@ cdef class AudioFifo:
     
     cdef uint64_t channel_layout_
     cdef int channels_
+    cdef bool add_silence
     
     cdef lib.AVSampleFormat sample_fmt_
     cdef int sample_rate_

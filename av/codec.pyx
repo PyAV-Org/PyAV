@@ -539,6 +539,14 @@ cdef class AudioFrame(Frame):
             raise Exception("avcodec_fill_audio_frame failed")
         
         self.buffer_size = samples_size
+        
+    def add_silence(self, int offset, int nb_samples):
+        
+        err_check(lib.av_samples_set_silence(self.ptr.extended_data,
+                                             offset,
+                                             nb_samples,
+                                             self.ptr.channels,
+                                             <lib.AVSampleFormat>self.ptr.format))
     
     def resample(self, char* channel_layout, char* sample_fmt, int out_sample_rate):
         
@@ -694,6 +702,7 @@ cdef class AudioFifo:
         self.sample_rate_ = sample_rate
         self.channel_layout_ = ch_layout
         self.channels_ = channels
+        self.add_silence = False
 
         
     def write(self, AudioFrame frame):
@@ -709,7 +718,10 @@ cdef class AudioFifo:
             
     def read(self, int nb_samples=-1):
         
-        if nb_samples < 1 or nb_samples > self.samples:
+        if nb_samples < 1:
+            nb_samples = self.samples
+            
+        if not self.add_silence and nb_samples > self.samples:
             nb_samples = self.samples
             
         if not nb_samples:
@@ -730,10 +742,13 @@ cdef class AudioFifo:
                                      <void **> frame.buffer_,
                                      nb_samples)
         
-        if ret != nb_samples:
-            raise Exception("Fifo read Error")
+        #if ret != nb_samples:
+            #raise Exception("Fifo read Error")
         
         frame.fill_frame(nb_samples)
+        
+        if self.add_silence and ret < nb_samples:
+            frame.add_silence(ret, nb_samples - ret)
         
         frame.ptr.sample_rate = self.sample_rate_
         frame.ptr.channel_layout = self.channel_layout_
@@ -741,11 +756,17 @@ cdef class AudioFifo:
         
         return frame
     
-    def get_frames(self, int nb_samples):
+    def get_frames(self, int nb_samples,flush=False):
         #print "asking for", nb_samples, "have", self.samples
         while True:
             
             if self.samples < nb_samples:
+                
+                if flush:
+                    if self.samples:
+                        yield self.read(nb_samples)
+                    else:
+                        return
                 break
 
             yield self.read(nb_samples)
