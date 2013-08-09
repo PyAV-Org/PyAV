@@ -741,10 +741,7 @@ cdef class AudioFifo:
         ret = lib.av_audio_fifo_read(self.ptr,
                                      <void **> frame.buffer_,
                                      nb_samples)
-        
-        #if ret != nb_samples:
-            #raise Exception("Fifo read Error")
-        
+
         frame.fill_frame(nb_samples)
         
         if self.add_silence and ret < nb_samples:
@@ -755,22 +752,6 @@ cdef class AudioFifo:
         
         
         return frame
-    
-    def get_frames(self, int nb_samples,flush=False):
-        #print "asking for", nb_samples, "have", self.samples
-        while True:
-            
-            if self.samples < nb_samples:
-                
-                if flush:
-                    if self.samples:
-                        yield self.read(nb_samples)
-                    else:
-                        yield None
-                break
-
-            yield self.read(nb_samples)
-        
         
     property samples:
         """Number of audio samples (per channel) """
