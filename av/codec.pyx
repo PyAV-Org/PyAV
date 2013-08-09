@@ -766,7 +766,7 @@ cdef class AudioFifo:
                     if self.samples:
                         yield self.read(nb_samples)
                     else:
-                        return
+                        yield None
                 break
 
             yield self.read(nb_samples)

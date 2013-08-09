@@ -8,7 +8,7 @@ encode_video = av.open("./sandbox/encode_example.mp4", 'w')
 
 
 video_stream = encode_video.add_stream("h264")
-audio_stream = encode_video.add_stream("mp2")
+audio_stream = encode_video.add_stream("mp3")
 
 codec = video_stream.codec
 print "name", codec.name
@@ -66,8 +66,16 @@ for packet in source_video.demux(streams):
                 encode_video.mux(encoded_packet)
             #print frame_count
         
-    if frame_count > 500:
+    if frame_count > 8000:
         break
     
+while True:
+    packet =  audio_stream.encode(None)
+    print "flushed out", packet
+    if packet:
+        encode_video.mux(packet)
+    else:
+        break
+    #     
 #         
 encode_video.close()

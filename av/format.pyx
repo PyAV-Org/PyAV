@@ -468,28 +468,33 @@ cdef class AudioStream(Stream):
                                            self.codec.sample_fmt,
                                            self.codec.sample_rate,
                                            self.codec.frame_size)
-        frame.swr_proxy = self.swr_proxy
-
-        channel_layout = self.codec.channel_layout
-        sample_fmt =  self.codec.sample_fmt
-        
+            self.fifo.add_silence = True
+            
         cdef av.codec.Packet packet
         cdef av.codec.AudioFrame fifo_frame
         cdef int got_output
+            
+        flush = False
         
-        self.fifo.write(frame)
+        if not frame:
+            flush = True
+        else:
+            frame.swr_proxy = self.swr_proxy
+            self.fifo.write(frame)
 
-        for fifo_frame in self.fifo.get_frames(self.codec.frame_size):
-
-            fifo_frame.ptr.pts = self.encoded_frame_count
-            self.encoded_frame_count += fifo_frame.samples
- 
+        for fifo_frame in self.fifo.get_frames(self.codec.frame_size,flush):
             packet = av.codec.Packet()
             packet.struct.data = NULL #packet data will be allocated by the encoder
             packet.struct.size = 0
             
-            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
             
+            if fifo_frame:
+                fifo_frame.ptr.pts = self.encoded_frame_count
+                self.encoded_frame_count += fifo_frame.samples
+                ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
+            else:
+                ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, NULL, &got_output)
+
             if ret < 0:
                 raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
             
@@ -513,6 +518,7 @@ cdef class AudioStream(Stream):
                     packet.struct.flags |= lib.AV_PKT_FLAG_KEY
     
                 packet.struct.stream_index = self.ptr.index
+                packet.stream = self
                 
                 return packet
                 #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
