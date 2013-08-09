@@ -72,6 +72,6 @@ cdef class AudioStream(Stream):
     cdef av.codec.AudioFifo fifo
     cdef int encoded_frame_count
     
-    cpdef encode(self, av.codec.AudioFrame frame)
+    cpdef encode(self, av.codec.AudioFrame frame=*)
 
     cpdef flush_encoder(self)

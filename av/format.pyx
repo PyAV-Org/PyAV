@@ -457,71 +457,86 @@ cdef class AudioStream(Stream):
         
         return frame
     
-    cpdef encode(self, av.codec.AudioFrame frame):
-    
+    cpdef encode(self, av.codec.AudioFrame frame=None):
+        """Encodes a frame of audio, returns a packet if one is ready.
+        The output packet does not necessarily contain data for the most recent frame, 
+        as encoders can delay, split, and combine input frames internally as needed.
+        If called with with no args it will flush out the encoder and return the buffered
+        packets until there are none left, at which it will return None.
+        """
+        #Setup a resampler if ones not setup
         if not self.swr_proxy:
             self.swr_proxy =  av.codec.SwrContextProxy()
         
-        # setup audio fifo
+        # setup audio fifo if ones not setup
         if not self.fifo:
             self.fifo = av.codec.AudioFifo(self.codec.channel_layout,
                                            self.codec.sample_fmt,
                                            self.codec.sample_rate,
                                            self.codec.frame_size)
-            self.fifo.add_silence = True
+            #self.fifo.add_silence = True
             
         cdef av.codec.Packet packet
         cdef av.codec.AudioFrame fifo_frame
         cdef int got_output
-            
-        flush = False
         
-        if not frame:
-            flush = True
-        else:
+        # if frame supplied add to audio fifo
+        if frame:
             frame.swr_proxy = self.swr_proxy
             self.fifo.write(frame)
 
-        for fifo_frame in self.fifo.get_frames(self.codec.frame_size,flush):
-            packet = av.codec.Packet()
-            packet.struct.data = NULL #packet data will be allocated by the encoder
-            packet.struct.size = 0
+        # if fifo has enough samples read a frame out
+        if self.fifo.samples > self.codec.frame_size:
+            fifo_frame = self.fifo.read(self.codec.frame_size)
+        
+        # if no frame (flushing) supplied get whats left of the audio fifo
+        elif not frame and self.fifo.samples:
+            fifo_frame = self.fifo.read(self.codec.frame_size)
             
-            
-            if fifo_frame:
-                fifo_frame.ptr.pts = self.encoded_frame_count
-                self.encoded_frame_count += fifo_frame.samples
-                ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
-            else:
-                ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, NULL, &got_output)
+        # if no frames are left in the audio fifo set fifo_frame to None to flush out encoder
+        elif not frame:
+            fifo_frame = None    
+        else:
+            return
+        
+        packet = av.codec.Packet()
+        packet.struct.data = NULL #packet data will be allocated by the encoder
+        packet.struct.size = 0
+        
+        if fifo_frame:
+            fifo_frame.ptr.pts = self.encoded_frame_count
+            self.encoded_frame_count += fifo_frame.samples
+            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
+        else:
+            # frame set to NULL to flush encoder out frame
+            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, NULL, &got_output)
 
-            if ret < 0:
-                raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
-            
-            if got_output:
-            
-                if packet.struct.pts != lib.AV_NOPTS_VALUE:
-                    packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
-                                                         self.codec.ctx.time_base,
-                                                         self.ptr.time_base)
-                if packet.struct.dts != lib.AV_NOPTS_VALUE:
-                    packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
-                                                         self.codec.ctx.time_base,
-                                                         self.ptr.time_base)
+        if ret < 0:
+            raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
+        
+        if got_output:
+        
+            if packet.struct.pts != lib.AV_NOPTS_VALUE:
+                packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
+                                                     self.codec.ctx.time_base,
+                                                     self.ptr.time_base)
+            if packet.struct.dts != lib.AV_NOPTS_VALUE:
+                packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
+                                                     self.codec.ctx.time_base,
+                                                     self.ptr.time_base)
 
-                if packet.struct.duration > 0:
-                    packet.struct.duration = lib.av_rescale_q(packet.struct.duration, 
-                                                         self.codec.ctx.time_base,
-                                                         self.ptr.time_base)
-                    
-                if self.codec.ctx.coded_frame.key_frame:
-                    packet.struct.flags |= lib.AV_PKT_FLAG_KEY
-    
-                packet.struct.stream_index = self.ptr.index
-                packet.stream = self
+            if packet.struct.duration > 0:
+                packet.struct.duration = lib.av_rescale_q(packet.struct.duration, 
+                                                     self.codec.ctx.time_base,
+                                                     self.ptr.time_base)
                 
-                return packet
-                #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+            if self.codec.ctx.coded_frame.key_frame:
+                packet.struct.flags |= lib.AV_PKT_FLAG_KEY
+
+            packet.struct.stream_index = self.ptr.index
+            packet.stream = self
+            
+            return packet
 
     cpdef flush_encoder(self):
         pass
