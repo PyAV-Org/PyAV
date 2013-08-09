@@ -162,10 +162,6 @@ cdef class Context(object):
         
         if self.is_output:
             lib.av_write_trailer(self.proxy.ptr)
-            
-            for stream in self.streams:
-                stream.flush_encoder()
-                
             for stream in self.streams:
                 
                 lib.avcodec_close(stream.codec.ctx)
@@ -415,11 +411,7 @@ cdef class VideoStream(Stream):
             packet.stream = self
             #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
             return packet
-        
-    cpdef flush_encoder(self):
-        pass
 
-        
 
 cdef class AudioStream(Stream):
 
@@ -545,8 +537,6 @@ cdef class AudioStream(Stream):
             
             return packet
 
-    cpdef flush_encoder(self):
-        pass
 
 
 cdef class SubtitleStream(Stream):
