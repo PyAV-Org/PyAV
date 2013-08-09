@@ -372,7 +372,7 @@ cdef class VideoStream(Stream):
         If called with with no args it will flush out the encoder and return the buffered
         packets until there are none left, at which it will return None.
         """
-
+        
         if not self.sws_proxy:
             self.sws_proxy =  av.codec.SwsContextProxy()
             
@@ -386,6 +386,7 @@ cdef class VideoStream(Stream):
             formated_frame.ptr.pts = self.encoded_frame_count
             self.encoded_frame_count += 1
         else:
+            # Flushing
             formated_frame = None
 
         packet = av.codec.Packet()
@@ -395,6 +396,7 @@ cdef class VideoStream(Stream):
         if formated_frame:
             ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output)
         else:
+            # Flushing
             ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, NULL, &got_output)
             
         if ret <0:
@@ -415,7 +417,7 @@ cdef class VideoStream(Stream):
                 
             packet.struct.stream_index = self.ptr.index
             packet.stream = self
-            #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
+
             return packet
 
 
@@ -479,7 +481,7 @@ cdef class AudioStream(Stream):
                                            self.codec.sample_fmt,
                                            self.codec.sample_rate,
                                            self.codec.frame_size)
-            #self.fifo.add_silence = True
+            self.fifo.add_silence = True
             
         cdef av.codec.Packet packet
         cdef av.codec.AudioFrame fifo_frame
@@ -492,7 +494,7 @@ cdef class AudioStream(Stream):
             frame.swr_proxy = self.swr_proxy
             self.fifo.write(frame)
 
-        # if fifo has enough samples read a frame out
+        # read a frame out of the fifo queue if there are enough samples ready
         if frame and self.fifo.samples > self.codec.frame_size:
             fifo_frame = self.fifo.read(self.codec.frame_size)
         
@@ -500,6 +502,7 @@ cdef class AudioStream(Stream):
         elif not frame and self.fifo.samples:
             fifo_frame = self.fifo.read(self.codec.frame_size)
             flushing_and_samples = True
+            
         # if no frames are left in the audio fifo set fifo_frame to None to flush out encoder
         elif not frame:
             fifo_frame = None    

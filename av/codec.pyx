@@ -499,10 +499,7 @@ cdef class AudioFrame(Frame):
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
      
         if self.ptr:
-            if self.buffer_:
-                lib.av_freep(&self.buffer_[0])
-            lib.av_freep(&self.buffer_)
-            lib.avcodec_free_frame(&self.ptr)
+            raise MemoryError("frame already allocated")
         cdef int ret
         cdef int linesize
         
@@ -520,20 +517,21 @@ cdef class AudioFrame(Frame):
 
         self.ptr.channels = channels
         self.ptr.format = sample_fmt
-        
         self.ptr.nb_samples = nb_samples
         
         
     cdef fill_frame(self, int nb_samples):
         if not self.ptr:
             raise Exception("Frame Not allocated")
+        
+        self.ptr.nb_samples = nb_samples
 
         samples_size = lib.av_samples_get_buffer_size(NULL,
                                                        self.ptr.channels,
                                                        self.ptr.nb_samples,
                                                        <lib.AVSampleFormat>self.ptr.format,self.align)
         
-        self.ptr.nb_samples = nb_samples
+        
         ret =lib.avcodec_fill_audio_frame(self.ptr, 
                                              self.ptr.channels, 
                                              <lib.AVSampleFormat> self.ptr.format,
@@ -740,8 +738,6 @@ cdef class AudioFifo:
         
         frame.alloc_frame(self.channels_,self.sample_fmt_,nb_samples)
         
-        if ret <0:
-            raise Exception("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
         
         ret = lib.av_audio_fifo_read(self.ptr,
                                      <void **> frame.buffer_,
