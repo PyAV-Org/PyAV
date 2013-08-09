@@ -516,9 +516,9 @@ cdef class AudioFrame(Frame):
             raise MemoryError("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
 
         self.ptr.channels = channels
-        self.ptr.format = sample_fmt
+        self.ptr.format = <int > sample_fmt
         self.ptr.nb_samples = nb_samples
-        
+                
         
     cdef fill_frame(self, int nb_samples):
         if not self.ptr:
@@ -530,7 +530,6 @@ cdef class AudioFrame(Frame):
                                                        self.ptr.channels,
                                                        self.ptr.nb_samples,
                                                        <lib.AVSampleFormat>self.ptr.format,self.align)
-        
         
         ret =lib.avcodec_fill_audio_frame(self.ptr, 
                                              self.ptr.channels, 
@@ -551,7 +550,8 @@ cdef class AudioFrame(Frame):
                                              self.ptr.channels,
                                              <lib.AVSampleFormat>self.ptr.format))
     
-    def resample(self, char* channel_layout, char* sample_fmt, int out_sample_rate):
+    def resample(self, bytes channel_layout, bytes sample_fmt, int out_sample_rate):
+        
         
         # Check params
         cdef uint64_t out_ch_layout = lib.av_get_channel_layout(channel_layout)
@@ -565,6 +565,11 @@ cdef class AudioFrame(Frame):
         if not self.swr_proxy:
             self.swr_proxy = SwrContextProxy()
         
+        cdef int dst_nb_channels = lib.av_get_channel_layout_nb_channels(out_ch_layout)
+            
+        #print "source =", self.sample_rate, self.channel_layout,self.ptr.channel_layout, self.channels, self.sample_fmt,self.ptr.format
+        #print "dest   =", out_sample_rate, channel_layout,out_ch_layout, dst_nb_channels, sample_fmt, out_sample_fmt
+
         # setup SwrContext
         self.swr_proxy.ptr = lib.swr_alloc_set_opts(
             self.swr_proxy.ptr,
@@ -589,9 +594,9 @@ cdef class AudioFrame(Frame):
         cdef int dst_nb_samples = lib.av_rescale_rnd(src_nb_samples,
                                                  out_sample_rate, #dst sample rate
                                                  src_rate, # src sample rate
-                                                 lib.AV_ROUND_UP) + 50
+                                                 lib.AV_ROUND_UP)
 
-        cdef int dst_nb_channels = lib.av_get_channel_layout_nb_channels(out_ch_layout)
+        
         cdef AudioFrame frame
         
         flush = False
@@ -684,9 +689,9 @@ cdef class AudioFifo:
             id(self),
         )
      
-    def __init__(self, char* channel_layout,char* sample_fmt, 
+    def __init__(self, bytes channel_layout,bytes sample_fmt, 
                             int sample_rate, int nb_samples):
-         
+        
         cdef uint64_t ch_layout = lib.av_get_channel_layout(channel_layout)
         if ch_layout == 0:
             raise ValueError("invalid channel layout %s" % channel_layout)
@@ -706,7 +711,6 @@ cdef class AudioFifo:
         self.channel_layout_ = ch_layout
         self.channels_ = channels
         self.add_silence = False
-
         
     def write(self, AudioFrame frame):
         cdef AudioFrame resampled_frame
