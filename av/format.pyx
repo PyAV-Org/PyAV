@@ -366,6 +366,12 @@ cdef class VideoStream(Stream):
         return frame
     
     cpdef encode(self, av.codec.VideoFrame frame=None):
+        """Encodes a frame of video, returns a packet if one is ready.
+        The output packet does not necessarily contain data for the most recent frame, 
+        as encoders can delay, split, and combine input frames internally as needed.
+        If called with with no args it will flush out the encoder and return the buffered
+        packets until there are none left, at which it will return None.
+        """
 
         if not self.sws_proxy:
             self.sws_proxy =  av.codec.SwsContextProxy()
@@ -479,19 +485,21 @@ cdef class AudioStream(Stream):
         cdef av.codec.AudioFrame fifo_frame
         cdef int got_output
         
+        flushing_and_samples = False
+        
         # if frame supplied add to audio fifo
         if frame:
             frame.swr_proxy = self.swr_proxy
             self.fifo.write(frame)
 
         # if fifo has enough samples read a frame out
-        if self.fifo.samples > self.codec.frame_size:
+        if frame and self.fifo.samples > self.codec.frame_size:
             fifo_frame = self.fifo.read(self.codec.frame_size)
         
         # if no frame (flushing) supplied get whats left of the audio fifo
         elif not frame and self.fifo.samples:
             fifo_frame = self.fifo.read(self.codec.frame_size)
-            
+            flushing_and_samples = True
         # if no frames are left in the audio fifo set fifo_frame to None to flush out encoder
         elif not frame:
             fifo_frame = None    
@@ -536,6 +544,11 @@ cdef class AudioStream(Stream):
             packet.stream = self
             
             return packet
+        
+        if flushing_and_samples:
+            # if we got here we are flushing but there was still audio in the fifo queue
+            # and encode_audio did not return a packet, call encode again to get a packet
+            return self.encode()
 
 
 
