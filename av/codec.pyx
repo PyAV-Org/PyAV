@@ -595,7 +595,6 @@ cdef class AudioFrame(Frame):
                                                  out_sample_rate, #dst sample rate
                                                  src_rate, # src sample rate
                                                  lib.AV_ROUND_UP)
-
         
         cdef AudioFrame frame
         
@@ -606,19 +605,20 @@ cdef class AudioFrame(Frame):
             
             # allocate the correct frame size
             frame.alloc_frame( dst_nb_channels, out_sample_fmt, dst_nb_samples)
+            frame.fill_frame(dst_nb_samples)
 
             # Note: swr_convert returns number of samples output per channel,
             # negative value on error
             
             if not flush:
                 ret = lib.swr_convert(self.swr_proxy.ptr,
-                                      frame.buffer_,dst_nb_samples,
+                                      frame.ptr.extended_data,dst_nb_samples,
                                       self.ptr.extended_data, src_nb_samples)
                 
             # Flush any remaining samples out
             else:         
                  ret =lib.swr_convert(self.swr_proxy.ptr,
-                                       frame.buffer_,dst_nb_samples,
+                                       frame.ptr.extended_data,dst_nb_samples,
                                        NULL, 0)
     
             if ret <0:
@@ -626,10 +626,8 @@ cdef class AudioFrame(Frame):
             
             if ret == 0:
                 break
-        
-            dst_nb_samples = ret
 
-            frame.fill_frame(dst_nb_samples)
+            frame.ptr.nb_samples = ret
 
             frame.ptr.sample_rate = out_sample_rate
             frame.ptr.channel_layout = out_ch_layout
