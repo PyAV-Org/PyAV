@@ -51,6 +51,9 @@ cdef extern from "libavcodec/avcodec.h":
         int max_b_frames
         int mb_decision
         
+        int global_quality
+        int compression_level
+        
         int qmin
         int qmax
         int rc_max_rate

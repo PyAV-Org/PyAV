@@ -117,6 +117,11 @@ cdef extern from "libavformat/avformat.h":
         AVPacket *pkt
     )
     
+    cdef int av_write_frame(
+        AVFormatContext *ctx,
+        AVPacket *pkt
+    )
+    
     cdef int avio_open(
         AVIOContext **s,
         char *url,

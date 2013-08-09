@@ -22,13 +22,15 @@ print "Audio"
 print "sample format", audio_stream.codec.sample_fmt
 print "channel layout", audio_stream.codec.channel_layout
 print "channels", audio_stream.codec.channels
-audio_stream.codec.channel_layout = "mono"
+#audio_stream.codec.channel_layout = "mono"
 
 print "channel layout",  audio_stream.codec.channel_layout 
 print "channels", audio_stream.codec.channels
 
-audio_stream.codec.channels = 2
-
+#audio_stream.codec.sample_fmt = "s16p"
+#audio_stream.codec.channel_layout  = "mono"
+#audio_stream.codec.channels = 2
+#audio_stream.codec.sample_fmt = 's16p'
 print "channel layout", audio_stream.codec.channel_layout 
 
 #raise Exception('stop')
@@ -53,6 +55,7 @@ for packet in source_video.demux(streams):
     for frame in packet.decode():
         
         if packet.stream.type == b'audio':
+            #print frame
             #print frame.samples, frame.sample_fmt, frame.channels, frame.channel_layout
             encoded_packet = audio_stream.encode(frame)
             if encoded_packet:
@@ -60,22 +63,26 @@ for packet in source_video.demux(streams):
         else:
             #print frame.pix_fmt
             frame_count += 1
-            print frame_count
+            #print frame_count
             encoded_packet = video_stream.encode(frame)
             if encoded_packet:
+                pass
                 encode_video.mux(encoded_packet)
-            #print frame_count
+            print frame_count
         
-    if frame_count > 500:
+    if frame_count > 800:
         break
-    
+count = 0
 while True:
     packet =  audio_stream.encode()
     print "flushed out", packet
     if packet:
         encode_video.mux(packet)
     else:
-        break
-    #     
-#         
+        if count > 0:
+            break
+        count += 1
+
+  
+         
 encode_video.close()

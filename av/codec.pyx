@@ -492,6 +492,10 @@ cdef class AudioFrame(Frame):
             id(self),
         )
         
+    def __init__(self, *args):
+        super(AudioFrame, self).__init__(*args)
+        self.align = 1
+        
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
      
         if self.ptr:
@@ -509,7 +513,8 @@ cdef class AudioFrame(Frame):
                                               &linesize,
                                               channels,
                                               nb_samples,
-                                              sample_fmt,0)
+                                              sample_fmt,
+                                              self.align)
         if ret < 0:
             raise MemoryError("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
 
@@ -526,21 +531,21 @@ cdef class AudioFrame(Frame):
         samples_size = lib.av_samples_get_buffer_size(NULL,
                                                        self.ptr.channels,
                                                        self.ptr.nb_samples,
-                                                       <lib.AVSampleFormat>self.ptr.format,0)
+                                                       <lib.AVSampleFormat>self.ptr.format,self.align)
         
         self.ptr.nb_samples = nb_samples
         ret =lib.avcodec_fill_audio_frame(self.ptr, 
                                              self.ptr.channels, 
                                              <lib.AVSampleFormat> self.ptr.format,
                                              self.buffer_[0],
-                                             samples_size, 0)
+                                             samples_size, self.align)
 
         if ret < 0:
             raise Exception("avcodec_fill_audio_frame failed")
         
         self.buffer_size = samples_size
         
-    def add_silence(self, int offset, int nb_samples):
+    def set_silence(self, int offset, int nb_samples):
         
         err_check(lib.av_samples_set_silence(self.ptr.extended_data,
                                              offset,
@@ -745,7 +750,7 @@ cdef class AudioFifo:
         frame.fill_frame(nb_samples)
         
         if self.add_silence and ret < nb_samples:
-            frame.add_silence(ret, nb_samples - ret)
+            frame.set_silence(ret, nb_samples - ret)
         
         frame.ptr.sample_rate = self.sample_rate_
         frame.ptr.channel_layout = self.channel_layout_

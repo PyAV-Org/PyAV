@@ -60,6 +60,7 @@ cdef class VideoFrame(Frame):
 
 cdef class AudioFrame(Frame):
     cdef int buffer_size
+    cdef int align
     cdef uint8_t **buffer_
     cdef readonly int frame_index
     
