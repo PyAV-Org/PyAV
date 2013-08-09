@@ -369,26 +369,32 @@ cdef class VideoStream(Stream):
         
         return frame
     
-    cpdef encode(self, av.codec.VideoFrame frame):
+    cpdef encode(self, av.codec.VideoFrame frame=None):
 
         if not self.sws_proxy:
-            self.sws_proxy =  av.codec.SwsContextProxy() 
-        frame.sws_proxy = self.sws_proxy
-
+            self.sws_proxy =  av.codec.SwsContextProxy()
+            
         cdef av.codec.VideoFrame formated_frame
-        
-        formated_frame = frame.reformat(self.codec.width,self.codec.height, self.codec.pix_fmt)
-        formated_frame.ptr.pts = self.encoded_frame_count
-        
-        self.encoded_frame_count += 1
-        
-        cdef av.codec.Packet packet = av.codec.Packet()
+        cdef av.codec.Packet packet
         cdef int got_output
         
+        if frame:
+            frame.sws_proxy = self.sws_proxy
+            formated_frame = frame.reformat(self.codec.width,self.codec.height, self.codec.pix_fmt)
+            formated_frame.ptr.pts = self.encoded_frame_count
+            self.encoded_frame_count += 1
+        else:
+            formated_frame = None
+
+        packet = av.codec.Packet()
         packet.struct.data = NULL #packet data will be allocated by the encoder
         packet.struct.size = 0
         
-        ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output)
+        if formated_frame:
+            ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output)
+        else:
+            ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, NULL, &got_output)
+            
         if ret <0:
             raise Exception("Error encoding video frame: %s" % lib.av_err2str(ret))
         
@@ -406,6 +412,7 @@ cdef class VideoStream(Stream):
                 packet.struct.flags |= lib.AV_PKT_FLAG_KEY
                 
             packet.struct.stream_index = self.ptr.index
+            packet.stream = self
             #ret = lib.av_interleaved_write_frame(self.ctx_proxy.ptr, &packet.struct)
             return packet
         

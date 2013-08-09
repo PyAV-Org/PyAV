@@ -70,18 +70,28 @@ for packet in source_video.demux(streams):
                 encode_video.mux(encoded_packet)
             print frame_count
         
-    if frame_count > 800:
+    if frame_count > 500:
         break
 count = 0
 while True:
     packet =  audio_stream.encode()
-    print "flushed out", packet
+    print "flushed out audio packet", packet
     if packet:
         encode_video.mux(packet)
     else:
         if count > 0:
             break
         count += 1
+
+count = 0
+
+while True:
+    packet =  video_stream.encode()
+    print "flushed out video packet", packet
+    if packet:
+        encode_video.mux(packet)
+    else:
+        break
 
   
          
