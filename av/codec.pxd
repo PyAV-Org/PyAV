@@ -12,6 +12,8 @@ cdef class Codec(object):
     cdef lib.AVCodec *ptr
     cdef lib.AVDictionary *options
     
+    cdef lib.AVRational frame_rate_
+    
 
 cdef class Packet(object):
 

@@ -12,6 +12,8 @@ cdef char* channel_layout_name(
 # Conversions.
 cdef dict avdict_to_dict(lib.AVDictionary *input)
 cdef object avrational_to_faction(lib.AVRational *input)
+cdef object to_avrational(object value, lib.AVRational *input)
+
 cdef object av_frac_to_fraction(lib.AVFrac *input)
 
 cdef int samples_alloc_array_and_samples(

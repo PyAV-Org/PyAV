@@ -28,7 +28,7 @@ cdef class Context(object):
     cdef readonly list streams
     cdef readonly dict metadata
     
-    cpdef add_stream(self, char* codec_name)
+    cpdef add_stream(self, bytes codec_name, object rate=*)
     
     cpdef begin_encoding(self)
 

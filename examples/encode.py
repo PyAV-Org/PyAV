@@ -3,11 +3,21 @@ import av
 
 
 source = sys.argv[1]
+source_video = av.open(source)
+
+
+streams = [s for s in source_video.streams if s.type == b'video']
+audio_streams = [s for s in source_video.streams if s.type == b'audio']
+streams = [streams[0]]
+
+if audio_streams:
+    streams.append(audio_streams[0])
+    
 
 encode_video = av.open("./sandbox/encode_example.mp4", 'w')
 
 
-video_stream = encode_video.add_stream("h264")
+video_stream = encode_video.add_stream("h264",streams[0].base_frame_rate)
 audio_stream = encode_video.add_stream("mp3")
 
 codec = video_stream.codec
@@ -39,15 +49,7 @@ encode_video.dump()
 
 #raise Exception()
 
-source_video = av.open(source)
 
-
-streams = [s for s in source_video.streams if s.type == b'video']
-audio_streams = [s for s in source_video.streams if s.type == b'audio']
-streams = [streams[0]]
-
-if audio_streams:
-    streams.append(audio_streams[0])
 
 frame_count = 0
 
@@ -70,7 +72,7 @@ for packet in source_video.demux(streams):
                 encode_video.mux(encoded_packet)
             print frame_count
         
-    if frame_count > 800:
+    if frame_count > 10000:
         break
 
 

@@ -5,7 +5,7 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 cimport libav as lib
 
 cimport av.format
-from .utils cimport err_check,avrational_to_faction, channel_layout_name,samples_alloc_array_and_samples
+from .utils cimport err_check,avrational_to_faction,to_avrational, channel_layout_name,samples_alloc_array_and_samples
 
 
 cdef class Codec(object):
@@ -55,6 +55,9 @@ cdef class Codec(object):
         def __get__(self): return self.ctx.bit_rate if self.ctx else None
         def __set__(self, int value):
             self.ctx.bit_rate = value
+    property frame_rate:
+        def __get__(self): return avrational_to_faction(&self.frame_rate_) if self.ctx else None
+        def __set__(self,value): to_avrational(value, &self.frame_rate_)
             
     property bit_rate_tolerance:
         def __get__(self): return self.ctx.bit_rate_tolerance if self.ctx else None

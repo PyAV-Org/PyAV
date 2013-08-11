@@ -1,6 +1,6 @@
 """Autodoc module test."""
 
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, free
 
 cimport libav as lib
@@ -64,7 +64,7 @@ cdef class Context(object):
             self.streams = []
             self.metadata = {}
             
-    cpdef add_stream(self, char* codec_name):
+    cpdef add_stream(self, bytes codec_name, object rate=None):
 
         cdef lib.AVCodec *codec
         cdef lib.AVCodecContext *codec_ctx
@@ -105,7 +105,10 @@ cdef class Context(object):
         
         # Now lets set some more sane video defaults
         if codec_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-            codec_ctx.time_base.den = 25
+            if not rate:
+                rate = 25
+            
+            codec_ctx.time_base.den = 10000
             codec_ctx.time_base.num = 1
             codec_ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_ctx.width = 640
@@ -128,6 +131,9 @@ cdef class Context(object):
         
         # And steam object to self.streams
         stream_obj = stream_factory(self,stream.id)
+        if rate:
+            stream_obj.codec.frame_rate = rate
+        
         self.streams.append(stream_obj)
         
         return stream_obj
@@ -383,8 +389,7 @@ cdef class VideoStream(Stream):
         if frame:
             frame.sws_proxy = self.sws_proxy
             formated_frame = frame.reformat(self.codec.width,self.codec.height, self.codec.pix_fmt)
-            formated_frame.ptr.pts = self.encoded_frame_count
-            self.encoded_frame_count += 1
+
         else:
             # Flushing
             formated_frame = None
@@ -394,6 +399,11 @@ cdef class VideoStream(Stream):
         packet.struct.size = 0
         
         if formated_frame:
+            
+            pts = 1/float(self.codec.frame_rate) * self.codec.ctx.time_base.den
+            
+            formated_frame.ptr.pts = <int64_t> (pts * self.encoded_frame_count)
+            self.encoded_frame_count += 1
             ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output)
         else:
             # Flushing
@@ -405,9 +415,11 @@ cdef class VideoStream(Stream):
         if got_output:
 
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
+                #print packet.struct.pts, '->',
                 packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
                                                          self.codec.ctx.time_base,
                                                          self.ptr.time_base)
+                #print packet.struct.pts, self.codec.ctx.time_base, self.ptr.time_base, self.ptr.start_time,self.codec.frame_rate
             if packet.struct.dts != lib.AV_NOPTS_VALUE:
                 packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
                                                      self.codec.ctx.time_base,
@@ -527,9 +539,12 @@ cdef class AudioStream(Stream):
         if got_output:
         
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
+                #print packet.struct.pts, '->',
                 packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
                                                      self.codec.ctx.time_base,
                                                      self.ptr.time_base)
+                #print packet.struct.pts, self.codec.ctx.time_base, self.ptr.time_base, self.ptr.start_time,self.codec.frame_rate
+
             if packet.struct.dts != lib.AV_NOPTS_VALUE:
                 packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
                                                      self.codec.ctx.time_base,
