@@ -66,7 +66,8 @@ cdef class Codec(object):
             
     property time_base:
         def __get__(self): return avrational_to_faction(&self.ctx.time_base) if self.ctx else None
-            
+        def __set__(self,value): to_avrational(value, &self.ctx.time_base)
+        
     property gop_size:
         def __get__(self): return self.ctx.gop_size if self.ctx else None
         def __set__(self, int value):
@@ -433,6 +434,7 @@ cdef class VideoFrame(Frame):
         frame.ptr.format = dst_pix_fmt
         
         frame.frame_index = self.frame_index
+        frame.time_base_ = self.time_base_
         
         # Copy over pts
         frame.ptr.pts = self.ptr.pts

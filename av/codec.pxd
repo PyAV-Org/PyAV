@@ -49,6 +49,7 @@ cdef class SwrContextProxy(object):
 
 cdef class Frame(object):
     cdef lib.AVFrame *ptr
+    cdef lib.AVRational time_base_
 
 cdef class VideoFrame(Frame):
 

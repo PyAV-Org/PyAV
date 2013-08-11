@@ -108,7 +108,7 @@ cdef class Context(object):
             if not rate:
                 rate = 25
             
-            codec_ctx.time_base.den = 10000
+            codec_ctx.time_base.den = 12800 
             codec_ctx.time_base.num = 1
             codec_ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_ctx.width = 640
@@ -362,6 +362,7 @@ cdef class VideoStream(Stream):
 
         # Calculate best effort time stamp    
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
+        frame.time_base_ = self.ptr.time_base
         
         # Copy SwsContextProxy so frames share the same one
         frame.sws_proxy = self.sws_proxy
@@ -399,10 +400,10 @@ cdef class VideoStream(Stream):
         packet.struct.size = 0
         
         if formated_frame:
-            
             pts = 1/float(self.codec.frame_rate) * self.codec.ctx.time_base.den
             
             formated_frame.ptr.pts = <int64_t> (pts * self.encoded_frame_count)
+            
             self.encoded_frame_count += 1
             ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output)
         else:
@@ -419,7 +420,7 @@ cdef class VideoStream(Stream):
                 packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
                                                          self.codec.ctx.time_base,
                                                          self.ptr.time_base)
-                #print packet.struct.pts, self.codec.ctx.time_base, self.ptr.time_base, self.ptr.start_time,self.codec.frame_rate
+                #print packet.struct.pts, self.codec.ctx.time_base, self.ptr.time_base, self.ptr.start_time,self.codec.frame_rate                
             if packet.struct.dts != lib.AV_NOPTS_VALUE:
                 packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
                                                      self.codec.ctx.time_base,
@@ -470,6 +471,7 @@ cdef class AudioStream(Stream):
         frame.swr_proxy = self.swr_proxy
         
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
+        frame.time_base_ = self.ptr.time_base
         
         # Null out ours.
         self.frame = NULL
