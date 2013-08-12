@@ -646,7 +646,7 @@ cdef class AudioFrame(Frame):
                                           ret))
             flush = True
             
-        frame = fifo.read(-1)
+        frame = fifo.read()
         
         # copy over pts and time_base
         frame.ptr.pts = self.ptr.pts
@@ -687,6 +687,9 @@ cdef class AudioFrame(Frame):
             
         
 cdef class AudioFifo:
+    """A simple Audio FIFO (First In First Out) Buffer. Accept any AudioFrame. Will automatically convert it 
+    to match the channel_layout, sample_fmt and sample_rate specified upon initialization. 
+    """
 
     def __dealloc__(self):
         lib.av_audio_fifo_free(self.ptr)
@@ -725,10 +728,25 @@ cdef class AudioFifo:
         self.channels_ = channels
         self.add_silence = False
         
+        self.last_pts = lib.AV_NOPTS_VALUE
+        self.pts_offset = 0
+        
+        self.time_base_.num = 1
+        self.time_base_.den = self.sample_rate_
+        
     def write(self, AudioFrame frame):
-        cdef AudioFrame resampled_frame
+        """Write a Frame to the Audio FIFO Buffer. If the AudioFrame has a valid pts the FIFO will store it.
+        """
+        
         cdef int ret
-        resampled_frame = frame.resample(self.channel_layout, self.sample_fmt, self.sample_rate)
+        cdef AudioFrame resampled_frame = frame.resample(self.channel_layout, self.sample_fmt, self.sample_rate)
+        
+        if resampled_frame.ptr.pts != lib.AV_NOPTS_VALUE:
+            
+            self.last_pts = lib.av_rescale_q(resampled_frame.ptr.pts, 
+                                             resampled_frame.time_base_, 
+                                             self.time_base_)
+            self.pts_offset = self.samples
             
         ret = lib.av_audio_fifo_write(self.ptr, 
                                       <void **> resampled_frame.ptr.extended_data,
@@ -737,6 +755,10 @@ cdef class AudioFifo:
             raise Exception("error writing to AudioFifo")
             
     def read(self, int nb_samples=-1):
+        """Read nb_samples from the Audio FIFO. returns a AudioFrame. If nb_samples is -1, will return a AudioFrame
+        with all the samples currently in the FIFO. If a frame was supplied with a valid pts the Audio frame returned
+        will contain a pts adjusted for the current read. The time_base of the pts will always be in 1/sample_rate time_base.
+        """
         
         if nb_samples < 1:
             nb_samples = self.samples
@@ -746,15 +768,13 @@ cdef class AudioFifo:
             
         if not nb_samples:
             raise Exception("Fifo is Empty")
-            
-        
+
         cdef int ret
         cdef int linesize
         cdef int sample_size
         cdef AudioFrame frame = AudioFrame()
         
         frame.alloc_frame(self.channels_,self.sample_fmt_,nb_samples)
-        
         
         ret = lib.av_audio_fifo_read(self.ptr,
                                      <void **> frame.buffer_,
@@ -768,7 +788,14 @@ cdef class AudioFifo:
         frame.ptr.sample_rate = self.sample_rate_
         frame.ptr.channel_layout = self.channel_layout_
         
-        
+        if self.last_pts != lib.AV_NOPTS_VALUE:
+            
+            frame.time_base_ = self.time_base_
+            frame.ptr.pts = self.last_pts - self.pts_offset
+            
+            # move the offset
+            self.pts_offset -= nb_samples
+
         return frame
         
     property samples:

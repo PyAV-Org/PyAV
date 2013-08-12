@@ -414,6 +414,8 @@ cdef class VideoStream(Stream):
             raise Exception("Error encoding video frame: %s" % lib.av_err2str(ret))
         
         if got_output:
+            
+            # rescale the packet pts and dts, which are in codec time_base, to the streams time_base
 
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
                 #print packet.struct.pts, '->',
@@ -528,8 +530,22 @@ cdef class AudioStream(Stream):
         packet.struct.size = 0
         
         if fifo_frame:
-            fifo_frame.ptr.pts = self.encoded_frame_count
+            
+            # if the fifo_frame has a valid pts scale it to the codecs time_base
+            # the audio fifo time_base is always 1/sample_rate
+            
+            if fifo_frame.ptr.pts != lib.AV_NOPTS_VALUE:
+                fifo_frame.ptr.pts = lib.av_rescale_q(fifo_frame.ptr.pts, 
+                                                      fifo_frame.time_base_, #src 
+                                                      self.codec.ctx.time_base) #dest
+            else:
+                fifo_frame.ptr.pts = lib.av_rescale(self.encoded_frame_count,
+                                                    self.codec.ctx.sample_rate, #src
+                                                    self.codec.ctx.time_base.den) #dest
+                
             self.encoded_frame_count += fifo_frame.samples
+            #print self.encoded_frame_count
+            
             ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
         else:
             # frame set to NULL to flush encoder out frame
@@ -539,6 +555,8 @@ cdef class AudioStream(Stream):
             raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
         
         if got_output:
+            
+            # rescale the packet pts, dts and duration, which are in codec time_base, to the streams time_base
         
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
                 #print packet.struct.pts, '->',

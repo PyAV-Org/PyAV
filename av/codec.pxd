@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t,uint64_t
+from libc.stdint cimport uint8_t,uint64_t,int64_t
 
 cimport libav as lib
 from cpython cimport bool
@@ -81,6 +81,10 @@ cdef class AudioFifo:
     
     cdef lib.AVSampleFormat sample_fmt_
     cdef int sample_rate_
+    
+    cdef int64_t last_pts
+    cdef int64_t pts_offset
+    cdef lib.AVRational time_base_
     
     
 
