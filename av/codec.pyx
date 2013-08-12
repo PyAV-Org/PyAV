@@ -603,6 +603,12 @@ cdef class AudioFrame(Frame):
         
         cdef AudioFrame frame
         
+        # create a audio fifo queue to collect samples
+        cdef AudioFifo fifo = AudioFifo(channel_layout,
+                                        sample_fmt, 
+                                        out_sample_rate,
+                                        dst_nb_samples)
+        
         flush = False
         
         while True:
@@ -631,18 +637,22 @@ cdef class AudioFrame(Frame):
             
             if ret == 0:
                 break
-
-            frame.ptr.nb_samples = ret
-
-            frame.ptr.sample_rate = out_sample_rate
-            frame.ptr.channel_layout = out_ch_layout
-            frame.frame_index = self.frame_index
-
-            # not sure what to do with the pts yet
-            frame.ptr.pts = lib.AV_NOPTS_VALUE
             
-            yield frame
+            # use av_audio_fifo_write command because fifo.write will call frame.resample
+            # and loop indefinitely 
+            
+            err_check(lib.av_audio_fifo_write(fifo.ptr, 
+                                          <void **> frame.ptr.extended_data,
+                                          ret))
             flush = True
+            
+        frame = fifo.read(-1)
+        
+        # copy over pts and time_base
+        frame.ptr.pts = self.ptr.pts
+        frame.time_base_ = self.time_base_
+        
+        return frame
         
 
     property samples:
@@ -718,13 +728,13 @@ cdef class AudioFifo:
     def write(self, AudioFrame frame):
         cdef AudioFrame resampled_frame
         cdef int ret
-        for resampled_frame in frame.resample(self.channel_layout, self.sample_fmt, self.sample_rate):
+        resampled_frame = frame.resample(self.channel_layout, self.sample_fmt, self.sample_rate)
             
-            ret = lib.av_audio_fifo_write(self.ptr, 
-                                          <void **> resampled_frame.ptr.extended_data,
-                                          resampled_frame.samples)
-            if ret != resampled_frame.samples:
-                raise Exception("error writing to AudioFifo")
+        ret = lib.av_audio_fifo_write(self.ptr, 
+                                      <void **> resampled_frame.ptr.extended_data,
+                                      resampled_frame.samples)
+        if ret != resampled_frame.samples:
+            raise Exception("error writing to AudioFifo")
             
     def read(self, int nb_samples=-1):
         

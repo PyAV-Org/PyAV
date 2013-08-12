@@ -96,6 +96,12 @@ cdef extern from "libavutil/avutil.h":
         AVRounding r
     )
     
+    cdef int64_t av_rescale(
+        int64_t a, 
+        int64_t b, 
+        int64_t c
+    )
+    
     cdef char* av_strdup(char *s)
 
 cdef extern from "libavutil/pixdesc.h":

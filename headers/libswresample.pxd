@@ -27,6 +27,8 @@ cdef extern from "libswresample/swresample.h":
     # Gets the delay the next input sample will 
     # experience relative to the next output sample. 
     cdef int64_t swr_get_delay(SwrContext *s, int64_t base)
+    
+    cdef int64_t swr_next_pts(SwrContext *s, int64_t base)
 
     cdef SwrContext* swr_alloc()
     cdef int swr_init(SwrContext* ctx)
