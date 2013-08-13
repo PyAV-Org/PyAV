@@ -64,6 +64,11 @@ cdef class Context(object):
             self.metadata = {}
             
     cpdef add_stream(self, bytes codec_name, object rate=None):
+        
+        """Add stream to Context and return it. Context must be opened with mode = "w",
+        if the codec_name is a video codec rate means frames per second,
+        if the codec_name is a audio codec rate means sample rate 
+        """
     
         if self.is_input:
             raise TypeError("Cannot add streams to input Context ")
