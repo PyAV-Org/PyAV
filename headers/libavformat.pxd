@@ -61,7 +61,7 @@ cdef extern from "libavformat/avformat.h":
     
     # http://ffmpeg.org/doxygen/trunk/structAVIOContext.html
     cdef struct AVIOContext:
-        pass
+        int write_flag
         
     # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
     cdef struct AVInputFormat:

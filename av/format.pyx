@@ -150,16 +150,18 @@ cdef class Context(object):
         filename = self.name
         
         # open the output file, if needed
-        if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            err_check(lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE))
-
-        err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
-        
+        if not self.proxy.ptr.pb:
+            
+            if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
+                err_check(lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE))
+    
+            err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
+            
     def close(self):
         cdef Stream stream
         
         if self.is_output:
-            lib.av_write_trailer(self.proxy.ptr)
+            err_check(lib.av_write_trailer(self.proxy.ptr))
             for stream in self.streams:
                 
                 lib.avcodec_close(stream.codec.ctx)
