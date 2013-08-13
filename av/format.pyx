@@ -163,13 +163,16 @@ cdef class Context(object):
         cdef Stream stream
         
         if self.is_output:
+            if not self.proxy.ptr.pb:
+                raise IOError("File not opened")
+            
             err_check(lib.av_write_trailer(self.proxy.ptr))
             for stream in self.streams:
                 
                 lib.avcodec_close(stream.codec.ctx)
                 
             if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-                lib.avio_close(self.proxy.ptr.pb)
+                lib.avio_closep(&self.proxy.ptr.pb)
         
     
     def dump(self):

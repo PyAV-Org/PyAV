@@ -142,6 +142,8 @@ cdef extern from "libavformat/avformat.h":
          
     cdef int avio_close(AVIOContext *s)
     
+    cdef int avio_closep(AVIOContext **s)
+    
     cdef int avformat_find_stream_info(
         AVFormatContext *ctx,
         AVDictionary **options, # Can be NULL.
