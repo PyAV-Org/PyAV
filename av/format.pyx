@@ -39,7 +39,6 @@ cdef class Context(object):
         elif mode == 'w':
             self.is_input = False
             self.is_output = True
-            #raise NotImplementedError('no output yet')
         else:
             raise ValueError('mode must be "r" or "w"')
         
@@ -65,12 +64,15 @@ cdef class Context(object):
             self.metadata = {}
             
     cpdef add_stream(self, bytes codec_name, object rate=None):
+    
+        if self.is_input:
+            raise TypeError("Cannot add streams to input Context ")
 
         cdef lib.AVCodec *codec
-        cdef lib.AVCodecContext *codec_ctx
         cdef lib.AVCodecDescriptor *desc
   
-        cdef lib.AVStream *stream
+        cdef lib.AVStream *st
+        cdef Stream stream
         
         # Find encoder
         codec = lib.avcodec_find_encoder_by_name(codec_name)
@@ -91,54 +93,54 @@ cdef class Context(object):
             raise ValueError("Codec is not supported in this format")
         
         # Create new stream
-        stream = lib.avformat_new_stream(self.proxy.ptr, codec)
-        if not stream:
+        st = lib.avformat_new_stream(self.proxy.ptr, codec)
+        if not st:
             raise MemoryError("Could not allocate stream")
         
         # Set Stream ID
-        stream.id = self.proxy.ptr.nb_streams -1
-        codec_ctx = stream.codec
+        st.id = self.proxy.ptr.nb_streams -1
+        codec_ctx = st.codec
         # Set Codecs defaults
         lib.avcodec_get_context_defaults3(codec_ctx, codec)
+        
+        stream = stream_factory(self,st.id)
         
         codec_ctx.codec = codec
         
         # Now lets set some more sane video defaults
-        if codec_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        if stream.codec.ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
             if not rate:
                 rate = 25
             
-            codec_ctx.time_base.den = 12800 
-            codec_ctx.time_base.num = 1
-            codec_ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
-            codec_ctx.width = 640
-            codec_ctx.height = 480
-        
+            stream.codec.ctx.time_base.den = 12800 
+            stream.codec.ctx.time_base.num = 1
+            stream.codec.ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
+            stream.codec.ctx.width = 640
+            stream.codec.ctx.height = 480
+            stream.codec.frame_rate = rate
         # Some Sane audio defaults
         elif codec_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-            #choose codecs first availbe sample format
-            codec_ctx.sample_fmt = codec.sample_fmts[0]
-            codec_ctx.bit_rate = 64000
-            codec_ctx.sample_rate = 44100
+            if not rate:
+                rate = 44100
+            #choose codecs first available sample format
+            stream.codec.ctx.sample_fmt = codec.sample_fmts[0]
+            stream.codec.ctx.bit_rate = 64000
+            stream.codec.ctx.sample_rate = int(rate)
             #codec_ctx.sample_rate = 48000
 
-            codec_ctx.channels = 2
-            codec_ctx.channel_layout = lib.AV_CH_LAYOUT_STEREO
+            stream.codec.ctx.channels = 2
+            stream.codec.ctx.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
-            codec_ctx.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
+            stream.codec.ctx.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
         
         # And steam object to self.streams
-        stream_obj = stream_factory(self,stream.id)
-        if rate:
-            stream_obj.codec.frame_rate = rate
         
-        self.streams.append(stream_obj)
-        
-        return stream_obj
+        self.streams.append(stream)
+        return stream
     
-    cpdef begin_encoding(self):
+    cpdef start_encoding(self):
 
         cdef Stream stream
         

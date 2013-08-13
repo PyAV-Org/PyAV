@@ -30,7 +30,7 @@ cdef class Context(object):
     
     cpdef add_stream(self, bytes codec_name, object rate=*)
     
-    cpdef begin_encoding(self)
+    cpdef start_encoding(self)
 
 
 cdef class Stream(object):

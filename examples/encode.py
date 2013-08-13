@@ -44,7 +44,7 @@ print "channels", audio_stream.codec.channels
 print "channel layout", audio_stream.codec.channel_layout 
 
 #raise Exception('stop')
-encode_video.begin_encoding()
+encode_video.start_encoding()
 encode_video.dump()
 
 #raise Exception()
