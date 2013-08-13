@@ -527,7 +527,7 @@ cdef class AudioFrame(Frame):
         
     cdef fill_frame(self, int nb_samples):
         if not self.ptr:
-            raise Exception("Frame Not allocated")
+            raise MemoryError("Frame Not allocated")
         
         self.ptr.nb_samples = nb_samples
 
@@ -536,14 +536,11 @@ cdef class AudioFrame(Frame):
                                                        self.ptr.nb_samples,
                                                        <lib.AVSampleFormat>self.ptr.format,self.align)
         
-        ret =lib.avcodec_fill_audio_frame(self.ptr, 
+        err_check(lib.avcodec_fill_audio_frame(self.ptr, 
                                              self.ptr.channels, 
                                              <lib.AVSampleFormat> self.ptr.format,
                                              self.buffer_[0],
-                                             samples_size, self.align)
-
-        if ret < 0:
-            raise Exception("avcodec_fill_audio_frame failed")
+                                             samples_size, self.align))
         
         self.buffer_size = samples_size
         
@@ -588,9 +585,8 @@ cdef class AudioFrame(Frame):
             NULL
         )
         
-        if lib.swr_init(self.swr_proxy.ptr) < 0:
-            raise Exception("Failed to initialize the resampling context")
-
+        err_check(lib.swr_init(self.swr_proxy.ptr))
+        
         # helper names, just so I remember what they are       
         cdef int src_nb_samples = self.ptr.nb_samples
         cdef int src_rate = self.ptr.sample_rate
@@ -622,19 +618,16 @@ cdef class AudioFrame(Frame):
             # negative value on error
             
             if not flush:
-                ret = lib.swr_convert(self.swr_proxy.ptr,
+                ret = err_check(lib.swr_convert(self.swr_proxy.ptr,
                                       frame.ptr.extended_data,dst_nb_samples,
-                                      self.ptr.extended_data, src_nb_samples)
+                                      self.ptr.extended_data, src_nb_samples))
                 
             # Flush any remaining samples out
             else:         
-                 ret =lib.swr_convert(self.swr_proxy.ptr,
+                 ret = err_check(lib.swr_convert(self.swr_proxy.ptr,
                                        frame.ptr.extended_data,dst_nb_samples,
-                                       NULL, 0)
-    
-            if ret <0:
-                raise Exception("error swr_convert: %s" % lib.av_err2str(ret))
-            
+                                       NULL, 0))
+
             if ret == 0:
                 break
             
@@ -748,12 +741,10 @@ cdef class AudioFifo:
                                              self.time_base_)
             self.pts_offset = self.samples
             
-        ret = lib.av_audio_fifo_write(self.ptr, 
+        err_check(lib.av_audio_fifo_write(self.ptr, 
                                       <void **> resampled_frame.ptr.extended_data,
-                                      resampled_frame.samples)
-        if ret != resampled_frame.samples:
-            raise Exception("error writing to AudioFifo")
-            
+                                      resampled_frame.samples))
+
     def read(self, int nb_samples=-1):
         """Read nb_samples from the Audio FIFO. returns a AudioFrame. If nb_samples is -1, will return a AudioFrame
         with all the samples currently in the FIFO. If a frame was supplied with a valid pts the Audio frame returned
@@ -767,7 +758,7 @@ cdef class AudioFifo:
             nb_samples = self.samples
             
         if not nb_samples:
-            raise Exception("Fifo is Empty")
+            raise EOFError("Fifo is Empty")
 
         cdef int ret
         cdef int linesize

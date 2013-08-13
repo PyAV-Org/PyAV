@@ -139,29 +139,21 @@ cdef class Context(object):
         return stream_obj
     
     cpdef begin_encoding(self):
-        print "encoding starting"
-        
+
         cdef Stream stream
         
         for stream in self.streams:
             # Open Codec if its not open
             if not lib.avcodec_is_open(stream.codec.ctx):
-                ret = lib.avcodec_open2(stream.codec.ctx, stream.codec.ptr, NULL)
-                if ret <0:
-                    raise Exception("Could not open video codec: %s" % lib.av_err2str(ret))
-                print "opened codec for", stream
-                
+                err_check(lib.avcodec_open2(stream.codec.ctx, stream.codec.ptr, NULL))
+
         filename = self.name
         
         # open the output file, if needed
         if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            ret = lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE)
-            if ret <0:
-                raise Exception("Could not open '%s' %s" % (filename,lib.av_err2str(ret)))
+            err_check(lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE))
 
-        ret = lib.avformat_write_header(self.proxy.ptr, NULL)
-        if ret < 0:
-            raise Exception("Error occurred when opening output file: %s" %  lib.av_err2str(ret))
+        err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
         
     def close(self):
         cdef Stream stream
@@ -405,14 +397,11 @@ cdef class VideoStream(Stream):
             formated_frame.ptr.pts = <int64_t> (pts * self.encoded_frame_count)
             
             self.encoded_frame_count += 1
-            ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output)
+            ret = err_check(lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output))
         else:
             # Flushing
-            ret = lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, NULL, &got_output)
-            
-        if ret <0:
-            raise Exception("Error encoding video frame: %s" % lib.av_err2str(ret))
-        
+            ret = err_check(lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, NULL, &got_output))
+
         if got_output:
             
             # rescale the packet pts and dts, which are in codec time_base, to the streams time_base
@@ -546,14 +535,11 @@ cdef class AudioStream(Stream):
             self.encoded_frame_count += fifo_frame.samples
             #print self.encoded_frame_count
             
-            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output)
+            ret = err_check(lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output))
         else:
             # frame set to NULL to flush encoder out frame
-            ret = lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, NULL, &got_output)
+            ret = err_check(lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, NULL, &got_output))
 
-        if ret < 0:
-            raise Exception("Error encoding audio frame: %s" % lib.av_err2str(ret))
-        
         if got_output:
             
             # rescale the packet pts, dts and duration, which are in codec time_base, to the streams time_base
