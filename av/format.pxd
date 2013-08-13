@@ -37,7 +37,7 @@ cdef class Stream(object):
     
     cdef readonly bytes type
     
-    cdef ContextProxy ctx_proxy
+    cdef Context ctx
     
     cdef lib.AVStream *ptr
     

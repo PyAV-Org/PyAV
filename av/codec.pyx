@@ -16,7 +16,7 @@ cdef class Codec(object):
         self.ctx = stream.ptr.codec
         
         # Keep these pointer alive with this reference.
-        self.format_ctx = stream.ctx_proxy
+        self.format_ctx = stream.ctx.proxy
         
         if stream.type == 'attachment':
             return

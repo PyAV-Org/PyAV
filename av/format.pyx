@@ -65,9 +65,10 @@ cdef class Context(object):
             
     cpdef add_stream(self, bytes codec_name, object rate=None):
         
-        """Add stream to Context and return it. Context must be opened with mode = "w",
+        """Add stream to Context and return it.
         if the codec_name is a video codec rate means frames per second,
         if the codec_name is a audio codec rate means sample rate 
+        Note: To use this Context must be opened with mode = "w"
         """
     
         if self.is_input:
@@ -146,6 +147,14 @@ cdef class Context(object):
         return stream
     
     cpdef start_encoding(self):
+    
+        """setups Context for encoding. Opens Codecs and output file if they aren't already open 
+        and writes file header. This method is automatically called by a Stream before encoding.
+        Note: To use this Context must be opened with mode = "w"
+        """
+    
+        if self.is_input:
+            raise TypeError('Cannot encoded to input Context, file needs to be opened with mode="w"')
 
         cdef Stream stream
         
@@ -184,6 +193,9 @@ cdef class Context(object):
         lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w')
         
     def mux(self, av.codec.Packet packet):
+        
+        self.start_encoding()
+        
         cdef int ret
         if self.is_input:
             raise ValueError("not a output file")
@@ -281,8 +293,8 @@ cdef class Stream(object):
         if index < 0 or index > ctx.proxy.ptr.nb_streams:
             raise ValueError('stream index out of range')
         
-        self.ctx_proxy = ctx.proxy
-        self.ptr = self.ctx_proxy.ptr.streams[index]
+        self.ctx = ctx
+        self.ptr = self.ctx.proxy.ptr.streams[index]
         self.type = type
 
         self.codec = av.codec.Codec(self)
@@ -383,6 +395,9 @@ cdef class VideoStream(Stream):
         If called with with no args it will flush out the encoder and return the buffered
         packets until there are none left, at which it will return None.
         """
+        
+        # setup formatContext for encoding
+        self.ctx.start_encoding()
         
         if not self.sws_proxy:
             self.sws_proxy =  av.codec.SwsContextProxy()
@@ -495,6 +510,10 @@ cdef class AudioStream(Stream):
         If called with with no args it will flush out the encoder and return the buffered
         packets until there are none left, at which it will return None.
         """
+        
+        # setup formatContext for encoding
+        self.ctx.start_encoding()
+        
         #Setup a resampler if ones not setup
         if not self.swr_proxy:
             self.swr_proxy =  av.codec.SwrContextProxy()

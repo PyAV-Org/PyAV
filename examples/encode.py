@@ -44,7 +44,6 @@ print "channels", audio_stream.codec.channels
 print "channel layout", audio_stream.codec.channel_layout 
 
 #raise Exception('stop')
-encode_video.start_encoding()
 encode_video.dump()
 
 #raise Exception()
@@ -72,7 +71,7 @@ for packet in source_video.demux(streams):
                 encode_video.mux(encoded_packet)
             print frame_count
         
-    if frame_count > 10000:
+    if frame_count > 1000:
         break
 
 
