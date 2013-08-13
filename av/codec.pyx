@@ -559,7 +559,7 @@ cdef class AudioFrame(Frame):
                                              self.ptr.channels,
                                              <lib.AVSampleFormat>self.ptr.format))
     
-    def resample(self, bytes channel_layout, bytes sample_fmt, int out_sample_rate):
+    cpdef resample(self, bytes channel_layout, bytes sample_fmt, int out_sample_rate):
         
         
         # Check params
@@ -687,6 +687,7 @@ cdef class AudioFrame(Frame):
             
         
 cdef class AudioFifo:
+
     """A simple Audio FIFO (First In First Out) Buffer. Accept any AudioFrame. Will automatically convert it 
     to match the channel_layout, sample_fmt and sample_rate specified upon initialization. 
     """
@@ -734,7 +735,8 @@ cdef class AudioFifo:
         self.time_base_.num = 1
         self.time_base_.den = self.sample_rate_
         
-    def write(self, AudioFrame frame):
+    cpdef write(self, AudioFrame frame):
+    
         """Write a Frame to the Audio FIFO Buffer. If the AudioFrame has a valid pts the FIFO will store it.
         """
         
@@ -752,7 +754,8 @@ cdef class AudioFifo:
                                       <void **> resampled_frame.ptr.extended_data,
                                       resampled_frame.samples))
 
-    def read(self, int nb_samples=-1):
+    cpdef read(self, int nb_samples=-1):
+    
         """Read nb_samples from the Audio FIFO. returns a AudioFrame. If nb_samples is -1, will return a AudioFrame
         with all the samples currently in the FIFO. If a frame was supplied with a valid pts the Audio frame returned
         will contain a pts adjusted for the current read. The time_base of the pts will always be in 1/sample_rate time_base.

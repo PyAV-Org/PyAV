@@ -70,7 +70,7 @@ cdef class AudioFrame(Frame):
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples)
     cdef fill_frame(self, int nb_samples)
     cdef SwrContextProxy swr_proxy
-    #cpdef resample(self, char* channel_layout, char* sample_fmt, int sample_rate)
+    cpdef resample(self, bytes channel_layout, bytes sample_fmt, int sample_rate)
     
 cdef class AudioFifo:
     cdef lib.AVAudioFifo *ptr
@@ -86,5 +86,7 @@ cdef class AudioFifo:
     cdef int64_t pts_offset
     cdef lib.AVRational time_base_
     
+    cpdef write(self, AudioFrame frame)
+    cpdef read(self, int nb_samples=*)
     
 
