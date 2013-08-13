@@ -392,9 +392,16 @@ cdef class VideoStream(Stream):
         packet.struct.size = 0
         
         if formated_frame:
-            pts = 1/float(self.codec.frame_rate) * self.codec.ctx.time_base.den
             
-            formated_frame.ptr.pts = <int64_t> (pts * self.encoded_frame_count)
+            if formated_frame.ptr.pts != lib.AV_NOPTS_VALUE:
+                formated_frame.ptr.pts = lib.av_rescale_q(formated_frame.ptr.pts, 
+                                                          formated_frame.time_base_, #src 
+                                                          self.codec.ctx.time_base) #dest
+                                
+            else:
+                pts_step = 1/float(self.codec.frame_rate) * self.codec.ctx.time_base.den
+                formated_frame.ptr.pts = <int64_t> (pts_step * self.encoded_frame_count)
+                
             
             self.encoded_frame_count += 1
             ret = err_check(lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output))
