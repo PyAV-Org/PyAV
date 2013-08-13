@@ -326,7 +326,14 @@ cdef class Frame(object):
     property pts:
         """Presentation time stamp of this frame."""
         def __get__(self):
+            if self.ptr.pts == lib.AV_NOPTS_VALUE:
+                return None
             return self.ptr.pts
+        def __set__(self, value):
+            if value is None:
+                self.ptr.pts = lib.AV_NOPTS_VALUE
+            else:
+                self.ptr.pts = value
 
 cdef class VideoFrame(Frame):
 
