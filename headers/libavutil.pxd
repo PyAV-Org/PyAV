@@ -103,6 +103,13 @@ cdef extern from "libavutil/avutil.h":
     )
     
     cdef char* av_strdup(char *s)
+    
+    cdef int av_opt_set_int(
+        void *obj,
+        char *name,
+        int64_t value,
+        int search_flags
+    )
 
 cdef extern from "libavutil/pixdesc.h":
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
