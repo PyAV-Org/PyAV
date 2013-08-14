@@ -8,6 +8,16 @@ cdef extern from "libavformat_shim.h":
 cdef extern from "libavformat/avformat.h":
     
     cdef int AV_TIME_BASE
+    cdef int AVSEEK_FLAG_BACKWARD
+    cdef int AVSEEK_FLAG_BYTE 
+    cdef int AVSEEK_FLAG_ANY 
+    cdef int AVSEEK_FLAG_FRAME
+    
+    cdef int AVFMT_GLOBALHEADER
+    cdef int AVFMT_NOFILE
+    cdef int AVFMT_RAWPICTURE
+    
+    cdef int AVIO_FLAG_WRITE
     
     # Initialize libavformat.
     cdef void av_register_all()
@@ -34,20 +44,35 @@ cdef extern from "libavformat/avformat.h":
         int index
         int id
         
-        
         AVCodecContext *codec
         
+        AVFrac pts
         AVRational r_frame_rate
         AVRational time_base
         
         int64_t start_time
         int64_t duration
         int64_t nb_frames
+        int64_t cur_dts
         
         AVDictionary *metadata
         
         AVRational avg_frame_rate
+    
+    # http://ffmpeg.org/doxygen/trunk/structAVIOContext.html
+    cdef struct AVIOContext:
+        int write_flag
         
+    # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
+    cdef struct AVInputFormat:
+        pass
+    
+    # http://ffmpeg.org/doxygen/trunk/structAVOutputFormat.html  
+    cdef struct AVOutputFormat:
+        char * name
+        AVCodecID video_codec
+        AVCodecID audio_codec
+        int flags
     
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
@@ -56,16 +81,19 @@ cdef extern from "libavformat/avformat.h":
         unsigned int nb_streams
         AVStream **streams
         
+        AVInputFormat *iformat
+        AVOutputFormat *oformat
+        
+        AVIOContext *pb
+        
         AVDictionary *metadata
         
+        char filename
         int64_t start_time
         int64_t duration
         int bit_rate
         
-    
-    # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
-    cdef struct AVInputFormat:
-        pass
+        int flags
     
     # Once called av_open_input_file, but no longer.
     cdef int avformat_open_input(
@@ -77,10 +105,63 @@ cdef extern from "libavformat/avformat.h":
     
     cdef int avformat_close_input(AVFormatContext **ctx)
     
+    cdef int avformat_write_header(
+        AVFormatContext *ctx,
+        AVDictionary **options # Can be NULL
+    )
+    
+    cdef int av_write_trailer(AVFormatContext *ctx)
+    
+    cdef int av_interleaved_write_frame(
+        AVFormatContext *ctx,
+        AVPacket *pkt
+    )
+    
+    cdef int av_write_frame(
+        AVFormatContext *ctx,
+        AVPacket *pkt
+    )
+    
+    cdef int avio_open(
+        AVIOContext **s,
+        char *url,
+        int flags
+    )
+    
+    cdef AVOutputFormat* av_guess_format(
+        char *short_name,
+        char *filename,
+        char *mime_type 
+    )
+    
+    cdef int avformat_query_codec(
+        AVOutputFormat *ofmt,
+        AVCodecID codec_id,
+        int std_compliance
+    )
+         
+    cdef int avio_close(AVIOContext *s)
+    
+    cdef int avio_closep(AVIOContext **s)
+    
     cdef int avformat_find_stream_info(
         AVFormatContext *ctx,
         AVDictionary **options, # Can be NULL.
     )
+    
+    cdef AVStream* avformat_new_stream(
+        AVFormatContext *ctx,
+        AVCodec *c
+    )
+       
+    cdef int avformat_alloc_output_context2(
+        AVFormatContext **ctx,
+        AVOutputFormat *oformat,
+        char *format_name,
+        char *filename
+    )
+    
+    cdef int avformat_free_context(AVFormatContext *ctx)
     
     cdef void av_dump_format(
         AVFormatContext *ctx,
@@ -93,3 +174,13 @@ cdef extern from "libavformat/avformat.h":
         AVFormatContext *ctx,
         AVPacket *packet,
     )
+    
+    cdef int av_seek_frame(
+        AVFormatContext *ctx,
+        int stream_index,
+        int64_t timestamp,
+        int flags
+    )
+    
+
+    
