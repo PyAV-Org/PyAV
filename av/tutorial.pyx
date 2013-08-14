@@ -105,7 +105,7 @@ def iter_frames(argv):
     print 'Reading packets...'
     cdef lib.AVPacket packet
     cdef int frame_i = 0
-    cdef bint finished = False
+    cdef int finished = 0
     while True:
         
         try:
