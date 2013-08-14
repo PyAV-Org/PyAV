@@ -25,19 +25,23 @@ cdef class Context(object):
     
     cdef ContextProxy proxy
     
-    cdef readonly tuple streams
+    cdef readonly list streams
     cdef readonly dict metadata
+    
+    cpdef add_stream(self, bytes codec_name, object rate=*)
+    
+    cpdef start_encoding(self)
 
 
 cdef class Stream(object):
     
     cdef readonly bytes type
     
-    cdef ContextProxy ctx_proxy
+    cdef Context ctx
     
     cdef lib.AVStream *ptr
     
-    cdef av.codec.Codec codec
+    cdef readonly av.codec.Codec codec
     cdef readonly dict metadata
     
     cpdef decode(self, av.codec.Packet packet)
@@ -49,15 +53,21 @@ cdef class VideoStream(Stream):
     
     # Hold onto the frames that we will decode until we have a full one.
     cdef lib.AVFrame *raw_frame
-    cdef lib.AVFrame *rgb_frame
-    cdef uint8_t *buffer_
-    cdef lib.SwsContext *sws_ctx
+    cdef av.codec.SwsContextProxy sws_proxy
     cdef int last_w
     cdef int last_h
+    
+    cdef int encoded_frame_count
+    
+    cpdef encode(self, av.codec.VideoFrame frame=*)
 
 
 cdef class AudioStream(Stream):
 
     # Hold onto the frames that we will decode until we have a full one.
     cdef lib.AVFrame *frame
-
+    cdef av.codec.SwrContextProxy swr_proxy
+    cdef av.codec.AudioFifo fifo
+    cdef int encoded_frame_count
+    
+    cpdef encode(self, av.codec.AudioFrame frame=*)
