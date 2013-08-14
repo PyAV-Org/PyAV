@@ -651,6 +651,9 @@ cdef class AudioFrame(Frame):
         frame.ptr.pts = self.ptr.pts
         frame.time_base_ = self.time_base_
         
+        # close the context (this only does soemthing when using avresample)
+        lib.swr_close(self.swr_proxy.ptr)
+        
         return frame
         
 
@@ -795,7 +798,7 @@ cdef class AudioFifo:
             
             # move the offset
             self.pts_offset -= nb_samples
-
+        
         return frame
         
     property samples:

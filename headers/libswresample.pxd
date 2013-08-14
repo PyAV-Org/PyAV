@@ -1,6 +1,6 @@
 from libc.stdint cimport int64_t, uint8_t
 
-cdef extern from "libswresample/swresample.h":
+cdef extern from "libswresample_compat.h":
 
     cdef struct SwrContext:
         pass
@@ -33,3 +33,7 @@ cdef extern from "libswresample/swresample.h":
     cdef SwrContext* swr_alloc()
     cdef int swr_init(SwrContext* ctx)
     cdef void swr_free(SwrContext **ctx)
+    
+    # wraper for libavresample
+    cdef void swr_close(SwrContext *ctx)
+    
