@@ -2,6 +2,8 @@
 
 #ifndef USE_AVRESAMPLE
 
+#define USING_AVRESAMPLE 0
+
 #include <libswresample/swresample.h>
 
 //swr does not have the equivalent so this does nothing
@@ -12,6 +14,7 @@ void swr_close(SwrContext *ctx)
 
 #else
 
+#define USING_AVRESAMPLE 1
 //wrap libavresample so it looks the same as libswresample
 #include <libavresample/avresample.h>
 
@@ -21,6 +24,7 @@ void swr_close(SwrContext *ctx)
 #define swr_free(ctx) avresample_free(ctx)
 #define swr_alloc() avresample_alloc_context()
 #define swr_get_delay(ctx, ...) avresample_get_delay(ctx)
-#define swr_convert(ctx, out, out_count, in, in_count) avresample_convert(ctx, out, 0, out_count, in, 0, in_count)
+#define swr_convert(ctx, out, out_count, in, in_count) \
+   avresample_convert(ctx, out, 0, out_count, (uint8_t **)in, 0, in_count)
 
 #endif

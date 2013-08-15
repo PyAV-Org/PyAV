@@ -613,6 +613,11 @@ cdef class AudioFrame(Frame):
         
         flush = False
         
+        # NOTE: for some reason avresample_convert won't return enough converted samples if src_nb_samples
+        # is the correct size, this hack fixes that, its not safe for use with swr_convert
+        if lib.USING_AVRESAMPLE:
+            src_nb_samples += 1000
+        
         while True:
             frame = AudioFrame()
             
@@ -651,7 +656,7 @@ cdef class AudioFrame(Frame):
         frame.ptr.pts = self.ptr.pts
         frame.time_base_ = self.time_base_
         
-        # close the context (this only does soemthing when using avresample)
+        # close the context (this only does something when using avresample)
         lib.swr_close(self.swr_proxy.ptr)
         
         return frame
