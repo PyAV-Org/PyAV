@@ -30,12 +30,10 @@ cdef extern from "libswresample_compat.h":
     # experience relative to the next output sample. 
     cdef int64_t swr_get_delay(SwrContext *s, int64_t base)
     
-    cdef int64_t swr_next_pts(SwrContext *s, int64_t base)
-
     cdef SwrContext* swr_alloc()
     cdef int swr_init(SwrContext* ctx)
     cdef void swr_free(SwrContext **ctx)
     
-    # wraper for libavresample
+    # wrapper for libavresample
     cdef void swr_close(SwrContext *ctx)
     

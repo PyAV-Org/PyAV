@@ -147,7 +147,7 @@ cdef extern from "libavutil/samplefmt.h":
      )
         
     
-cdef extern from "libavutil/channel_layout.h":
+cdef extern from "libavutil/audioconvert.h":
     cdef char* av_get_channel_name(uint64_t channel)
     
     cdef uint64_t av_get_channel_layout(char* name)
