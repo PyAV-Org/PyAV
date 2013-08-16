@@ -103,6 +103,13 @@ cdef extern from "libavutil/avutil.h":
     )
     
     cdef char* av_strdup(char *s)
+    
+    cdef int av_opt_set_int(
+        void *obj,
+        char *name,
+        int64_t value,
+        int search_flags
+    )
 
 cdef extern from "libavutil/pixdesc.h":
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
@@ -140,7 +147,7 @@ cdef extern from "libavutil/samplefmt.h":
      )
         
     
-cdef extern from "libavutil/channel_layout.h":
+cdef extern from "libavutil/audioconvert.h":
     cdef char* av_get_channel_name(uint64_t channel)
     
     cdef uint64_t av_get_channel_layout(char* name)
