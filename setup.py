@@ -20,7 +20,7 @@ for chunk in autoconf_flags.strip().split():
         ext_extra.setdefault('libraries', []).append(chunk[2:])
     elif chunk.startswith('-D'):
         name = chunk[2:].split('=')[0]
-        if name.startswith('HAVE'):
+        if name.startswith('HAVE') or name.startswith('USE'):
             ext_extra.setdefault('define_macros', []).append((name, None))
 
 

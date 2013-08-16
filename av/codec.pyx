@@ -579,18 +579,17 @@ cdef class AudioFrame(Frame):
         #print "source =", self.sample_rate, self.channel_layout,self.ptr.channel_layout, self.channels, self.sample_fmt,self.ptr.format
         #print "dest   =", out_sample_rate, channel_layout,out_ch_layout, dst_nb_channels, sample_fmt, out_sample_fmt
 
-        # setup SwrContext
-        self.swr_proxy.ptr = lib.swr_alloc_set_opts(
-            self.swr_proxy.ptr,
-            out_ch_layout,
-            out_sample_fmt,
-            out_sample_rate,
-            self.ptr.channel_layout,
-            <lib.AVSampleFormat > self.ptr.format,
-            self.ptr.sample_rate,
-            0,
-            NULL
-        )
+        if not self.swr_proxy.ptr:
+            self.swr_proxy.ptr = lib.swr_alloc()
+        
+        err_check(lib.av_opt_set_int(self.swr_proxy.ptr, "in_channel_layout" ,self.ptr.channel_layout,0))
+        err_check(lib.av_opt_set_int(self.swr_proxy.ptr, "out_channel_layout" ,out_ch_layout,0))
+        
+        err_check(lib.av_opt_set_int(self.swr_proxy.ptr, 'in_sample_rate', self.ptr.sample_rate, 0))
+        err_check(lib.av_opt_set_int(self.swr_proxy.ptr, 'out_sample_rate', out_sample_rate, 0))
+        
+        err_check(lib.av_opt_set_int(self.swr_proxy.ptr, 'in_sample_fmt', self.ptr.format, 0))
+        err_check(lib.av_opt_set_int(self.swr_proxy.ptr, 'out_sample_fmt', <int>out_sample_fmt, 0))
         
         err_check(lib.swr_init(self.swr_proxy.ptr))
         
@@ -613,6 +612,11 @@ cdef class AudioFrame(Frame):
                                         dst_nb_samples)
         
         flush = False
+        
+        # NOTE: for some reason avresample_convert won't return enough converted samples if src_nb_samples
+        # is the correct size, this hack fixes that, its not safe for use with swr_convert
+        if lib.USING_AVRESAMPLE:
+            src_nb_samples += 1000
         
         while True:
             frame = AudioFrame()
@@ -651,6 +655,9 @@ cdef class AudioFrame(Frame):
         # copy over pts and time_base
         frame.ptr.pts = self.ptr.pts
         frame.time_base_ = self.time_base_
+        
+        # close the context (this only does something when using avresample)
+        lib.swr_close(self.swr_proxy.ptr)
         
         return frame
         
@@ -796,7 +803,7 @@ cdef class AudioFifo:
             
             # move the offset
             self.pts_offset -= nb_samples
-
+        
         return frame
         
     property samples:

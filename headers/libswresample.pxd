@@ -1,6 +1,8 @@
 from libc.stdint cimport int64_t, uint8_t
 
-cdef extern from "libswresample/swresample.h":
+cdef extern from "libswresample_compat.h":
+
+    cdef int USING_AVRESAMPLE
 
     cdef struct SwrContext:
         pass
@@ -28,8 +30,10 @@ cdef extern from "libswresample/swresample.h":
     # experience relative to the next output sample. 
     cdef int64_t swr_get_delay(SwrContext *s, int64_t base)
     
-    cdef int64_t swr_next_pts(SwrContext *s, int64_t base)
-
     cdef SwrContext* swr_alloc()
     cdef int swr_init(SwrContext* ctx)
     cdef void swr_free(SwrContext **ctx)
+    
+    # wrapper for libavresample
+    cdef void swr_close(SwrContext *ctx)
+    
