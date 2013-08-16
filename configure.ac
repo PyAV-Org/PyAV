@@ -36,7 +36,7 @@ LDFLAGS="${LDFLAGS} ${AV_LDFLAGS}"
 # Look for some of the differences between FFmpeg and Libav. These will result
 # in HAVE_<FUNC_NAME> macros to be defined.
 AC_CHECK_FUNCS_ONCE(av_frame_get_best_effort_timestamp)
-AC_CHECK_FUNCS_ONCE(avformat_close_input)
+AC_CHECK_LIB(avformat, avformat_close_input,[AC_DEFINE(HAVE_AVFORMAT_CLOSE_INPUT)])
 
 AC_CONFIG_FILES([
     config.py
