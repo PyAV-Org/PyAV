@@ -52,6 +52,8 @@ setup(
     author_email="pyav@mikeboers.com",
     
     url="https://github.com/mikeboers/PyAV",
+
+    packages=["av"],
     
     ext_modules=ext_modules,
 
