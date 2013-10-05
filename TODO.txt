@@ -1,3 +1,5 @@
+
+- video.demix(only_video=True)
     
 - FFmpeg tutorial: http://dranger.com/ffmpeg/
 	- also has function reference: http://dranger.com/ffmpeg/functions.html
