@@ -1,0 +1,22 @@
+Hacking on PyAV
+===============
+
+
+The Real Goal
+-------------
+
+The goal here is to not only wrap ffmpeg in Python and provide nearly complete access to the library, but to make it easier to use without the need to understand the full library.
+
+For example:
+
+- we don't need to mimick the underlying project structure as much as we do;
+- we shouldn't be exposing audio attributes on a video codec, and vise-versa;
+- the concept of packets should be abtracted away to yielding frames from streams;
+- ...
+
+
+FFmpeg vs Libav
+---------------
+
+Right now we use a little bit of autoconf to discover the differences between these two libraries, and some very small shim headers to smooth out the differences. Do try to test all changes on platforms which default to both libraries.
+

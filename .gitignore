@@ -6,10 +6,8 @@
 /lib
 
 # Libraries.
-/ffmpeg
-/tutorial
-/src/ffmpeg
-/src/libav
+/vendor/ffmpeg
+/vendor/libav
 
 # Autoconf.
 /autom4te.cache
@@ -25,9 +23,7 @@
 *.pyc
 _build
 
-
 # Testing.
 /sandbox
 /subtitles
-
-
+/tests/samples
