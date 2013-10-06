@@ -31,9 +31,6 @@ test-fail: build
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)
 
-docs: build
-	make -C docs html
-
 clean:
 	- rm -rf build
 	- find av -name '*.so' -delete
@@ -41,3 +38,9 @@ clean:
 clean-all: clean
 	- rm configure config.py
 	- make -C docs clean
+
+docs: build
+	PYTHONPATH=.. make -C docs html
+
+deploy-docs: docs
+	./scripts/sphinx-to-github docs
