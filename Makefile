@@ -23,6 +23,10 @@ build: configure cythonize
 configure:
 	autoconf
 
+samples:
+	# Grab the samples from the ffmpeg site.
+	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/samples/
+
 test: build
 	python -m examples.decode $(TEST_MOV)
 test-fail: build
