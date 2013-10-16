@@ -150,6 +150,10 @@ cdef class Codec(object):
         def __get__(self): return self.ctx.height if self.ctx else None
         def __set__(self, int value):
             self.ctx.height = value
+
+    property sample_aspect_ratio:
+        def __get__(self): return avrational_to_faction(&self.ctx.sample_aspect_ratio) if self.ctx else None
+        def __set__(self,value): to_avrational(value, &self.ctx.sample_aspect_ratio)
             
     
     
