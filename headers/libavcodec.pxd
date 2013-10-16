@@ -67,6 +67,9 @@ cdef extern from "libavcodec/avcodec.h":
         
         AVCodec *codec
 
+        # Video.
+        AVRational sample_aspect_ratio
+
         # Audio.
         AVSampleFormat sample_fmt
         int sample_rate
