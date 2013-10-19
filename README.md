@@ -12,4 +12,4 @@ At least, they will be eventually. For now I'm working my way through some tutor
 
 In the future, I hope to represent the majority of libav in a Pythonic manner.
 
-Have fun, [Read the Docs](https://io.github.com/mikeboers/PyAV), and good luck!
+Have fun, [Read the Docs](http://mikeboers.github.io/PyAV/), and good luck!
