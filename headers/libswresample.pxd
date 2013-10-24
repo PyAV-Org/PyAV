@@ -2,8 +2,6 @@ from libc.stdint cimport int64_t, uint8_t
 
 cdef extern from "libswresample_compat.h":
 
-    cdef int USING_AVRESAMPLE
-
     cdef struct SwrContext:
         pass
     

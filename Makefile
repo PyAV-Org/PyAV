@@ -17,11 +17,8 @@ build/cython/%.c: %.pyx
 	@ mkdir -p $(shell dirname $@)
 	cython -I. -Iheaders -o $@ $<
 
-build: configure cythonize
+build: cythonize
 	python setup.py build_ext --inplace
-
-configure:
-	autoconf
 
 samples:
 	# Grab the samples from the ffmpeg site.
@@ -40,7 +37,6 @@ clean:
 	- find av -name '*.so' -delete
 
 clean-all: clean
-	- rm configure config.py
 	- make -C docs clean
 
 docs: build

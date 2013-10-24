@@ -1,11 +1,6 @@
 from libc.stdint cimport int64_t, uint64_t
 
-
-cdef extern from "libavformat_shim.h":
-    pass
-
-
-cdef extern from "libavformat/avformat.h":
+cdef extern from "libavformat_compat.h":
     
     cdef int AV_TIME_BASE
     cdef int AVSEEK_FLAG_BACKWARD

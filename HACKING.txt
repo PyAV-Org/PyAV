@@ -20,3 +20,16 @@ FFmpeg vs Libav
 
 Right now we use a little bit of autoconf to discover the differences between these two libraries, and some very small shim headers to smooth out the differences. Do try to test all changes on platforms which default to both libraries.
 
+
+Library Detection
+-----------------
+
+Macros will be defined for the libraries which are different bettween FFmpeg and
+PyAV. In particular, you will have either `USE_SWRESAMPLE` or `USE_AVRESAMPLE`.
+
+
+Function Detection
+------------------
+
+Macros will be defined for a few functions that are only in one of FFmpeg or
+LibAV. For example, there may be a `HAVE_AVFORMAT_CLOSE_INPUT` macro.

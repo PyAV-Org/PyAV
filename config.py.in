@@ -1,5 +1,0 @@
-autoconf_flags = '''
-    @AV_CFLAGS@
-    @AV_LDFLAGS@
-    @DEFS@
-'''
