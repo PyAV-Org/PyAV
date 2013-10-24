@@ -1,0 +1,48 @@
+#!/bin/bash
+
+
+mkdir -p vendor
+cd vendor
+
+
+if [[ $LIBRARY == ffmpeg ]]; then
+    
+    sudo apt-get build-dep -qq --fix-missing ffmpeg
+
+    wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
+    tar -xf ffmpeg-1.2.2.tar.bz2
+    cd ffmpeg-1.2.2
+
+    ./configure \
+        --disable-static \
+        --enable-shared \
+        --disable-doc \
+        --disable-avfilter \
+        --disable-avdevice \
+        --disable-postproc
+
+    make
+    sudo make install
+
+
+elif [[ $LIBRARY == libav ]]; then
+    
+    # Just assuming these are the same.
+    sudo apt-get build-dep -qq --fix-missing ffmpeg
+
+    wget https://libav.org/releases/libav-9.10.tar.gz
+    tar -xf libav-9.10.tar.gz
+    cd libav-9.10
+
+    ./configure \
+        --disable-static \
+        --enable-shared \
+        --disable-doc \
+        --disable-avfilter \
+        --disable-avdevice
+
+    make
+    sudo make install
+
+fi
+

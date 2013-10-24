@@ -1,20 +1,7 @@
 # General.
 .DS_Store
 /venv
-/bin
-/include
-/lib
-
-# Libraries.
-/vendor/ffmpeg
-/vendor/libav
-
-# Autoconf.
-/autom4te.cache
-/config.py
-/config.log
-/config.status
-/configure
+/vendor
 
 # Build products.
 /build

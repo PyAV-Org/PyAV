@@ -3,20 +3,11 @@ language: python
 python:
     - "2.6"
     - "2.7"
+env:
+    - LIBRARY=ffmpeg
+    - LIBRARY=libav
 
-# Install FFmpeg.
-before_install: 
-    - sudo apt-get build-dep -qq ffmpeg
-    - wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
-    - tar -xf ffmpeg-1.2.2.tar.bz2
-    - cd ffmpeg-1.2.2
-    - ./configure --disable-static --enable-shared --disable-doc --disable-avfilter --disable-avdevice --disable-postproc
-    - make
-    - sudo make install
-    - cd ..
-#    - sudo apt-get install -qq libavformat-dev libavcodec-dev libswscale-dev libavutil-dev libswresample-dev
-
-# Install build requirements.
+before_install: ./.travis-setup
 install: pip install --use-mirrors cython
 
 # Currently only building, not testing.
