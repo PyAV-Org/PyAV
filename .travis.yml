@@ -6,6 +6,7 @@ python:
 
 # Install FFmpeg.
 before_install: 
+    - sudo apt-get update
     - sudo apt-get build-dep -qq ffmpeg
     - wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
     - tar -xf ffmpeg-1.2.2.tar.bz2
