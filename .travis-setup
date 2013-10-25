@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo apt-get update -qq
+sudo apt-get build-dep -qq --fix-missing ffmpeg
 
 mkdir -p vendor
 cd vendor
@@ -7,8 +9,6 @@ cd vendor
 
 if [[ $LIBRARY == ffmpeg ]]; then
     
-    sudo apt-get build-dep -qq --fix-missing ffmpeg
-
     wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
     tar -xf ffmpeg-1.2.2.tar.bz2
     cd ffmpeg-1.2.2
@@ -27,8 +27,7 @@ if [[ $LIBRARY == ffmpeg ]]; then
 
 elif [[ $LIBRARY == libav ]]; then
     
-    # Just assuming these are the same.
-    sudo apt-get build-dep -qq --fix-missing ffmpeg
+    # Just assuming the dependencies are the same...
 
     wget https://libav.org/releases/libav-9.10.tar.gz
     tar -xf libav-9.10.tar.gz
