@@ -1,8 +1,7 @@
 import ctypes.util
 from distutils.core import setup, Extension
 import os
-import subprocess
-from subprocess import check_output, CalledProcessError
+from subprocess import Popen, PIPE
 
 
 def update_extend(dst, src):
@@ -13,9 +12,9 @@ def update_extend(dst, src):
 def pkg_config(name, macro=False):
     """Get distutils compatible extension extras via pkg-config."""
 
-    try:
-        raw_config = check_output(['pkg-config', '--cflags', '--libs', name])
-    except CalledProcessError:
+    proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
+    raw_config, err = proc.communicate()
+    if proc.wait():
         return
 
     config = {}
@@ -44,11 +43,31 @@ def check_for_func(lib_names, func_name):
         lib_names = [lib_names]
 
     for lib_name in lib_names:
+
         lib_path = ctypes.util.find_library(lib_name)
         if not lib_path:
-            print 'Could not find', lib_name, 'with ctypes.'
+            print 'Could not find', lib_name, 'with ctypes.util.find_library'
             continue
-        lib = ctypes.CDLL(lib_path)
+
+        # Open the lib. Look in the path returned by find_library, but also all
+        # the paths returned by pkg-config (since we don't get an absolute path
+        # on linux).
+        lib_paths = [lib_path]
+        lib_paths.extend(
+            os.path.join(root, os.path.basename(lib_path))
+            for root in set(extension_extra.get('library_dirs', []))
+        )
+        for lib_path in lib_paths:
+            try:
+                lib = ctypes.CDLL(lib_path)
+                break
+            except OSError:
+                pass
+        else:
+            print 'Could not open', lib_name, 'with ctypes; looked in:'
+            print '\n'.join('\t' + path for path in lib_paths)
+            continue
+
         if hasattr(lib, func_name):
             extension_extra.setdefault('define_macros', []).append(('HAVE_%s' % func_name.upper(), '1'))
             return
