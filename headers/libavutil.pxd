@@ -1,5 +1,11 @@
 from libc.stdint cimport int64_t, uint8_t, uint64_t
 
+cdef extern from "libavutil_compat.h":
+    pass
+
+cdef extern from "libavutil/mathematics.h":
+    pass
+
 cdef extern from "libavutil/avutil.h":
 
     cdef enum AVPixelFormat:
