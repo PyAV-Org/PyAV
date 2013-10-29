@@ -1,3 +1,5 @@
+from cpython cimport PyBuffer_FromMemory
+
 
 cdef class SubtitleProxy(object):
     def __dealloc__(self):

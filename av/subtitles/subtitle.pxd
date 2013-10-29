@@ -1,3 +1,7 @@
+cimport libav as lib
+
+from av.packet cimport Packet
+
 
 cdef class SubtitleProxy(object):
 

@@ -1,7 +1,10 @@
 from libc.stdint cimport uint8_t, uint64_t, int64_t
+
 cimport libav as lib
+
 from av.frame cimport Frame
 from av.audio.swrcontext cimport SwrContextProxy
+
 
 cdef class AudioFrame(Frame):
 

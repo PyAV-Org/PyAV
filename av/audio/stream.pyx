@@ -1,3 +1,6 @@
+from av.packet cimport Packet
+from av.utils cimport err_check
+
 
 cdef class AudioStream(Stream):
 
@@ -17,7 +20,7 @@ cdef class AudioStream(Stream):
         # These are all NULL safe.
         lib.av_free(self.frame)
         
-    cpdef decode(self, av.codec.Packet packet):
+    cpdef decode(self, Packet packet):
         if not self.frame:
             self.frame = lib.avcodec_alloc_frame()
 
@@ -27,9 +30,9 @@ cdef class AudioStream(Stream):
             return
         
         if not self.swr_proxy:
-            self.swr_proxy =  av.codec.SwrContextProxy() 
+            self.swr_proxy =  SwrContextProxy() 
 
-        cdef av.codec.AudioFrame frame = av.codec.AudioFrame()
+        cdef AudioFrame frame = AudioFrame()
         
         # Copy the pointers over.
         frame.ptr = self.frame
@@ -43,7 +46,7 @@ cdef class AudioStream(Stream):
         
         return frame
     
-    cpdef encode(self, av.codec.AudioFrame frame=None):
+    cpdef encode(self, AudioFrame frame=None):
         """Encodes a frame of audio, returns a packet if one is ready.
         The output packet does not necessarily contain data for the most recent frame, 
         as encoders can delay, split, and combine input frames internally as needed.
@@ -56,18 +59,19 @@ cdef class AudioStream(Stream):
         
         #Setup a resampler if ones not setup
         if not self.swr_proxy:
-            self.swr_proxy =  av.codec.SwrContextProxy()
+            self.swr_proxy = SwrContextProxy()
         
         # setup audio fifo if ones not setup
         if not self.fifo:
-            self.fifo = av.codec.AudioFifo(self.codec.channel_layout,
-                                           self.codec.sample_fmt,
-                                           self.codec.sample_rate,
-                                           self.codec.frame_size)
+            self.fifo = AudioFifo(self.codec.channel_layout,
+                self.codec.sample_fmt,
+                self.codec.sample_rate,
+                self.codec.frame_size,
+            )
             self.fifo.add_silence = True
             
-        cdef av.codec.Packet packet
-        cdef av.codec.AudioFrame fifo_frame
+        cdef Packet packet
+        cdef AudioFrame fifo_frame
         cdef int got_output
         
         flushing_and_samples = False
@@ -92,7 +96,7 @@ cdef class AudioStream(Stream):
         else:
             return
         
-        packet = av.codec.Packet()
+        packet = Packet()
         packet.struct.data = NULL #packet data will be allocated by the encoder
         packet.struct.size = 0
         

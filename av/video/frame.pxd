@@ -1,7 +1,9 @@
+from libc.stdint cimport uint8_t
 
-cdef class SwsContextProxy(object):
+cimport libav as lib
 
-    cdef lib.SwsContext *ptr
+from av.frame cimport Frame
+from av.video.swscontext cimport SwsContextProxy
 
 
 cdef class VideoFrame(Frame):

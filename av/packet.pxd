@@ -1,6 +1,10 @@
+cimport libav as lib
+
+from av.stream cimport Stream
+
 
 cdef class Packet(object):
 
-    cdef readonly av.format.Stream stream
+    cdef readonly Stream stream
     cdef lib.AVPacket struct
-    cdef readonly bool is_null
+    cdef readonly bint is_null

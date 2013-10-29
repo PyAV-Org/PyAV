@@ -4,7 +4,7 @@ import pprint
 import Image
 
 from av import open
-import av.format
+from av.context import time_base
 
 video = open(sys.argv[1])
 
@@ -14,7 +14,7 @@ video.dump()
 print '-----'
 print
 
-print 'duration:', float(video.duration) / av.format.time_base
+print 'duration:', float(video.duration) / time_base
 
 print 'Metadata:'
 for k, v in sorted(video.metadata.iteritems()):

@@ -6,7 +6,8 @@ cimport libav as lib
 from .utils cimport err_check, avdict_to_dict, avrational_to_faction
 from .utils import Error, LibError
 
-cimport av.codec
+from av.packet cimport Packet
+from av.stream cimport Stream, stream_factory
 
 
 time_base = lib.AV_TIME_BASE
@@ -190,7 +191,7 @@ cdef class Context(object):
     def dump(self):
         lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w')
         
-    def mux(self, av.codec.Packet packet):
+    def mux(self, Packet packet):
         
         self.start_encoding()
         
@@ -199,7 +200,7 @@ cdef class Context(object):
             raise ValueError("not a output file")
         #None and Null check
         if not packet:
-            raise TypeError("argument must be a av.codec.Packet, not 'NoneType' or 'NULL'")
+            raise TypeError("argument must be a av.packet.Packet, not 'NoneType' or 'NULL'")
         
         err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
     
@@ -210,7 +211,7 @@ cdef class Context(object):
             raise MemoryError()
         
         cdef int i
-        cdef av.codec.Packet packet
+        cdef Packet packet
 
         try:
             
@@ -220,7 +221,7 @@ cdef class Context(object):
                 include_stream[stream.index] = True
         
             while True:
-                packet = av.codec.Packet()
+                packet = Packet()
                 try:
                     err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
                 except LibError:
@@ -244,7 +245,7 @@ cdef class Context(object):
             for i in range(self.proxy.ptr.nb_streams):
 
                 if include_stream[i]:
-                    packet = av.codec.Packet()
+                    packet = Packet()
                     packet.struct.data= NULL
                     packet.struct.size = 0
                     packet.is_null = True

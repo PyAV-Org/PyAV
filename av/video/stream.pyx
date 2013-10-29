@@ -1,3 +1,8 @@
+from libc.stdint cimport int64_t
+
+from av.packet cimport Packet
+from av.utils cimport err_check
+
 
 cdef class VideoStream(Stream):
     
@@ -12,7 +17,7 @@ cdef class VideoStream(Stream):
         # These are all NULL safe.
         lib.avcodec_free_frame(&self.raw_frame)
         
-    cpdef decode(self, av.codec.Packet packet):
+    cpdef decode(self, Packet packet):
         
         if not self.raw_frame:
             self.raw_frame = lib.avcodec_alloc_frame()
@@ -37,9 +42,9 @@ cdef class VideoStream(Stream):
             )
             
             # Create a new SwsContextProxy
-            self.sws_proxy = av.codec.SwsContextProxy()
+            self.sws_proxy = SwsContextProxy()
 
-        cdef av.codec.VideoFrame frame = av.codec.VideoFrame()
+        cdef VideoFrame frame = VideoFrame()
         
         # Copy the pointers over.
         frame.buffer_size = self.buffer_size
@@ -57,7 +62,7 @@ cdef class VideoStream(Stream):
         
         return frame
     
-    cpdef encode(self, av.codec.VideoFrame frame=None):
+    cpdef encode(self, VideoFrame frame=None):
         """Encodes a frame of video, returns a packet if one is ready.
         The output packet does not necessarily contain data for the most recent frame, 
         as encoders can delay, split, and combine input frames internally as needed.
@@ -69,10 +74,10 @@ cdef class VideoStream(Stream):
         self.ctx.start_encoding()
         
         if not self.sws_proxy:
-            self.sws_proxy =  av.codec.SwsContextProxy()
+            self.sws_proxy = SwsContextProxy()
             
-        cdef av.codec.VideoFrame formated_frame
-        cdef av.codec.Packet packet
+        cdef VideoFrame formated_frame
+        cdef Packet packet
         cdef int got_output
         
         if frame:
@@ -83,7 +88,7 @@ cdef class VideoStream(Stream):
             # Flushing
             formated_frame = None
 
-        packet = av.codec.Packet()
+        packet = Packet()
         packet.struct.data = NULL #packet data will be allocated by the encoder
         packet.struct.size = 0
         

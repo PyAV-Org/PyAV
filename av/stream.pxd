@@ -1,7 +1,8 @@
 cimport libav as lib
 from av.codec cimport Codec
 from av.packet cimport Packet
-from av.context cimport ContextProxy
+from av.context cimport Context, ContextProxy
+
 
 cdef class Stream(object):
     
@@ -15,3 +16,6 @@ cdef class Stream(object):
     cdef readonly dict metadata
     
     cpdef decode(self, Packet packet)
+
+
+cdef Stream stream_factory(Context ctx, int index)

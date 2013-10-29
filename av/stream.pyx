@@ -3,10 +3,15 @@ from libc.stdlib cimport malloc, free
 
 cimport libav as lib
 
-from .utils cimport err_check, avdict_to_dict, avrational_to_faction
+from av.utils cimport err_check, avdict_to_dict, avrational_to_faction
 from .utils import Error, LibError
 
-cimport av.codec
+
+from av.codec cimport Codec
+from av.packet cimport Packet
+from av.video.stream cimport VideoStream
+from av.audio.stream cimport AudioStream
+from av.subtitles.stream cimport SubtitleStream
 
 
 time_base = lib.AV_TIME_BASE
@@ -44,7 +49,7 @@ cdef class Stream(object):
         self.ptr = self.ctx.ptr.streams[index]
         self.type = type
 
-        self.codec = av.codec.Codec(self)
+        self.codec = Codec(self)
         self.metadata = avdict_to_dict(self.ptr.metadata)
     
     def __repr__(self):
@@ -74,7 +79,7 @@ cdef class Stream(object):
     property frames:
         def __get__(self): return self.ptr.nb_frames
     
-    cpdef decode(self, av.codec.Packet packet):
+    cpdef decode(self, Packet packet):
         return None
 
 

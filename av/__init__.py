@@ -3,5 +3,5 @@
 from . import core
 del core
 
-from .format import open
+from .context import Context as open
 
