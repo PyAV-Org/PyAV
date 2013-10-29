@@ -34,23 +34,24 @@ cdef class AudioFrame(Frame):
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
      
         if self.ptr:
-            raise MemoryError("frame already allocated")
+            return
+
         cdef int ret
         cdef int linesize
         
-        self.ptr= lib.avcodec_alloc_frame()
+        self.ptr = lib.avcodec_alloc_frame()
         lib.avcodec_get_frame_defaults(self.ptr)
         
-        ret = samples_alloc_array_and_samples(&self.buffer_, 
-                                              &linesize,
-                                              channels,
-                                              nb_samples,
-                                              sample_fmt,
-                                              self.align)
-        if ret < 0:
-            raise MemoryError("error samples_alloc_array_and_samples: %i" % ret)
-        #NEED TO SET CHANNEL LAYOUT!
-        #self.ptr.channels = channels
+        err_check(samples_alloc_array_and_samples(
+            &self.buffer_, 
+            &linesize,
+            channels,
+            nb_samples,
+            sample_fmt,
+            self.align,
+        ))
+
+        # TODO: Set channel layout.
         self.ptr.format = <int > sample_fmt
         self.ptr.nb_samples = nb_samples
                 
@@ -145,7 +146,7 @@ cdef class AudioFrame(Frame):
             frame = AudioFrame()
             
             # allocate the correct frame size
-            frame.alloc_frame( dst_nb_channels, out_sample_fmt, dst_nb_samples)
+            frame.alloc_frame(dst_nb_channels, out_sample_fmt, dst_nb_samples)
             frame.fill_frame(dst_nb_samples)
 
             # Note: swr_convert returns number of samples output per channel,
