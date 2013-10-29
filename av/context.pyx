@@ -6,7 +6,7 @@ cimport libav as lib
 from av.packet cimport Packet
 from av.stream cimport Stream, stream_factory
 from av.utils cimport err_check, avdict_to_dict
-from av.utils import LibError
+from av.utils import AVError
 
 
 cdef class ContextProxy(object):
@@ -43,7 +43,10 @@ cdef class Context(object):
         self.proxy = ContextProxy(self.is_input)
         
         if self.is_input:
-            err_check(lib.avformat_open_input(&self.proxy.ptr, name, NULL, NULL))
+            err_check(
+                lib.avformat_open_input(&self.proxy.ptr, name, NULL, NULL),
+                name,
+            )
             err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
             self.streams = list(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
             self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
@@ -220,7 +223,7 @@ cdef class Context(object):
                 packet = Packet()
                 try:
                     err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
-                except LibError:
+                except AVError:
                     break
                     
                 if include_stream[packet.struct.stream_index]:

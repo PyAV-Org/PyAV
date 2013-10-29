@@ -25,9 +25,7 @@ samples:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/samples/
 
 test: build
-	python -m examples.decode $(TEST_MOV)
-test-fail: build
-	python -m examples.decode dne-$(TEST_MOV)
+	nosetests -v
 
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)
