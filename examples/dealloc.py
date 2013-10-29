@@ -4,7 +4,7 @@ import sys
 import av
 
 path = sys.argv[1] if len(sys.argv) > 1 else 'sandbox/640x360.mp4'
-DELINK = True
+DELINK = False
 
 
 _last_rss = 0

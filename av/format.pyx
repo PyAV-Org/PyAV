@@ -293,8 +293,8 @@ cdef class Stream(object):
         if index < 0 or index > ctx.proxy.ptr.nb_streams:
             raise ValueError('stream index out of range')
         
-        self.ctx = ctx
-        self.ptr = self.ctx.proxy.ptr.streams[index]
+        self.ctx = ctx.proxy
+        self.ptr = self.ctx.ptr.streams[index]
         self.type = type
 
         self.codec = av.codec.Codec(self)

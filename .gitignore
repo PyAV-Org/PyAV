@@ -2,6 +2,17 @@
 .DS_Store
 /venv
 /vendor
+/bin
+/include
+/lib
+
+# Autoconf.
+/autom4te.cache
+/config.py
+/config.log
+/config.status
+/configure
+>>>>>>> Stream and Codec hold onto ContextProxy
 
 # Build products.
 /build
