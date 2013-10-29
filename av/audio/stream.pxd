@@ -1,6 +1,7 @@
 cimport libav as lib
-from av.frame.audio cimport AudioFrame, AudioFifo
-from av.codec cimport SwrContextProxy
+from av.audio.frame cimport AudioFrame, AudioFifo
+from av.audio.swrcontext cimport SwrContextProxy
+from av.stream cimport Stream
 
 
 cdef class AudioStream(Stream):

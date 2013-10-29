@@ -1,9 +1,7 @@
-
-    
-cdef class SwrContextProxy(object):
-
-    cdef lib.SwrContext *ptr
-
+from libc.stdint cimport uint8_t, uint64_t, int64_t
+cimport libav as lib
+from av.frame cimport Frame
+from av.audio.swrcontext cimport SwrContextProxy
 
 cdef class AudioFrame(Frame):
 
@@ -24,7 +22,7 @@ cdef class AudioFifo:
     
     cdef uint64_t channel_layout_
     cdef int channels_
-    cdef bool add_silence
+    cdef bint add_silence
     
     cdef lib.AVSampleFormat sample_fmt_
     cdef int sample_rate_

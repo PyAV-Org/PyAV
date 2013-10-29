@@ -12,6 +12,7 @@ cimport av.codec
 time_base = lib.AV_TIME_BASE
 
 
+
 cdef Stream stream_factory(Context ctx, int index):
     
     cdef lib.AVStream *ptr = ctx.proxy.ptr.streams[index]
@@ -75,3 +76,12 @@ cdef class Stream(object):
     
     cpdef decode(self, av.codec.Packet packet):
         return None
+
+
+cdef class AttachmentStream(Stream):
+    pass
+cdef class DataStream(Stream):
+    pass
+cdef class NBStream(Stream):
+    pass
+

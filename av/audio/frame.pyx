@@ -1,8 +1,9 @@
+from av.utils cimport err_check, samples_alloc_array_and_samples, channel_layout_name
+
 
 cdef class SwrContextProxy(object):
     def __dealloc__(self):
         lib.swr_free(&self.ptr)
-
 
 
 cdef class AudioFrame(Frame):
