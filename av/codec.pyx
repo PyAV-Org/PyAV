@@ -529,9 +529,9 @@ cdef class AudioFrame(Frame):
                                               sample_fmt,
                                               self.align)
         if ret < 0:
-            raise MemoryError("error samples_alloc_array_and_samples: %s" % lib.av_err2str(ret))
-
-        self.ptr.channels = channels
+            raise MemoryError("error samples_alloc_array_and_samples: %i" % ret)
+        #NEED TO SET CHANNEL LAYOUT!
+        #self.ptr.channels = channels
         self.ptr.format = <int > sample_fmt
         self.ptr.nb_samples = nb_samples
                 
@@ -543,12 +543,12 @@ cdef class AudioFrame(Frame):
         self.ptr.nb_samples = nb_samples
 
         samples_size = lib.av_samples_get_buffer_size(NULL,
-                                                       self.ptr.channels,
+                                                       self.channels,
                                                        self.ptr.nb_samples,
                                                        <lib.AVSampleFormat>self.ptr.format,self.align)
         
         err_check(lib.avcodec_fill_audio_frame(self.ptr, 
-                                             self.ptr.channels, 
+                                             self.channels, 
                                              <lib.AVSampleFormat> self.ptr.format,
                                              self.buffer_[0],
                                              samples_size, self.align))
@@ -560,7 +560,7 @@ cdef class AudioFrame(Frame):
         err_check(lib.av_samples_set_silence(self.ptr.extended_data,
                                              offset,
                                              nb_samples,
-                                             self.ptr.channels,
+                                             self.channels,
                                              <lib.AVSampleFormat>self.ptr.format))
     
     cpdef resample(self, bytes channel_layout, bytes sample_fmt, int out_sample_rate):
@@ -686,12 +686,12 @@ cdef class AudioFrame(Frame):
         
     property channels:
         """Number of audio channels"""
-        def __get__(self): return self.ptr.channels
+        def __get__(self): return lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         
     property channel_layout:
         """Audio channel layout"""
         def __get__(self):
-            result = channel_layout_name(self.ptr.channels, self.ptr.channel_layout)
+            result = channel_layout_name(self.channels, self.ptr.channel_layout)
             if result == NULL:
                 return None
             return result
