@@ -7,8 +7,12 @@ env:
     - LIBRARY=ffmpeg
     - LIBRARY=libav
 
-before_install: ./.travis-setup
-install: pip install --use-mirrors cython
+before_install:
+    - ./.travis-setup
+    - pip install --use-mirrors cython nosetests
 
-# Currently only building, not testing.
-script: make build
+install:
+    - make build
+
+script:
+    - nosetests
