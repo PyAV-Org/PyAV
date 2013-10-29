@@ -1,5 +1,7 @@
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 
+cdef extern from "libavcodec_compat.h":
+    pass
 
 cdef extern from "libavcodec/avcodec.h":
 
@@ -119,7 +121,7 @@ cdef extern from "libavcodec/avcodec.h":
         int width
         int height
         int nb_samples # Audio samples
-        int channels # Audio channels
+        #int channels # Audio channels
         int sample_rate #Audio Sample rate 
         int channel_layout # Audio channel_layout
         int format

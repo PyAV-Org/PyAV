@@ -64,7 +64,7 @@ def check_for_func(lib_names, func_name):
             except OSError:
                 pass
         else:
-            print 'Could not open', lib_name, 'with ctypes; looked in:'
+            print 'Could not open', lib_name,func_name, 'with ctypes; looked in:'
             print '\n'.join('\t' + path for path in lib_paths)
             continue
 
@@ -97,8 +97,10 @@ update_extend(extension_extra, config)
 
 
 # Check for some specific functions.
-check_for_func(('avformat', 'avutil'), 'av_frame_get_best_effort_timestamp')
+check_for_func(('avcodec', 'avutil', 'avcodec'), 'av_frame_get_best_effort_timestamp')
 check_for_func('avformat', 'avformat_close_input')
+check_for_func('avformat', 'avformat_alloc_output_context2')
+check_for_func('avutil', 'av_calloc')
 
 
 # Normalize the extras.
