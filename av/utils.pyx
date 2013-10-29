@@ -3,17 +3,13 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 cimport libav as lib
 
 
-class Error(ValueError):
-    pass
-
-
 # Would love to use the built-in constant, but it doesn't appear to
 # exist on Travis, or my Linux workstation. Could this be because they
 # are actually libav?
 cdef int AV_ERROR_MAX_STRING_SIZE = 64
 
 
-class LibError(Error):
+class LibError(RuntimeError):
     
     def __init__(self, msg, code=0):
         super(LibError, self).__init__(msg, code)

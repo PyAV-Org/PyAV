@@ -3,14 +3,10 @@ from libc.stdlib cimport malloc, free
 
 cimport libav as lib
 
-from .utils cimport err_check, avdict_to_dict, avrational_to_faction
-from .utils import Error, LibError
-
 from av.packet cimport Packet
 from av.stream cimport Stream, stream_factory
-
-
-time_base = lib.AV_TIME_BASE
+from av.utils cimport err_check, avdict_to_dict
+from av.utils import LibError
 
 
 cdef class ContextProxy(object):

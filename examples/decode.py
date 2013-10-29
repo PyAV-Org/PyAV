@@ -3,8 +3,7 @@ import pprint
 
 import Image
 
-from av import open
-from av.context import time_base
+from av import open, time_base
 
 video = open(sys.argv[1])
 

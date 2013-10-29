@@ -1,21 +1,13 @@
 from libc.stdint cimport uint8_t, int64_t
-from libc.stdlib cimport malloc, free
 
 cimport libav as lib
 
-from av.utils cimport err_check, avdict_to_dict, avrational_to_faction
-from .utils import Error, LibError
-
-
+from av.audio.stream cimport AudioStream
 from av.codec cimport Codec
 from av.packet cimport Packet
-from av.video.stream cimport VideoStream
-from av.audio.stream cimport AudioStream
 from av.subtitles.stream cimport SubtitleStream
-
-
-time_base = lib.AV_TIME_BASE
-
+from av.utils cimport err_check, avdict_to_dict, avrational_to_faction
+from av.video.stream cimport VideoStream
 
 
 cdef Stream stream_factory(Context ctx, int index):
