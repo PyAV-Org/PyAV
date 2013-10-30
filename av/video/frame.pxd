@@ -13,4 +13,4 @@ cdef class VideoFrame(Frame):
     cdef readonly int frame_index
     
     cdef SwsContextProxy sws_proxy
-    cpdef reformat(self, int width, int height, char* pix_fmt)
+    cpdef reformat(self, int width, int height, char* format)
