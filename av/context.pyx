@@ -22,8 +22,6 @@ cdef class ContextProxy(object):
 
 cdef class Context(object):
 
-    """Autodoc class test."""
-
     def __init__(self, name, mode='r'):
         
         cdef lib.AVOutputFormat* fmt

@@ -206,6 +206,8 @@ cdef class AudioFrame(Frame):
         
     property channels:
         """Number of audio channels"""
+        # It would be great to just look at self.ptr.channels, but it doesn't
+        # exist in Libav! So, we must be drastic.
         def __get__(self): return lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         
     property channel_layout:

@@ -37,8 +37,7 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   api/format
-   api/codec
+   api
 
 
 ..

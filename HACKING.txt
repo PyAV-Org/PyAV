@@ -1,7 +1,6 @@
 Hacking on PyAV
 ===============
 
-
 The Real Goal
 -------------
 
@@ -33,3 +32,13 @@ Function Detection
 
 Macros will be defined for a few functions that are only in one of FFmpeg or
 LibAV. For example, there may be a `HAVE_AVFORMAT_CLOSE_INPUT` macro.
+
+
+Class Relationships
+-------------------
+
+- `Context.streams` is a list of `Stream`.
+- `Stream.codec` is a `Codec`.
+- `Packet.stream` is the `Stream` that it is from.
+- `Frame` has no relationships in Python space.
+
