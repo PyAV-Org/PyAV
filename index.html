@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PyAV &mdash; PyAV 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="PyAV 0.1 documentation" href="#" />
+    <link rel="next" title="General" href="api.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="General"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">PyAV 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pyav">
+<h1>PyAV<a class="headerlink" href="#pyav" title="Permalink to this headline">¶</a></h1>
+<p>Pythonic bindings for FFmpeg/Libav.</p>
+<p>At least, they will be eventually.... In the future, we hope to represent the majority of these libraries in a Pythonic manner.</p>
+<div class="section" id="building-from-source">
+<h2>Building From Source<a class="headerlink" href="#building-from-source" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>$ git clone git@github.com:mikeboers/PyAV.git
+$ cd PyAV
+$ virtualenv venv
+$ . venv/bin/activate
+$ pip install cython pil
+$ make</pre>
+</div>
+<div class="section" id="ffmpeg-vs-libav">
+<h3>FFmpeg vs. Libav<a class="headerlink" href="#ffmpeg-vs-libav" title="Permalink to this headline">¶</a></h3>
+<p>We are attempting to write this wrapper to work with either <a class="reference external" href="http://ffmpeg.org">FFmpeg</a> or <a class="reference external" href="http://libav.org">Libav</a>. We are using <a class="reference external" href="http://docs.python.org/2/library/ctypes.html">ctypes</a> to detect the differences that we have descerned exist as this wrapper is being developed.</p>
+<p>This is a fairly trial-and-error process, so please let ud know if there are any odd compiler errors or something won&#8217;t link due to missing functions.</p>
+</div>
+</div>
+</div>
+<div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">General</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#module-av.video.stream">Video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#module-av.audio.stream">Audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#module-av.subtitles.stream">Subtitles</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PyAV</a><ul>
+<li><a class="reference internal" href="#building-from-source">Building From Source</a><ul>
+<li><a class="reference internal" href="#ffmpeg-vs-libav">FFmpeg vs. Libav</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api-reference">API Reference</a><ul>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">General</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="General"
+             >next</a> |</li>
+        <li><a href="#">PyAV 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

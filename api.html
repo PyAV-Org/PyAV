@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>General &mdash; PyAV 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="PyAV 0.1 documentation" href="index.html" />
+    <link rel="prev" title="PyAV" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PyAV"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyAV 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-av.context">
+<span id="general"></span><h1>General<a class="headerlink" href="#module-av.context" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="av.context.Context">
+<em class="property">class </em><tt class="descclassname">av.context.</tt><tt class="descname">Context</tt><a class="headerlink" href="#av.context.Context" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="av.context.Context.add_stream">
+<tt class="descname">add_stream</tt><big>(</big><big>)</big><a class="headerlink" href="#av.context.Context.add_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add stream to Context and return it.
+if the codec_name is a video codec rate means frames per second,
+if the codec_name is a audio codec rate means sample rate 
+Note: To use this Context must be opened with mode = &#8220;w&#8221;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="av.context.Context.start_encoding">
+<tt class="descname">start_encoding</tt><big>(</big><big>)</big><a class="headerlink" href="#av.context.Context.start_encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>setups Context for encoding. Opens Codecs and output file if they aren&#8217;t already open 
+and writes file header. This method is automatically called by a Stream before encoding.
+Note: To use this Context must be opened with mode = &#8220;w&#8221;</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-av.stream"></span><dl class="class">
+<dt id="av.stream.Stream">
+<em class="property">class </em><tt class="descclassname">av.stream.</tt><tt class="descname">Stream</tt><a class="headerlink" href="#av.stream.Stream" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-av.codec"></span><dl class="class">
+<dt id="av.codec.Codec">
+<em class="property">class </em><tt class="descclassname">av.codec.</tt><tt class="descname">Codec</tt><a class="headerlink" href="#av.codec.Codec" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="av.codec.Codec.channel_layout">
+<tt class="descname">channel_layout</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.channel_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Audio channel layout</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.channels">
+<tt class="descname">channels</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of audio channels</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.frame_size">
+<tt class="descname">frame_size</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.frame_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of samples per channel in an audio frame.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.sample_fmt">
+<tt class="descname">sample_fmt</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.sample_fmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Audio sample format</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.sample_rate">
+<tt class="descname">sample_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.sample_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>samples per second</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-av.packet"></span><dl class="class">
+<dt id="av.packet.Packet">
+<em class="property">class </em><tt class="descclassname">av.packet.</tt><tt class="descname">Packet</tt><a class="headerlink" href="#av.packet.Packet" title="Permalink to this definition">¶</a></dt>
+<dd><p>A packet of encoded data within a <tt class="xref py py-class docutils literal"><span class="pre">Stream</span></tt>.</p>
+<p>This may, or may not include a complete object within a stream.
+<a class="reference internal" href="#av.packet.Packet.decode" title="av.packet.Packet.decode"><tt class="xref py py-meth docutils literal"><span class="pre">decode()</span></tt></a> must be called to extract encoded data.</p>
+<dl class="method">
+<dt id="av.packet.Packet.decode">
+<tt class="descname">decode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.packet.Packet.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode the data in this packet.</p>
+<p>yields frame.</p>
+<p>Note.
+Some codecs will cause frames to be buffered up in the decoding process. If Packets Data
+is NULL and size is 0 the packet will try and retrieve those frames. Context.demux will 
+yeild a NULL Packet as its last packet.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-av.video.stream">
+<span id="video"></span><h1>Video<a class="headerlink" href="#module-av.video.stream" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="av.video.stream.VideoStream">
+<em class="property">class </em><tt class="descclassname">av.video.stream.</tt><tt class="descname">VideoStream</tt><a class="headerlink" href="#av.video.stream.VideoStream" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="av.video.stream.VideoStream.encode">
+<tt class="descname">encode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.stream.VideoStream.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encodes a frame of video, returns a packet if one is ready.
+The output packet does not necessarily contain data for the most recent frame, 
+as encoders can delay, split, and combine input frames internally as needed.
+If called with with no args it will flush out the encoder and return the buffered
+packets until there are none left, at which it will return None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-av.video.frame"></span><dl class="class">
+<dt id="av.video.frame.VideoFrame">
+<em class="property">class </em><tt class="descclassname">av.video.frame.</tt><tt class="descname">VideoFrame</tt><a class="headerlink" href="#av.video.frame.VideoFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>A frame of video.</p>
+<dl class="attribute">
+<dt id="av.video.frame.VideoFrame.height">
+<tt class="descname">height</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Height of the image, in pixels.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.frame.VideoFrame.key_frame">
+<tt class="descname">key_frame</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.key_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>return 1 if frame is a key frame</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.frame.VideoFrame.pix_fmt">
+<tt class="descname">pix_fmt</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.pix_fmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pixel format of the image.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="av.video.frame.VideoFrame.reformat">
+<tt class="descname">reformat</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.frame.VideoFrame.reformat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new VideoFrame object scaled to width and height and converted to 
+specified pix_fmt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="av.video.frame.VideoFrame.to_rgba">
+<tt class="descname">to_rgba</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.frame.VideoFrame.to_rgba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new VideoFrame object that is converted from what every pix_fmt is 
+currently is to rgba pix_fmt</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.frame.VideoFrame.width">
+<tt class="descname">width</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Width of the image, in pixels.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-av.audio.stream">
+<span id="audio"></span><h1>Audio<a class="headerlink" href="#module-av.audio.stream" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="av.audio.stream.AudioStream">
+<em class="property">class </em><tt class="descclassname">av.audio.stream.</tt><tt class="descname">AudioStream</tt><a class="headerlink" href="#av.audio.stream.AudioStream" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="av.audio.stream.AudioStream.encode">
+<tt class="descname">encode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.audio.stream.AudioStream.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encodes a frame of audio, returns a packet if one is ready.
+The output packet does not necessarily contain data for the most recent frame, 
+as encoders can delay, split, and combine input frames internally as needed.
+If called with with no args it will flush out the encoder and return the buffered
+packets until there are none left, at which it will return None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-av.audio.frame"></span><dl class="class">
+<dt id="av.audio.frame.AudioFrame">
+<em class="property">class </em><tt class="descclassname">av.audio.frame.</tt><tt class="descname">AudioFrame</tt><a class="headerlink" href="#av.audio.frame.AudioFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>A frame of audio.</p>
+<dl class="attribute">
+<dt id="av.audio.frame.AudioFrame.channel_layout">
+<tt class="descname">channel_layout</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.channel_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Audio channel layout</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.frame.AudioFrame.channels">
+<tt class="descname">channels</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of audio channels</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.frame.AudioFrame.sample_fmt">
+<tt class="descname">sample_fmt</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.sample_fmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Audio Sample Format</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.frame.AudioFrame.sample_rate">
+<tt class="descname">sample_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.sample_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample rate of the audio data.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.frame.AudioFrame.samples">
+<tt class="descname">samples</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of audio samples (per channel)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-av.subtitles.stream">
+<span id="subtitles"></span><h1>Subtitles<a class="headerlink" href="#module-av.subtitles.stream" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="av.subtitles.stream.SubtitleStream">
+<em class="property">class </em><tt class="descclassname">av.subtitles.stream.</tt><tt class="descname">SubtitleStream</tt><a class="headerlink" href="#av.subtitles.stream.SubtitleStream" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-av.subtitles.subtitle"></span><dl class="class">
+<dt id="av.subtitles.subtitle.Subtitle">
+<em class="property">class </em><tt class="descclassname">av.subtitles.subtitle.</tt><tt class="descname">Subtitle</tt><a class="headerlink" href="#av.subtitles.subtitle.Subtitle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="av.subtitles.subtitle.SubtitleRect">
+<em class="property">class </em><tt class="descclassname">av.subtitles.subtitle.</tt><tt class="descname">SubtitleRect</tt><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">General</a></li>
+<li><a class="reference internal" href="#module-av.video.stream">Video</a></li>
+<li><a class="reference internal" href="#module-av.audio.stream">Audio</a></li>
+<li><a class="reference internal" href="#module-av.subtitles.stream">Subtitles</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">PyAV</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PyAV"
+             >previous</a> |</li>
+        <li><a href="index.html">PyAV 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>
