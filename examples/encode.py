@@ -92,13 +92,14 @@ for packet in input_file.demux(input_streams):
 
 # Finally we need to flush out the frames that are buffered in the encoder.
 # To do that we simply call encode with no args until we get a None returned
-while True:
-    packet =  output_audio_stream.encode()
-    if packet:
-        print "flushed out audio packet", packet
-        output_file.mux(packet)
-    else:
-        break
+if output_audio_stream:
+    while True:
+        packet =  output_audio_stream.encode()
+        if packet:
+            print "flushed out audio packet", packet
+            output_file.mux(packet)
+        else:
+            break
 
 while True:
     packet =  output_video_stream.encode()

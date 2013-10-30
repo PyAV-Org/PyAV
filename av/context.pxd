@@ -20,6 +20,7 @@ cdef class Context(object):
     cdef readonly bint is_output
     
     cdef ContextProxy proxy
+    cdef object __weakref__
     
     cdef readonly list streams
     cdef readonly dict metadata

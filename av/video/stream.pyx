@@ -71,7 +71,7 @@ cdef class VideoStream(Stream):
         """
         
         # setup formatContext for encoding
-        self.ctx.start_encoding()
+        self.weak_ctx().start_encoding()
         
         if not self.sws_proxy:
             self.sws_proxy = SwsContextProxy()

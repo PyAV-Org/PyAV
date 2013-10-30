@@ -1,4 +1,5 @@
 from libc.stdint cimport uint8_t, int64_t
+from cpython cimport PyWeakref_NewRef
 
 cimport libav as lib
 
@@ -38,6 +39,8 @@ cdef class Stream(object):
             raise ValueError('stream index out of range')
         
         self.ctx = ctx.proxy
+        self.weak_ctx = PyWeakref_NewRef(ctx, 0)
+
         self.ptr = self.ctx.ptr.streams[index]
         self.type = type
 
