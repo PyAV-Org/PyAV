@@ -50,18 +50,26 @@
 
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
+ | <a href="#X"><strong>X</strong></a>
+ | <a href="#Y"><strong>Y</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -69,6 +77,10 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#av.context.Context.add_stream">add_stream() (av.context.Context method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.ass">ass (av.subtitles.subtitle.SubtitleRect attribute)</a>
   </dt>
 
       
@@ -121,6 +133,40 @@
   <dt><a href="api.html#module-av.video.stream">av.video.stream (module)</a>
   </dt>
 
+      
+  <dt><a href="api.html#av.stream.Stream.avg_frame_rate">avg_frame_rate (av.stream.Stream attribute)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.stream.Stream.base_frame_rate">base_frame_rate (av.stream.Stream attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.codec.Codec.bit_rate">bit_rate (av.codec.Codec attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.context.Context.bit_rate">(av.context.Context attribute)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.codec.Codec.bit_rate_tolerance">bit_rate_tolerance (av.codec.Codec attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.video.stream.VideoStream.buffer_size">buffer_size (av.video.stream.VideoStream attribute)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -143,12 +189,24 @@
 
       <dd><dl>
         
+  <dt><a href="api.html#av.audio.stream.AudioStream.channels">(av.audio.stream.AudioStream attribute)</a>
+  </dt>
+
+        
   <dt><a href="api.html#av.codec.Codec.channels">(av.codec.Codec attribute)</a>
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="api.html#av.context.Context.close">close() (av.context.Context method)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.stream.Stream.codec">codec (av.stream.Stream attribute)</a>
+  </dt>
+
       
   <dt><a href="api.html#av.codec.Codec">Codec (class in av.codec)</a>
   </dt>
@@ -164,9 +222,55 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#av.packet.Packet.decode">decode() (av.packet.Packet method)</a>
+  <dt><a href="api.html#av.audio.stream.AudioStream.decode">decode() (av.audio.stream.AudioStream method)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="api.html#av.packet.Packet.decode">(av.packet.Packet method)</a>
+  </dt>
+
+        
+  <dt><a href="api.html#av.stream.Stream.decode">(av.stream.Stream method)</a>
+  </dt>
+
+        
+  <dt><a href="api.html#av.subtitles.stream.SubtitleStream.decode">(av.subtitles.stream.SubtitleStream method)</a>
+  </dt>
+
+        
+  <dt><a href="api.html#av.video.stream.VideoStream.decode">(av.video.stream.VideoStream method)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api.html#av.context.Context.demux">demux() (av.context.Context method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.packet.Packet.dts">dts (av.packet.Packet attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.context.Context.dump">dump() (av.context.Context method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.context.Context.duration">duration (av.context.Context attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.packet.Packet.duration">(av.packet.Packet attribute)</a>
+  </dt>
+
+        
+  <dt><a href="api.html#av.stream.Stream.duration">(av.stream.Stream attribute)</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -184,13 +288,59 @@
 
       </dl></dd>
   </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.subtitles.subtitle.Subtitle.end_display_time">end_display_time (av.subtitles.subtitle.Subtitle attribute)</a>
+  </dt>
+
+  </dl></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="api.html#av.subtitles.subtitle.Subtitle.format">format (av.subtitles.subtitle.Subtitle attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.video.frame.VideoFrame.format">(av.video.frame.VideoFrame attribute)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api.html#av.audio.frame.AudioFrame.frame_index">frame_index (av.audio.frame.AudioFrame attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.video.frame.VideoFrame.frame_index">(av.video.frame.VideoFrame attribute)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api.html#av.codec.Codec.frame_rate">frame_rate (av.codec.Codec attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
   <dt><a href="api.html#av.codec.Codec.frame_size">frame_size (av.codec.Codec attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.stream.Stream.frames">frames (av.stream.Stream attribute)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.codec.Codec.gop_size">gop_size (av.codec.Codec attribute)</a>
   </dt>
 
   </dl></td>
@@ -200,7 +350,45 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#av.video.frame.VideoFrame.height">height (av.video.frame.VideoFrame attribute)</a>
+  <dt><a href="api.html#av.codec.Codec.height">height (av.codec.Codec attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.height">(av.subtitles.subtitle.SubtitleRect attribute)</a>
+  </dt>
+
+        
+  <dt><a href="api.html#av.video.frame.VideoFrame.height">(av.video.frame.VideoFrame attribute)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.stream.Stream.id">id (av.stream.Stream attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.stream.Stream.index">index (av.stream.Stream attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.context.Context.is_input">is_input (av.context.Context attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.packet.Packet.is_null">is_null (av.packet.Packet attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.context.Context.is_output">is_output (av.context.Context attribute)</a>
   </dt>
 
   </dl></td>
@@ -216,19 +404,99 @@
   </dl></td>
 </tr></table>
 
-<h2 id="P">P</h2>
+<h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#av.packet.Packet">Packet (class in av.packet)</a>
+  <dt><a href="api.html#av.codec.Codec.long_name">long_name (av.codec.Codec attribute)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.context.Context.metadata">metadata (av.context.Context attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.stream.Stream.metadata">(av.stream.Stream attribute)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api.html#av.context.Context.mode">mode (av.context.Context attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#av.video.frame.VideoFrame.pix_fmt">pix_fmt (av.video.frame.VideoFrame attribute)</a>
+  <dt><a href="api.html#av.context.Context.mux">mux() (av.context.Context method)</a>
   </dt>
 
+  </dl></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.codec.Codec.name">name (av.codec.Codec attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.context.Context.name">(av.context.Context attribute)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.nb_colors">nb_colors (av.subtitles.subtitle.SubtitleRect attribute)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.subtitles.subtitle.Subtitle.packet">packet (av.subtitles.subtitle.Subtitle attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.packet.Packet">Packet (class in av.packet)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.pict_buffers">pict_buffers (av.subtitles.subtitle.SubtitleRect attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.pict_line_sizes">pict_line_sizes (av.subtitles.subtitle.SubtitleRect attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.codec.Codec.pix_fmt">pix_fmt (av.codec.Codec attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.packet.Packet.pts">pts (av.packet.Packet attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.subtitles.subtitle.Subtitle.pts">(av.subtitles.subtitle.Subtitle attribute)</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -236,7 +504,17 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="api.html#av.subtitles.subtitle.Subtitle.rects">rects (av.subtitles.subtitle.Subtitle attribute)</a>
+  </dt>
+
+      
   <dt><a href="api.html#av.video.frame.VideoFrame.reformat">reformat() (av.video.frame.VideoFrame method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.audio.frame.AudioFrame.resample">resample() (av.audio.frame.AudioFrame method)</a>
   </dt>
 
   </dl></td>
@@ -245,6 +523,10 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.codec.Codec.sample_aspect_ratio">sample_aspect_ratio (av.codec.Codec attribute)</a>
+  </dt>
+
       
   <dt><a href="api.html#av.audio.frame.AudioFrame.sample_fmt">sample_fmt (av.audio.frame.AudioFrame attribute)</a>
   </dt>
@@ -261,6 +543,10 @@
 
       <dd><dl>
         
+  <dt><a href="api.html#av.audio.stream.AudioStream.sample_rate">(av.audio.stream.AudioStream attribute)</a>
+  </dt>
+
+        
   <dt><a href="api.html#av.codec.Codec.sample_rate">(av.codec.Codec attribute)</a>
   </dt>
 
@@ -270,13 +556,43 @@
   </dt>
 
       
+  <dt><a href="api.html#av.audio.frame.AudioFrame.set_silence">set_silence() (av.audio.frame.AudioFrame method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.packet.Packet.size">size (av.packet.Packet attribute)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.subtitles.subtitle.Subtitle.start_display_time">start_display_time (av.subtitles.subtitle.Subtitle attribute)</a>
+  </dt>
+
+      
   <dt><a href="api.html#av.context.Context.start_encoding">start_encoding() (av.context.Context method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="api.html#av.context.Context.start_time">start_time (av.context.Context attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.stream.Stream.start_time">(av.stream.Stream attribute)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api.html#av.packet.Packet.stream">stream (av.packet.Packet attribute)</a>
+  </dt>
+
+      
   <dt><a href="api.html#av.stream.Stream">Stream (class in av.stream)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.context.Context.streams">streams (av.context.Context attribute)</a>
   </dt>
 
       
@@ -298,9 +614,35 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#av.video.frame.VideoFrame.to_rgba">to_rgba() (av.video.frame.VideoFrame method)</a>
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.text">text (av.subtitles.subtitle.SubtitleRect attribute)</a>
   </dt>
 
+      
+  <dt><a href="api.html#av.codec.Codec.time_base">time_base (av.codec.Codec attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.stream.Stream.time_base">(av.stream.Stream attribute)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.video.frame.VideoFrame.to_rgb">to_rgb() (av.video.frame.VideoFrame method)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#av.stream.Stream.type">type (av.stream.Stream attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.type">(av.subtitles.subtitle.SubtitleRect attribute)</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -324,7 +666,37 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#av.video.frame.VideoFrame.width">width (av.video.frame.VideoFrame attribute)</a>
+  <dt><a href="api.html#av.codec.Codec.width">width (av.codec.Codec attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.width">(av.subtitles.subtitle.SubtitleRect attribute)</a>
+  </dt>
+
+        
+  <dt><a href="api.html#av.video.frame.VideoFrame.width">(av.video.frame.VideoFrame attribute)</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="X">X</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.x">x (av.subtitles.subtitle.SubtitleRect attribute)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="Y">Y</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#av.subtitles.subtitle.SubtitleRect.y">y (av.subtitles.subtitle.SubtitleRect attribute)</a>
   </dt>
 
   </dl></td>

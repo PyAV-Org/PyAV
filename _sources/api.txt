@@ -35,6 +35,12 @@ Video
 
     .. autoclass:: VideoFrame
         :members:
+        :exclude-members: width, height, format
+
+        .. autoattribute:: width
+        .. autoattribute:: height
+        .. autoattribute:: format
+
 
 
 Audio

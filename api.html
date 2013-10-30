@@ -53,7 +53,8 @@
 <dl class="class">
 <dt id="av.context.Context">
 <em class="property">class </em><tt class="descclassname">av.context.</tt><tt class="descname">Context</tt><a class="headerlink" href="#av.context.Context" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="method">
 <dt id="av.context.Context.add_stream">
 <tt class="descname">add_stream</tt><big>(</big><big>)</big><a class="headerlink" href="#av.context.Context.add_stream" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add stream to Context and return it.
@@ -61,6 +62,61 @@ if the codec_name is a video codec rate means frames per second,
 if the codec_name is a audio codec rate means sample rate 
 Note: To use this Context must be opened with mode = &#8220;w&#8221;</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.bit_rate">
+<tt class="descname">bit_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.bit_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.context.Context.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#av.context.Context.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.context.Context.demux">
+<tt class="descname">demux</tt><big>(</big><big>)</big><a class="headerlink" href="#av.context.Context.demux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.context.Context.dump">
+<tt class="descname">dump</tt><big>(</big><big>)</big><a class="headerlink" href="#av.context.Context.dump" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.duration">
+<tt class="descname">duration</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.is_input">
+<tt class="descname">is_input</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.is_input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.is_output">
+<tt class="descname">is_output</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.is_output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.metadata">
+<tt class="descname">metadata</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.mode">
+<tt class="descname">mode</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.context.Context.mux">
+<tt class="descname">mux</tt><big>(</big><big>)</big><a class="headerlink" href="#av.context.Context.mux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.name">
+<tt class="descname">name</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="av.context.Context.start_encoding">
@@ -70,17 +126,99 @@ and writes file header. This method is automatically called by a Stream before e
 Note: To use this Context must be opened with mode = &#8220;w&#8221;</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="av.context.Context.start_time">
+<tt class="descname">start_time</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.start_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.context.Context.streams">
+<tt class="descname">streams</tt><em class="property"> None</em><a class="headerlink" href="#av.context.Context.streams" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <span class="target" id="module-av.stream"></span><dl class="class">
 <dt id="av.stream.Stream">
 <em class="property">class </em><tt class="descclassname">av.stream.</tt><tt class="descname">Stream</tt><a class="headerlink" href="#av.stream.Stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="attribute">
+<dt id="av.stream.Stream.avg_frame_rate">
+<tt class="descname">avg_frame_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.avg_frame_rate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.base_frame_rate">
+<tt class="descname">base_frame_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.base_frame_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.codec">
+<tt class="descname">codec</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.codec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.stream.Stream.decode">
+<tt class="descname">decode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.stream.Stream.decode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.duration">
+<tt class="descname">duration</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.frames">
+<tt class="descname">frames</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.id">
+<tt class="descname">id</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.index">
+<tt class="descname">index</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.metadata">
+<tt class="descname">metadata</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.start_time">
+<tt class="descname">start_time</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.start_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.time_base">
+<tt class="descname">time_base</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.time_base" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.stream.Stream.type">
+<tt class="descname">type</tt><em class="property"> None</em><a class="headerlink" href="#av.stream.Stream.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 <span class="target" id="module-av.codec"></span><dl class="class">
 <dt id="av.codec.Codec">
 <em class="property">class </em><tt class="descclassname">av.codec.</tt><tt class="descname">Codec</tt><a class="headerlink" href="#av.codec.Codec" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="attribute">
+<dt id="av.codec.Codec.bit_rate">
+<tt class="descname">bit_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.bit_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.bit_rate_tolerance">
+<tt class="descname">bit_rate_tolerance</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.bit_rate_tolerance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="av.codec.Codec.channel_layout">
 <tt class="descname">channel_layout</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.channel_layout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Audio channel layout</p>
@@ -93,10 +231,45 @@ Note: To use this Context must be opened with mode = &#8220;w&#8221;</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="av.codec.Codec.frame_rate">
+<tt class="descname">frame_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.frame_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="av.codec.Codec.frame_size">
 <tt class="descname">frame_size</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.frame_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of samples per channel in an audio frame.</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.gop_size">
+<tt class="descname">gop_size</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.gop_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.height">
+<tt class="descname">height</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.height" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.long_name">
+<tt class="descname">long_name</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.long_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.name">
+<tt class="descname">name</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.pix_fmt">
+<tt class="descname">pix_fmt</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.pix_fmt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.sample_aspect_ratio">
+<tt class="descname">sample_aspect_ratio</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.sample_aspect_ratio" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="attribute">
 <dt id="av.codec.Codec.sample_fmt">
@@ -110,12 +283,23 @@ Note: To use this Context must be opened with mode = &#8220;w&#8221;</p>
 <dd><p>samples per second</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="av.codec.Codec.time_base">
+<tt class="descname">time_base</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.time_base" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.codec.Codec.width">
+<tt class="descname">width</tt><em class="property"> None</em><a class="headerlink" href="#av.codec.Codec.width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <span class="target" id="module-av.packet"></span><dl class="class">
 <dt id="av.packet.Packet">
 <em class="property">class </em><tt class="descclassname">av.packet.</tt><tt class="descname">Packet</tt><a class="headerlink" href="#av.packet.Packet" title="Permalink to this definition">¶</a></dt>
-<dd><p>A packet of encoded data within a <tt class="xref py py-class docutils literal"><span class="pre">Stream</span></tt>.</p>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A packet of encoded data within a <tt class="xref py py-class docutils literal"><span class="pre">Stream</span></tt>.</p>
 <p>This may, or may not include a complete object within a stream.
 <a class="reference internal" href="#av.packet.Packet.decode" title="av.packet.Packet.decode"><tt class="xref py py-meth docutils literal"><span class="pre">decode()</span></tt></a> must be called to extract encoded data.</p>
 <dl class="method">
@@ -129,6 +313,36 @@ is NULL and size is 0 the packet will try and retrieve those frames. Context.dem
 yeild a NULL Packet as its last packet.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="av.packet.Packet.dts">
+<tt class="descname">dts</tt><em class="property"> None</em><a class="headerlink" href="#av.packet.Packet.dts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.packet.Packet.duration">
+<tt class="descname">duration</tt><em class="property"> None</em><a class="headerlink" href="#av.packet.Packet.duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.packet.Packet.is_null">
+<tt class="descname">is_null</tt><em class="property"> None</em><a class="headerlink" href="#av.packet.Packet.is_null" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.packet.Packet.pts">
+<tt class="descname">pts</tt><em class="property"> None</em><a class="headerlink" href="#av.packet.Packet.pts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.packet.Packet.size">
+<tt class="descname">size</tt><em class="property"> None</em><a class="headerlink" href="#av.packet.Packet.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.packet.Packet.stream">
+<tt class="descname">stream</tt><em class="property"> None</em><a class="headerlink" href="#av.packet.Packet.stream" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -137,7 +351,18 @@ yeild a NULL Packet as its last packet.</p>
 <dl class="class">
 <dt id="av.video.stream.VideoStream">
 <em class="property">class </em><tt class="descclassname">av.video.stream.</tt><tt class="descname">VideoStream</tt><a class="headerlink" href="#av.video.stream.VideoStream" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <a class="reference internal" href="#av.stream.Stream" title="av.stream.Stream"><tt class="xref py py-class docutils literal"><span class="pre">av.stream.Stream</span></tt></a></p>
+<dl class="attribute">
+<dt id="av.video.stream.VideoStream.buffer_size">
+<tt class="descname">buffer_size</tt><em class="property"> None</em><a class="headerlink" href="#av.video.stream.VideoStream.buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.video.stream.VideoStream.decode">
+<tt class="descname">decode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.stream.VideoStream.decode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="av.video.stream.VideoStream.encode">
 <tt class="descname">encode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.stream.VideoStream.encode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encodes a frame of video, returns a packet if one is ready.
@@ -152,7 +377,14 @@ packets until there are none left, at which it will return None.</p>
 <span class="target" id="module-av.video.frame"></span><dl class="class">
 <dt id="av.video.frame.VideoFrame">
 <em class="property">class </em><tt class="descclassname">av.video.frame.</tt><tt class="descname">VideoFrame</tt><a class="headerlink" href="#av.video.frame.VideoFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>A frame of video.</p>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">av.frame.Frame</span></tt></p>
+<p>A frame of video.</p>
+<dl class="attribute">
+<dt id="av.video.frame.VideoFrame.width">
+<tt class="descname">width</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Width of the image, in pixels.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="av.video.frame.VideoFrame.height">
 <tt class="descname">height</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.height" title="Permalink to this definition">¶</a></dt>
@@ -160,35 +392,64 @@ packets until there are none left, at which it will return None.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="av.video.frame.VideoFrame.key_frame">
-<tt class="descname">key_frame</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.key_frame" title="Permalink to this definition">¶</a></dt>
-<dd><p>return 1 if frame is a key frame</p>
+<dt id="av.video.frame.VideoFrame.format">
+<tt class="descname">format</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pixel format of the image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">bytes</span></tt> or <tt class="docutils literal"><span class="pre">None</span></tt>.</td>
+</tr>
+</tbody>
+</table>
+<p>See <tt class="docutils literal"><span class="pre">ffmpeg</span> <span class="pre">-pix_fmts</span></tt> for all formats.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">format</span>
+<span class="go">&#39;yuv420p&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="av.video.frame.VideoFrame.pix_fmt">
-<tt class="descname">pix_fmt</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.pix_fmt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pixel format of the image.</p>
+<dt id="av.video.frame.VideoFrame.frame_index">
+<tt class="descname">frame_index</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.frame_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.video.frame.VideoFrame.key_frame">
+<tt class="descname">key_frame</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.key_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is this frame a key frame?</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="av.video.frame.VideoFrame.reformat">
-<tt class="descname">reformat</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.frame.VideoFrame.reformat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a new VideoFrame object scaled to width and height and converted to 
-specified pix_fmt</p>
+<tt class="descname">reformat</tt><big>(</big><em>width</em>, <em>height</em>, <em>format</em><big>)</big><a class="headerlink" href="#av.video.frame.VideoFrame.reformat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="#av.video.frame.VideoFrame" title="av.video.frame.VideoFrame"><tt class="xref py py-class docutils literal"><span class="pre">VideoFrame</span></tt></a> with the given width/height/format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>width</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; New width.</li>
+<li><strong>height</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; New height.</li>
+<li><strong>format</strong> (<em>bytes</em>) &#8211; New format; see <a class="reference internal" href="#av.video.frame.VideoFrame.format" title="av.video.frame.VideoFrame.format"><tt class="xref py py-attr docutils literal"><span class="pre">VideoFrame.format</span></tt></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
-<dt id="av.video.frame.VideoFrame.to_rgba">
-<tt class="descname">to_rgba</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.frame.VideoFrame.to_rgba" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a new VideoFrame object that is converted from what every pix_fmt is 
-currently is to rgba pix_fmt</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="av.video.frame.VideoFrame.width">
-<tt class="descname">width</tt><em class="property"> None</em><a class="headerlink" href="#av.video.frame.VideoFrame.width" title="Permalink to this definition">¶</a></dt>
-<dd><p>Width of the image, in pixels.</p>
+<dt id="av.video.frame.VideoFrame.to_rgb">
+<tt class="descname">to_rgb</tt><big>(</big><big>)</big><a class="headerlink" href="#av.video.frame.VideoFrame.to_rgb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an RGB version of this frame.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">format</span>
+<span class="go">&#39;yuv420p&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">()</span><span class="o">.</span><span class="n">format</span>
+<span class="go">&#39;rgb24&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -199,7 +460,18 @@ currently is to rgba pix_fmt</p>
 <dl class="class">
 <dt id="av.audio.stream.AudioStream">
 <em class="property">class </em><tt class="descclassname">av.audio.stream.</tt><tt class="descname">AudioStream</tt><a class="headerlink" href="#av.audio.stream.AudioStream" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Bases: <a class="reference internal" href="#av.stream.Stream" title="av.stream.Stream"><tt class="xref py py-class docutils literal"><span class="pre">av.stream.Stream</span></tt></a></p>
+<dl class="attribute">
+<dt id="av.audio.stream.AudioStream.channels">
+<tt class="descname">channels</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.stream.AudioStream.channels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.audio.stream.AudioStream.decode">
+<tt class="descname">decode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.audio.stream.AudioStream.decode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="av.audio.stream.AudioStream.encode">
 <tt class="descname">encode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.audio.stream.AudioStream.encode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encodes a frame of audio, returns a packet if one is ready.
@@ -209,12 +481,18 @@ If called with with no args it will flush out the encoder and return the buffere
 packets until there are none left, at which it will return None.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="av.audio.stream.AudioStream.sample_rate">
+<tt class="descname">sample_rate</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.stream.AudioStream.sample_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <span class="target" id="module-av.audio.frame"></span><dl class="class">
 <dt id="av.audio.frame.AudioFrame">
 <em class="property">class </em><tt class="descclassname">av.audio.frame.</tt><tt class="descname">AudioFrame</tt><a class="headerlink" href="#av.audio.frame.AudioFrame" title="Permalink to this definition">¶</a></dt>
-<dd><p>A frame of audio.</p>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">av.frame.Frame</span></tt></p>
+<p>A frame of audio.</p>
 <dl class="attribute">
 <dt id="av.audio.frame.AudioFrame.channel_layout">
 <tt class="descname">channel_layout</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.channel_layout" title="Permalink to this definition">¶</a></dt>
@@ -226,6 +504,16 @@ packets until there are none left, at which it will return None.</p>
 <tt class="descname">channels</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.channels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of audio channels</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="av.audio.frame.AudioFrame.frame_index">
+<tt class="descname">frame_index</tt><em class="property"> None</em><a class="headerlink" href="#av.audio.frame.AudioFrame.frame_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="av.audio.frame.AudioFrame.resample">
+<tt class="descname">resample</tt><big>(</big><big>)</big><a class="headerlink" href="#av.audio.frame.AudioFrame.resample" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="attribute">
 <dt id="av.audio.frame.AudioFrame.sample_fmt">
@@ -245,6 +533,11 @@ packets until there are none left, at which it will return None.</p>
 <dd><p>Number of audio samples (per channel)</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="av.audio.frame.AudioFrame.set_silence">
+<tt class="descname">set_silence</tt><big>(</big><big>)</big><a class="headerlink" href="#av.audio.frame.AudioFrame.set_silence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -253,17 +546,105 @@ packets until there are none left, at which it will return None.</p>
 <dl class="class">
 <dt id="av.subtitles.stream.SubtitleStream">
 <em class="property">class </em><tt class="descclassname">av.subtitles.stream.</tt><tt class="descname">SubtitleStream</tt><a class="headerlink" href="#av.subtitles.stream.SubtitleStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#av.stream.Stream" title="av.stream.Stream"><tt class="xref py py-class docutils literal"><span class="pre">av.stream.Stream</span></tt></a></p>
+<dl class="method">
+<dt id="av.subtitles.stream.SubtitleStream.decode">
+<tt class="descname">decode</tt><big>(</big><big>)</big><a class="headerlink" href="#av.subtitles.stream.SubtitleStream.decode" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 <span class="target" id="module-av.subtitles.subtitle"></span><dl class="class">
 <dt id="av.subtitles.subtitle.Subtitle">
 <em class="property">class </em><tt class="descclassname">av.subtitles.subtitle.</tt><tt class="descname">Subtitle</tt><a class="headerlink" href="#av.subtitles.subtitle.Subtitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.Subtitle.end_display_time">
+<tt class="descname">end_display_time</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.Subtitle.end_display_time" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.Subtitle.format">
+<tt class="descname">format</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.Subtitle.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.Subtitle.packet">
+<tt class="descname">packet</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.Subtitle.packet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.Subtitle.pts">
+<tt class="descname">pts</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.Subtitle.pts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.Subtitle.rects">
+<tt class="descname">rects</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.Subtitle.rects" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.Subtitle.start_display_time">
+<tt class="descname">start_display_time</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.Subtitle.start_display_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 <dl class="class">
 <dt id="av.subtitles.subtitle.SubtitleRect">
 <em class="property">class </em><tt class="descclassname">av.subtitles.subtitle.</tt><tt class="descname">SubtitleRect</tt><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.ass">
+<tt class="descname">ass</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.ass" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.height">
+<tt class="descname">height</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.height" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.nb_colors">
+<tt class="descname">nb_colors</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.nb_colors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.pict_buffers">
+<tt class="descname">pict_buffers</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.pict_buffers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.pict_line_sizes">
+<tt class="descname">pict_line_sizes</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.pict_line_sizes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.text">
+<tt class="descname">text</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.type">
+<tt class="descname">type</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.width">
+<tt class="descname">width</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.x">
+<tt class="descname">x</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.x" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="av.subtitles.subtitle.SubtitleRect.y">
+<tt class="descname">y</tt><em class="property"> None</em><a class="headerlink" href="#av.subtitles.subtitle.SubtitleRect.y" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 </div>
 
