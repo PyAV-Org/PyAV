@@ -1,9 +1,3 @@
-cdef class SwsContextProxy(object):
-    def __dealloc__(self):
-        lib.sws_freeContext(self.ptr)
-
-
-
 cdef class VideoFrame(Frame):
 
     """A frame of video."""
