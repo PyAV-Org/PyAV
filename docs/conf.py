@@ -244,3 +244,8 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
+
+autodoc_member_order = 'bysource'
+autodoc_default_flags = ['undoc-members', 'show-inheritance']
+
+

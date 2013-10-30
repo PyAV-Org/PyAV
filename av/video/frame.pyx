@@ -23,20 +23,25 @@ cdef class VideoFrame(Frame):
         )
         
     def to_rgb(self):
-        """Get an RGB version of this frame."""
+        """Get an RGB version of this frame.
+
+        >>> frame.format
+        'yuv420p'
+        >>> frame.to_rgb().format
+        'rgb24'
+
+        """
         return self.reformat(self.width, self.height, "rgb24")
 
     cpdef reformat(self, int width, int height, char* dst_format_str):
     
         """reformat(width, height, format)
 
-        Create a new :class:`VideoFrame` with the given width/height, and converted to
-        the given format.
+        Create a new :class:`VideoFrame` with the given width/height/format.
 
-        :param int width:
-        :param int height:
-        :param bytes format: See :attr:`pix_fmt`.
-        :return VideoFrame:
+        :param int width: New width.
+        :param int height: New height.
+        :param bytes format: New format; see :attr:`VideoFrame.format`.
 
         """
         
