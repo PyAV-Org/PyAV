@@ -1,17 +1,14 @@
 
 - `make test-assets` -> into tests/assets/
-- TestCase.sandbox -> dated sandbox; ln -s $(date) last
-- TestCase.sandboxed(*args, mkdir=True) -> os.path.join and os.makedirs
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
 - try to wrap API of testsrc filters
 - Vagrant for two environments for ffmpeg and libav
-    cd /vagrant; python setup.py build -b /tmp install
-    cd; PYTHONPATH=/vagrant nosetests tests
-
-    vagrant ssh ffmpeg -c 'cd /vagrant; ~/venv/bin/python setup.py build -b /tmp install; cd; PYTHONPATH=/vagrant venv/bin/nosetests tests'
-
     libav needs to have LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib set for
     both building and testing. Also try `runtime_library_dirs`.
+
+- Humanize attribute names?
+    VideoFrame.pix_fmt -> pixel_format or just format
+    various nb_* for numbers of things
 
 - Tox for various versions?
 - av.errno module
@@ -25,9 +22,7 @@
 - Even out more of the differences:
     - See README of https://github.com/chelyaev/ffmpeg-tutorial
 
-- Can Packet.decode yield multiple frames, or is that the old API?
-    See: http://ffmpeg.mplayerhq.hu/doxygen/trunk/group__lavf__decoding.html#ga4fdb3084415a82e3810de6ee60e46a61
-    Video packets contain exactly one frame. Audio packets can contain an integer number of frames.
+- Should Packet.decode yield Frames, or return a list of Frames?
 
 - Figure out how to grab FFmpeg samples.
 
@@ -40,12 +35,6 @@
 
 - Implement __getbuffer__ and __releasebuffer__ for new-style buffers.
     See: http://www.python.org/dev/peps/pep-3118/
-
-- Skip the packet stage altogether?
-    - av.format.Context.demux() could directly yield frames.
-
-- Move away from generator from av.format.Context.demux(), so that the API makes
-  more sense when we get around to adding Context.seek(time)?
 
 - Replicate av_frame_get_best_effort_timestamp
     http://ffmpeg.org/pipermail/ffmpeg-devel/2011-February/104327.html

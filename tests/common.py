@@ -9,6 +9,14 @@ from av.stream import Stream
 from av.utils import AVError
 
 
+def makedirs(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+
 def _sandbox():
     sandbox = os.path.join(
         os.path.dirname(__file__),
@@ -38,4 +46,14 @@ class TestCase(_Base):
     @property
     def sandbox(self):
         return self._sandbox()
+
+    def sandboxed(self, *args, **kwargs):
+        do_makedirs = kwargs.pop('makedirs', True)
+        if kwargs:
+            raise TypeError('extra kwargs: %s' % ', '.join(sorted(kwargs)))
+        path = os.path.join(self.sandbox, *args)
+        if do_makedirs:
+            makedirs(os.path.dirname(path))
+        return path
+
 
