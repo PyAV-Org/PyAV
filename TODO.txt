@@ -11,11 +11,12 @@
     vagrant ssh ffmpeg -c 'cd /vagrant; ~/venv/bin/python setup.py build -b /tmp install; cd; PYTHONPATH=/vagrant venv/bin/nosetests tests'
 
     libav needs to have LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib set for
-    both building and testing
+    both building and testing. Also try `runtime_library_dirs`.
 
 - Tox for various versions?
 - av.errno module
 
+- Split Context into input/output varieties.
 
 - FFmpeg tutorial: http://dranger.com/ffmpeg/
 	- also has function reference: http://dranger.com/ffmpeg/functions.html
@@ -30,9 +31,6 @@
 
 - Figure out how to grab FFmpeg samples.
 
-- Move calling `configure` into an extension of the build command so that it
-  does not run until it needs to.
-
 - VideoStream.setup_conversion(size, format, etc.)
 
 - How to interpret raw audio?
@@ -42,15 +40,6 @@
 
 - Implement __getbuffer__ and __releasebuffer__ for new-style buffers.
     See: http://www.python.org/dev/peps/pep-3118/
-
-- Stop mimicking the underlying project structure, and break into (many) more
-  modules:
-    - av.format.context/input/output
-    - av.stream.core/video/audio/subtitle/etc.
-    - av.codec.core/video/audio/subtitle
-    - av.packet (if it doesn't vanish alltogether)
-    - av.frame.core/video/audio
-    - av.subtitle.frame/rect
 
 - Skip the packet stage altogether?
     - av.format.Context.demux() could directly yield frames.

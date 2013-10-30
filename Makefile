@@ -27,10 +27,15 @@ samples:
 test: build
 	nosetests -v
 
+vagrant:
+	vagrant box list | grep -q precise32 || vagrant box add precise32 http://files.vagrantup.com/precise32.box
+
 vtest-ffmpeg: cythonize
 	vagrant ssh ffmpeg -c /vagrant/scripts/vagrant-test
+
 vtest-libav: cythonize
 	vagrant ssh libav -c /vagrant/scripts/vagrant-test
+
 vtest: vtest-ffmpeg vtest-libav
 
 debug: build
