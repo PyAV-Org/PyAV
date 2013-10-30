@@ -39,7 +39,7 @@ cdef class Stream(object):
             raise ValueError('stream index out of range')
         
         self.ctx = ctx.proxy
-        self.weak_ctx = PyWeakref_NewRef(ctx, 0)
+        self.weak_ctx = PyWeakref_NewRef(ctx, None)
 
         self.ptr = self.ctx.ptr.streams[index]
         self.type = type
