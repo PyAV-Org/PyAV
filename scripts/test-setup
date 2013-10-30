@@ -1,6 +1,10 @@
 #!/bin/bash
 
+
+echo apt-get update
 sudo apt-get update -qq
+
+echo apt-get build-dep ffmpeg
 sudo apt-get build-dep -qq --fix-missing ffmpeg
 
 mkdir -p vendor
@@ -9,10 +13,13 @@ cd vendor
 
 if [[ $LIBRARY == ffmpeg ]]; then
     
-    wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
-    tar -xf ffmpeg-1.2.2.tar.bz2
+    if [[ ! -d ffmpeg-1.2.2 ]]; then
+        wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
+        tar -xjf ffmpeg-1.2.2.tar.bz2
+    fi
     cd ffmpeg-1.2.2
 
+    echo ./configure
     ./configure \
         --disable-static \
         --enable-shared \
@@ -21,18 +28,22 @@ if [[ $LIBRARY == ffmpeg ]]; then
         --disable-avdevice \
         --disable-postproc
 
+    echo make
     make
+
+    echo make install
     sudo make install
 
 
 elif [[ $LIBRARY == libav ]]; then
     
-    # Just assuming the dependencies are the same...
-
-    wget https://libav.org/releases/libav-9.10.tar.gz
-    tar -xf libav-9.10.tar.gz
+    if [[ ! -d libav-9.10 ]]; then
+        wget https://libav.org/releases/libav-9.10.tar.gz
+        tar -xzf libav-9.10.tar.gz
+    fi
     cd libav-9.10
 
+    echo ./configure
     ./configure \
         --disable-static \
         --enable-shared \
@@ -40,7 +51,10 @@ elif [[ $LIBRARY == libav ]]; then
         --disable-avfilter \
         --disable-avdevice
 
+    echo make
     make
+
+    echo make install
     sudo make install
 
 fi

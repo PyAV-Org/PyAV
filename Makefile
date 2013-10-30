@@ -27,6 +27,9 @@ samples:
 test: build
 	nosetests -v
 
+vtest: cythonize
+	vagrant ssh ffmpeg -c /vagrant/scripts/vagrant-test
+
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)
 

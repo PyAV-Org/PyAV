@@ -8,7 +8,7 @@ env:
     - LIBRARY=libav
 
 before_install:
-    - ./.travis-setup
+    - scripts/test-setup
     - pip install --use-mirrors cython nose
 
 install:

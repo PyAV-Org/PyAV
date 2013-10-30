@@ -1,4 +1,16 @@
 
+- `make test-assets` -> into tests/assets/
+- TestCase.sandbox -> dated sandbox; ln -s $(date) last
+- TestCase.sandboxed(*args, mkdir=True) -> os.path.join and os.makedirs
+- TestCase.rms_diff(one, two) -> Root-mean-square diff
+- try to wrap API of testsrc filters
+- Vagrant for two environments for ffmpeg and libav
+    cd /vagrant; python setup.py build -b /tmp install
+    cd; PYTHONPATH=/vagrant nosetests tests
+- Tox for various versions?
+- av.errno module
+
+
 - FFmpeg tutorial: http://dranger.com/ffmpeg/
 	- also has function reference: http://dranger.com/ffmpeg/functions.html
 	- updated tutorial code: https://github.com/chelyaev/ffmpeg-tutorial

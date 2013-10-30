@@ -1,0 +1,32 @@
+#!/bin/bash
+
+cd
+mkdir -p PyAV
+
+echo syncing...
+rsync -avx --update --delete \
+    --exclude .git \
+    --exclude vendor \
+    --exclude venv \
+    /vagrant/ PyAV/ \
+    > /dev/null 2>&1
+
+cd PyAV
+
+if [[ ! -d venv ]]; then
+    virtualenv venv
+fi
+
+. venv/bin/activate
+
+if [[ -z "$(which nosetests)" ]]; then
+    pip install nose
+fi
+
+echo building...
+python setup.py build_ext --inplace
+
+echo
+echo
+
+nosetests

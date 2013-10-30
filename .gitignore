@@ -12,16 +12,20 @@
 /config.log
 /config.status
 /configure
->>>>>>> Stream and Codec hold onto ContextProxy
 
 # Build products.
 /build
 *.c
 *.so
 *.pyc
-_build
+/docs/_build
+/dist
+*.egg-info
 
 # Testing.
 /sandbox
 /subtitles
 /tests/samples
+/tests/assets
+/tests/sandbox
+/.vagrant

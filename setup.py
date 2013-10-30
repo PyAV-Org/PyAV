@@ -1,5 +1,5 @@
 import ctypes.util
-from distutils.core import setup, Extension
+from setuptools import setup, find_packages, Extension
 import os
 from subprocess import Popen, PIPE
 
@@ -64,7 +64,7 @@ def check_for_func(lib_names, func_name):
             except OSError:
                 pass
         else:
-            print 'Could not open', lib_name,func_name, 'with ctypes; looked in:'
+            print 'Could not find', lib_name, 'with ctypes; looked in:'
             print '\n'.join('\t' + path for path in lib_paths)
             continue
 
@@ -136,8 +136,9 @@ setup(
     
     url="https://github.com/mikeboers/PyAV",
 
-    packages=["av"],
+    packages=find_packages(exclude=['tests', 'examples']),
     
+    zip_safe=False,
     ext_modules=ext_modules,
 
 )
