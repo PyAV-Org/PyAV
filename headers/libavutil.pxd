@@ -1,12 +1,12 @@
 from libc.stdint cimport int64_t, uint8_t, uint64_t
 
-cdef extern from "libavutil_compat.h":
+cdef extern from "libavutil_compat.h" nogil:
     pass
 
-cdef extern from "libavutil/mathematics.h":
+cdef extern from "libavutil/mathematics.h" nogil:
     pass
 
-cdef extern from "libavutil/avutil.h":
+cdef extern from "libavutil/avutil.h" nogil:
 
     cdef enum AVPixelFormat:
         AV_PIX_FMT_NONE
@@ -117,11 +117,11 @@ cdef extern from "libavutil/avutil.h":
         int search_flags
     )
 
-cdef extern from "libavutil/pixdesc.h":
+cdef extern from "libavutil/pixdesc.h" nogil:
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(char* name)
 
-cdef extern from "libavutil/samplefmt.h":
+cdef extern from "libavutil/samplefmt.h" nogil:
     cdef char * av_get_sample_fmt_name(AVSampleFormat sample_fmt)
     cdef AVSampleFormat av_get_sample_fmt(char* name)
     
@@ -153,7 +153,7 @@ cdef extern from "libavutil/samplefmt.h":
      )
         
     
-cdef extern from "libavutil/audioconvert.h":
+cdef extern from "libavutil/audioconvert.h" nogil:
     cdef char* av_get_channel_name(uint64_t channel)
     
     cdef uint64_t av_get_channel_layout(char* name)
@@ -171,7 +171,7 @@ cdef extern from "libavutil/audioconvert.h":
     )
     
     
-cdef extern from "libavutil/audio_fifo.h":
+cdef extern from "libavutil/audio_fifo.h" nogil:
     
     cdef struct AVAudioFifo:
         pass
@@ -200,7 +200,7 @@ cdef extern from "libavutil/audio_fifo.h":
     cdef int av_audio_fifo_space (AVAudioFifo *af)
 
 
-cdef extern from "stdarg.h":
+cdef extern from "stdarg.h" nogil:
 
     # For logging. Should really be in another PXD.
     ctypedef struct va_list:
@@ -213,7 +213,7 @@ cdef extern from "Python.h":
     void PyEval_InitThreads()
 
 
-cdef extern from "libavutil/log.h":
+cdef extern from "libavutil/log.h" nogil:
 
     int AV_LOG_QUIET
     int AV_LOG_PANIC
