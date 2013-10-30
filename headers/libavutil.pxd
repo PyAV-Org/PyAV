@@ -202,15 +202,15 @@ cdef extern from "libavutil/audio_fifo.h":
 
 cdef extern from "stdarg.h":
 
-    # For logging. Should really be in another header
+    # For logging. Should really be in another PXD.
     ctypedef struct va_list:
         pass
 
 
-cdef extern from "stdio.h":
-    
-    # For logging. Should really be in another header.
-    int vsnprintf(char *out, size_t size, const char *fmt, va_list ap)
+# We need a single function from Python that Cython's cpython does not expose.
+# Since it is for dealing with the GIL, we also mark it as nogil.
+cdef extern from "Python.h":
+    void PyEval_InitThreads()
 
 
 cdef extern from "libavutil/log.h":
@@ -234,3 +234,12 @@ cdef extern from "libavutil/log.h":
     ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
     void av_log_set_callback (av_log_callback callback)
 
+    void av_log_format_line (
+        void *ptr,
+        int level,
+        const char *fmt,
+        va_list vl,
+        char *line,
+        int line_size,
+        int *print_prefix 
+    )   

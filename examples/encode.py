@@ -3,6 +3,7 @@ import sys
 import av
 
 logging.basicConfig()
+av.logging.set_level(av.logging.VERBOSE)
 
 # open input file
 input_file_path = sys.argv[1]

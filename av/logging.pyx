@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 cimport libav as lib
+
 import logging
 
 
@@ -31,19 +32,22 @@ def get_level():
     return lib.av_log_get_level()
 
 def set_level(int level):
-    lib.av_log_set_level(int)
+    lib.av_log_set_level(level)
 
 
 cdef void log_callback(void *cls, int av_level, const char *format, lib.va_list args) with gil:
 
+    # Make sure that the GIL exists.
+    lib.PyEval_InitThreads()
+
     # Assume a reasonable maxlength of 1024.
-    cdef bytes out = b'\0' * 1024
-    cdef int outlen = lib.vsnprintf(out, 1024, format, args)
+    cdef bytes msg = b'\0' * 1024
+    cdef int print_prefix = 1
+    lib.av_log_format_line(cls, av_level, format, args, msg, 1024, &print_prefix)
 
     # Convert the level, and default to INFO
-    py_level = level_map.get(av_level, 20)
-
-    logging.getLogger('av').log(py_level, out[:outlen].strip())
+    cdef int py_level = level_map.get(av_level, 20)
+    logging.getLogger('av').log(py_level, msg)
 
 lib.av_log_set_callback(log_callback)
 
