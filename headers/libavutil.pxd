@@ -198,4 +198,39 @@ cdef extern from "libavutil/audio_fifo.h":
     
     cdef int av_audio_fifo_size(AVAudioFifo *af)
     cdef int av_audio_fifo_space (AVAudioFifo *af)
+
+
+cdef extern from "stdarg.h":
+
+    # For logging. Should really be in another header
+    ctypedef struct va_list:
+        pass
+
+
+cdef extern from "stdio.h":
     
+    # For logging. Should really be in another header.
+    int vsnprintf(char *out, size_t size, const char *fmt, va_list ap)
+
+
+cdef extern from "libavutil/log.h":
+
+    int AV_LOG_QUIET
+    int AV_LOG_PANIC
+    int AV_LOG_FATAL
+    int AV_LOG_ERROR
+    int AV_LOG_WARNING
+    int AV_LOG_INFO
+    int AV_LOG_VERBOSE
+    int AV_LOG_DEBUG
+
+    int av_log_get_level()
+    void av_log_set_level(int)
+
+    # Send a log.
+    void av_log(void *avcl, int level, const char *fmt, ...)       
+
+    # Get the logs.
+    ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
+    void av_log_set_callback (av_log_callback callback)
+

@@ -1,5 +1,8 @@
+import logging
 import sys
 import av
+
+logging.basicConfig()
 
 # open input file
 input_file_path = sys.argv[1]
