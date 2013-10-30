@@ -9,7 +9,7 @@ env:
 
 before_install:
     - ./.travis-setup
-    - pip install --use-mirrors cython nosetests
+    - pip install --use-mirrors cython nose
 
 install:
     - make build
