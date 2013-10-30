@@ -4,8 +4,8 @@ python:
     - "2.6"
     - "2.7"
 env:
-    - LIBRARY=ffmpeg
-    - LIBRARY=libav
+    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=ffmpeg
+    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=libav
 
 before_install:
     - scripts/test-setup
