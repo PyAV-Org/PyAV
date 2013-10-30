@@ -27,8 +27,11 @@ samples:
 test: build
 	nosetests -v
 
-vtest: cythonize
+vtest-ffmpeg: cythonize
 	vagrant ssh ffmpeg -c /vagrant/scripts/vagrant-test
+vtest-libav: cythonize
+	vagrant ssh libav -c /vagrant/scripts/vagrant-test
+vtest: vtest-ffmpeg vtest-libav
 
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)

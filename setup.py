@@ -84,7 +84,8 @@ for name in 'libavformat libavcodec libavutil libswscale'.split():
     config = pkg_config(name)
     if not config:
         print 'Could not find', name, 'with pkg-config.'
-    update_extend(extension_extra, config)
+    else:
+        update_extend(extension_extra, config)
 
 
 # Get the config for either swresample OR avresample.
@@ -93,7 +94,8 @@ if not config:
     config = pkg_config('libavresample', macro=True)
 if not config:
     print 'Could not find either of libswresample or libavresample with pkg-config.'
-update_extend(extension_extra, config)
+else:
+    update_extend(extension_extra, config)
 
 
 # Check for some specific functions.

@@ -7,6 +7,12 @@
 - Vagrant for two environments for ffmpeg and libav
     cd /vagrant; python setup.py build -b /tmp install
     cd; PYTHONPATH=/vagrant nosetests tests
+
+    vagrant ssh ffmpeg -c 'cd /vagrant; ~/venv/bin/python setup.py build -b /tmp install; cd; PYTHONPATH=/vagrant venv/bin/nosetests tests'
+
+    libav needs to have LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib set for
+    both building and testing
+
 - Tox for various versions?
 - av.errno module
 
