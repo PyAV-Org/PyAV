@@ -206,13 +206,44 @@ cdef extern from "stdarg.h" nogil:
     ctypedef struct va_list:
         pass
 
+
 cdef extern from "Python.h" nogil:
 
     # For logging. See av/logging.pyx for an explanation.
     cdef int Py_AddPendingCall(void *, void *)
 
 
+cdef extern from "stdio.h" nogil:
+
+    cdef int vsnprintf(
+        char *output,
+        size_t size,
+        const char *format,
+        va_list ap
+    )
+
+
 cdef extern from "libavutil/log.h" nogil:
+
+    cdef enum AVClassCategory:
+        AV_CLASS_CATEGORY_NA    
+        AV_CLASS_CATEGORY_INPUT     
+        AV_CLASS_CATEGORY_OUTPUT    
+        AV_CLASS_CATEGORY_MUXER     
+        AV_CLASS_CATEGORY_DEMUXER   
+        AV_CLASS_CATEGORY_ENCODER   
+        AV_CLASS_CATEGORY_DECODER   
+        AV_CLASS_CATEGORY_FILTER    
+        AV_CLASS_CATEGORY_BITSTREAM_FILTER  
+        AV_CLASS_CATEGORY_SWSCALER  
+        AV_CLASS_CATEGORY_SWRESAMPLER   
+        AV_CLASS_CATEGORY_NB
+
+    cdef struct AVClass:
+        const char *class_name
+        const char (*item_name)(void *ctx)
+        AVClassCategory category
+        int parent_log_context_offset
 
     int AV_LOG_QUIET
     int AV_LOG_PANIC
@@ -227,18 +258,8 @@ cdef extern from "libavutil/log.h" nogil:
     void av_log_set_level(int)
 
     # Send a log.
-    void av_log(void *avcl, int level, const char *fmt, ...)       
+    void av_log(void *ptr, int level, const char *fmt, ...)       
 
     # Get the logs.
     ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
     void av_log_set_callback (av_log_callback callback)
-
-    void av_log_format_line (
-        void *ptr,
-        int level,
-        const char *fmt,
-        va_list vl,
-        char *line,
-        int line_size,
-        int *print_prefix 
-    )   

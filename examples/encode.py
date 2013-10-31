@@ -2,7 +2,7 @@ import logging
 import sys
 import av
 
-logging.basicConfig()
+logging.basicConfig(level=logging.DEBUG)
 av.logging.set_level(av.logging.VERBOSE)
 
 # open input file
@@ -43,8 +43,8 @@ if input_video_stream:
     codec = output_video_stream.codec
     
     # set output size
-    codec.width = 1280
-    codec.height = 720
+    codec.width = 640
+    codec.height = 480
     
     # set bit rate and pix_fmt
     #codec.bit_rate = 256000
@@ -84,15 +84,24 @@ for packet in input_file.demux(input_streams):
         else:
             # encode video frame
             encoded_packet = output_video_stream.encode(frame)
-            print frame_count
+
+            if frame_count % 10 == 0:
+                if frame_count:
+                    print
+                print ('%03d:' % frame_count), 
+            sys.stdout.write('.')
+            sys.stdout.flush()
+
             frame_count += 1
             
         if encoded_packet:
                 # Add encoded packet to output file
                 output_file.mux(encoded_packet)
         
-    if frame_count > 200:
+    if frame_count >= 10:
         break
+
+print
 
 # Finally we need to flush out the frames that are buffered in the encoder.
 # To do that we simply call encode with no args until we get a None returned
@@ -117,3 +126,9 @@ while True:
 # if you don't close the output file the trailer will not be written
 input_file.close()
 output_file.close()
+
+print 'del1'
+del input_file
+print 'del2'
+del output_file
+print 'done'

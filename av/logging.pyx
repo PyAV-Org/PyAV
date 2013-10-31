@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 
+from cython.operator cimport dereference as deref
 from libc.stdlib cimport malloc, free
+from libc.stdint cimport uint8_t
+
 cimport libav as lib
 
 import logging
@@ -50,23 +53,35 @@ def set_level(int level):
 
 
 cdef struct LogRequest:
+    lib.AVClass *cls
     int level
     char message[1024]
 
-cdef void log_callback(void *obj, int level, const char *format, lib.va_list args) nogil:
-    cdef int print_prefix = 1
+cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
     cdef LogRequest *req = <LogRequest*>malloc(sizeof(LogRequest))
+    req.cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
     req.level = level
-    lib.av_log_format_line(obj, level, format, args, req.message, 1024, &print_prefix)
+    lib.vsnprintf(req.message, 1024, format, args)
     lib.Py_AddPendingCall(<void*>async_log_callback, <void*>req)
 
 cdef int async_log_callback(void *arg) except -1:
+
     cdef LogRequest *req = <LogRequest*>arg
     cdef int py_level
+    cdef str logger_name = 'libav'
+
     try:
+
         py_level = level_map.get(req.level, 20)
-        logging.getLogger('av').log(py_level, req.message.strip())
+
+        # We would do this sort of thing with FFmpeg's av_log_format_line, but
+        # it doesn't exist in Libav.
+        if req.cls and req.cls.class_name:
+            logger_name = 'libav.' + req.cls.class_name
+
+        logging.getLogger(logger_name).log(py_level, req.message.strip())
         return 0
+
     finally:
         free(req)
 
