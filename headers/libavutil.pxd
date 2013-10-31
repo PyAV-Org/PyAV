@@ -206,11 +206,10 @@ cdef extern from "stdarg.h" nogil:
     ctypedef struct va_list:
         pass
 
+cdef extern from "Python.h" nogil:
 
-# We need a single function from Python that Cython's cpython does not expose.
-# Since it is for dealing with the GIL, we also mark it as nogil.
-cdef extern from "Python.h":
-    void PyEval_InitThreads()
+    # For logging. See av/logging.pyx for an explanation.
+    cdef int Py_AddPendingCall(void *, void *)
 
 
 cdef extern from "libavutil/log.h" nogil:

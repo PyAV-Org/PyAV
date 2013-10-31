@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from libc.stdlib cimport malloc, free
 cimport libav as lib
 
 import logging
@@ -14,6 +15,7 @@ WARNING = lib.AV_LOG_WARNING
 INFO = lib.AV_LOG_INFO
 VERBOSE = lib.AV_LOG_VERBOSE
 DEBUG = lib.AV_LOG_DEBUG
+
 
 # Map from AV levels to logging levels.
 level_map = {
@@ -35,28 +37,39 @@ def set_level(int level):
     lib.av_log_set_level(level)
 
 
-cdef void log_callback(void *cls, int av_level, const char *format, lib.va_list args) with gil:
+# Threads sure are a mess!
+#
+# I simply did not find a way to capture the GIL in a function called from a
+# thread that was spawned by Libav. The only solution is the tangle that you
+# see before you.
+#
+# We handle the formatting of the log immediately, but stuff the resultang
+# message and it's log level into a temporary struct. We use the super low-level
+# Py_AddPendingCall to schedule a call to run in the main Python thread. That
+# call dumps the message into the Python logging system.
 
-    # Make sure that the GIL exists.
-    lib.PyEval_InitThreads()
 
-    # Assume a reasonable maxlength of 1024.
-    cdef bytes msg = b'\0' * 1024
+cdef struct LogRequest:
+    int level
+    char message[1024]
+
+cdef void log_callback(void *obj, int level, const char *format, lib.va_list args) nogil:
     cdef int print_prefix = 1
-    lib.av_log_format_line(cls, av_level, format, args, msg, 1024, &print_prefix)
+    cdef LogRequest *req = <LogRequest*>malloc(sizeof(LogRequest))
+    req.level = level
+    lib.av_log_format_line(obj, level, format, args, req.message, 1024, &print_prefix)
+    lib.Py_AddPendingCall(<void*>async_log_callback, <void*>req)
 
-    # Convert the level, and default to INFO
-    cdef int py_level = level_map.get(av_level, 20)
-    logging.getLogger('av').log(py_level, msg)
+cdef int async_log_callback(void *arg) except -1:
+    cdef LogRequest *req = <LogRequest*>arg
+    cdef int py_level
+    try:
+        py_level = level_map.get(req.level, 20)
+        logging.getLogger('av').log(py_level, req.message.strip())
+        return 0
+    finally:
+        free(req)
 
+
+# Start the magic!
 lib.av_log_set_callback(log_callback)
-
-
-def log(int level, bytes message, *args):
-    if args:
-        message = message & args
-    lib.av_log(NULL, level, message)
-
-
-
-
