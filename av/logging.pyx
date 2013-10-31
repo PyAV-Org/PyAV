@@ -53,13 +53,13 @@ def set_level(int level):
 
 
 cdef struct LogRequest:
-    lib.AVClass *cls
+    void *ptr
     int level
     char message[1024]
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
     cdef LogRequest *req = <LogRequest*>malloc(sizeof(LogRequest))
-    req.cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
+    req.ptr = ptr
     req.level = level
     lib.vsnprintf(req.message, 1024, format, args)
     lib.Py_AddPendingCall(<void*>async_log_callback, <void*>req)
@@ -68,7 +68,11 @@ cdef int async_log_callback(void *arg) except -1:
 
     cdef LogRequest *req = <LogRequest*>arg
     cdef int py_level
-    cdef str logger_name = 'libav'
+    cdef str logger_name = 'libav.null'
+
+    cdef lib.AVClass *cls = (<lib.AVClass**>req.ptr)[0] if req.ptr else NULL
+    cdef char* c_item_name
+    cdef bytes item_name
 
     try:
 
@@ -76,8 +80,12 @@ cdef int async_log_callback(void *arg) except -1:
 
         # We would do this sort of thing with FFmpeg's av_log_format_line, but
         # it doesn't exist in Libav.
-        if req.cls and req.cls.class_name:
-            logger_name = 'libav.' + req.cls.class_name
+        if cls and cls.item_name:
+            c_item_name = cls.item_name(req.ptr)
+            if c_item_name:
+                item_name = c_item_name
+                if item_name and item_name != "NULL":
+                    logger_name = 'libav.' + item_name
 
         logging.getLogger(logger_name).log(py_level, req.message.strip())
         return 0

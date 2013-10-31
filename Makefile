@@ -18,7 +18,7 @@ build/cython/%.c: %.pyx
 	cython -I. -Iheaders -o $@ $<
 
 build: cythonize
-	python setup.py build_ext --inplace
+	python setup.py build_ext --inplace --debug
 
 samples:
 	# Grab the samples from the ffmpeg site.

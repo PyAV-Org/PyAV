@@ -241,7 +241,7 @@ cdef extern from "libavutil/log.h" nogil:
 
     cdef struct AVClass:
         const char *class_name
-        const char (*item_name)(void *ctx)
+        const char *(*item_name)(void*)
         AVClassCategory category
         int parent_log_context_offset
 
