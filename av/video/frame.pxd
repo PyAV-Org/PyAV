@@ -18,3 +18,8 @@ cdef class VideoFrame(Frame):
 
     cdef _init(self, unsigned int width, unsigned int height, lib.AVPixelFormat format)
     cpdef reformat(self, int width, int height, char* format)
+
+    # PEP 3118 buffer protocol.
+    cdef Py_ssize_t _buffer_shape[3]
+    cdef Py_ssize_t _buffer_strides[3]
+    cdef Py_ssize_t _buffer_suboffsets[3]

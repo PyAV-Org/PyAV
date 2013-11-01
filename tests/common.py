@@ -7,6 +7,7 @@ from unittest import TestCase as _Base
 from itertools import izip
 
 import Image
+import ImageFilter
 
 import av
 from av.frame import Frame
@@ -81,10 +82,10 @@ class TestCase(_Base):
         kwargs.setdefault('sandbox', self.sandbox)
         return sandboxed(*args, **kwargs)
 
-    def assertImagesAlmostEqual(self, a, b, epsilon=16/256, *args):
+    def assertImagesAlmostEqual(self, a, b, epsilon=0.1, *args):
         self.assertEqual(a.size, b.size, 'sizes dont match')
-        a = a.getdata()
-        b = b.getdata()
+        a = a.filter(ImageFilter.BLUR).getdata()
+        b = b.filter(ImageFilter.BLUR).getdata()
         for i, ax, bx in izip(xrange(len(a)), a, b):
             diff = sum(abs(ac / 256 - bc / 256) for ac, bc in izip(ax, bx)) / 3
             if diff > epsilon:
