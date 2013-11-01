@@ -39,7 +39,7 @@ output_audio_stream = None
 if input_video_stream:
     
     # setup video output stream
-    output_video_stream = output_file.add_stream("h264",input_video_stream.base_frame_rate)
+    output_video_stream = output_file.add_stream("mpeg4", input_video_stream.base_frame_rate)
     
     codec = output_video_stream.codec
     

@@ -15,7 +15,7 @@ duration = 96
 path = sandboxed('rgb_rotate.mov')
 output = av.open(path, 'w')
 
-stream = output.add_stream("h264", 24)
+stream = output.add_stream("mpeg4", 24)
 codec = stream.codec
     
 # set output size
