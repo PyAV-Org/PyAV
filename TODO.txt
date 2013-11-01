@@ -1,4 +1,6 @@
 
+- Context.add_stream(codec_name, frame_rate) -> Context.streams.append(Stream(codec_name, frame_rate))?
+
 - VideoFrame(width=0, height=0, format='rgb24')
     - VideoFrame.update(input_)
         And then it tries if it is a buffer, memoryview, bytes, etc..
@@ -8,12 +10,7 @@
 - SwsContext -> Scaler
 - SwrContext -> Resampler
 
-- `make test-assets` -> into tests/assets/
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
-- try to wrap API of testsrc filters
-- Vagrant for two environments for ffmpeg and libav
-    libav needs to have LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib set for
-    both building and testing. Also try `runtime_library_dirs`.
 
 - Humanize attribute names?
     VideoFrame.pix_fmt -> pixel_format or just format

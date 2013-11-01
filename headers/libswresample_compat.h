@@ -2,6 +2,7 @@
 
 #ifdef USE_SWRESAMPLE
 
+    #define USING_AVRESAMPLE 0
     #include <libswresample/swresample.h>
 
     //swr does not have the equivalent so this does nothing
@@ -9,6 +10,7 @@
 
 #else
 
+    #define USING_AVRESAMPLE 1
     #include <libavresample/avresample.h>
 
     #define SwrContext AVAudioResampleContext

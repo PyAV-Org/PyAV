@@ -34,4 +34,7 @@ cdef extern from "libswresample_compat.h" nogil:
     
     # wrapper for libavresample
     cdef void swr_close(SwrContext *ctx)
+
+    int USING_AVRESAMPLE
+
     

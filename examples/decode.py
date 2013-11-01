@@ -52,13 +52,20 @@ for i, packet in enumerate(video.demux(streams)):
     print '    dts: %.3f' % float(packet.stream.time_base * packet.dts)
     
     for frame in packet.decode():
+
         if packet.stream.type == 'video':
 
             frame_count += 1
     
             print '    decoded:', frame
-            print '               pts: %.3f' % float(packet.stream.time_base * frame.pts)
+            if frame.pts:
+                print '               pts: %.3f' % float(packet.stream.time_base * frame.pts)
         
+        if packet.stream.type == 'audio':
+            print '    decoded:', frame
+            if frame.pts:
+                print '               pts: %.3f' % float(packet.stream.time_base * frame.pts)
+
         elif packet.stream.type == 'subtitle':
             
             sub = frame

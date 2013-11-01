@@ -81,6 +81,9 @@ for packet in input_file.demux(input_streams):
         
         if packet.stream.type == b'audio':
             # encode audio frame
+            print frame
+            print len(buffer(frame))
+            print bytes(buffer(frame)).encode('hex')
             encoded_packet = output_audio_stream.encode(frame)
         else:
             # encode video frame
