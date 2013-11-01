@@ -1,5 +1,6 @@
 # General.
 .DS_Store
+*~
 /venv
 /vendor
 /bin
