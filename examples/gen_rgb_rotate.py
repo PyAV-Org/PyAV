@@ -1,15 +1,11 @@
 from __future__ import division
 
-import logging
 import math
 
 import av
 from av.video.frame import VideoFrame
 import Image
 from tests.common import sandboxed
-
-logging.basicConfig(level=logging.DEBUG)
-av.logging.set_level(av.logging.VERBOSE)
 
 
 width = 320

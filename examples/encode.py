@@ -1,12 +1,13 @@
 import logging
+import os
 import sys
-import av
 
-logging.basicConfig(level=logging.DEBUG)
-av.logging.set_level(av.logging.VERBOSE)
+import av
+from tests.common import asset, sandboxed
+
 
 # open input file
-input_file_path = sys.argv[1]
+input_file_path = sys.argv[1] if len(sys.argv) > 1 else asset('320x240x4.mov')
 input_file = av.open(input_file_path)
 
 input_video_stream = None
@@ -29,7 +30,7 @@ for stream in input_file.streams:
         break
 
 # open output file
-output_file_path = "./sandbox/encode_example.mp4"
+output_file_path = sandboxed(os.path.basename(input_file_path))
 output_file = av.open(output_file_path, 'w')
 
 output_video_stream = None
@@ -127,8 +128,3 @@ while True:
 input_file.close()
 output_file.close()
 
-print 'del1'
-del input_file
-print 'del2'
-del output_file
-print 'done'
