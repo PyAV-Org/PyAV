@@ -1,5 +1,3 @@
-import errno
-
 from .common import *
 
 

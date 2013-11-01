@@ -47,7 +47,7 @@ cdef class AudioFrame(Frame):
         ))
 
         # TODO: Set channel layout.
-        self.ptr.format = <int > sample_fmt
+        self.ptr.format = <int> sample_fmt
         self.ptr.nb_samples = nb_samples
                 
         

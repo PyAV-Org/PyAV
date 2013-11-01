@@ -22,7 +22,10 @@ cdef int err_check(int res, str filename=None) except -1:
         py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
         c_buffer = py_buffer
         lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
-        raise AVError(-res, c_buffer, filename)
+        if filename:
+            raise AVError(-res, c_buffer, filename)
+        else:
+            raise AVError(-res, c_buffer)
     return res
 
 cdef char* channel_layout_name(int nb_channels, uint64_t channel_layout):

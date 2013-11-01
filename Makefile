@@ -24,7 +24,14 @@ samples:
 	# Grab the samples from the ffmpeg site.
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/samples/
 
-test: build
+test-assets: tests/assets/lenna.png tests/assets/320x240x4.mov
+tests/assets/320x240x4.mov:
+	python scripts/generate_video.py -s 320x240 -r 24 -t 4 $@
+tests/assets/lenna.png:
+	@ mkdir -p $(@D)
+	wget -O $@ https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png
+
+test: build test-assets
 	nosetests -v
 
 vagrant:
@@ -45,7 +52,11 @@ clean:
 	- rm -rf build
 	- find av -name '*.so' -delete
 
-clean-all: clean
+clean-sandbox:
+	- rm -rf sandbox/2013*
+	- rm sandbox/last
+
+clean-all: clean clean-sandbox
 	- make -C docs clean
 
 docs: build
