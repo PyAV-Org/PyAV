@@ -3,8 +3,10 @@ from __future__ import division
 import datetime
 import errno
 import os
-from unittest import TestCase as _Base, SkipTest
+from unittest import TestCase as _Base
 from itertools import izip
+
+from nose.plugins.skip import SkipTest
 
 import Image
 import ImageFilter
