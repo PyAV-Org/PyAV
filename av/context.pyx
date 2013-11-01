@@ -20,6 +20,7 @@ cdef class ContextProxy(object):
                 lib.avformat_close_input(&self.ptr)
 
 
+
 cdef class Context(object):
 
     def __init__(self, name, mode='r'):

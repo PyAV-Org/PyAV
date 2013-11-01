@@ -211,6 +211,9 @@ cdef extern from "Python.h" nogil:
 
     # For logging. See av/logging.pyx for an explanation.
     cdef int Py_AddPendingCall(void *, void *)
+    void PyErr_PrintEx(int set_sys_last_vars)
+    int Py_IsInitialized()
+    void PyErr_Display(object, object, object)
 
 
 cdef extern from "stdio.h" nogil:
