@@ -98,7 +98,7 @@ for packet in input_file.demux(input_streams):
                 # Add encoded packet to output file
                 output_file.mux(encoded_packet)
         
-    if frame_count >= 10:
+    if frame_count >= 100:
         break
 
 print

@@ -204,6 +204,10 @@ cdef class Context(object):
     
     def demux(self, streams=None):
         
+        streams = streams or self.streams
+        if isinstance(streams, Stream):
+            streams = (streams, )
+
         cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
         if include_stream == NULL:
             raise MemoryError()
@@ -215,7 +219,7 @@ cdef class Context(object):
             
             for i in range(self.proxy.ptr.nb_streams):
                 include_stream[i] = False
-            for stream in streams or self.streams:
+            for stream in streams:
                 include_stream[stream.index] = True
         
             while True:
@@ -234,23 +238,19 @@ cdef class Context(object):
                         packet.stream = self.streams[packet.struct.stream_index]
                         yield packet
 
-
             # Some codecs will cause frames to be buffered up in the decoding process.
             # These codecs should have a CODEC CAP_DELAY capability set.
             # This sends a special packet with data set to NULL and size set to 0
-            # This tells the Packet Object that its the last packet
-            
+            # This tells the Packet Object that its the last packet            
             for i in range(self.proxy.ptr.nb_streams):
-
                 if include_stream[i]:
                     packet = Packet()
-                    packet.struct.data= NULL
+                    packet.struct.data = NULL
                     packet.struct.size = 0
                     packet.is_null = True
-                    stream = self.streams[i]
-                    packet.stream = stream
-                    
+                    packet.stream = self.streams[i]
                     yield packet
+
         finally:
             free(include_stream)
     
