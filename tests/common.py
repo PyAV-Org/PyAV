@@ -1,13 +1,19 @@
+from __future__ import division
+
 import datetime
 import errno
 import os
 from unittest import TestCase as _Base
+from itertools import izip
+
+import Image
 
 import av
 from av.frame import Frame
 from av.packet import Packet
 from av.stream import Stream
 from av.utils import AVError
+from av.video import VideoFrame
 
 
 def makedirs(path):
@@ -40,6 +46,10 @@ def _sandbox():
     return sandbox
 
 
+def asset(*args):
+    return os.path.abspath(os.path.join(__file__, '..', 'assets', *args))
+
+
 def sandboxed(*args, **kwargs):
     do_makedirs = kwargs.pop('makedirs', True)
     base = kwargs.pop('sandbox', None)
@@ -70,5 +80,16 @@ class TestCase(_Base):
     def sandboxed(self, *args, **kwargs):
         kwargs.setdefault('sandbox', self.sandbox)
         return sandboxed(*args, **kwargs)
+
+    def assertImagesAlmostEqual(self, a, b, epsilon=16/256, *args):
+        self.assertEqual(a.size, b.size, 'sizes dont match')
+        a = a.getdata()
+        b = b.getdata()
+        for i, ax, bx in izip(xrange(len(a)), a, b):
+            diff = sum(abs(ac / 256 - bc / 256) for ac, bc in izip(ax, bx)) / 3
+            if diff > epsilon:
+                self.fail('images differed by %s at index %d; %s %s' % (diff, i, ax, bx))
+
+
 
 

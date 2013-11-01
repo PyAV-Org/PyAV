@@ -8,33 +8,31 @@ cdef class VideoStream(Stream):
     
     def __init__(self, *args):
         super(VideoStream, self).__init__(*args)
+
         self.last_w = 0
         self.last_h = 0
-        
         self.encoded_frame_count = 0
-    
-    def __dealloc__(self):
-        # These are all NULL safe.
-        lib.avcodec_free_frame(&self.raw_frame)
         
     cpdef decode(self, Packet packet):
+        """Decode a :class:`Packet` into a :class:`VideoFrame` if it is ready."""
         
-        if not self.raw_frame:
-            self.raw_frame = lib.avcodec_alloc_frame()
-            lib.avcodec_get_frame_defaults(self.raw_frame)
+        # Create a frame if we don't have one ready.
+        if not self.next_frame:
+            self.next_frame = VideoFrame()
 
+        # Decode video into the frame.
         cdef int done = 0
-        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.raw_frame, &done, &packet.struct))
+        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.next_frame.ptr, &done, &packet.struct))
         if not done:
             return
         
-        # Check if the frame size has change
-        if not (self.last_w,self.last_h) == (self.codec.ctx.width,self.codec.ctx.height):
+        # Check if the frame size has changed so that we can always have a
+        # SwsContext that is ready to go.
+        if self.last_w != self.codec.ctx.width or self.last_h != self.codec.ctx.height:
             
             self.last_w = self.codec.ctx.width
             self.last_h = self.codec.ctx.height
             
-            # Recalculate buffer size
             self.buffer_size = lib.avpicture_get_size(
                 self.codec.ctx.pix_fmt,
                 self.codec.ctx.width,
@@ -44,22 +42,20 @@ cdef class VideoStream(Stream):
             # Create a new SwsContextProxy
             self.sws_proxy = SwsContextProxy()
 
-        cdef VideoFrame frame = VideoFrame()
+        # We are ready to send this one off into the world!
+        cdef VideoFrame frame = self.next_frame
+        self.next_frame = None
         
-        # Copy the pointers over.
+        # Transfer some convenient attributes over.
         frame.buffer_size = self.buffer_size
-        frame.ptr = self.raw_frame
-
-        # Calculate best effort time stamp    
-        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         frame.time_base_ = self.ptr.time_base
+        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         
-        # Copy SwsContextProxy so frames share the same one
+        # Share our SwsContext with the frames. Most of the time they will end
+        # up using the same settings as each other, so it makes sense to cache
+        # it like this.
         frame.sws_proxy = self.sws_proxy
-        
-        # Null out our frame.
-        self.raw_frame = NULL
-        
+
         return frame
     
     cpdef encode(self, VideoFrame frame=None):

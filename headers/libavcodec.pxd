@@ -124,7 +124,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         #int channels # Audio channels
         int sample_rate #Audio Sample rate 
         int channel_layout # Audio channel_layout
-        int format
+        int format # Should be AVPixelFormat or AV...Format
         int key_frame # 0 or 1.
         
         int64_t pts

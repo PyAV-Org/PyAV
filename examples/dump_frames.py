@@ -16,8 +16,7 @@ for packet in video.demux(stream):
     for frame in packet.decode():
 
         frame_count += 1
-        img = Image.frombuffer("RGB", (frame.width, frame.height), frame.to_rgb(), "raw", "RGB", 0, 1)
-        img.save('sandbox/%04d.jpg' % frame_count)
+        frame.to_image().save('sandbox/%04d.jpg' % frame_count)
 
     if frame_count > 5:
         break

@@ -24,7 +24,12 @@ samples:
 	# Grab the samples from the ffmpeg site.
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/samples/
 
-test: build
+test-assets: tests/assets/lenna.png
+tests/assets/lenna.png:
+	@ mkdir -p $(@D)
+	wget -O $@ https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png
+
+test: build test-assets
 	nosetests -v
 
 vagrant:
