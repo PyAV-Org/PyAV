@@ -215,9 +215,8 @@ cdef extern from "Python.h" nogil:
 
 cdef extern from "stdio.h" nogil:
 
-    cdef int vsnprintf(
-        char *output,
-        size_t size,
+    cdef int vasprintf(
+        char **output,
         const char *format,
         va_list ap
     )
@@ -241,7 +240,7 @@ cdef extern from "libavutil/log.h" nogil:
 
     cdef struct AVClass:
         const char *class_name
-        const char *(*item_name)(void*)
+        const char *(*item_name)(void*) nogil
         AVClassCategory category
         int parent_log_context_offset
 
