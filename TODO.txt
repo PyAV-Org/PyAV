@@ -1,4 +1,13 @@
 
+- VideoFrame(width=0, height=0, format='rgb24')
+    - VideoFrame.update(input_)
+        And then it tries if it is a buffer, memoryview, bytes, etc..
+
+- Stream.encode(frame) -> list_of_packets
+- Context.mux(list_of_packets)
+- SwsContext -> Scaler
+- SwrContext -> Resampler
+
 - `make test-assets` -> into tests/assets/
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
 - try to wrap API of testsrc filters
