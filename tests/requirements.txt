@@ -1,0 +1,3 @@
+Cython
+PIL
+nose

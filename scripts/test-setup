@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# PIL dependencies are a little complex, since PIL does not look in the
+# right place for them.
+sudo apt-get install -y libjpeg-dev libfreetype6-dev zlib1g-dev
+for lib in libfreetype.so libjpeg.so libz.so
+do
+    if [[ ! -e /usr/lib/$lib ]]
+    then
+        sudo ln -s /usr/lib/$(uname -i)-linux-gnu/$lib /usr/lib/
+    fi
+done
+
 
 pkg-config --exists libavformat
 exists=$?
