@@ -3,7 +3,7 @@ from __future__ import division
 import datetime
 import errno
 import os
-from unittest import TestCase as _Base
+from unittest import TestCase as _Base, SkipTest
 from itertools import izip
 
 import Image

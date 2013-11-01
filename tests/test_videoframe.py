@@ -25,6 +25,10 @@ class TestVideoFrameBasics(TestCase):
 
 
     def test_memoryview_read(self):
+        try:
+            memoryview
+        except NameError:
+            raise SkipTest()
         frame = VideoFrame(640, 480, 'rgb24')
         frame.update_from_string('01234' + ('x' * (640 * 480 * 3 - 5)))
         mem = memoryview(frame)
