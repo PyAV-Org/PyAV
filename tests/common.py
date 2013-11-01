@@ -29,15 +29,16 @@ def makedirs(path):
 
 _start_time = datetime.datetime.now()
 
-def _sandbox():
+def _sandbox(timed=False):
     root = os.path.abspath(os.path.join(
         __file__, '..', '..',
         'sandbox'
     ))
+
     sandbox = os.path.join(
         root,
         _start_time.strftime('%Y%m%d-%H%M%S'),
-    )
+    ) if timed else root
     if not os.path.exists(sandbox):
         os.makedirs(sandbox)
         last = os.path.join(root, 'last')
@@ -56,9 +57,10 @@ def asset(*args):
 def sandboxed(*args, **kwargs):
     do_makedirs = kwargs.pop('makedirs', True)
     base = kwargs.pop('sandbox', None)
+    timed = kwargs.pop('timed', False)
     if kwargs:
         raise TypeError('extra kwargs: %s' % ', '.join(sorted(kwargs)))
-    path = os.path.join(_sandbox() if base is None else base, *args)
+    path = os.path.join(_sandbox(timed=timed) if base is None else base, *args)
     if do_makedirs:
         makedirs(os.path.dirname(path))
     return path
@@ -78,10 +80,11 @@ class TestCase(_Base):
 
     @property
     def sandbox(self):
-        return self._sandbox()
+        return self._sandbox(timed=True)
 
     def sandboxed(self, *args, **kwargs):
         kwargs.setdefault('sandbox', self.sandbox)
+        kwargs.setdefault('timed', True)
         return sandboxed(*args, **kwargs)
 
     def assertImagesAlmostEqual(self, a, b, epsilon=0.1, *args):

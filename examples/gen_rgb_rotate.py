@@ -1,6 +1,7 @@
 from __future__ import division
 
 import logging
+import math
 
 import av
 from av.video.frame import VideoFrame
@@ -11,8 +12,8 @@ logging.basicConfig(level=logging.DEBUG)
 av.logging.set_level(av.logging.VERBOSE)
 
 
-width = 160
-height = 120
+width = 320
+height = 240
 duration = 96
 
 path = sandboxed('rgb_rotate.mov')
@@ -34,7 +35,12 @@ for frame_i in xrange(duration):
 
     # Magic goes here.
     frame = VideoFrame(width, height, 'rgb24')
-    image = Image.new('RGB', (width, height), 'green')
+
+    image = Image.new('RGB', (width, height), (
+        int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi))),
+        int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi + 2 / 3 * math.pi))),
+        int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi + 4 / 3 * math.pi))),
+    ))
     frame.update_from_string(image.tostring())
 
     packet = stream.encode(frame)
