@@ -1,6 +1,6 @@
 from libc.stdint cimport int64_t, uint64_t
 
-cdef extern from "libavformat_compat.h":
+cdef extern from "libavformat_compat.h" nogil:
     
     cdef int AV_TIME_BASE
     cdef int AVSEEK_FLAG_BACKWARD

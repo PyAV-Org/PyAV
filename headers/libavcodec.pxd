@@ -1,9 +1,9 @@
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 
-cdef extern from "libavcodec_compat.h":
+cdef extern from "libavcodec_compat.h" nogil:
     pass
 
-cdef extern from "libavcodec/avcodec.h":
+cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef void avcodec_register_all()
     

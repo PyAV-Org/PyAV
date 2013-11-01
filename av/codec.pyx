@@ -38,8 +38,6 @@ cdef class Codec(object):
                 raise
         else:
             self.ptr = self.ctx.codec
-            print "encoder"
-            pass
     
     def __dealloc__(self):
         if self.ptr != NULL:

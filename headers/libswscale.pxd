@@ -1,4 +1,4 @@
-cdef extern from "libswscale/swscale.h":
+cdef extern from "libswscale/swscale.h" nogil:
     
     # See: http://ffmpeg.org/doxygen/trunk/structSwsContext.html
     cdef struct SwsContext:

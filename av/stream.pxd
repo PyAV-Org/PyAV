@@ -9,6 +9,7 @@ cdef class Stream(object):
     cdef readonly bytes type
     
     cdef ContextProxy ctx
+    cdef weak_ctx
     
     cdef lib.AVStream *ptr
     

@@ -38,9 +38,9 @@ for src_path in sys.argv[1:]:
         for frame_i, frame in itertools.izip(xrange(max_size), frames):
 
             if chunk is None:
-                chunk = Image.new("RGBA", (max_size, frame.height))
+                chunk = Image.new("RGB", (max_size, frame.height))
 
-            img = Image.frombuffer("RGBA", (frame.width, frame.height), frame.to_rgba(), "raw", "RGBA", 0, 1)
+            img = Image.frombuffer("RGB", (frame.width, frame.height), frame.to_rgb(), "raw", "RGB", 0, 1)
             img = img.resize((1, frame.height), Image.ANTIALIAS)
             chunk.paste(img, (frame_i, 0))
 

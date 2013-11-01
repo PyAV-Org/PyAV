@@ -1,12 +1,12 @@
 from libc.stdint cimport int64_t, uint8_t, uint64_t
 
-cdef extern from "libavutil_compat.h":
+cdef extern from "libavutil_compat.h" nogil:
     pass
 
-cdef extern from "libavutil/mathematics.h":
+cdef extern from "libavutil/mathematics.h" nogil:
     pass
 
-cdef extern from "libavutil/avutil.h":
+cdef extern from "libavutil/avutil.h" nogil:
 
     cdef enum AVPixelFormat:
         AV_PIX_FMT_NONE
@@ -117,11 +117,11 @@ cdef extern from "libavutil/avutil.h":
         int search_flags
     )
 
-cdef extern from "libavutil/pixdesc.h":
+cdef extern from "libavutil/pixdesc.h" nogil:
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(char* name)
 
-cdef extern from "libavutil/samplefmt.h":
+cdef extern from "libavutil/samplefmt.h" nogil:
     cdef char * av_get_sample_fmt_name(AVSampleFormat sample_fmt)
     cdef AVSampleFormat av_get_sample_fmt(char* name)
     
@@ -153,7 +153,7 @@ cdef extern from "libavutil/samplefmt.h":
      )
         
     
-cdef extern from "libavutil/audioconvert.h":
+cdef extern from "libavutil/audioconvert.h" nogil:
     cdef char* av_get_channel_name(uint64_t channel)
     
     cdef uint64_t av_get_channel_layout(char* name)
@@ -171,7 +171,7 @@ cdef extern from "libavutil/audioconvert.h":
     )
     
     
-cdef extern from "libavutil/audio_fifo.h":
+cdef extern from "libavutil/audio_fifo.h" nogil:
     
     cdef struct AVAudioFifo:
         pass
@@ -198,4 +198,67 @@ cdef extern from "libavutil/audio_fifo.h":
     
     cdef int av_audio_fifo_size(AVAudioFifo *af)
     cdef int av_audio_fifo_space (AVAudioFifo *af)
-    
+
+
+cdef extern from "stdarg.h" nogil:
+
+    # For logging. Should really be in another PXD.
+    ctypedef struct va_list:
+        pass
+
+
+cdef extern from "Python.h" nogil:
+
+    # For logging. See av/logging.pyx for an explanation.
+    cdef int Py_AddPendingCall(void *, void *)
+
+
+cdef extern from "stdio.h" nogil:
+
+    cdef int vasprintf(
+        char **output,
+        const char *format,
+        va_list ap
+    )
+
+
+cdef extern from "libavutil/log.h" nogil:
+
+    cdef enum AVClassCategory:
+        AV_CLASS_CATEGORY_NA    
+        AV_CLASS_CATEGORY_INPUT     
+        AV_CLASS_CATEGORY_OUTPUT    
+        AV_CLASS_CATEGORY_MUXER     
+        AV_CLASS_CATEGORY_DEMUXER   
+        AV_CLASS_CATEGORY_ENCODER   
+        AV_CLASS_CATEGORY_DECODER   
+        AV_CLASS_CATEGORY_FILTER    
+        AV_CLASS_CATEGORY_BITSTREAM_FILTER  
+        AV_CLASS_CATEGORY_SWSCALER  
+        AV_CLASS_CATEGORY_SWRESAMPLER   
+        AV_CLASS_CATEGORY_NB
+
+    cdef struct AVClass:
+        const char *class_name
+        const char *(*item_name)(void*) nogil
+        AVClassCategory category
+        int parent_log_context_offset
+
+    int AV_LOG_QUIET
+    int AV_LOG_PANIC
+    int AV_LOG_FATAL
+    int AV_LOG_ERROR
+    int AV_LOG_WARNING
+    int AV_LOG_INFO
+    int AV_LOG_VERBOSE
+    int AV_LOG_DEBUG
+
+    int av_log_get_level()
+    void av_log_set_level(int)
+
+    # Send a log.
+    void av_log(void *ptr, int level, const char *fmt, ...)       
+
+    # Get the logs.
+    ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
+    void av_log_set_callback (av_log_callback callback)
