@@ -1,6 +1,8 @@
 from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, free
 
+import os
+
 cimport libav as lib
 
 from av.packet cimport Packet
@@ -15,9 +17,19 @@ cdef class ContextProxy(object):
         self.is_input = is_input
     
     def __dealloc__(self):
+
+        # XXX: The lib.avformat_close_input causes the following on shutdown:
+        #   Exception TypeError: "'NoneType' object is not callable" in <function
+        #   _remove at 0x102386410> ignored
+        
         if self.ptr != NULL:
             if self.is_input:
                 lib.avformat_close_input(&self.ptr)
+                # This stops it?!?!
+                os.environ.__iter__()
+                # ... but this doesnt:
+                # iter(os.environ.data)
+
 
 
 cdef class Context(object):
