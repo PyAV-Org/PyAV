@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 
 from libc.stdlib cimport malloc, free
-from libc.stdio cimport printf
+from libc.stdio cimport printf, fprintf, stderr
 
 cimport libav as lib
 
 import logging
+import sys
 
 
 # Levels.
@@ -79,7 +80,17 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         free(req)
         return
 
-    lib.Py_AddPendingCall(<void*>async_log_callback, <void*>req)
+    # Schedule this to be called in the main Python thread, but only if
+    # Python hasn't started finalizing yet.
+    if lib.Py_IsInitialized():
+        lib.Py_AddPendingCall(<void*>async_log_callback, <void*>req)
+    else:
+        fprintf(stderr, "av.logging: message after Python shutdown: %s[%d]: %s",
+            req.item_name, req.level, req.message
+        )
+        free(req.message)
+        free(req)
+
 
 cdef int async_log_callback(void *arg) except -1:
 
@@ -88,11 +99,24 @@ cdef int async_log_callback(void *arg) except -1:
     cdef bytes logger_name
     cdef bytes item_name
 
+    if not lib.Py_IsInitialized():
+        fprintf(stderr, "av.logging: callback after Python shutdown: %s[%d]: %s",
+            req.item_name, req.level, req.message
+        )
+        return 0
+
     try:
         level = level_map.get(req.level, 20)
         item_name = req.item_name if req.item_name else ''
         logger_name = b'libav.' + item_name if item_name else b'libav.generic'
         logging.getLogger(logger_name).log(level, req.message.strip())
+    except Exception as e:
+        fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
+            req.item_name, req.level, req.message
+        )
+        # For some reason lib.PyErr_PrintEx(0) won't work.
+        exc, type_, tb = sys.exc_info()
+        lib.PyErr_Display(exc, type_, tb)
     finally:
         free(req.message)
         free(req)
