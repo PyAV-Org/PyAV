@@ -1,5 +1,7 @@
 cimport libav as lib
-from av.audio.frame cimport AudioFrame, AudioFifo
+
+from av.audio.frame cimport AudioFrame
+from av.audio.fifo cimport AudioFifo
 from av.audio.swrcontext cimport SwrContextProxy
 from av.stream cimport Stream
 
