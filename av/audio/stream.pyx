@@ -35,6 +35,7 @@ cdef class AudioStream(Stream):
         
         # Copy the pointers over.
         frame.swr_proxy = self.swr_proxy
+        frame.buffer_size = frame._get_buffer_size()
         
         return frame
     

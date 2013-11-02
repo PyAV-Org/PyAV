@@ -9,8 +9,9 @@ from av.audio.swrcontext cimport SwrContextProxy
 cdef class AudioFrame(Frame):
 
     # This is the size of the Frame.ptr.data[0] buffer, not the _buffer below.
-    cdef int buffer_size
-
+    cdef readonly int buffer_size
+    cdef int _get_buffer_size(self)
+    
     # For raw storage of the frame's data.
     cdef uint8_t **_buffer
 

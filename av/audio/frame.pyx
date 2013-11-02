@@ -20,12 +20,21 @@ cdef class AudioFrame(Frame):
             self.__class__.__module__,
             self.__class__.__name__,
             self.samples,
-            self.sample_rate,
+            self.rate,
             self.layout,
             self.format,
             id(self),
         )
-        
+    
+    cdef int _get_buffer_size(self):
+        return lib.av_samples_get_buffer_size(
+            NULL,
+            self.channels,
+            self.ptr.nb_samples,
+            <lib.AVSampleFormat>self.ptr.format,
+            self.align
+        )
+
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
      
         if self.ptr:
@@ -186,7 +195,7 @@ cdef class AudioFrame(Frame):
         def __get__(self):
             return self.ptr.nb_samples
     
-    property sample_rate:
+    property rate:
         """Sample rate of the audio data. """
         def __get__(self):
             return self.ptr.sample_rate
