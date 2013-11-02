@@ -106,14 +106,11 @@ cdef class Stream(object):
         # These codecs should have a CODEC CAP_DELAY capability set.
         # This sends a special packet with data set to NULL and size set to 0
         # This tells the Packet Object that its the last packet    
-        cdef lib.AVPacket null_packet
         if frames_decoded:
             while True:
-                lib.av_init_packet(&null_packet)
-                null_packet.data = NULL
-                null_packet.size = 0
-                frame = self._decode_one(&null_packet, &data_consumed)
-                lib.av_free_packet(&null_packet)
+                # Create a new NULL packet for every frame we try to pull out.
+                packet = Packet()
+                frame = self._decode_one(&packet.struct, &data_consumed)
                 if frame:
                     self._setup_frame(frame)
                     frames.append(frame)
