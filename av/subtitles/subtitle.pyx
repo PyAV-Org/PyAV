@@ -8,17 +8,15 @@ cdef class SubtitleProxy(object):
 
 cdef class Subtitle(object):
     
-    def __init__(self, Packet packet, SubtitleProxy proxy):
-        self.packet = packet
+    def __init__(self, SubtitleProxy proxy):
         self.proxy = proxy
         cdef int i
         self.rects = tuple(SubtitleRect(self, i) for i in range(self.proxy.struct.num_rects))
     
     def __repr__(self):
-        return '<%s.%s of %s at 0x%x>' % (
+        return '<%s.%s at 0x%x>' % (
             self.__class__.__module__,
             self.__class__.__name__,
-            self.packet.stream,
             id(self),
         )
     

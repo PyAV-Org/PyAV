@@ -1,29 +1,27 @@
 from libc.stdint cimport int64_t
 
+from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport err_check
 
 
 cdef class VideoStream(Stream):
     
-    def __init__(self, *args):
-        super(VideoStream, self).__init__(*args)
-
+    def __cinit__(self, *args):
         self.last_w = 0
         self.last_h = 0
         self.encoded_frame_count = 0
         
-    cpdef decode(self, Packet packet):
-        """Decode a :class:`Packet` into a :class:`VideoFrame` if it is ready."""
+    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         
         # Create a frame if we don't have one ready.
         if not self.next_frame:
             self.next_frame = VideoFrame()
 
         # Decode video into the frame.
-        cdef int done = 0
-        err_check(lib.avcodec_decode_video2(self.codec.ctx, self.next_frame.ptr, &done, &packet.struct))
-        if not done:
+        cdef int completed_frame = 0
+        data_consumed[0] = err_check(lib.avcodec_decode_video2(self.codec.ctx, self.next_frame.ptr, &completed_frame, packet))
+        if not completed_frame:
             return
         
         # Check if the frame size has changed so that we can always have a
@@ -48,8 +46,6 @@ cdef class VideoStream(Stream):
         
         # Transfer some convenient attributes over.
         frame.buffer_size = self.buffer_size
-        frame.time_base_ = self.ptr.time_base
-        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         
         # Share our SwsContext with the frames. Most of the time they will end
         # up using the same settings as each other, so it makes sense to cache
@@ -92,7 +88,7 @@ cdef class VideoStream(Stream):
             
             if formated_frame.ptr.pts != lib.AV_NOPTS_VALUE:
                 formated_frame.ptr.pts = lib.av_rescale_q(formated_frame.ptr.pts, 
-                                                          formated_frame.time_base_, #src 
+                                                          formated_frame.time_base, #src 
                                                           self.codec.ctx.time_base) #dest
                                 
             else:

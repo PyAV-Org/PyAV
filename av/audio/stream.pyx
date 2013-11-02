@@ -1,3 +1,4 @@
+from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport err_check
 
@@ -20,13 +21,14 @@ cdef class AudioStream(Stream):
         # These are all NULL safe.
         lib.av_free(self.frame)
         
-    cpdef decode(self, Packet packet):
+    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+
         if not self.frame:
             self.frame = lib.avcodec_alloc_frame()
 
-        cdef int done = 0
-        err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.frame, &done, &packet.struct))
-        if not done:
+        cdef int completed_frame = 0
+        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.frame, &completed_frame, packet))
+        if not completed_frame:
             return
         
         if not self.swr_proxy:
@@ -37,9 +39,6 @@ cdef class AudioStream(Stream):
         # Copy the pointers over.
         frame.ptr = self.frame
         frame.swr_proxy = self.swr_proxy
-        
-        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
-        frame.time_base_ = self.ptr.time_base
         
         # Null out ours.
         self.frame = NULL

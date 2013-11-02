@@ -22,28 +22,9 @@ cdef class Packet(object):
         )
     
     def decode(self):
-        """Decode the data in this packet.
+        """Decode the data in this packet into a list of Frames."""
+        return self.stream.decode(self)
 
-       yields frame.
-       
-       Note.
-       Some codecs will cause frames to be buffered up in the decoding process. If Packets Data
-       is NULL and size is 0 the packet will try and retrieve those frames. Context.demux will 
-       yeild a NULL Packet as its last packet.
-        """
-
-        if not self.struct.data:
-            while True:
-                frame = self.stream.decode(self)
-                if frame:
-                    yield frame
-                else:
-                    break
-        else:
-            frame = self.stream.decode(self)
-            if frame:
-                yield frame
-                
     property pts:
         def __get__(self): return self.struct.pts
     property dts:

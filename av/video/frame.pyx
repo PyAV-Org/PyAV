@@ -138,7 +138,7 @@ cdef class VideoFrame(Frame):
         
         # Copy some properties.
         frame.frame_index = self.frame_index
-        frame.time_base_ = self.time_base_
+        frame.time_base = self.time_base
         frame.ptr.pts = self.ptr.pts
         
         return frame

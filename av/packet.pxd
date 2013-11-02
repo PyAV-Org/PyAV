@@ -7,4 +7,3 @@ cdef class Packet(object):
 
     cdef readonly Stream stream
     cdef lib.AVPacket struct
-    cdef readonly bint is_null
