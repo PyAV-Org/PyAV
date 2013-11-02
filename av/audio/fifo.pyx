@@ -93,7 +93,7 @@ cdef class AudioFifo:
         frame.alloc_frame(self.channels_,self.sample_fmt_,nb_samples)
         
         ret = lib.av_audio_fifo_read(self.ptr,
-                                     <void **> frame.buffer_,
+                                     <void **> frame._buffer,
                                      nb_samples)
 
         frame.fill_frame(nb_samples)

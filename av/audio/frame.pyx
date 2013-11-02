@@ -6,26 +6,25 @@ cdef class AudioFrame(Frame):
 
     """A frame of audio."""
     
+    def __cinit__(self):
+        self.align = 1
+
     def __dealloc__(self):
         # These are all NULL safe.
-        if self.buffer_:
-            lib.av_freep(&self.buffer_[0])
-        lib.av_freep(&self.buffer_)
+        if self._buffer:
+            lib.av_freep(&self._buffer[0])
+        lib.av_freep(&self._buffer)
     
     def __repr__(self):
-        return '<%s.%s nb_samples:%d %dhz %s %s at 0x%x>' % (
+        return '<%s.%s %d samples at %dHz, %s, %s at 0x%x>' % (
             self.__class__.__module__,
             self.__class__.__name__,
             self.samples,
             self.sample_rate,
-            self.channel_layout,
-            self.sample_fmt,
+            self.layout,
+            self.format,
             id(self),
         )
-        
-    def __init__(self, *args):
-        super(AudioFrame, self).__init__(*args)
-        self.align = 1
         
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
      
@@ -39,7 +38,7 @@ cdef class AudioFrame(Frame):
         lib.avcodec_get_frame_defaults(self.ptr)
         
         err_check(samples_alloc_array_and_samples(
-            &self.buffer_, 
+            &self._buffer, 
             &linesize,
             channels,
             nb_samples,
@@ -48,7 +47,7 @@ cdef class AudioFrame(Frame):
         ))
 
         # TODO: Set channel layout.
-        self.ptr.format = <int> sample_fmt
+        self.ptr.format = <int>sample_fmt
         self.ptr.nb_samples = nb_samples
                 
         
@@ -66,7 +65,7 @@ cdef class AudioFrame(Frame):
         err_check(lib.avcodec_fill_audio_frame(self.ptr, 
                                              self.channels, 
                                              <lib.AVSampleFormat> self.ptr.format,
-                                             self.buffer_[0],
+                                             self._buffer[0],
                                              samples_size, self.align))
         
         self.buffer_size = samples_size
@@ -192,7 +191,7 @@ cdef class AudioFrame(Frame):
         def __get__(self):
             return self.ptr.sample_rate
 
-    property sample_fmt:
+    property format:
         """Audio Sample Format"""
         def __get__(self):
             result = lib.av_get_sample_fmt_name(<lib.AVSampleFormat > self.ptr.format)
@@ -206,7 +205,7 @@ cdef class AudioFrame(Frame):
         # exist in Libav! So, we must be drastic.
         def __get__(self): return lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         
-    property channel_layout:
+    property layout:
         """Audio channel layout"""
         def __get__(self):
             result = channel_layout_name(self.channels, self.ptr.channel_layout)
