@@ -158,7 +158,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     )
     
     cdef struct AVPacket:
-        
+
         int64_t pts
         int64_t dts
         uint8_t *data
@@ -168,7 +168,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int flags
         
         int duration
+
+        void (*destruct)(AVPacket*)
     
+
     cdef int avcodec_decode_video2(
         AVCodecContext *ctx,
         AVFrame *frame,
@@ -210,7 +213,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     
     cdef void av_free_packet(AVPacket*)
     cdef void av_init_packet(AVPacket*)
-    
+    cdef void av_packet_unref(AVPacket *pkt)   
+    cdef int av_copy_packet(AVPacket *dst, AVPacket *src)
+    cdef int av_dup_packet(AVPacket *pkt)
+
     cdef enum AVSubtitleType:
         SUBTITLE_NONE
         SUBTITLE_BITMAP

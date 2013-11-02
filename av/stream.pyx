@@ -33,7 +33,7 @@ cdef Stream stream_factory(Context ctx, int index):
 
 cdef class Stream(object):
     
-    def __init__(self, Context ctx, int index, bytes type=b'unknown'):
+    def __cinit__(self, Context ctx, int index, bytes type=b'unknown'):
         
         if index < 0 or index > ctx.proxy.ptr.nb_streams:
             raise ValueError('stream index out of range')
@@ -75,7 +75,56 @@ cdef class Stream(object):
         def __get__(self): return self.ptr.nb_frames
     
     cpdef decode(self, Packet packet):
-        return None
+
+        cdef Frame frame
+        cdef unsigned int frames_decoded = 0
+        cdef int data_consumed = 0
+        cdef list frames = []
+
+        cdef uint8_t *original_data = packet.struct.data
+        cdef int      original_size = packet.struct.size
+
+        while packet.struct.size > 0:
+
+            frame = self._decode_one(&packet.struct, &data_consumed)
+            if not data_consumed:
+                raise RuntimeError('no data consumed from packet')
+            if packet.struct.data:
+                packet.struct.data += data_consumed
+            packet.struct.size -= data_consumed
+
+            if frame:
+                frames_decoded += 1
+                self._setup_frame(frame)
+                frames.append(frame)
+
+        # Restore the packet.
+        packet.struct.data = original_data
+        packet.struct.size = original_size
+
+        # Some codecs will cause frames to be buffered up in the decoding process.
+        # These codecs should have a CODEC CAP_DELAY capability set.
+        # This sends a special packet with data set to NULL and size set to 0
+        # This tells the Packet Object that its the last packet    
+        if frames_decoded:
+            while True:
+                # Create a new NULL packet for every frame we try to pull out.
+                packet = Packet()
+                frame = self._decode_one(&packet.struct, &data_consumed)
+                if frame:
+                    self._setup_frame(frame)
+                    frames.append(frame)
+                else:
+                    break
+
+        return frames
+    
+    cdef _setup_frame(self, Frame frame):
+        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
+        frame.time_base = self.ptr.time_base
+
+    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+        raise NotImplementedError('base stream cannot decode packets')
 
 
 cdef class AttachmentStream(Stream):
