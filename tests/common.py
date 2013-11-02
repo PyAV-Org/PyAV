@@ -69,8 +69,8 @@ def sandboxed(*args, **kwargs):
 class TestCase(_Base):
 
     @classmethod
-    def _sandbox(cls):
-        path = os.path.join(_sandbox(), cls.__name__)
+    def _sandbox(cls, timed=True):
+        path = os.path.join(_sandbox(timed=timed), cls.__name__)
         try:
             os.makedirs(path)
         except OSError as e:
