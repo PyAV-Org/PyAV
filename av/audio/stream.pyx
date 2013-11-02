@@ -16,32 +16,25 @@ cdef class AudioStream(Stream):
     property channels:
         def __get__(self):
             return self.codec.ctx.channels
-
-    def __dealloc__(self):
-        # These are all NULL safe.
-        lib.av_free(self.frame)
         
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
 
-        if not self.frame:
-            self.frame = lib.avcodec_alloc_frame()
+        if not self.next_frame:
+            self.next_frame = AudioFrame()
 
         cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.frame, &completed_frame, packet))
+        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.next_frame.ptr, &completed_frame, packet))
         if not completed_frame:
             return
         
         if not self.swr_proxy:
             self.swr_proxy =  SwrContextProxy() 
 
-        cdef AudioFrame frame = AudioFrame()
+        cdef AudioFrame frame = self.next_frame
+        self.next_frame = None
         
         # Copy the pointers over.
-        frame.ptr = self.frame
         frame.swr_proxy = self.swr_proxy
-        
-        # Null out ours.
-        self.frame = NULL
         
         return frame
     

@@ -9,7 +9,7 @@ from av.stream cimport Stream
 cdef class AudioStream(Stream):
 
     # Hold onto the frames that we will decode until we have a full one.
-    cdef lib.AVFrame *frame
+    cdef AudioFrame next_frame
     cdef SwrContextProxy swr_proxy
     cdef AudioFifo fifo
     cdef int encoded_frame_count
