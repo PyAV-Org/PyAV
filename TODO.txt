@@ -1,3 +1,18 @@
+- Expose pixel and sample formats.
+    - Frame.format knows the frame's dimensions so that it can specify
+      the width/height of chroma planes
+    - Frame.format == "rgb24" checks against the name
+    - av.{video/audio}.format has a list which exposes them all (without parent
+      Frames dimensions)
+    - Frame.format.is_planar -> every channel is in it's own plane
+    - Frame.format.is_packed -> nearly the opposite of the above; True whenever
+      you can treat it as packed, so one channel is both packed and planar.
+
+- Expose Frame data planes individually.
+    - Frame.data is a tuple of planes.
+        Frame.data[0].channels is a tuple of channel names (if we can get that)
+        Frame.data[0] supports the buffer protocol
+    - Frame buffer protocol is plane 0, or not at all.
 
 - I don't think we are decoding right. See: http://ffmpeg.org/doxygen/trunk/doc_2examples_2decoding_encoding_8c-example.html#a59
     - We aren't feeding the same packet in multiple times
