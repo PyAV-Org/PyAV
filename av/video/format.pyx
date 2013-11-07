@@ -1,4 +1,4 @@
-cdef class Descriptor(object):
+cdef class VideoFormat(object):
 
     def __cinit__(self, bytes name, unsigned int width=0, unsigned int height=0):
         self.pix_fmt = lib.av_get_pix_fmt(name)
@@ -7,7 +7,7 @@ cdef class Descriptor(object):
         self.ptr = lib.av_pix_fmt_desc_get(self.pix_fmt)
         self.width = width
         self.height = height
-        self.components = tuple(ComponentDescriptor(self, i) for i in range(self.ptr.nb_components))
+        self.components = tuple(VideoFormatComponent(self, i) for i in range(self.ptr.nb_components))
 
     property name:
         def __get__(self):
@@ -40,9 +40,9 @@ cdef class Descriptor(object):
 
 
 
-cdef class ComponentDescriptor(object):
+cdef class VideoFormatComponent(object):
 
-    def __cinit__(self, Descriptor format, size_t index):
+    def __cinit__(self, VideoFormat format, size_t index):
         self.format = format
         self.index = index
         self.ptr = &format.ptr.comp[index]
@@ -66,5 +66,5 @@ cdef class ComponentDescriptor(object):
     property height:
         def __get__(self):
             return self.format.chroma_height() if self.is_chroma else self.format.height
-    
+
 

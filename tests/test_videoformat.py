@@ -1,11 +1,11 @@
 from .common import *
-from av.video.format import Descriptor
+from av.video.format import VideoFormat
 
 
-class TestVideoFormatDescriptor(TestCase):
+class TestVideoFormats(TestCase):
 
     def test_rgb24_inspection(self):
-        fmt = Descriptor('rgb24', 640, 480)
+        fmt = VideoFormat('rgb24', 640, 480)
         self.assertEqual(fmt.name, 'rgb24')
         self.assertEqual(len(fmt.components), 3)
         self.assertFalse(fmt.is_planar)
@@ -24,7 +24,7 @@ class TestVideoFormatDescriptor(TestCase):
             self.assertEqual(comp.height, 480)
 
     def test_yuv420p_inspection(self):
-        fmt = Descriptor('yuv420p', 640, 480)
+        fmt = VideoFormat('yuv420p', 640, 480)
         self.assertEqual(fmt.name, 'yuv420p')
         self.assertEqual(len(fmt.components), 3)
         self._test_yuv420(fmt)
@@ -49,14 +49,14 @@ class TestVideoFormatDescriptor(TestCase):
         self.assertEqual(fmt.components[2].width, 320)
 
     def test_yuva420p_inspection(self):
-        fmt = Descriptor('yuva420p', 640, 480)
+        fmt = VideoFormat('yuva420p', 640, 480)
         self.assertEqual(len(fmt.components), 4)
         self._test_yuv420(fmt)
         self.assertFalse(fmt.components[3].is_chroma)
         self.assertEqual(fmt.components[3].width, 640)
 
     def test_gray16be_inspection(self):
-        fmt = Descriptor('gray16be', 640, 480)
+        fmt = VideoFormat('gray16be', 640, 480)
         self.assertEqual(fmt.name, 'gray16be')
         self.assertEqual(len(fmt.components), 1)
         self.assertFalse(fmt.is_planar)

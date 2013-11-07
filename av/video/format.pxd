@@ -1,7 +1,7 @@
 cimport libav as lib
 
 
-cdef class Descriptor(object):
+cdef class VideoFormat(object):
 
     cdef lib.AVPixelFormat pix_fmt
     cdef lib.AVPixFmtDescriptor *ptr
@@ -13,8 +13,8 @@ cdef class Descriptor(object):
     cpdef chroma_height(self, unsigned int luma_height=?)
 
 
-cdef class ComponentDescriptor(object):
+cdef class VideoFormatComponent(object):
 
-    cdef Descriptor format
+    cdef VideoFormat format
     cdef readonly unsigned int index
     cdef lib.AVComponentDescriptor *ptr
