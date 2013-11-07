@@ -1,3 +1,12 @@
+- Expose Frame data planes individually.
+    - Frame buffer interface is the first plane.
+    - Frame.planes is a tuple of planes.
+        - Plane exposes many attributes of the underlying VideoFormatComponent
+        - Plane exposes the buffer interface with (linewidths[i] * plane.height * plane.bits / 8) bytes
+
+- av.audio.format.AudioFormat
+    - wrap around AVSampleFormat enum: http://ffmpeg.org/doxygen/1.2/samplefmt_8h.html#af9a51ca15301871723577c730b5865c5
+    - use SampleFmtInfo http://ffmpeg.org/doxygen/1.2/structSampleFmtInfo.html
 
 - I don't think we are decoding right. See: http://ffmpeg.org/doxygen/trunk/doc_2examples_2decoding_encoding_8c-example.html#a59
     - We aren't feeding the same packet in multiple times
