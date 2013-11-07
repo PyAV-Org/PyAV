@@ -28,27 +28,6 @@ cdef extern from "libavutil/avutil.h" nogil:
         AV_ROUND_NEAR_INF
         AV_ROUND_PASS_MINMAX
     
-    # See: http://ffmpeg.org/doxygen/trunk/structAVComponentDescriptor.html
-    cdef struct AVComponentDescriptor:
-        # These are bitfields, but this should generate the right C anyways.
-        unsigned int plane
-        unsigned int step_minus1
-        unsigned int offset_plus1
-        unsigned int shift
-        unsigned int depth_minus1
-
-    # See: http://ffmpeg.org/doxygen/trunk/structAVPixFmtDescriptor.html
-    cdef struct AVPixFmtDescriptor:
-        const char *name
-        uint8_t nb_components
-        uint8_t log2_chroma_w
-        uint8_t log2_chroma_h
-        uint8_t flags
-        AVComponentDescriptor comp[4]
-
-    cdef AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
-    cdef AVPixFmtDescriptor* av_pix_fmt_desc_next(AVPixFmtDescriptor *prev)
-    
     cdef int AV_ERROR_MAX_STRING_SIZE
     cdef int AVERROR_EOF
     
@@ -139,6 +118,37 @@ cdef extern from "libavutil/avutil.h" nogil:
     )
 
 cdef extern from "libavutil/pixdesc.h" nogil:
+
+
+    # See: http://ffmpeg.org/doxygen/trunk/structAVComponentDescriptor.html
+    cdef struct AVComponentDescriptor:
+        # These are bitfields, but this should generate the right C anyways.
+        unsigned int plane
+        unsigned int step_minus1
+        unsigned int offset_plus1
+        unsigned int shift
+        unsigned int depth_minus1
+
+    cdef enum AVPixFmtFlags:
+        PIX_FMT_BE
+        PIX_FMT_PAL
+        PIX_FMT_BITSTREAM
+        PIX_FMT_HWACCEL
+        PIX_FMT_PLANAR
+        PIX_FMT_RGB
+
+    # See: http://ffmpeg.org/doxygen/trunk/structAVPixFmtDescriptor.html
+    cdef struct AVPixFmtDescriptor:
+        const char *name
+        uint8_t nb_components
+        uint8_t log2_chroma_w
+        uint8_t log2_chroma_h
+        uint8_t flags
+        AVComponentDescriptor comp[4]
+
+    cdef AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
+    cdef AVPixFmtDescriptor* av_pix_fmt_desc_next(AVPixFmtDescriptor *prev)
+
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(char* name)
 
