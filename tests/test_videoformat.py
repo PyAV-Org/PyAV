@@ -19,7 +19,9 @@ class TestVideoFormats(TestCase):
             comp = fmt.components[i]
             self.assertEqual(comp.plane, 0)
             self.assertEqual(comp.bits, 8)
+            self.assertFalse(comp.is_luma)
             self.assertFalse(comp.is_chroma)
+            self.assertFalse(comp.is_alpha)
             self.assertEqual(comp.width, 640)
             self.assertEqual(comp.height, 480)
 
@@ -44,6 +46,12 @@ class TestVideoFormats(TestCase):
         self.assertFalse(fmt.components[0].is_chroma)
         self.assertTrue(fmt.components[1].is_chroma)
         self.assertTrue(fmt.components[2].is_chroma)
+        self.assertTrue(fmt.components[0].is_luma)
+        self.assertFalse(fmt.components[1].is_luma)
+        self.assertFalse(fmt.components[2].is_luma)
+        self.assertFalse(fmt.components[0].is_alpha)
+        self.assertFalse(fmt.components[1].is_alpha)
+        self.assertFalse(fmt.components[2].is_alpha)
         self.assertEqual(fmt.components[0].width, 640)
         self.assertEqual(fmt.components[1].width, 320)
         self.assertEqual(fmt.components[2].width, 320)
@@ -69,6 +77,8 @@ class TestVideoFormats(TestCase):
         comp = fmt.components[0]
         self.assertEqual(comp.plane, 0)
         self.assertEqual(comp.bits, 16)
+        self.assertTrue(comp.is_luma)
         self.assertFalse(comp.is_chroma)
         self.assertEqual(comp.width, 640)
         self.assertEqual(comp.height, 480)
+        self.assertFalse(comp.is_alpha)

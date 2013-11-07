@@ -9,8 +9,8 @@ cdef class VideoFormat(object):
 
     cdef readonly tuple components
 
-    cpdef chroma_width(self, unsigned int luma_width=?)
-    cpdef chroma_height(self, unsigned int luma_height=?)
+    cpdef chroma_width(self, int luma_width=?)
+    cpdef chroma_height(self, int luma_height=?)
 
 
 cdef class VideoFormatComponent(object):
