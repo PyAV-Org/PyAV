@@ -82,3 +82,9 @@ class TestVideoFormats(TestCase):
         self.assertEqual(comp.width, 640)
         self.assertEqual(comp.height, 480)
         self.assertFalse(comp.is_alpha)
+
+    def test_pal8_inspection(self):
+        fmt = VideoFormat('pal8', 640, 480)
+        self.assertEqual(len(fmt.components), 1)
+        self.assertTrue(fmt.has_palette)
+
