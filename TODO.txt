@@ -1,13 +1,3 @@
-- Expose pixel and sample formats.
-    - BaseFormat has most properties.
-    - Descriptor(BaseFormat) extends with chroma_width and chroma_height functions
-    - Format(BaseFormat) uses MountedComponent which has a width and height
-    - Frame.format knows the frame's dimensions so that it can specify
-      the width/height of chroma planes
-    - Frame.format == "rgb24" checks against the name
-    - av.{video/audio}.format has a list which exposes them all (without parent
-      Frames dimensions)
-
 - Expose Frame data planes individually.
     - Frame.data is a tuple of planes.
         Frame.data[0].channels is a tuple of channel names (if we can get that)
