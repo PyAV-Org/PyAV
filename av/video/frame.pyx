@@ -1,30 +1,39 @@
 from libc.string cimport memcpy
 from libc.stdlib cimport malloc, free
 cimport cpython as cpy
+from av.video.format cimport blank_video_format
 from av.utils cimport err_check
+
+
+cdef object _cinit_bypass_sentinel = object()
+cdef VideoFrame blank_video_frame():
+    """Be sure to call VideoFrame._init(...)!"""
+    return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
 
 
 cdef class VideoFrame(Frame):
 
     """A frame of video."""
-    
-    def __cinit__(self, unsigned int width=0, unsigned int height=0, bytes format=b'yuv420p'):
+
+    def __cinit__(self, unsigned int width=0, unsigned int height=0, format=b'yuv420p'):
+
+        self.ptr = lib.avcodec_alloc_frame()
+        lib.avcodec_get_frame_defaults(self.ptr)
 
         cdef lib.AVPixelFormat c_format = lib.av_get_pix_fmt(format)
         if c_format < 0:
             raise ValueError('invalid format %r' % format)
 
-        self.ptr = lib.avcodec_alloc_frame()
-        lib.avcodec_get_frame_defaults(self.ptr)
+        self._init(c_format, width, height)
 
-        self._init(width, height, c_format)
+    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height):
 
-    cdef _init(self, unsigned int width, unsigned int height, lib.AVPixelFormat format):
+        self.ptr.width = width
+        self.ptr.height = height
+        self.ptr.format = format
 
-        cdef lib.AVFrame *ptr = self.ptr
-        ptr.width = width
-        ptr.height = height
-        ptr.format = format
+        self.format = blank_video_format()
+        self.format._init(format, width, height)
 
         if width and height:
             self.buffer_size = err_check(lib.avpicture_get_size(format, width, height))

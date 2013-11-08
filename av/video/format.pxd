@@ -9,6 +9,8 @@ cdef class VideoFormat(object):
 
     cdef readonly tuple components
 
+    cdef _init(self, lib.AVPixelFormat pix_fmt, unsigned int width, unsigned int height)
+
     cpdef chroma_width(self, int luma_width=?)
     cpdef chroma_height(self, int luma_height=?)
 
@@ -18,3 +20,6 @@ cdef class VideoFormatComponent(object):
     cdef VideoFormat format
     cdef readonly unsigned int index
     cdef lib.AVComponentDescriptor *ptr
+
+
+cdef VideoFormat blank_video_format()
