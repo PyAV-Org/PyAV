@@ -14,8 +14,8 @@ cdef class AudioLayout(object):
 
 cdef class AudioChannel(object):
 
-    cdef AudioLayout layout
-    cdef int index
-
     # The channel for FFmpeg.
     cdef uint64_t channel
+    
+
+cdef AudioLayout blank_audio_layout()

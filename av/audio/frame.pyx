@@ -1,13 +1,36 @@
 from av.audio.fifo cimport AudioFifo
 from av.utils cimport err_check, samples_alloc_array_and_samples, channel_layout_name
+from av.audio.layout cimport blank_audio_layout
+from av.audio.format cimport blank_audio_format
+
+cdef object _cinit_bypass_sentinel = object()
+
+
+cdef AudioFrame blank_audio_frame():
+    return AudioFrame.__new__(AudioFrame, _cinit_bypass_sentinel)
 
 
 cdef class AudioFrame(Frame):
 
     """A frame of audio."""
     
-    def __cinit__(self):
-        self.align = 1
+    def __cinit__(self, format='s16', layout='stereo', align=True):
+
+        self.align = 1 if align else 0
+
+        if format is _cinit_bypass_sentinel:
+            return
+
+        raise NotImplementedError()
+
+    cdef _init(self):
+        self._init_properties()
+
+    cdef _init_properties(self):
+        self.layout = blank_audio_layout()
+        self.layout._init(self.ptr.channel_layout)
+        self.format = blank_audio_format()
+        self.format._init(<lib.AVSampleFormat>self.ptr.format)
 
     def __dealloc__(self):
         # These are all NULL safe.
@@ -21,20 +44,11 @@ cdef class AudioFrame(Frame):
             self.__class__.__name__,
             self.samples,
             self.rate,
-            self.layout,
-            self.format,
+            self.layout.name,
+            self.format.name,
             id(self),
         )
     
-    cdef int _get_buffer_size(self):
-        return lib.av_samples_get_buffer_size(
-            NULL,
-            self.channels,
-            self.ptr.nb_samples,
-            <lib.AVSampleFormat>self.ptr.format,
-            self.align
-        )
-
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
      
         if self.ptr:
@@ -200,27 +214,6 @@ cdef class AudioFrame(Frame):
         def __get__(self):
             return self.ptr.sample_rate
 
-    property format:
-        """Audio Sample Format"""
-        def __get__(self):
-            result = lib.av_get_sample_fmt_name(<lib.AVSampleFormat > self.ptr.format)
-            if result == NULL:
-                return None
-            return result
-        
-    property channels:
-        """Number of audio channels"""
-        # It would be great to just look at self.ptr.channels, but it doesn't
-        # exist in Libav! So, we must be drastic.
-        def __get__(self): return lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
-        
-    property layout:
-        """Audio channel layout"""
-        def __get__(self):
-            result = channel_layout_name(self.channels, self.ptr.channel_layout)
-            if result == NULL:
-                return None
-            return result
             
         
         

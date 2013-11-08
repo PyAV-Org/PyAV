@@ -5,21 +5,29 @@ cimport libav as lib
 
 cdef object _cinit_bypass_sentinel = object()
 
-cdef AudioLayout blank_audio_format():
+cdef AudioLayout blank_audio_layout():
     """Make sure to call AudioLayout._init manually!"""
     return AudioLayout.__new__(AudioLayout, _cinit_bypass_sentinel)
 
 
 cdef class AudioLayout(object):
 
-    def __init__(self, name):
-        if name is _cinit_bypass_sentinel:
+    def __init__(self, layout):
+        if layout is _cinit_bypass_sentinel:
             return
 
-        cdef uint64_t layout = lib.av_get_channel_layout(name)
-        if not layout:
-            raise ValueError('invalid channel layout %r' % name)
-        self._init(layout)
+        cdef uint64_t c_layout
+        if isinstance(layout, basestring):
+            c_layout = lib.av_get_channel_layout(layout)
+        elif isinstance(layout, int):
+            c_layout = lib.av_get_default_channel_layout(layout)
+        else:
+            raise TypeError('layout must be str or int')
+
+        if not c_layout:
+            raise ValueError('invalid channel layout %r' % layout)
+
+        self._init(c_layout)
 
     cdef _init(self, uint64_t layout):
 
@@ -50,8 +58,6 @@ cdef class AudioLayout(object):
 cdef class AudioChannel(object):
 
     def __cinit__(self, AudioLayout layout, int index):
-        self.layout = layout
-        self.index = index
         self.channel = lib.av_channel_layout_extract_channel(layout.layout, index)
 
     def __repr__(self):

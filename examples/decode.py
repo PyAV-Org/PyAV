@@ -1,3 +1,5 @@
+import array
+import argparse
 import sys
 import pprint
 
@@ -5,7 +7,16 @@ import Image
 
 from av import open, time_base
 
-video = open(sys.argv[1])
+
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument('path')
+arg_parser.add_argument('-a', '--audio', action='store_true')
+arg_parser.add_argument('-v', '--video', action='store_true')
+arg_parser.add_argument('-s', '--subs', action='store_true')
+arg_parser.add_argument('-c', '--count', type=int, default=10)
+args = arg_parser.parse_args()
+
+video = open(args.path)
 
 print 'DUMP'
 print '====='
@@ -39,39 +50,53 @@ for i, stream in enumerate(video.streams):
         print '            %s: %r' % (k, v)
 
 
-streams = [s for s in video.streams if s.type in (b'video', b'audio')]
+streams = [s for s in video.streams if
+    (s.type == 'audio' and args.audio) or
+    (s.type == 'video' and args.video) or
+    (s.type == 'subtitle' and args.subs)
+]
 
 
 frame_count = 0
 
 for i, packet in enumerate(video.demux(streams)):
     
-    print '%4d %r' % (i, packet)
-    print '    duration: %.3f' % float(packet.stream.time_base * packet.duration)
-    print '    pts: %.3f' % float(packet.stream.time_base * packet.pts)
-    print '    dts: %.3f' % float(packet.stream.time_base * packet.dts)
+    print '%02d %r' % (i, packet)
+    print '\tduration: %.3f' % float(packet.stream.time_base * packet.duration)
+    print '\tpts: %.3f' % float(packet.stream.time_base * packet.pts)
+    print '\tdts: %.3f' % float(packet.stream.time_base * packet.dts)
     
     for frame in packet.decode():
-        if packet.stream.type == 'video':
 
-            frame_count += 1
+        frame_count += 1
+
+        if packet.stream.type == 'video':
     
-            print '    decoded:', frame
-            print '               pts: %.3f' % float(packet.stream.time_base * frame.pts)
+            print '\tdecoded:', frame
+            print '\t\tpts: %.3f' % float(packet.stream.time_base * (frame.pts or 0))
         
+        elif packet.stream.type == 'audio':
+            print '\tdecoded:', frame
+            print '\t\tsamples:', frame.samples
+            print '\t\tformat:', frame.format.name
+            print '\t\tlayout:', frame.layout.name
+            print '\t\tpts: %.3f' % float(packet.stream.time_base * (frame.pts or 0))
+
         elif packet.stream.type == 'subtitle':
             
             sub = frame
 
-            print '        format:', sub.format
-            print '        start_display_time: %.3f' % float(packet.stream.time_base * sub.start_display_time)
-            print '        end_display_time: %.3f' % float(packet.stream.time_base * sub.end_display_time)
-            print '        pts: %.3f' % float(packet.stream.time_base * sub.pts)
-            print '        rects: %d' % len(sub.rects)
+            print '\t\tformat:', sub.format
+            print '\t\tstart_display_time: %.3f' % float(packet.stream.time_base * sub.start_display_time)
+            print '\t\tend_display_time: %.3f' % float(packet.stream.time_base * sub.end_display_time)
+            print '\t\tpts: %.3f' % float(packet.stream.time_base * sub.pts)
+            print '\t\trects: %d' % len(sub.rects)
             for rect in sub.rects:
-                print '            %r' % rect
+                print '\t\t\t%r' % rect
                 if rect.type == 'ass':
-                    print '                ass: %r' % rect.ass
+                    print '\t\t\t\tass: %r' % rect.ass
         
-        if frame_count > 5:
-            break
+        if args.count and frame_count > args.count:
+            exit()
+
+    print

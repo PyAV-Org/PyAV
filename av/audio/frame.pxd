@@ -4,14 +4,13 @@ cimport libav as lib
 
 from av.frame cimport Frame
 from av.audio.swrcontext cimport SwrContextProxy
+from av.audio.format cimport AudioFormat
+from av.audio.layout cimport AudioLayout
 
 
 cdef class AudioFrame(Frame):
 
-    # This is the size of the Frame.ptr.data[0] buffer, not the _buffer below.
-    cdef readonly int buffer_size
-    cdef int _get_buffer_size(self)
-    
+ 
     # For raw storage of the frame's data.
     cdef uint8_t **_buffer
 
@@ -20,9 +19,16 @@ cdef class AudioFrame(Frame):
     
     cdef SwrContextProxy swr_proxy
 
+    cdef readonly AudioLayout layout
+    cdef readonly AudioFormat format
+
+    cdef _init(self)
+    cdef _init_properties(self)
 
     cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples)
     cdef fill_frame(self, int nb_samples)
 
     cpdef resample(self, bytes channel_layout, bytes sample_fmt, int sample_rate)
-    
+
+
+cdef AudioFrame blank_audio_frame()
