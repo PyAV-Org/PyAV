@@ -13,6 +13,8 @@ cdef class VideoPlane(object):
         else:
             raise RuntimeError('could not find plane %d of %r' % (index, frame.format))
 
+        self.buffer_size = self.frame.ptr.linesize[self.index] * self.component.height
+
     property width:
         def __get__(self):
             return self.component.width
@@ -25,15 +27,10 @@ cdef class VideoPlane(object):
         def __get__(self):
             return self.frame.ptr.linesize[self.index]
 
-    property buffer_size:
-        def __get__(self):
-            return self.frame.ptr.linesize[self.index] * self.component.height
-
     def update_from_string(self, bytes input):
         if len(input) != self.buffer_size:
             raise ValueError('got %d bytes; need %d bytes' % (len(input), self.buffer_size))
-        memcpy(<void*>self.ptr.data[0], <void*><char*>input, self.buffer_size)
-
+        memcpy(<void*>self.frame.ptr.data[self.index], <void*><char*>input, self.buffer_size)
 
     # Legacy buffer support. For `buffer` and PIL.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
@@ -46,13 +43,13 @@ cdef class VideoPlane(object):
     def __getreadbuffer__(self, Py_ssize_t index, void **data):
         if index:
             raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = <void*>self.ptr.data[0]
+        data[0] = <void*>self.frame.ptr.data[self.index]
         return <Py_ssize_t>self.buffer_size
 
     def __getwritebuffer__(self, Py_ssize_t index, void **data):
         if index:
             raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = <void*>self.ptr.data[0]
+        data[0] = <void*>self.frame.ptr.data[self.index]
         return <Py_ssize_t>self.buffer_size
 
     # PEP 3118 buffers. For `memoryviews`.
@@ -61,7 +58,7 @@ cdef class VideoPlane(object):
 
     def __getbuffer__(self, Py_buffer *view, int flags):
 
-        view.buf = <void*>self.ptr.data[0]
+        view.buf = <void*>self.frame.ptr.data[self.index]
         view.len = <Py_ssize_t>self.buffer_size
         view.readonly = 0
         view.format = NULL

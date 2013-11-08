@@ -8,6 +8,9 @@ cdef class VideoPlane(object):
     cdef int index
     cdef VideoFormatComponent component
 
+    # Common properties
+    cdef readonly size_t buffer_size
+    
     # For PEP 3118 buffer protocol.
     cdef Py_ssize_t _buffer_shape[3]
     cdef Py_ssize_t _buffer_strides[3]
