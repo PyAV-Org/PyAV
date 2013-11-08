@@ -1,51 +1,19 @@
-- Expose Frame data planes individually.
-    - Frame buffer interface is the first plane.
-    - Frame.planes is a tuple of planes.
-        - Plane exposes many attributes of the underlying VideoFormatComponent
-        - Plane exposes the buffer interface with (linewidths[i] * plane.height * plane.bits / 8) bytes
+- VideoPlane.array_format could be a format string for array.array
+- VideoPlane.update(input_)
+    And then it tries if it is a buffer, memoryview, bytes, etc..
 
 - av.audio.format.AudioFormat
     - wrap around AVSampleFormat enum: http://ffmpeg.org/doxygen/1.2/samplefmt_8h.html#af9a51ca15301871723577c730b5865c5
     - use SampleFmtInfo http://ffmpeg.org/doxygen/1.2/structSampleFmtInfo.html
 
-- I don't think we are decoding right. See: http://ffmpeg.org/doxygen/trunk/doc_2examples_2decoding_encoding_8c-example.html#a59
-    - We aren't feeding the same packet in multiple times
-    - We may not be pulling buffered frames (via empty Packets) properly
-    - Waiting until the end of a demux to yield a null packet could be very
-      memory intensive, and also feels rather hacky to me.
-    - codec or packet or frame is reference counted or unsafe. Look into this.
-    - Should:
-        - demuxitems() -> generator of (stream, packet) pairs
-        - demux -> generator of packets without null packet
-        - decode -> generator of frames, automatically checking for buffered
-          frames (by using a null packet)
-            - this requires us to have access to both the packet and stream
-              internals; the generator should be on the stream!
-                - Packet.decode() forwards to Stream.decode()
-                - Stream.decode keeps calling Stream._decode_one(lib.AVPacket)
-                    and handles the null packet
-                - subclasses of Stream implement _decode_one
-                    - we need to increment to data pointer??
-                        len = avcodec_decode_audio4(c, decoded_frame, &got_frame, &avpkt)
-                        avpkt.size -= len;
-                        avpkt.data += len;
-                        # since the data is stored elsewhere, it is safe to do
-                        # this
-
-        - encode -> generator of packets, automatically checking buffer)
-        - mux -> take a single packet, or an iterator of them:
-            context.mux(stream.encode(frame))
+- Stream.encode(...) -> list of packets, automatically checking buffer)
+- Context.mux(...) -> take a single packet, or an iterator of them:
+        context.mux(stream.encode(frame))
 
 - Context.add_stream(codec_name, frame_rate) -> Context.streams.append(Stream(codec_name, frame_rate))?
 
-- VideoFrame(width=0, height=0, format='rgb24')
-    - VideoFrame.update(input_)
-        And then it tries if it is a buffer, memoryview, bytes, etc..
-
-- Stream.encode(frame) -> list_of_packets
-- Context.mux(list_of_packets)
-- SwsContext -> Scaler
-- SwrContext -> Resampler
+- SwsContext -> av.video.rescaler.Rescaler
+- SwrContext -> av.autio.resample.Resampler
 
 - `make test-assets` -> into tests/assets/
 - TestCase.rms_diff(one, two) -> Root-mean-square diff

@@ -1,13 +1,45 @@
+from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
+
+
+cdef object _cinit_bypass_sentinel = object()
+
+cdef VideoFormat blank_video_format():
+    """Make sure to call VideoFormat._init manually!"""
+    return VideoFormat.__new__(VideoFormat, _cinit_bypass_sentinel)
+
+
 cdef class VideoFormat(object):
 
-    def __cinit__(self, bytes name, unsigned int width=0, unsigned int height=0):
-        self.pix_fmt = lib.av_get_pix_fmt(name)
-        if self.pix_fmt < 0:
+    def __cinit__(self, name, width=0, height=0):
+
+        if name is _cinit_bypass_sentinel:
+            return
+
+        cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name)
+        if pix_fmt < 0:
             raise ValueError('not a pixel format: %r' % name)
-        self.ptr = lib.av_pix_fmt_desc_get(self.pix_fmt)
+        self._init(pix_fmt, width, height)
+
+    cdef _init(self, lib.AVPixelFormat pix_fmt, unsigned int width, unsigned int height):
+
+        self.pix_fmt = pix_fmt
+        self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-        self.components = tuple(VideoFormatComponent(self, i) for i in range(self.ptr.nb_components))
+
+        self.components = PyTuple_New(self.ptr.nb_components)
+        cdef VideoFormatComponent c
+        for i in range(self.ptr.nb_components):
+            c = VideoFormatComponent(self, i)
+
+            # We are constructing this tuple manually, but since Cython does
+            # not understand reference stealing we must manually Py_INCREF
+            # so that when Cython Py_DECREFs it doesn't release our object.
+            Py_INCREF(c)
+            PyTuple_SET_ITEM(self.components, i, c)
+
+    def __repr__(self):
+        return '<av.VideoFormat %s, %d by %d>' % (self.name, self.width, self.height)
 
     property name:
         """Canonical name of the pixel format."""
