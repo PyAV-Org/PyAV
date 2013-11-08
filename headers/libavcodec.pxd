@@ -106,6 +106,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef int avcodec_is_open(AVCodecContext *ctx )
     cdef int avcodec_close(AVCodecContext *ctx)
     
+    cdef int AV_NUM_DATA_POINTERS
+    
     # See: http://ffmpeg.org/doxygen/trunk/structAVPicture.html
     cdef struct AVPicture:
         uint8_t **data

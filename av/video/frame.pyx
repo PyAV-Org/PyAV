@@ -1,6 +1,6 @@
-from libc.string cimport memcpy
-from libc.stdlib cimport malloc, free
-cimport cpython as cpy
+from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
+
+from av.video.plane cimport VideoPlane
 from av.video.format cimport blank_video_format
 from av.utils cimport err_check
 
@@ -35,28 +35,48 @@ cdef class VideoFrame(Frame):
         self.format = blank_video_format()
         self.format._init(format, width, height)
 
-        if width and height:
-            self.buffer_size = err_check(lib.avpicture_get_size(format, width, height))
-        else:
-            self.buffer_size = 0
+        cdef int buffer_size
+        cdef int plane_count = 0
+        cdef VideoPlane p
 
-        if self.buffer_size:
+        if width and height:
             
-            # Cleanup the old one.
+            # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
 
-            self._buffer = <uint8_t *>lib.av_malloc(self.buffer_size)
+            # Get a new one.
+            buffer_size = err_check(lib.avpicture_get_size(format, width, height))
+            self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
             if not self._buffer:
                 raise MemoryError("cannot allocate VideoFrame buffer")
 
             # Attach the AVPicture to our buffer.
             lib.avpicture_fill(
-                    <lib.AVPicture *>ptr,
+                    <lib.AVPicture *>self.ptr,
                     self._buffer,
                     format,
                     width,
                     height
             )
+
+            # Construct the planes.
+            for i in range(lib.AV_NUM_DATA_POINTERS):
+                if self.ptr.data[i]:
+                    plane_count = i + 1
+                else:
+                    break
+            self.planes = PyTuple_New(plane_count)
+            for i in range(plane_count):
+                p = VideoPlane(self, i)
+                # We are constructing this tuple manually, but since Cython does
+                # not understand reference stealing we must manually Py_INCREF
+                # so that when Cython Py_DECREFs it doesn't release our object.
+                Py_INCREF(p)
+                PyTuple_SET_ITEM(self.planes, i, p)
+
+        else:
+            self.planes = ()
+
 
     def __dealloc__(self):
         lib.av_freep(&self._buffer)
@@ -131,8 +151,8 @@ cdef class VideoFrame(Frame):
         
         # Create a new VideoFrame
         
-        cdef VideoFrame frame = VideoFrame()
-        frame._init(width, height, dst_format)
+        cdef VideoFrame frame = blank_video_frame()
+        frame._init(dst_format, width, height)
         
         # Finally Scale the image
         lib.sws_scale(
@@ -159,78 +179,15 @@ cdef class VideoFrame(Frame):
     property height:
         """Height of the image, in pixels."""
         def __get__(self): return self.ptr.height
-    
-    property format:
-        """Pixel format of the image.
-
-        :rtype: :class:`bytes` or ``None``.
-
-        See ``ffmpeg -pix_fmts`` for all formats.
-
-        >>> frame.format
-        'yuv420p'
-
-        """
-        def __get__(self):
-            result = lib.av_get_pix_fmt_name(<lib.AVPixelFormat>self.ptr.format)
-            if result == NULL:
-                return None
-            return result
         
     property key_frame:
         """Is this frame a key frame?"""
         def __get__(self): return self.ptr.key_frame
 
-    def update_from_string(self, bytes input):
-        if len(input) != self.buffer_size:
-            raise ValueError('got %d bytes; need %d bytes' % (len(input), self.buffer_size))
-        memcpy(<void*>self.ptr.data[0], <void*><char*>input, self.buffer_size)
-
     def to_image(self):
         import Image
-        return Image.frombuffer("RGB", (self.width, self.height), self.to_rgb(), "raw", "RGB", 0, 1)
+        return Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
 
 
-    # Legacy buffer support. For `buffer` and PIL.
-    # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
-
-    def __getsegcount__(self, Py_ssize_t *len_out):
-        if len_out != NULL:
-            len_out[0] = <Py_ssize_t>self.buffer_size
-        return 1
-
-    def __getreadbuffer__(self, Py_ssize_t index, void **data):
-        if index:
-            raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = <void*>self.ptr.data[0]
-        return <Py_ssize_t>self.buffer_size
-
-    def __getwritebuffer__(self, Py_ssize_t index, void **data):
-        if index:
-            raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = <void*>self.ptr.data[0]
-        return <Py_ssize_t>self.buffer_size
-
-    # PEP 3118 buffers. For `memoryviews`.
-    # We cannot supply __releasebuffer__ or PIL will no longer think it can
-    # take a read-only buffer. How silly.
-
-    def __getbuffer__(self, Py_buffer *view, int flags):
-
-        view.buf = <void*>self.ptr.data[0]
-        view.len = <Py_ssize_t>self.buffer_size
-        view.readonly = 0
-        view.format = NULL
-        view.ndim = 1
-        view.itemsize = 1
-
-        # We must hold onto these arrays, and share them amoung all buffers.
-        # Please treat a Frame as immutable, okay?
-        self._buffer_shape[0] = self.buffer_size
-        view.shape = &self._buffer_shape[0]
-        self._buffer_strides[0] = view.itemsize
-        view.strides = &self._buffer_strides[0]
-        self._buffer_suboffsets[0] = -1
-        view.suboffsets = &self._buffer_suboffsets[0]
 
 
