@@ -8,21 +8,18 @@ class TestVideoFrameBasics(TestCase):
         self.assertEqual(frame.width, 0)
         self.assertEqual(frame.height, 0)
         self.assertEqual(frame.format.name, 'yuv420p')
-        self.assertEqual(len(frame.planes), 0)
 
     def test_manual_yuv_constructor(self):
         frame = VideoFrame(640, 480, 'yuv420p')
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, 'yuv420p')
-        self.assertEqual(len(frame.planes), 3)
 
     def test_manual_rgb_constructor(self):
         frame = VideoFrame(640, 480, 'rgb24')
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, 'rgb24')
-        self.assertEqual(len(frame.planes), 1)
 
     def xtest_buffer(self):
         frame = VideoFrame(640, 480, 'rgb24')
@@ -61,3 +58,31 @@ class TestVideoFrameTransforms(TestCase):
         img = frame.to_image()
         img.save(self.sandboxed('lenna-roundtrip.jpg'))
         self.assertImagesAlmostEqual(self.lenna, img)
+
+
+class TestVideoFramePlanes(TestCase):
+
+    def test_null_planes(self):
+        frame = VideoFrame() # yuv420p
+        self.assertEqual(len(frame.planes), 0)
+
+    def test_yuv420p_planes(self):
+        frame = VideoFrame(640, 480, 'yuv420p')
+        self.assertEqual(len(frame.planes), 3)
+        self.assertEqual(frame.planes[0].width, 640)
+        self.assertEqual(frame.planes[0].height, 480)
+        self.assertEqual(frame.planes[0].line_size, 640)
+        self.assertEqual(frame.planes[0].buffer_size, 640 * 480)
+        for i in xrange(1, 3):
+            self.assertEqual(frame.planes[i].width, 320)
+            self.assertEqual(frame.planes[i].height, 240)
+            self.assertEqual(frame.planes[i].line_size, 320)
+            self.assertEqual(frame.planes[i].buffer_size, 320 * 240)
+
+    def test_rgb24_planes(self):
+        frame = VideoFrame(640, 480, 'rgb24')
+        self.assertEqual(len(frame.planes), 1)
+        self.assertEqual(frame.planes[0].width, 640)
+        self.assertEqual(frame.planes[0].height, 480)
+        self.assertEqual(frame.planes[0].line_size, 640 * 3)
+        self.assertEqual(frame.planes[0].buffer_size, 640 * 480 * 3)

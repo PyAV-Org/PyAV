@@ -6,8 +6,28 @@ cdef class VideoPlane(object):
     def __cinit__(self, VideoFrame frame, int index):
         self.frame = frame
         self.index = index
-        cdef int height = 1 # XXX
-        self.buffer_size = frame.ptr.linesize[index] * height
+        for i in range(frame.format.ptr.nb_components):
+            if frame.format.ptr.comp[i].plane == index:
+                self.component = frame.format.components[i]
+                break
+        else:
+            raise RuntimeError('could not find plane %d of %r' % (index, frame.format))
+
+    property width:
+        def __get__(self):
+            return self.component.width
+
+    property height:
+        def __get__(self):
+            return self.component.height
+
+    property line_size:
+        def __get__(self):
+            return self.frame.ptr.linesize[self.index]
+
+    property buffer_size:
+        def __get__(self):
+            return self.frame.ptr.linesize[self.index] * self.component.height
 
     def update_from_string(self, bytes input):
         if len(input) != self.buffer_size:
