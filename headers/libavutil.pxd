@@ -189,21 +189,24 @@ cdef extern from "libavutil/samplefmt.h" nogil:
         
     
 cdef extern from "libavutil/audioconvert.h" nogil:
-    cdef char* av_get_channel_name(uint64_t channel)
     
+    # Layouts.
     cdef uint64_t av_get_channel_layout(char* name)
-    
     cdef int av_get_channel_layout_nb_channels(uint64_t channel_layout)
-    
-    # Returns default channel layout for a given number of channels
     cdef int64_t av_get_default_channel_layout(int nb_channels)
-    
     cdef void av_get_channel_layout_string(
         char* buff,
         int buf_size,
         int nb_channels,
         uint64_t channel_layout
     )
+
+    # Channels.
+    cdef uint64_t av_channel_layout_extract_channel(uint64_t layout, int index)
+    cdef char* av_get_channel_name(uint64_t channel)
+    cdef char* av_get_channel_description(uint64_t channel)
+
+    
     
     
 cdef extern from "libavutil/audio_fifo.h" nogil:
