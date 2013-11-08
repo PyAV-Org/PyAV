@@ -16,18 +16,22 @@ cdef class VideoPlane(object):
         self.buffer_size = self.frame.ptr.linesize[self.index] * self.component.height
 
     property width:
+        """Pixel width of this plane."""
         def __get__(self):
             return self.component.width
 
     property height:
+        """Pixel height of this plane."""
         def __get__(self):
             return self.component.height
 
     property line_size:
+        """Bytes per horizontal line in this plane."""
         def __get__(self):
             return self.frame.ptr.linesize[self.index]
 
     def update_from_string(self, bytes input):
+        """Replace the data in this plane with the given string."""
         if len(input) != self.buffer_size:
             raise ValueError('got %d bytes; need %d bytes' % (len(input), self.buffer_size))
         memcpy(<void*>self.frame.ptr.data[self.index], <void*><char*>input, self.buffer_size)
