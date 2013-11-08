@@ -1,8 +1,12 @@
 - Expose Frame data planes individually.
-    - Frame buffer interface is the first plane.
-    - Frame.planes is a tuple of planes.
-        - Plane exposes many attributes of the underlying VideoFormatComponent
+    - Frame no longer directly supports the buffer interface; we still keep
+      some convenience methods such as to_image, but to_ndarray and to_bytes
+      may not exist since they won't always work
+    - Frame.planes is a tuple of Plane.
+        - Plane exposes many attributes of the underlying (Audio|Video)Format(s)
+            - match where FormatComponent.plane == Plane.index
         - Plane exposes the buffer interface with (linewidths[i] * plane.height * plane.bits / 8) bytes
+        - Plane.array_format could be a format string for array.array
 
 - av.audio.format.AudioFormat
     - wrap around AVSampleFormat enum: http://ffmpeg.org/doxygen/1.2/samplefmt_8h.html#af9a51ca15301871723577c730b5865c5
