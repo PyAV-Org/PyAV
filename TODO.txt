@@ -13,6 +13,30 @@ The Little Steps
 ================
 
 
+- Uniform time representation: fraction or av.utils.Rational
+  
+  1) av.utils.Rational:
+
+    - Needs: __abs__, __add__, __div__, __eq__, __floordiv__, __le__, __lt__,
+      __mod__, __mul__, __neg__, __pos__, __pow__, __radd__, __rdiv__, __rfloordiv__,
+      __rmod__, __rmul__, __rpow__, __rtruediv__, __truediv__, __trunc__,
+      denominator, numerator
+
+    - Likely doable as a Mixin.
+    - Is the extra little bit of speed worth the trouble?
+
+  2) fraction.Fraction:
+
+    - Slower:
+      $ python -m timeit -s 'from fractions import Fraction; a = Fraction(1, 2)' 'b = a * 1234567890'
+      100000 loops, best of 3: 9.95 usec per loop
+
+
+  - I think that the Python and C objects will not have synchonized time stamps
+    since the user will need to set the time on the frame without a stream. So
+    either (1) the user needs to manage both the stream time_base AND the frame
+    times, or (2) the Frame.time needs to be compatible with the stream time_base
+
 - Replace AudioFrame.resample with AudioResampler
 
     - make examples.decode use it for audio
