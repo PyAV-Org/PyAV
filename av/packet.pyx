@@ -14,8 +14,7 @@ cdef class Packet(object):
         lib.av_free_packet(&self.struct)
     
     def __repr__(self):
-        return '<%s.%s of %s at 0x%x>' % (
-            self.__class__.__module__,
+        return '<av.%s of %s at 0x%x>' % (
             self.__class__.__name__,
             self.stream,
             id(self),

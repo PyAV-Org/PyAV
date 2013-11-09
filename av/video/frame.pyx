@@ -66,8 +66,7 @@ cdef class VideoFrame(Frame):
         lib.av_freep(&self._buffer)
 
     def __repr__(self):
-        return '<%s.%s %s %dx%d at 0x%x>' % (
-            self.__class__.__module__,
+        return '<av.%s %s %dx%d at 0x%x>' % (
             self.__class__.__name__,
             self.format.name,
             self.width,

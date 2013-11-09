@@ -44,7 +44,7 @@ cdef class AudioLayout(object):
             PyTuple_SET_ITEM(self.channels, i, c)
 
     def __repr__(self):
-        return '<av.audio.AudioLayout %r>' % self.name
+        return '<av.%s %r>' % (self.__class__.__name__, self.name)
 
     property name:
         """The canonical name of the audio layout."""
@@ -61,7 +61,7 @@ cdef class AudioChannel(object):
         self.channel = lib.av_channel_layout_extract_channel(layout.layout, index)
 
     def __repr__(self):
-        return '<av.audio.AudioChannel %r (%s)>' % (self.name, self.description)
+        return '<av.%s %r (%s)>' % (self.__class__.__name__, self.name, self.description)
 
     property name:
         """The canonical name of the audio channel."""

@@ -8,6 +8,9 @@ cdef class Plane(object):
         self.index = index
         self.buffer_size = frame.ptr.linesize[index]
 
+    def __repr__(self):
+        return '<av.%s at 0x%x>' % (self.__class__.__name__, id(self))
+    
     property line_size:
         """Bytes per horizontal line in this plane."""
         def __get__(self):

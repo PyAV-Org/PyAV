@@ -39,7 +39,7 @@ cdef class VideoFormat(object):
             PyTuple_SET_ITEM(self.components, i, c)
 
     def __repr__(self):
-        return '<av.VideoFormat %s, %dx%d>' % (self.name, self.width, self.height)
+        return '<av.%s %s, %dx%d>' % (self.__class__.__name__, self.name, self.width, self.height)
 
     property name:
         """Canonical name of the pixel format."""
