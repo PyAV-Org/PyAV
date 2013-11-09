@@ -1,7 +1,7 @@
 from av.audio.fifo cimport AudioFifo
-from av.utils cimport err_check, samples_alloc_array_and_samples, channel_layout_name
 from av.audio.layout cimport blank_audio_layout
 from av.audio.format cimport blank_audio_format
+from av.utils cimport err_check
 
 cdef object _cinit_bypass_sentinel = object()
 
@@ -14,17 +14,55 @@ cdef class AudioFrame(Frame):
 
     """A frame of audio."""
     
-    def __cinit__(self, format='s16', layout='stereo', align=True):
-
-        self.align = 1 if align else 0
-
+    def __cinit__(self, format='s16', layout='stereo', samples=0, align=True):
         if format is _cinit_bypass_sentinel:
             return
-
         raise NotImplementedError()
 
-    cdef _init(self):
+    cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align):
+
+        self.align = align
+        self.ptr.nb_samples = nb_samples
+        self.ptr.format = <int>format
+        self.ptr.channel_layout = layout
+
         self._init_properties()
+        
+        cdef int nb_channels = lib.av_get_channel_layout_nb_channels(layout)
+        cdef int nb_planes
+        if lib.av_sample_fmt_is_planar(format):
+            nb_planes = nb_channels
+        else:
+            nb_planes = 1
+
+
+        cdef size_t buffer_size
+        if nb_channels and nb_samples:
+            
+            # Cleanup the old buffer.
+            lib.av_freep(&self._buffer)
+
+            # Get a new one.
+            buffer_size = err_check(lib.av_samples_get_buffer_size(
+                NULL,
+                nb_channels,
+                nb_samples,
+                format,
+                align,
+            ))
+            self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
+            if not self._buffer:
+                raise MemoryError("cannot allocate AudioFrame buffer")
+
+            # Connect the buffer to the frame fields.
+            err_check(lib.avcodec_fill_audio_frame(
+                self.ptr, 
+                self.channels, 
+                <lib.AVSampleFormat>self.ptr.format,
+                self._buffer,
+                buffer_size,
+                self.align
+            ))
 
     cdef _init_properties(self):
         self.layout = blank_audio_layout()
@@ -33,9 +71,6 @@ cdef class AudioFrame(Frame):
         self.format._init(<lib.AVSampleFormat>self.ptr.format)
 
     def __dealloc__(self):
-        # These are all NULL safe.
-        if self._buffer:
-            lib.av_freep(&self._buffer[0])
         lib.av_freep(&self._buffer)
     
     def __repr__(self):
@@ -49,58 +84,15 @@ cdef class AudioFrame(Frame):
             id(self),
         )
     
-    cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples):
-     
-        if self.ptr:
-            return
-
-        cdef int ret
-        cdef int linesize
-        
-        self.ptr = lib.avcodec_alloc_frame()
-        lib.avcodec_get_frame_defaults(self.ptr)
-        
-        err_check(samples_alloc_array_and_samples(
-            &self._buffer, 
-            &linesize,
-            channels,
-            nb_samples,
-            sample_fmt,
-            self.align,
-        ))
-
-        # TODO: Set channel layout.
-        self.ptr.format = <int>sample_fmt
-        self.ptr.nb_samples = nb_samples
-                
-        
-    cdef fill_frame(self, int nb_samples):
-        if not self.ptr:
-            raise MemoryError("Frame Not allocated")
-        
-        self.ptr.nb_samples = nb_samples
-
-        samples_size = lib.av_samples_get_buffer_size(NULL,
-                                                       self.channels,
-                                                       self.ptr.nb_samples,
-                                                       <lib.AVSampleFormat>self.ptr.format,self.align)
-        
-        err_check(lib.avcodec_fill_audio_frame(self.ptr, 
-                                             self.channels, 
-                                             <lib.AVSampleFormat> self.ptr.format,
-                                             self._buffer[0],
-                                             samples_size, self.align))
-        
-        self.buffer_size = samples_size
-        
+   
     def set_silence(self, int offset, int nb_samples):
-        
         err_check(lib.av_samples_set_silence(self.ptr.extended_data,
                                              offset,
                                              nb_samples,
                                              self.channels,
                                              <lib.AVSampleFormat>self.ptr.format))
     
+
     cpdef resample(self, bytes channel_layout, bytes sample_fmt, int out_sample_rate):
         
         

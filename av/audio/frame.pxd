@@ -10,11 +10,10 @@ from av.audio.layout cimport AudioLayout
 
 cdef class AudioFrame(Frame):
 
- 
-    # For raw storage of the frame's data.
-    cdef uint8_t **_buffer
+    # For raw storage of the frame's data; don't ever touch this.
+    cdef uint8_t *_buffer
 
-    cdef int align
+    cdef bint align
     cdef readonly int frame_index
     
     cdef SwrContextProxy swr_proxy
@@ -22,11 +21,9 @@ cdef class AudioFrame(Frame):
     cdef readonly AudioLayout layout
     cdef readonly AudioFormat format
 
-    cdef _init(self)
+    cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align)
     cdef _init_properties(self)
 
-    cdef alloc_frame(self, int channels, lib.AVSampleFormat sample_fmt, int nb_samples)
-    cdef fill_frame(self, int nb_samples)
 
     cpdef resample(self, bytes channel_layout, bytes sample_fmt, int sample_rate)
 
