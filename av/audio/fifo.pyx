@@ -1,4 +1,4 @@
-from av.utils cimport err_check, channel_layout_name
+from av.utils cimport err_check
 
 
 cdef class AudioFifo:
@@ -11,8 +11,7 @@ cdef class AudioFifo:
         lib.av_audio_fifo_free(self.ptr)
         
     def __repr__(self):
-        return '<%s.%s nb_samples:%s %dhz %s %s at 0x%x>' % (
-            self.__class__.__module__,
+        return '<av.%s nb_samples:%s %dhz %s %s at 0x%x>' % (
             self.__class__.__name__,
             self.samples,
             self.sample_rate,
@@ -113,7 +112,8 @@ cdef class AudioFifo:
             self.pts_offset -= nb_samples
         
         return frame
-        
+    
+    '''
     property samples:
         """Number of audio samples (per channel) """
         def __get__(self):
@@ -143,3 +143,4 @@ cdef class AudioFifo:
             if result == NULL:
                 return None
             return result
+    '''
