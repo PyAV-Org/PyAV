@@ -2,6 +2,7 @@ import array
 import argparse
 import sys
 import pprint
+import subprocess
 
 import Image
 
@@ -13,8 +14,13 @@ arg_parser.add_argument('path')
 arg_parser.add_argument('-a', '--audio', action='store_true')
 arg_parser.add_argument('-v', '--video', action='store_true')
 arg_parser.add_argument('-s', '--subs', action='store_true')
-arg_parser.add_argument('-c', '--count', type=int, default=10)
+arg_parser.add_argument('-d', '--data', action='store_true')
+arg_parser.add_argument('-p', '--play', action='store_true')
+arg_parser.add_argument('-c', '--count', type=int, default=5)
 args = arg_parser.parse_args()
+
+
+proc = None
 
 video = open(args.path)
 
@@ -98,7 +104,27 @@ for i, packet in enumerate(video.demux(streams)):
                 if rect.type == 'ass':
                     print '\t\t\t\tass: %r' % rect.ass
         
-        if args.count and frame_count > args.count:
+        if args.play:
+            if not proc:
+                cmd = ['ffplay',
+                    '-f', 's16le',
+                    '-ar', str(packet.stream.codec.rate),
+                    '-vn','-',
+                ]
+                print '***', ' '.join(cmd)
+                proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+            proc.stdin.write(frame.planes[0].to_bytes())
+
+        if args.data:
+            print '\t\tdata'
+            for i, plane in enumerate(frame.planes or ()):
+                data = plane.to_bytes()
+                print '\t\t\tPLANE %d, %d bytes' % (i, len(data))
+                data = data.encode('hex')
+                for i in xrange(0, len(data), 128):
+                    print '\t\t\t%s' % data[i:i + 128]
+
+        if args.count and frame_count >= args.count:
             exit()
 
     print
