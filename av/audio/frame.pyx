@@ -1,15 +1,19 @@
 from av.audio.fifo cimport AudioFifo
-from av.audio.layout cimport blank_audio_layout
-from av.audio.format cimport blank_audio_format
+from av.audio.format cimport get_audio_format
+from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
-
 from av.utils cimport err_check
 
 
-cdef object _cinit_bypass_sentinel = object()
+cdef object _cinit_bypass_sentinel
 
+cdef AudioFrame alloc_audio_frame():
+    """Get a mostly uninitialized AudioFrame.
 
-cdef AudioFrame blank_audio_frame():
+    You MUST call AudioFrame._init(...) or AudioFrame._init_properties()
+    before exposing to the user.
+
+    """
     return AudioFrame.__new__(AudioFrame, _cinit_bypass_sentinel)
 
 
@@ -60,10 +64,8 @@ cdef class AudioFrame(Frame):
         self._init_properties()
 
     cdef _init_properties(self):
-        self.layout = blank_audio_layout()
-        self.layout._init(self.ptr.channel_layout)
-        self.format = blank_audio_format()
-        self.format._init(<lib.AVSampleFormat>self.ptr.format)
+        self.layout = get_audio_layout(self.ptr.channel_layout)
+        self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
 
         self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1

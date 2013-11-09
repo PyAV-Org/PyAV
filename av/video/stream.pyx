@@ -1,7 +1,7 @@
 from libc.stdint cimport int64_t
 
 from av.frame cimport Frame
-from av.video.frame cimport blank_video_frame
+from av.video.frame cimport alloc_video_frame
 from av.packet cimport Packet
 from av.utils cimport err_check
 
@@ -17,7 +17,7 @@ cdef class VideoStream(Stream):
         
         # Create a frame if we don't have one ready.
         if not self.next_frame:
-            self.next_frame = blank_video_frame()
+            self.next_frame = alloc_video_frame()
 
         # Decode video into the frame.
         cdef int completed_frame = 0

@@ -2,19 +2,15 @@ cimport libav as lib
 
 from av.utils cimport avrational_to_faction, to_avrational
 from av.stream cimport Stream
-from av.video.format cimport blank_video_format
+from av.video.format cimport get_video_format
 
 
 cdef class VideoCodec(Codec):
     
     def __cinit__(self, Stream stream):
-        
         if not self.ctx:
             return
-
-        # Build the VideoFormat.
-        self.format = blank_video_format()
-        self.format._init(<lib.AVPixelFormat>self.ctx.pix_fmt, self.ctx.width, self.ctx.height)
+        self.format = get_video_format(<lib.AVPixelFormat>self.ctx.pix_fmt, self.ctx.width, self.ctx.height)
 
     def __repr__(self):
         return '<av.%s %s, %s %dx%d at 0x%x>' % (

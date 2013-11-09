@@ -1,4 +1,4 @@
-from av.audio.frame cimport blank_audio_frame
+from av.audio.frame cimport alloc_audio_frame
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport err_check
@@ -21,7 +21,7 @@ cdef class AudioStream(Stream):
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
 
         if not self.next_frame:
-            self.next_frame = blank_audio_frame()
+            self.next_frame = alloc_audio_frame()
 
         cdef int completed_frame = 0
         data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.next_frame.ptr, &completed_frame, packet))

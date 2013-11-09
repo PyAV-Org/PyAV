@@ -1,8 +1,12 @@
-cdef object _cinit_bypass_sentinel = object()
 
-cdef AudioFormat blank_audio_format():
-    """Make sure to call AudioFormat._init manually!"""
-    return AudioFormat.__new__(AudioFormat, _cinit_bypass_sentinel)
+
+cdef object _cinit_bypass_sentinel
+
+cdef AudioFormat get_audio_format(lib.AVSampleFormat c_format):
+    """Get an AudioFormat without going through a string."""
+    cdef AudioFormat format = AudioFormat.__new__(AudioFormat, _cinit_bypass_sentinel)
+    format._init(c_format)
+    return format
 
 
 cdef class AudioFormat(object):

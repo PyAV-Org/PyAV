@@ -12,6 +12,7 @@ The Big Plan
 The Little Steps
 ================
 
+
 - Replace AudioFrame.resample with AudioResampler
 
     - make examples.decode use it for audio
@@ -35,6 +36,10 @@ The Little Steps
         .write(frame)
         .read(samples=0) -> AudioFrame of specified samples or ALL the samples
 
+- Context use a StringIO or similar to write into/from?
+    - Create wrapper around AVIOContext for arbitrary Python object with read/write
+      methods.
+
 - libavdevice? Pull from video input?
 
 - Various AudioLayout/AudioFormat/VideoFormat attributes should be writable.
@@ -42,8 +47,6 @@ The Little Steps
       streams, etc.) could guard the __set__ methods of properties.
 
 - Should methods be: to_bytes, as_bytes, tobytes, asbytes??
-
-- All __repr__ should return <av.ClassName ...>
 
 - Plane.array_format could be a format string for array.array
 - Plane.update_from_array(array.array)
@@ -70,11 +73,9 @@ The Little Steps
     both building and testing. Also try `runtime_library_dirs`.
 
 - Humanize attribute names?
-    VideoFrame.pix_fmt -> pixel_format or just format
-    various nb_* for numbers of things
+    pts -> time
+    pkt_time -> Packet.time
 
-- Tox for various versions?
-- av.errno module
 
 - Split Context into input/output varieties.
 
@@ -87,17 +88,9 @@ The Little Steps
 
 - Should Packet.decode yield Frames, or return a list of Frames?
 
-- Figure out how to grab FFmpeg samples.
-
 - VideoStream.setup_conversion(size, format, etc.)
 
-- How to interpret raw audio?
-    http://ffmpeg.org/doxygen/trunk/doc_2examples_2filtering_audio_8c-example.html#a84
-
 - Move decoding into Packet from Stream?
-
-- Implement __getbuffer__ and __releasebuffer__ for new-style buffers.
-    See: http://www.python.org/dev/peps/pep-3118/
 
 - Replicate av_frame_get_best_effort_timestamp
     http://ffmpeg.org/pipermail/ffmpeg-devel/2011-February/104327.html

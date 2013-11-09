@@ -3,11 +3,13 @@ from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 cimport libav as lib
 
 
-cdef object _cinit_bypass_sentinel = object()
+cdef object _cinit_bypass_sentinel
 
-cdef AudioLayout blank_audio_layout():
-    """Make sure to call AudioLayout._init manually!"""
-    return AudioLayout.__new__(AudioLayout, _cinit_bypass_sentinel)
+cdef AudioLayout get_audio_layout(uint64_t c_layout):
+    """Get an AudioLayout from Cython land."""
+    cdef AudioLayout layout = AudioLayout.__new__(AudioLayout, _cinit_bypass_sentinel)
+    layout._init(c_layout)
+    return layout
 
 
 cdef class AudioLayout(object):

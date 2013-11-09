@@ -1,12 +1,17 @@
-from av.video.format cimport blank_video_format
 from av.utils cimport err_check
-
+from av.video.format cimport get_video_format
 from av.video.plane import VideoPlane
 
 
-cdef object _cinit_bypass_sentinel = object()
-cdef VideoFrame blank_video_frame():
-    """Be sure to call VideoFrame._init(...)!"""
+cdef object _cinit_bypass_sentinel
+
+cdef VideoFrame alloc_video_frame():
+    """Get a mostly uninitialized VideoFrame.
+
+    You MUST call VideoFrame._init(...) or VideoFrame._init_properties()
+    before exposing to the user.
+
+    """
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
 
 
@@ -60,10 +65,7 @@ cdef class VideoFrame(Frame):
         self._init_properties()
 
     cdef _init_properties(self):
-        
-        # Build the VideoFormat.
-        self.format = blank_video_format()
-        self.format._init(<lib.AVPixelFormat>self.ptr.format, self.ptr.width, self.ptr.height)
+        self.format = get_video_format(<lib.AVPixelFormat>self.ptr.format, self.ptr.width, self.ptr.height)
         self._init_planes(VideoPlane)
 
     def __dealloc__(self):
@@ -139,7 +141,7 @@ cdef class VideoFrame(Frame):
         
         # Create a new VideoFrame
         
-        cdef VideoFrame frame = blank_video_frame()
+        cdef VideoFrame frame = alloc_video_frame()
         frame._init(dst_format, width, height)
         
         # Finally Scale the image

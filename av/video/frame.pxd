@@ -24,4 +24,4 @@ cdef class VideoFrame(Frame):
     cpdef reformat(self, int width, int height, char* format)
 
 
-cdef VideoFrame blank_video_frame()
+cdef VideoFrame alloc_video_frame()

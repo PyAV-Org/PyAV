@@ -8,4 +8,4 @@ cdef class AudioFormat(object):
     cdef _init(self, lib.AVSampleFormat sample_fmt)
 
 
-cdef AudioFormat blank_audio_format()
+cdef AudioFormat get_audio_format(lib.AVSampleFormat format)

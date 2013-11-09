@@ -22,4 +22,4 @@ cdef class VideoFormatComponent(object):
     cdef lib.AVComponentDescriptor *ptr
 
 
-cdef VideoFormat blank_video_format()
+cdef VideoFormat get_video_format(lib.AVPixelFormat c_format, unsigned int width, unsigned int height)

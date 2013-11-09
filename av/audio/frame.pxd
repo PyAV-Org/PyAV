@@ -31,4 +31,4 @@ cdef class AudioFrame(Frame):
     cpdef resample(self, bytes channel_layout, bytes sample_fmt, int sample_rate)
 
 
-cdef AudioFrame blank_audio_frame()
+cdef AudioFrame alloc_audio_frame()

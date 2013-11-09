@@ -4,11 +4,11 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 
 cimport libav as lib
 
-from av.utils cimport err_check, avrational_to_faction, to_avrational
+from av.audio.codec cimport AudioCodec
 from av.context cimport ContextProxy
 from av.stream cimport Stream
+from av.utils cimport err_check, avrational_to_faction, to_avrational
 from av.video.codec cimport VideoCodec
-from av.audio.codec cimport AudioCodec
 
 
 cdef Codec codec_factory(Stream stream):

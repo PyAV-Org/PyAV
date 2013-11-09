@@ -11,7 +11,6 @@ cdef int AV_ERROR_MAX_STRING_SIZE = 64
 
 class AVError(EnvironmentError):
     pass
-
 AVError.__module__ = 'av'
 
 
@@ -28,6 +27,7 @@ cdef int err_check(int res, str filename=None) except -1:
             raise AVError(-res, c_buffer)
     return res
 
+
 cdef dict avdict_to_dict(lib.AVDictionary *input):
     
     cdef lib.AVDictionaryEntry *element = NULL
@@ -42,6 +42,7 @@ cdef dict avdict_to_dict(lib.AVDictionary *input):
 
 cdef object avrational_to_faction(lib.AVRational *input):
     return Fraction(input.num, input.den) if input.den else Fraction(0, 1)
+
 
 cdef object to_avrational(object value, lib.AVRational *input):
 
