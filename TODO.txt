@@ -9,9 +9,27 @@ The Big Plan
 - Lots of documentation
 
 
-The Little Steps
-================
+Encoding
+========
 
+- Should video frame dimensions be a property of Stream, Codec, or VideoFormat?
+  It feels most accurate for there to be an immutable (but writable) VideoFormat
+  on a Context. If we want it on Stream, it should proxy attribute access to
+  the underlying Codec.
+- Why do we need to much separation between Streams and Codecs? Since they are
+  created at the same time, and the user will not create their own Codec (will
+  they?), then they could be merged together.
+    - Streams have a Codec, timing information, and metadata.
+    - Codec has all the dimensions, qualities, encoding details, etc..
+
+
+Unsorted
+========
+
+- Rename Context to Container.
+- Create Format descriptor
+- Merge Codec into Stream
+- Create Codec Descriptor
 
 - Uniform time representation: fraction or av.utils.Rational
   
@@ -31,11 +49,18 @@ The Little Steps
       $ python -m timeit -s 'from fractions import Fraction; a = Fraction(1, 2)' 'b = a * 1234567890'
       100000 loops, best of 3: 9.95 usec per loop
 
-
   - I think that the Python and C objects will not have synchonized time stamps
     since the user will need to set the time on the frame without a stream. So
     either (1) the user needs to manage both the stream time_base AND the frame
     times, or (2) the Frame.time needs to be compatible with the stream time_base
+
+  - For now, for making it move quickly, use the same system, and call it `pts.
+    Then, in the future, we can introduce `time` attributes and make it cleaner.
+  - Automatically set reasonable default `time_base`s determined by the frame
+    and sample rates, such that a pts of 1 is either a sample or a frame.
+
+runtime_library_dirs
+
 
 - Replace AudioFrame.resample with AudioResampler
 

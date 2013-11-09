@@ -17,14 +17,14 @@ input_streams = []
 
 # find first video stream
 for stream in input_file.streams:
-    if stream.type == b'video':
+    if stream.type == 'video':
         input_video_stream = stream
         input_streams.append(input_video_stream)
         break
 
 # find first audio stream
 for stream in input_file.streams:
-    if stream.type == b'audio':
+    if stream.type == 'audio':
         input_audio_stream = stream
         input_streams.append(input_audio_stream)
         break

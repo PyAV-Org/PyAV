@@ -90,7 +90,6 @@ cdef extern from "libavformat_compat.h" nogil:
         
         int flags
     
-    # Once called av_open_input_file, but no longer.
     cdef int avformat_open_input(
         AVFormatContext **ctx, # NULL will allocate for you.
         char *filename,

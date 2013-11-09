@@ -48,6 +48,7 @@ cdef class Codec(object):
                 # Signal that we don't need to close it.
                 self.ptr = NULL
                 raise
+        
         else:
             self.ptr = self.ctx.codec
     
