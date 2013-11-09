@@ -4,7 +4,7 @@ from cpython cimport PyWeakref_NewRef
 cimport libav as lib
 
 from av.audio.stream cimport AudioStream
-from av.codec cimport Codec
+from av.codec cimport codec_factory
 from av.packet cimport Packet
 from av.subtitles.stream cimport SubtitleStream
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction
@@ -20,13 +20,13 @@ cdef Stream stream_factory(Context ctx, int index):
     elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
         return AudioStream(ctx, index, 'audio')
     elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_DATA:
-        return DataStream(ctx, index, 'data')
+        return Stream(ctx, index, 'data')
     elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
-        return SubtitleStream(ctx, index, 'subtitle')
+        return Stream(ctx, index, 'subtitle')
     elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
-        return AttachmentStream(ctx, index, 'attachment')
+        return Stream(ctx, index, 'attachment')
     elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_NB:
-        return NBStream(ctx, index, 'nb')
+        return Stream(ctx, index, 'nb')
     else:
         return Stream(ctx, index)
 
@@ -44,12 +44,11 @@ cdef class Stream(object):
         self.ptr = self.ctx.ptr.streams[index]
         self.type = type
 
-        self.codec = Codec(self)
+        self.codec = codec_factory(self)
         self.metadata = avdict_to_dict(self.ptr.metadata)
     
     def __repr__(self):
-        return '<%s.%s #%d %s/%s at 0x%x>' % (
-            self.__class__.__module__,
+        return '<av.%s #%d %s/%s at 0x%x>' % (
             self.__class__.__name__,
             self.index,
             self.type or '<notype>',
@@ -125,12 +124,4 @@ cdef class Stream(object):
 
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('base stream cannot decode packets')
-
-
-cdef class AttachmentStream(Stream):
-    pass
-cdef class DataStream(Stream):
-    pass
-cdef class NBStream(Stream):
-    pass
 
