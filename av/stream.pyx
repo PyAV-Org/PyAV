@@ -11,7 +11,7 @@ from av.utils cimport err_check, avdict_to_dict, avrational_to_faction
 from av.video.stream cimport VideoStream
 
 
-cdef Stream stream_factory(Context ctx, int index):
+cdef Stream stream_factory(Container ctx, int index):
     
     cdef lib.AVStream *ptr = ctx.proxy.ptr.streams[index]
     
@@ -33,7 +33,7 @@ cdef Stream stream_factory(Context ctx, int index):
 
 cdef class Stream(object):
     
-    def __cinit__(self, Context ctx, int index, bytes type=b'unknown'):
+    def __cinit__(self, Container ctx, int index, bytes type=b'unknown'):
         
         if index < 0 or index > ctx.proxy.ptr.nb_streams:
             raise ValueError('stream index out of range')

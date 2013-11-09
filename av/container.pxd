@@ -4,13 +4,13 @@ cimport libav as lib
 # Since there are multiple objects that need to refer to a valid context, we
 # need this intermediate proxy object so that there aren't any reference cycles
 # and the pointer can be freed when everything that depends upon it is deleted.
-cdef class ContextProxy(object):
+cdef class ContainerProxy(object):
     
     cdef bint is_input
     cdef lib.AVFormatContext *ptr
 
 
-cdef class Context(object):
+cdef class Container(object):
     
     cdef readonly bytes name
     cdef readonly bytes mode
@@ -19,7 +19,7 @@ cdef class Context(object):
     cdef readonly bint is_input
     cdef readonly bint is_output
     
-    cdef ContextProxy proxy
+    cdef ContainerProxy proxy
     cdef object __weakref__
     
     cdef readonly list streams

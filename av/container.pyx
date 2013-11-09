@@ -9,7 +9,7 @@ from av.utils cimport err_check, avdict_to_dict
 from av.utils import AVError
 
 
-cdef class ContextProxy(object):
+cdef class ContainerProxy(object):
 
     def __init__(self, bint is_input):
         self.is_input = is_input
@@ -21,7 +21,7 @@ cdef class ContextProxy(object):
 
 
 
-cdef class Context(object):
+cdef class Container(object):
 
     def __init__(self, name, mode='r'):
         
@@ -39,7 +39,7 @@ cdef class Context(object):
         self.name = name
         self.mode = mode
         
-        self.proxy = ContextProxy(self.is_input)
+        self.proxy = ContainerProxy(self.is_input)
         
         if self.is_input:
             err_check(
@@ -62,14 +62,14 @@ cdef class Context(object):
             
     cpdef add_stream(self, bytes codec_name, object rate=None):
         
-        """Add stream to Context and return it.
+        """Add stream to Container and return it.
         if the codec_name is a video codec rate means frames per second,
         if the codec_name is a audio codec rate means sample rate 
-        Note: To use this Context must be opened with mode = "w"
+        Note: To use this Container must be opened with mode = "w"
         """
     
         if self.is_input:
-            raise TypeError("Cannot add streams to input Context ")
+            raise TypeError("Cannot add streams to input Container ")
 
         cdef lib.AVCodec *codec
         cdef lib.AVCodecDescriptor *desc
@@ -145,13 +145,13 @@ cdef class Context(object):
     
     cpdef start_encoding(self):
     
-        """setups Context for encoding. Opens Codecs and output file if they aren't already open 
+        """setups Container for encoding. Opens Codecs and output file if they aren't already open 
         and writes file header. This method is automatically called by a Stream before encoding.
-        Note: To use this Context must be opened with mode = "w"
+        Note: To use this Container must be opened with mode = "w"
         """
     
         if self.is_input:
-            raise TypeError('Cannot encoded to input Context, file needs to be opened with mode="w"')
+            raise TypeError('Cannot encoded to input Container, file needs to be opened with mode="w"')
 
         cdef Stream stream
         
