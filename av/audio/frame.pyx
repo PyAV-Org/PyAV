@@ -1,9 +1,10 @@
 from av.audio.fifo cimport AudioFifo
 from av.audio.layout cimport blank_audio_layout
 from av.audio.format cimport blank_audio_format
-from av.plane cimport Plane
+from av.audio.plane cimport AudioPlane
 
 from av.utils cimport err_check
+
 
 cdef object _cinit_bypass_sentinel = object()
 
@@ -28,15 +29,8 @@ cdef class AudioFrame(Frame):
         self.ptr.format = <int>format
         self.ptr.channel_layout = layout
         
-        cdef int nb_channels = lib.av_get_channel_layout_nb_channels(layout)
-        cdef int nb_planes
-        if lib.av_sample_fmt_is_planar(format):
-            nb_planes = nb_channels
-        else:
-            nb_planes = 1
-
         cdef size_t buffer_size
-        if nb_channels and nb_samples:
+        if self.format.channels and nb_samples:
             
             # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
@@ -44,7 +38,7 @@ cdef class AudioFrame(Frame):
             # Get a new one.
             buffer_size = err_check(lib.av_samples_get_buffer_size(
                 NULL,
-                nb_channels,
+                len(self.format.channels),
                 nb_samples,
                 format,
                 align,
@@ -56,7 +50,7 @@ cdef class AudioFrame(Frame):
             # Connect the buffer to the frame fields.
             err_check(lib.avcodec_fill_audio_frame(
                 self.ptr, 
-                self.channels, 
+                len(self.format.channels), 
                 <lib.AVSampleFormat>self.ptr.format,
                 self._buffer,
                 buffer_size,
@@ -70,7 +64,10 @@ cdef class AudioFrame(Frame):
         self.layout._init(self.ptr.channel_layout)
         self.format = blank_audio_format()
         self.format._init(<lib.AVSampleFormat>self.ptr.format)
-        self._init_planes()
+
+        self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
+        self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1
+        self._init_planes(AudioPlane)
 
     def __dealloc__(self):
         lib.av_freep(&self._buffer)

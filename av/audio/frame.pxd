@@ -14,6 +14,9 @@ cdef class AudioFrame(Frame):
     cdef uint8_t *_buffer
 
     cdef bint align
+    cdef int nb_channels
+    cdef int nb_planes
+
     cdef readonly int frame_index
     
     cdef SwrContextProxy swr_proxy
