@@ -12,6 +12,49 @@ cdef AudioLayout get_audio_layout(uint64_t c_layout):
     return layout
 
 
+# This are the defaults given by FFmpeg; Libav is different.
+cdef tuple default_layout_names = (
+    0, # This is to raise an error.
+    'mono',
+    'stereo',
+    '2.1',
+    '4.0',
+    '5.0',
+    '5.1',
+    '6.1',
+    '7.1',
+)
+
+# These are the descriptions as given by FFmpeg; Libav does not have them.
+cdef dict channel_descriptions = {
+    'FL': 'front left',
+    'FR': 'front right',
+    'FC': 'front center',
+    'LFE': 'low frequency',
+    'BL': 'back left',
+    'BR': 'back right',
+    'FLC': 'front left-of-center',
+    'FRC': 'front right-of-center',
+    'BC': 'back center',
+    'SL': 'side left',
+    'SR': 'side right',
+    'TC': 'top center',
+    'TFL': 'top front left',
+    'TFC': 'top front center',
+    'TFR': 'top front right',
+    'TBL': 'top back left',
+    'TBC': 'top back center',
+    'TBR': 'top back right',
+    'DL': 'downmix left',
+    'DR': 'downmix right',
+    'WL': 'wide left',
+    'WR': 'wide right',
+    'SDL': 'surround direct left',
+    'SDR': 'surround direct right',
+    'LFE2': 'low frequency 2',
+}
+
+
 cdef class AudioLayout(object):
 
     def __init__(self, layout):
@@ -19,10 +62,10 @@ cdef class AudioLayout(object):
             return
 
         cdef uint64_t c_layout
+        if isinstance(layout, int):
+            layout = default_layout_names[layout]
         if isinstance(layout, basestring):
             c_layout = lib.av_get_channel_layout(layout)
-        elif isinstance(layout, int):
-            c_layout = lib.av_get_default_channel_layout(layout)
         else:
             raise TypeError('layout must be str or int')
 
@@ -71,8 +114,8 @@ cdef class AudioChannel(object):
             return lib.av_get_channel_name(self.channel)
 
     property description:
-        """A description of the audio channel."""
+        """A human description of the audio channel."""
         def __get__(self):
-            return lib.av_get_channel_description(self.channel)
+            return channel_descriptions.get(self.name)
 
 
