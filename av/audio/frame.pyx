@@ -1,6 +1,8 @@
 from av.audio.fifo cimport AudioFifo
 from av.audio.layout cimport blank_audio_layout
 from av.audio.format cimport blank_audio_format
+from av.plane cimport Plane
+
 from av.utils cimport err_check
 
 cdef object _cinit_bypass_sentinel = object()
@@ -25,8 +27,6 @@ cdef class AudioFrame(Frame):
         self.ptr.nb_samples = nb_samples
         self.ptr.format = <int>format
         self.ptr.channel_layout = layout
-
-        self._init_properties()
         
         cdef int nb_channels = lib.av_get_channel_layout_nb_channels(layout)
         cdef int nb_planes
@@ -34,7 +34,6 @@ cdef class AudioFrame(Frame):
             nb_planes = nb_channels
         else:
             nb_planes = 1
-
 
         cdef size_t buffer_size
         if nb_channels and nb_samples:
@@ -64,11 +63,14 @@ cdef class AudioFrame(Frame):
                 self.align
             ))
 
+        self._init_properties()
+
     cdef _init_properties(self):
         self.layout = blank_audio_layout()
         self.layout._init(self.ptr.channel_layout)
         self.format = blank_audio_format()
         self.format._init(<lib.AVSampleFormat>self.ptr.format)
+        self._init_planes()
 
     def __dealloc__(self):
         lib.av_freep(&self._buffer)

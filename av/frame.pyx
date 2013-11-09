@@ -1,3 +1,8 @@
+from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
+
+from av.plane cimport Plane
+
+
 cdef class Frame(object):
 
     """Frame Base Class"""
@@ -20,3 +25,22 @@ cdef class Frame(object):
                 self.ptr.pts = lib.AV_NOPTS_VALUE
             else:
                 self.ptr.pts = value
+
+    cdef _init_planes(self, cls=Plane):
+
+        # Construct the planes.
+        cdef int plane_count = 0
+        for i in range(lib.AV_NUM_DATA_POINTERS):
+            if self.ptr.data[i]:
+                plane_count = i + 1
+            else:
+                break
+        self.planes = PyTuple_New(plane_count)
+        for i in range(plane_count):
+            # We are constructing this tuple manually, but since Cython does
+            # not understand reference stealing we must manually Py_INCREF
+            # so that when Cython Py_DECREFs it doesn't release our object.
+            plane = cls(self, i)
+            Py_INCREF(plane)
+            PyTuple_SET_ITEM(self.planes, i, plane)
+
