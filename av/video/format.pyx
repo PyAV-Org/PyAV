@@ -9,6 +9,13 @@ cdef VideoFormat blank_video_format():
 
 
 cdef class VideoFormat(object):
+    """
+
+        >>> format = VideoFormat('rgb24')
+        >>> format.name
+        'rgb24'
+
+    """
 
     def __cinit__(self, name, width=0, height=0):
 

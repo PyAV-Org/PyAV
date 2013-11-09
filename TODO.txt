@@ -12,9 +12,6 @@ The Big Plan
 The Little Steps
 ================
 
-- Doctests
-- Everything on av package
-
 - Replace AudioFrame.resample with AudioResampler
 
     - make examples.decode use it for audio

@@ -12,7 +12,11 @@ cdef VideoFrame blank_video_frame():
 
 cdef class VideoFrame(Frame):
 
-    """A frame of video."""
+    """A frame of video.
+
+    >>> frame = VideoFrame(1920, 1080, 'rgb24')
+
+    """
 
     def __cinit__(self, width=0, height=0, format=b'yuv420p'):
 
@@ -77,9 +81,10 @@ cdef class VideoFrame(Frame):
     def to_rgb(self):
         """Get an RGB version of this frame.
 
-        >>> frame.format
+        >>> frame = VideoFrame(1920, 1080)
+        >>> frame.format.name
         'yuv420p'
-        >>> frame.to_rgb().format
+        >>> frame.to_rgb().format.name
         'rgb24'
 
         """
