@@ -28,13 +28,6 @@ cdef int err_check(int res, str filename=None) except -1:
             raise AVError(-res, c_buffer)
     return res
 
-cdef char* channel_layout_name(int nb_channels, uint64_t channel_layout):
-
-    cdef char c_buffer[1024]    
-    lib.av_get_channel_layout_string(c_buffer, 1024, nb_channels, channel_layout)
-
-    return c_buffer
-
 cdef dict avdict_to_dict(lib.AVDictionary *input):
     
     cdef lib.AVDictionaryEntry *element = NULL
@@ -64,33 +57,3 @@ cdef object to_avrational(object value, lib.AVRational *input):
 cdef object av_frac_to_fraction(lib.AVFrac *input):
     return Fraction(input.val * input.num, input.den)
 
-# this should behave the same as av_samples_alloc_array_and_samples
-# older version of ffmpeg don't have that helper method
-
-cdef int samples_alloc_array_and_samples(uint8_t ***audio_data, int *linesize, 
-                                         int nb_channels, int nb_samples, 
-                                            lib.AVSampleFormat sample_fmt, int align):
-                                            
-    cdef int ret = -1
-    
-    cdef int nb_planes
-    
-    if lib.av_sample_fmt_is_planar(sample_fmt):
-        nb_planes = nb_channels
-    else:
-        nb_planes = 1
-        
-    audio_data[0] = <uint8_t **>lib.av_calloc(nb_planes, sizeof(audio_data[0][0]))
-    
-    if not audio_data[0]:
-        return lib.AVERROR(lib.ENOMEM)
-    
-    ret = lib.av_samples_alloc(audio_data[0], linesize, nb_channels,
-                           nb_samples, sample_fmt, align)
-    
-    if ret < 0:
-        lib.av_freep(audio_data)
-        
-    
-    
-    return ret

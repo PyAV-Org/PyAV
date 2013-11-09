@@ -1,3 +1,4 @@
+from av.audio.frame cimport blank_audio_frame
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport err_check
@@ -9,39 +10,34 @@ cdef class AudioStream(Stream):
         super(AudioStream, self).__init__(*args)
         self.encoded_frame_count = 0
     
-    property sample_rate:
+    property rate:
         def __get__(self):
             return self.codec.ctx.sample_rate
 
     property channels:
         def __get__(self):
             return self.codec.ctx.channels
-
-    def __dealloc__(self):
-        # These are all NULL safe.
-        lib.av_free(self.frame)
         
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
 
-        if not self.frame:
-            self.frame = lib.avcodec_alloc_frame()
+        if not self.next_frame:
+            self.next_frame = blank_audio_frame()
 
         cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.frame, &completed_frame, packet))
+        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.next_frame.ptr, &completed_frame, packet))
         if not completed_frame:
             return
         
         if not self.swr_proxy:
             self.swr_proxy =  SwrContextProxy() 
 
-        cdef AudioFrame frame = AudioFrame()
+        cdef AudioFrame frame = self.next_frame
+        self.next_frame = None
         
+        frame._init_properties()
+
         # Copy the pointers over.
-        frame.ptr = self.frame
         frame.swr_proxy = self.swr_proxy
-        
-        # Null out ours.
-        self.frame = NULL
         
         return frame
     
@@ -54,7 +50,7 @@ cdef class AudioStream(Stream):
         """
         
         # setup formatContext for encoding
-        self.ctx.start_encoding()
+        self.weak_ctx().start_encoding()
         
         #Setup a resampler if ones not setup
         if not self.swr_proxy:

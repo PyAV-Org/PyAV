@@ -30,7 +30,7 @@ for stream in input_file.streams:
         break
 
 # open output file
-output_file_path = sandboxed(os.path.basename(input_file_path))
+output_file_path = sandboxed('encoded-' + os.path.basename(input_file_path))
 output_file = av.open(output_file_path, 'w')
 
 output_video_stream = None

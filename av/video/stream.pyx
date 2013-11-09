@@ -1,6 +1,7 @@
 from libc.stdint cimport int64_t
 
 from av.frame cimport Frame
+from av.video.frame cimport blank_video_frame
 from av.packet cimport Packet
 from av.utils cimport err_check
 
@@ -16,7 +17,7 @@ cdef class VideoStream(Stream):
         
         # Create a frame if we don't have one ready.
         if not self.next_frame:
-            self.next_frame = VideoFrame()
+            self.next_frame = blank_video_frame()
 
         # Decode video into the frame.
         cdef int completed_frame = 0
@@ -44,9 +45,9 @@ cdef class VideoStream(Stream):
         cdef VideoFrame frame = self.next_frame
         self.next_frame = None
         
-        # Transfer some convenient attributes over.
-        frame.buffer_size = self.buffer_size
-        
+        # Tell frame to finish constructing user properties.
+        frame._init_properties()
+
         # Share our SwsContext with the frames. Most of the time they will end
         # up using the same settings as each other, so it makes sense to cache
         # it like this.

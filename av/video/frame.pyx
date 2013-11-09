@@ -1,8 +1,7 @@
-from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
-
-from av.video.plane cimport VideoPlane
 from av.video.format cimport blank_video_format
 from av.utils cimport err_check
+
+from av.video.plane import VideoPlane
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -15,10 +14,10 @@ cdef class VideoFrame(Frame):
 
     """A frame of video."""
 
-    def __cinit__(self, unsigned int width=0, unsigned int height=0, format=b'yuv420p'):
+    def __cinit__(self, width=0, height=0, format=b'yuv420p'):
 
-        self.ptr = lib.avcodec_alloc_frame()
-        lib.avcodec_get_frame_defaults(self.ptr)
+        if width is _cinit_bypass_sentinel:
+            return
 
         cdef lib.AVPixelFormat c_format = lib.av_get_pix_fmt(format)
         if c_format < 0:
@@ -32,12 +31,7 @@ cdef class VideoFrame(Frame):
         self.ptr.height = height
         self.ptr.format = format
 
-        self.format = blank_video_format()
-        self.format._init(format, width, height)
-
         cdef int buffer_size
-        cdef int plane_count = 0
-        cdef VideoPlane p
 
         if width and height:
             
@@ -59,35 +53,25 @@ cdef class VideoFrame(Frame):
                     height
             )
 
-            # Construct the planes.
-            for i in range(lib.AV_NUM_DATA_POINTERS):
-                if self.ptr.data[i]:
-                    plane_count = i + 1
-                else:
-                    break
-            self.planes = PyTuple_New(plane_count)
-            for i in range(plane_count):
-                p = VideoPlane(self, i)
-                # We are constructing this tuple manually, but since Cython does
-                # not understand reference stealing we must manually Py_INCREF
-                # so that when Cython Py_DECREFs it doesn't release our object.
-                Py_INCREF(p)
-                PyTuple_SET_ITEM(self.planes, i, p)
+        self._init_properties()
 
-        else:
-            self.planes = ()
-
+    cdef _init_properties(self):
+        
+        # Build the VideoFormat.
+        self.format = blank_video_format()
+        self.format._init(<lib.AVPixelFormat>self.ptr.format, self.ptr.width, self.ptr.height)
+        self._init_planes(VideoPlane)
 
     def __dealloc__(self):
         lib.av_freep(&self._buffer)
 
     def __repr__(self):
-        return '<%s.%s %dx%d %s at 0x%x>' % (
+        return '<%s.%s %s %dx%d at 0x%x>' % (
             self.__class__.__module__,
             self.__class__.__name__,
+            self.format.name,
             self.width,
             self.height,
-            self.format,
             id(self),
         )
         

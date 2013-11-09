@@ -17,9 +17,10 @@ cdef class VideoFrame(Frame):
     cdef SwsContextProxy sws_proxy
 
     cdef readonly VideoFormat format
-    cdef readonly tuple planes
 
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
+    cdef _init_properties(self)
+
     cpdef reformat(self, int width, int height, char* format)
 
 

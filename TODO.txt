@@ -1,10 +1,60 @@
-- VideoPlane.array_format could be a format string for array.array
-- VideoPlane.update(input_)
-    And then it tries if it is a buffer, memoryview, bytes, etc..
+The Big Plan
+============
 
-- av.audio.format.AudioFormat
-    - wrap around AVSampleFormat enum: http://ffmpeg.org/doxygen/1.2/samplefmt_8h.html#af9a51ca15301871723577c730b5865c5
-    - use SampleFmtInfo http://ffmpeg.org/doxygen/1.2/structSampleFmtInfo.html
+- Restore audio resampling
+- Uniform time representation
+- Restore video encoding
+- Restore audio encoding
+- Examples for encoding from numpy arrays
+- Lots of documentation
+
+
+The Little Steps
+================
+
+- Doctests
+- Everything on av package
+
+- Replace AudioFrame.resample with AudioResampler
+
+    - make examples.decode use it for audio
+
+    - see: detailed description on http://www.ffmpeg.org/doxygen/2.0/group__lswr.html
+                               and https://libav.org/doxygen/master/group__lavr.html
+
+    - FFmpeg's swr does not have an internal fifo. This is why we must always
+      assert that we are getting everything we request.
+    - Separate the AudioResampler from the AudioFifo; the user must manage
+      them both if they want to both resample and rechunk the stream
+
+    - AudioResampler(format, layout)
+        .convert(frame) -> a new frame with (nearly) the same logical data
+            - The first time this is called it initializes the internal src_format
+              and src_layout. After that, it asserts that they are equal, or
+              raises a ValueError since the incoming packet does not match
+        .flush() or .convert(None) -> last frames
+
+    - AudioFifo(format, layout, nb_samples=0)
+        .write(frame)
+        .read(samples=0) -> AudioFrame of specified samples or ALL the samples
+
+- libavdevice? Pull from video input?
+
+- Various AudioLayout/AudioFormat/VideoFormat attributes should be writable.
+    - is_mutable flags on various objects (including formats, layouts, contexts,
+      streams, etc.) could guard the __set__ methods of properties.
+
+- Should methods be: to_bytes, as_bytes, tobytes, asbytes??
+
+- All __repr__ should return <av.ClassName ...>
+
+- Plane.array_format could be a format string for array.array
+- Plane.update_from_array(array.array)
+    - If it were HD RGB then it would be 1920 * 1080 * 3 long.
+- Plane.update_from_ndarray(numpy.ndarray)
+    - If it were HD RGB then it would have shape (1080, 1920, 3)
+- Plane.update(input_)
+    And then it tries if it is a buffer, memoryview, bytes, etc..
 
 - Stream.encode(...) -> list of packets, automatically checking buffer)
 - Context.mux(...) -> take a single packet, or an iterator of them:
