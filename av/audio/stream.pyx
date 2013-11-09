@@ -10,7 +10,7 @@ cdef class AudioStream(Stream):
         super(AudioStream, self).__init__(*args)
         self.encoded_frame_count = 0
     
-    property sample_rate:
+    property rate:
         def __get__(self):
             return self.codec.ctx.sample_rate
 

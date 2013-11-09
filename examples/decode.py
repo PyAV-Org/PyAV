@@ -33,21 +33,23 @@ print
 
 print len(video.streams), 'stream(s):'
 for i, stream in enumerate(video.streams):
-    print '    %r' % stream
-    print '        time_base: %r' % stream.time_base
-    print '        start_time: %r' % stream.start_time
-    print '        duration: %r' % stream.duration
-    print '        base_frame_rate: %.3f - %r' % (float(stream.base_frame_rate), stream.base_frame_rate)
-    print '        avg_frame_rate: %.3f' % float(stream.avg_frame_rate)
+    print '\t%r' % stream
+    print '\t\ttime_base: %r' % stream.time_base
+    print '\t\tstart_time: %r' % stream.start_time
+    print '\t\tduration: %r' % stream.duration
+    print '\t\tbase_frame_rate: %.3f - %r' % (float(stream.base_frame_rate), stream.base_frame_rate)
+    print '\t\tavg_frame_rate: %.3f' % float(stream.avg_frame_rate)
+
+    print '\t\tcodec:', stream.codec
 
     if stream.type == b'audio':
-        print '        audio:'
-        print '            sample_rate: %s' % stream.sample_rate
-        print '            channels: %s' % stream.channels
+        print '\t\taudio:'
+        print '\t\t\tsample_rate: %s' % stream.rate
+        print '\t\t\tchannels: %s' % stream.channels
 
-    print '        metadata:'
+    print '\t\tmetadata:'
     for k, v in sorted(stream.metadata.iteritems()):
-        print '            %s: %r' % (k, v)
+        print '\t\t\t%s: %r' % (k, v)
 
 
 streams = [s for s in video.streams if
