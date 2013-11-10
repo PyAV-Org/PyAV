@@ -11,11 +11,7 @@ from .audio.fifo import AudioFifo
 from .audio.format import AudioFormat
 from .audio.frame import AudioFrame
 from .audio.layout import AudioLayout
-from .container import Container
+from .container import open
 from .utils import AVError
 from .video.format import VideoFormat
 from .video.frame import VideoFrame
-
-
-def open(*args, **kwargs):
-    return Container(*args, **kwargs)

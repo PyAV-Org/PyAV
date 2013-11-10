@@ -9,6 +9,12 @@ import Image
 from av import open, time_base
 
 
+def format_time(time, stream):
+    if time is None:
+        return 'None'
+    return '%.3fs (%s or %s/%s)' % (stream.time_base * time, stream.time_base * time, stream.time_base.numerator * time, stream.time_base.denominator)
+
+
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('path')
 arg_parser.add_argument('-a', '--audio', action='store_true')
@@ -24,23 +30,12 @@ proc = None
 
 video = open(args.path)
 
-print 'DUMP'
-print '====='
-video.dump()
-print '-----'
-print
-
-print 'duration:', float(video.duration) / time_base
-
-print 'Metadata:'
+print 'container:', video
+print '\tduration:', float(video.duration) / time_base
+print '\tmetadata:'
 for k, v in sorted(video.metadata.iteritems()):
-    print '    %s: %r' % (k, v)
+    print '\t\t%s: %r' % (k, v)
 print
-
-def format_time(time, stream):
-    if time is None:
-        return 'None'
-    return '%.3fs (%s or %s/%s)' % (stream.time_base * time, stream.time_base * time, stream.time_base.numerator * time, stream.time_base.denominator)
 
 print len(video.streams), 'stream(s):'
 for i, stream in enumerate(video.streams):
@@ -66,6 +61,8 @@ for i, stream in enumerate(video.streams):
     print '\t\tmetadata:'
     for k, v in sorted(stream.metadata.iteritems()):
         print '\t\t\t%s: %r' % (k, v)
+
+    print
 
 
 streams = [s for s in video.streams if

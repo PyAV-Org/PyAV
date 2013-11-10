@@ -15,51 +15,113 @@ cdef class ContainerProxy(object):
         self.is_input = is_input
     
     def __dealloc__(self):
-        if self.ptr != NULL:
-            if self.is_input:
-                lib.avformat_close_input(&self.ptr)
+        if self.is_input and self.ptr:
+            lib.avformat_close_input(&self.ptr)
 
+
+cdef object _base_constructor_sentinel = object()
+
+def open(name, mode='r'):
+    if mode == 'r':
+        return InputContainer(_base_constructor_sentinel, name)
+    if mode == 'w':
+        return OutputContainer(_base_constructor_sentinel, name)
+    raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
 
 
 cdef class Container(object):
 
-    def __init__(self, name, mode='r'):
-        
-        cdef lib.AVOutputFormat* fmt
-        
-        if mode == 'r':
-            self.is_input = True
-            self.is_output = False
-        elif mode == 'w':
-            self.is_input = False
-            self.is_output = True
-        else:
-            raise ValueError('mode must be "r" or "w"')
-        
+    def __cinit__(self, sentinel, name):
+        if sentinel is not _base_constructor_sentinel:
+            raise RuntimeError('cannot construct base Container')
         self.name = name
-        self.mode = mode
+        self.proxy = ContainerProxy(isinstance(self, InputContainer))
+
+    def __repr__(self):
+        return '<av.%s %r>' % (self.__class__.__name__, self.name)
+
+
+cdef class InputContainer(object):
+    
+    def __cinit__(self, *args, **kwargs):
+        err_check(
+            lib.avformat_open_input(&self.proxy.ptr, self.name, NULL, NULL),
+            self.name,
+        )
+        err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
+        self.streams = list(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
+        self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
+
+    property start_time:
+        def __get__(self): return self.proxy.ptr.start_time
+    
+    property duration:
+        def __get__(self): return self.proxy.ptr.duration
+    
+    property bit_rate:
+        def __get__(self): return self.proxy.ptr.bit_rate
+
+    def demux(self, streams=None):
         
-        self.proxy = ContainerProxy(self.is_input)
+        streams = streams or self.streams
+        if isinstance(streams, Stream):
+            streams = (streams, )
+
+        cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
+        if include_stream == NULL:
+            raise MemoryError()
         
-        if self.is_input:
-            err_check(
-                lib.avformat_open_input(&self.proxy.ptr, name, NULL, NULL),
-                name,
-            )
-            err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
-            self.streams = list(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
-            self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
+        cdef int i
+        cdef Packet packet
+
+        try:
             
-        if self.is_output:
-            
-            fmt = lib.av_guess_format(NULL, name, NULL)
-            if not fmt:
-                raise ValueError("Could not deduce output format")
-            
-            err_check(lib.avformat_alloc_output_context2(&self.proxy.ptr, fmt,NULL, name))
-            self.streams = []
-            self.metadata = {}
-            
+            for i in range(self.proxy.ptr.nb_streams):
+                include_stream[i] = False
+            for stream in streams:
+                include_stream[stream.index] = True
+        
+            while True:
+                packet = Packet()
+                try:
+                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
+                except AVError:
+                    break
+                    
+                if include_stream[packet.struct.stream_index]:
+                    # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams 
+                    # may also appear in av_read_frame().
+                    # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
+                    # TODO: find better way to handle this 
+                    if packet.struct.stream_index < len(self.streams):
+                        packet.stream = self.streams[packet.struct.stream_index]
+                        yield packet
+
+        finally:
+            free(include_stream)
+
+
+cdef class OutputContainer(object):
+
+    def __cinit__(self, *args, **kwargs):
+
+        cdef lib.AVOutputFormat* container_format = lib.av_guess_format(NULL, self.name, NULL)
+        if not container_format:
+            raise ValueError("Could not deduce output format")
+        
+        err_check(lib.avformat_alloc_output_context2(
+            &self.proxy.ptr,
+            container_format,
+            NULL,
+            self.name,
+        ))
+
+        self.streams = []
+        self.metadata = {}
+
+    def __del__(self):
+        self.close()
+
     cpdef add_stream(self, bytes codec_name, object rate=None):
         
         """Add stream to Container and return it.
@@ -150,9 +212,6 @@ cdef class Container(object):
         Note: To use this Container must be opened with mode = "w"
         """
     
-        if self.is_input:
-            raise TypeError('Cannot encoded to input Container, file needs to be opened with mode="w"')
-
         cdef Stream stream
         
         for stream in self.streams:
@@ -171,23 +230,20 @@ cdef class Container(object):
             err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
             
     def close(self):
+
         cdef Stream stream
         
-        if self.is_output:
-            if not self.proxy.ptr.pb:
-                raise IOError("File not opened")
-            
-            err_check(lib.av_write_trailer(self.proxy.ptr))
-            for stream in self.streams:
-                
-                lib.avcodec_close(stream._codec_context)
-                
-            if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-                lib.avio_closep(&self.proxy.ptr.pb)
+        if not self.proxy.ptr.pb:
+            raise IOError("File not opened")
         
-    
-    def dump(self):
-        lib.av_dump_format(self.proxy.ptr, 0, self.name, self.mode == 'w')
+        err_check(lib.av_write_trailer(self.proxy.ptr))
+        for stream in self.streams:
+            
+            lib.avcodec_close(stream._codec_context)
+            
+        if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
+            lib.avio_closep(&self.proxy.ptr.pb)
+        
         
     def mux(self, Packet packet):
         
@@ -202,49 +258,4 @@ cdef class Container(object):
         
         err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
     
-    def demux(self, streams=None):
-        
-        streams = streams or self.streams
-        if isinstance(streams, Stream):
-            streams = (streams, )
-
-        cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
-        if include_stream == NULL:
-            raise MemoryError()
-        
-        cdef int i
-        cdef Packet packet
-
-        try:
-            
-            for i in range(self.proxy.ptr.nb_streams):
-                include_stream[i] = False
-            for stream in streams:
-                include_stream[stream.index] = True
-        
-            while True:
-                packet = Packet()
-                try:
-                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
-                except AVError:
-                    break
-                    
-                if include_stream[packet.struct.stream_index]:
-                    # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams 
-                    # may also appear in av_read_frame().
-                    # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
-                    # TODO: find better way to handle this 
-                    if packet.struct.stream_index < len(self.streams):
-                        packet.stream = self.streams[packet.struct.stream_index]
-                        yield packet
-
-        finally:
-            free(include_stream)
-    
-    property start_time:
-        def __get__(self): return self.proxy.ptr.start_time
-    property duration:
-        def __get__(self): return self.proxy.ptr.duration
-    property bit_rate:
-        def __get__(self): return self.proxy.ptr.bit_rate
             

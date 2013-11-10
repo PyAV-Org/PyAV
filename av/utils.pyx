@@ -14,7 +14,7 @@ class AVError(EnvironmentError):
 AVError.__module__ = 'av'
 
 
-cdef int err_check(int res, str filename=None) except -1:
+cdef int err_check(int res, filename=None) except -1:
     cdef bytes py_buffer
     cdef char *c_buffer
     if res < 0:

@@ -13,11 +13,6 @@ cdef class ContainerProxy(object):
 cdef class Container(object):
     
     cdef readonly bytes name
-    cdef readonly bytes mode
-    
-    # Mirrors of each other for readibility.
-    cdef readonly bint is_input
-    cdef readonly bint is_output
     
     cdef ContainerProxy proxy
     cdef object __weakref__
@@ -25,6 +20,12 @@ cdef class Container(object):
     cdef readonly list streams
     cdef readonly dict metadata
     
+
+
+cdef class InputContainer(Container):
+    pass
+
+
+cdef class OutputContainer(Container):
     cpdef add_stream(self, bytes codec_name, object rate=*)
-    
     cpdef start_encoding(self)
