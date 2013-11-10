@@ -133,78 +133,69 @@ cdef class OutputContainer(object):
         Note: To use this Container must be opened with mode = "w"
         """
     
-        if self.is_input:
-            raise TypeError("Cannot add streams to input Container ")
 
-        cdef lib.AVCodec *codec
-        cdef lib.AVCodecDescriptor *desc
-  
-        cdef lib.AVStream *st
-        cdef Stream stream
         
         # Find encoder
+        cdef lib.AVCodec *codec
+        cdef lib.AVCodecDescriptor *codec_descriptor
         codec = lib.avcodec_find_encoder_by_name(codec_name)
-        
         if not codec:
-            desc = lib.avcodec_descriptor_get_by_name(codec_name)
-            if desc:
-                codec = lib.avcodec_find_encoder(desc.id)
-                
+            codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)
+            if codec_descriptor:
+                codec = lib.avcodec_find_encoder(codec_descriptor.id)
         if not codec:
-            raise ValueError("Unknown encoder %s" % codec_name)
+            raise ValueError("unknown encoding codec: %r" % codec_name)
         
-        # Check if format supports codec
-        ret = lib.avformat_query_codec(self.proxy.ptr.oformat,
-                                       codec.id,
-                                       lib.FF_COMPLIANCE_NORMAL)
-        if not ret:
-            raise ValueError("Codec is not supported in this format")
+        # Assert that this format supports the requested codec.
+        if not lib.avformat_query_codec(
+            self.proxy.ptr.oformat,
+            codec.id,
+            lib.FF_COMPLIANCE_NORMAL,
+        ):
+            raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
         
         # Create new stream
-        st = lib.avformat_new_stream(self.proxy.ptr, codec)
-        if not st:
-            raise MemoryError("Could not allocate stream")
+        cdef lib.AVStream *c_stream = lib.avformat_new_stream(self.proxy.ptr, codec)
+        if not c_stream:
+            raise MemoryError("could not allocate stream")
         
         # Set Stream ID
-        st.id = self.proxy.ptr.nb_streams -1
-        codec_ctx = st.codec
-        # Set Codecs defaults
-        lib.avcodec_get_context_defaults3(codec_ctx, codec)
-        
-        stream = stream_factory(self,st.id)
-        
-        codec_ctx.codec = codec
+        c_stream.index = self.proxy.ptr.nb_streams - 1        
+        cdef Stream stream = stream_factory(self, c_stream.index)
+        stream._codec_context.codec = codec
+        lib.avcodec_get_context_defaults3(stream._codec_context, codec)
+        stream._codec_context.codec = codec
         
         # Now lets set some more sane video defaults
         if stream._codec_context.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+
             if not rate:
-                rate = 25
-            
+                rate = 24
             stream._codec_context.time_base.den = 12800 
             stream._codec_context.time_base.num = 1
             stream._codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
             stream._codec_context.width = 640
             stream._codec_context.height = 480
-            stream.codec.frame_rate = rate
+            stream.rate = rate
+
         # Some Sane audio defaults
-        elif codec_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+        elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+
             if not rate:
                 rate = 44100
+
             #choose codecs first available sample format
             stream._codec_context.sample_fmt = codec.sample_fmts[0]
             stream._codec_context.bit_rate = 64000
             stream._codec_context.sample_rate = int(rate)
             #codec_ctx.sample_rate = 48000
-
             stream._codec_context.channels = 2
             stream._codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             stream._codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
-        
-        # And steam object to self.streams
-        
+                
         self.streams.append(stream)
         return stream
     
@@ -215,10 +206,9 @@ cdef class OutputContainer(object):
         Note: To use this Container must be opened with mode = "w"
         """
     
+        # Open all the streams.
         cdef Stream stream
-        
         for stream in self.streams:
-            # Open Codec if its not open
             if not lib.avcodec_is_open(stream._codec_context):
                 err_check(lib.avcodec_open2(stream._codec_context, stream._codec, NULL))
 
@@ -248,17 +238,8 @@ cdef class OutputContainer(object):
             lib.avio_closep(&self.proxy.ptr.pb)
         
         
-    def mux(self, Packet packet):
-        
+    def mux(self, Packet packet not None):
         self.start_encoding()
-        
-        cdef int ret
-        if self.is_input:
-            raise ValueError("not a output file")
-        #None and Null check
-        if not packet:
-            raise TypeError("argument must be a av.packet.Packet, not 'NoneType' or 'NULL'")
-        
         err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
-    
-            
+
+

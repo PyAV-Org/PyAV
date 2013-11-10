@@ -60,7 +60,7 @@ cdef class Stream(object):
 
     def __dealloc__(self):
         if self._codec:
-            lib.avcodec_close(self._codec_context);
+            lib.avcodec_close(self._codec_context)
         if self._codec_options:
             lib.av_dict_free(&self._codec_options)
 
@@ -97,7 +97,13 @@ cdef class Stream(object):
 
     property rate:
         def __get__(self): 
-            return self._codec_context.ticks_per_frame * avrational_to_faction(&self._codec_context.time_base) if self._codec_context else None
+            if self._codec_context:
+                return self._codec_context.ticks_per_frame * avrational_to_faction(&self._codec_context.time_base)
+        def __set__(self, value):
+            if self._codec_context:
+                self._codec_context.ticks_per_frame = 1
+                self._codec_context.time_base.num = 1
+                self._codec_context.time_base.den = value
 
     property start_time:
         def __get__(self): return self._stream.start_time

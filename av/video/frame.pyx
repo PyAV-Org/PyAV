@@ -92,7 +92,7 @@ cdef class VideoFrame(Frame):
         """
         return self.reformat(self.width, self.height, "rgb24")
 
-    cpdef reformat(self, int width, int height, char* dst_format_str):
+    def reformat(self, unsigned int width, unsigned int height, char* dst_format_str):
     
         """reformat(width, height, format)
 
@@ -104,13 +104,18 @@ cdef class VideoFrame(Frame):
 
         """
         
-        if self.ptr.format < 0:
-            raise ValueError("invalid source format")
 
         cdef lib.AVPixelFormat dst_format = lib.av_get_pix_fmt(dst_format_str)
         if dst_format == lib.AV_PIX_FMT_NONE:
             raise ValueError("invalid format %s" % dst_format_str)
         
+        return self._reformat(width, height, dst_format)
+
+    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format):
+
+        if self.ptr.format < 0:
+            raise ValueError("invalid source format")
+
         cdef lib.AVPixelFormat src_format = <lib.AVPixelFormat> self.ptr.format
         
         # Shortcut!
