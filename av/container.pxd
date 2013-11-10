@@ -7,8 +7,6 @@ from av.format cimport ContainerFormat
 # need this intermediate proxy object so that there aren't any reference cycles
 # and the pointer can be freed when everything that depends upon it is deleted.
 cdef class ContainerProxy(object):
-    
-    cdef bint is_input
     cdef lib.AVFormatContext *ptr
 
 

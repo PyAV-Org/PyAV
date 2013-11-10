@@ -11,12 +11,8 @@ from av.utils import AVError
 
 
 cdef class ContainerProxy(object):
-
-    def __init__(self, bint is_input):
-        self.is_input = is_input
-    
     def __dealloc__(self):
-        if self.is_input and self.ptr:
+        if self.ptr and self.ptr.iformat:
             lib.avformat_close_input(&self.ptr)
 
 
@@ -36,7 +32,7 @@ cdef class Container(object):
         if sentinel is not _base_constructor_sentinel:
             raise RuntimeError('cannot construct base Container')
         self.name = name
-        self.proxy = ContainerProxy(isinstance(self, InputContainer))
+        self.proxy = ContainerProxy()
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
