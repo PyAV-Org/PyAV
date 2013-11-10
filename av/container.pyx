@@ -3,6 +3,7 @@ from libc.stdlib cimport malloc, free
 
 cimport libav as lib
 
+from av.format cimport build_container_format
 from av.packet cimport Packet
 from av.stream cimport Stream, stream_factory
 from av.utils cimport err_check, avdict_to_dict
@@ -49,6 +50,7 @@ cdef class InputContainer(object):
             self.name,
         )
         err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
+        self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
         self.streams = list(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
 
@@ -108,7 +110,7 @@ cdef class OutputContainer(object):
         cdef lib.AVOutputFormat* container_format = lib.av_guess_format(NULL, self.name, NULL)
         if not container_format:
             raise ValueError("Could not deduce output format")
-        
+
         err_check(lib.avformat_alloc_output_context2(
             &self.proxy.ptr,
             container_format,
@@ -116,6 +118,7 @@ cdef class OutputContainer(object):
             self.name,
         ))
 
+        self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
         self.streams = []
         self.metadata = {}
 

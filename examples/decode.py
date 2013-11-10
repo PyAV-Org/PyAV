@@ -31,6 +31,7 @@ proc = None
 video = open(args.path)
 
 print 'container:', video
+print '\tformat:', video.format
 print '\tduration:', float(video.duration) / time_base
 print '\tmetadata:'
 for k, v in sorted(video.metadata.iteritems()):

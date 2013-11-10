@@ -1,9 +1,24 @@
 cimport libav as lib
 
 
+cdef object _cinit_bypass_sentinel = object()
+
+cdef ContainerFormat build_container_format(lib.AVInputFormat* in_, lib.AVOutputFormat* out):
+    if not in_ and not out:
+        raise ValueError('needs input format or output format')
+    cdef ContainerFormat format = ContainerFormat.__new__(ContainerFormat, _cinit_bypass_sentinel)
+    format.in_ = in_
+    format.out = out
+    format.name = out.name if out else in_.name
+    return format
+
+
 cdef class ContainerFormat(object):
 
-    def __cinit__(self, bytes name):
+    def __cinit__(self, name):
+
+        if name is _cinit_bypass_sentinel:
+            return
 
         # We need to hold onto the original name because AVInputFormat.name
         # is actually comma-seperated, and so we need to remember which one
@@ -34,6 +49,8 @@ cdef class ContainerFormat(object):
 
     property long_name:
         def __get__(self):
+            # We prefer the output names since the inputs may represent
+            # multiple formats.
             return self.out.long_name if self.out else self.in_.long_name
 
     property extensions:

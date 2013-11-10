@@ -1,5 +1,7 @@
 cimport libav as lib
 
+from av.format cimport ContainerFormat
+
 
 # Since there are multiple objects that need to refer to a valid context, we
 # need this intermediate proxy object so that there aren't any reference cycles
@@ -13,6 +15,7 @@ cdef class ContainerProxy(object):
 cdef class Container(object):
     
     cdef readonly bytes name
+    cdef readonly ContainerFormat format
     
     cdef ContainerProxy proxy
     cdef object __weakref__
