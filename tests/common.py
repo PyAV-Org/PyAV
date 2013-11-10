@@ -5,6 +5,7 @@ import errno
 import os
 from unittest import TestCase as _Base
 from itertools import izip
+from fractions import Fraction
 
 from nose.plugins.skip import SkipTest
 
