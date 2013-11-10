@@ -13,20 +13,28 @@ from av.video.stream cimport VideoStream
 cdef object _cinit_bypass_sentinel = object()
 
 
-cdef Stream alloc_stream(lib.AVMediaType media_type):
-    """Allocate a completely blank Stream. You MUST finalize it."""
-    if media_type == lib.AVMEDIA_TYPE_VIDEO:
-        return VideoStream.__new__(VideoStream, _cinit_bypass_sentinel)
-    elif media_type == lib.AVMEDIA_TYPE_AUDIO:
-        return AudioStream.__new__(AudioStream, _cinit_bypass_sentinel)
+cdef Stream build_stream(Container container, lib.AVStream *c_stream):
+    """Build an av.Stream for an existing AVStream.
+
+    The AVStream MUST be fully constructed and ready for use before this is
+    called.
+
+    """
+    
+    # This better be the right one...
+    assert container.proxy.ptr.streams[c_stream.index] == c_stream
+
+    cdef Stream py_stream
+
+    if c_stream.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        py_stream = VideoStream.__new__(VideoStream, _cinit_bypass_sentinel)
+    elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+        py_stream = AudioStream.__new__(AudioStream, _cinit_bypass_sentinel)
     else:
-        return Stream.__new__(Stream, _cinit_bypass_sentinel)
+        py_stream = Stream.__new__(Stream, _cinit_bypass_sentinel)
 
-
-cdef Stream build_stream_from_container(Container container, lib.AVStream *c_stream):
-    cdef Stream stream = alloc_stream(c_stream.codec.codec_type)
-    stream._init(container, c_stream)
-    return stream
+    py_stream._init(container, c_stream)
+    return py_stream
 
 
 cdef class Stream(object):
@@ -36,16 +44,16 @@ cdef class Stream(object):
             return
         raise RuntimeError('cannot manually instatiate Stream')
 
-    cdef _init(self, Container container, lib.AVStream *c_stream):
+    cdef _init(self, Container container, lib.AVStream *stream):
         
         self._container = container.proxy        
         self._weak_container = PyWeakref_NewRef(container, None)
-        self._stream = c_stream
-        self._codec_context = self._stream.codec
+        self._stream = stream
+        self._codec_context = stream.codec
         
-        self.metadata = avdict_to_dict(self._stream.metadata)
+        self.metadata = avdict_to_dict(stream.metadata)
         
-        if self._container.is_input:
+        if self._container.ptr.iformat:
 
             # Find the codec.
             self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
@@ -105,11 +113,6 @@ cdef class Stream(object):
         def __get__(self): 
             if self._codec_context:
                 return self._codec_context.ticks_per_frame * avrational_to_faction(&self._codec_context.time_base)
-        def __set__(self, value):
-            if self._codec_context:
-                self._codec_context.ticks_per_frame = 1
-                self._codec_context.time_base.num = 1
-                self._codec_context.time_base.den = value
 
     property start_time:
         def __get__(self): return self._stream.start_time

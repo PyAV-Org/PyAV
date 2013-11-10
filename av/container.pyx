@@ -5,7 +5,7 @@ cimport libav as lib
 
 from av.format cimport build_container_format
 from av.packet cimport Packet
-from av.stream cimport Stream, alloc_stream, build_stream_from_container
+from av.stream cimport Stream, build_stream
 from av.utils cimport err_check, avdict_to_dict
 from av.utils import AVError
 
@@ -52,7 +52,7 @@ cdef class InputContainer(object):
         err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
         self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
         self.streams = list(
-            build_stream_from_container(self, self.proxy.ptr.streams[i])
+            build_stream(self, self.proxy.ptr.streams[i])
             for i in range(self.proxy.ptr.nb_streams)
         )
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
@@ -135,8 +135,6 @@ cdef class OutputContainer(object):
         if the codec_name is a audio codec rate means sample rate 
         Note: To use this Container must be opened with mode = "w"
         """
-    
-
         
         # Find encoder
         cdef lib.AVCodec *codec
@@ -156,38 +154,41 @@ cdef class OutputContainer(object):
             lib.FF_COMPLIANCE_NORMAL,
         ):
             raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
-        
-        # Create new stream
-        lib.avformat_new_stream(self.proxy.ptr, codec)
-        cdef Stream stream = build_stream_from_container(self, self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1])
 
-        # Setup the AVCodecContext.
-        lib.avcodec_get_context_defaults3(stream._codec_context, codec)
-        stream._codec_context.codec = stream._codec = codec
-        
+        # Create new stream in the AVFormatContext, set AVCodecContext values.
+        lib.avformat_new_stream(self.proxy.ptr, codec)
+        cdef lib.AVStream *stream = self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1]
+        cdef lib.AVCodecContext *codec_context = stream.codec # For readibility.
+        lib.avcodec_get_context_defaults3(stream.codec, codec)
+        stream.codec.codec = codec # Still have to manually set this though...
+
         # Now lets set some more sane video defaults
         if codec.type == lib.AVMEDIA_TYPE_VIDEO:
-            stream._codec_context.time_base.num = 1
-            stream._codec_context.time_base.den = 12800 
-            stream._codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
-            stream._codec_context.width = 640
-            stream._codec_context.height = 480
-            stream.rate = rate or 24
+            codec_context.time_base.num = 1
+            codec_context.time_base.den = 12800 
+            codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
+            codec_context.width = 640
+            codec_context.height = 480
+            codec_context.ticks_per_frame = 1
+            codec_context.time_base.num = 1
+            codec_context.time_base.den = rate or 24
 
         # Some Sane audio defaults
-        elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-            stream._codec_context.sample_fmt = codec.sample_fmts[0]
-            stream._codec_context.bit_rate = 64000
-            stream._codec_context.sample_rate = rate or 48000
-            stream._codec_context.channels = 2
-            stream._codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
+        elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
+            codec_context.sample_fmt = codec.sample_fmts[0]
+            codec_context.bit_rate = 64000
+            codec_context.sample_rate = rate or 48000
+            codec_context.channels = 2
+            codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
-            stream._codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
-                
-        self.streams.append(stream)
-        return stream
+            codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
+        
+        # Finally construct the user-land stream.
+        cdef Stream py_stream = build_stream(self, stream)
+        self.streams.append(py_stream)
+        return py_stream
     
     cpdef start_encoding(self):
     
@@ -211,18 +212,16 @@ cdef class OutputContainer(object):
             
     def close(self):
 
-        cdef Stream stream
-        
         if not self.proxy.ptr.pb:
             raise IOError("file not opened")
         
         err_check(lib.av_write_trailer(self.proxy.ptr))
+        cdef Stream stream
         for stream in self.streams:
             lib.avcodec_close(stream._codec_context)
             
         if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.proxy.ptr.pb)
-        
         
     def mux(self, Packet packet not None):
         self.start_encoding()

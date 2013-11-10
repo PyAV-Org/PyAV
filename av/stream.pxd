@@ -21,11 +21,10 @@ cdef class Stream(object):
     # cdef lib.AVRational _frame_rate
 
     # API.
-    cdef _init(self, Container container, lib.AVStream *c_stream)
-    cpdef decode(self, Packet packet)
-    cdef _setup_frame(self, Frame frame)
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed)
+    cdef _init(self, Container, lib.AVStream*)
+    cpdef decode(self, Packet)
+    cdef _setup_frame(self, Frame)
+    cdef Frame _decode_one(self, lib.AVPacket*, int *data_consumed)
 
 
-cdef Stream alloc_stream(lib.AVMediaType media_type)
-cdef Stream build_stream_from_container(Container container, lib.AVStream *c_stream)
+cdef Stream build_stream(Container, lib.AVStream*)
