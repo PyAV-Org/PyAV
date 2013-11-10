@@ -89,8 +89,18 @@ cdef class Stream(object):
 
     property type:
         def __get__(self):
-            cdef char *name = lib.av_get_media_type_string(self._codec_context.codec_type)
-            return name if name != NULL else 'unknown'
+            # There is a convenient lib.av_get_media_type_string(x), but it
+            # doesn't exist in libav.
+            if self._codec_context.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+                return "video"
+            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+                return "audio"
+            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_DATA:
+                return "data"
+            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
+                return "subtitle"
+            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
+                return "attachment"
 
     property name:
         def __get__(self):
