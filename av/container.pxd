@@ -28,5 +28,9 @@ cdef class InputContainer(Container):
 
 
 cdef class OutputContainer(Container):
+
+    cdef bint _started
+    cdef bint _done
+
     cpdef add_stream(self, bytes codec_name, object rate=*)
     cpdef start_encoding(self)

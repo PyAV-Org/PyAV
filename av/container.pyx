@@ -11,6 +11,7 @@ from av.utils import AVError
 
 
 cdef class ContainerProxy(object):
+    # Just a reference-counting wrapper for a pointer.
     def __dealloc__(self):
         if self.ptr and self.ptr.iformat:
             lib.avformat_close_input(&self.ptr)
@@ -187,12 +188,11 @@ cdef class OutputContainer(object):
         return py_stream
     
     cpdef start_encoding(self):
-    
-        """setups Container for encoding. Opens Codecs and output file if they aren't already open 
-        and writes file header. This method is automatically called by a Stream before encoding.
-        Note: To use this Container must be opened with mode = "w"
-        """
-    
+        """Write the file header! Called automatically."""
+        
+        if self._started:
+            return
+
         # Make sure all of the streams are open.
         cdef Stream stream
         for stream in self.streams:
@@ -205,9 +205,15 @@ cdef class OutputContainer(object):
             if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
                 err_check(lib.avio_open(&self.proxy.ptr.pb, self.name, lib.AVIO_FLAG_WRITE))
             err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
+
+        self._started = True
             
     def close(self):
 
+        if self._closed:
+            return
+        if not self._started:
+            raise RuntimeError('not started')
         if not self.proxy.ptr.pb:
             raise IOError("file not opened")
         
@@ -218,6 +224,8 @@ cdef class OutputContainer(object):
             
         if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.proxy.ptr.pb)
+
+        self._closed = True
         
     def mux(self, Packet packet not None):
         self.start_encoding()
