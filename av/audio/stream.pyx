@@ -48,16 +48,10 @@ cdef class AudioStream(Stream):
         if not completed_frame:
             return
         
-        if not self.swr_proxy:
-            self.swr_proxy =  SwrContextProxy() 
-
         cdef AudioFrame frame = self.next_frame
         self.next_frame = None
         
         frame._init_properties()
-
-        # Copy the pointers over.
-        frame.swr_proxy = self.swr_proxy
         
         return frame
     
@@ -73,8 +67,8 @@ cdef class AudioStream(Stream):
         self.weak_ctx().start_encoding()
         
         #Setup a resampler if ones not setup
-        if not self.swr_proxy:
-            self.swr_proxy = SwrContextProxy()
+        if not self.resampler:
+            self.resampler = AudioResampler()
         
         # setup audio fifo if ones not setup
         if not self.fifo:
@@ -93,7 +87,7 @@ cdef class AudioStream(Stream):
         
         # if frame supplied add to audio fifo
         if frame:
-            frame.swr_proxy = self.swr_proxy
+            frame.resampler = self.resampler
             self.fifo.write(frame)
 
         # read a frame out of the fifo queue if there are enough samples ready
