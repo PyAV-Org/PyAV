@@ -45,12 +45,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         
         AVFrame* coded_frame
         
-        int width
-        int height
         int bit_rate
         int bit_rate_tolerance
-        int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 
-        int max_b_frames
         int mb_decision
         
         int global_quality
@@ -65,12 +61,18 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         float rc_min_vbv_overflow_use
         
         AVRational time_base
-        AVPixelFormat pix_fmt
+        int ticks_per_frame
+        
         
         AVCodec *codec
 
         # Video.
+        int width
+        int height
+        AVPixelFormat pix_fmt
         AVRational sample_aspect_ratio
+        int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 
+        int max_b_frames
 
         # Audio.
         AVSampleFormat sample_fmt

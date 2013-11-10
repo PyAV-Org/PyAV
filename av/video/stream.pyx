@@ -141,11 +141,12 @@ cdef class VideoStream(Stream):
             return packet
 
 
-    property frame_rate:
-        def __get__(self):
-            return avrational_to_faction(&self._stream.r_frame_rate) if self._codec_context else None
-        def __set__(self, value):
-            to_avrational(value, &self._stream.r_frame_rate)
+    property guessed_rate:
+        def __get__(self): return avrational_to_faction(&self._stream.r_frame_rate)
+
+    property average_rate:
+        def __get__(self): return avrational_to_faction(&self._stream.avg_frame_rate)
+
 
     property gop_size:
         def __get__(self):

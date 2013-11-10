@@ -90,16 +90,20 @@ cdef class Stream(object):
         def __get__(self): return self._stream.index
     property id:
         def __get__(self): return self._stream.id
-    # property time_base:
-    #     def __get__(self): return avrational_to_faction(&self._stream.time_base)
-    property base_frame_rate:
-        def __get__(self): return avrational_to_faction(&self._stream.r_frame_rate)
-    property avg_frame_rate:
-        def __get__(self): return avrational_to_faction(&self._stream.avg_frame_rate)
+
+
+    property time_base:
+        def __get__(self): return avrational_to_faction(&self._stream.time_base)
+
+    property rate:
+        def __get__(self): 
+            return self._codec_context.ticks_per_frame * avrational_to_faction(&self._codec_context.time_base) if self._codec_context else None
+
     property start_time:
         def __get__(self): return self._stream.start_time
     property duration:
         def __get__(self): return self._stream.duration
+
     property frames:
         def __get__(self): return self._stream.nb_frames
     
@@ -116,11 +120,6 @@ cdef class Stream(object):
         def __set__(self, int value):
             self._codec_context.bit_rate_tolerance = value
             
-    property time_base:
-        def __get__(self): 
-            return avrational_to_faction(&self._codec_context.time_base) if self._codec_context else None
-        def __set__(self, value):
-            to_avrational(value, &self._codec_context.time_base)
 
 
     cpdef decode(self, Packet packet):
