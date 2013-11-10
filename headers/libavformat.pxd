@@ -24,6 +24,8 @@ cdef extern from "libavformat_compat.h" nogil:
         AVMEDIA_TYPE_NB
         # There are a few more...
     
+    cdef char* av_get_media_type_string(AVMediaType)
+    
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrac.html
     cdef struct AVFrac:
         int64_t val

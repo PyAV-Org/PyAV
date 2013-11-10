@@ -111,32 +111,32 @@ cdef class Container(object):
         codec_ctx.codec = codec
         
         # Now lets set some more sane video defaults
-        if stream.codec.ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        if stream._codec_context.codec_type == lib.AVMEDIA_TYPE_VIDEO:
             if not rate:
                 rate = 25
             
-            stream.codec.ctx.time_base.den = 12800 
-            stream.codec.ctx.time_base.num = 1
-            stream.codec.ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
-            stream.codec.ctx.width = 640
-            stream.codec.ctx.height = 480
+            stream._codec_context.time_base.den = 12800 
+            stream._codec_context.time_base.num = 1
+            stream._codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
+            stream._codec_context.width = 640
+            stream._codec_context.height = 480
             stream.codec.frame_rate = rate
         # Some Sane audio defaults
         elif codec_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
             if not rate:
                 rate = 44100
             #choose codecs first available sample format
-            stream.codec.ctx.sample_fmt = codec.sample_fmts[0]
-            stream.codec.ctx.bit_rate = 64000
-            stream.codec.ctx.sample_rate = int(rate)
+            stream._codec_context.sample_fmt = codec.sample_fmts[0]
+            stream._codec_context.bit_rate = 64000
+            stream._codec_context.sample_rate = int(rate)
             #codec_ctx.sample_rate = 48000
 
-            stream.codec.ctx.channels = 2
-            stream.codec.ctx.channel_layout = lib.AV_CH_LAYOUT_STEREO
+            stream._codec_context.channels = 2
+            stream._codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
-            stream.codec.ctx.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
+            stream._codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
         
         # And steam object to self.streams
         
@@ -157,8 +157,8 @@ cdef class Container(object):
         
         for stream in self.streams:
             # Open Codec if its not open
-            if not lib.avcodec_is_open(stream.codec.ctx):
-                err_check(lib.avcodec_open2(stream.codec.ctx, stream.codec.ptr, NULL))
+            if not lib.avcodec_is_open(stream._codec_context):
+                err_check(lib.avcodec_open2(stream._codec_context, stream._codec, NULL))
 
         filename = self.name
         
@@ -180,7 +180,7 @@ cdef class Container(object):
             err_check(lib.av_write_trailer(self.proxy.ptr))
             for stream in self.streams:
                 
-                lib.avcodec_close(stream.codec.ctx)
+                lib.avcodec_close(stream._codec_context)
                 
             if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
                 lib.avio_closep(&self.proxy.ptr.pb)

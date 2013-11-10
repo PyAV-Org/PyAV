@@ -46,8 +46,6 @@ for i, stream in enumerate(video.streams):
     print '\t\tbase_frame_rate: %.3f - %r' % (float(stream.base_frame_rate), stream.base_frame_rate)
     print '\t\tavg_frame_rate: %.3f' % float(stream.avg_frame_rate)
 
-    print '\t\tcodec:', stream.codec
-
     if stream.type == b'audio':
         print '\t\taudio:'
         print '\t\t\tsample_rate: %s' % stream.rate
@@ -108,7 +106,7 @@ for i, packet in enumerate(video.demux(streams)):
             if not proc:
                 cmd = ['ffplay',
                     '-f', 's16le',
-                    '-ar', str(packet.stream.codec.rate),
+                    '-ar', str(packet.stream.rate),
                     '-vn','-',
                 ]
                 print '***', ' '.join(cmd)

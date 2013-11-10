@@ -1,4 +1,6 @@
+from av.audio.format cimport get_audio_format
 from av.audio.frame cimport alloc_audio_frame
+from av.audio.layout cimport get_audio_layout
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport err_check
@@ -6,17 +8,33 @@ from av.utils cimport err_check
 
 cdef class AudioStream(Stream):
 
-    def __init__(self, *args):
-        super(AudioStream, self).__init__(*args)
+    def __cinit__(self, *args):
+        self.layout = get_audio_layout(self._codec_context.channel_layout)
+        self.format = get_audio_format(self._codec_context.sample_fmt)
         self.encoded_frame_count = 0
     
+    def __repr__(self):
+        return '<av.%s %s at %dHz, %s, %s at 0x%x>' % (
+            self.__class__.__name__,
+            self.name,
+            self.rate,
+            self.layout.name,
+            self.format.name,
+            id(self),
+        )
+
+    property frame_size:
+        """Number of samples per channel in an audio frame."""
+        def __get__(self): return self._codec_context.frame_size
+        
     property rate:
-        def __get__(self):
-            return self.codec.ctx.sample_rate
+        """samples per second """
+        def __get__(self): return self._codec_context.sample_rate
+        def __set__(self, int value): self._codec_context.sample_rate = value
 
     property channels:
         def __get__(self):
-            return self.codec.ctx.channels
+            return self._codec_context.channels
         
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
 
@@ -24,7 +42,7 @@ cdef class AudioStream(Stream):
             self.next_frame = alloc_audio_frame()
 
         cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.codec.ctx, self.next_frame.ptr, &completed_frame, packet))
+        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self._codec_context, self.next_frame.ptr, &completed_frame, packet))
         if not completed_frame:
             return
         
@@ -103,19 +121,19 @@ cdef class AudioStream(Stream):
             if fifo_frame.ptr.pts != lib.AV_NOPTS_VALUE:
                 fifo_frame.ptr.pts = lib.av_rescale_q(fifo_frame.ptr.pts, 
                                                       fifo_frame.time_base_, #src 
-                                                      self.codec.ctx.time_base) #dest
+                                                      self._codec_context.time_base) #dest
             else:
                 fifo_frame.ptr.pts = lib.av_rescale(self.encoded_frame_count,
-                                                    self.codec.ctx.sample_rate, #src
-                                                    self.codec.ctx.time_base.den) #dest
+                                                    self._codec_context.sample_rate, #src
+                                                    self._codec_context.time_base.den) #dest
                 
             self.encoded_frame_count += fifo_frame.samples
             #print self.encoded_frame_count
             
-            ret = err_check(lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, fifo_frame.ptr, &got_output))
+            ret = err_check(lib.avcodec_encode_audio2(self._codec_context, &packet.struct, fifo_frame.ptr, &got_output))
         else:
             # frame set to NULL to flush encoder out frame
-            ret = err_check(lib.avcodec_encode_audio2(self.codec.ctx, &packet.struct, NULL, &got_output))
+            ret = err_check(lib.avcodec_encode_audio2(self._codec_context, &packet.struct, NULL, &got_output))
 
         if got_output:
             
@@ -124,21 +142,21 @@ cdef class AudioStream(Stream):
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
                 #print packet.struct.pts, '->',
                 packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
-                                                     self.codec.ctx.time_base,
+                                                     self._codec_context.time_base,
                                                      self.ptr.time_base)
-                #print packet.struct.pts, self.codec.ctx.time_base, self.ptr.time_base, self.ptr.start_time,self.codec.frame_rate
+                #print packet.struct.pts, self._codec_context.time_base, self.ptr.time_base, self.ptr.start_time,self.codec.frame_rate
 
             if packet.struct.dts != lib.AV_NOPTS_VALUE:
                 packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
-                                                     self.codec.ctx.time_base,
+                                                     self._codec_context.time_base,
                                                      self.ptr.time_base)
 
             if packet.struct.duration > 0:
                 packet.struct.duration = lib.av_rescale_q(packet.struct.duration, 
-                                                     self.codec.ctx.time_base,
+                                                     self._codec_context.time_base,
                                                      self.ptr.time_base)
                 
-            if self.codec.ctx.coded_frame.key_frame:
+            if self._codec_context.coded_frame.key_frame:
                 packet.struct.flags |= lib.AV_PKT_FLAG_KEY
 
             packet.struct.stream_index = self.ptr.index
