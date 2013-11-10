@@ -12,55 +12,60 @@ The Big Plan
 Encoding
 ========
 
-- Should video frame dimensions be a property of Stream, Codec, or VideoFormat?
-  It feels most accurate for there to be an immutable (but writable) VideoFormat
-  on a Context. If we want it on Stream, it should proxy attribute access to
-  the underlying Codec.
-- Why do we need to much separation between Streams and Codecs? Since they are
-  created at the same time, and the user will not create their own Codec (will
-  they?), then they could be merged together.
-    - Streams have a Codec, timing information, and metadata.
-    - Codec has all the dimensions, qualities, encoding details, etc..
+- Make everything mutable. Later, we can introduce a PseudoMutable base class
+  for everything that has a .assert_mutable() method and public is_read_only
+
+
+Time
+====
+
+- What are the various rates and scales?
+
+  see: http://ffmpeg.org/pipermail/libav-user/2011-December/001041.html
+  see: http://stackoverflow.com/questions/12234949/ffmpeg-time-unit-explanation-and-av-seek-frame-method/16739755#16739755
+
+  - Stream.guessed_rate or AVStream.r_frame_rate:
+    FFmpeg's guess as to the frame rate. Often 24/1.
+
+  - Stream.average_rate or AVStream.avg_frame_rate:
+    Average frame rate that has been inspected in the file. This is what VLC
+    reports in the media information. Often near 24/1.
+
+    It may calculate this from 20 frames; see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02768
+
+  - Stream.time_base or AVStream.time_base:
+    Duration of one time unit for AVStream times.
+
+  - Stream.rate or CodecContext.time_base:
+      The length of a single frame as reported by the file. Sometimes 1/24,
+      sometimes really really wrong.
+
+  possibilities for discrepencies:
+    - .mov supports a fixed frame rate
+    - .mp4 does not support a fixed frame rate?
+    - see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02647
 
 
 Unsorted
 ========
 
-- Rename Context to Container.
-- Create Format descriptor
-- Merge Codec into Stream
+- split container into container/{base,input,output}.{pxd,pyx}
+
+- Replace adhoc frame counting attributes with AVCodecContext.frame_number
+  see: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html#a9e5a25a530d01c04491216c368a1a04a
+
+- Container.add_stream(template=stream)
+
+- atexit.register something to clean up FFmpeg threads
+
 - Create Codec Descriptor
 
-- Uniform time representation: fraction or av.utils.Rational
-  
-  1) av.utils.Rational:
-
-    - Needs: __abs__, __add__, __div__, __eq__, __floordiv__, __le__, __lt__,
-      __mod__, __mul__, __neg__, __pos__, __pow__, __radd__, __rdiv__, __rfloordiv__,
-      __rmod__, __rmul__, __rpow__, __rtruediv__, __truediv__, __trunc__,
-      denominator, numerator
-
-    - Likely doable as a Mixin.
-    - Is the extra little bit of speed worth the trouble?
-
-  2) fraction.Fraction:
-
-    - Slower:
-      $ python -m timeit -s 'from fractions import Fraction; a = Fraction(1, 2)' 'b = a * 1234567890'
-      100000 loops, best of 3: 9.95 usec per loop
-
-  - I think that the Python and C objects will not have synchonized time stamps
-    since the user will need to set the time on the frame without a stream. So
-    either (1) the user needs to manage both the stream time_base AND the frame
-    times, or (2) the Frame.time needs to be compatible with the stream time_base
-
-  - For now, for making it move quickly, use the same system, and call it `pts.
-    Then, in the future, we can introduce `time` attributes and make it cleaner.
-  - Automatically set reasonable default `time_base`s determined by the frame
-    and sample rates, such that a pts of 1 is either a sample or a frame.
+- Make av.utils.SmartPointer to wrap around a pointer?
 
 runtime_library_dirs
 
+- Look at how stream alloc works; can we manually do this and register the
+  stream on a format context later?
 
 - Replace AudioFrame.resample with AudioResampler
 

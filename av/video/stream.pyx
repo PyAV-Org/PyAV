@@ -22,9 +22,9 @@ cdef class VideoStream(Stream):
         return '<av.%s %s, %s %dx%d at 0x%x>' % (
             self.__class__.__name__,
             self.name,
-            self.format.name,
-            self.format.width,
-            self.format.height,
+            self.format.name if self.format else None,
+            self._codec_context.width,
+            self._codec_context.height,
             id(self),
         )
 
@@ -154,6 +154,11 @@ cdef class VideoStream(Stream):
 
 
     property guessed_rate:
+        """The lowest framerate with which all timestamps can be represented.
+
+        Just a guess though, so be careful.
+
+        """
         def __get__(self): return avrational_to_faction(&self._stream.r_frame_rate)
 
     property average_rate:

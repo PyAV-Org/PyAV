@@ -102,8 +102,6 @@ cdef class Stream(object):
     
     property index:
         def __get__(self): return self._stream.index
-    property id:
-        def __get__(self): return self._stream.id
 
 
     property time_base:
