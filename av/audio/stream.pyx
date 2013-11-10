@@ -1,6 +1,7 @@
 from av.audio.format cimport get_audio_format
 from av.audio.frame cimport alloc_audio_frame
 from av.audio.layout cimport get_audio_layout
+from av.container cimport Container
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport err_check
@@ -8,10 +9,11 @@ from av.utils cimport err_check
 
 cdef class AudioStream(Stream):
 
-    def __cinit__(self, *args):
+    cdef _init(self, Container container, lib.AVStream *stream):
+        Stream._init(self, container, stream)
+        self.encoded_frame_count = 0
         self.layout = get_audio_layout(self._codec_context.channel_layout)
         self.format = get_audio_format(self._codec_context.sample_fmt)
-        self.encoded_frame_count = 0
     
     def __repr__(self):
         return '<av.%s %s at %dHz, %s, %s at 0x%x>' % (

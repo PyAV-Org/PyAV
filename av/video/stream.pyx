@@ -1,5 +1,6 @@
 from libc.stdint cimport int64_t
 
+from av.container cimport Container
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_faction, to_avrational
@@ -10,7 +11,8 @@ from av.video.frame cimport alloc_video_frame
 
 cdef class VideoStream(Stream):
     
-    def __cinit__(self, *args):
+    cdef _init(self, Container container, lib.AVStream *stream):
+        Stream._init(self, container, stream)
         self.last_w = 0
         self.last_h = 0
         self.encoded_frame_count = 0
