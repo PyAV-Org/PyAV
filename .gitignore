@@ -1,7 +1,7 @@
 # General.
 .DS_Store
 *~
-/venv
+/venv*
 /vendor
 /bin
 /include

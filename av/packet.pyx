@@ -25,11 +25,11 @@ cdef class Packet(object):
         return self.stream.decode(self)
 
     property pts:
-        def __get__(self): return self.struct.pts
+        def __get__(self): return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts
     property dts:
-        def __get__(self): return self.struct.dts
+        def __get__(self): return None if self.struct.dts == lib.AV_NOPTS_VALUE else self.struct.dts
     property size:
         def __get__(self): return self.struct.size
     property duration:
-        def __get__(self): return self.struct.duration
+        def __get__(self): return None if self.struct.duration == lib.AV_NOPTS_VALUE else self.struct.duration
 

@@ -1,26 +1,30 @@
 cimport libav as lib
-from av.codec cimport Codec
 from av.packet cimport Packet
-from av.context cimport Context, ContextProxy
+from av.container cimport Container, ContainerProxy
 from av.frame cimport Frame
 
 
 cdef class Stream(object):
     
-    cdef readonly bytes type
+    # Stream attributes.
+    cdef ContainerProxy _container
+    cdef _weak_container
     
-    cdef ContextProxy ctx
-    cdef weak_ctx
-    
-    cdef lib.AVStream *ptr
-    
-    cdef readonly Codec codec
+    cdef lib.AVStream *_stream
     cdef readonly dict metadata
 
+    # CodecContext attributes.
+    cdef lib.AVCodecContext *_codec_context
+    cdef lib.AVCodec *_codec
+    cdef lib.AVDictionary *_codec_options
     
-    cpdef decode(self, Packet packet)
-    cdef _setup_frame(self, Frame frame)
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed)
+    # cdef lib.AVRational _frame_rate
+
+    # API.
+    cdef _init(self, Container, lib.AVStream*)
+    cpdef decode(self, Packet)
+    cdef _setup_frame(self, Frame)
+    cdef Frame _decode_one(self, lib.AVPacket*, int *data_consumed)
 
 
-cdef Stream stream_factory(Context ctx, int index)
+cdef Stream build_stream(Container, lib.AVStream*)

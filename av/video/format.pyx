@@ -5,6 +5,8 @@ cdef object _cinit_bypass_sentinel = object()
 
 cdef VideoFormat get_video_format(lib.AVPixelFormat c_format, unsigned int width, unsigned int height):
     """Make sure to call VideoFormat._init manually!"""
+    if c_format == lib.AV_PIX_FMT_NONE:
+        return None
     cdef VideoFormat format = VideoFormat.__new__(VideoFormat, _cinit_bypass_sentinel)
     format._init(c_format, width, height)
     return format
@@ -35,15 +37,13 @@ cdef class VideoFormat(object):
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-
+        
         self.components = PyTuple_New(self.ptr.nb_components)
-        cdef VideoFormatComponent c
         for i in range(self.ptr.nb_components):
-            c = VideoFormatComponent(self, i)
-
             # We are constructing this tuple manually, but since Cython does
             # not understand reference stealing we must manually Py_INCREF
             # so that when Cython Py_DECREFs it doesn't release our object.
+            c = VideoFormatComponent(self, i)
             Py_INCREF(c)
             PyTuple_SET_ITEM(self.components, i, c)
 

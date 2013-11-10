@@ -1,12 +1,16 @@
 cimport libav as lib
 
 from av.stream cimport Stream
+from av.video.format cimport VideoFormat
 from av.video.frame cimport VideoFrame
 from av.video.swscontext cimport SwsContextProxy
 
 
 cdef class VideoStream(Stream):
     
+    cdef readonly VideoFormat format
+    cdef _build_format(self)
+
     cdef readonly int buffer_size
     
     # Hold onto the frames that we will decode until we have a full one.

@@ -4,49 +4,80 @@ from cpython cimport PyWeakref_NewRef
 cimport libav as lib
 
 from av.audio.stream cimport AudioStream
-from av.codec cimport codec_factory
 from av.packet cimport Packet
 from av.subtitles.stream cimport SubtitleStream
-from av.utils cimport err_check, avdict_to_dict, avrational_to_faction
+from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational
 from av.video.stream cimport VideoStream
 
 
-cdef Stream stream_factory(Context ctx, int index):
+cdef object _cinit_bypass_sentinel = object()
+
+
+cdef Stream build_stream(Container container, lib.AVStream *c_stream):
+    """Build an av.Stream for an existing AVStream.
+
+    The AVStream MUST be fully constructed and ready for use before this is
+    called.
+
+    """
     
-    cdef lib.AVStream *ptr = ctx.proxy.ptr.streams[index]
-    
-    if ptr.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-        return VideoStream(ctx, index, 'video')
-    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-        return AudioStream(ctx, index, 'audio')
-    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_DATA:
-        return Stream(ctx, index, 'data')
-    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
-        return Stream(ctx, index, 'subtitle')
-    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
-        return Stream(ctx, index, 'attachment')
-    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_NB:
-        return Stream(ctx, index, 'nb')
+    # This better be the right one...
+    assert container.proxy.ptr.streams[c_stream.index] == c_stream
+
+    cdef Stream py_stream
+
+    if c_stream.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        py_stream = VideoStream.__new__(VideoStream, _cinit_bypass_sentinel)
+    elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+        py_stream = AudioStream.__new__(AudioStream, _cinit_bypass_sentinel)
     else:
-        return Stream(ctx, index)
+        py_stream = Stream.__new__(Stream, _cinit_bypass_sentinel)
+
+    py_stream._init(container, c_stream)
+    return py_stream
 
 
 cdef class Stream(object):
     
-    def __cinit__(self, Context ctx, int index, bytes type=b'unknown'):
-        
-        if index < 0 or index > ctx.proxy.ptr.nb_streams:
-            raise ValueError('stream index out of range')
-        
-        self.ctx = ctx.proxy
-        self.weak_ctx = PyWeakref_NewRef(ctx, None)
+    def __cinit__(self, name):
+        if name is _cinit_bypass_sentinel:
+            return
+        raise RuntimeError('cannot manually instatiate Stream')
 
-        self.ptr = self.ctx.ptr.streams[index]
-        self.type = type
+    cdef _init(self, Container container, lib.AVStream *stream):
+        
+        self._container = container.proxy        
+        self._weak_container = PyWeakref_NewRef(container, None)
+        self._stream = stream
+        self._codec_context = stream.codec
+        
+        self.metadata = avdict_to_dict(stream.metadata)
+        
+        if self._container.ptr.iformat:
 
-        self.codec = codec_factory(self)
-        self.metadata = avdict_to_dict(self.ptr.metadata)
-    
+            # Find the codec.
+            self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
+            if self._codec == NULL:
+                raise RuntimeError('could not find %s codec' % self.type)
+            
+            # Open the codec.
+            try:
+                err_check(lib.avcodec_open2(self._codec_context, self._codec, &self._codec_options))
+            except:
+                # Signal that we don't need to close it.
+                self._codec = NULL
+                raise
+        
+        # Output container.
+        else:
+            self._codec = self._codec_context.codec
+
+    def __dealloc__(self):
+        if self._codec:
+            lib.avcodec_close(self._codec_context)
+        if self._codec_options:
+            lib.av_dict_free(&self._codec_options)
+
     def __repr__(self):
         return '<av.%s #%d %s/%s at 0x%x>' % (
             self.__class__.__name__,
@@ -55,24 +86,55 @@ cdef class Stream(object):
             self.codec.name or '<nocodec>',
             id(self),
         )
+
+    property type:
+        def __get__(self):
+            cdef char *name = lib.av_get_media_type_string(self._codec_context.codec_type)
+            return name if name != NULL else 'unknown'
+
+    property name:
+        def __get__(self):
+            return bytes(self._codec.name) if self._codec else None
+
+    property long_name:
+        def __get__(self):
+            return bytes(self._codec.long_name) if self._codec else None
     
     property index:
-        def __get__(self): return self.ptr.index
-    property id:
-        def __get__(self): return self.ptr.id
+        def __get__(self): return self._stream.index
+
+
     property time_base:
-        def __get__(self): return avrational_to_faction(&self.ptr.time_base)
-    property base_frame_rate:
-        def __get__(self): return avrational_to_faction(&self.ptr.r_frame_rate)
-    property avg_frame_rate:
-        def __get__(self): return avrational_to_faction(&self.ptr.avg_frame_rate)
+        def __get__(self): return avrational_to_faction(&self._stream.time_base)
+
+    property rate:
+        def __get__(self): 
+            if self._codec_context:
+                return self._codec_context.ticks_per_frame * avrational_to_faction(&self._codec_context.time_base)
+
     property start_time:
-        def __get__(self): return self.ptr.start_time
+        def __get__(self): return self._stream.start_time
     property duration:
-        def __get__(self): return self.ptr.duration
+        def __get__(self): return self._stream.duration
+
     property frames:
-        def __get__(self): return self.ptr.nb_frames
+        def __get__(self): return self._stream.nb_frames
     
+
+    property bit_rate:
+        def __get__(self):
+            return self._codec_context.bit_rate if self._codec_context else None
+        def __set__(self, int value):
+            self._codec_context.bit_rate = value
+            
+    property bit_rate_tolerance:
+        def __get__(self):
+            return self._codec_context.bit_rate_tolerance if self._codec_context else None
+        def __set__(self, int value):
+            self._codec_context.bit_rate_tolerance = value
+            
+
+
     cpdef decode(self, Packet packet):
 
         cdef Frame frame
@@ -120,7 +182,7 @@ cdef class Stream(object):
     
     cdef _setup_frame(self, Frame frame):
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
-        frame.time_base = self.ptr.time_base
+        frame.time_base = self._stream.time_base
 
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('base stream cannot decode packets')

@@ -9,33 +9,63 @@ The Big Plan
 - Lots of documentation
 
 
-The Little Steps
-================
+Encoding
+========
+
+- Make everything mutable. Later, we can introduce a PseudoMutable base class
+  for everything that has a .assert_mutable() method and public is_read_only
 
 
-- Uniform time representation: fraction or av.utils.Rational
-  
-  1) av.utils.Rational:
+Time
+====
 
-    - Needs: __abs__, __add__, __div__, __eq__, __floordiv__, __le__, __lt__,
-      __mod__, __mul__, __neg__, __pos__, __pow__, __radd__, __rdiv__, __rfloordiv__,
-      __rmod__, __rmul__, __rpow__, __rtruediv__, __truediv__, __trunc__,
-      denominator, numerator
+- What are the various rates and scales?
 
-    - Likely doable as a Mixin.
-    - Is the extra little bit of speed worth the trouble?
+  see: http://ffmpeg.org/pipermail/libav-user/2011-December/001041.html
+  see: http://stackoverflow.com/questions/12234949/ffmpeg-time-unit-explanation-and-av-seek-frame-method/16739755#16739755
 
-  2) fraction.Fraction:
+  - Stream.guessed_rate or AVStream.r_frame_rate:
+    FFmpeg's guess as to the frame rate. Often 24/1.
 
-    - Slower:
-      $ python -m timeit -s 'from fractions import Fraction; a = Fraction(1, 2)' 'b = a * 1234567890'
-      100000 loops, best of 3: 9.95 usec per loop
+  - Stream.average_rate or AVStream.avg_frame_rate:
+    Average frame rate that has been inspected in the file. This is what VLC
+    reports in the media information. Often near 24/1.
+
+    It may calculate this from 20 frames; see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02768
+
+  - Stream.time_base or AVStream.time_base:
+    Duration of one time unit for AVStream times.
+
+  - Stream.rate or CodecContext.time_base:
+      The length of a single frame as reported by the file. Sometimes 1/24,
+      sometimes really really wrong.
+
+  possibilities for discrepencies:
+    - .mov supports a fixed frame rate
+    - .mp4 does not support a fixed frame rate?
+    - see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02647
 
 
-  - I think that the Python and C objects will not have synchonized time stamps
-    since the user will need to set the time on the frame without a stream. So
-    either (1) the user needs to manage both the stream time_base AND the frame
-    times, or (2) the Frame.time needs to be compatible with the stream time_base
+Unsorted
+========
+
+- split container into container/{base,input,output}.{pxd,pyx}
+
+- Replace adhoc frame counting attributes with AVCodecContext.frame_number
+  see: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html#a9e5a25a530d01c04491216c368a1a04a
+
+- Container.add_stream(template=stream)
+
+- atexit.register something to clean up FFmpeg threads
+
+- Create Codec Descriptor
+
+- Make av.utils.SmartPointer to wrap around a pointer?
+
+runtime_library_dirs
+
+- Look at how stream alloc works; can we manually do this and register the
+  stream on a format context later?
 
 - Replace AudioFrame.resample with AudioResampler
 

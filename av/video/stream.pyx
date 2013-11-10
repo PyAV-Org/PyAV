@@ -1,17 +1,38 @@
 from libc.stdint cimport int64_t
 
+from av.container cimport Container
 from av.frame cimport Frame
-from av.video.frame cimport alloc_video_frame
 from av.packet cimport Packet
+from av.utils cimport avrational_to_faction, to_avrational
 from av.utils cimport err_check
+from av.video.format cimport get_video_format
+from av.video.frame cimport alloc_video_frame
 
 
 cdef class VideoStream(Stream):
     
-    def __cinit__(self, *args):
+    cdef _init(self, Container container, lib.AVStream *stream):
+        Stream._init(self, container, stream)
         self.last_w = 0
         self.last_h = 0
         self.encoded_frame_count = 0
+        self._build_format()
+        
+    def __repr__(self):
+        return '<av.%s %s, %s %dx%d at 0x%x>' % (
+            self.__class__.__name__,
+            self.name,
+            self.format.name if self.format else None,
+            self._codec_context.width,
+            self._codec_context.height,
+            id(self),
+        )
+
+    cdef _build_format(self):
+        if self._codec_context:
+            self.format = get_video_format(<lib.AVPixelFormat>self._codec_context.pix_fmt, self._codec_context.width, self._codec_context.height)
+        else:
+            self.format = None
         
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         
@@ -21,21 +42,21 @@ cdef class VideoStream(Stream):
 
         # Decode video into the frame.
         cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_video2(self.codec.ctx, self.next_frame.ptr, &completed_frame, packet))
+        data_consumed[0] = err_check(lib.avcodec_decode_video2(self._codec_context, self.next_frame.ptr, &completed_frame, packet))
         if not completed_frame:
             return
         
         # Check if the frame size has changed so that we can always have a
         # SwsContext that is ready to go.
-        if self.last_w != self.codec.ctx.width or self.last_h != self.codec.ctx.height:
+        if self.last_w != self._codec_context.width or self.last_h != self._codec_context.height:
             
-            self.last_w = self.codec.ctx.width
-            self.last_h = self.codec.ctx.height
+            self.last_w = self._codec_context.width
+            self.last_h = self._codec_context.height
             
             self.buffer_size = lib.avpicture_get_size(
-                self.codec.ctx.pix_fmt,
-                self.codec.ctx.width,
-                self.codec.ctx.height,
+                self._codec_context.pix_fmt,
+                self._codec_context.width,
+                self._codec_context.height,
             )
             
             # Create a new SwsContextProxy
@@ -64,7 +85,7 @@ cdef class VideoStream(Stream):
         """
         
         # setup formatContext for encoding
-        self.weak_ctx().start_encoding()
+        self._weak_container().start_encoding()
         
         if not self.sws_proxy:
             self.sws_proxy = SwsContextProxy()
@@ -75,7 +96,11 @@ cdef class VideoStream(Stream):
         
         if frame:
             frame.sws_proxy = self.sws_proxy
-            formated_frame = frame.reformat(self.codec.width,self.codec.height, self.codec.pix_fmt)
+            formated_frame = frame._reformat(
+                self._codec_context.width,
+                self._codec_context.height,
+                self.format.pix_fmt,
+            )
 
         else:
             # Flushing
@@ -87,21 +112,25 @@ cdef class VideoStream(Stream):
         
         if formated_frame:
             
+            # It has a pts, so adjust it.
             if formated_frame.ptr.pts != lib.AV_NOPTS_VALUE:
-                formated_frame.ptr.pts = lib.av_rescale_q(formated_frame.ptr.pts, 
-                                                          formated_frame.time_base, #src 
-                                                          self.codec.ctx.time_base) #dest
-                                
+                formated_frame.ptr.pts = lib.av_rescale_q(
+                    formated_frame.ptr.pts,
+                    formated_frame.time_base, #src
+                    self._codec_context.time_base,
+                )
+            
+            # There is no pts, so create one.
             else:
-                pts_step = 1/float(self.codec.frame_rate) * self.codec.ctx.time_base.den
-                formated_frame.ptr.pts = <int64_t> (pts_step * self.encoded_frame_count)
+                # pts_step = float(self._stream.r_frame_rate.den) / float(self._stream.r_frame_rate.num) * self._stream.time_base.den
+                formated_frame.ptr.pts = <int64_t>self.encoded_frame_count# (pts_step * self.encoded_frame_count)
                 
             
             self.encoded_frame_count += 1
-            ret = err_check(lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, formated_frame.ptr, &got_output))
+            ret = err_check(lib.avcodec_encode_video2(self._codec_context, &packet.struct, formated_frame.ptr, &got_output))
         else:
             # Flushing
-            ret = err_check(lib.avcodec_encode_video2(self.codec.ctx, &packet.struct, NULL, &got_output))
+            ret = err_check(lib.avcodec_encode_video2(self._codec_context, &packet.struct, NULL, &got_output))
 
         if got_output:
             
@@ -109,17 +138,60 @@ cdef class VideoStream(Stream):
 
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
                 packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
-                                                         self.codec.ctx.time_base,
-                                                         self.ptr.time_base)
+                                                         self._codec_context.time_base,
+                                                         self._stream.time_base)
             if packet.struct.dts != lib.AV_NOPTS_VALUE:
                 packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
-                                                     self.codec.ctx.time_base,
-                                                     self.ptr.time_base)
-            if self.codec.ctx.coded_frame.key_frame:
+                                                     self._codec_context.time_base,
+                                                     self._stream.time_base)
+            if self._codec_context.coded_frame.key_frame:
                 packet.struct.flags |= lib.AV_PKT_FLAG_KEY
                 
-            packet.struct.stream_index = self.ptr.index
+            packet.struct.stream_index = self._stream.index
             packet.stream = self
 
             return packet
+
+
+    property guessed_rate:
+        """The lowest framerate with which all timestamps can be represented.
+
+        Just a guess though, so be careful.
+
+        """
+        def __get__(self): return avrational_to_faction(&self._stream.r_frame_rate)
+
+    property average_rate:
+        def __get__(self): return avrational_to_faction(&self._stream.avg_frame_rate)
+
+
+    property gop_size:
+        def __get__(self):
+            return self._codec_context.gop_size if self._codec_context else None
+        def __set__(self, int value):
+            self._codec_context.gop_size = value
+
+    property sample_aspect_ratio:
+        def __get__(self):
+            return avrational_to_faction(&self._codec_context.sample_aspect_ratio) if self._codec_context else None
+        def __set__(self, value):
+            to_avrational(value, &self._codec_context.sample_aspect_ratio)
+
+
+    # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
+    property width:
+        def __set__(self, unsigned int value):
+            self._codec_context.width = value
+            self._build_format()
+    property height:
+        def __set__(self, unsigned int value):
+            self._codec_context.height = value
+            self._build_format()
+    property pix_fmt:
+        def __set__(self, bytes value):
+            self._codec_context.pix_fmt = lib.av_get_pix_fmt(value)
+            self._build_format()
+
+
+    
 

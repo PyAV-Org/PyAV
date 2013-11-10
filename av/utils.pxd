@@ -3,7 +3,7 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 cimport libav as lib
 
 
-cdef int err_check(int res, str filename=*) except -1
+cdef int err_check(int res, filename=*) except -1
 
 
 # Conversions.

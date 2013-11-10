@@ -9,6 +9,12 @@ import Image
 from av import open, time_base
 
 
+def format_time(time, time_base):
+    if time is None:
+        return 'None'
+    return '%.3fs (%s or %s/%s)' % (time_base * time, time_base * time, time_base.numerator * time, time_base.denominator)
+
+
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('path')
 arg_parser.add_argument('-a', '--audio', action='store_true')
@@ -24,38 +30,41 @@ proc = None
 
 video = open(args.path)
 
-print 'DUMP'
-print '====='
-video.dump()
-print '-----'
-print
-
-print 'duration:', float(video.duration) / time_base
-
-print 'Metadata:'
+print 'container:', video
+print '\tformat:', video.format
+print '\tduration:', float(video.duration) / time_base
+print '\tmetadata:'
 for k, v in sorted(video.metadata.iteritems()):
-    print '    %s: %r' % (k, v)
+    print '\t\t%s: %r' % (k, v)
 print
 
 print len(video.streams), 'stream(s):'
 for i, stream in enumerate(video.streams):
+
     print '\t%r' % stream
     print '\t\ttime_base: %r' % stream.time_base
+    print '\t\trate: %r' % stream.rate
     print '\t\tstart_time: %r' % stream.start_time
-    print '\t\tduration: %r' % stream.duration
-    print '\t\tbase_frame_rate: %.3f - %r' % (float(stream.base_frame_rate), stream.base_frame_rate)
-    print '\t\tavg_frame_rate: %.3f' % float(stream.avg_frame_rate)
-
-    print '\t\tcodec:', stream.codec
+    print '\t\tduration: %s' % format_time(stream.duration, stream.time_base)
+    print '\t\tbit_rate: %r' % stream.bit_rate
+    print '\t\tbit_rate_tolerance: %r' % stream.bit_rate_tolerance
 
     if stream.type == b'audio':
         print '\t\taudio:'
-        print '\t\t\tsample_rate: %s' % stream.rate
+        print '\t\t\tformat:', stream.format
         print '\t\t\tchannels: %s' % stream.channels
+
+    elif stream.type == 'video':
+        print '\t\tvideo:'
+        print '\t\t\tformat:', stream.format
+        print '\t\t\tguessed_rate: %r' % stream.guessed_rate
+        print '\t\t\taverage_rate: %r' % stream.average_rate
 
     print '\t\tmetadata:'
     for k, v in sorted(stream.metadata.iteritems()):
         print '\t\t\t%s: %r' % (k, v)
+
+    print
 
 
 streams = [s for s in video.streams if
@@ -70,50 +79,51 @@ frame_count = 0
 for i, packet in enumerate(video.demux(streams)):
     
     print '%02d %r' % (i, packet)
-    print '\tduration: %.3f' % float(packet.stream.time_base * packet.duration)
-    print '\tpts: %.3f' % float(packet.stream.time_base * packet.pts)
-    print '\tdts: %.3f' % float(packet.stream.time_base * packet.dts)
+    print '\tduration: %s' % format_time(packet.duration, packet.stream.time_base)
+    print '\tpts: %s' % format_time(packet.pts, packet.stream.time_base)
+    print '\tdts: %s' % format_time(packet.dts, packet.stream.time_base)
     
     for frame in packet.decode():
 
         frame_count += 1
 
+        print '\tdecoded:', frame
+        print '\t\tpts:', format_time(frame.pts, packet.stream.time_base)
+
         if packet.stream.type == 'video':
-    
-            print '\tdecoded:', frame
-            print '\t\tpts: %.3f' % float(packet.stream.time_base * (frame.pts or 0))
-        
+            pass
+
         elif packet.stream.type == 'audio':
-            print '\tdecoded:', frame
             print '\t\tsamples:', frame.samples
             print '\t\tformat:', frame.format.name
             print '\t\tlayout:', frame.layout.name
-            print '\t\tpts: %.3f' % float(packet.stream.time_base * (frame.pts or 0))
 
         elif packet.stream.type == 'subtitle':
             
             sub = frame
 
             print '\t\tformat:', sub.format
-            print '\t\tstart_display_time: %.3f' % float(packet.stream.time_base * sub.start_display_time)
-            print '\t\tend_display_time: %.3f' % float(packet.stream.time_base * sub.end_display_time)
-            print '\t\tpts: %.3f' % float(packet.stream.time_base * sub.pts)
+            print '\t\tstart_display_time:', format_time(sub.start_display_time, packet.stream.time_base)
+            print '\t\tend_display_time:', format_time(sub.end_display_time, packet.stream.time_base)
             print '\t\trects: %d' % len(sub.rects)
             for rect in sub.rects:
                 print '\t\t\t%r' % rect
                 if rect.type == 'ass':
                     print '\t\t\t\tass: %r' % rect.ass
         
-        if args.play:
+        if args.play and packet.stream.type == 'audio':
             if not proc:
                 cmd = ['ffplay',
                     '-f', 's16le',
-                    '-ar', str(packet.stream.codec.rate),
+                    '-ar', str(packet.stream.time_base),
                     '-vn','-',
                 ]
-                print '***', ' '.join(cmd)
                 proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-            proc.stdin.write(frame.planes[0].to_bytes())
+            try:
+                proc.stdin.write(frame.planes[0].to_bytes())
+            except IOError as e:
+                print e
+                exit()
 
         if args.data:
             print '\t\tdata'

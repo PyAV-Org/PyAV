@@ -8,10 +8,7 @@ cdef extern from "libavformat_compat.h" nogil:
     cdef int AVSEEK_FLAG_ANY 
     cdef int AVSEEK_FLAG_FRAME
     
-    cdef int AVFMT_GLOBALHEADER
-    cdef int AVFMT_NOFILE
-    cdef int AVFMT_RAWPICTURE
-    
+
     cdef int AVIO_FLAG_WRITE
     
     # Initialize libavformat.
@@ -26,6 +23,8 @@ cdef extern from "libavformat_compat.h" nogil:
         AVMEDIA_TYPE_ATTACHMENT
         AVMEDIA_TYPE_NB
         # There are a few more...
+    
+    cdef char* av_get_media_type_string(AVMediaType)
     
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrac.html
     cdef struct AVFrac:
@@ -60,14 +59,39 @@ cdef extern from "libavformat_compat.h" nogil:
         
     # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
     cdef struct AVInputFormat:
-        pass
+        const char *name
+        const char *long_name
+        const char *extensions
+        int flags
+        # const AVCodecTag* const *codec_tag
+        # const AVClass *priv_class
     
     # http://ffmpeg.org/doxygen/trunk/structAVOutputFormat.html  
     cdef struct AVOutputFormat:
-        char * name
+        const char *name
+        const char *long_name
+        const char *extensions
         AVCodecID video_codec
         AVCodecID audio_codec
+        AVCodecID subtitle_codec
         int flags
+        # const AVCodecTag* const *codec_tag
+        # const AVClass *priv_class
+
+    cdef int AVFMT_NOFILE
+    cdef int AVFMT_NEEDNUMBER
+    cdef int AVFMT_RAWPICTURE
+    cdef int AVFMT_GLOBALHEADER
+    cdef int AVFMT_NOTIMESTAMPS
+    cdef int AVFMT_VARIABLE_FPS
+    cdef int AVFMT_NODIMENSIONS
+    cdef int AVFMT_NOSTREAMS
+    cdef int AVFMT_ALLOW_FLUSH
+    cdef int AVFMT_TS_NONSTRICT
+
+    cdef AVInputFormat* av_find_input_format(const char *name)
+    cdef AVInputFormat* av_iformat_next(AVInputFormat*)
+    cdef AVOutputFormat* av_oformat_next(AVOutputFormat*)
     
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
@@ -90,7 +114,6 @@ cdef extern from "libavformat_compat.h" nogil:
         
         int flags
     
-    # Once called av_open_input_file, but no longer.
     cdef int avformat_open_input(
         AVFormatContext **ctx, # NULL will allocate for you.
         char *filename,
