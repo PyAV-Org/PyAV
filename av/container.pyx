@@ -210,7 +210,7 @@ cdef class OutputContainer(object):
             
     def close(self):
 
-        if self._closed:
+        if self._done:
             return
         if not self._started:
             raise RuntimeError('not started')
@@ -225,7 +225,7 @@ cdef class OutputContainer(object):
         if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.proxy.ptr.pb)
 
-        self._closed = True
+        self._done = True
         
     def mux(self, Packet packet not None):
         self.start_encoding()
