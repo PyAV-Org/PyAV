@@ -11,10 +11,10 @@ from av.video.frame cimport alloc_video_frame
 cdef class VideoStream(Stream):
     
     def __cinit__(self, *args):
-        self.format = get_video_format(<lib.AVPixelFormat>self._codec_context.pix_fmt, self._codec_context.width, self._codec_context.height)
         self.last_w = 0
         self.last_h = 0
         self.encoded_frame_count = 0
+        self._build_format()
         
     def __repr__(self):
         return '<av.%s %s, %s %dx%d at 0x%x>' % (
@@ -26,6 +26,12 @@ cdef class VideoStream(Stream):
             id(self),
         )
 
+    cdef _build_format(self):
+        if self._codec_context:
+            self.format = get_video_format(<lib.AVPixelFormat>self._codec_context.pix_fmt, self._codec_context.width, self._codec_context.height)
+        else:
+            self.format = None
+        
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         
         # Create a frame if we don't have one ready.
@@ -168,13 +174,16 @@ cdef class VideoStream(Stream):
     # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
     property width:
         def __set__(self, unsigned int value):
-            self.format.width = self._codec_context.width = value
+            self._codec_context.width = value
+            self._build_format()
     property height:
         def __set__(self, unsigned int value):
-            self.format.height = self._codec_context.height = value
+            self._codec_context.height = value
+            self._build_format()
     property pix_fmt:
         def __set__(self, bytes value):
-            self.format.pix_fmt = self._codec_context.pix_fmt = lib.av_get_pix_fmt(value)
+            self._codec_context.pix_fmt = lib.av_get_pix_fmt(value)
+            self._build_format()
 
 
     

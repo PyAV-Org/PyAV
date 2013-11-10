@@ -7,7 +7,6 @@ from av.frame cimport Frame
 cdef class Stream(object):
     
     # Stream attributes.
-
     cdef ContainerProxy _container
     cdef _weak_container
     
@@ -21,11 +20,12 @@ cdef class Stream(object):
     
     # cdef lib.AVRational _frame_rate
 
-
     # API.
+    cdef _init(self, Container container, lib.AVStream *c_stream)
     cpdef decode(self, Packet packet)
     cdef _setup_frame(self, Frame frame)
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed)
 
 
-cdef Stream stream_factory(Container ctx, int index)
+cdef Stream alloc_stream(lib.AVMediaType media_type)
+cdef Stream build_stream_from_container(Container container, lib.AVStream *c_stream)

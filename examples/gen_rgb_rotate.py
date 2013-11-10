@@ -15,11 +15,11 @@ duration = 96
 path = sandboxed('rgb_rotate.mov')
 output = av.open(path, 'w')
 
+
 stream = output.add_stream("mpeg4", 24)
 stream.width = width
 stream.height = height
 stream.pix_fmt = "yuv420p"
-
 
 for frame_i in xrange(duration):
 

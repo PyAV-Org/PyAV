@@ -10,34 +10,40 @@ from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrat
 from av.video.stream cimport VideoStream
 
 
-cdef Stream stream_factory(Container ctx, int index):
-    cdef lib.AVStream *ptr = ctx.proxy.ptr.streams[index]
-    if ptr.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-        return VideoStream(ctx, index)
-    elif ptr.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-        return AudioStream(ctx, index)
+cdef object _cinit_bypass_sentinel = object()
+
+
+cdef Stream alloc_stream(lib.AVMediaType media_type):
+    """Allocate a completely blank Stream. You MUST finalize it."""
+    if media_type == lib.AVMEDIA_TYPE_VIDEO:
+        return VideoStream.__new__(VideoStream, _cinit_bypass_sentinel)
+    elif media_type == lib.AVMEDIA_TYPE_AUDIO:
+        return AudioStream.__new__(AudioStream, _cinit_bypass_sentinel)
     else:
-        return Stream(ctx, index)
+        return Stream.__new__(Stream, _cinit_bypass_sentinel)
+
+
+cdef Stream build_stream_from_container(Container container, lib.AVStream *c_stream):
+    cdef Stream stream = alloc_stream(c_stream.codec.codec_type)
+    stream._init(container, c_stream)
+    return stream
 
 
 cdef class Stream(object):
     
-    def __cinit__(self, Container container, int index):
-        
-        self._container = container.proxy
+    def __cinit__(self, name):
+        if name is _cinit_bypass_sentinel:
+            return
+        raise RuntimeError('cannot manually instatiate Stream')
 
-        if index < 0 or index > self._container.ptr.nb_streams:
-            raise ValueError('stream index out of range')
+    cdef _init(self, Container container, lib.AVStream *c_stream):
         
+        self._container = container.proxy        
         self._weak_container = PyWeakref_NewRef(container, None)
-        self._stream = self._container.ptr.streams[index]
+        self._stream = c_stream
         self._codec_context = self._stream.codec
         
         self.metadata = avdict_to_dict(self._stream.metadata)
-
-        # Nothing else to do here...
-        # if self._codec_context.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
-        #    return
         
         if self._container.is_input:
 

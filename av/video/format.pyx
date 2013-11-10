@@ -37,7 +37,7 @@ cdef class VideoFormat(object):
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-
+        
         self.components = PyTuple_New(self.ptr.nb_components)
         for i in range(self.ptr.nb_components):
             # We are constructing this tuple manually, but since Cython does

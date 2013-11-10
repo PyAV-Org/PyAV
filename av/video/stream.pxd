@@ -9,8 +9,8 @@ from av.video.swscontext cimport SwsContextProxy
 cdef class VideoStream(Stream):
     
     cdef readonly VideoFormat format
-    cdef readonly tuple planes
-    
+    cdef _build_format(self)
+
     cdef readonly int buffer_size
     
     # Hold onto the frames that we will decode until we have a full one.

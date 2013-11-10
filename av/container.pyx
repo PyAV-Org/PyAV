@@ -5,7 +5,7 @@ cimport libav as lib
 
 from av.format cimport build_container_format
 from av.packet cimport Packet
-from av.stream cimport Stream, stream_factory
+from av.stream cimport Stream, alloc_stream, build_stream_from_container
 from av.utils cimport err_check, avdict_to_dict
 from av.utils import AVError
 
@@ -51,7 +51,10 @@ cdef class InputContainer(object):
         )
         err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
         self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
-        self.streams = list(stream_factory(self, i) for i in range(self.proxy.ptr.nb_streams))
+        self.streams = list(
+            build_stream_from_container(self, self.proxy.ptr.streams[i])
+            for i in range(self.proxy.ptr.nb_streams)
+        )
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
 
     property start_time:
@@ -155,40 +158,27 @@ cdef class OutputContainer(object):
             raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
         
         # Create new stream
-        cdef lib.AVStream *c_stream = lib.avformat_new_stream(self.proxy.ptr, codec)
-        if not c_stream:
-            raise MemoryError("could not allocate stream")
-        
-        # Set Stream ID
-        c_stream.index = self.proxy.ptr.nb_streams - 1        
-        cdef Stream stream = stream_factory(self, c_stream.index)
-        stream._codec_context.codec = codec
+        lib.avformat_new_stream(self.proxy.ptr, codec)
+        cdef Stream stream = build_stream_from_container(self, self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1])
+
+        # Setup the AVCodecContext.
         lib.avcodec_get_context_defaults3(stream._codec_context, codec)
-        stream._codec_context.codec = codec
+        stream._codec_context.codec = stream._codec = codec
         
         # Now lets set some more sane video defaults
-        if stream._codec_context.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-
-            if not rate:
-                rate = 24
-            stream._codec_context.time_base.den = 12800 
+        if codec.type == lib.AVMEDIA_TYPE_VIDEO:
             stream._codec_context.time_base.num = 1
+            stream._codec_context.time_base.den = 12800 
             stream._codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
             stream._codec_context.width = 640
             stream._codec_context.height = 480
-            stream.rate = rate
+            stream.rate = rate or 24
 
         # Some Sane audio defaults
         elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-
-            if not rate:
-                rate = 44100
-
-            #choose codecs first available sample format
             stream._codec_context.sample_fmt = codec.sample_fmts[0]
             stream._codec_context.bit_rate = 64000
-            stream._codec_context.sample_rate = int(rate)
-            #codec_ctx.sample_rate = 48000
+            stream._codec_context.sample_rate = rate or 48000
             stream._codec_context.channels = 2
             stream._codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
@@ -206,20 +196,17 @@ cdef class OutputContainer(object):
         Note: To use this Container must be opened with mode = "w"
         """
     
-        # Open all the streams.
+        # Make sure all of the streams are open.
         cdef Stream stream
         for stream in self.streams:
             if not lib.avcodec_is_open(stream._codec_context):
                 err_check(lib.avcodec_open2(stream._codec_context, stream._codec, NULL))
 
-        filename = self.name
-        
-        # open the output file, if needed
+        # Open the output file, if needed.
+        # TODO: is the avformat_write_header in the right place here?
         if not self.proxy.ptr.pb:
-            
             if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-                err_check(lib.avio_open(&self.proxy.ptr.pb, filename, lib.AVIO_FLAG_WRITE))
-    
+                err_check(lib.avio_open(&self.proxy.ptr.pb, self.name, lib.AVIO_FLAG_WRITE))
             err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
             
     def close(self):
@@ -227,11 +214,10 @@ cdef class OutputContainer(object):
         cdef Stream stream
         
         if not self.proxy.ptr.pb:
-            raise IOError("File not opened")
+            raise IOError("file not opened")
         
         err_check(lib.av_write_trailer(self.proxy.ptr))
         for stream in self.streams:
-            
             lib.avcodec_close(stream._codec_context)
             
         if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
