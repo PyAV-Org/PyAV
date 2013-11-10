@@ -17,13 +17,13 @@ cdef class Plane(object):
             return self.frame.ptr.linesize[self.index]
 
     def to_bytes(self):
-        return PyString_FromStringAndSize(<char*>self.frame.ptr.data[self.index], self.buffer_size)
+        return PyString_FromStringAndSize(<char*>self.frame.ptr.extended_data[self.index], self.buffer_size)
 
     def update_from_string(self, bytes input):
         """Replace the data in this plane with the given string."""
         if len(input) != self.buffer_size:
             raise ValueError('got %d bytes; need %d bytes' % (len(input), self.buffer_size))
-        memcpy(<void*>self.frame.ptr.data[self.index], <void*><char*>input, self.buffer_size)
+        memcpy(<void*>self.frame.ptr.extended_data[self.index], <void*><char*>input, self.buffer_size)
 
     # Legacy buffer support. For `buffer` and PIL.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
@@ -36,13 +36,13 @@ cdef class Plane(object):
     def __getreadbuffer__(self, Py_ssize_t index, void **data):
         if index:
             raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = <void*>self.frame.ptr.data[self.index]
+        data[0] = <void*>self.frame.ptr.extended_data[self.index]
         return <Py_ssize_t>self.buffer_size
 
     def __getwritebuffer__(self, Py_ssize_t index, void **data):
         if index:
             raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = <void*>self.frame.ptr.data[self.index]
+        data[0] = <void*>self.frame.ptr.extended_data[self.index]
         return <Py_ssize_t>self.buffer_size
 
     # PEP 3118 buffers. For `memoryviews`.
@@ -51,7 +51,7 @@ cdef class Plane(object):
 
     def __getbuffer__(self, Py_buffer *view, int flags):
 
-        view.buf = <void*>self.frame.ptr.data[self.index]
+        view.buf = <void*>self.frame.ptr.extended_data[self.index]
         view.len = <Py_ssize_t>self.buffer_size
         view.readonly = 0
         view.format = NULL
