@@ -12,7 +12,13 @@ cdef class AudioStream(Stream):
     cdef _init(self, Container container, lib.AVStream *stream):
         Stream._init(self, container, stream)
         self.encoded_frame_count = 0
-        self.layout = get_audio_layout(self._codec_context.channel_layout)
+        
+        # Sometimes there isn't a layout set, but there are a number of
+        # channels. Assume it is the default layout.
+        self.layout = get_audio_layout(self._codec_context.channels, self._codec_context.channel_layout)
+        if not self._codec_context.channel_layout:
+            self._codec_context.channel_layout = self.layout.layout
+
         self.format = get_audio_format(self._codec_context.sample_fmt)
     
     def __repr__(self):

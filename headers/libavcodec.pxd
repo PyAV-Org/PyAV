@@ -274,3 +274,12 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
     
     
+    cdef uint64_t AV_CH_LAYOUT_MONO
+    cdef uint64_t AV_CH_LAYOUT_STEREO
+    cdef uint64_t AV_CH_LAYOUT_2POINT1
+    cdef uint64_t AV_CH_LAYOUT_4POINT0
+    cdef uint64_t AV_CH_LAYOUT_5POINT0_BACK
+    cdef uint64_t AV_CH_LAYOUT_5POINT1_BACK
+    cdef uint64_t AV_CH_LAYOUT_6POINT1
+    cdef uint64_t AV_CH_LAYOUT_7POINT1
+    

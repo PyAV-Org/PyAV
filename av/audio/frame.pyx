@@ -66,7 +66,7 @@ cdef class AudioFrame(Frame):
         self._init_properties()
 
     cdef _init_properties(self):
-        self.layout = get_audio_layout(self.ptr.channel_layout)
+        self.layout = get_audio_layout(0, self.ptr.channel_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
         self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1

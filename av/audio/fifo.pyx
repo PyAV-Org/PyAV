@@ -36,7 +36,7 @@ cdef class AudioFifo:
         if not self.ptr:
 
             self.format = get_audio_format(<lib.AVSampleFormat>frame.ptr.format)
-            self.layout = get_audio_layout(frame.ptr.channel_layout)
+            self.layout = get_audio_layout(0, frame.ptr.channel_layout)
             self.time_base.den = frame.ptr.sample_rate
             self.ptr = lib.av_audio_fifo_alloc(
                 self.format.sample_fmt,

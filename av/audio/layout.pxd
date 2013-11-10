@@ -18,4 +18,4 @@ cdef class AudioChannel(object):
     cdef uint64_t channel
     
 
-cdef AudioLayout get_audio_layout(uint64_t c_layout)
+cdef AudioLayout get_audio_layout(int channels, uint64_t c_layout)

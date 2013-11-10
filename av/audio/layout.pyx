@@ -5,11 +5,25 @@ cimport libav as lib
 
 cdef object _cinit_bypass_sentinel
 
-cdef AudioLayout get_audio_layout(uint64_t c_layout):
+cdef AudioLayout get_audio_layout(int channels, uint64_t c_layout):
     """Get an AudioLayout from Cython land."""
     cdef AudioLayout layout = AudioLayout.__new__(AudioLayout, _cinit_bypass_sentinel)
+    if channels and not c_layout:
+        c_layout = default_layouts[channels]
     layout._init(c_layout)
     return layout
+
+
+cdef uint64_t default_layouts[9]
+default_layouts[0] = 0
+default_layouts[1] = lib.AV_CH_LAYOUT_MONO
+default_layouts[2] = lib.AV_CH_LAYOUT_STEREO
+default_layouts[3] = lib.AV_CH_LAYOUT_2POINT1
+default_layouts[4] = lib.AV_CH_LAYOUT_4POINT0
+default_layouts[5] = lib.AV_CH_LAYOUT_5POINT0_BACK
+default_layouts[6] = lib.AV_CH_LAYOUT_5POINT1_BACK
+default_layouts[7] = lib.AV_CH_LAYOUT_6POINT1
+default_layouts[8] = lib.AV_CH_LAYOUT_7POINT1
 
 
 # This are the defaults given by FFmpeg; Libav is different.
