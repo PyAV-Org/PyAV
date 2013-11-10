@@ -87,7 +87,6 @@ cdef class AudioResampler(object):
             self.src_rate,
             lib.AV_ROUND_UP,
         )
-        print frame.ptr.nb_samples, 'converts to', output_nb_samples
         
         cdef AudioFrame output = alloc_audio_frame()
         output.ptr.sample_rate = self.rate
@@ -112,8 +111,6 @@ cdef class AudioResampler(object):
 
         # Recalculate linesizes and various properties.
         output._fill()
-
-        print 'expected', output_nb_samples, 'got', output.ptr.nb_samples
 
         # Flush
         # ret = err_check(lib.swr_convert(self.ptr,

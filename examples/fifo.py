@@ -35,7 +35,7 @@ stream = next(s for s in container.streams if s.type == 'audio')
 
 fifo = av.AudioFifo() if args.size else None
 resampler = av.AudioResampler(
-    format=args.format,
+    format=av.AudioFormat(args.format).alt_packed if args.format else None,
     layout=int(args.layout) if args.layout and args.layout.isdigit() else args.layout,
     rate=args.rate,
 ) if (args.format or args.layout or args.rate) else None
@@ -79,14 +79,14 @@ for i, packet in enumerate(container.demux(stream)):
                             print_data(frame)
                         frames.append(frame)
 
-        if args.play:
+        if frames and args.play:
             if not ffplay:
                 cmd = ['ffplay',
-                    '-f', 's16ple',
+                    '-f', frames[0].format.alt_packed.container_name,
                     '-ar', str(args.rate or stream.rate),
                     '-vn','-',
                 ]
-                print '*** ****', ' '.join(cmd)
+                print 'PLAY', ' '.join(cmd)
                 ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE)
             try:
                 for frame in frames:
