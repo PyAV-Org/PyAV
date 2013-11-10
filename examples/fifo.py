@@ -21,6 +21,9 @@ arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('path')
 arg_parser.add_argument('-p', '--play', action='store_true')
 arg_parser.add_argument('-d', '--data', action='store_true')
+arg_parser.add_argument('-f', '--format')
+arg_parser.add_argument('-l', '--layout')
+arg_parser.add_argument('-r', '--rate', type=int)
 arg_parser.add_argument('-s', '--size', type=int, default=1024)
 arg_parser.add_argument('-c', '--count', type=int, default=5)
 args = arg_parser.parse_args()
@@ -30,45 +33,68 @@ ffplay = None
 container = av.open(args.path)
 stream = next(s for s in container.streams if s.type == 'audio')
 
-fifo = av.AudioFifo()
+fifo = av.AudioFifo() if args.size else None
+resampler = av.AudioResampler(
+    format=args.format,
+    layout=int(args.layout) if args.layout and args.layout.isdigit() else args.layout,
+    rate=args.rate,
+) if (args.format or args.layout or args.rate) else None
 
-input_count = 0
-output_count = 0
+read_count = 0
+fifo_count = 0
+sample_count = 0
 
 for i, packet in enumerate(container.demux(stream)):
-    for frame in packet.decode():
-        input_count += 1
-        
-        print '<<< %04d     ' % i, frame
 
+    for frame in packet.decode():
+
+        read_count += 1
+        print '>>>> %04d' % read_count, frame
         if args.data:
             print_data(frame)
 
-        fifo.write(frame)
-        while frame:
-            frame = fifo.read(args.size)
-            if frame:
-                output_count += 1
-                print '>>>      %04d' % output_count, frame
+        frames = [frame]
+
+        if resampler:
+            for i, frame in enumerate(frames):
+                frame = resampler.resample(frame)
+                print 'RESAMPLED', frame
                 if args.data:
                     print_data(frame)
+                frames[i] = frame
 
-                if args.play:
-                    if not ffplay:
-                        cmd = ['ffplay',
-                            '-f', 's16le',
-                            '-ar', str(stream.rate),
-                            '-vn','-',
-                        ]
-                        print '*** ****', ' '.join(cmd)
-                        ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-                    try:
-                        ffplay.stdin.write(frame.planes[0].to_bytes())
-                    except IOError as e:
-                        print e
-                        exit()
+        if fifo:
 
+            to_process = frames
+            frames = []
 
-        if args.count and input_count >= args.count:
+            for frame in to_process:
+                fifo.write(frame)
+                while frame:
+                    frame = fifo.read(args.size)
+                    if frame:
+                        fifo_count += 1
+                        print '|||| %04d' % fifo_count, frame
+                        if args.data:
+                            print_data(frame)
+                        frames.append(frame)
+
+        if args.play:
+            if not ffplay:
+                cmd = ['ffplay',
+                    '-f', 's16ple',
+                    '-ar', str(args.rate or stream.rate),
+                    '-vn','-',
+                ]
+                print '*** ****', ' '.join(cmd)
+                ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+            try:
+                for frame in frames:
+                    ffplay.stdin.write(frame.planes[0].to_bytes())
+            except IOError as e:
+                print e
+                exit()
+
+        if args.count and read_count >= args.count:
             exit()
 

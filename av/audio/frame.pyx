@@ -42,27 +42,28 @@ cdef class AudioFrame(Frame):
             lib.av_freep(&self._buffer)
 
             # Get a new one.
-            buffer_size = err_check(lib.av_samples_get_buffer_size(
+            self._buffer_size = err_check(lib.av_samples_get_buffer_size(
                 NULL,
                 len(self.layout.channels),
                 nb_samples,
                 format,
-                align,
+                align
             ))
-            self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
+            self._buffer = <uint8_t *>lib.av_malloc(self._buffer_size)
             if not self._buffer:
                 raise MemoryError("cannot allocate AudioFrame buffer")
 
-            # Connect the buffer to the frame fields.
-            err_check(lib.avcodec_fill_audio_frame(
-                self.ptr, 
-                len(self.layout.channels), 
-                <lib.AVSampleFormat>self.ptr.format,
-                self._buffer,
-                buffer_size,
-                self.align
-            ))
+            self._fill()
 
+    cdef _fill(self):
+        err_check(lib.avcodec_fill_audio_frame(
+            self.ptr, 
+            len(self.layout.channels), 
+            <lib.AVSampleFormat>self.ptr.format,
+            self._buffer,
+            self._buffer_size,
+            self.align
+        ))
         self._init_properties()
 
     cdef _init_properties(self):

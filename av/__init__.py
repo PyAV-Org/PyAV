@@ -11,6 +11,7 @@ from .audio.fifo import AudioFifo
 from .audio.format import AudioFormat
 from .audio.frame import AudioFrame
 from .audio.layout import AudioLayout
+from .audio.resampler import AudioResampler
 from .container import open
 from .utils import AVError
 from .video.format import VideoFormat
