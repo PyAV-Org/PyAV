@@ -14,6 +14,7 @@ cdef AudioLayout get_audio_layout(int channels, uint64_t c_layout):
     return layout
 
 
+# These are the defaults given by FFmpeg; Libav is different.
 cdef uint64_t default_layouts[9]
 default_layouts[0] = 0
 default_layouts[1] = lib.AV_CH_LAYOUT_MONO
@@ -25,19 +26,6 @@ default_layouts[6] = lib.AV_CH_LAYOUT_5POINT1_BACK
 default_layouts[7] = lib.AV_CH_LAYOUT_6POINT1
 default_layouts[8] = lib.AV_CH_LAYOUT_7POINT1
 
-
-# This are the defaults given by FFmpeg; Libav is different.
-cdef tuple default_layout_names = (
-    0, # This is to raise an error.
-    'mono',
-    'stereo',
-    '2.1',
-    '4.0',
-    '5.0',
-    '5.1',
-    '6.1',
-    '7.1',
-)
 
 # These are the descriptions as given by FFmpeg; Libav does not have them.
 cdef dict channel_descriptions = {
@@ -77,8 +65,10 @@ cdef class AudioLayout(object):
 
         cdef uint64_t c_layout
         if isinstance(layout, int):
-            layout = default_layout_names[layout]
-        if isinstance(layout, basestring):
+            if layout < 0 or layout > 8:
+                raise ValueError('no layout with %d channels' % layout)
+            c_layout = default_layouts[layout]
+        elif isinstance(layout, basestring):
             c_layout = lib.av_get_channel_layout(layout)
         else:
             raise TypeError('layout must be str or int')
