@@ -31,9 +31,12 @@ cdef class AudioFrame(Frame):
         self.ptr.nb_samples = nb_samples
         self.ptr.format = <int>format
         self.ptr.channel_layout = layout
-        
+
+        # HACK: It really sucks to do this twice.
+        self._init_properties()
+
         cdef size_t buffer_size
-        if self.format.channels and nb_samples:
+        if self.layout.channels and nb_samples:
             
             # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
@@ -41,7 +44,7 @@ cdef class AudioFrame(Frame):
             # Get a new one.
             buffer_size = err_check(lib.av_samples_get_buffer_size(
                 NULL,
-                len(self.format.channels),
+                len(self.layout.channels),
                 nb_samples,
                 format,
                 align,
@@ -53,7 +56,7 @@ cdef class AudioFrame(Frame):
             # Connect the buffer to the frame fields.
             err_check(lib.avcodec_fill_audio_frame(
                 self.ptr, 
-                len(self.format.channels), 
+                len(self.layout.channels), 
                 <lib.AVSampleFormat>self.ptr.format,
                 self._buffer,
                 buffer_size,
@@ -65,7 +68,6 @@ cdef class AudioFrame(Frame):
     cdef _init_properties(self):
         self.layout = get_audio_layout(self.ptr.channel_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
-
         self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1
         self._init_planes(AudioPlane)
