@@ -14,6 +14,8 @@ cdef AudioFormat get_audio_format(lib.AVSampleFormat c_format):
 
 
 cdef class AudioFormat(object):
+    
+    """Descriptor of audio formats."""
 
     def __cinit__(self, name):
 
@@ -32,39 +34,89 @@ cdef class AudioFormat(object):
         return '<av.AudioFormat %s>' % (self.name)
 
     property name:
-        """Canonical name of the sample format."""
+        """Canonical name of the sample format.
+
+        >>> SampleFormat('s16p').name
+        's16p'
+
+        """
         def __get__(self):
             return lib.av_get_sample_fmt_name(self.sample_fmt)
 
     property bytes:
+        """Number of bytes per sample.
+
+        >>> SampleFormat('s16p').bytes
+        2
+
+        """
         def __get__(self):
             return lib.av_get_bytes_per_sample(self.sample_fmt)
     
     property bits:
+        """Number of bits per sample.
+
+        >>> SampleFormat('s16p').bits
+        16
+
+        """
         def __get__(self):
             return lib.av_get_bytes_per_sample(self.sample_fmt) << 3
 
     property is_planar:
+        """Is this a planar format?
+
+        Strictly opposite of :attr:`is_packed`.
+
+        """
         def __get__(self):
             return bool(lib.av_sample_fmt_is_planar(self.sample_fmt))
 
     property is_packed:
+        """Is this a planar format?
+
+        Strictly opposite of :attr:`is_planar`.
+
+        """
         def __get__(self):
             return not lib.av_sample_fmt_is_planar(self.sample_fmt)
 
     property planar:
+        """The planar variant of this format.
+
+        Is itself when planar:
+
+        >>> fmt = Format('s16p')
+        >>> fmt.planar is fmt
+        True
+
+        """
         def __get__(self):
             if self.is_planar:
                 return self
             return get_audio_format(lib.av_get_planar_sample_fmt(self.sample_fmt))
 
     property packed:
+        """The packed variant of this format.
+
+        Is itself when packed:
+
+        >>> fmt = Format('s16')
+        >>> fmt.packed is fmt
+        True
+
+        """
         def __get__(self):
             if self.is_packed:
                 return self
             return get_audio_format(lib.av_get_packed_sample_fmt(self.sample_fmt))
 
     property container_name:
+        """The name of a :class:`ContainerFormat` which directly accepts this data.
+
+        :raises ValueError: when planar, since there are no such containers.
+
+        """
         def __get__(self):
 
             if self.is_planar:
