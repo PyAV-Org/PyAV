@@ -1,6 +1,9 @@
 General
 ===============
 
+Containers
+----------
+
 .. automodule:: av.container
 
     .. autoclass:: Container
@@ -15,20 +18,32 @@ General
     .. autoclass:: ContainerFormat
         :members:
 
+Streams
+-------
+
 .. automodule:: av.stream
 
     .. autoclass:: Stream
         :members:
+
+Packets
+-------
 
 .. automodule:: av.packet
 
     .. autoclass:: Packet
         :members:
 
+Frames
+------
+
 .. automodule:: av.frame
 
     .. autoclass:: Frame
         :members:
+
+Planes
+------
 
 .. automodule:: av.plane
 
@@ -37,17 +52,29 @@ General
 
 
 Video
-=============
+===============
+
+Video Streams
+-------------
 
 .. automodule:: av.video.stream
 
     .. autoclass:: VideoStream
         :members:
 
+Video Formats
+-------------
+
 .. automodule:: av.video.format
 
     .. autoclass:: VideoFormat
         :members:
+
+    .. autoclass:: VideoFormatComponent
+        :members:
+
+Video Frames
+------------
 
 .. automodule:: av.video.frame
 
@@ -60,34 +87,60 @@ Video
         .. autoattribute:: format
 
 
+Video Planes
+-------------
+
+.. automodule:: av.video.plane
+
+    .. autoclass:: VideoPlane
+        :members:
+
 
 Audio
-=============
+===============
+
+Audio Streams
+-------------
 
 .. automodule:: av.audio.stream
 
     .. autoclass:: AudioStream
         :members:
 
+Audio Formats
+-------------
+
 .. automodule:: av.audio.format
 
     .. autoclass:: AudioFormat
         :members:
+
+Audio Layouts
+-------------
 
 .. automodule:: av.audio.layout
 
     .. autoclass:: AudioLayout
         :members:
 
+Audio Frames
+------------
+
 .. automodule:: av.audio.frame
 
     .. autoclass:: AudioFrame
         :members:
 
+Audio FIFOs
+-----------
+
 .. automodule:: av.audio.fifo
 
     .. autoclass:: AudioFifo
         :members:
+
+Audio Resamplers
+----------------
 
 .. automodule:: av.audio.resampler
 
