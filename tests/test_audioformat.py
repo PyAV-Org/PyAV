@@ -14,8 +14,8 @@ class TestAudioFormats(TestCase):
         self.assertEqual(fmt.bits, 16)
         self.assertEqual(fmt.bytes, 2)
         self.assertEqual(fmt.container_name, 's16' + postfix)
-        self.assertEqual(fmt.alt_planar.name, 's16p')
-        self.assertIs(fmt.alt_packed, fmt)
+        self.assertEqual(fmt.planar.name, 's16p')
+        self.assertIs(fmt.packed, fmt)
 
     def test_s32p_inspection(self):
         fmt = AudioFormat('s32p')

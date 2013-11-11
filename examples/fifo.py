@@ -35,7 +35,7 @@ stream = next(s for s in container.streams if s.type == 'audio')
 
 fifo = av.AudioFifo() if args.size else None
 resampler = av.AudioResampler(
-    format=av.AudioFormat(args.format or stream.format.name).alt_packed if args.format else None,
+    format=av.AudioFormat(args.format or stream.format.name).packed if args.format else None,
     layout=int(args.layout) if args.layout and args.layout.isdigit() else args.layout,
     rate=args.rate,
 ) if (args.format or args.layout or args.rate) else None

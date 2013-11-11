@@ -52,13 +52,13 @@ cdef class AudioFormat(object):
         def __get__(self):
             return not lib.av_sample_fmt_is_planar(self.sample_fmt)
 
-    property alt_planar:
+    property planar:
         def __get__(self):
             if self.is_planar:
                 return self
             return get_audio_format(lib.av_get_planar_sample_fmt(self.sample_fmt))
 
-    property alt_packed:
+    property packed:
         def __get__(self):
             if self.is_packed:
                 return self
