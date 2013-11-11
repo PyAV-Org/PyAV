@@ -47,12 +47,17 @@ Time
 Unsorted
 ========
 
+- Write Container.metadata and Stream.metadata.
+- Non-integer frame rates, e.g. Fraction(30000, 1001) or '29.97'
+- Protocol for streams to pull packets from iterators. Then secondary streams
+  get easier: container.add_stream('audio_codec', source=av.open('music.aiff').iter_packets(only_primary=True))
+
+
+- Container.demux(video=True)
+- Container.decode(video=True) -> straight to frames
+
 - Flush AudioResampler.
 
-- Replace adhoc frame counting attributes with AVCodecContext.frame_number
-  see: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html#a9e5a25a530d01c04491216c368a1a04a
-
-  Frame.index gets set by the Stream._setup_frame()
 
 - Container.add_stream(template=stream)
 

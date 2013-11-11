@@ -1,9 +1,32 @@
 PyAV
 ====
 
-Pythonic bindings for FFmpeg/Libav.
+This project aims to be a Pythonic binding for FFmpeg_ or Libav_.
 
-At least, they will be eventually.... In the future, we hope to represent the majority of these libraries in a Pythonic manner.
+Currently, it includes the basics for reading/writing audio and video. We aim to provide all of the power and control of the underlying library, but manage the gritty details for you as much as possible.
+
+
+Basic Demo
+----------
+
+::
+
+    import av
+
+    container = av.open('/path/to/video.mp4')
+
+    for packet in container.demux():
+        for frame in packet.decode():
+            if frame.type == 'video':
+                frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
+
+
+Installation from PyPI
+----------------------
+
+::
+
+    $ pip install av
 
 
 Building From Source
@@ -22,9 +45,9 @@ Building From Source
 FFmpeg vs. Libav
 ^^^^^^^^^^^^^^^^
 
-We are attempting to write this wrapper to work with either FFmpeg_ or Libav_. We are using ctypes_ to detect the differences that we have descerned exist as this wrapper is being developed.
+We are attempting to write this wrapper to work with either FFmpeg_ or Libav_. We are using ctypes_ to detect the differences that we have discerned exist as this wrapper is being developed.
 
-This is a fairly trial-and-error process, so please let ud know if there are any odd compiler errors or something won't link due to missing functions.
+This is a fairly trial-and-error process, so please let us know if there are any odd compiler errors or something won't link due to missing functions.
 
 .. _FFmpeg: http://ffmpeg.org
 .. _Libav: http://libav.org

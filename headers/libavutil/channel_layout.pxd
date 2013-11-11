@@ -1,5 +1,4 @@
-
-cdef extern from "libavutil/avutil.h" nogil:
+cdef extern from "libavutil/channel_layout.h" nogil:
 
     # This is not a comprehensive list.
     cdef uint64_t AV_CH_LAYOUT_MONO

@@ -6,9 +6,7 @@ from av.utils cimport err_check
 
 cdef class AudioFifo:
 
-    """A simple Audio FIFO (First In First Out) Buffer. Accept any AudioFrame. Will automatically convert it 
-    to match the channel_layout, sample_fmt and sample_rate specified upon initialization. 
-    """
+    """A simple Audio FIFO (First In First Out) Buffer."""
 
     def __dealloc__(self):
         lib.av_audio_fifo_free(self.ptr)

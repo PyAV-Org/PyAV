@@ -130,7 +130,7 @@ for dirname, dirnames, filenames in os.walk(build_dir):
 setup(
 
     name='av',
-    version='0.1',
+    version='0.1.0',
     description='Pythonic bindings for libav.',
     
     author="Mike Boers",
