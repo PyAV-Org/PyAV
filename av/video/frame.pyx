@@ -196,14 +196,13 @@ cdef class VideoFrame(Frame):
         return frame
 
     @classmethod
-    def from_ndarray(cls, array):
+    def from_ndarray(cls, array, format='rgb24'):
 
         # TODO: We could stand to be more accepting.
         assert array.ndim == 3
         assert array.shape[2] == 3
         assert array.dtype == 'uint8'
-
-        frame = cls(array.shape[1], array.shape[0], 'rgb24')
+        frame = cls(array.shape[1], array.shape[0], format)
 
         # TODO: Use the buffer protocol.
         frame.planes[0].update_from_string(array.tostring())
