@@ -80,7 +80,8 @@ cdef class VideoFrame(Frame):
             self.height,
             id(self),
         )
-        
+    
+
     def to_rgb(self):
         """Get an RGB version of this frame.
 
@@ -183,6 +184,32 @@ cdef class VideoFrame(Frame):
     def to_image(self):
         import Image
         return Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
+
+    @classmethod
+    def from_image(cls, img):
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        frame = cls(img.size[0], img.size[1], 'rgb24')
+
+        # TODO: Use the buffer protocol.
+        frame.planes[0].update_from_string(img.to_string())
+        return frame
+
+    @classmethod
+    def from_ndarray(cls, array):
+
+        # TODO: We could stand to be more accepting.
+        assert array.ndim == 3
+        assert array.shape[2] == 3
+        assert array.dtype == 'uint8'
+
+        frame = cls(array.shape[1], array.shape[0], 'rgb24')
+
+        # TODO: Use the buffer protocol.
+        frame.planes[0].update_from_string(array.tostring())
+
+        return frame
+
 
 
 

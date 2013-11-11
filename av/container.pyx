@@ -168,7 +168,7 @@ cdef class OutputContainer(object):
             codec_context.height = 480
             codec_context.ticks_per_frame = 1
             codec_context.time_base.num = 1
-            codec_context.time_base.den = rate or 24
+            codec_context.time_base.den = int(rate or 24)
 
         # Some Sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
