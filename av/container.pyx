@@ -6,7 +6,7 @@ cimport libav as lib
 from av.format cimport build_container_format
 from av.packet cimport Packet
 from av.stream cimport Stream, build_stream
-from av.utils cimport err_check, avdict_to_dict
+from av.utils cimport err_check, avdict_to_dict, dict_to_avdict
 from av.utils import AVError
 
 
@@ -198,12 +198,14 @@ cdef class OutputContainer(object):
         for stream in self.streams:
             if not lib.avcodec_is_open(stream._codec_context):
                 err_check(lib.avcodec_open2(stream._codec_context, stream._codec, NULL))
+            dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
 
         # Open the output file, if needed.
         # TODO: is the avformat_write_header in the right place here?
         if not self.proxy.ptr.pb:
             if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
                 err_check(lib.avio_open(&self.proxy.ptr.pb, self.name, lib.AVIO_FLAG_WRITE))
+            dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
             err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
 
         self._started = True

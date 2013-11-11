@@ -40,6 +40,18 @@ cdef dict avdict_to_dict(lib.AVDictionary *input):
     return output
 
 
+cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
+    
+    if clear:
+        lib.av_dict_free(dst)
+
+    cdef bytes key_str, value_str
+    for key, value in src.iteritems():
+        key_str = str(key)
+        value_str = str(value)
+        err_check(lib.av_dict_set(dst, key_str, value_str, 0))
+
+
 cdef object avrational_to_faction(lib.AVRational *input):
     return Fraction(input.num, input.den) if input.den else Fraction(0, 1)
 

@@ -14,7 +14,10 @@ class TestBasicVideoEncoding(TestCase):
         duration = 48
 
         path = self.sandboxed('rgb_rotate.mov')
+
         output = av.open(path, 'w')
+        output.metadata['title'] = 'container'
+        output.metadata['key'] = 'value'
 
         stream = output.add_stream("mpeg4", 24)
         stream.width = width
@@ -50,6 +53,8 @@ class TestBasicVideoEncoding(TestCase):
         input_ = av.open(path)
         self.assertEqual(input_.name, path)
         self.assertEqual(len(input_.streams), 1)
+        self.assertEqual(input_.metadata.get('title'), 'container', input_.metadata)
+        self.assertEqual(input_.metadata.get('key'), None)
         stream = input_.streams[0]
         self.assertIsInstance(stream, VideoStream)
         self.assertEqual(stream.type, 'video')
