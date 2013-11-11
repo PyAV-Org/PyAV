@@ -70,7 +70,7 @@ cdef class AudioStream(Stream):
         """
         
         # setup formatContext for encoding
-        self.weak_ctx().start_encoding()
+        self._weak_container().start_encoding()
         
         #Setup a resampler if ones not setup
         if not self.resampler:
@@ -78,10 +78,10 @@ cdef class AudioStream(Stream):
         
         # setup audio fifo if ones not setup
         if not self.fifo:
-            self.fifo = AudioFifo(self.codec.channel_layout,
-                self.codec.sample_fmt,
-                self.codec.sample_rate,
-                self.codec.frame_size,
+            self.fifo = AudioFifo(self._codec_context.channel_layout,
+                self._codec_context.sample_fmt,
+                self._codec_context.sample_rate,
+                self._codec_context.frame_size,
             )
             self.fifo.add_silence = True
             

@@ -37,53 +37,25 @@ output_video_stream = None
 output_audio_stream = None
 
 if input_video_stream:
+    output_video_stream = output_file.add_stream("mpeg4", 24)
     
-    # setup video output stream
-    output_video_stream = output_file.add_stream("mpeg4", input_video_stream.base_frame_rate)
-    
-    codec = output_video_stream.codec
-    
-    # set output size
-    codec.width = 640
-    codec.height = 480
-    
-    # set bit rate and pix_fmt
-    #codec.bit_rate = 256000
-    codec.pix_fmt = "yuv420p"
-    
-    
-
 if input_audio_stream:
-    
-    # setup audio output stream
     output_audio_stream = output_file.add_stream("mp3")
     
-    codec = output_audio_stream.codec
-    
-    codec.bit_rate = 128000
-    codec.sample_rate = 44100
-    codec.channel_layout = "stereo"
-    
-    codec.sample_fmt = "s16p"
-    
 
-output_file.dump()
 
 frame_count = 0
 
-# demux the input file
+
 for packet in input_file.demux(input_streams):
-    
-    # decode the frames in the packet
     for frame in packet.decode():
         
+        frame.pts = None
         encoded_packet = None
         
         if packet.stream.type == b'audio':
-            # encode audio frame
             encoded_packet = output_audio_stream.encode(frame)
         else:
-            # encode video frame
             encoded_packet = output_video_stream.encode(frame)
 
             if frame_count % 10 == 0:
