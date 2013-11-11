@@ -34,7 +34,7 @@ cdef class VideoStream(Stream):
         else:
             self.format = None
         
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         
         # Create a frame if we don't have one ready.
         if not self.next_frame:

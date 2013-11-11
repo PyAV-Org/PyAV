@@ -30,6 +30,8 @@ cdef Stream build_stream(Container container, lib.AVStream *c_stream):
         py_stream = VideoStream.__new__(VideoStream, _cinit_bypass_sentinel)
     elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
         py_stream = AudioStream.__new__(AudioStream, _cinit_bypass_sentinel)
+    elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
+        py_stream = SubtitleStream.__new__(SubtitleStream, _cinit_bypass_sentinel)
     else:
         py_stream = Stream.__new__(Stream, _cinit_bypass_sentinel)
 
@@ -147,8 +149,6 @@ cdef class Stream(object):
 
     cpdef decode(self, Packet packet):
 
-        cdef Frame frame
-        cdef unsigned int frames_decoded = 0
         cdef int data_consumed = 0
         cdef list frames = []
 
@@ -165,8 +165,8 @@ cdef class Stream(object):
             packet.struct.size -= data_consumed
 
             if frame:
-                frames_decoded += 1
-                self._setup_frame(frame)
+                if isinstance(frame, Frame):
+                    self._setup_frame(frame)
                 frames.append(frame)
 
         # Restore the packet.
@@ -177,13 +177,14 @@ cdef class Stream(object):
         # These codecs should have a CODEC CAP_DELAY capability set.
         # This sends a special packet with data set to NULL and size set to 0
         # This tells the Packet Object that its the last packet    
-        if frames_decoded:
+        if frames:
             while True:
                 # Create a new NULL packet for every frame we try to pull out.
                 packet = Packet()
                 frame = self._decode_one(&packet.struct, &data_consumed)
                 if frame:
-                    self._setup_frame(frame)
+                    if isinstance(frame, Frame):
+                        self._setup_frame(frame)
                     frames.append(frame)
                 else:
                     break
@@ -195,6 +196,6 @@ cdef class Stream(object):
         frame.time_base = self._stream.time_base
         frame.index = self._codec_context.frame_number - 1
 
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('base stream cannot decode packets')
 

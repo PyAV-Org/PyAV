@@ -44,7 +44,7 @@ cdef class AudioStream(Stream):
         def __get__(self):
             return self._codec_context.channels
         
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
 
         if not self.next_frame:
             self.next_frame = alloc_audio_frame()
