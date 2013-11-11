@@ -46,11 +46,8 @@ Time
 Unsorted
 ========
 
-- Write Container.metadata and Stream.metadata.
-- Non-integer frame rates, e.g. Fraction(30000, 1001) or '29.97'
 - Protocol for streams to pull packets from iterators. Then secondary streams
   get easier: container.add_stream('audio_codec', source=av.open('music.aiff').iter_packets(only_primary=True))
-
 
 - Container.demux(video=True)
 - Container.decode(video=True) -> straight to frames
