@@ -1,10 +1,9 @@
-The Big Plan
-============
+The Big Picture
+===============
 
+- Lots of documentation
 - Uniform time representation
 - Restore audio encoding
-- Examples for encoding from numpy arrays
-- Lots of documentation
 
 
 Encoding
@@ -72,29 +71,6 @@ runtime_library_dirs
 - Look at how stream alloc works; can we manually do this and register the
   stream on a format context later?
 
-- Replace AudioFrame.resample with AudioResampler
-
-    - make examples.decode use it for audio
-
-    - see: detailed description on http://www.ffmpeg.org/doxygen/2.0/group__lswr.html
-                               and https://libav.org/doxygen/master/group__lavr.html
-
-    - FFmpeg's swr does not have an internal fifo. This is why we must always
-      assert that we are getting everything we request.
-    - Separate the AudioResampler from the AudioFifo; the user must manage
-      them both if they want to both resample and rechunk the stream
-
-    - AudioResampler(format, layout)
-        .convert(frame) -> a new frame with (nearly) the same logical data
-            - The first time this is called it initializes the internal src_format
-              and src_layout. After that, it asserts that they are equal, or
-              raises a ValueError since the incoming packet does not match
-        .flush() or .convert(None) -> last frames
-
-    - AudioFifo(format, layout, nb_samples=0)
-        .write(frame)
-        .read(samples=0) -> AudioFrame of specified samples or ALL the samples
-
 - Context use a StringIO or similar to write into/from?
     - Create wrapper around AVIOContext for arbitrary Python object with read/write
       methods.
@@ -122,21 +98,11 @@ runtime_library_dirs
 - Context.add_stream(codec_name, frame_rate) -> Context.streams.append(Stream(codec_name, frame_rate))?
 
 - SwsContext -> av.video.rescaler.Rescaler
-- SwrContext -> av.autio.resample.Resampler
 
-- `make test-assets` -> into tests/assets/
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
 - try to wrap API of testsrc filters
-- Vagrant for two environments for ffmpeg and libav
-    libav needs to have LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib set for
-    both building and testing. Also try `runtime_library_dirs`.
 
-- Humanize attribute names?
-    pts -> time
-    pkt_time -> Packet.time
-
-
-- Split Context into input/output varieties.
+---
 
 - FFmpeg tutorial: http://dranger.com/ffmpeg/
 	- also has function reference: http://dranger.com/ffmpeg/functions.html
@@ -145,14 +111,10 @@ runtime_library_dirs
 - Even out more of the differences:
     - See README of https://github.com/chelyaev/ffmpeg-tutorial
 
-- Should Packet.decode yield Frames, or return a list of Frames?
-
-- VideoStream.setup_conversion(size, format, etc.)
-
-- Move decoding into Packet from Stream?
-
 - Replicate av_frame_get_best_effort_timestamp
+
     http://ffmpeg.org/pipermail/ffmpeg-devel/2011-February/104327.html
     http://pastebin.com/Aq8eDZw3/
     http://web.archiveorange.com/archive/v/yR2T4bybpYnYCUXmzAI5
+
 
