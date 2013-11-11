@@ -193,6 +193,7 @@ cdef class Stream(object):
     cdef _setup_frame(self, Frame frame):
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         frame.time_base = self._stream.time_base
+        frame.index = self._codec_context.frame_number - 1
 
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('base stream cannot decode packets')

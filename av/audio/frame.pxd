@@ -17,9 +17,6 @@ cdef class AudioFrame(Frame):
     cdef int nb_channels
     cdef int nb_planes
 
-    cdef readonly int frame_index
-    
-
     cdef readonly AudioLayout layout
     cdef readonly AudioFormat format
     

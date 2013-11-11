@@ -72,8 +72,9 @@ cdef class VideoFrame(Frame):
         lib.av_freep(&self._buffer)
 
     def __repr__(self):
-        return '<av.%s %s %dx%d at 0x%x>' % (
+        return '<av.%s #%d, %s %dx%d at 0x%x>' % (
             self.__class__.__name__,
+            self.index,
             self.format.name,
             self.width,
             self.height,
@@ -161,7 +162,7 @@ cdef class VideoFrame(Frame):
         )
         
         # Copy some properties.
-        frame.frame_index = self.frame_index
+        frame.index = self.index
         frame.time_base = self.time_base
         frame.ptr.pts = self.ptr.pts
         

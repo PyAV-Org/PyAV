@@ -77,8 +77,9 @@ cdef class AudioFrame(Frame):
         lib.av_freep(&self._buffer)
     
     def __repr__(self):
-        return '<av.%s %d samples at %dHz, %s, %s at 0x%x>' % (
+        return '<av.%s %d, %d samples at %dHz, %s, %s at 0x%x>' % (
             self.__class__.__name__,
+            self.index,
             self.samples,
             self.rate,
             self.layout.name,

@@ -13,7 +13,6 @@ cdef class VideoFrame(Frame):
     # We don't ever actually access it directly.
     cdef uint8_t *_buffer
 
-    cdef readonly int frame_index
     cdef SwsContextProxy sws_proxy
 
     cdef readonly VideoFormat format

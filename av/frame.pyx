@@ -13,7 +13,14 @@ cdef class Frame(object):
 
     def __dealloc__(self):
         lib.avcodec_free_frame(&self.ptr)
-        
+    
+    def __repr__(self):
+        return 'av.%s #%d at 0x%x>' % (
+            self.__class__.__name__,
+            self.index,
+            id(self),
+        )
+    
     property pts:
         """Presentation time stamp of this frame."""
         def __get__(self):
