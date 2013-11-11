@@ -153,39 +153,6 @@ cdef extern from "libavutil/pixdesc.h" nogil:
     cdef AVPixelFormat av_get_pix_fmt(char* name)
 
 
-cdef extern from "libavutil/samplefmt.h" nogil:
-
-    cdef AVSampleFormat av_get_sample_fmt(char* name)
-
-    cdef char * av_get_sample_fmt_name(AVSampleFormat sample_fmt)
-    cdef int av_get_bytes_per_sample(AVSampleFormat sample_fmt)
-    cdef int av_sample_fmt_is_planar(AVSampleFormat sample_fmt)
-    cdef AVSampleFormat av_get_alt_sample_fmt(AVSampleFormat sample_fmt, int planar)
-    
-    cdef int av_samples_alloc(
-        uint8_t** audio_data,
-        int* linesize,
-        int nb_channels,
-        int nb_samples,
-        AVSampleFormat sample_fmt,
-        int align
-    )
-    
-    cdef int av_samples_get_buffer_size(
-        int *linesize,
-        int nb_channels,
-        int nb_samples,
-        AVSampleFormat sample_fmt,
-        int align
-    )
-    
-    cdef int av_samples_set_silence(
-        uint8_t **audio_data,
-        int offset,
-        int nb_samples,
-        int nb_channels,
-        AVSampleFormat sample_fmt
-     )
         
     
 cdef extern from "libavutil/audioconvert.h" nogil:

@@ -56,13 +56,13 @@ cdef class AudioFormat(object):
         def __get__(self):
             if self.is_planar:
                 return self
-            return get_audio_format(lib.av_get_alt_sample_fmt(self.sample_fmt, 1))
+            return get_audio_format(lib.av_get_planar_sample_fmt(self.sample_fmt))
 
     property alt_packed:
         def __get__(self):
             if self.is_packed:
                 return self
-            return get_audio_format(lib.av_get_alt_sample_fmt(self.sample_fmt, 0))
+            return get_audio_format(lib.av_get_packed_sample_fmt(self.sample_fmt))
 
     property container_name:
         def __get__(self):
