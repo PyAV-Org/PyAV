@@ -3,18 +3,9 @@
 *~
 /venv*
 /vendor
-/bin
-/include
-/lib
-
-# Autoconf.
-/autom4te.cache
-/config.py
-/config.log
-/config.status
-/configure
 
 # Build products.
+/src
 /build
 *.c
 *.so
@@ -25,8 +16,5 @@
 
 # Testing.
 /sandbox
-/subtitles
-/tests/samples
 /tests/assets
-/tests/sandbox
 /.vagrant

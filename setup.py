@@ -75,7 +75,7 @@ def check_for_func(lib_names, func_name):
 
 
 extension_extra = {
-    'include_dirs': ['headers'],
+    'include_dirs': ['include'],
 }
 
 
@@ -111,7 +111,7 @@ extension_extra = dict((k, sorted(set(v))) for k, v in extension_extra.iteritems
 
 # Construct the modules that we find in the "build/cython" directory.
 ext_modules = []
-build_dir = os.path.abspath(os.path.join(__file__, '..', 'build', 'cython'))
+build_dir = os.path.abspath(os.path.join(__file__, '..', 'src'))
 for dirname, dirnames, filenames in os.walk(build_dir):
     for filename in filenames:
         if filename.startswith('.') or os.path.splitext(filename)[1] != '.c':

@@ -1,5 +1,5 @@
 CYTHON_SRC = $(shell find av -name "*.pyx")
-C_SRC = $(CYTHON_SRC:%.pyx=build/cython/%.c)
+C_SRC = $(CYTHON_SRC:%.pyx=src/%.c)
 MOD_SOS = $(CYTHON_SRC:%.pyx=%.so)
 
 TEST_MOV = sandbox/640x360.mp4
@@ -13,9 +13,9 @@ info:
 
 cythonize: $(C_SRC)
 
-build/cython/%.c: %.pyx
+src/%.c: %.pyx
 	@ mkdir -p $(shell dirname $@)
-	cython -I. -Iheaders -o $@ $<
+	cython -I. -Iinclude -o $@ $<
 
 build: cythonize
 	CFLAGS=-O0 python setup.py build_ext --inplace --debug
@@ -52,6 +52,7 @@ debug: build
 
 clean:
 	- rm -rf build
+	- rm -rf src
 	- find av -name '*.so' -delete
 
 clean-sandbox:
