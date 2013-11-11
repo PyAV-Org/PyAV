@@ -7,6 +7,9 @@ from av.format cimport build_container_format
 from av.packet cimport Packet
 from av.stream cimport Stream, build_stream
 from av.utils cimport err_check, avdict_to_dict, dict_to_avdict
+
+from fractions import Fraction
+
 from av.utils import AVError
 
 
@@ -126,11 +129,17 @@ cdef class OutputContainer(object):
         self.close()
 
     cpdef add_stream(self, bytes codec_name, object rate=None):
-        
-        """Add stream to Container and return it.
-        if the codec_name is a video codec rate means frames per second,
-        if the codec_name is a audio codec rate means sample rate 
-        Note: To use this Container must be opened with mode = "w"
+        """add_stream(codec_name, rate=None)
+
+        Create a new stream, and return it.
+
+        :param str codec_name: The name of a codec.
+        :param rate: The frame rate for video, and sample rate for audio.
+            Examples for video include ``24``, ``23.976``, and
+            ``Fraction(30000,1001)``. Examples for audio include ``48000``
+            and ``44100``.
+        :returns: The new :class:`~av.stream.Stream`.
+
         """
         
         # Find encoder
@@ -167,8 +176,10 @@ cdef class OutputContainer(object):
             codec_context.width = 640
             codec_context.height = 480
             codec_context.ticks_per_frame = 1
-            codec_context.time_base.num = 1
-            codec_context.time_base.den = int(rate or 24)
+
+            rate = Fraction(rate or 24)
+            codec_context.time_base.num = rate.denominator
+            codec_context.time_base.den = rate.numerator
 
         # Some Sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
