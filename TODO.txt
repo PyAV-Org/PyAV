@@ -1,9 +1,7 @@
 The Big Plan
 ============
 
-- Restore audio resampling
 - Uniform time representation
-- Restore video encoding
 - Restore audio encoding
 - Examples for encoding from numpy arrays
 - Lots of documentation
@@ -49,10 +47,12 @@ Time
 Unsorted
 ========
 
-- split container into container/{base,input,output}.{pxd,pyx}
+- Flush AudioResampler.
 
 - Replace adhoc frame counting attributes with AVCodecContext.frame_number
   see: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html#a9e5a25a530d01c04491216c368a1a04a
+
+  Frame.index gets set by the Stream._setup_frame()
 
 - Container.add_stream(template=stream)
 

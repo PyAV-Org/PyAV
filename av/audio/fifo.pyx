@@ -1,3 +1,6 @@
+from av.audio.format cimport get_audio_format
+from av.audio.frame cimport alloc_audio_frame
+from av.audio.layout cimport get_audio_layout
 from av.utils cimport err_check
 
 
@@ -20,127 +23,103 @@ cdef class AudioFifo:
             id(self),
         )
      
-    def __init__(self, bytes channel_layout,bytes sample_fmt, 
-                            int sample_rate, int nb_samples):
-        
-        cdef uint64_t ch_layout = lib.av_get_channel_layout(channel_layout)
-        if ch_layout == 0:
-            raise ValueError("invalid channel layout %s" % channel_layout)
-            
-        cdef lib.AVSampleFormat fmt = lib.av_get_sample_fmt(sample_fmt)
-        if fmt == lib.AV_SAMPLE_FMT_NONE:
-            raise ValueError("invalid sample_fmt %s" % sample_fmt)
-        
-        cdef int channels = lib.av_get_channel_layout_nb_channels(ch_layout)
-        
-        self.ptr = lib.av_audio_fifo_alloc(fmt, channels, nb_samples)
-        if not self.ptr:
-            raise MemoryError("Unable to allocate AVAudioFifo")
-        
-        self.sample_fmt_ = fmt
-        self.sample_rate_ = sample_rate
-        self.channel_layout_ = ch_layout
-        self.channels_ = channels
-        self.add_silence = False
-        
+    def __cinit__(self):
         self.last_pts = lib.AV_NOPTS_VALUE
         self.pts_offset = 0
-        
-        self.time_base_.num = 1
-        self.time_base_.den = self.sample_rate_
+        self.time_base.num = 1
+        self.time_base.den = 1
         
     cpdef write(self, AudioFrame frame):
-    
-        """Write a Frame to the Audio FIFO Buffer. If the AudioFrame has a valid pts the FIFO will store it.
-        """
+        """Push some samples into the queue."""
+
+        # Take configuration from the first frame.
+        if not self.ptr:
+
+            self.format = get_audio_format(<lib.AVSampleFormat>frame.ptr.format)
+            self.layout = get_audio_layout(0, frame.ptr.channel_layout)
+            self.time_base.den = frame.ptr.sample_rate
+            self.ptr = lib.av_audio_fifo_alloc(
+                self.format.sample_fmt,
+                len(self.layout.channels),
+                frame.ptr.nb_samples * 2, # Just a default number of samples; it will adjust.
+            )
+            if not self.ptr:
+                raise ValueError('could not create fifo')
         
-        cdef int ret
-        cdef AudioFrame resampled_frame = frame.resample(self.channel_layout, self.sample_fmt, self.sample_rate)
-        
-        if resampled_frame.ptr.pts != lib.AV_NOPTS_VALUE:
-            
-            self.last_pts = lib.av_rescale_q(resampled_frame.ptr.pts, 
-                                             resampled_frame.time_base_, 
-                                             self.time_base_)
+        # Make sure nothing changed.
+        else:
+            if (
+                frame.ptr.format != self.format.sample_fmt or
+                frame.ptr.channel_layout != self.layout.layout or
+                frame.ptr.sample_rate != self.time_base.den
+            ):
+                raise ValueError('frame does not match fifo parameters')
+
+        if frame.ptr.pts != lib.AV_NOPTS_VALUE:
+            self.last_pts = frame.ptr.pts
             self.pts_offset = self.samples
             
-        err_check(lib.av_audio_fifo_write(self.ptr, 
-                                      <void **> resampled_frame.ptr.extended_data,
-                                      resampled_frame.samples))
+        err_check(lib.av_audio_fifo_write(
+            self.ptr, 
+            <void **>frame.ptr.extended_data,
+            frame.ptr.nb_samples,
+        ))
 
-    cpdef read(self, int nb_samples=-1):
-    
-        """Read nb_samples from the Audio FIFO. returns a AudioFrame. If nb_samples is -1, will return a AudioFrame
-        with all the samples currently in the FIFO. If a frame was supplied with a valid pts the Audio frame returned
-        will contain a pts adjusted for the current read. The time_base of the pts will always be in 1/sample_rate time_base.
+
+    cpdef read(self, unsigned int nb_samples=0, bint partial=False):
+        """Read samples from the queue.
+
+        :param int samples: The number of samples to pull; 0 gets all.
+        :param bool partial: Allow returning less than requested.
+        :returns: New :class:`AudioFrame` or ``None`` (if empty).
+
+        If the incoming frames had valid timestamps, the returned frames
+        will have accurate timestamps (assuming a time_base or 1/sample_rate).
+
         """
-        
-        if nb_samples < 1:
-            nb_samples = self.samples
-            
-        if not self.add_silence and nb_samples > self.samples:
-            nb_samples = self.samples
-            
+
+        nb_samples = nb_samples or self.samples
         if not nb_samples:
-            raise EOFError("Fifo is Empty")
+            return
+        if not partial and self.samples < nb_samples:
+            return
 
         cdef int ret
         cdef int linesize
         cdef int sample_size
-        cdef AudioFrame frame = AudioFrame()
-        
-        frame.alloc_frame(self.channels_,self.sample_fmt_,nb_samples)
-        
-        ret = lib.av_audio_fifo_read(self.ptr,
-                                     <void **> frame._buffer,
-                                     nb_samples)
 
-        frame.fill_frame(nb_samples)
+        cdef AudioFrame frame = alloc_audio_frame()
+        frame._init(
+            self.format.sample_fmt,
+            self.layout.layout,
+            nb_samples,
+            1, # Align?
+        )
+
+        err_check(lib.av_audio_fifo_read(
+            self.ptr,
+            <void **>frame.ptr.extended_data,
+            nb_samples,
+        ))
+
+        # frame.fill_frame(nb_samples) ???
         
-        if self.add_silence and ret < nb_samples:
-            frame.set_silence(ret, nb_samples - ret)
-        
-        frame.ptr.sample_rate = self.sample_rate_
-        frame.ptr.channel_layout = self.channel_layout_
+        frame.ptr.sample_rate = self.time_base.den
+        frame.ptr.channel_layout = self.layout.layout
         
         if self.last_pts != lib.AV_NOPTS_VALUE:
-            
-            frame.time_base_ = self.time_base_
             frame.ptr.pts = self.last_pts - self.pts_offset
-            
-            # move the offset
             self.pts_offset -= nb_samples
         
         return frame
     
-    '''
     property samples:
         """Number of audio samples (per channel) """
         def __get__(self):
             return lib.av_audio_fifo_size(self.ptr)
     
-    property sample_rate:
+    property rate:
         """Sample rate of the audio data. """
         def __get__(self):
-            return self.sample_rate_
+            return self.time_base.den
 
-    property sample_fmt:
-        """Audio Sample Format"""
-        def __get__(self):
-            result = lib.av_get_sample_fmt_name(self.sample_fmt_)
-            if result == NULL:
-                return None
-            return result
-        
-    property channels:
-        """Number of audio channels"""
-        def __get__(self): return self.channels_
-        
-    property channel_layout:
-        """Audio channel layout"""
-        def __get__(self):
-            result = channel_layout_name(self.channels_, self.channel_layout_)
-            if result == NULL:
-                return None
-            return result
-    '''

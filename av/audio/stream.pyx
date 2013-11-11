@@ -12,7 +12,13 @@ cdef class AudioStream(Stream):
     cdef _init(self, Container container, lib.AVStream *stream):
         Stream._init(self, container, stream)
         self.encoded_frame_count = 0
-        self.layout = get_audio_layout(self._codec_context.channel_layout)
+        
+        # Sometimes there isn't a layout set, but there are a number of
+        # channels. Assume it is the default layout.
+        self.layout = get_audio_layout(self._codec_context.channels, self._codec_context.channel_layout)
+        if not self._codec_context.channel_layout:
+            self._codec_context.channel_layout = self.layout.layout
+
         self.format = get_audio_format(self._codec_context.sample_fmt)
     
     def __repr__(self):
@@ -48,16 +54,10 @@ cdef class AudioStream(Stream):
         if not completed_frame:
             return
         
-        if not self.swr_proxy:
-            self.swr_proxy =  SwrContextProxy() 
-
         cdef AudioFrame frame = self.next_frame
         self.next_frame = None
         
         frame._init_properties()
-
-        # Copy the pointers over.
-        frame.swr_proxy = self.swr_proxy
         
         return frame
     
@@ -73,8 +73,8 @@ cdef class AudioStream(Stream):
         self.weak_ctx().start_encoding()
         
         #Setup a resampler if ones not setup
-        if not self.swr_proxy:
-            self.swr_proxy = SwrContextProxy()
+        if not self.resampler:
+            self.resampler = AudioResampler()
         
         # setup audio fifo if ones not setup
         if not self.fifo:
@@ -93,7 +93,7 @@ cdef class AudioStream(Stream):
         
         # if frame supplied add to audio fifo
         if frame:
-            frame.swr_proxy = self.swr_proxy
+            frame.resampler = self.resampler
             self.fifo.write(frame)
 
         # read a frame out of the fifo queue if there are enough samples ready
