@@ -46,6 +46,13 @@ Time
 Unsorted
 ========
 
+- Investigate adding Python-defined formats. Then we could pull frames from
+  webcams via OS X APIs.
+
+- Directly use the Numpy C-API
+  - see: http://docs.scipy.org/doc/numpy/reference/c-api.array.html
+  - see: https://github.com/cython/cython/wiki/tutorials-numpy#c-api-initalization
+
 - Protocol for streams to pull packets from iterators. Then secondary streams
   get easier: container.add_stream('audio_codec', source=av.open('music.aiff').iter_packets(only_primary=True))
 
