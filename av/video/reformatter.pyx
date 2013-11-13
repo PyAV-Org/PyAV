@@ -1,5 +1,5 @@
 cimport libav as lib
 
-cdef class SwsContextProxy(object):
+cdef class VideoReformatter(object):
     def __dealloc__(self):
         lib.sws_freeContext(self.ptr)

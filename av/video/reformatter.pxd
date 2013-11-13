@@ -1,4 +1,4 @@
 cimport libav as lib
 
-cdef class SwsContextProxy(object):
+cdef class VideoReformatter(object):
     cdef lib.SwsContext *ptr

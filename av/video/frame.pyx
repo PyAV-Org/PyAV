@@ -125,15 +125,15 @@ cdef class VideoFrame(Frame):
             return self
 
         # If VideoFrame doesn't have a SwsContextProxy create one
-        if not self.sws_proxy:
-            self.sws_proxy = SwsContextProxy()
+        if not self.reformatter:
+            self.reformatter = VideoReformatter()
         
         # Try and reuse existing SwsContextProxy
         # VideoStream.decode will copy its SwsContextProxy to VideoFrame
         # So all Video frames from the same VideoStream should have the same one
         
-        self.sws_proxy.ptr = lib.sws_getCachedContext(
-            self.sws_proxy.ptr,
+        self.reformatter.ptr = lib.sws_getCachedContext(
+            self.reformatter.ptr,
             self.ptr.width,
             self.ptr.height,
             src_format,
@@ -153,7 +153,7 @@ cdef class VideoFrame(Frame):
         
         # Finally Scale the image
         lib.sws_scale(
-            self.sws_proxy.ptr,
+            self.reformatter.ptr,
             self.ptr.data,
             self.ptr.linesize,
             0, # slice Y

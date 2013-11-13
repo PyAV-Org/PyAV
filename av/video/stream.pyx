@@ -60,7 +60,7 @@ cdef class VideoStream(Stream):
             )
             
             # Create a new SwsContextProxy
-            self.sws_proxy = SwsContextProxy()
+            self.reformatter = VideoReformatter()
 
         # We are ready to send this one off into the world!
         cdef VideoFrame frame = self.next_frame
@@ -72,7 +72,7 @@ cdef class VideoStream(Stream):
         # Share our SwsContext with the frames. Most of the time they will end
         # up using the same settings as each other, so it makes sense to cache
         # it like this.
-        frame.sws_proxy = self.sws_proxy
+        frame.reformatter = self.reformatter
 
         return frame
     
@@ -87,15 +87,15 @@ cdef class VideoStream(Stream):
         # setup formatContext for encoding
         self._weak_container().start_encoding()
         
-        if not self.sws_proxy:
-            self.sws_proxy = SwsContextProxy()
+        if not self.reformatter:
+            self.reformatter = VideoReformatter()
             
         cdef VideoFrame formated_frame
         cdef Packet packet
         cdef int got_output
         
         if frame:
-            frame.sws_proxy = self.sws_proxy
+            frame.reformatter = self.reformatter
             formated_frame = frame._reformat(
                 self._codec_context.width,
                 self._codec_context.height,

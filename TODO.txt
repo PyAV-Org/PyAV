@@ -53,6 +53,9 @@ Unsorted
   - see: http://docs.scipy.org/doc/numpy/reference/c-api.array.html
   - see: https://github.com/cython/cython/wiki/tutorials-numpy#c-api-initalization
 
+- Move the logic regard initializating a VideoReformatter into the object
+  itself instead of the VideoFrame.reformat method.
+
 - Protocol for streams to pull packets from iterators. Then secondary streams
   get easier: container.add_stream('audio_codec', source=av.open('music.aiff').iter_packets(only_primary=True))
 
@@ -60,7 +63,6 @@ Unsorted
 - Container.decode(video=True) -> straight to frames
 
 - Flush AudioResampler.
-
 
 - Container.add_stream(template=stream)
 
@@ -100,8 +102,6 @@ runtime_library_dirs
         context.mux(stream.encode(frame))
 
 - Context.add_stream(codec_name, frame_rate) -> Context.streams.append(Stream(codec_name, frame_rate))?
-
-- SwsContext -> av.video.rescaler.Rescaler
 
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
 - try to wrap API of testsrc filters

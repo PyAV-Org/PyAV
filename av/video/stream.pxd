@@ -3,7 +3,7 @@ cimport libav as lib
 from av.stream cimport Stream
 from av.video.format cimport VideoFormat
 from av.video.frame cimport VideoFrame
-from av.video.swscontext cimport SwsContextProxy
+from av.video.reformatter cimport VideoReformatter
 
 
 cdef class VideoStream(Stream):
@@ -16,8 +16,8 @@ cdef class VideoStream(Stream):
     # Hold onto the frames that we will decode until we have a full one.
     cdef VideoFrame next_frame
 
-    # Common SwsContext shared with all frames.
-    cdef SwsContextProxy sws_proxy
+    # Common reformatter shared with all frames since it is likely to get reused.
+    cdef VideoReformatter reformatter
 
     # Size of the last frame. Used to determine if the sws_proxy should be
     # recreated.
