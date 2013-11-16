@@ -3,7 +3,14 @@ The Big Picture
 
 - Lots of documentation
 - Uniform time representation
-- Restore audio encoding
+- High-level APIs
+
+
+NEXT
+====
+
+- Stream.encode should return a list of packets. Otherwise, resampling
+  can easily result in a massive buffer in a fifo or codec
 
 
 Encoding
@@ -43,13 +50,22 @@ Time
     - see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02647
 
 
+High-Level API (Conveniences)
+=============================
+
+- Container.demux(video=True)
+- Container.demux(video=2, audio=2) first 2 video and audio streams OR
+  Container.demux(video=0, audio=0) first video and audio
+- Container.decode(*args_for_demux, **kwargs_for_demux) -> straight to frames
+- Stream.mux(frame) -> encode, flush, and mux
+- Container.__del__ -> flush the streams and close
+- Container.add_stream(template=stream)
+
+
 Unsorted
 ========
 
-- Stream.encode should return a list of packets
-- What was the "add_silence" for with recard to encoding?
-
-
+- atexit.register something to clean up FFmpeg threads
 
 
 - Investigate adding Python-defined formats. Then we could pull frames from
@@ -64,14 +80,6 @@ Unsorted
 
 - Protocol for streams to pull packets from iterators. Then secondary streams
   get easier: container.add_stream('audio_codec', source=av.open('music.aiff').iter_packets(only_primary=True))
-
-- Container.demux(video=True)
-- Container.decode(video=True) -> straight to frames
-
-
-- Container.add_stream(template=stream)
-
-- atexit.register something to clean up FFmpeg threads
 
 - Create Codec Descriptor
 
@@ -110,8 +118,6 @@ runtime_library_dirs
 
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
 - try to wrap API of testsrc filters
-
----
 
 - FFmpeg tutorial: http://dranger.com/ffmpeg/
 	- also has function reference: http://dranger.com/ffmpeg/functions.html
