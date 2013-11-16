@@ -76,6 +76,9 @@ cdef class AudioFifo:
 
         """
 
+        if not self.samples:
+            return
+
         nb_samples = nb_samples or self.samples
         if not nb_samples:
             return
