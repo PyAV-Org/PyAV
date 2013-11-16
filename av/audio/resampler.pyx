@@ -116,6 +116,10 @@ cdef class AudioResampler(object):
             frame.ptr.nb_samples if frame else 0
         ))
 
+        # Empty frame.
+        if not output.ptr.nb_samples:
+            return
+
         # Recalculate linesizes and various properties, since the initial
         # number of samples was an estimate.
         output._fill()
