@@ -12,24 +12,22 @@ arg_parser.add_argument('-v', '--verbose', action='store_true')
 arg_parser.add_argument('input', nargs=1)
 args = arg_parser.parse_args()
 
-
 input_file = av.open(args.input[0])
 input_video_stream = None # next((s for s in input_file.streams if s.type == 'video'), None)
 input_audio_stream = next((s for s in input_file.streams if s.type == 'audio'), None)
-
 
 # open output file
 output_file_path = sandboxed('encoded-' + os.path.basename(args.input[0]))
 output_file = av.open(output_file_path, 'w')
 output_video_stream = output_file.add_stream("mpeg4", 24) if input_video_stream else None
 output_audio_stream = output_file.add_stream("mp3") if input_audio_stream else None
-    
 
 
 frame_count = 0
 
 
 for packet in input_file.demux([s for s in (input_video_stream, input_audio_stream) if s]):
+
 
     if args.verbose:
         print 'in ', packet

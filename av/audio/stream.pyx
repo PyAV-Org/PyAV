@@ -67,7 +67,7 @@ cdef class AudioStream(Stream):
         If called with with no args it will flush out the encoder and return the buffered
         packets until there are none left, at which it will return None.
         """
-        
+
         self._weak_container().start_encoding()
         if not self.resampler:
             self.resampler = AudioResampler(
@@ -77,7 +77,7 @@ cdef class AudioStream(Stream):
             )
         if not self.fifo:
             self.fifo = AudioFifo()
-                    
+
         # if input_frame:
         #     print 'input_frame.ptr.pts', input_frame.ptr.pts
 
@@ -88,37 +88,35 @@ cdef class AudioStream(Stream):
             self.fifo.write(resampled_frame)
             # print 'resampled_frame.ptr.pts', resampled_frame.ptr.pts
 
-
-        cdef AudioFrame output_frame = None
-        if self._codec_context.frame_size < self.fifo.samples or not resampled_frame:
-            output_frame = self.fifo.read(self._codec_context.frame_size, True)
+        # Pull partial frames if we were requested to flush (via a None frame).
+        cdef AudioFrame fifo_frame = self.fifo.read(self._codec_context.frame_size, partial=input_frame is None)
 
         cdef Packet packet = Packet()
         cdef int got_packet = 0
 
-        if output_frame:
+        if fifo_frame:
 
-            # If the output_frame has a valid pts, scale it to the codec's time_base.
+            # If the fifo_frame has a valid pts, scale it to the codec's time_base.
             # Remember that the AudioFifo time_base is always 1/sample_rate!
-            if output_frame.ptr.pts != lib.AV_NOPTS_VALUE:
-                output_frame.ptr.pts = lib.av_rescale_q(
-                    output_frame.ptr.pts, 
-                    output_frame.time_base,
+            if fifo_frame.ptr.pts != lib.AV_NOPTS_VALUE:
+                fifo_frame.ptr.pts = lib.av_rescale_q(
+                    fifo_frame.ptr.pts, 
+                    fifo_frame.time_base,
                     self._codec_context.time_base
                 )
             else:
-                output_frame.ptr.pts = lib.av_rescale(
+                fifo_frame.ptr.pts = lib.av_rescale(
                     self._codec_context.frame_number,
                     self._codec_context.sample_rate,
                     self._codec_context.frame_size,
                 )
         
-        # print 'output_frame.ptr.pts', output_frame.ptr.pts if output_frame else None
+        # print 'fifo_frame.ptr.pts', fifo_frame.ptr.pts if fifo_frame else None
         
         err_check(lib.avcodec_encode_audio2(
             self._codec_context,
             &packet.struct,
-            output_frame.ptr if output_frame is not None else NULL,
+            fifo_frame.ptr if fifo_frame is not None else NULL,
             &got_packet,
         ))
 
