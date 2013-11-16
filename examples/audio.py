@@ -82,7 +82,7 @@ for i, packet in enumerate(container.demux(stream)):
         if frames and args.play:
             if not ffplay:
                 cmd = ['ffplay',
-                    '-f', frames[0].format.alt_packed.container_name,
+                    '-f', frames[0].format.packed.container_name,
                     '-ar', str(args.rate or stream.rate),
                     '-ac', str(len(resampler.layout.channels if resampler else stream.layout.channels)),
                     '-vn','-',
