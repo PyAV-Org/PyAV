@@ -46,6 +46,12 @@ Time
 Unsorted
 ========
 
+- Stream.encode should return a list of packets
+- What was the "add_silence" for with recard to encoding?
+
+
+
+
 - Investigate adding Python-defined formats. Then we could pull frames from
   webcams via OS X APIs.
 

@@ -15,8 +15,11 @@ cdef class AudioStream(Stream):
     
     # Hold onto the frames that we will decode until we have a full one.
     cdef AudioFrame next_frame
+
+    # For encoding.
     cdef AudioResampler resampler
     cdef AudioFifo fifo
-    cdef int encoded_frame_count
-    
-    cpdef encode(self, AudioFrame frame=*)
+
+    cpdef encode(self, AudioFrame)
+
+

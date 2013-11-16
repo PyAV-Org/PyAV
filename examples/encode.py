@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import sys
@@ -6,57 +7,45 @@ import av
 from tests.common import asset, sandboxed
 
 
-# open input file
-input_file_path = sys.argv[1] if len(sys.argv) > 1 else asset('320x240x4.mov')
-input_file = av.open(input_file_path)
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument('-v', '--verbose', action='store_true')
+arg_parser.add_argument('input', nargs=1)
+args = arg_parser.parse_args()
 
-input_video_stream = None
-input_audio_stream = None
 
-input_streams = []
+input_file = av.open(args.input[0])
+input_video_stream = None # next((s for s in input_file.streams if s.type == 'video'), None)
+input_audio_stream = next((s for s in input_file.streams if s.type == 'audio'), None)
 
-# find first video stream
-for stream in input_file.streams:
-    if stream.type == 'video':
-        input_video_stream = stream
-        input_streams.append(input_video_stream)
-        break
-
-# find first audio stream
-for stream in input_file.streams:
-    if stream.type == 'audio':
-        input_audio_stream = stream
-        input_streams.append(input_audio_stream)
-        break
 
 # open output file
-output_file_path = sandboxed('encoded-' + os.path.basename(input_file_path))
+output_file_path = sandboxed('encoded-' + os.path.basename(args.input[0]))
 output_file = av.open(output_file_path, 'w')
-
-output_video_stream = None
-output_audio_stream = None
-
-if input_video_stream:
-    output_video_stream = output_file.add_stream("mpeg4", 24)
-    
-if input_audio_stream:
-    output_audio_stream = output_file.add_stream("mp3")
+output_video_stream = output_file.add_stream("mpeg4", 24) if input_video_stream else None
+output_audio_stream = output_file.add_stream("mp3") if input_audio_stream else None
     
 
 
 frame_count = 0
 
 
-for packet in input_file.demux(input_streams):
+for packet in input_file.demux([s for s in (input_video_stream, input_audio_stream) if s]):
+
+    if args.verbose:
+        print 'in ', packet
+
     for frame in packet.decode():
         
+        if args.verbose:
+            print '\t%s' % frame
+
+        # Signal to generate it's own timestamps.
         frame.pts = None
-        encoded_packet = None
         
         if packet.stream.type == b'audio':
-            encoded_packet = output_audio_stream.encode(frame)
+            output_packet = output_audio_stream.encode(frame)
         else:
-            encoded_packet = output_video_stream.encode(frame)
+            output_packet = output_video_stream.encode(frame)
 
             if frame_count % 10 == 0:
                 if frame_count:
@@ -67,36 +56,37 @@ for packet in input_file.demux(input_streams):
 
             frame_count += 1
             
-        if encoded_packet:
-                # Add encoded packet to output file
-                output_file.mux(encoded_packet)
+        if output_packet:
+            if args.verbose:
+                print 'OUT', output_packet
+            output_file.mux(output_packet)
         
     if frame_count >= 100:
         break
 
-print
+print '-' * 78
 
 # Finally we need to flush out the frames that are buffered in the encoder.
 # To do that we simply call encode with no args until we get a None returned
 if output_audio_stream:
     while True:
-        packet =  output_audio_stream.encode()
-        if packet:
-            print "flushed out audio packet", packet
-            output_file.mux(packet)
+        output_packet = output_audio_stream.encode(None)
+        if output_packet:
+            if args.verbose:
+                print '<<<', output_packet
+            output_file.mux(output_packet)
         else:
             break
 
-while True:
-    packet =  output_video_stream.encode()
-    if packet:
-        print "flushed out video packet", packet
-        output_file.mux(packet)
-    else:
-        break
+if output_video_stream:
+    while True:
+        output_packet = output_video_stream.encode(None)
+        if output_packet:
+            if args.verbose:
+                print '<<<', output_packet
+            output_file.mux(output_packet)
+        else:
+            break
 
-# now close the files
-# if you don't close the output file the trailer will not be written
-input_file.close()
 output_file.close()
 
