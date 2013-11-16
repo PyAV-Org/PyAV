@@ -62,7 +62,6 @@ Unsorted
 - Container.demux(video=True)
 - Container.decode(video=True) -> straight to frames
 
-- Flush AudioResampler.
 
 - Container.add_stream(template=stream)
 
