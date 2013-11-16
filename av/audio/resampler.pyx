@@ -117,13 +117,13 @@ cdef class AudioResampler(object):
         ))
 
         # Empty frame.
-        if not output.ptr.nb_samples:
+        if output.ptr.nb_samples <= 0:
             return
 
-        # Recalculate linesizes and various properties, since the initial
-        # number of samples was an estimate.
-        output._fill()
-        
+        # Recalculate linesize since the initial number of samples was
+        # only an estimate.
+        output._recalc_linesize()
+
         return output
         
 

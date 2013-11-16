@@ -103,8 +103,6 @@ cdef class AudioFifo:
             nb_samples,
         ))
 
-        # frame.fill_frame(nb_samples) ???
-        
         frame.ptr.sample_rate = self.time_base.den
         frame.ptr.channel_layout = self.layout.layout
         

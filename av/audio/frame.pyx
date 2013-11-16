@@ -53,18 +53,29 @@ cdef class AudioFrame(Frame):
             if not self._buffer:
                 raise MemoryError("cannot allocate AudioFrame buffer")
 
-            self._fill()
+            # Connect the data pointers to the buffer.
+            err_check(lib.avcodec_fill_audio_frame(
+                self.ptr, 
+                len(self.layout.channels), 
+                <lib.AVSampleFormat>self.ptr.format,
+                self._buffer,
+                self._buffer_size,
+                self.align
+            ))
+            
+            self._init_planes(AudioPlane)
 
-    cdef _fill(self):
-        err_check(lib.avcodec_fill_audio_frame(
-            self.ptr, 
-            len(self.layout.channels), 
+    cdef _recalc_linesize(self):
+        lib.av_samples_get_buffer_size(
+            self.ptr.linesize,
+            len(self.layout.channels),
+            self.ptr.nb_samples,
             <lib.AVSampleFormat>self.ptr.format,
-            self._buffer,
-            self._buffer_size,
             self.align
-        ))
-        self._init_properties()
+        )
+        # We need to reset the buffer_size on the AudioPlane/s. This is
+        # an easy, if inefficient way.
+        self._init_planes(AudioPlane)
 
     cdef _init_properties(self):
         self.layout = get_audio_layout(0, self.ptr.channel_layout)
