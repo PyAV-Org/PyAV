@@ -175,6 +175,8 @@ cdef class OutputContainer(object):
             codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_context.width = 640
             codec_context.height = 480
+            codec_context.bit_rate = 1024000
+            codec_context.bit_rate_tolerance = 128000
             codec_context.ticks_per_frame = 1
 
             rate = Fraction(rate or 24)
@@ -184,7 +186,8 @@ cdef class OutputContainer(object):
         # Some Sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
             codec_context.sample_fmt = codec.sample_fmts[0]
-            codec_context.bit_rate = 64000
+            codec_context.bit_rate = 128000
+            codec_context.bit_rate_tolerance = 32000
             codec_context.sample_rate = rate or 48000
             codec_context.channels = 2
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO

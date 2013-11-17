@@ -37,11 +37,9 @@ cdef class Frame(object):
 
         # Construct the planes.
         cdef int plane_count = 0
-        for i in range(lib.AV_NUM_DATA_POINTERS):
-            if self.ptr.data[i]:
-                plane_count = i + 1
-            else:
-                break
+        while self.ptr.extended_data[plane_count]:
+            plane_count += 1
+        
         self.planes = PyTuple_New(plane_count)
         for i in range(plane_count):
             # We are constructing this tuple manually, but since Cython does

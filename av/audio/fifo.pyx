@@ -76,6 +76,9 @@ cdef class AudioFifo:
 
         """
 
+        if not self.samples:
+            return
+
         nb_samples = nb_samples or self.samples
         if not nb_samples:
             return
@@ -100,8 +103,6 @@ cdef class AudioFifo:
             nb_samples,
         ))
 
-        # frame.fill_frame(nb_samples) ???
-        
         frame.ptr.sample_rate = self.time_base.den
         frame.ptr.channel_layout = self.layout.layout
         

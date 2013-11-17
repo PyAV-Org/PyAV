@@ -28,6 +28,9 @@ cdef class AudioResampler(object):
         # Take source settings from the first frame.
         if not self.ptr:
 
+            if not frame:
+                raise ValueError('first frame must not be None')
+
             # Grab the source descriptors.
             self.src_format = get_audio_format(<lib.AVSampleFormat>frame.ptr.format)
             self.src_layout = get_audio_layout(0, frame.ptr.channel_layout)
@@ -56,7 +59,8 @@ cdef class AudioResampler(object):
                 raise
 
         # Make sure the settings are the same on consecutive frames.
-        else:
+        elif frame:
+
             if (
                 frame.ptr.format != self.src_format.sample_fmt or
                 frame.ptr.channel_layout != self.src_layout.layout or
@@ -80,14 +84,21 @@ cdef class AudioResampler(object):
         #     av_freep(&output);
         # }
         
-        # Figure out how many frames this will create.
+        # Estimate out how many samples this will create; it will be high.
+        # My investigations say that this swr_get_delay is not required, but
+        # it is in the example loop, and avresample (as opposed to swresample)
+        # may require it.
         cdef int output_nb_samples = lib.av_rescale_rnd(
             lib.swr_get_delay(self.ptr, self.rate) + frame.ptr.nb_samples,
             self.rate,
             self.src_rate,
             lib.AV_ROUND_UP,
-        )
-        
+        ) if frame else lib.swr_get_delay(self.ptr, self.rate)
+
+        # There aren't any frames coming, so no new frame pops out.
+        if not output_nb_samples:
+            return
+
         cdef AudioFrame output = alloc_audio_frame()
         output.ptr.sample_rate = self.rate
         output._init(
@@ -97,26 +108,22 @@ cdef class AudioResampler(object):
             1, # Align?
         )
 
-        # HACK: This used to be nessesary for unknown reasons.
-        # if lib.USING_AVRESAMPLE:
-        #    src_nb_samples += 1000
-
         output.ptr.nb_samples = err_check(lib.swr_convert(
             self.ptr,
             output.ptr.extended_data,
             output_nb_samples,
-            frame.ptr.extended_data,
-            frame.ptr.nb_samples
+            frame.ptr.extended_data if frame else NULL,
+            frame.ptr.nb_samples if frame else 0
         ))
 
-        # Recalculate linesizes and various properties.
-        output._fill()
+        # Empty frame.
+        if output.ptr.nb_samples <= 0:
+            return
 
-        # Flush
-        # ret = err_check(lib.swr_convert(self.ptr,
-        #                       frame.ptr.extended_data,dst_nb_samples,
-        #                       NULL, 0))
-        
+        # Recalculate linesize since the initial number of samples was
+        # only an estimate.
+        output._recalc_linesize()
+
         return output
         
 
