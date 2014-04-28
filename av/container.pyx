@@ -22,21 +22,29 @@ cdef class ContainerProxy(object):
 
 cdef object _base_constructor_sentinel = object()
 
-def open(name, mode='r'):
+def open(name, mode='r', format=None):
     if mode == 'r':
-        return InputContainer(_base_constructor_sentinel, name)
+        return InputContainer(_base_constructor_sentinel, name, format)
     if mode == 'w':
-        return OutputContainer(_base_constructor_sentinel, name)
+        return OutputContainer(_base_constructor_sentinel, name, format)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
 
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, name):
+    def __cinit__(self, sentinel, name, format_name):
         if sentinel is not _base_constructor_sentinel:
             raise RuntimeError('cannot construct base Container')
+
+        if format_name is not None:
+            self.format = ContainerFormat(format_name)
+
         self.name = name
         self.proxy = ContainerProxy()
+
+        if format_name is not None:
+            self.proxy.ptr.iformat = self.format.in_
+            self.proxy.ptr.oformat = self.format.out
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
@@ -45,19 +53,13 @@ cdef class Container(object):
 cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
-        
-        cdef int result
-        cdef char *name = self.name
-        
-        with nogil:
-            result = lib.avformat_open_input(&self.proxy.ptr, name, NULL, NULL)
-        err_check(result, self.name)
-        
-        with nogil:
-            result = lib.avformat_find_stream_info(self.proxy.ptr, NULL)
-            
-        err_check(result)
-        self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
+        err_check(
+            lib.avformat_open_input(&self.proxy.ptr, self.name, NULL, NULL),
+            self.name,
+        )
+        err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
+        self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
+
         self.streams = list(
             build_stream(self, self.proxy.ptr.streams[i])
             for i in range(self.proxy.ptr.nb_streams)
@@ -181,7 +183,7 @@ cdef class OutputContainer(Container):
             self.name,
         ))
 
-        self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
+        self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
         self.streams = []
         self.metadata = {}
 
