@@ -107,7 +107,7 @@ cdef int async_log_callback(void *arg) except -1:
 
     try:
         level = level_map.get(req.level, 20)
-        item_name = req.item_name if req.item_name else ''
+        item_name = req.item_name if req.item_name else b''
         logger_name = b'libav.' + item_name if item_name else b'libav.generic'
         logging.getLogger(logger_name).log(level, req.message.strip())
     except Exception as e:

@@ -42,7 +42,7 @@ cdef class Container(object):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
 
 
-cdef class InputContainer(object):
+cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
         err_check(
@@ -106,7 +106,7 @@ cdef class InputContainer(object):
             free(include_stream)
 
 
-cdef class OutputContainer(object):
+cdef class OutputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
 
