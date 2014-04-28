@@ -1,10 +1,10 @@
 // This header serves to smooth out the differences in FFmpeg and LibAV.
 
-#ifdef USE_SWRESAMPLE
+#ifdef PYAV_HAVE_LIBSWRESAMPLE
 
     #include <libswresample/swresample.h>
 
-    //swr does not have the equivalent so this does nothing
+    // swr does not have the equivalent so this does nothing
     void swr_close(SwrContext *ctx) {};
 
 #else

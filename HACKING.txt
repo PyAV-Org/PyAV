@@ -23,15 +23,17 @@ Right now we use a little bit of autoconf to discover the differences between th
 Library Detection
 -----------------
 
-Macros will be defined for the libraries which are different bettween FFmpeg and
-PyAV. In particular, you will have either `USE_SWRESAMPLE` or `USE_AVRESAMPLE`.
+Macros will be defined for the libraries we link against. In particular, you
+will have either `PYAV_HAVE_LIBSWRESAMPLE` or `PYAV_HAVE_LIBAVRESAMPLE` (for
+FFmpeg and Libav, respectively).
 
 
 Function Detection
 ------------------
 
 Macros will be defined for a few functions that are only in one of FFmpeg or
-LibAV. For example, there may be a `HAVE_AVFORMAT_CLOSE_INPUT` macro.
+LibAV. For example, there may be a `PYAV_HAVE_AVFORMAT_CLOSE_INPUT` macro.
+See where `check_for_func` is used in `setup.py` to add more.
 
 
 Class Relationships

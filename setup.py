@@ -1,15 +1,29 @@
-import ctypes.util
+import errno
+from setuptools.command.build_ext import build_ext
 from setuptools import setup, find_packages, Extension
-import os
 from subprocess import Popen, PIPE
+import ctypes.util
+import os
 
+
+version = '0.1.0'
+
+
+# The "extras" to be supplied to every one of our modules.
+extension_extra = {
+    'include_dirs': ['include'],
+}
 
 def update_extend(dst, src):
     for k, v in src.iteritems():
         dst.setdefault(k, []).extend(v)
 
+config_macros = [
+    ("PYAV_VERSION", version),
+]
 
-def pkg_config(name, macro=False):
+
+def pkg_config(name):
     """Get distutils compatible extension extras via pkg-config."""
 
     proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
@@ -18,10 +32,6 @@ def pkg_config(name, macro=False):
         return
 
     config = {}
-    if macro:
-        macro_name = name[3:] if name.startswith('lib') else name
-        config['define_macros'] = [('USE_' + macro_name.upper(), '1')]
-
     for chunk in raw_config.strip().split():
         if chunk.startswith('-I'):
             config.setdefault('include_dirs', []).append(chunk[2:])
@@ -35,12 +45,27 @@ def pkg_config(name, macro=False):
 
     return config
 
+# Get the config for the libraries that we require.
+for name in 'libavformat', 'libavcodec', 'libavutil', 'libswscale':
+    config = pkg_config(name)
+    if config:
+        update_extend(extension_extra, config)
+        config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+    else:
+        print 'Could not find', name, 'with pkg-config.'
+
+for name in 'libswresample', 'libavresample':
+    config = pkg_config(name)
+    if config:
+        update_extend(extension_extra, config)
+        config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+        break
+else:
+    print 'Could not find either of libswresample or libavresample with pkg-config.'
+
 
 def check_for_func(lib_names, func_name):
     """Define macros if we can find the given function in one of the given libraries."""
-
-    if isinstance(lib_names, basestring):
-        lib_names = [lib_names]
 
     for lib_name in lib_names:
 
@@ -68,42 +93,17 @@ def check_for_func(lib_names, func_name):
             print '\n'.join('\t' + path for path in lib_paths)
             continue
 
-        if hasattr(lib, func_name):
-            extension_extra.setdefault('define_macros', []).append(('HAVE_%s' % func_name.upper(), '1'))
-            return
-
-
-
-extension_extra = {
-    'include_dirs': ['include'],
-}
-
-
-# Get the config for the libraries that we require.
-for name in 'libavformat libavcodec libavutil libswscale'.split():
-    config = pkg_config(name)
-    if not config:
-        print 'Could not find', name, 'with pkg-config.'
-    else:
-        update_extend(extension_extra, config)
-
-
-# Get the config for either swresample OR avresample.
-config = pkg_config('libswresample', macro=True)
-if not config:
-    config = pkg_config('libavresample', macro=True)
-if not config:
-    print 'Could not find either of libswresample or libavresample with pkg-config.'
-else:
-    update_extend(extension_extra, config)
-
+        return hasattr(lib, func_name)
 
 # Check for some specific functions.
-check_for_func(('avcodec', 'avutil', 'avcodec'), 'av_frame_get_best_effort_timestamp')
-check_for_func('avformat', 'avformat_close_input')
-check_for_func('avformat', 'avformat_alloc_output_context2')
-check_for_func('avutil', 'av_calloc')
-
+for libs, func in (
+    (['avcodec', 'avutil', 'avcodec'], 'av_frame_get_best_effort_timestamp'),
+    (['avformat'], 'avformat_close_input'),
+    (['avformat'], 'avformat_alloc_output_context2'),
+    (['avutil'], 'av_calloc'),
+):
+    if check_for_func(libs, func):
+        config_macros.append(('PYAV_HAVE_' + func.upper(), '1'))
 
 # Normalize the extras.
 extension_extra = dict((k, sorted(set(v))) for k, v in extension_extra.iteritems())
@@ -127,10 +127,36 @@ for dirname, dirnames, filenames in os.walk(build_dir):
         ))
 
 
+class my_build_ext(build_ext):
+
+    def run(self):
+
+        include_dir = os.path.join(self.build_temp, 'include')
+        pyav_dir = os.path.join(include_dir, 'pyav')
+        try:
+            os.makedirs(pyav_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        header_path = os.path.join(pyav_dir, 'config.h')
+        print 'writing', header_path
+        with open(header_path, 'w') as fh:
+            fh.write('#ifndef PYAV_COMPAT_H\n')
+            fh.write('#define PYAV_COMPAT_H\n')
+            for k, v in config_macros:
+                fh.write('#define %s %s\n' % (k, v))
+            fh.write('#endif\n')
+
+        self.include_dirs = self.include_dirs or []
+        self.include_dirs.append(include_dir)
+
+        return build_ext.run(self)
+
+
 setup(
 
     name='av',
-    version='0.1.0',
+    version=version,
     description='Pythonic bindings for libav.',
     
     author="Mike Boers",
@@ -142,5 +168,7 @@ setup(
     
     zip_safe=False,
     ext_modules=ext_modules,
+
+    cmdclass={'build_ext': my_build_ext},
 
 )
