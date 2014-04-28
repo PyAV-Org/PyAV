@@ -10,8 +10,8 @@ from fractions import Fraction
 
 from nose.plugins.skip import SkipTest
 
-import Image
-import ImageFilter
+import PIL.Image as Image
+import PIL.ImageFilter as ImageFilter
 
 import av
 from av.frame import Frame

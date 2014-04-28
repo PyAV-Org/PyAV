@@ -182,8 +182,8 @@ cdef class VideoFrame(Frame):
         def __get__(self): return self.ptr.key_frame
 
     def to_image(self):
-        import Image
-        return Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
+        import PIL.Image
+        return PIL.Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
 
     @classmethod
     def from_image(cls, img):
