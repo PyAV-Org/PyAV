@@ -33,7 +33,7 @@ cdef class ContainerFormat(object):
             if not self.out or self.out.name == name:
                 break
 
-        if not self.in_ and not self.out_:
+        if not self.in_ and not self.out:
             raise ValueError('no container format %r' % name)
 
     def __repr__(self):
