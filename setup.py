@@ -1,9 +1,10 @@
-import errno
-from setuptools.command.build_ext import build_ext
 from setuptools import setup, find_packages, Extension
+from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
 import ctypes.util
+import errno
 import os
+import re
 
 
 version = '0.1.0'
@@ -62,6 +63,19 @@ for name in 'libswresample', 'libavresample':
         break
 else:
     print 'Could not find either of libswresample or libavresample with pkg-config.'
+
+
+def check_for_header(header_name):
+    for include_dir in extension_extra.get('include_dirs', []):
+        path = os.path.join(include_dir, header_name)
+        if os.path.exists(path):
+            return True
+
+for header in (
+    # When we need to look for specific headers.
+):
+    if check_for_header(header):
+        config_macros.append(('PYAV_HAVE_' + re.sub('\W+', '_', header.upper()), '1'))
 
 
 def check_for_func(lib_names, func_name):
