@@ -7,6 +7,10 @@
 #endif
 
 #ifndef PYAV_HAVE_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
+
+#include <libavutil/avstring.h>
+#include <libavutil/opt.h>
+
 int avformat_alloc_output_context2(AVFormatContext **avctx, AVOutputFormat *oformat,
                                    const char *format, const char *filename)
 {

@@ -1,7 +1,7 @@
+#include "libavutil/avutil.h"
 
 #ifndef PYAV_HAVE_AV_CALLOC
 
-#include "libavutil/avutil.h"
 #include "libavutil/mem.h"
 
 void *av_calloc(size_t nmemb, size_t size)

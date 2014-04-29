@@ -1,6 +1,6 @@
 from libc.stdint cimport int64_t, uint8_t
 
-cdef extern from "libswresample_compat.h" nogil:
+cdef extern from "libswresample/swresample.pyav.h" nogil:
 
     cdef struct SwrContext:
         pass

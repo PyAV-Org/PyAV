@@ -1,12 +1,9 @@
 from libc.stdint cimport int64_t, uint8_t, uint64_t
 
-cdef extern from "libavutil_compat.h" nogil:
-    pass
-
 cdef extern from "libavutil/mathematics.h" nogil:
     pass
 
-cdef extern from "libavutil/avutil.h" nogil:
+cdef extern from "libavutil/avutil.pyav.h" nogil:
 
     cdef enum AVPixelFormat:
         AV_PIX_FMT_NONE

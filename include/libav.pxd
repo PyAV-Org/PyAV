@@ -4,12 +4,12 @@
 cdef extern from "pyav/config.h" nogil:
     pass
 
-include "libavutil.pxd"
+include "libavutil/avutil.pxd"
 include "libavutil/channel_layout.pxd"
 include "libavutil/dict.pxd"
 include "libavutil/samplefmt.pxd"
 
-include "libavcodec.pxd"
-include "libavformat.pxd"
-include "libswscale.pxd"
-include "libswresample.pxd"
+include "libavcodec/avcodec.pxd"
+include "libavformat/avformat.pxd"
+include "libswresample/swresample.pxd"
+include "libswscale/swscale.pxd"

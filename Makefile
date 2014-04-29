@@ -50,16 +50,20 @@ vtest: vtest-ffmpeg vtest-libav
 debug: build
 	gdb python --args python -m examples.tutorial $(TEST_MOV)
 
-clean:
+clean: clean-build
+
+clean-build:
 	- rm -rf build
-	- rm -rf src
 	- find av -name '*.so' -delete
 
 clean-sandbox:
 	- rm -rf sandbox/2013*
 	- rm sandbox/last
 
-clean-all: clean clean-sandbox
+clean-src:
+	- rm -rf src
+
+clean-all: clean-build clean-sandbox clean-src
 	- make -C docs clean
 
 docs: build
