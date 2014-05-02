@@ -9,6 +9,11 @@ The Big Picture
 NEXT
 ====
 
+- Make able to build on various fedoras at Western Post
+  - PKG_CONFIG_PATH=/opt/ffmpeg/fedora-14/ffmpeg-0.11/lib/pkgconfig
+
+- Be able to read from devices: open(':0', 'r', 'x11grab')
+
 - Stream.encode should return a list of packets. Otherwise, resampling
   can easily result in a massive buffer in a fifo or codec
 

@@ -6,7 +6,7 @@ TEST_MOV = sandbox/640x360.mp4
 
 .PHONY: default build cythonize clean clean-all info test docs
 
-default: build
+default: cythonize
 
 info:
 	@ echo Cython sources: $(CYTHON_SRC)
