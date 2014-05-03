@@ -178,7 +178,7 @@ setup(
     
     url="https://github.com/mikeboers/PyAV",
 
-    packages=find_packages(exclude=['tests', 'examples']),
+    packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
     
     zip_safe=False,
     ext_modules=ext_modules,
