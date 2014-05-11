@@ -177,17 +177,16 @@ cdef class Stream(object):
         # These codecs should have a CODEC CAP_DELAY capability set.
         # This sends a special packet with data set to NULL and size set to 0
         # This tells the Packet Object that its the last packet    
-        if frames:
-            while True:
-                # Create a new NULL packet for every frame we try to pull out.
-                packet = Packet()
-                frame = self._decode_one(&packet.struct, &data_consumed)
-                if frame:
-                    if isinstance(frame, Frame):
-                        self._setup_frame(frame)
-                    frames.append(frame)
-                else:
-                    break
+        while True:
+            # Create a new NULL packet for every frame we try to pull out.
+            packet = Packet()
+            frame = self._decode_one(&packet.struct, &data_consumed)
+            if frame:
+                if isinstance(frame, Frame):
+                    self._setup_frame(frame)
+                frames.append(frame)
+            else:
+                break
 
         return frames
     
