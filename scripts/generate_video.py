@@ -33,13 +33,11 @@ if which('avconv'):
     
 if not ffmpeg_cmd and not avconv_cmd:
     print 'Unable to find ffmpeg or avconve command'
-    sys.exit(0)
-
-    
+    sys.exit(-1)
 
 def testsrc(size, frame_rate, time, out_path, vcodec=None, bitrate=None, pix_fmt=None, use_avconv=False):
     exec_cmd = ffmpeg_cmd
-    if use_avconv:
+    if use_avconv or os.environ.get('LIBRARY', None) == 'libav':
         exec_cmd = avconv_cmd
     
     exec_cmd.extend(['testsrc=size=%s:rate=%s' % (size, str(frame_rate)), '-t', str(time)])
@@ -59,7 +57,7 @@ def testsrc(size, frame_rate, time, out_path, vcodec=None, bitrate=None, pix_fmt
 
 def main():
     parser = optparse.OptionParser()
-    parser.add_option('-r', '--rate', help="Frame Rate", default=25, type="int")
+    parser.add_option('-r', '--rate', help="Frame Rate", default=24, type="string")
     parser.add_option('-t', '--time', help="Duration in seconds.", default=5, type="int")
     parser.add_option('-s', '--size', help="size of testsrc", default='640x480')
     parser.add_option('-v', '--vcodec', help="video codec", default='mpeg4')

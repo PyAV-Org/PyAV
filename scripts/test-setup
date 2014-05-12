@@ -39,10 +39,7 @@ if [[ $exists != 0 ]]; then
         ./configure \
             --disable-static \
             --enable-shared \
-            --disable-doc \
-            --disable-avfilter \
-            --disable-avdevice \
-            --disable-postproc
+            --disable-doc
 
         echo make
         make
@@ -63,9 +60,7 @@ if [[ $exists != 0 ]]; then
         ./configure \
             --disable-static \
             --enable-shared \
-            --disable-doc \
-            --disable-avfilter \
-            --disable-avdevice
+            --disable-doc
 
         echo make
         make
