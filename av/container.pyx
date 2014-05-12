@@ -104,7 +104,30 @@ cdef class InputContainer(Container):
 
         finally:
             free(include_stream)
-
+            
+    def seek(self, timestamp, mode = "backward"):
+        """
+        Seek to the keyframe at timestamp, time base is in AV_TIME_BASE
+        """
+        cdef int flags = 0
+         
+        if mode:
+            if mode.lower() == "backward":
+                flags = lib.AVSEEK_FLAG_BACKWARD
+            elif mode.lower() == "frame":
+                flags = lib.AVSEEK_FLAG_FRAME
+            elif mode.lower() == "byte":
+                flags = lib.AVSEEK_FLAG_BYTE
+            elif mode.lower() == 'any':
+                flags = lib.AVSEEK_FLAG_ANY
+            else:
+               raise ValueError("Invalid mode %s" % str(mode))
+           
+        
+        err_check(lib.av_seek_frame(self.proxy.ptr, -1, timestamp, flags))
+        cdef Stream stream
+        for stream in self.streams:
+            lib.avcodec_flush_buffers(stream._codec_context)
 
 cdef class OutputContainer(Container):
 
