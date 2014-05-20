@@ -176,6 +176,12 @@ cdef class VideoStream(Stream):
             return avrational_to_faction(&self._codec_context.sample_aspect_ratio) if self._codec_context else None
         def __set__(self, value):
             to_avrational(value, &self._codec_context.sample_aspect_ratio)
+            
+    property has_b_frames:
+        def __get__(self):
+            if self._codec_context.has_b_frames:
+                return True
+            return False
 
 
     # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
@@ -191,7 +197,6 @@ cdef class VideoStream(Stream):
         def __set__(self, bytes value):
             self._codec_context.pix_fmt = lib.av_get_pix_fmt(value)
             self._build_format()
-
 
     
 

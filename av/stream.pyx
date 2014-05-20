@@ -151,6 +151,21 @@ cdef class Stream(object):
 
         cdef int data_consumed = 0
         cdef list frames = []
+        
+        # Null Packet Signals Flushing Codec
+        if not packet.struct.data:
+            while True:
+                # Create a new NULL packet for every frame we try to pull out.
+                packet = Packet()
+                frame = self._decode_one(&packet.struct, &data_consumed)
+                if frame:
+                    if isinstance(frame, Frame):
+                        self._setup_frame(frame)
+                    frames.append(frame)
+                else:
+                    break
+                
+            return frames
 
         cdef uint8_t *original_data = packet.struct.data
         cdef int      original_size = packet.struct.size
@@ -173,22 +188,24 @@ cdef class Stream(object):
         packet.struct.data = original_data
         packet.struct.size = original_size
 
-        # Some codecs will cause frames to be buffered up in the decoding process.
-        # These codecs should have a CODEC CAP_DELAY capability set.
-        # This sends a special packet with data set to NULL and size set to 0
-        # This tells the Packet Object that its the last packet    
-        while True:
-            # Create a new NULL packet for every frame we try to pull out.
-            packet = Packet()
-            frame = self._decode_one(&packet.struct, &data_consumed)
-            if frame:
-                if isinstance(frame, Frame):
-                    self._setup_frame(frame)
-                frames.append(frame)
-            else:
-                break
-
         return frames
+    
+    def seek_frame(self, frame_num):
+        err_check(lib.avformat_seek_file(self._container.ptr, self._stream.index, 
+                                         lib.INT64_MIN, frame_num, frame_num, lib.AVSEEK_FLAG_FRAME))
+        
+        
+        for i in xrange(self._container.ptr.nb_streams):
+            lib.avcodec_flush_buffers(self._container.ptr.streams[i].codec)
+    
+    def seek_timestamp(self, timestamp):
+        err_check(lib.avformat_seek_file(self._container.ptr, self._stream.index, 
+                                         lib.INT64_MIN, timestamp, timestamp, lib.AVSEEK_FLAG_BACKWARD))
+        
+        for i in xrange(self._container.ptr.nb_streams):
+            lib.avcodec_flush_buffers(self._container.ptr.streams[i].codec)
+        
+        
     
     cdef _setup_frame(self, Frame frame):
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)

@@ -72,6 +72,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVRational sample_aspect_ratio
         int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 
         int max_b_frames
+        int has_b_frames
 
         # Audio.
         AVSampleFormat sample_fmt
@@ -132,6 +133,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         
         int64_t pts
         int64_t pkt_pts
+        int64_t pkt_dts
         
         int pkt_size
         

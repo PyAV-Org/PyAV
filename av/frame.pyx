@@ -32,6 +32,12 @@ cdef class Frame(object):
                 self.ptr.pts = lib.AV_NOPTS_VALUE
             else:
                 self.ptr.pts = value
+                
+    property dts:
+        def __get__(self):
+            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
+                return None
+            return self.ptr.pkt_dts
 
     cdef _init_planes(self, cls=Plane):
 

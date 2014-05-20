@@ -1,6 +1,8 @@
 from libc.stdint cimport int64_t, uint64_t
 
 cdef extern from "libavformat/avformat.pyav.h" nogil:
+
+    cdef int64_t INT64_MIN
     
     cdef int AV_TIME_BASE
     cdef int AVSEEK_FLAG_BACKWARD
@@ -194,6 +196,15 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         AVFormatContext *ctx,
         int stream_index,
         int64_t timestamp,
+        int flags
+    )
+    
+    cdef int avformat_seek_file(
+        AVFormatContext *ctx,
+        int stream_index,
+        int64_t min_ts,
+        int64_t ts,
+        int64_t max_ts,
         int flags
     )
     
