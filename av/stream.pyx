@@ -190,21 +190,32 @@ cdef class Stream(object):
 
         return frames
     
-    def seek_frame(self, frame_num):
+    def seek(self, lib.int64_t timestamp, mode = 'backward'):
+        """
+        Seek to the keyframe at timestamp. If mode is backward timestamp is in the streams time_base.
+        If mode frame timestamp is a frame number.
+        """
+        
+        cdef int flags = 0
+         
+        if mode:
+            if mode.lower() == "backward":
+                flags = lib.AVSEEK_FLAG_BACKWARD
+            elif mode.lower() == "frame":
+                flags = lib.AVSEEK_FLAG_FRAME
+            elif mode.lower() == "byte":
+                flags = lib.AVSEEK_FLAG_BYTE
+            elif mode.lower() == 'any':
+                flags = lib.AVSEEK_FLAG_ANY
+            else:
+               raise ValueError("Invalid mode %s" % str(mode))
+           
         err_check(lib.avformat_seek_file(self._container.ptr, self._stream.index, 
-                                         lib.INT64_MIN, frame_num, frame_num, lib.AVSEEK_FLAG_FRAME))
+                                         lib.INT64_MIN, timestamp, timestamp, mode))
         
         
         for i in xrange(self._container.ptr.nb_streams):
-            lib.avcodec_flush_buffers(self._container.ptr.streams[i].codec)
-    
-    def seek_timestamp(self, timestamp):
-        err_check(lib.avformat_seek_file(self._container.ptr, self._stream.index, 
-                                         lib.INT64_MIN, timestamp, timestamp, lib.AVSEEK_FLAG_BACKWARD))
-        
-        for i in xrange(self._container.ptr.nb_streams):
-            lib.avcodec_flush_buffers(self._container.ptr.streams[i].codec)
-        
+            lib.avcodec_flush_buffers(self._container.ptr.streams[i].codec)       
         
     
     cdef _setup_frame(self, Frame frame):
