@@ -143,9 +143,14 @@ cdef class InputContainer(Container):
                 raise ValueError("Invalid mode %s" % str(mode))
            
         err_check(lib.av_seek_frame(self.proxy.ptr, -1, timestamp, flags))
+        
+        # flush codec buffers
         cdef Stream stream
         for stream in self.streams:
-            lib.avcodec_flush_buffers(stream._codec_context)
+            if stream._codec_context:
+                # don't try and flush unkown codecs
+                if not stream._codec_context.codec_id == lib.AV_CODEC_ID_NONE:
+                    lib.avcodec_flush_buffers(stream._codec_context)
 
 
 cdef class OutputContainer(Container):

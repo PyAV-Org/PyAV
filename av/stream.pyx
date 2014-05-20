@@ -60,7 +60,8 @@ cdef class Stream(object):
             # Find the codec.
             self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
             if self._codec == NULL:
-                raise RuntimeError('could not find %s codec' % self.type)
+                return
+                #raise RuntimeError('could not find %s codec' % self.type)
             
             # Open the codec.
             try:
@@ -192,8 +193,7 @@ cdef class Stream(object):
     
     def seek(self, lib.int64_t timestamp, mode = 'backward'):
         """
-        Seek to the keyframe at timestamp. If mode is backward timestamp is in the streams time_base.
-        If mode frame timestamp is a frame number.
+        Seek to the keyframe at timestamp.
         """
         
         cdef int flags = 0
@@ -209,15 +209,17 @@ cdef class Stream(object):
                 flags = lib.AVSEEK_FLAG_ANY
             else:
                raise ValueError("Invalid mode %s" % str(mode))
-           
-        err_check(lib.avformat_seek_file(self._container.ptr, self._stream.index, 
-                                         lib.INT64_MIN, timestamp, timestamp, mode))
-        
-        
+
+        err_check(lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags))
+        # flush codec buffers
+        cdef lib.AVStream *stream
         for i in xrange(self._container.ptr.nb_streams):
-            lib.avcodec_flush_buffers(self._container.ptr.streams[i].codec)       
-        
-    
+            stream = self._container.ptr.streams[i]
+            if stream.codec:
+                # don't try and flush unkown codecs
+                if not stream.codec.codec_id == lib.AV_CODEC_ID_NONE:
+                    lib.avcodec_flush_buffers(stream.codec)    
+ 
     cdef _setup_frame(self, Frame frame):
         frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         frame.time_base = self._stream.time_base
