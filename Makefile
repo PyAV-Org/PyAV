@@ -4,6 +4,9 @@ MOD_SOS = $(CYTHON_SRC:%.pyx=%.so)
 
 TEST_MOV = sandbox/640x360.mp4
 
+LDFLAGS ?= ""
+CFLAGS ?= "-O0"
+
 .PHONY: default build cythonize clean clean-all info test docs
 
 default: cythonize
@@ -18,7 +21,7 @@ src/%.c: %.pyx
 	cython -I. -Iinclude -o $@ $<
 
 build: cythonize
-	CFLAGS=-O0 python setup.py build_ext --inplace --debug
+	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace --debug
 
 samples:
 	# Grab the samples from the ffmpeg site.
