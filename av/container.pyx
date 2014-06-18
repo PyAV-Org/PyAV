@@ -78,6 +78,7 @@ cdef class InputContainer(Container):
         
         cdef int i
         cdef Packet packet
+        cdef int result
 
         try:
             
@@ -89,7 +90,9 @@ cdef class InputContainer(Container):
             while True:
                 packet = Packet()
                 try:
-                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
+                    with nogil:
+                        result = lib.av_read_frame(self.proxy.ptr, &packet.struct)
+                    err_check(result)
                 except AVError:
                     break
                     

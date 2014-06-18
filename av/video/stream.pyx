@@ -42,7 +42,13 @@ cdef class VideoStream(Stream):
 
         # Decode video into the frame.
         cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_video2(self._codec_context, self.next_frame.ptr, &completed_frame, packet))
+        
+        cdef int result
+        
+        with nogil:
+            result = lib.avcodec_decode_video2(self._codec_context, self.next_frame.ptr, &completed_frame, packet)
+        data_consumed[0] = err_check(result)
+        
         if not completed_frame:
             return
         

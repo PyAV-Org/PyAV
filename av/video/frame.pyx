@@ -152,15 +152,16 @@ cdef class VideoFrame(Frame):
         frame._init(dst_format, width, height)
         
         # Finally Scale the image
-        lib.sws_scale(
-            self.reformatter.ptr,
-            self.ptr.data,
-            self.ptr.linesize,
-            0, # slice Y
-            self.ptr.height,
-            frame.ptr.data,
-            frame.ptr.linesize,
-        )
+        with nogil:
+            lib.sws_scale(
+                self.reformatter.ptr,
+                self.ptr.data,
+                self.ptr.linesize,
+                0, # slice Y
+                self.ptr.height,
+                frame.ptr.data,
+                frame.ptr.linesize,
+            )
         
         # Copy some properties.
         frame.index = self.index
