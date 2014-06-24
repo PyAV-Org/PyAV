@@ -12,6 +12,14 @@ cdef extern from "libswscale/swscale.h" nogil:
     cdef int SWS_BILINEAR
     cdef int SWS_BICUBIC
     
+    cdef int SWS_CS_ITU709
+    cdef int SWS_CS_FCC
+    cdef int SWS_CS_ITU601
+    cdef int SWS_CS_ITU624
+    cdef int SWS_CS_SMPTE170M
+    cdef int SWS_CS_SMPTE240M
+    cdef int SWS_CS_DEFAULT
+    
     cdef SwsContext* sws_getContext(
         int src_width,
         int src_height,
@@ -50,5 +58,27 @@ cdef extern from "libswscale/swscale.h" nogil:
         SwsFilter *dst_filter,
         double *param,
     )
-        
     
+    cdef int* sws_getCoefficients(int colorspace)  
+    
+    cdef int sws_getColorspaceDetails(
+        SwsContext *context,
+        int **inv_table,
+        int *srcRange,
+        int **table,
+        int *dstRange,
+        int *brightness,
+        int *contrast,
+        int *saturation          
+    )
+        
+    cdef int sws_setColorspaceDetails(
+        SwsContext *context,
+        const int inv_table[4],
+        int srcRange,
+        const int table[4],
+        int dstRange,
+        int brightness,
+        int contrast,
+        int saturation     
+    )   
