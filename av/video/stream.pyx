@@ -5,7 +5,7 @@ from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_faction, to_avrational
 from av.utils cimport err_check
-from av.video.format cimport get_video_format
+from av.video.format cimport get_video_format, VideoFormat
 from av.video.frame cimport alloc_video_frame
 
 
@@ -100,15 +100,24 @@ cdef class VideoStream(Stream):
         cdef Packet packet
         cdef int got_output
         
+        cdef VideoFormat pixel_format
+        
         if frame:
-            frame.reformatter = self.reformatter
-            formated_frame = frame._reformat(
-                self._codec_context.width,
-                self._codec_context.height,
-                self.format.pix_fmt,
-                lib.SWS_CS_DEFAULT,
-                lib.SWS_CS_DEFAULT
-            )
+            # don't reformat if format matches
+            pixel_format = frame.format
+            if pixel_format.pix_fmt == self.format.pix_fmt and \
+                        frame.width == self._codec_context.width and frame.height == self._codec_context.height:
+                formated_frame = frame
+            else:
+            
+                frame.reformatter = self.reformatter
+                formated_frame = frame._reformat(
+                    self._codec_context.width,
+                    self._codec_context.height,
+                    self.format.pix_fmt,
+                    lib.SWS_CS_DEFAULT,
+                    lib.SWS_CS_DEFAULT
+                )
 
         else:
             # Flushing
