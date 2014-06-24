@@ -94,7 +94,7 @@ cdef class VideoFrame(Frame):
         """
         return self.reformat(self.width, self.height, "rgb24")
 
-    def reformat(self, unsigned int width, unsigned int height, char* dst_format_str):
+    def reformat(self, unsigned int width, unsigned int height, char* dst_format_str, src_colorspace = None, dst_colorspace = None):
     
         """reformat(width, height, format)
 
@@ -110,10 +110,28 @@ cdef class VideoFrame(Frame):
         cdef lib.AVPixelFormat dst_format = lib.av_get_pix_fmt(dst_format_str)
         if dst_format == lib.AV_PIX_FMT_NONE:
             raise ValueError("invalid format %s" % dst_format_str)
-        
-        return self._reformat(width, height, dst_format)
 
-    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format):
+        
+        colorspace_dict = {'itu709': lib.SWS_CS_ITU709,
+                           'fcc': lib.SWS_CS_FCC,
+                           'itu601': lib.SWS_CS_ITU601,
+                           'itu624': lib.SWS_CS_SMPTE170M,
+                           'smpte240,': lib.SWS_CS_SMPTE240M,
+                           'default': lib.SWS_CS_DEFAULT}
+        
+        cdef int cs_src = lib.SWS_CS_DEFAULT
+        cdef int cs_dst = lib.SWS_CS_DEFAULT
+        
+        if not src_colorspace is None:
+            cs_src = colorspace_dict[src_colorspace.lower()]
+        
+        if not dst_colorspace is None:
+            cs_dst = colorspace_dict[dst_colorspace.lower()]
+        
+        
+        return self._reformat(width, height, dst_format, cs_src, cs_dst)
+
+    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
 
         if self.ptr.format < 0:
             raise ValueError("invalid source format")
@@ -145,6 +163,25 @@ cdef class VideoFrame(Frame):
             NULL,
             NULL
         )
+        
+        cdef int *inv_tbl = NULL
+        cdef int *tbl = NULL
+        cdef int *rgbTbl = NULL
+        
+        cdef int srcRange, dstRange, brightness, contrast, saturation
+        
+        cdef int ret
+        
+        ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
+        err_check(ret)
+        
+        if src_colorspace != lib.SWS_CS_DEFAULT:
+            inv_tbl = lib.sws_getCoefficients(src_colorspace)
+        
+        if dst_colorspace !=  lib.SWS_CS_DEFAULT:
+            tbl = lib.sws_getCoefficients(dst_colorspace)
+        
+        lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
         
         # Create a new VideoFrame
         
@@ -181,7 +218,7 @@ cdef class VideoFrame(Frame):
     property key_frame:
         """Is this frame a key frame?"""
         def __get__(self): return self.ptr.key_frame
-
+        
     def to_image(self):
         import PIL.Image
         return PIL.Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)

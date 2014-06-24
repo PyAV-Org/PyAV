@@ -20,7 +20,7 @@ cdef class VideoFrame(Frame):
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
     cdef _init_properties(self)
 
-    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat format)
+    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat format, int src_colorspace, int dst_colorspace)
 
 
 cdef VideoFrame alloc_video_frame()
