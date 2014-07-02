@@ -149,20 +149,20 @@ cdef class VideoFrame(Frame):
         # Try and reuse existing SwsContextProxy
         # VideoStream.decode will copy its SwsContextProxy to VideoFrame
         # So all Video frames from the same VideoStream should have the same one
-        
-        self.reformatter.ptr = lib.sws_getCachedContext(
-            self.reformatter.ptr,
-            self.ptr.width,
-            self.ptr.height,
-            src_format,
-            width,
-            height,
-            dst_format,
-            lib.SWS_BILINEAR,
-            NULL,
-            NULL,
-            NULL
-        )
+        with nogil:
+            self.reformatter.ptr = lib.sws_getCachedContext(
+                self.reformatter.ptr,
+                self.ptr.width,
+                self.ptr.height,
+                src_format,
+                width,
+                height,
+                dst_format,
+                lib.SWS_BILINEAR,
+                NULL,
+                NULL,
+                NULL
+            )
         
         cdef int *inv_tbl = NULL
         cdef int *tbl = NULL
@@ -173,15 +173,16 @@ cdef class VideoFrame(Frame):
         cdef int ret
         
         ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
-        err_check(ret)
         
-        if src_colorspace != lib.SWS_CS_DEFAULT:
-            inv_tbl = lib.sws_getCoefficients(src_colorspace)
-        
-        if dst_colorspace !=  lib.SWS_CS_DEFAULT:
-            tbl = lib.sws_getCoefficients(dst_colorspace)
-        
-        lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
+        # not all pix_fmt colorspace details supported should log...
+        if not ret < 0:
+            if src_colorspace != lib.SWS_CS_DEFAULT:
+                inv_tbl = lib.sws_getCoefficients(src_colorspace)
+            
+            if dst_colorspace !=  lib.SWS_CS_DEFAULT:
+                tbl = lib.sws_getCoefficients(dst_colorspace)
+            
+            lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
         
         # Create a new VideoFrame
         
