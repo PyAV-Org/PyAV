@@ -241,6 +241,19 @@ cdef class VideoFrame(Frame):
         import numpy as np
         return np.frombuffer(self.to_colorspace(colorspace).planes[0],np.uint8).reshape(self.height,self.width,-1)
 
+    def to_qimage(self, unsigned int width=0, unsigned int height=0):
+
+        from PyQt4.QtGui import QImage
+        from sip import voidptr
+
+        width = width or self.width
+        height = height or self.height
+
+        cdef VideoFrame rgb = self.reformat(width, height, 'rgb24')
+        ptr = voidptr(<long><void*>rgb.ptr.extended_data[0])
+
+        return rgb, QImage(ptr, width, height, QImage.Format_RGB888)
+
     @classmethod
     def from_image(cls, img):
         if img.mode != 'RGB':
