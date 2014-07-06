@@ -1,13 +1,12 @@
 import os
 import sys
-import pprint
 
 import cv2
-
 from av import open
 
 
-video = open("/path/to/video/video.avi")
+video = open(sys.argv[1])
+
 stream = next(s for s in video.streams if s.type == b'video')
 
 for packet in video.demux(stream):
