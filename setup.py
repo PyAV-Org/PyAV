@@ -1,146 +1,121 @@
-import ctypes.util
-from setuptools import setup, find_packages, Extension
 import os
-from subprocess import Popen, PIPE
+import platform
+from collections import defaultdict
+from Cython.Distutils import build_ext
+from setuptools import setup, Extension, find_packages, dist
+# Below, pkgconfig (Python bindings to pkg-config) will be installed
+# and imported if the platform is not Windows.
 
 
-def update_extend(dst, src):
-    for k, v in src.iteritems():
-        dst.setdefault(k, []).extend(v)
+version = '0.1.0'
+
+required_libs = ['libavformat', 'libavcodec', 'libavutil', 'libswscale']
+pick_one_libs = ['libswresample', 'libavresample']
+
+# Explicitly specify each and every .pyx file. And, below, generate
+# extensions for each list separately. This is a little extra work
+# but it helps when debugging difficult builds.
+av_files = ['_core', 'container', 'format', 'frame', 'logging', 'packet',
+            'plane', 'stream', 'utils']
+av_video_files = ['format', 'frame', 'plane', 'stream', 'swscontext']
+av_audio_files = ['fifo', 'format', 'frame', 'layout', 'plane', 'resampler',
+                  'stream']
+av_subtitles_files = ['stream', 'subtitle']
 
 
-def pkg_config(name, macro=False):
-    """Get distutils compatible extension extras via pkg-config."""
-
-    proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
-    raw_config, err = proc.communicate()
-    if proc.wait():
-        return
-
-    config = {}
-    if macro:
-        macro_name = name[3:] if name.startswith('lib') else name
-        config['define_macros'] = [('USE_' + macro_name.upper(), '1')]
-
-    for chunk in raw_config.strip().split():
-        if chunk.startswith('-I'):
-            config.setdefault('include_dirs', []).append(chunk[2:])
-        elif chunk.startswith('-L'):
-            config.setdefault('library_dirs', []).append(chunk[2:])
-        elif chunk.startswith('-l'):
-            config.setdefault('libraries', []).append(chunk[2:])
-        elif chunk.startswith('-D'):
-            name = chunk[2:].split('=')[0]
-            config.setdefault('define_macros', []).append((name, None))
-
-    return config
+class LibraryNotFoundError(Exception):
+    pass
 
 
-def check_for_func(lib_names, func_name):
-    """Define macros if we can find the given function in one of the given libraries."""
-
-    if isinstance(lib_names, basestring):
-        lib_names = [lib_names]
-
-    for lib_name in lib_names:
-
-        lib_path = ctypes.util.find_library(lib_name)
-        if not lib_path:
-            print 'Could not find', lib_name, 'with ctypes.util.find_library'
+def check_for_libraries():
+    "Raise if the necessary libraries are not found."
+    missing = []
+    for lib in required_libs:
+        if not pkgconfig.exists(lib):
+            missing.append(lib)
             continue
+    if missing:
+        raise LibraryNotFoundError(
+            "Could not find the required libraries: {0}".format(
+                ' '.join(missing)))
 
-        # Open the lib. Look in the path returned by find_library, but also all
-        # the paths returned by pkg-config (since we don't get an absolute path
-        # on linux).
-        lib_paths = [lib_path]
-        lib_paths.extend(
-            os.path.join(root, os.path.basename(lib_path))
-            for root in set(extension_extra.get('library_dirs', []))
-        )
-        for lib_path in lib_paths:
-            try:
-                lib = ctypes.CDLL(lib_path)
-                break
-            except OSError:
-                pass
-        else:
-            print 'Could not find', lib_name, 'with ctypes; looked in:'
-            print '\n'.join('\t' + path for path in lib_paths)
-            continue
-
-        if hasattr(lib, func_name):
-            extension_extra.setdefault('define_macros', []).append(('HAVE_%s' % func_name.upper(), '1'))
-            return
+    missing = []
+    for lib in pick_one_libs:
+        if not pkgconfig.exists(lib):
+            missing.append(lib)
+    if len(missing) > 1:
+        raise LibraryNotFoundError(
+            "Could not find either of these libraries: {0}."
+            "One or the other is required.".format(' '.join(missing)))
 
 
+def make_extension_name(basename, path):
+    """Utitily: 'format', 'av/video' -> 'av.video.format'"""
+    split_path = list(os.path.split(path)) + [basename]
+    try:
+	split_path.remove('')  # fix corner case: os.split.path('av') -> ('', 'av')
+    except ValueError:
+	pass
+    return '.'.join(split_path)
+    
 
-extension_extra = {
-    'include_dirs': ['include'],
-}
+def generate_extensions(basenames, path, extra_args):
+    """Generate extension from a list of .pyx filenames.
 
+    The list of names passed should not include the .pyx."""
 
-# Get the config for the libraries that we require.
-for name in 'libavformat libavcodec libavutil libswscale'.split():
-    config = pkg_config(name)
-    if not config:
-        print 'Could not find', name, 'with pkg-config.'
-    else:
-        update_extend(extension_extra, config)
-
-
-# Get the config for either swresample OR avresample.
-config = pkg_config('libswresample', macro=True)
-if not config:
-    config = pkg_config('libavresample', macro=True)
-if not config:
-    print 'Could not find either of libswresample or libavresample with pkg-config.'
-else:
-    update_extend(extension_extra, config)
-
-
-# Check for some specific functions.
-check_for_func(('avcodec', 'avutil', 'avcodec'), 'av_frame_get_best_effort_timestamp')
-check_for_func('avformat', 'avformat_close_input')
-check_for_func('avformat', 'avformat_alloc_output_context2')
-check_for_func('avutil', 'av_calloc')
+    extensions = \
+        [Extension(make_extension_name(basename, path),
+                   language='c',
+                   sources=[os.path.join(path, '{0}.pyx'.format(basename))],
+                   depends=[os.path.join(path, '{0}.pxd'.format(basename))],
+                   include_dirs = (extra_args['include_dirs'] +
+                                   [path, '.', 'include']),
+                   library_dirs = extra_args['library_dirs'],
+                   libraries = extra_args['libraries'],
+                   define_macros = extra_args['define_macros'])
+        for basename in basenames]
+    return extensions
 
 
-# Normalize the extras.
-extension_extra = dict((k, sorted(set(v))) for k, v in extension_extra.iteritems())
+windows = platform.system() == 'Windows'
+if not windows:
+    dist.Distribution(dict(setup_requires='pkgconfig'))
+    # installs pkgconfig (a Python interface to pkg-config) immediately
+    import pkgconfig
 
 
-# Construct the modules that we find in the "build/cython" directory.
-ext_modules = []
-build_dir = os.path.abspath(os.path.join(__file__, '..', 'src'))
-for dirname, dirnames, filenames in os.walk(build_dir):
-    for filename in filenames:
-        if filename.startswith('.') or os.path.splitext(filename)[1] != '.c':
-            continue
+    check_for_libraries()  # raises to stop build if any required lib not found
 
-        path = os.path.join(dirname, filename)
-        name = os.path.splitext(os.path.relpath(path, build_dir))[0].replace('/', '.')
+    # Get info from pkgconfig. It returns a defaultdict of sets.
+    extra_args = pkgconfig.parse(' '.join(required_libs + pick_one_libs))
+    extra_args = {k: list(v) for k, v in extra_args.items()}  # dict of lists
 
-        ext_modules.append(Extension(
-            name,
-            sources=[path],
-            **extension_extra
-        ))
+# Again, generating separately to ease debugging.
+av_extensions = generate_extensions(av_files, 'av',
+                                    extra_args)
+av_video_extensions = generate_extensions(av_video_files, 'av/video',
+                                          extra_args)
+av_audio_extensions = generate_extensions(av_audio_files, 'av/audio',
+                                          extra_args)
+av_subtitles_extensions = generate_extensions(av_subtitles_files,
+                                              'av/subtitles', extra_args)
 
 
 setup(
-
     name='av',
-    version='0.1.0',
+    version=version,
     description='Pythonic bindings for libav.',
-    
+
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
-    
+
     url="https://github.com/mikeboers/PyAV",
 
-    packages=find_packages(exclude=['tests', 'examples']),
-    
-    zip_safe=False,
-    ext_modules=ext_modules,
+    packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
 
+    zip_safe=False,
+    ext_modules = av_extensions + av_video_extensions + av_audio_extensions + av_subtitles_extensions,
+
+    cmdclass={'build_ext': build_ext},
 )
