@@ -161,6 +161,12 @@ cdef class VideoStream(Stream):
                 packet.struct.dts = lib.av_rescale_q(packet.struct.dts, 
                                                      self._codec_context.time_base,
                                                      self._stream.time_base)
+                
+            if packet.struct.duration != lib.AV_NOPTS_VALUE:
+                packet.struct.duration = lib.av_rescale_q(packet.struct.duration, 
+                                                     self._codec_context.time_base,
+                                                     self._stream.time_base)
+                
             if self._codec_context.coded_frame:
                 if self._codec_context.coded_frame.key_frame:
                     packet.struct.flags |= lib.AV_PKT_FLAG_KEY
