@@ -6,7 +6,25 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     
     cdef int64_t AV_NOPTS_VALUE
     cdef int CODEC_FLAG_GLOBAL_HEADER
+
+    cdef int CODEC_CAP_DRAW_HORIZ_BAND
+    cdef int CODEC_CAP_DR1
+    cdef int CODEC_CAP_TRUNCATED
+    cdef int CODEC_CAP_HWACCEL
+    cdef int CODEC_CAP_DELAY
+    cdef int CODEC_CAP_SMALL_LAST_FRAME
+    cdef int CODEC_CAP_HWACCEL_VDPAU
+    cdef int CODEC_CAP_SUBFRAMES
+    cdef int CODEC_CAP_EXPERIMENTAL
+    cdef int CODEC_CAP_CHANNEL_CONF
+    cdef int CODEC_CAP_NEG_LINESIZES
+    cdef int CODEC_CAP_FRAME_THREADS
+    cdef int CODEC_CAP_SLICE_THREADS
+    cdef int CODEC_CAP_PARAM_CHANGE
+    cdef int CODEC_CAP_AUTO_THREADS
     cdef int CODEC_CAP_VARIABLE_FRAME_SIZE
+    cdef int CODEC_CAP_INTRA_ONLY
+    cdef int CODEC_CAP_LOSSLESS
     
     cdef int AV_PKT_FLAG_KEY
     
@@ -23,13 +41,18 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodec.html
     cdef struct AVCodec:
+
         char *name
         char *long_name
         AVMediaType type
         AVCodecID id
+
         int capabilities
         
+        AVRational* supported_framerates
         AVSampleFormat* sample_fmts
+        AVPixelFormat* pix_fmts
+        int* supported_samplerates
         
             
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html

@@ -105,3 +105,23 @@ cdef ByteSource bytesource(obj, bint allow_none=False):
         return obj
     else:
         return ByteSource(obj)
+
+
+cdef str media_type_to_string(lib.AVMediaType media_type):
+
+    # There is a convenient lib.av_get_media_type_string(x), but it
+    # doesn't exist in libav.
+            
+    if media_type == lib.AVMEDIA_TYPE_VIDEO:
+        return "video"
+    elif media_type == lib.AVMEDIA_TYPE_AUDIO:
+        return "audio"
+    elif media_type == lib.AVMEDIA_TYPE_DATA:
+        return "data"
+    elif media_type == lib.AVMEDIA_TYPE_SUBTITLE:
+        return "subtitle"
+    elif media_type == lib.AVMEDIA_TYPE_ATTACHMENT:
+        return "attachment"
+    else:
+        return "unknown"
+

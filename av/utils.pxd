@@ -32,3 +32,4 @@ cdef class ByteSource(object):
 cdef ByteSource bytesource(object, bint allow_none=*)
 
 
+cdef str media_type_to_string(lib.AVMediaType)

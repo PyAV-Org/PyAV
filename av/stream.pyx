@@ -7,7 +7,7 @@ cimport libav as lib
 from av.audio.stream cimport AudioStream
 from av.packet cimport Packet
 from av.subtitles.stream cimport SubtitleStream
-from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational
+from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 from av.video.stream cimport VideoStream
 
 
@@ -92,19 +92,7 @@ cdef class Stream(object):
         )
 
     property type:
-        def __get__(self):
-            # There is a convenient lib.av_get_media_type_string(x), but it
-            # doesn't exist in libav.
-            if self._codec_context.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-                return "video"
-            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-                return "audio"
-            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_DATA:
-                return "data"
-            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
-                return "subtitle"
-            elif self._codec_context.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
-                return "attachment"
+        def __get__(self): return media_type_to_string(self._codec_context.codec_type)
 
     property name:
         def __get__(self):
