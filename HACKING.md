@@ -10,22 +10,22 @@ For example:
 
 - we don't need to mimick the underlying project structure as much as we do;
 - we shouldn't be exposing audio attributes on a video codec, and vise-versa;
-- the concept of packets should be abtracted away to yielding frames from streams;
+- the concept of packets could be abtracted away to yielding frames from streams;
+- time should be a real number, instead of a rational;
 - ...
 
 
 FFmpeg vs Libav
 ---------------
 
-Right now we use a little bit of autoconf to discover the differences between these two libraries, and some very small shim headers to smooth out the differences. Do try to test all changes on platforms which default to both libraries.
+Right now we ctypes-based discovery to determine what functions are availible, and some very small shim headers to smooth out the differences. Do try to test all changes on platforms which default to both libraries.
 
 
 Library Detection
 -----------------
 
 Macros will be defined for the libraries we link against. In particular, you
-will have either `PYAV_HAVE_LIBSWRESAMPLE` or `PYAV_HAVE_LIBAVRESAMPLE` (for
-FFmpeg and Libav, respectively).
+will have either `PYAV_HAVE_LIBSWRESAMPLE` or `PYAV_HAVE_LIBAVRESAMPLE`.
 
 
 Function Detection
