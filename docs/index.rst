@@ -59,7 +59,7 @@ API Reference
    :maxdepth: 1
 
    api
-
+   includes
 
 ..
 	Indices and tables
