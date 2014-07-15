@@ -43,3 +43,12 @@ Class Relationships
 - `Packet.stream` is the `Stream` that it is from.
 - `Frame` has no relationships in Python space.
 
+
+Time in Libraries
+-----------------
+
+Time is usually represented as fractions; there is often a `uint64_t pts` or `dts` variable in `AVRational time_base` units.
+
+Both `AVStream` and `AVCodecContext` have a time_base. While encoding, they are for the `AVPacket` and `AVFrame` times respectively. However, while decoding all times are in `AVStream.time_base`.
+
+When there is no time_base (such as on `AVFormatContext`), there is an implicit time_base of `1/AV_TIME_BASE`.
