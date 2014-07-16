@@ -124,6 +124,10 @@ cdef class Stream(object):
         def __get__(self): 
             if self._codec_context:
                 return self._codec_context.ticks_per_frame * avrational_to_faction(&self._codec_context.time_base)
+    
+    property average_rate:
+        def __get__(self):
+            return avrational_to_faction(&self._stream.avg_frame_rate)
 
     property start_time:
         def __get__(self): return self._stream.start_time
@@ -209,8 +213,11 @@ cdef class Stream(object):
                 flags = lib.AVSEEK_FLAG_ANY
             else:
                raise ValueError("Invalid mode %s" % str(mode))
-
-        err_check(lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags))
+        
+        cdef int result
+        with nogil:
+            result = lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags)
+        err_check(result)
         # flush codec buffers
         cdef lib.AVStream *stream
         for i in xrange(self._container.ptr.nb_streams):
