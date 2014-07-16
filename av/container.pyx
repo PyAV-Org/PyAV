@@ -45,11 +45,18 @@ cdef class Container(object):
 cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
-        err_check(
-            lib.avformat_open_input(&self.proxy.ptr, self.name, NULL, NULL),
-            self.name,
-        )
-        err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
+        
+        cdef int result
+        cdef char *name = self.name
+        
+        with nogil:
+            result = lib.avformat_open_input(&self.proxy.ptr, name, NULL, NULL)
+        err_check(result, self.name)
+        
+        with nogil:
+            result = lib.avformat_find_stream_info(self.proxy.ptr, NULL)
+            
+        err_check(result)
         self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
         self.streams = list(
             build_stream(self, self.proxy.ptr.streams[i])
