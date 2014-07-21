@@ -199,9 +199,10 @@ cdef class Stream(object):
             
 
 
-    cpdef decode(self, Packet packet):
+    cpdef decode(self, Packet packet = None):
     
-        if not packet.struct.data:
+        # None Packet Signals Flushing Codec
+        if packet is None:
             return self._flush_decoder_frames()
 
         cdef int data_consumed = 0

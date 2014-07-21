@@ -24,7 +24,7 @@ cdef class Stream(object):
 
     # API.
     cdef _init(self, Container, lib.AVStream*)
-    cpdef decode(self, Packet)
+    cpdef decode(self, Packet packet = *)
     cdef _flush_decoder_frames(self)
     cdef _setup_frame(self, Frame)
     cdef _decode_one(self, lib.AVPacket*, int *data_consumed)
