@@ -91,6 +91,8 @@ class TestSeek(TestCase):
             for frame in packet.decode():
                 total_frame_count += 1
         
+        self.assertEqual(video_stream.frames, total_frame_count +1)
+        
         # set target frame to middle frame
         target_frame = int(total_frame_count/ 2.0)
         target_timestamp = int((target_frame * AV_TIME_BASE) / float(video_stream.rate.denominator))
@@ -112,7 +114,7 @@ class TestSeek(TestCase):
                 # start counting once we reach the target frame
                 if current_frame is not None and current_frame >= target_frame:
                     frame_count += 1
-        
+
         self.assertEqual(frame_count, total_frame_count- target_frame)
 
 
