@@ -200,27 +200,14 @@ cdef class Stream(object):
 
 
     cpdef decode(self, Packet packet):
+    
+        if not packet.struct.data:
+            return self._flush_decoder_frames()
 
         cdef int data_consumed = 0
         cdef list frames = []
         
         cdef Frame frame
-        
-        # Null Packet Signals Flushing Codec
-        if not packet.struct.data:
-            self.packet_pts = lib.AV_NOPTS_VALUE
-            while True:
-                # Create a new NULL packet for every frame we try to pull out.
-                packet = Packet()
-                frame = self._decode_one(&packet.struct, &data_consumed)
-                if frame:
-                    if isinstance(frame, Frame):
-                        self._setup_frame(frame)
-                    frames.append(frame)
-                else:
-                    break
-                
-            return frames
 
         cdef uint8_t *original_data = packet.struct.data
         cdef int      original_size = packet.struct.size
@@ -300,7 +287,29 @@ cdef class Stream(object):
             if stream.codec:
                 # don't try and flush unkown codecs
                 if not stream.codec.codec_id == lib.AV_CODEC_ID_NONE:
-                    lib.avcodec_flush_buffers(stream.codec)    
+                    lib.avcodec_flush_buffers(stream.codec)
+    
+    cdef _flush_decoder_frames(self):
+        cdef int data_consumed = 0
+        cdef list frames = []
+        
+        cdef Packet packet
+        
+        cdef Frame frame
+
+        self.packet_pts = lib.AV_NOPTS_VALUE
+        while True:
+            # Create a new NULL packet for every frame we try to pull out.
+            packet = Packet()
+            frame = self._decode_one(&packet.struct, &data_consumed)
+            if frame:
+                if isinstance(frame, Frame):
+                    self._setup_frame(frame)
+                frames.append(frame)
+            else:
+                break
+            
+        return frames
  
     cdef _setup_frame(self, Frame frame):
         #frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
