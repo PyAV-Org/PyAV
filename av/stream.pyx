@@ -297,7 +297,8 @@ cdef class Stream(object):
         cdef Packet packet
         
         cdef Frame frame
-
+        cdef int64_t * packet_pts
+        
         self.packet_pts = lib.AV_NOPTS_VALUE
         while True:
             # Create a new NULL packet for every frame we try to pull out.
@@ -306,6 +307,14 @@ cdef class Stream(object):
             if frame:
                 if isinstance(frame, Frame):
                     self._setup_frame(frame)
+                    
+                packet_pts = <int64_t *> frame.ptr.opaque
+                
+                if packet_pts[0] != lib.AV_NOPTS_VALUE:
+                    frame.ptr.pts = packet_pts[0]
+                else:
+                    frame.ptr.pts = lib.AV_NOPTS_VALUE
+                
                 frames.append(frame)
             else:
                 break
