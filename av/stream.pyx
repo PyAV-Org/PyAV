@@ -241,7 +241,7 @@ cdef class Stream(object):
                 # retrive packet pts from frame.ptr.opaque 
                 packet_pts = <int64_t *> frame.ptr.opaque
                 
-                if packet_pts[0] != lib.AV_NOPTS_VALUE:
+                if packet_dts == lib.AV_NOPTS_VALUE and packet_pts[0] != lib.AV_NOPTS_VALUE:
                     frame.ptr.pts = packet_pts[0] 
                 
                 elif packet_dts != lib.AV_NOPTS_VALUE:
@@ -275,7 +275,7 @@ cdef class Stream(object):
             elif mode.lower() == 'any':
                 flags = lib.AVSEEK_FLAG_ANY
             else:
-               raise ValueError("Invalid mode %s" % str(mode))
+                raise ValueError("Invalid mode %s" % str(mode))
         
         cdef int result
         with nogil:
