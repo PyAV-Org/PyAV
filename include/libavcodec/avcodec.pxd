@@ -81,6 +81,13 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int frame_size
         int channel_layout
         
+        # TODO: get_buffer is deprecated for get_buffer2 in newer versions of FFmpeg
+        int get_buffer(AVCodecContext *ctx, AVFrame *frame)
+        void release_buffer(AVCodecContext *ctx, AVFrame *frame)
+        
+        #User Data
+        void *opaque
+        
     cdef struct AVCodecDescriptor:
         AVCodecID id
         AVMediaType type
@@ -138,7 +145,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int pkt_size
         
         uint8_t **base
-
+        void *opaque
+        
     cdef AVFrame* avcodec_alloc_frame()
     
     cdef int avpicture_alloc(
@@ -273,5 +281,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     
     cdef int64_t av_frame_get_best_effort_timestamp(AVFrame *frame)
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
+    
+     # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
+    cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
+    cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
     
     

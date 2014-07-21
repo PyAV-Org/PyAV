@@ -27,6 +27,7 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
     
     cdef int AV_ERROR_MAX_STRING_SIZE
     cdef int AVERROR_EOF
+    cdef int AVERROR_NOMEM "AVERROR(ENOMEM)"
     
     cdef int AV_CH_LAYOUT_STEREO
     

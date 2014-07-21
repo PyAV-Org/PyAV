@@ -2,7 +2,7 @@ cimport libav as lib
 from av.packet cimport Packet
 from av.container cimport Container, ContainerProxy
 from av.frame cimport Frame
-
+from libc.stdint cimport int64_t
 
 cdef class Stream(object):
     
@@ -17,6 +17,8 @@ cdef class Stream(object):
     cdef lib.AVCodecContext *_codec_context
     cdef lib.AVCodec *_codec
     cdef lib.AVDictionary *_codec_options
+    
+    cdef int64_t packet_pts
     
     # cdef lib.AVRational _frame_rate
 

@@ -1,4 +1,5 @@
 from libc.stdint cimport uint8_t, int64_t
+from libc.string cimport memcpy
 from cpython cimport PyWeakref_NewRef
 
 cimport libav as lib
@@ -38,7 +39,43 @@ cdef Stream build_stream(Container container, lib.AVStream *c_stream):
     py_stream._init(container, c_stream)
     return py_stream
 
+cdef int pyav_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
+    
+    # Get the buffer the way it would normally get it
+    cdef int ret
+    ret = lib.avcodec_default_get_buffer(ctx, frame)
 
+    # Allocate a int64_t and copy the current pts stored in 
+    # AVCodecContext.opaque, which is a pointer to Stream.packet_pts.
+    # stream.packet_pts is set in the decode method of Stream.
+    # this is done so the new AVFrame can store this pts of the first packet
+    # needed to create it. This is need later for timing purposes see
+    # http://dranger.com/ffmpeg/tutorial05.html. this is the done the same way but
+    # we use AVCodecContext.opaque so we don't need a global variable.
+    
+    # Allocate a new int64_t to be stored in AVFrame
+    cdef int64_t *pkt_pts = <int64_t*>lib.av_malloc(sizeof(int64_t))
+    if not pkt_pts:
+        return lib.AVERROR_NOMEM
+    
+    # Copy Packet pts
+    memcpy(pkt_pts, ctx.opaque, sizeof(int64_t))
+    
+    # Assign AVFrame.opaque pointer to new PacketInfo
+    frame.opaque = pkt_pts
+    
+    #return the result of avcodec_default_get_buffer
+    return ret
+
+cdef void pyav_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
+    if frame:
+        #Free AVFrame packet pts
+        lib.av_freep(&frame.opaque)
+
+    lib.avcodec_default_release_buffer(ctx, frame)
+    
+    
+    
 cdef class Stream(object):
     
     def __cinit__(self, name):
@@ -54,6 +91,7 @@ cdef class Stream(object):
         self._codec_context = stream.codec
         
         self.metadata = avdict_to_dict(stream.metadata)
+        self.packet_pts = lib.AV_NOPTS_VALUE
         
         if self._container.ptr.iformat:
 
@@ -70,7 +108,13 @@ cdef class Stream(object):
                 # Signal that we don't need to close it.
                 self._codec = NULL
                 raise
-        
+            
+            self._codec_context.opaque = &self.packet_pts
+            
+            self._codec_context.get_buffer = pyav_get_buffer
+            self._codec_context.release_buffer = pyav_release_buffer
+            
+            
         # Output container.
         else:
             self._codec = self._codec_context.codec
@@ -132,7 +176,10 @@ cdef class Stream(object):
     property start_time:
         def __get__(self): return self._stream.start_time
     property duration:
-        def __get__(self): return self._stream.duration
+        def __get__(self):
+            if self._stream.duration == lib.AV_NOPTS_VALUE:
+                return None
+            return self._stream.duration
 
     property frames:
         def __get__(self): return self._stream.nb_frames
@@ -157,8 +204,11 @@ cdef class Stream(object):
         cdef int data_consumed = 0
         cdef list frames = []
         
+        cdef Frame frame
+        
         # Null Packet Signals Flushing Codec
         if not packet.struct.data:
+            self.packet_pts = lib.AV_NOPTS_VALUE
             while True:
                 # Create a new NULL packet for every frame we try to pull out.
                 packet = Packet()
@@ -174,6 +224,11 @@ cdef class Stream(object):
 
         cdef uint8_t *original_data = packet.struct.data
         cdef int      original_size = packet.struct.size
+        
+        cdef int64_t packet_dts = packet.struct.dts
+        cdef int64_t * packet_pts
+        
+        self.packet_pts = packet.struct.pts
 
         while packet.struct.size > 0:
 
@@ -185,8 +240,28 @@ cdef class Stream(object):
             packet.struct.size -= data_consumed
 
             if frame:
-                if isinstance(frame, Frame):
-                    self._setup_frame(frame)
+
+                self._setup_frame(frame)
+                
+                # According to http://dranger.com/ffmpeg/tutorial05.html
+                # ffmpeg reorders the packets so that the DTS of the packet
+                # being processed by avcodec_decode_video() will always be the same
+                # as the PTS of the frame it returns.
+                # And The PTS of frame is also equal to the PTS of the first
+                # Packet needed to decode it
+                
+                # retrive packet pts from frame.ptr.opaque 
+                packet_pts = <int64_t *> frame.ptr.opaque
+                
+                if packet_pts[0] != lib.AV_NOPTS_VALUE:
+                    frame.ptr.pts = packet_pts[0] 
+                
+                elif packet_dts != lib.AV_NOPTS_VALUE:
+                    frame.ptr.pts = packet_dts
+                
+                else:
+                    frame.ptr.pts = lib.AV_NOPTS_VALUE             
+                    
                 frames.append(frame)
 
         # Restore the packet.
@@ -228,7 +303,7 @@ cdef class Stream(object):
                     lib.avcodec_flush_buffers(stream.codec)    
  
     cdef _setup_frame(self, Frame frame):
-        frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
+        #frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         frame.time_base = self._stream.time_base
         frame.index = self._codec_context.frame_number - 1
 
