@@ -38,20 +38,22 @@ def get_frame_count(f, stream):
 class FrameGrabber(QtCore.QObject):
     
     frame_ready = QtCore.pyqtSignal(object, object)
-    update_frame_range = QtCore.pyqtSignal(object)
+    update_frame_range = QtCore.pyqtSignal(object, object)
     
     def __init__(self, parent =None):
         super(FrameGrabber, self).__init__(parent)
         self.file = None
         self.stream = None
         self.frame = None
-        self.active_frame = None
+        self.active_time = None
         self.start_time = 0
         self.pts_seen = False
         self.nb_frames = None
         
         self.rate = None
         self.time_base = None
+        
+        self.pts_map = {}
         
     def next_frame(self):
         
@@ -82,14 +84,27 @@ class FrameGrabber(QtCore.QObject):
                 elif not frame_index is None:
                     frame_index += 1
                 
+                if not frame.dts in self.pts_map:
+                    secs  = None
+                    
+                    if not pts is None:
+                        secs = pts * time_base
+                    
+                    self.pts_map[frame.dts] = secs
+                    
+                
+                #if frame.pts == None:
+                    
+                
                 
                 yield frame_index, frame
                 
                 
+    
     @QtCore.pyqtSlot(object)
-    def request_frame(self, target_frame):
+    def request_time(self, second):
         
-        frame = self.get_frame(target_frame)
+        frame = self.get_frame(second)
         if not frame:
             return
         
@@ -104,9 +119,49 @@ class FrameGrabber(QtCore.QObject):
         #img = QtGui.QImage(rgba.planes[0], rgba.width, rgba.height, QtGui.QImage.Format_RGB888)
 
         #pixmap = QtGui.QPixmap.fromImage(img)
-        self.frame_ready.emit(img, target_frame)
+        self.frame_ready.emit(img, second)
         
-    def get_frame(self, target_frame):
+    def get_frame(self, target_sec):
+
+        if target_sec != self.active_time:
+            return
+        print 'seeking to', target_sec
+        
+        rate = self.rate
+        time_base = self.time_base
+        
+        target_pts = int(target_sec / time_base) + self.start_time
+        seek_pts = target_pts
+        
+        
+        self.stream.seek(seek_pts)
+        
+        #frame_cache = []
+        
+        last_frame= None
+        
+        for i, (frame_index, frame) in enumerate(self.next_frame()):
+            
+            
+            if target_sec != self.active_time:
+                return
+            
+            pts =frame.dts
+            if self.pts_seen:
+                pts = frame.pts
+            
+            if pts > target_pts:
+                break
+            
+            print frame.pts, seek_pts
+            last_frame = frame
+            
+        if last_frame:
+            
+            return last_frame
+        
+        
+    def get_frame_old(self, target_frame):
 
         if target_frame != self.active_frame:
             return
@@ -255,7 +310,14 @@ class FrameGrabber(QtCore.QObject):
         #self.nb_frames = get_frame_count(self.file, self.stream)
         self.nb_frames = self.get_frame_count()
         
-        self.update_frame_range.emit(self.nb_frames)
+        dur = None
+        
+        if self.stream.duration:
+            dur = self.stream.duration * self.time_base
+        else:
+            dur = self.file.duration * 1.0 / float(AV_TIME_BASE)
+        
+        self.update_frame_range.emit(dur, self.rate)
         
         
         
@@ -302,23 +364,28 @@ class DisplayWidget(QtGui.QLabel):
 
 class VideoPlayerWidget(QtGui.QWidget):
     
-    request_frame = QtCore.pyqtSignal(object)
+    request_time = QtCore.pyqtSignal(object)
     
     load_file = QtCore.pyqtSignal(object)
     
     def __init__(self, parent=None):
         super(VideoPlayerWidget, self).__init__(parent)
+        
+        self.rate = None
+        
         self.display = DisplayWidget()
         self.timeline = QtGui.QScrollBar(Qt.Horizontal)
+        self.timeline_base = 100000
+        
         self.frame_grabber = FrameGrabber()
         
-        self.frame_control = QtGui.QSpinBox()
+        self.frame_control = QtGui.QDoubleSpinBox()
         self.frame_control.setFixedWidth(100)
 
-        self.timeline.valueChanged.connect(self.frame_changed)
+        self.timeline.valueChanged.connect(self.slider_changed)
         self.frame_control.valueChanged.connect(self.frame_changed)
         
-        self.request_frame.connect(self.frame_grabber.request_frame)
+        self.request_time.connect(self.frame_grabber.request_time)
         self.load_file.connect(self.frame_grabber.set_file)
 
         self.frame_grabber.frame_ready.connect(self.display.setPixmap)
@@ -344,26 +411,35 @@ class VideoPlayerWidget(QtGui.QWidget):
         self.load_file.emit(path)
         self.frame_changed(0)
         
-    @QtCore.pyqtSlot(object)
-    def set_frame_range(self, maximum):
-        print "frame range =", maximum
-        self.timeline.setMaximum(maximum)
+    @QtCore.pyqtSlot(object, object)
+    def set_frame_range(self, maximum, rate):
+        print "frame range =", maximum, rate, int(maximum * self.timeline_base)
+        
+        self.timeline.setMaximum( int(maximum * self.timeline_base))
+        
         self.frame_control.setMaximum(maximum)
+        self.frame_control.setSingleStep(1/rate)
+        #self.timeline.setSingleStep( int(AV_TIME_BASE * 1/rate))
+        self.rate = rate
+        
+    def slider_changed(self, value):
+        print '..', value
+        self.frame_changed(value * 1.0 / float(self.timeline_base))
     
     def frame_changed(self, value):
         self.timeline.blockSignals(True)
         self.frame_control.blockSignals(True)
         
-        self.timeline.setValue(value)
-        self.frame_control.setValue(value)
+        self.timeline.setValue(int(value * self.timeline_base))
+        self.frame_control.setValue( value)
         
         self.timeline.blockSignals(False)
         self.frame_control.blockSignals(False)
         
         #self.display.current_index = value
-        self.frame_grabber.active_frame = value
+        self.frame_grabber.active_time = value
         
-        self.request_frame.emit(value)
+        self.request_time.emit(value)
         
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Right, Qt.Key_Left):
@@ -374,8 +450,10 @@ class VideoPlayerWidget(QtGui.QWidget):
             if event.modifiers() == Qt.ShiftModifier:
                 print 'shift'
                 direction *= 10
+            
+            direction = direction * 1/self.rate
                 
-            self.timeline.setValue(self.timeline.value() + direction)
+            self.frame_changed(self.frame_control.value() + direction)
                 
         else:
             super(VideoPlayerWidget,self).keyPressEvent(event)
@@ -402,9 +480,12 @@ class VideoPlayerWidget(QtGui.QWidget):
             self.set_file(path)
     def closeEvent(self, event):
         
-        self.frame_grabber.active_frame = -1
+        self.frame_grabber.active_time = -1
         self.frame_grabber_thread.quit()
         self.frame_grabber_thread.wait()
+        
+        for key,value in sorted(self.frame_grabber.pts_map.items()):
+            print key, '=', value
         
         event.accept()
         

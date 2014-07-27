@@ -23,6 +23,7 @@ cdef class Stream(object):
     # cdef lib.AVRational _frame_rate
 
     # API.
+    cdef flush_buffers(self)
     cdef _init(self, Container, lib.AVStream*)
     cpdef decode(self, Packet packet = *)
     cdef _flush_decoder_frames(self)

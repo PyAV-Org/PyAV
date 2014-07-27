@@ -214,7 +214,11 @@ cdef class Stream(object):
         cdef int      original_size = packet.struct.size
         
         cdef int64_t packet_dts = packet.struct.dts
-        cdef int64_t * packet_pts
+        cdef int64_t * packet_pts_ptr
+        cdef int64_t packet_pts
+        cdef int64_t best_effort
+        
+        cdef int decoder_reorder_pts = 1
         
         self.packet_pts = packet.struct.pts
 
@@ -239,17 +243,22 @@ cdef class Stream(object):
                 # Packet needed to decode it
                 
                 # retrive packet pts from frame.ptr.opaque 
-                packet_pts = <int64_t *> frame.ptr.opaque
+                packet_pts_ptr = <int64_t *> frame.ptr.opaque
                 
-                if packet_dts == lib.AV_NOPTS_VALUE and packet_pts[0] != lib.AV_NOPTS_VALUE:
-                    frame.ptr.pts = packet_pts[0] 
-                
-                elif packet_dts != lib.AV_NOPTS_VALUE:
-                    frame.ptr.pts = packet_dts
-                
+                if packet_pts_ptr:
+                    packet_pts = packet_pts_ptr[0]
                 else:
-                    frame.ptr.pts = lib.AV_NOPTS_VALUE             
+                    packet_pts = lib.AV_NOPTS_VALUE
                     
+                
+                if decoder_reorder_pts == -1:
+                    frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
+                elif decoder_reorder_pts:
+                    frame.ptr.pts = frame.ptr.pkt_pts
+                else:
+                    frame.ptr.pts = frame.ptr.pkt_dts
+                
+                
                 frames.append(frame)
 
         # Restore the packet.
@@ -281,14 +290,20 @@ cdef class Stream(object):
         with nogil:
             result = lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags)
         err_check(result)
+        
+        self.flush_buffers()
+        
+    cdef flush_buffers(self):
         # flush codec buffers
         cdef lib.AVStream *stream
         for i in xrange(self._container.ptr.nb_streams):
             stream = self._container.ptr.streams[i]
             if stream.codec:
                 # don't try and flush unkown codecs
-                if not stream.codec.codec_id == lib.AV_CODEC_ID_NONE:
-                    lib.avcodec_flush_buffers(stream.codec)
+                if stream.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO or stream.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+                    if not stream.codec.codec_id == lib.AV_CODEC_ID_NONE:
+                        lib.avcodec_flush_buffers(stream.codec)
+        
     
     cdef _flush_decoder_frames(self):
         cdef int data_consumed = 0
