@@ -201,16 +201,21 @@ cdef class VideoStream(Stream):
                 return True
             return False
 
-
-    # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
     property width:
+        def __get__(self):
+            return self._codec_context.width if self._codec_context else None
         def __set__(self, unsigned int value):
             self._codec_context.width = value
             self._build_format()
+
     property height:
+        def __get__(self):
+            return self._codec_context.height if self._codec_context else None
         def __set__(self, unsigned int value):
             self._codec_context.height = value
             self._build_format()
+
+    # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
     property pix_fmt:
         def __set__(self, bytes value):
             self._codec_context.pix_fmt = lib.av_get_pix_fmt(value)
