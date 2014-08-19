@@ -75,7 +75,7 @@ class TestAudioProbe(TestCase):
 
 class TestMPEGVideoProbe(TestCase):
     def setUp(self):
-        self.file = av.open(asset('320x240x4.mpg'))
+        self.file = av.open(asset('320x240x4.ts'))
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
@@ -86,9 +86,12 @@ class TestMPEGVideoProbe(TestCase):
         self.assertEqual(stream.coded_height, 240)
         self.assertEqual(stream.sample_aspect_ratio, Fraction(1, 1))
         self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
-        self.assertEqual(stream.profile, 'Main')
         try:  # Libav is able to return a bit-rate for this file, but ffmpeg doesn't, so have to rely on rc_max_rate.
             self.assertEqual(stream.bit_rate, None)
             self.assertEqual(stream.max_bit_rate, 104857200)
         except AssertionError:
             self.assertEqual(stream.bit_rate, 104857200)
+
+    def test_audio_stream_probing(self):
+        stream = self.file.streams[1]
+        self.assertEqual(stream.language, "eng")

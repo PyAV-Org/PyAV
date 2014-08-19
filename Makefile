@@ -27,13 +27,13 @@ samples:
 	# Grab the samples from the ffmpeg site.
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/samples/
 
-test-assets: tests/assets/lenna.png tests/assets/320x240x4.mov tests/assets/1KHz.wav tests/assets/320x240x4.mpg
+test-assets: tests/assets/lenna.png tests/assets/320x240x4.mov tests/assets/1KHz.wav tests/assets/320x240x4.ts
 tests/assets/1KHz.wav:
 	python scripts/generate_audio.py -c 2 -r 48000 -t 4 -a 0.5 -f 1000 $@
 tests/assets/320x240x4.mov:
 	python scripts/generate_video.py -s 320x240 -r 24 -t 4 $@
-tests/assets/320x240x4.mpg:
-	python scripts/generate_video.py -s 320x240 -r 24 -t 4 -v mpeg2video $@
+tests/assets/320x240x4.ts:
+	python scripts/generate_video.py -s 320x240 -r 24 -t 4 -v mpeg2video -a -l eng $@
 tests/assets/lenna.png:
 	@ mkdir -p $(@D)
 	wget -O $@ https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png

@@ -159,7 +159,10 @@ cdef class Stream(object):
             return self._codec_context.bit_rate_tolerance if self._codec_context else None
         def __set__(self, int value):
             self._codec_context.bit_rate_tolerance = value
-            
+
+    property language:
+        def __get__(self):
+            return self.metadata.get('language')
 
 
     cpdef decode(self, Packet packet):
