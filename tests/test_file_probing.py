@@ -27,6 +27,8 @@ class TestVideoProbe(TestCase):
         self.assertEqual(stream.type, 'video')
         self.assertEqual(stream.name, 'mpeg4')
         self.assertEqual(stream.long_name, 'MPEG-4 part 2')
+        self.assertEqual(stream.bit_rate, 298480)
+        self.assertEqual(stream.max_bit_rate, None)
         self.assertEqual(stream.sample_aspect_ratio, Fraction(1, 1))
         self.assertEqual(stream.gop_size, 12)
         self.assertEqual(stream.format.name, 'yuv420p')
@@ -56,8 +58,24 @@ class TestAudioProbe(TestCase):
         self.assertEqual(stream.type, 'audio')
         self.assertEqual(stream.name, 'pcm_s16le')
         self.assertEqual(stream.long_name, 'PCM signed 16-bit little-endian')
+        self.assertEqual(stream.bit_rate, 1536000)
+        self.assertEqual(stream.max_bit_rate, None)
         self.assertEqual(stream.channels, 2)
         self.assertEqual(stream.layout.name, 'stereo')
         self.assertEqual(stream.rate, 48000)
         self.assertEqual(stream.format.name, 's16')
         self.assertEqual(stream.format.bits, 16)
+
+
+class TestMPEGVideoProbe(TestCase):
+    def setUp(self):
+        self.file = av.open(asset('320x240x4.mpg'))
+
+    def test_stream_probing(self):
+        stream = self.file.streams[0]
+        self.assertEqual(stream.index, 0)
+        try:  # Libav is able to return a bit-rate for this file, but ffmpeg doesn't, so have to rely on rc_max_rate.
+            self.assertEqual(stream.bit_rate, None)
+            self.assertEqual(stream.max_bit_rate, 104857200)
+        except AssertionError:
+            self.assertEqual(stream.bit_rate, 104857200)

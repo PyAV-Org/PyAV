@@ -136,9 +136,16 @@ cdef class Stream(object):
 
     property bit_rate:
         def __get__(self):
-            return self._codec_context.bit_rate if self._codec_context else None
+            return self._codec_context.bit_rate if self._codec_context and self._codec_context.bit_rate > 0 else None
         def __set__(self, int value):
             self._codec_context.bit_rate = value
+
+    property max_bit_rate:
+        def __get__(self):
+            if self._codec_context and self._codec_context.rc_max_rate > 0:
+                return self._codec_context.rc_max_rate
+            else:
+                return None
             
     property bit_rate_tolerance:
         def __get__(self):
