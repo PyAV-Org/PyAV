@@ -8,7 +8,7 @@ import os
 import sys
 import pprint
 
-import Image
+from PIL import Image
 
 from av import open
 

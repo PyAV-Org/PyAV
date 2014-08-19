@@ -4,7 +4,7 @@ import sys
 import pprint
 import subprocess
 
-import Image
+from PIL import Image
 
 from av import open, time_base
 
