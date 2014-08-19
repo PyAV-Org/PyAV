@@ -70,6 +70,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         # Video.
         int width
         int height
+        int coded_width
+        int coded_height
+
         AVPixelFormat pix_fmt
         AVRational sample_aspect_ratio
         int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 

@@ -201,6 +201,14 @@ cdef class VideoStream(Stream):
                 return True
             return False
 
+    property coded_width:
+        def __get__(self):
+            return self._codec_context.coded_width if self._codec_context else None
+
+    property coded_height:
+        def __get__(self):
+            return self._codec_context.coded_height if self._codec_context else None
+
     property width:
         def __get__(self):
             return self._codec_context.width if self._codec_context else None
