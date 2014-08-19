@@ -3,7 +3,7 @@ import sys
 import pprint
 import itertools
 
-import Image
+from PIL import Image
 
 from av import open
 

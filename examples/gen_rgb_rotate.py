@@ -4,7 +4,7 @@ import math
 
 import av
 from av.video.frame import VideoFrame
-import Image
+from PIL import Image
 from tests.common import sandboxed
 
 

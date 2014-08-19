@@ -1,7 +1,7 @@
 import os
 import sys
 
-import Image
+from PIL import Image
 
 
 final_width = 10 * 300 * 2
