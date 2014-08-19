@@ -113,6 +113,13 @@ cdef class Stream(object):
         def __get__(self):
             return bytes(self._codec.long_name) if self._codec else None
     
+    property profile:
+        def __get__(self):
+            if self._codec and lib.av_get_profile_name(self._codec, self._codec_context.profile):
+                return lib.av_get_profile_name(self._codec, self._codec_context.profile)
+            else:
+                return None
+
     property index:
         def __get__(self): return self._stream.index
 

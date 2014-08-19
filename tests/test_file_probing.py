@@ -27,6 +27,7 @@ class TestVideoProbe(TestCase):
         self.assertEqual(stream.type, 'video')
         self.assertEqual(stream.name, 'mpeg4')
         self.assertEqual(stream.long_name, 'MPEG-4 part 2')
+        self.assertEqual(stream.profile, 'Simple Profile')
         self.assertEqual(stream.bit_rate, 298480)
         self.assertEqual(stream.max_bit_rate, None)
         self.assertEqual(stream.sample_aspect_ratio, Fraction(1, 1))
@@ -78,6 +79,7 @@ class TestMPEGVideoProbe(TestCase):
         self.assertEqual(stream.index, 0)
         self.assertEqual(stream.width, 320)
         self.assertEqual(stream.height, 240)
+        self.assertEqual(stream.profile, 'Main')
         try:  # Libav is able to return a bit-rate for this file, but ffmpeg doesn't, so have to rely on rc_max_rate.
             self.assertEqual(stream.bit_rate, None)
             self.assertEqual(stream.max_bit_rate, 104857200)
