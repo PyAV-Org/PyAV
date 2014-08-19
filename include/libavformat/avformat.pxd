@@ -15,6 +15,9 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     
     # Initialize libavformat.
     cdef void av_register_all()
+
+    # Initialize global network.
+    cdef void avformat_network_init()
     
     cdef enum AVMediaType:
         AVMEDIA_TYPE_UNKNOWN
