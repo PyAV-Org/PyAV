@@ -35,22 +35,36 @@ if not ffmpeg_cmd and not avconv_cmd:
     print 'Unable to find ffmpeg or avconve command'
     sys.exit(-1)
 
-def testsrc(size, frame_rate, time, out_path, vcodec=None, bitrate=None, pix_fmt=None, use_avconv=False):
-    exec_cmd = ffmpeg_cmd
+def testsrc(
+        size, frame_rate, time, out_path, vcodec=None, bitrate=None, pix_fmt=None, audio=False, language=None,
+        use_avconv=False):
     if use_avconv or os.environ.get('LIBRARY', None) == 'libav':
         exec_cmd = avconv_cmd
+    elif ffmpeg_cmd:
+        exec_cmd = ffmpeg_cmd
+    else:
+        exec_cmd = avconv_cmd
     
-    exec_cmd.extend(['testsrc=size=%s:rate=%s' % (size, str(frame_rate)), '-t', str(time)])
+    exec_cmd.extend(['testsrc=size=%s:rate=%s' % (size, str(frame_rate))])
     
     if vcodec:
         exec_cmd.extend(['-vcodec',vcodec])
-        
+
     if bitrate:
         exec_cmd.extend(['-b', str(bitrate)])
     
     if pix_fmt:
         exec_cmd.extend(['-pix_fmt', pix_fmt])
-        
+
+    if audio:
+        if avconv_cmd:
+            exec_cmd.extend(['-filter_complex', 'aevalsrc=0', '-map', '0', '-map', '1'])
+        else:
+            exec_cmd.extend(['-f', 'lavfi', '-i', 'aevalsrc=0', '-map', '0', '-map', '1'])
+        if language:
+            exec_cmd.extend(['-metadata:s:a:0', 'language={0}'.format(language)])
+
+    exec_cmd.extend(['-t', str(time)])
     exec_cmd.extend([out_path])
     print subprocess.list2cmdline(exec_cmd)
     subprocess.check_call(exec_cmd)
@@ -63,7 +77,9 @@ def main():
     parser.add_option('-v', '--vcodec', help="video codec", default='mpeg4')
     parser.add_option('-b', '--bitrate', help="video bitrate")
     parser.add_option('-p', '--pix_fmt', help='pixel format')
-    parser.add_option('--use_avconv', help="force using avconv",action="store_true", default=False)
+    parser.add_option('-a', '--with-audio', help='add audio stream', action="store_true", default=False)
+    parser.add_option('-l', '--language', help='audio language')
+    parser.add_option('--use_avconv', help="force using avconv", action="store_true", default=False)
  
     (options, args) = parser.parse_args()
 
@@ -77,6 +93,8 @@ def main():
             options.vcodec,
             options.bitrate,
             options.pix_fmt,
+            options.with_audio,
+            options.language,
             use_avconv=options.use_avconv)
     
     
