@@ -195,6 +195,17 @@ cdef class VideoStream(Stream):
         def __set__(self, value):
             to_avrational(value, &self._codec_context.sample_aspect_ratio)
             
+    property display_aspect_ratio:
+        def __get__(self):
+            cdef lib.AVRational dar
+            
+            lib.av_reduce(
+                &dar.num, &dar.den,
+                self._codec_context.width * self._codec_context.sample_aspect_ratio.num,
+                self._codec_context.height * self._codec_context.sample_aspect_ratio.den, 1024*1024)
+
+            return avrational_to_faction(&dar)
+
     property has_b_frames:
         def __get__(self):
             if self._codec_context.has_b_frames:

@@ -3,6 +3,9 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 cdef extern from "libavutil/mathematics.h" nogil:
     pass
 
+cdef extern from "libavutil/rational.h" nogil:
+    cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
+
 cdef extern from "libavutil/avutil.pyav.h" nogil:
 
     cdef enum AVPixelFormat:
