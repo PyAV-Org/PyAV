@@ -49,9 +49,6 @@ def testsrc(
     
     if vcodec:
         exec_cmd.extend(['-vcodec',vcodec])
-
-    if bitrate:
-        exec_cmd.extend(['-b', str(bitrate)])
     
     if pix_fmt:
         exec_cmd.extend(['-pix_fmt', pix_fmt])
@@ -63,6 +60,9 @@ def testsrc(
             exec_cmd.extend(['-f', 'lavfi', '-i', 'aevalsrc=0', '-map', '0', '-map', '1'])
         if language:
             exec_cmd.extend(['-metadata:s:a:0', 'language={0}'.format(language)])
+
+    if bitrate:
+        exec_cmd.extend(['-b', str(bitrate)])
 
     exec_cmd.extend(['-t', str(time)])
     exec_cmd.extend([out_path])
