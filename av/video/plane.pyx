@@ -12,7 +12,10 @@ cdef class VideoPlane(Plane):
         else:
             raise RuntimeError('could not find plane %d of %r' % (index, frame.format))
 
-        self.buffer_size = self.frame.ptr.linesize[self.index] * self.component.height
+        # Sometimes, linesize is negative (and that is meaningful). We are only
+        # insisting that the buffer size be based on the extent of linesize, and
+        # ignore it's direction.
+        self.buffer_size = abs(self.frame.ptr.linesize[self.index]) * self.component.height
 
     property width:
         """Pixel width of this plane."""
