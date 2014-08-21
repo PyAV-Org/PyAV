@@ -174,8 +174,6 @@ cdef class Stream(object):
         while packet.struct.size > 0:
 
             frame = self._decode_one(&packet.struct, &data_consumed)
-            if not data_consumed:
-                raise RuntimeError('no data consumed from packet')
             if packet.struct.data:
                 packet.struct.data += data_consumed
             packet.struct.size -= data_consumed
@@ -184,6 +182,11 @@ cdef class Stream(object):
                 if isinstance(frame, Frame):
                     self._setup_frame(frame)
                 frames.append(frame)
+            
+            # Sometimes, no data is consumed, and this is ok. However, no more
+            # frames are going to be pulled out of here.
+            if not data_consumed:
+                break
 
         # Restore the packet.
         packet.struct.data = original_data
