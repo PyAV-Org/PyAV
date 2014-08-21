@@ -29,6 +29,15 @@ cdef class SubtitleSet(object):
     property pts:
         def __get__(self): return self.proxy.struct.pts
 
+    def __len__(self):
+        return len(self.rects)
+
+    def __iter__(self):
+        return iter(self.rects)
+
+    def __getitem__(self, i):
+        return self.rects[i]
+
 
 cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
     """Build an av.Stream for an existing AVStream.
