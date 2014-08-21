@@ -86,7 +86,7 @@ cdef class Stream(object):
             self.__class__.__name__,
             self.index,
             self.type or '<notype>',
-            self.codec.name or '<nocodec>',
+            self._codec.name or '<nocodec>',
             id(self),
         )
 
