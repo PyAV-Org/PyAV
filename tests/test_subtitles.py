@@ -38,10 +38,9 @@ class TestSubtitle(TestCase):
         self.assertEqual(sub.width, 200)
         self.assertEqual(sub.height, 24)
 
-        bms = sub.pict_buffers
-        self.assertIsNone(bms[1])
-        self.assertIsNone(bms[2])
-        self.assertIsNone(bms[3])
-        self.assertEqual(len(bms[0]), 4800)
+        bms = sub.planes
+        self.assertEqual(len(bms), 1)
+        self.assertEqual(len(buffer(bms[0])), 4800)
+        self.assertEqual(len(memoryview(bms[0])), 4800)
 
 

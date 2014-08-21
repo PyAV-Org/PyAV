@@ -28,4 +28,12 @@ cdef class ASSSubtitle(Subtitle):
     pass
 
 cdef class BitmapSubtitle(Subtitle):
-    pass
+    
+    cdef readonly planes
+
+cdef class BitmapSubtitlePlane(object):
+    
+    cdef readonly BitmapSubtitle subtitle
+    cdef readonly int index
+    cdef readonly long buffer_size
+    cdef void *_buffer

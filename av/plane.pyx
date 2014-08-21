@@ -45,8 +45,8 @@ cdef class Plane(object):
         data[0] = <void*>self.frame.ptr.extended_data[self.index]
         return <Py_ssize_t>self.buffer_size
 
-    def __getbuffer__(self, Py_buffer *view, int flags):
-        
 
-        PyBuffer_FillInfo(view, self, <void *> self.frame.ptr.extended_data[self.index],
-                          self.buffer_size, 0, flags)
+    # New-style buffer support.
+
+    def __getbuffer__(self, Py_buffer *view, int flags):
+        PyBuffer_FillInfo(view, self, <void *> self.frame.ptr.extended_data[self.index], self.buffer_size, 0, flags)

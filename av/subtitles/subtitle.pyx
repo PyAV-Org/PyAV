@@ -1,4 +1,4 @@
-from cpython cimport PyBuffer_FromMemory
+from cpython cimport PyBuffer_FillInfo
 
 
 cdef class SubtitleProxy(object):
@@ -8,7 +8,7 @@ cdef class SubtitleProxy(object):
 
 cdef class SubtitleSet(object):
     
-    def __init__(self, SubtitleProxy proxy):
+    def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
         cdef int i
         self.rects = tuple(build_subtitle(self, i) for i in range(self.proxy.struct.num_rects))
@@ -65,7 +65,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 
 cdef class Subtitle(object):
 
-    def __init__(self, SubtitleSet subtitle, int index):
+    def __cinit__(self, SubtitleSet subtitle, int index):
         if index < 0 or index >= subtitle.proxy.struct.num_rects:
             raise ValueError('subtitle rect index out of range')
         self.proxy = subtitle.proxy
@@ -92,6 +92,13 @@ cdef class Subtitle(object):
 
 cdef class BitmapSubtitle(Subtitle):
 
+    def __cinit__(self, SubtitleSet subtitle, int index):
+        self.planes = tuple(
+            BitmapSubtitlePlane(self, i)
+            for i in range(4)
+            if self.ptr.pict.linesize[i]
+        )
+
     def __repr__(self):
         return '<%s.%s %dx%d at %d,%d; at 0x%x>' % (
             self.__class__.__module__,
@@ -114,25 +121,58 @@ cdef class BitmapSubtitle(Subtitle):
     property nb_colors:
         def __get__(self): return self.ptr.nb_colors
 
-    property pict_line_sizes:
-        def __get__(self):
-            if self.ptr.type != lib.SUBTITLE_BITMAP:
-                return ()
-            else:
-                # return self.ptr.nb_colors
-                return tuple(self.ptr.pict.linesize[i] for i in range(4))
-    
-    property pict_buffers:
-        def __get__(self):
-            cdef float [:] buffer_
-            if self.ptr.type != lib.SUBTITLE_BITMAP:
-                return ()
-            else:
-                return tuple(
-                    PyBuffer_FromMemory(self.ptr.pict.data[i], self.width * self.height)
-                    if width else None
-                    for i, width in enumerate(self.pict_line_sizes)
-                )
+    def __len__(self):
+        return len(self.planes)
+
+    def __iter__(self):
+        return iter(self.planes)
+
+    def __getitem__(self, i):
+        return self.planes[i]
+
+
+cdef class BitmapSubtitlePlane(object):
+
+    def __cinit__(self, BitmapSubtitle subtitle, int index):
+
+        if index >= 4:
+            raise ValueError('BitmapSubtitles have only 4 planes')
+        if not subtitle.ptr.pict.linesize[index]:
+            raise ValueError('plane does not exist')
+
+        self.subtitle = subtitle
+        self.index = index
+        self.buffer_size = subtitle.ptr.w * subtitle.ptr.h
+        self._buffer = <void*>subtitle.ptr.pict.data[index]
+
+    # PyBuffer_FromMemory(self.ptr.pict.data[i], self.width * self.height)
+
+    # Legacy buffer support. For `buffer` and PIL.
+    # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
+
+    def __getsegcount__(self, Py_ssize_t *len_out):
+        if len_out != NULL:
+            len_out[0] = <Py_ssize_t>self.buffer_size
+        return 1
+
+    def __getreadbuffer__(self, Py_ssize_t index, void **data):
+        if index:
+            raise RuntimeError("accessing non-existent buffer segment")
+        data[0] = self._buffer
+        return <Py_ssize_t>self.buffer_size
+
+    def __getwritebuffer__(self, Py_ssize_t index, void **data):
+        if index:
+            raise RuntimeError("accessing non-existent buffer segment")
+        data[0] = self._buffer
+        return <Py_ssize_t>self.buffer_size
+
+
+    # New-style buffer support.
+
+    def __getbuffer__(self, Py_buffer *view, int flags):
+        PyBuffer_FillInfo(view, self, self._buffer, self.buffer_size, 0, flags)
+
 
 
 cdef class TextSubtitle(Subtitle):
