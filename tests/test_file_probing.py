@@ -8,13 +8,13 @@ class TestVideoProbe(TestCase):
         self.file = av.open(asset('320x240x4.mov'))
 
     def test_container_probing(self):
-        self.assertEqual(self.file.size, 150484)
+        self.assertEqual(self.file.size, 156088)
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mov,mp4,m4a,3gp,3g2,mj2'>")
         self.assertEqual(self.file.format.name, 'mov,mp4,m4a,3gp,3g2,mj2')
         self.assertEqual(self.file.format.long_name, "QuickTime / MOV")
         self.assertEqual(self.file.duration, 4000000L)
         self.assertEqual(float(self.file.duration) / av.time_base, 4.0)
-        self.assertEqual(self.file.bit_rate, 300968)
+        self.assertEqual(self.file.bit_rate, 309688)
         self.assertEqual(len(self.file.streams), 1)
         self.assertEqual(self.file.start_time, 0L)
         self.assertEqual(
