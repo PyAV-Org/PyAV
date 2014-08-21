@@ -22,7 +22,11 @@ cdef class AudioFormat(object):
         if name is _cinit_bypass_sentinel:
             return
 
-        cdef lib.AVSampleFormat sample_fmt = lib.av_get_sample_fmt(name)
+        cdef char *name_as_bytes
+        temp = bytes(name, 'utf-8')
+        name_as_bytes = temp
+
+        cdef lib.AVSampleFormat sample_fmt = lib.av_get_sample_fmt(name_as_bytes)
         if sample_fmt < 0:
             raise ValueError('not a sample format: %r' % name)
         self._init(sample_fmt)
@@ -31,7 +35,7 @@ cdef class AudioFormat(object):
         self.sample_fmt = sample_fmt
 
     def __repr__(self):
-        return '<av.AudioFormat %s>' % (self.name)
+        return "<av.AudioFormat '%s'>" % (self.name.decode())
 
     property name:
         """Canonical name of the sample format.
@@ -41,7 +45,7 @@ cdef class AudioFormat(object):
 
         """
         def __get__(self):
-            return lib.av_get_sample_fmt_name(self.sample_fmt)
+            return lib.av_get_sample_fmt_name(self.sample_fmt).decode()
 
     property bytes:
         """Number of bytes per sample.

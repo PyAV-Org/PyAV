@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from six.moves import range
 from .common import *
 
 
@@ -35,7 +37,7 @@ class TestVideoFramePlanes(TestCase):
         self.assertEqual(frame.planes[0].height, 480)
         self.assertEqual(frame.planes[0].line_size, 640)
         self.assertEqual(frame.planes[0].buffer_size, 640 * 480)
-        for i in xrange(1, 3):
+        for i in range(1, 3):
             self.assertEqual(frame.planes[i].width, 320)
             self.assertEqual(frame.planes[i].height, 240)
             self.assertEqual(frame.planes[i].line_size, 320)

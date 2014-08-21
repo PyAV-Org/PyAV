@@ -1,3 +1,4 @@
+from __future__ import print_function
 from .common import *
 
 
@@ -16,14 +17,14 @@ class TestAudioFifo(TestCase):
         for i, packet in enumerate(container.demux(stream)):
             for frame in packet.decode():
                 
-                print '<<<', frame
+                print('<<<', frame)
                 
                 input_.append(frame.planes[0].to_bytes())
                 fifo.write(frame)
                 while frame:
                     frame = fifo.read(512)
                     if frame:
-                        print '>>>', frame
+                        print('>>>', frame)
                         output.append(frame.planes[0].to_bytes())
 
             if len(output) > 10:

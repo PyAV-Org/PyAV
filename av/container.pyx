@@ -1,3 +1,5 @@
+from __future__ import print_function, unicode_literals
+
 from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, free
 
@@ -24,9 +26,11 @@ cdef object _base_constructor_sentinel = object()
 
 def open(name, mode='r', format=None, options=None):
     if mode == 'r':
-        return InputContainer(_base_constructor_sentinel, name, format, options)
+        return InputContainer(_base_constructor_sentinel,
+                              name.encode('utf-8'), format, options)
     if mode == 'w':
-        return OutputContainer(_base_constructor_sentinel, name, format, options)
+        return OutputContainer(_base_constructor_sentinel,
+                               name.encode('utf-8'), format, options)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
 
 
@@ -45,13 +49,13 @@ cdef class Container(object):
 
         if options is not None:
             dict_to_avdict(&self.options, options)
-            print options, <long>self.options, avdict_to_dict(self.options)
+            print(options, <long>self.options, avdict_to_dict(self.options))
 
     def __dealloc__(self):
         lib.av_dict_free(&self.options)
 
     def __repr__(self):
-        return '<av.%s %r>' % (self.__class__.__name__, self.name)
+        return '<av.{0} {1}>'.format(self.__class__.__name__, self.name.decode())
 
     cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
         raise NotImplementedError()
@@ -81,6 +85,9 @@ cdef class InputContainer(Container):
             for i in range(self.proxy.ptr.nb_streams)
         )
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
+
+    property name:
+        def __get__(self): return "{0}".format(self.name.decode('utf-8'))
 
     property start_time:
         def __get__(self): return self.proxy.ptr.start_time
@@ -209,7 +216,7 @@ cdef class OutputContainer(Container):
     def __del__(self):
         self.close()
 
-    cpdef add_stream(self, bytes codec_name, object rate=None):
+    cpdef add_stream(self, codec_name, object rate=None):
         """add_stream(codec_name, rate=None)
 
         Create a new stream, and return it.
@@ -226,7 +233,11 @@ cdef class OutputContainer(Container):
         # Find encoder
         cdef lib.AVCodec *codec
         cdef lib.AVCodecDescriptor *codec_descriptor
-        codec = lib.avcodec_find_encoder_by_name(codec_name)
+
+        cdef char *codec_name_as_bytes
+        temp = bytes(codec_name, 'utf-8')
+        codec_name_as_bytes = temp
+        codec = lib.avcodec_find_encoder_by_name(codec_name_as_bytes)
         if not codec:
             codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)
             if codec_descriptor:

@@ -1,7 +1,10 @@
+import sys
 from fractions import Fraction
-
 from .common import asset, av, TestCase
 
+# There is no good workaround for long ints in six.
+if sys.version_info[0] > 2:
+    long = int
 
 class TestAudioProbe(TestCase):
     def setUp(self):
@@ -13,7 +16,7 @@ class TestAudioProbe(TestCase):
         self.assertEqual(self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
         self.assertEqual(self.file.bit_rate, 270494)
         self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, 1400000L)
+        self.assertEqual(self.file.start_time, long(1400000))
         self.assertEqual(self.file.size, 207740)
         self.assertEqual(self.file.metadata, {})
 
@@ -41,11 +44,11 @@ class TestVideoProbe(TestCase):
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
         self.assertEqual(self.file.format.name, 'mpegts')
         self.assertEqual(self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
-        self.assertEqual(self.file.duration, 1580000L)
+        self.assertEqual(self.file.duration, long(1580000))
         self.assertEqual(float(self.file.duration) / av.time_base, 1.58)
         self.assertEqual(self.file.bit_rate, 4050632)
         self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, 22953408322L)
+        self.assertEqual(self.file.start_time, long(22953408322))
         self.assertEqual(self.file.size, 800000)
         self.assertEqual(self.file.metadata, {})
 

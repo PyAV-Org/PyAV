@@ -1,4 +1,6 @@
+from __future__ import unicode_literals
 from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
+import six
 
 cimport libav as lib
 
@@ -63,13 +65,16 @@ cdef class AudioLayout(object):
         if layout is _cinit_bypass_sentinel:
             return
 
+        cdef char *layout_as_bytes
         cdef uint64_t c_layout
         if isinstance(layout, int):
             if layout < 0 or layout > 8:
                 raise ValueError('no layout with %d channels' % layout)
             c_layout = default_layouts[layout]
-        elif isinstance(layout, basestring):
-            c_layout = lib.av_get_channel_layout(layout)
+        elif isinstance(layout, six.string_types):
+            temp = bytes(layout, 'utf-8')
+            layout_as_bytes = temp
+            c_layout = lib.av_get_channel_layout(layout_as_bytes)
         else:
             raise TypeError('layout must be str or int')
 
@@ -98,7 +103,8 @@ cdef class AudioLayout(object):
     property name:
         """The canonical name of the audio layout."""
         def __get__(self):
-            cdef bytes name = b'\0' * 32
+            temp = bytes('\0' * 32, 'utf-8')
+            cdef bytes name = temp
             # Passing 0 as number of channels... fix this later?
             lib.av_get_channel_layout_string(name, 32, 0, self.layout)
             return name.strip('\0')

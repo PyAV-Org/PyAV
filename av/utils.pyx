@@ -51,8 +51,8 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
 
     cdef bytes key_str, value_str
     for key, value in src.iteritems():
-        key_str = str(key)
-        value_str = str(value)
+        key_str = str.encode(key, 'utf-8')
+        value_str = str.encode(value, 'utf-8')
         err_check(lib.av_dict_set(dst, key_str, value_str, 0))
 
 

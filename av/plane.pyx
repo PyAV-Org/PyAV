@@ -1,6 +1,7 @@
 from libc.string cimport memcpy
-
-from cpython cimport PyString_FromStringAndSize, PyBuffer_FillInfo
+from cpython cimport PyBytes_FromStringAndSize, PyBuffer_FillInfo
+# For thorough discussion of PyString_FromStringAndSize (Python 2 only) see
+# See https://groups.google.com/forum/#!topic/cython-users/xoKNFTRagvk
 
 from .utils cimport ByteSource, bytesource
 
@@ -21,7 +22,7 @@ cdef class Plane(object):
             return self.frame.ptr.linesize[self.index]
 
     def to_bytes(self):
-        return PyString_FromStringAndSize(<char*>self.frame.ptr.extended_data[self.index], self.buffer_size)
+        return PyBytes_FromStringAndSize(<char*>self.frame.ptr.extended_data[self.index], self.buffer_size)
 
     def update(self, input):
         """Replace the data in this plane with the given buffer."""

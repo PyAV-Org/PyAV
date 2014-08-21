@@ -3,6 +3,7 @@ from __future__ import division
 import math
 from .common import *
 from av.video.stream import VideoStream
+from six.moves import range
 
 
 class TestBasicVideoEncoding(TestCase):
@@ -24,7 +25,7 @@ class TestBasicVideoEncoding(TestCase):
         stream.height = height
         stream.pix_fmt = "yuv420p"
 
-        for frame_i in xrange(duration):
+        for frame_i in range(duration):
 
             frame = VideoFrame(width, height, 'rgb24')
             image = Image.new('RGB', (width, height), (

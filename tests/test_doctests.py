@@ -3,6 +3,7 @@ import doctest
 import os
 import re
 import sys
+import six
 
 import av
 

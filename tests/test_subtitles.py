@@ -1,7 +1,9 @@
+import sys
 from .common import *
-
 from av.subtitles.subtitle import *
 
+if sys.version_info[0] < 3:
+    buffer = memoryview
 
 class TestSubtitle(TestCase):
 

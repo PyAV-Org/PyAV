@@ -1,16 +1,18 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import sys
 import wave
 import math
 import struct
 import random
 import optparse
-from itertools import *
+from six.moves import zip, map, range
+from itertools import islice, count, zip_longest
 
 def grouper(n, iterable, fillvalue=None):
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
-    return izip_longest(fillvalue=fillvalue, *args)
+    return zip_longest(fillvalue=fillvalue, *args)
 
 def sine_wave(frequency=440.0, framerate=44100, amplitude=0.5):
     '''
@@ -19,7 +21,7 @@ def sine_wave(frequency=440.0, framerate=44100, amplitude=0.5):
     period = int(framerate / frequency)
     if amplitude > 1.0: amplitude = 1.0
     if amplitude < 0.0: amplitude = 0.0
-    lookup_table = [float(amplitude) * math.sin(2.0*math.pi*float(frequency)*(float(i%period)/float(framerate))) for i in xrange(period)]
+    lookup_table = [float(amplitude) * math.sin(2.0*math.pi*float(frequency)*(float(i%period)/float(framerate))) for i in range(period)]
     return (lookup_table[i%period] for i in count(0))
 
 def square_wave(frequency=440.0, framerate=44100, amplitude=0.5):
@@ -49,7 +51,7 @@ def compute_samples(channels, nsamples=None):
     essentially it creates a sequence of the sum of each function in the channel
     at each sample in the file for each channel.
     '''
-    return islice(izip(*(imap(sum, izip(*channel)) for channel in channels)), nsamples)
+    return islice(zip(*(map(sum, zip(*channel)) for channel in channels)), nsamples)
 
 def write_wavefile(filename, samples, nframes=None, nchannels=2, sampwidth=2, framerate=44100, bufsize=2048):
     "Write samples to a wavefile."

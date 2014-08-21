@@ -109,7 +109,8 @@ cdef int async_log_callback(void *arg) except -1:
         level = level_map.get(req.level, 20)
         item_name = req.item_name if req.item_name else b''
         logger_name = b'libav.' + item_name if item_name else b'libav.generic'
-        logging.getLogger(logger_name).log(level, req.message.strip())
+        logger = logging.getLogger(logger_name.decode('utf-8'))
+        logger.log(level, req.message.strip())
     except Exception as e:
         fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
             req.item_name, req.level, req.message

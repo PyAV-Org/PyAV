@@ -1,11 +1,11 @@
 from __future__ import division
 
+from six.moves import zip, range
 import datetime
 import errno
 import os
 import sys
 from unittest import TestCase as _Base
-from itertools import izip
 from fractions import Fraction
 from subprocess import check_call
 
@@ -107,8 +107,8 @@ class TestCase(_Base):
         self.assertEqual(a.size, b.size, 'sizes dont match')
         a = a.filter(ImageFilter.BLUR).getdata()
         b = b.filter(ImageFilter.BLUR).getdata()
-        for i, ax, bx in izip(xrange(len(a)), a, b):
-            diff = sum(abs(ac / 256 - bc / 256) for ac, bc in izip(ax, bx)) / 3
+        for i, ax, bx in zip(range(len(a)), a, b):
+            diff = sum(abs(ac / 256 - bc / 256) for ac, bc in zip(ax, bx)) / 3
             if diff > epsilon:
                 self.fail('images differed by %s at index %d; %s %s' % (diff, i, ax, bx))
 

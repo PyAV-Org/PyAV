@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 
 
@@ -26,7 +27,11 @@ cdef class VideoFormat(object):
         if name is _cinit_bypass_sentinel:
             return
 
-        cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name)
+        cdef char *name_as_bytes
+        temp = bytes(name, 'utf-8')
+        name_as_bytes = temp
+
+        cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name_as_bytes)
         if pix_fmt < 0:
             raise ValueError('not a pixel format: %r' % name)
         self._init(pix_fmt, width, height)
@@ -48,12 +53,13 @@ cdef class VideoFormat(object):
             PyTuple_SET_ITEM(self.components, i, c)
 
     def __repr__(self):
-        return '<av.%s %s, %dx%d>' % (self.__class__.__name__, self.name, self.width, self.height)
+        return "<av.{0} '{1}', {2}x{3}>".format(
+            self.__class__.__name__, self.name.decode('utf-8'), self.width, self.height)
 
     property name:
         """Canonical name of the pixel format."""
         def __get__(self):
-            return self.ptr.name
+            return "{0}".format(self.ptr.name.decode('utf-8'))
 
     property is_big_endian:
         """Pixel format is big-endian."""
