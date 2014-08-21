@@ -6,12 +6,12 @@ cdef class SubtitleProxy(object):
         lib.avsubtitle_free(&self.struct)
 
 
-cdef class Subtitle(object):
+cdef class SubtitleSet(object):
     
     def __init__(self, SubtitleProxy proxy):
         self.proxy = proxy
         cdef int i
-        self.rects = tuple(SubtitleRect(self, i) for i in range(self.proxy.struct.num_rects))
+        self.rects = tuple(build_subtitle(self, i) for i in range(self.proxy.struct.num_rects))
     
     def __repr__(self):
         return '<%s.%s at 0x%x>' % (
@@ -30,9 +30,33 @@ cdef class Subtitle(object):
         def __get__(self): return self.proxy.struct.pts
 
 
-cdef class SubtitleRect(object):
+cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
+    """Build an av.Stream for an existing AVStream.
 
-    def __init__(self, Subtitle subtitle, int index):
+    The AVStream MUST be fully constructed and ready for use before this is
+    called.
+
+    """
+    
+    if index < 0 or index >= subtitle.proxy.struct.num_rects:
+        raise ValueError('subtitle rect index out of range')
+    cdef lib.AVSubtitleRect *ptr = subtitle.proxy.struct.rects[index]
+
+    if ptr.type == lib.SUBTITLE_NONE:
+        return Subtitle(subtitle, index)
+    elif ptr.type == lib.SUBTITLE_BITMAP:
+        return BitmapSubtitle(subtitle, index)
+    elif ptr.type == lib.SUBTITLE_TEXT:
+        return TextSubtitle(subtitle, index)
+    elif ptr.type == lib.SUBTITLE_ASS:
+        return AssSubtitle(subtitle, index)
+    else:
+        raise ValueError('unknown subtitle type %r' % ptr.type)
+
+
+cdef class Subtitle(object):
+
+    def __init__(self, SubtitleSet subtitle, int index):
         if index < 0 or index >= subtitle.proxy.struct.num_rects:
             raise ValueError('subtitle rect index out of range')
         self.proxy = subtitle.proxy
@@ -50,17 +74,26 @@ cdef class SubtitleRect(object):
             raise ValueError('unknown subtitle type %r' % self.ptr.type)
     
     def __repr__(self):
-        return '<%s.%s %s %dx%d at %d,%d; at 0x%x>' % (
+        return '<%s.%s at 0x%x>' % (
             self.__class__.__module__,
             self.__class__.__name__,
-            self.type,
+            id(self),
+        )
+
+
+cdef class BitmapSubtitle(Subtitle):
+
+    def __repr__(self):
+        return '<%s.%s %dx%d at %d,%d; at 0x%x>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
             self.width,
             self.height,
             self.x,
             self.y,
             id(self),
         )
-    
+
     property x:
         def __get__(self): return self.ptr.x
     property y:
@@ -71,11 +104,6 @@ cdef class SubtitleRect(object):
         def __get__(self): return self.ptr.h
     property nb_colors:
         def __get__(self): return self.ptr.nb_colors
-    property text:
-        def __get__(self): return self.ptr.text
-        
-    property ass:
-        def __get__(self): return self.ptr.ass
 
     property pict_line_sizes:
         def __get__(self):
@@ -96,3 +124,32 @@ cdef class SubtitleRect(object):
                     if width else None
                     for i, width in enumerate(self.pict_line_sizes)
                 )
+
+
+cdef class TextSubtitle(Subtitle):
+    
+    def __repr__(self):
+        return '<%s.%s %r at 0x%x>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.text,
+            id(self),
+        )
+
+    property text:
+        def __get__(self): return self.ptr.text
+
+
+cdef class AssSubtitle(Subtitle):
+    
+    def __repr__(self):
+        return '<%s.%s %r at 0x%x>' % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.ass,
+            id(self),
+        )
+
+    property ass:
+        def __get__(self): return self.ptr.ass
+
