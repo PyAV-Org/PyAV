@@ -3,95 +3,72 @@ from fractions import Fraction
 from .common import asset, av, TestCase
 
 
-class TestVideoProbe(TestCase):
-    def setUp(self):
-        self.file = av.open(asset('320x240x4.mov'))
-
-    def test_container_probing(self):
-        self.assertEqual(self.file.size, 156088)
-        self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mov,mp4,m4a,3gp,3g2,mj2'>")
-        self.assertEqual(self.file.format.name, 'mov,mp4,m4a,3gp,3g2,mj2')
-        self.assertEqual(self.file.format.long_name, "QuickTime / MOV")
-        self.assertEqual(self.file.duration, 4000000L)
-        self.assertEqual(float(self.file.duration) / av.time_base, 4.0)
-        self.assertEqual(self.file.bit_rate, 309688)
-        self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, 0L)
-        self.assertEqual(
-            self.file.metadata,
-            {'major_brand': 'qt  ', 'encoder': 'Lavf55.48.101', 'compatible_brands': 'qt  ', 'minor_version': '512'})
-
-    def test_stream_probing(self):
-        stream = self.file.streams[0]
-        self.assertEqual(stream.index, 0)
-        self.assertEqual(stream.type, 'video')
-        self.assertEqual(stream.name, 'mpeg4')
-        self.assertEqual(stream.long_name, 'MPEG-4 part 2')
-        self.assertEqual(stream.profile, 'Simple Profile')
-        self.assertEqual(stream.bit_rate, 298480)
-        self.assertEqual(stream.max_bit_rate, None)
-        self.assertEqual(stream.sample_aspect_ratio, Fraction(1, 1))
-        self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
-        self.assertEqual(stream.gop_size, 12)
-        self.assertEqual(stream.format.name, 'yuv420p')
-        self.assertFalse(stream.has_b_frames)
-        self.assertEqual(stream.guessed_rate, Fraction(24, 1))
-        self.assertEqual(stream.average_rate, Fraction(24, 1))
-        self.assertEqual(stream.width, 320)
-        self.assertEqual(stream.height, 240)
-        self.assertEqual(stream.coded_width, 320)
-        self.assertEqual(stream.coded_height, 240)
-
-
 class TestAudioProbe(TestCase):
     def setUp(self):
-        self.file = av.open(asset('1KHz.wav'))
+        self.file = av.open(asset('latm_stereo_to_51.ts'))
 
     def test_container_probing(self):
-        self.assertEqual(str(self.file.format), "<av.ContainerFormat 'wav'>")
-        self.assertEqual(self.file.format.name, 'wav')
-        self.assertEqual(self.file.format.long_name, "WAV / WAVE (Waveform Audio)")
-        self.assertEqual(self.file.duration, 4000000L)
-        self.assertEqual(float(self.file.duration) / av.time_base, 4.0)
-        self.assertEqual(self.file.bit_rate, 1536088)
+        self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
+        self.assertEqual(self.file.format.name, 'mpegts')
+        self.assertEqual(self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
+        self.assertEqual(self.file.bit_rate, 270494)
         self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, -9223372036854775808L)
+        self.assertEqual(self.file.start_time, 1400000L)
+        self.assertEqual(self.file.size, 207740)
         self.assertEqual(self.file.metadata, {})
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
         self.assertEqual(stream.index, 0)
         self.assertEqual(stream.type, 'audio')
-        self.assertEqual(stream.name, 'pcm_s16le')
-        self.assertEqual(stream.long_name, 'PCM signed 16-bit little-endian')
-        self.assertEqual(stream.bit_rate, 1536000)
+        self.assertEqual(stream.name, 'aac_latm')
+        self.assertEqual(stream.long_name, 'AAC LATM (Advanced Audio Coding LATM syntax)')
+        self.assertEqual(stream.bit_rate, None)
         self.assertEqual(stream.max_bit_rate, None)
         self.assertEqual(stream.channels, 2)
         self.assertEqual(stream.layout.name, 'stereo')
         self.assertEqual(stream.rate, 48000)
-        self.assertEqual(stream.format.name, 's16')
-        self.assertEqual(stream.format.bits, 16)
+        self.assertEqual(stream.format.name, 'fltp')
+        self.assertEqual(stream.format.bits, 32)
+        self.assertEqual(stream.language, "eng")
 
 
-class TestMPEGVideoProbe(TestCase):
+class TestVideoProbe(TestCase):
     def setUp(self):
-        self.file = av.open(asset('320x240x4.ts'))
+        self.file = av.open(asset('mpeg2_field_encoding.ts'))
+
+    def test_container_probing(self):
+        self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
+        self.assertEqual(self.file.format.name, 'mpegts')
+        self.assertEqual(self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
+        self.assertEqual(self.file.duration, 1580000L)
+        self.assertEqual(float(self.file.duration) / av.time_base, 1.58)
+        self.assertEqual(self.file.bit_rate, 4050632)
+        self.assertEqual(len(self.file.streams), 1)
+        self.assertEqual(self.file.start_time, 22953408322L)
+        self.assertEqual(self.file.size, 800000)
+        self.assertEqual(self.file.metadata, {})
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
         self.assertEqual(stream.index, 0)
-        self.assertEqual(stream.width, 320)
-        self.assertEqual(stream.height, 240)
-        self.assertEqual(stream.coded_width, 320)
-        self.assertEqual(stream.coded_height, 240)
-        self.assertEqual(stream.sample_aspect_ratio, Fraction(1, 1))
-        self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
+        self.assertEqual(stream.type, 'video')
+        self.assertEqual(stream.name, 'mpeg2video')
+        self.assertEqual(stream.long_name, 'MPEG-2 video')
+        self.assertEqual(stream.profile, 'Simple')
         try:  # Libav is able to return a bit-rate for this file, but ffmpeg doesn't, so have to rely on rc_max_rate.
             self.assertEqual(stream.bit_rate, None)
-            self.assertEqual(stream.max_bit_rate, 104857200)
+            self.assertEqual(stream.max_bit_rate, 3364800)
         except AssertionError:
-            self.assertEqual(stream.bit_rate, 104857200)
-
-    def test_audio_stream_probing(self):
-        stream = self.file.streams[1]
-        self.assertEqual(stream.language, "eng")
+            self.assertEqual(stream.bit_rate, 3364800)
+        self.assertEqual(stream.sample_aspect_ratio, Fraction(16, 15))
+        self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
+        self.assertEqual(stream.gop_size, 12)
+        self.assertEqual(stream.format.name, 'yuv420p')
+        self.assertFalse(stream.has_b_frames)
+        self.assertEqual(stream.guessed_rate, Fraction(25, 1))
+        self.assertEqual(stream.average_rate, Fraction(25, 1))
+        self.assertEqual(stream.width, 720)
+        self.assertEqual(stream.height, 576)
+        self.assertEqual(stream.coded_width, 720)
+        self.assertEqual(stream.coded_height, 576)

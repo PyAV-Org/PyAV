@@ -17,4 +17,5 @@
 # Testing.
 /sandbox
 /tests/assets
+/tests/samples
 /.vagrant
