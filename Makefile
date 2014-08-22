@@ -23,9 +23,9 @@ src/%.c: %.pyx
 build: cythonize
 	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace --debug
 
-samples:
-	# Grab the samples from the ffmpeg site.
-	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/samples/
+fate-suite:
+	# Grab ALL of the samples from the ffmpeg site.
+	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 test-assets: tests/assets/lenna.png tests/assets/320x240x4.mov tests/assets/1KHz.wav tests/assets/latm_stereo_to_51.ts tests/assets/mpeg2_field_encoding.ts
 tests/assets/1KHz.wav:

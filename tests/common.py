@@ -7,6 +7,7 @@ import sys
 from unittest import TestCase as _Base
 from itertools import izip
 from fractions import Fraction
+from subprocess import check_call
 
 from nose.plugins.skip import SkipTest
 
@@ -19,6 +20,19 @@ from av.packet import Packet
 from av.stream import Stream
 from av.utils import AVError
 from av.video import VideoFrame
+
+
+def fate_suite(name):
+    fate_dir = os.path.abspath(os.path.join(
+        __file__, '..',
+        'assets', 'fate-suite',
+    ))
+    path = os.path.join(fate_dir, name)
+    if not os.path.exists(path):
+        makedirs(os.path.dirname(path))
+        url = 'http://fate.ffmpeg.org/fate-suite/' + name
+        check_call(['curl', '-o', path, url])
+    return path
 
 
 def makedirs(path):

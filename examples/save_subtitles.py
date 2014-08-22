@@ -24,16 +24,23 @@ if not streams:
     print 'no subtitles'
     exit(1)
 
+print streams
+
 count = 0
-for packet in video.demux([streams[0]]):
+for pi, packet in enumerate(video.demux([streams[0]])):
     
-    for subtitle in packet.decode():
+    print 'packet', pi
+    for si, subtitle in enumerate(packet.decode()):
+
+        print '\tsubtitle', si, subtitle
         
-        for rect in subtitle.rects:
+        for ri, rect in enumerate(subtitle.rects):
             if rect.type == 'ass':
-                print rect.ass.rstrip('\n')
+                print '\t\tass: ', rect, rect.ass.rstrip('\n')
+            if rect.type == 'text':
+                print '\t\ttext: ', rect, rect.text.rstrip('\n')
             if rect.type == 'bitmap':
-                print rect.width, rect.height, rect.pict_buffers
+                print '\t\tbitmap: ', rect, rect.width, rect.height, rect.pict_buffers
                 buffers = [b for b in rect.pict_buffers if b is not None]
                 if buffers:
                     imgs = [
