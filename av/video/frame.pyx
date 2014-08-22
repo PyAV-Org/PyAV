@@ -43,7 +43,7 @@ cdef class VideoFrame(Frame):
         cdef int buffer_size
 
         if width and height:
-            
+
             # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
 
@@ -80,7 +80,7 @@ cdef class VideoFrame(Frame):
             self.height,
             id(self),
         )
-    
+
 
     def to_rgb(self):
         """Get an RGB version of this frame.
@@ -94,8 +94,21 @@ cdef class VideoFrame(Frame):
         """
         return self.reformat(self.width, self.height, "rgb24")
 
+    def to_colorspace(self,colorspace):
+        """Get an versio of this frame in a different colorspace.
+        :param str colorspace: New color format
+
+        >>> frame = VideoFrame(1920, 1080)
+        >>> frame.format.name
+        'yuv420p'
+        >>> frame.to_colorspace('rgb24').format.name
+        'rgb24'
+
+        """
+        return self.reformat(self.width, self.height,colorspace)
+
     def reformat(self, unsigned int width, unsigned int height, char* dst_format_str, src_colorspace = None, dst_colorspace = None):
-    
+
         """reformat(width, height, format)
 
         Create a new :class:`VideoFrame` with the given width/height/format.
@@ -105,30 +118,30 @@ cdef class VideoFrame(Frame):
         :param bytes format: New format; see :attr:`VideoFrame.format`.
 
         """
-        
+
 
         cdef lib.AVPixelFormat dst_format = lib.av_get_pix_fmt(dst_format_str)
         if dst_format == lib.AV_PIX_FMT_NONE:
             raise ValueError("invalid format %s" % dst_format_str)
 
-        
+
         colorspace_dict = {'itu709': lib.SWS_CS_ITU709,
                            'fcc': lib.SWS_CS_FCC,
                            'itu601': lib.SWS_CS_ITU601,
                            'itu624': lib.SWS_CS_SMPTE170M,
                            'smpte240': lib.SWS_CS_SMPTE240M,
                            'default': lib.SWS_CS_DEFAULT}
-        
+
         cdef int cs_src = lib.SWS_CS_DEFAULT
         cdef int cs_dst = lib.SWS_CS_DEFAULT
-        
+
         if not src_colorspace is None:
             cs_src = colorspace_dict[src_colorspace.lower()]
-        
+
         if not dst_colorspace is None:
             cs_dst = colorspace_dict[dst_colorspace.lower()]
-        
-        
+
+
         return self._reformat(width, height, dst_format, cs_src, cs_dst)
 
     cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
@@ -137,7 +150,7 @@ cdef class VideoFrame(Frame):
             raise ValueError("invalid source format")
 
         cdef lib.AVPixelFormat src_format = <lib.AVPixelFormat> self.ptr.format
-        
+
         # Shortcut!
         if dst_format == src_format and width == self.ptr.width and height == self.ptr.height:
             return self
@@ -145,7 +158,7 @@ cdef class VideoFrame(Frame):
         # If VideoFrame doesn't have a SwsContextProxy create one
         if not self.reformatter:
             self.reformatter = VideoReformatter()
-        
+
         # Try and reuse existing SwsContextProxy
         # VideoStream.decode will copy its SwsContextProxy to VideoFrame
         # So all Video frames from the same VideoStream should have the same one
@@ -163,32 +176,32 @@ cdef class VideoFrame(Frame):
                 NULL,
                 NULL
             )
-        
+
         cdef int *inv_tbl = NULL
         cdef int *tbl = NULL
         cdef int *rgbTbl = NULL
-        
+
         cdef int srcRange, dstRange, brightness, contrast, saturation
-        
+
         cdef int ret
-        
+
         ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
-        
+
         # not all pix_fmt colorspace details supported should log...
         if not ret < 0:
             if src_colorspace != lib.SWS_CS_DEFAULT:
                 inv_tbl = lib.sws_getCoefficients(src_colorspace)
-            
+
             if dst_colorspace !=  lib.SWS_CS_DEFAULT:
                 tbl = lib.sws_getCoefficients(dst_colorspace)
-            
+
             lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
-        
+
         # Create a new VideoFrame
-        
+
         cdef VideoFrame frame = alloc_video_frame()
         frame._init(dst_format, width, height)
-        
+
         # Finally Scale the image
         with nogil:
             lib.sws_scale(
@@ -200,14 +213,14 @@ cdef class VideoFrame(Frame):
                 frame.ptr.data,
                 frame.ptr.linesize,
             )
-        
+
         # Copy some properties.
         frame.index = self.index
         frame.time_base = self.time_base
         frame.ptr.pts = self.ptr.pts
-        
+
         return frame
-        
+
     property width:
         """Width of the image, in pixels."""
         def __get__(self): return self.ptr.width
@@ -215,14 +228,22 @@ cdef class VideoFrame(Frame):
     property height:
         """Height of the image, in pixels."""
         def __get__(self): return self.ptr.height
-        
+
     property key_frame:
         """Is this frame a key frame?"""
         def __get__(self): return self.ptr.key_frame
-        
+
     def to_image(self):
         import PIL.Image
         return PIL.Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
+
+    def to_nd_array(self,colorspace="bgr24"):
+        """
+        numpy array from frame contents
+        :param str colorspace: color format of image; Defaults to OpenCV convention.
+        """
+        import numpy as np
+        return np.frombuffer(self.to_colorspace(colorspace).planes[0],np.uint8).reshape(self.height,self.width,-1)
 
     @classmethod
     def from_image(cls, img):

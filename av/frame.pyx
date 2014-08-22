@@ -32,7 +32,16 @@ cdef class Frame(object):
                 self.ptr.pts = lib.AV_NOPTS_VALUE
             else:
                 self.ptr.pts = value
-                
+
+
+    property time_base:
+        """Presentation time stamp of this frame."""
+        def __get__(self):
+            return self.time_base
+        def __set__(self, value):
+            self.time_base.num = value.numerator
+            self.time_base.den = value.denominator
+
     property dts:
         def __get__(self):
             if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
