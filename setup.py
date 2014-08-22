@@ -107,7 +107,34 @@ def check_for_func(lib_names, func_name):
             print '\n'.join('\t' + path for path in lib_paths)
             continue
 
-        return hasattr(lib, func_name)
+
+        if hasattr(lib, func_name):
+            extension_extra.setdefault('define_macros', []).append(('HAVE_%s' % func_name.upper(), '1'))
+            return
+
+
+extension_extra = {
+    'include_dirs': ['include'],
+}
+
+
+# Get the config for the libraries that we require.
+for name in 'libavformat libavcodec libavdevice libavutil libswscale'.split():
+    config = pkg_config(name)
+    if not config:
+        print 'Could not find', name, 'with pkg-config.'
+    else:
+        update_extend(extension_extra, config)
+
+
+# Get the config for either swresample OR avresample.
+config = pkg_config('libswresample')
+if not config:
+    config = pkg_config('libavresample')
+if not config:
+    print 'Could not find either of libswresample or libavresample with pkg-config.'
+else:
+    update_extend(extension_extra, config)
 
 # Check for some specific functions.
 for libs, func in (

@@ -10,6 +10,7 @@ include "libavutil/dict.pxd"
 include "libavutil/samplefmt.pxd"
 
 include "libavcodec/avcodec.pxd"
+include "libavdevice/avdevice.pxd"
 include "libavformat/avformat.pxd"
 include "libswresample/swresample.pxd"
 include "libswscale/swscale.pxd"
