@@ -1,4 +1,6 @@
 In alphabetical order:
 
-Mark Reid (https://github.com/markreidvfx)
-Mike Boers <github@mikeboers.com>
+Billy Shambrook; @billyshambrook
+Dan Allan <dallan@pha.jhu.edu>; @danielballan
+Mark Reid <mindmark@gmail.com>; @markreidvfx
+Mike Boers <github@mikeboers.com>; @mikeboers
