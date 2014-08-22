@@ -84,12 +84,14 @@ class TestSeek(TestCase):
         container = av.open(asset('320x240x4.mov'))
         
         video_stream = next(s for s in container.streams if s.type == 'video')
-        total_frame_count = -1
+        total_frame_count = 0
         
         # Count number of frames in video
         for packet in container.demux(video_stream):
             for frame in packet.decode():
                 total_frame_count += 1
+        
+        self.assertEqual(video_stream.frames, total_frame_count)
         
         # set target frame to middle frame
         target_frame = int(total_frame_count/ 2.0)
@@ -99,7 +101,7 @@ class TestSeek(TestCase):
         container.seek(target_timestamp)
         
         current_frame = None
-        frame_count = -1
+        frame_count =  0
         
         for packet in container.demux(video_stream):
             for frame in packet.decode():
@@ -112,7 +114,7 @@ class TestSeek(TestCase):
                 # start counting once we reach the target frame
                 if current_frame is not None and current_frame >= target_frame:
                     frame_count += 1
-        
+
         self.assertEqual(frame_count, total_frame_count- target_frame)
 
 

@@ -116,7 +116,7 @@ cdef class VideoFrame(Frame):
                            'fcc': lib.SWS_CS_FCC,
                            'itu601': lib.SWS_CS_ITU601,
                            'itu624': lib.SWS_CS_SMPTE170M,
-                           'smpte240,': lib.SWS_CS_SMPTE240M,
+                           'smpte240': lib.SWS_CS_SMPTE240M,
                            'default': lib.SWS_CS_DEFAULT}
         
         cdef int cs_src = lib.SWS_CS_DEFAULT
