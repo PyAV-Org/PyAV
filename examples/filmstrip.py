@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import pprint
@@ -8,18 +9,28 @@ from PIL import Image
 from av import open
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--format')
+parser.add_argument('-n', '--frames', type=int, default=0)
+parser.add_argument('path', nargs='+')
+args = parser.parse_args()
+
 max_size = 24 * 60 # One minute's worth.
 
 
 def frame_iter(video):
+    count = 0
     streams = [s for s in video.streams if s.type == b'video']
     streams = [streams[0]]
     for packet in video.demux(streams):
         for frame in packet.decode():
             yield frame
+            count += 1
+            if args.frames and count > args.frames:
+                return
 
 
-for src_path in sys.argv[1:]:
+for src_path in args.path:
 
     print src_path
 
@@ -28,7 +39,7 @@ for src_path in sys.argv[1:]:
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
-    video = open(src_path)
+    video = open(src_path, format=args.format)
     frames = frame_iter(video)
 
     for chunk_i in itertools.count(1):
@@ -40,7 +51,7 @@ for src_path in sys.argv[1:]:
             if chunk is None:
                 chunk = Image.new("RGB", (max_size, frame.height))
 
-            img = Image.frombuffer("RGB", (frame.width, frame.height), frame.to_rgb(), "raw", "RGB", 0, 1)
+            img = frame.to_image()
             img = img.resize((1, frame.height), Image.ANTIALIAS)
             chunk.paste(img, (frame_i, 0))
 

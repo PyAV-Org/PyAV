@@ -17,6 +17,7 @@ def format_time(time, time_base):
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('path')
+arg_parser.add_argument('-f', '--format')
 arg_parser.add_argument('-a', '--audio', action='store_true')
 arg_parser.add_argument('-v', '--video', action='store_true')
 arg_parser.add_argument('-s', '--subs', action='store_true')
@@ -28,7 +29,7 @@ args = arg_parser.parse_args()
 
 proc = None
 
-video = open(args.path)
+video = open(args.path, format=args.format)
 
 print 'container:', video
 print '\tformat:', video.format

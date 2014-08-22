@@ -42,9 +42,6 @@ cdef class Container(object):
         self.name = name
         self.proxy = ContainerProxy()
 
-        if format_name is not None:
-            self.proxy.ptr.iformat = self.format.in_
-            self.proxy.ptr.oformat = self.format.out
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
@@ -53,8 +50,14 @@ cdef class Container(object):
 cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
+
         err_check(
-            lib.avformat_open_input(&self.proxy.ptr, self.name, NULL, NULL),
+            lib.avformat_open_input(
+                &self.proxy.ptr,
+                self.name,
+                self.format.in_ if self.format else NULL,
+                NULL
+            ),
             self.name,
         )
         err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
@@ -172,13 +175,13 @@ cdef class OutputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
 
-        cdef lib.AVOutputFormat* container_format = lib.av_guess_format(NULL, self.name, NULL)
-        if not container_format:
+        cdef lib.AVOutputFormat* format = self.format.out if self.format else lib.av_guess_format(NULL, self.name, NULL)
+        if not format:
             raise ValueError("Could not deduce output format")
 
         err_check(lib.avformat_alloc_output_context2(
             &self.proxy.ptr,
-            container_format,
+            format,
             NULL,
             self.name,
         ))
