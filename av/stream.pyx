@@ -39,9 +39,10 @@ cdef Stream build_stream(Container container, lib.AVStream *c_stream):
     py_stream._init(container, c_stream)
     return py_stream
 
+
 cdef int pyav_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
     
-    # Get the buffer the way it would normally get it
+    # Get the default buffer.
     cdef int ret
     ret = lib.avcodec_default_get_buffer(ctx, frame)
 
@@ -53,25 +54,18 @@ cdef int pyav_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
     # http://dranger.com/ffmpeg/tutorial05.html. this is the done the same way but
     # we use AVCodecContext.opaque so we don't need a global variable.
     
-    # Allocate a new int64_t to be stored in AVFrame
     cdef int64_t *pkt_pts = <int64_t*>lib.av_malloc(sizeof(int64_t))
     if not pkt_pts:
         return lib.AVERROR_NOMEM
-    
-    # Copy Packet pts
     memcpy(pkt_pts, ctx.opaque, sizeof(int64_t))
-    
-    # Assign AVFrame.opaque pointer to new PacketInfo
     frame.opaque = pkt_pts
     
-    #return the result of avcodec_default_get_buffer
     return ret
+
 
 cdef void pyav_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
     if frame:
-        #Free AVFrame packet pts
-        lib.av_freep(&frame.opaque)
-
+        lib.av_freep(frame.opaque)
     lib.avcodec_default_release_buffer(ctx, frame)
     
     
@@ -93,13 +87,13 @@ cdef class Stream(object):
         self.metadata = avdict_to_dict(stream.metadata)
         self.packet_pts = lib.AV_NOPTS_VALUE
         
+        # This is an input container!
         if self._container.ptr.iformat:
 
             # Find the codec.
             self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
             if self._codec == NULL:
                 return
-                #raise RuntimeError('could not find %s codec' % self.type)
             
             # Open the codec.
             try:
@@ -109,13 +103,12 @@ cdef class Stream(object):
                 self._codec = NULL
                 raise
             
+            # For fetching accurate(ish) PTS values.
             self._codec_context.opaque = &self.packet_pts
-            
             self._codec_context.get_buffer = pyav_get_buffer
-            self._codec_context.release_buffer = pyav_release_buffer
+            self._codec_context.release_buffer = pyav_release_buffer 
             
-            
-        # Output container.
+        # This is an output container!
         else:
             self._codec = self._codec_context.codec
 
@@ -167,7 +160,6 @@ cdef class Stream(object):
     property index:
         def __get__(self): return self._stream.index
 
-
     property time_base:
         def __get__(self): return avrational_to_faction(&self._stream.time_base)
 
@@ -182,6 +174,7 @@ cdef class Stream(object):
 
     property start_time:
         def __get__(self): return self._stream.start_time
+
     property duration:
         def __get__(self):
             if self._stream.duration == lib.AV_NOPTS_VALUE:
@@ -190,7 +183,6 @@ cdef class Stream(object):
 
     property frames:
         def __get__(self): return self._stream.nb_frames
-    
 
     property bit_rate:
         def __get__(self):
@@ -215,10 +207,9 @@ cdef class Stream(object):
         def __get__(self):
             return self.metadata.get('language')
 
-
-    cpdef decode(self, Packet packet = None):
+    cpdef decode(self, Packet packet=None):
     
-        # None Packet Signals Flushing Codec
+        # Flush!
         if packet is None:
             return self._flush_decoder_frames()
 
@@ -233,7 +224,6 @@ cdef class Stream(object):
         cdef int64_t packet_dts = packet.struct.dts
         cdef int64_t * packet_pts_ptr
         cdef int64_t packet_pts
-        cdef int64_t best_effort
         
         cdef int decoder_reorder_pts = 1
         
@@ -289,7 +279,7 @@ cdef class Stream(object):
 
         return decoded_objs
     
-    def seek(self, lib.int64_t timestamp, mode = 'backward'):
+    def seek(self, lib.int64_t timestamp, mode='backward'):
         """
         Seek to the keyframe at timestamp.
         """
@@ -308,17 +298,13 @@ cdef class Stream(object):
             else:
                 raise ValueError("Invalid mode %s" % str(mode))
         
-        cdef int result
-        with nogil:
-            result = lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags)
-        err_check(result)
-        
+        err_check(lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags))
         self.flush_buffers()
         
     cdef flush_buffers(self):
-        # flush codec buffers
+        cdef int i
         cdef lib.AVStream *stream
-        for i in xrange(self._container.ptr.nb_streams):
+        for i in range(self._container.ptr.nb_streams):
             stream = self._container.ptr.streams[i]
             if stream.codec:
                 # don't try and flush unkown codecs
@@ -326,7 +312,6 @@ cdef class Stream(object):
                     if not stream.codec.codec_id == lib.AV_CODEC_ID_NONE:
                         lib.avcodec_flush_buffers(stream.codec)
         
-    
     cdef _flush_decoder_frames(self):
         cdef int data_consumed = 0
         cdef list frames = []
@@ -359,7 +344,6 @@ cdef class Stream(object):
         return frames
  
     cdef _setup_frame(self, Frame frame):
-        #frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
         frame.time_base = self._stream.time_base
         frame.index = self._codec_context.frame_number - 1
 
