@@ -66,6 +66,9 @@ cdef class InputContainer(Container):
     property bit_rate:
         def __get__(self): return self.proxy.ptr.bit_rate
 
+    property size:
+        def __get__(self): return lib.avio_size(self.proxy.ptr.pb)
+
     def demux(self, streams=None):
         
         streams = streams or self.streams

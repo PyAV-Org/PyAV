@@ -148,6 +148,10 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         int flags
     )
     
+    cdef int avio_size(
+        AVIOContext *s
+    )
+
     cdef AVOutputFormat* av_guess_format(
         char *short_name,
         char *filename,

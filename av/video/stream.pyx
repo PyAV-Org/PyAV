@@ -195,22 +195,46 @@ cdef class VideoStream(Stream):
         def __set__(self, value):
             to_avrational(value, &self._codec_context.sample_aspect_ratio)
             
+    property display_aspect_ratio:
+        def __get__(self):
+            cdef lib.AVRational dar
+            
+            lib.av_reduce(
+                &dar.num, &dar.den,
+                self._codec_context.width * self._codec_context.sample_aspect_ratio.num,
+                self._codec_context.height * self._codec_context.sample_aspect_ratio.den, 1024*1024)
+
+            return avrational_to_faction(&dar)
+
     property has_b_frames:
         def __get__(self):
             if self._codec_context.has_b_frames:
                 return True
             return False
 
+    property coded_width:
+        def __get__(self):
+            return self._codec_context.coded_width if self._codec_context else None
 
-    # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
+    property coded_height:
+        def __get__(self):
+            return self._codec_context.coded_height if self._codec_context else None
+
     property width:
+        def __get__(self):
+            return self._codec_context.width if self._codec_context else None
         def __set__(self, unsigned int value):
             self._codec_context.width = value
             self._build_format()
+
     property height:
+        def __get__(self):
+            return self._codec_context.height if self._codec_context else None
         def __set__(self, unsigned int value):
             self._codec_context.height = value
             self._build_format()
+
+    # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
     property pix_fmt:
         def __set__(self, bytes value):
             self._codec_context.pix_fmt = lib.av_get_pix_fmt(value)

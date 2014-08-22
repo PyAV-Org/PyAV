@@ -113,6 +113,13 @@ cdef class Stream(object):
         def __get__(self):
             return bytes(self._codec.long_name) if self._codec else None
     
+    property profile:
+        def __get__(self):
+            if self._codec and lib.av_get_profile_name(self._codec, self._codec_context.profile):
+                return lib.av_get_profile_name(self._codec, self._codec_context.profile)
+            else:
+                return None
+
     property index:
         def __get__(self): return self._stream.index
 
@@ -136,16 +143,26 @@ cdef class Stream(object):
 
     property bit_rate:
         def __get__(self):
-            return self._codec_context.bit_rate if self._codec_context else None
+            return self._codec_context.bit_rate if self._codec_context and self._codec_context.bit_rate > 0 else None
         def __set__(self, int value):
             self._codec_context.bit_rate = value
+
+    property max_bit_rate:
+        def __get__(self):
+            if self._codec_context and self._codec_context.rc_max_rate > 0:
+                return self._codec_context.rc_max_rate
+            else:
+                return None
             
     property bit_rate_tolerance:
         def __get__(self):
             return self._codec_context.bit_rate_tolerance if self._codec_context else None
         def __set__(self, int value):
             self._codec_context.bit_rate_tolerance = value
-            
+
+    property language:
+        def __get__(self):
+            return self.metadata.get('language')
 
 
     cpdef decode(self, Packet packet):

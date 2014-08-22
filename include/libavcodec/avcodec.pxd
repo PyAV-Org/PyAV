@@ -40,6 +40,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVCodecID codec_id
         int flags
         
+        int profile
+
         AVFrame* coded_frame
         
         int bit_rate
@@ -68,6 +70,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         # Video.
         int width
         int height
+        int coded_width
+        int coded_height
+
         AVPixelFormat pix_fmt
         AVRational sample_aspect_ratio
         int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 
@@ -99,6 +104,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     
     cdef char* avcodec_get_name(AVCodecID id)
     
+    cdef char* av_get_profile_name(AVCodec *codec, int profile)
+
     cdef int avcodec_open2(
         AVCodecContext *ctx,
         AVCodec *codec,
