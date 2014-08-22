@@ -2,7 +2,6 @@ from av.utils cimport err_check
 from av.video.format cimport get_video_format
 from av.video.plane import VideoPlane
 
-import numpy as np
 
 cdef object _cinit_bypass_sentinel
 
@@ -243,8 +242,8 @@ cdef class VideoFrame(Frame):
         numpy array from frame contents
         :param str colorspace: color format of image; Defaults to OpenCV convention.
         """
+        import numpy as np
         return np.frombuffer(self.to_colorspace(colorspace).planes[0],np.uint8).reshape(self.height,self.width,-1)
-
 
     @classmethod
     def from_image(cls, img):
