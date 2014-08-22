@@ -223,7 +223,7 @@ cdef class Stream(object):
             return self._flush_decoder_frames()
 
         cdef int data_consumed = 0
-        cdef list frames = []
+        cdef list decoded_objs = []
         
         cdef Frame frame
 
@@ -241,13 +241,14 @@ cdef class Stream(object):
 
         while packet.struct.size > 0:
 
-            frame = self._decode_one(&packet.struct, &data_consumed)
+            decoded = self._decode_one(&packet.struct, &data_consumed)
             if packet.struct.data:
                 packet.struct.data += data_consumed
             packet.struct.size -= data_consumed
 
-            if frame:
+            if decoded and isinstance(decoded, Frame):
 
+                frame = decoded
                 self._setup_frame(frame)
                 
                 # According to http://dranger.com/ffmpeg/tutorial05.html
@@ -273,8 +274,9 @@ cdef class Stream(object):
                 else:
                     frame.ptr.pts = frame.ptr.pkt_dts
                 
-                
-                frames.append(frame)
+            
+            if decoded:
+                decoded_objs.append(decoded)
             
             # Sometimes, no data is consumed, and this is ok. However, no more
             # frames are going to be pulled out of here.
@@ -285,7 +287,7 @@ cdef class Stream(object):
         packet.struct.data = original_data
         packet.struct.size = original_size
 
-        return frames
+        return decoded_objs
     
     def seek(self, lib.int64_t timestamp, mode = 'backward'):
         """
