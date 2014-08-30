@@ -22,17 +22,18 @@ cdef class ContainerProxy(object):
 
 cdef object _base_constructor_sentinel = object()
 
-def open(name, mode='r', format=None):
+def open(name, mode='r', format=None, options=None):
     if mode == 'r':
-        return InputContainer(_base_constructor_sentinel, name, format)
+        return InputContainer(_base_constructor_sentinel, name, format, options)
     if mode == 'w':
-        return OutputContainer(_base_constructor_sentinel, name, format)
+        return OutputContainer(_base_constructor_sentinel, name, format, options)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
 
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, name, format_name):
+    def __cinit__(self, sentinel, name, format_name, options):
+
         if sentinel is not _base_constructor_sentinel:
             raise RuntimeError('cannot construct base Container')
 
@@ -42,6 +43,12 @@ cdef class Container(object):
         self.name = name
         self.proxy = ContainerProxy()
 
+        if options is not None:
+            dict_to_avdict(&self.options, options)
+            print options, <long>self.options, avdict_to_dict(self.options)
+
+    def __dealloc__(self):
+        lib.av_dict_free(&self.options)
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
@@ -56,7 +63,7 @@ cdef class InputContainer(Container):
                 &self.proxy.ptr,
                 self.name,
                 self.format.in_ if self.format else NULL,
-                NULL
+                &self.options if self.options else NULL
             ),
             self.name,
         )

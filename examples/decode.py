@@ -1,5 +1,6 @@
 import array
 import argparse
+import logging
 import sys
 import pprint
 import subprocess
@@ -7,6 +8,9 @@ import subprocess
 from PIL import Image
 
 from av import open, time_base
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def format_time(time, time_base):
@@ -23,13 +27,15 @@ arg_parser.add_argument('-v', '--video', action='store_true')
 arg_parser.add_argument('-s', '--subs', action='store_true')
 arg_parser.add_argument('-d', '--data', action='store_true')
 arg_parser.add_argument('-p', '--play', action='store_true')
+arg_parser.add_argument('-o', '--option', action='append', default=[])
 arg_parser.add_argument('-c', '--count', type=int, default=5)
 args = arg_parser.parse_args()
 
 
 proc = None
 
-video = open(args.path, format=args.format)
+options = dict(x.split('=') for x in args.option)
+video = open(args.path, format=args.format, options=options)
 
 print 'container:', video
 print '\tformat:', video.format
