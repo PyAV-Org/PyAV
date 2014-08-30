@@ -9,12 +9,13 @@ import av
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('video')
+parser.add_argument('-f', '--format')
+parser.add_argument('path')
 args = parser.parse_args()
 
 
 def _iter_images():
-    video = av.open(args.video)
+    video = av.open(args.path, format=args.format)
     stream = next(s for s in video.streams if s.type == b'video')
     for packet in video.demux(stream):
         for frame in packet.decode():
