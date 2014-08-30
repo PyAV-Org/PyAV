@@ -1,5 +1,9 @@
 from libc.string cimport memcpy
+
 from cpython cimport PyString_FromStringAndSize, PyBuffer_FillInfo
+
+from .utils cimport ByteSource, bytesource
+
 
 cdef class Plane(object):
     
@@ -19,11 +23,21 @@ cdef class Plane(object):
     def to_bytes(self):
         return PyString_FromStringAndSize(<char*>self.frame.ptr.extended_data[self.index], self.buffer_size)
 
-    def update_from_string(self, bytes input):
-        """Replace the data in this plane with the given string."""
-        if len(input) != self.buffer_size:
+    def update(self, input):
+        """Replace the data in this plane with the given buffer."""
+        cdef ByteSource source = bytesource(input)
+        if source.length != self.buffer_size:
             raise ValueError('got %d bytes; need %d bytes' % (len(input), self.buffer_size))
-        memcpy(<void*>self.frame.ptr.extended_data[self.index], <void*><char*>input, self.buffer_size)
+        memcpy(<void*>self.frame.ptr.extended_data[self.index], source.ptr, self.buffer_size)
+
+    def update_from_string(self, input):
+        """Replace the data in this plane with the given string.
+
+        Deprecated; use :meth:`Plane.update` instead.
+
+        """
+        self.update(input)
+
 
     # Legacy buffer support. For `buffer` and PIL.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs

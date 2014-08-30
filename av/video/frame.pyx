@@ -1,5 +1,5 @@
-from av.utils cimport err_check
-from av.video.format cimport get_video_format
+from av.utils cimport err_check, ByteSource, bytesource
+from av.video.format cimport get_video_format, VideoFormat
 from av.video.plane import VideoPlane
 
 
@@ -252,7 +252,7 @@ cdef class VideoFrame(Frame):
         frame = cls(img.size[0], img.size[1], 'rgb24')
 
         # TODO: Use the buffer protocol.
-        frame.planes[0].update_from_string(img.to_string())
+        frame.planes[0].update(img.to_string())
         return frame
 
     @classmethod
@@ -262,14 +262,10 @@ cdef class VideoFrame(Frame):
         assert array.ndim == 3
         assert array.shape[2] == 3
         assert array.dtype == 'uint8'
-        frame = cls(array.shape[1], array.shape[0], format)
 
-        # TODO: Use the buffer protocol.
-        frame.planes[0].update_from_string(array.tostring())
+        frame = cls(array.shape[1], array.shape[0], format)
+        frame.planes[0].update(array)
 
         return frame
-
-
-
 
 
