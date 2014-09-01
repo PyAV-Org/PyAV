@@ -53,6 +53,12 @@ cdef class Container(object):
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
 
+    cdef _seek(self, lib.int64_t timestamp, str mode, int stream_index):
+        raise NotImplementedError()
+
+    cdef _flush_buffers(self):
+        raise NotImplementedError()
+
 
 cdef class InputContainer(Container):
     
@@ -89,6 +95,11 @@ cdef class InputContainer(Container):
         def __get__(self): return lib.avio_size(self.proxy.ptr.pb)
 
     def demux(self, streams=None):
+        """Yields a series of :class:`.Packet` from the given set of :class:`.Stream`
+
+        The last packet is a dummy packet, that when decoded will flush the buffers.
+
+        """
         
         streams = streams or self.streams
         if isinstance(streams, Stream):
@@ -110,11 +121,10 @@ cdef class InputContainer(Container):
                 include_stream[stream.index] = True
         
             while True:
+                
                 packet = Packet()
                 try:
-                    with nogil:
-                        result = lib.av_read_frame(self.proxy.ptr, &packet.struct)
-                    err_check(result)
+                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
                 except AVError:
                     break
                     
@@ -127,6 +137,13 @@ cdef class InputContainer(Container):
                         packet.stream = self.streams[packet.struct.stream_index]
                         yield packet
 
+            # Flush!
+            for i in range(self.proxy.ptr.nb_streams):
+                if include_stream[i]:
+                    packet = Packet()
+                    packet.stream = self.streams[i]
+                    yield packet
+
         finally:
             free(include_stream)
             
@@ -137,6 +154,9 @@ cdef class InputContainer(Container):
         :param str mode: one of ``"backward"``, ``"frame"``, ``"byte"``, or ``"any"``.
 
         """
+        self._seek(timestamp, mode, -1)
+
+    cdef _seek(self, lib.int64_t timestamp, str mode, int stream_index):
 
         cdef int flags = 0
         if mode:
@@ -150,16 +170,17 @@ cdef class InputContainer(Container):
                 flags = lib.AVSEEK_FLAG_ANY
             else:
                 raise ValueError("Invalid mode %s" % str(mode))
-           
-        err_check(lib.av_seek_frame(self.proxy.ptr, -1, timestamp, flags))
-        
-        # flush codec buffers
-        cdef Stream stream
-        for stream in self.streams:
-            if stream._codec_context:
-                # don't try and flush unkown codecs
-                if not stream._codec_context.codec_id == lib.AV_CODEC_ID_NONE:
-                    lib.avcodec_flush_buffers(stream._codec_context)
+
+        err_check(lib.av_seek_frame(self.proxy.ptr, stream_index, timestamp, flags))
+        self._flush_buffers()
+
+    cdef _flush_buffers(self):
+        cdef int i
+        cdef lib.AVStream *stream
+        for i in range(self.proxy.ptr.nb_streams):
+            stream = self.proxy.ptr.streams[i]
+            if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
+                lib.avcodec_flush_buffers(stream.codec)
 
 
 cdef class OutputContainer(Container):

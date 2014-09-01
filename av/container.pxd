@@ -21,7 +21,9 @@ cdef class Container(object):
     
     cdef readonly list streams
     cdef readonly dict metadata
-    
+
+    cdef _seek(self, lib.int64_t timestamp, str mode, int stream_index)
+    cdef _flush_buffers(self)
 
 
 cdef class InputContainer(Container):

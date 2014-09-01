@@ -172,6 +172,13 @@ cdef class Stream(object):
             return self.metadata.get('language')
 
     cpdef decode(self, Packet packet):
+        """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
+
+        If the packet is None, the buffers will be flushed. This is useful if
+        you do not want the library to automatically re-order frames for you
+        (if they are encoded with a codec that has B-frames).
+
+        """
 
         if packet is None:
             raise TypeError('packet must not be None')
@@ -182,8 +189,14 @@ cdef class Stream(object):
         cdef uint8_t *original_data = packet.struct.data
         cdef int      original_size = packet.struct.size
 
+        cdef bint is_flushing = not (packet.struct.data and packet.struct.size)
+
         # Keep decoding while there is data.
-        while packet.struct.size > 0:
+        while is_flushing or packet.struct.size > 0:
+
+            if is_flushing:
+                packet.struct.data = NULL
+                packet.struct.size = 0
 
             decoded = self._decode_one(&packet.struct, &data_consumed)
             packet.struct.data += data_consumed
@@ -194,20 +207,12 @@ cdef class Stream(object):
                     self._setup_frame(decoded)
                 decoded_objs.append(decoded)
             
-            # Sometimes, no data is consumed, and this is ok. However, no more
-            # frames are going to be pulled out of here.
-            if not data_consumed:
+            # Sometimes there are no frames, and no data is consumed, and this
+            # is ok. However, no more frames are going to be pulled out of here.
+            # (It is possible for data to not be consumed as long as there are
+            # frames, e.g. during flushing.)
+            elif not data_consumed:
                 break
-
-        # Flush!
-        packet.struct.data = NULL
-        packet.struct.size = 0
-        while data_consumed:
-            decoded = self._decode_one(&packet.struct, &data_consumed)
-            if decoded:
-                if isinstance(decoded, Frame):
-                    self._setup_frame(decoded)
-                decoded_objs.append(decoded)
 
         # Restore the packet.
         packet.struct.data = original_data
@@ -219,36 +224,12 @@ cdef class Stream(object):
         """
         Seek to the keyframe at timestamp.
         """
-        
-        cdef int flags = 0
-         
-        if mode:
-            if mode.lower() == "backward":
-                flags = lib.AVSEEK_FLAG_BACKWARD
-            elif mode.lower() == "frame":
-                flags = lib.AVSEEK_FLAG_FRAME
-            elif mode.lower() == "byte":
-                flags = lib.AVSEEK_FLAG_BYTE
-            elif mode.lower() == 'any':
-                flags = lib.AVSEEK_FLAG_ANY
-            else:
-                raise ValueError("Invalid mode %s" % str(mode))
-        
-        err_check(lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags))
-        self._flush_buffers()
-        
-    cdef _flush_buffers(self):
-        cdef int i
-        cdef lib.AVStream *stream
-        for i in range(self._container.ptr.nb_streams):
-            stream = self._container.ptr.streams[i]
-            if stream.codec:
-                # don't try and flush unkown codecs
-                if stream.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO or stream.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-                    if not stream.codec.codec_id == lib.AV_CODEC_ID_NONE:
-                        lib.avcodec_flush_buffers(stream.codec)
+        self._container._seek(timestamp, mode, self._stream.index)
  
     cdef _setup_frame(self, Frame frame):
+        # This PTS handling looks a little nuts, however it really seems like it
+        # is the way to go. The PTS from a packet is the correct one while
+        # decoding, and it is copied to pkt_pts during creation of a frame.
         frame.ptr.pts = frame.ptr.pkt_pts
         frame.time_base = self._stream.time_base
         frame.index = self._codec_context.frame_number - 1

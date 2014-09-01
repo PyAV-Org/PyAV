@@ -22,6 +22,7 @@ cdef class Frame(object):
         )
 
     property dts:
+
         def __get__(self):
             if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
                 return None
@@ -41,6 +42,7 @@ cdef class Frame(object):
                 self.ptr.pts = value
 
     property time:
+    
         def __get__(self):
             if self.ptr.pts == lib.AV_NOPTS_VALUE:
                 return None

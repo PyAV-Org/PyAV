@@ -9,6 +9,8 @@ cdef class Packet(object):
     """
     def __init__(self):
         lib.av_init_packet(&self.struct)
+        self.struct.data = NULL
+        self.struct.size = 0
 
     def __dealloc__(self):
         lib.av_free_packet(&self.struct)
