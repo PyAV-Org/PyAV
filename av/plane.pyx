@@ -19,6 +19,10 @@ cdef class Plane(object):
         def __get__(self):
             return self.frame.ptr.linesize[self.index]
 
+    property ptr:
+        def __get__(self):
+            return <long>self.frame.ptr.extended_data[self.index]
+    
     def to_bytes(self):
         return <bytes>(<char*>self.frame.ptr.extended_data[self.index])[:self.buffer_size]
 

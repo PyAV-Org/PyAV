@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append('/usr/local/lib/python2.7/site-packages')
-from PyQt4 import QtCore, QtGui, QtOpenGL
+from PyQt4 import QtCore, QtGui, QtOpenGL, QtMultimedia
 
 
 class QtProxy(object):
@@ -19,4 +19,4 @@ class QtProxy(object):
 					return obj
 		raise AttributeError(base_name)
 
-Q = QtProxy(QtGui, QtCore, QtCore.Qt, QtOpenGL)
+Q = QtProxy(QtGui, QtCore, QtCore.Qt, QtOpenGL, QtMultimedia)
