@@ -220,11 +220,14 @@ cdef class Stream(object):
 
         return decoded_objs
     
-    def seek(self, lib.int64_t timestamp, mode='backward'):
+    def seek(self, timestamp, mode='time', backward=True, any_frame=False):
         """
         Seek to the keyframe at timestamp.
         """
-        self._container._seek(timestamp, mode, self._stream.index)
+        if isinstance(timestamp, float):
+            self._container._seek(-1, <long>(timestamp * lib.AV_TIME_BASE), mode, backward, any_frame)
+        else:
+            self._container._seek(self._stream.index, timestamp, mode, backward, any_frame)
  
     cdef _setup_frame(self, Frame frame):
         # This PTS handling looks a little nuts, however it really seems like it

@@ -22,7 +22,7 @@ cdef class Container(object):
     cdef readonly list streams
     cdef readonly dict metadata
 
-    cdef _seek(self, lib.int64_t timestamp, str mode, int stream_index)
+    cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame)
     cdef _flush_buffers(self)
 
 

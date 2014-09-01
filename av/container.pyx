@@ -53,7 +53,7 @@ cdef class Container(object):
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
 
-    cdef _seek(self, lib.int64_t timestamp, str mode, int stream_index):
+    cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
         raise NotImplementedError()
 
     cdef _flush_buffers(self):
@@ -147,29 +147,33 @@ cdef class InputContainer(Container):
         finally:
             free(include_stream)
             
-    def seek(self, timestamp, mode="backward"):
+    def seek(self, timestamp, mode='time', backward=True, any_frame=False):
         """Seek to the keyframe at the given timestamp.
 
         :param int timestamp: time in AV_TIME_BASE units.
         :param str mode: one of ``"backward"``, ``"frame"``, ``"byte"``, or ``"any"``.
 
         """
-        self._seek(timestamp, mode, -1)
+        if isinstance(timestamp, float):
+            timestamp = <long>(timestamp * lib.AV_TIME_BASE)
+        self._seek(-1, timestamp, mode, backward, any_frame)
 
-    cdef _seek(self, lib.int64_t timestamp, str mode, int stream_index):
+    cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
 
         cdef int flags = 0
-        if mode:
-            if mode.lower() == "backward":
-                flags = lib.AVSEEK_FLAG_BACKWARD
-            elif mode.lower() == "frame":
-                flags = lib.AVSEEK_FLAG_FRAME
-            elif mode.lower() == "byte":
-                flags = lib.AVSEEK_FLAG_BYTE
-            elif mode.lower() == 'any':
-                flags = lib.AVSEEK_FLAG_ANY
-            else:
-                raise ValueError("Invalid mode %s" % str(mode))
+
+        if mode == 'frame':
+            flags |= lib.AVSEEK_FLAG_FRAME
+        elif mode == 'byte':
+            flags |= lib.AVSEEK_FLAG_BYTE
+        elif mode != 'time':
+            raise ValueError('mode must be one of "frame", "byte", or "time"')
+
+        if backward:
+            flags |= lib.AVSEEK_FLAG_BACKWARD
+
+        if any_frame:
+            flags |= lib.AVSEEK_FLAG_ANY
 
         err_check(lib.av_seek_frame(self.proxy.ptr, stream_index, timestamp, flags))
         self._flush_buffers()
