@@ -90,7 +90,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
         void release_buffer(AVCodecContext *ctx, AVFrame *frame)
         
-        #User Data
+        # User Data
         void *opaque
         
     cdef struct AVCodecDescriptor:

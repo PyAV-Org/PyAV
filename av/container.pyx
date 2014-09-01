@@ -126,22 +126,6 @@ cdef class InputContainer(Container):
                     if packet.struct.stream_index < len(self.streams):
                         packet.stream = self.streams[packet.struct.stream_index]
                         yield packet
-                        
-            # Some codecs will cause frames to be buffered up in the decoding process.
-            # These codecs should have a CODEC CAP_DELAY capability set.
-            # This sends a special packet with data set to NULL and size set to 0
-            # This tells the Packet Object that its the last packet
-            
-            for i in range(self.proxy.ptr.nb_streams):
-
-                if include_stream[i]:
-                    packet = Packet()
-                    packet.struct.data = NULL
-                    packet.struct.size = 0
-                    stream = self.streams[i]
-                    packet.stream = stream
-                    
-                    yield packet
 
         finally:
             free(include_stream)

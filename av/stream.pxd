@@ -18,17 +18,14 @@ cdef class Stream(object):
     cdef lib.AVCodec *_codec
     cdef lib.AVDictionary *_codec_options
     
-    cdef int64_t packet_pts
-    
-    # cdef lib.AVRational _frame_rate
-
-    # API.
-    cdef flush_buffers(self)
+    # Private API.
     cdef _init(self, Container, lib.AVStream*)
-    cpdef decode(self, Packet packet = *)
-    cdef _flush_decoder_frames(self)
     cdef _setup_frame(self, Frame)
     cdef _decode_one(self, lib.AVPacket*, int *data_consumed)
+    cdef _flush_buffers(self)
+
+    # Public API.
+    cpdef decode(self, Packet packet)
 
 
 cdef Stream build_stream(Container, lib.AVStream*)

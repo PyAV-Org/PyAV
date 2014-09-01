@@ -20,33 +20,36 @@ cdef class Frame(object):
             self.index,
             id(self),
         )
-    
+
     property pts:
-        """Presentation time stamp of this frame."""
+
         def __get__(self):
             if self.ptr.pts == lib.AV_NOPTS_VALUE:
                 return None
             return self.ptr.pts
+
         def __set__(self, value):
             if value is None:
                 self.ptr.pts = lib.AV_NOPTS_VALUE
             else:
                 self.ptr.pts = value
 
+    property time:
+        def __get__(self):
+            if self.ptr.pts == lib.AV_NOPTS_VALUE:
+                return None
+            else:
+                return float(self.ptr.pts) * self.time_base.num / self.time_base.den
 
     property time_base:
-        """Presentation time stamp of this frame."""
+
         def __get__(self):
             return self.time_base
+
         def __set__(self, value):
             self.time_base.num = value.numerator
             self.time_base.den = value.denominator
 
-    property dts:
-        def __get__(self):
-            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
-                return None
-            return self.ptr.pkt_dts
 
     cdef _init_planes(self, cls=Plane):
 

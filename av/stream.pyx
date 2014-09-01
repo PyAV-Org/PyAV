@@ -40,36 +40,6 @@ cdef Stream build_stream(Container container, lib.AVStream *c_stream):
     return py_stream
 
 
-cdef int pyav_get_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
-    
-    # Get the default buffer.
-    cdef int ret
-    ret = lib.avcodec_default_get_buffer(ctx, frame)
-
-    # Allocate a int64_t and copy the current pts stored in 
-    # AVCodecContext.opaque, which is a pointer to Stream.packet_pts.
-    # stream.packet_pts is set in the decode method of Stream.
-    # this is done so the new AVFrame can store this pts of the first packet
-    # needed to create it. This is need later for timing purposes see
-    # http://dranger.com/ffmpeg/tutorial05.html. this is the done the same way but
-    # we use AVCodecContext.opaque so we don't need a global variable.
-    
-    cdef int64_t *pkt_pts = <int64_t*>lib.av_malloc(sizeof(int64_t))
-    if not pkt_pts:
-        return lib.AVERROR_NOMEM
-    memcpy(pkt_pts, ctx.opaque, sizeof(int64_t))
-    frame.opaque = pkt_pts
-    
-    return ret
-
-
-cdef void pyav_release_buffer(lib.AVCodecContext *ctx, lib.AVFrame *frame):
-    if frame:
-        lib.av_freep(frame.opaque)
-    lib.avcodec_default_release_buffer(ctx, frame)
-    
-    
-    
 cdef class Stream(object):
     
     def __cinit__(self, name):
@@ -85,7 +55,6 @@ cdef class Stream(object):
         self._codec_context = stream.codec
         
         self.metadata = avdict_to_dict(stream.metadata)
-        self.packet_pts = lib.AV_NOPTS_VALUE
         
         # This is an input container!
         if self._container.ptr.iformat:
@@ -102,11 +71,6 @@ cdef class Stream(object):
                 # Signal that we don't need to close it.
                 self._codec = NULL
                 raise
-            
-            # For fetching accurate(ish) PTS values.
-            self._codec_context.opaque = &self.packet_pts
-            self._codec_context.get_buffer = pyav_get_buffer
-            self._codec_context.release_buffer = pyav_release_buffer 
             
         # This is an output container!
         else:
@@ -207,71 +171,43 @@ cdef class Stream(object):
         def __get__(self):
             return self.metadata.get('language')
 
-    cpdef decode(self, Packet packet=None):
-    
-        # Flush!
+    cpdef decode(self, Packet packet):
+
         if packet is None:
-            return self._flush_decoder_frames()
+            raise TypeError('packet must not be None')
 
         cdef int data_consumed = 0
         cdef list decoded_objs = []
-        
-        cdef Frame frame
 
         cdef uint8_t *original_data = packet.struct.data
         cdef int      original_size = packet.struct.size
-        
-        cdef int64_t packet_dts = packet.struct.dts
-        cdef int64_t * packet_pts_ptr
-        cdef int64_t packet_pts
-        
-        cdef int decoder_reorder_pts = 1
-        
-        self.packet_pts = packet.struct.pts
 
+        # Keep decoding while there is data.
         while packet.struct.size > 0:
 
             decoded = self._decode_one(&packet.struct, &data_consumed)
-            if packet.struct.data:
-                packet.struct.data += data_consumed
+            packet.struct.data += data_consumed
             packet.struct.size -= data_consumed
 
-            if decoded and isinstance(decoded, Frame):
-
-                frame = decoded
-                self._setup_frame(frame)
-                
-                # According to http://dranger.com/ffmpeg/tutorial05.html
-                # ffmpeg reorders the packets so that the DTS of the packet
-                # being processed by avcodec_decode_video() will always be the same
-                # as the PTS of the frame it returns.
-                # And The PTS of frame is also equal to the PTS of the first
-                # Packet needed to decode it
-                
-                # retrive packet pts from frame.ptr.opaque 
-                packet_pts_ptr = <int64_t *> frame.ptr.opaque
-                
-                if packet_pts_ptr:
-                    packet_pts = packet_pts_ptr[0]
-                else:
-                    packet_pts = lib.AV_NOPTS_VALUE
-                    
-                
-                if decoder_reorder_pts == -1:
-                    frame.ptr.pts = lib.av_frame_get_best_effort_timestamp(frame.ptr)
-                elif decoder_reorder_pts:
-                    frame.ptr.pts = frame.ptr.pkt_pts
-                else:
-                    frame.ptr.pts = frame.ptr.pkt_dts
-                
-            
             if decoded:
+                if isinstance(decoded, Frame):
+                    self._setup_frame(decoded)
                 decoded_objs.append(decoded)
             
             # Sometimes, no data is consumed, and this is ok. However, no more
             # frames are going to be pulled out of here.
             if not data_consumed:
                 break
+
+        # Flush!
+        packet.struct.data = NULL
+        packet.struct.size = 0
+        while data_consumed:
+            decoded = self._decode_one(&packet.struct, &data_consumed)
+            if decoded:
+                if isinstance(decoded, Frame):
+                    self._setup_frame(decoded)
+                decoded_objs.append(decoded)
 
         # Restore the packet.
         packet.struct.data = original_data
@@ -299,9 +235,9 @@ cdef class Stream(object):
                 raise ValueError("Invalid mode %s" % str(mode))
         
         err_check(lib.av_seek_frame(self._container.ptr, self._stream.index, timestamp, flags))
-        self.flush_buffers()
+        self._flush_buffers()
         
-    cdef flush_buffers(self):
+    cdef _flush_buffers(self):
         cdef int i
         cdef lib.AVStream *stream
         for i in range(self._container.ptr.nb_streams):
@@ -311,39 +247,9 @@ cdef class Stream(object):
                 if stream.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO or stream.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
                     if not stream.codec.codec_id == lib.AV_CODEC_ID_NONE:
                         lib.avcodec_flush_buffers(stream.codec)
-        
-    cdef _flush_decoder_frames(self):
-        cdef int data_consumed = 0
-        cdef list frames = []
-        
-        cdef Packet packet
-        
-        cdef Frame frame
-        cdef int64_t * packet_pts
-        
-        self.packet_pts = lib.AV_NOPTS_VALUE
-        while True:
-            # Create a new NULL packet for every frame we try to pull out.
-            packet = Packet()
-            frame = self._decode_one(&packet.struct, &data_consumed)
-            if frame:
-                if isinstance(frame, Frame):
-                    self._setup_frame(frame)
-                    
-                packet_pts = <int64_t *> frame.ptr.opaque
-                
-                if packet_pts[0] != lib.AV_NOPTS_VALUE:
-                    frame.ptr.pts = packet_pts[0]
-                else:
-                    frame.ptr.pts = lib.AV_NOPTS_VALUE
-                
-                frames.append(frame)
-            else:
-                break
-            
-        return frames
  
     cdef _setup_frame(self, Frame frame):
+        frame.ptr.pts = frame.ptr.pkt_pts
         frame.time_base = self._stream.time_base
         frame.index = self._codec_context.frame_number - 1
 

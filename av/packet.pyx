@@ -22,10 +22,6 @@ cdef class Packet(object):
     
     def decode(self):
         """Decode the data in this packet into a list of Frames."""
-        
-        if not self.struct.data:
-            return self.stream.decode()
-        
         return self.stream.decode(self)
 
     property pts:
