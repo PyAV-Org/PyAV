@@ -87,7 +87,7 @@ cdef class Stream(object):
             self.__class__.__name__,
             self.index,
             self.type or '<notype>',
-            self._codec.name or '<nocodec>',
+            self.name or '<nocodec>',
             id(self),
         )
 
@@ -182,6 +182,9 @@ cdef class Stream(object):
 
         if packet is None:
             raise TypeError('packet must not be None')
+
+        if not self._codec:
+            raise ValueError('cannot decode unknown codec')
 
         cdef int data_consumed = 0
         cdef list decoded_objs = []
