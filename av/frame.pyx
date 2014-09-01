@@ -21,6 +21,12 @@ cdef class Frame(object):
             id(self),
         )
 
+    property dts:
+        def __get__(self):
+            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
+                return None
+            return self.ptr.pkt_dts
+
     property pts:
 
         def __get__(self):
@@ -50,7 +56,6 @@ cdef class Frame(object):
             self.time_base.num = value.numerator
             self.time_base.den = value.denominator
 
-
     cdef _init_planes(self, cls=Plane):
 
         # Construct the planes.
@@ -66,4 +71,12 @@ cdef class Frame(object):
             plane = cls(self, i)
             Py_INCREF(plane)
             PyTuple_SET_ITEM(self.planes, i, plane)
+
+    cdef _copy_attributes_from(self, Frame other):
+        self.index = other.index
+        self.time_base = other.time_base
+        if self.ptr and other.ptr:
+            self.ptr.pkt_pts = other.ptr.pkt_pts
+            self.ptr.pkt_dts = other.ptr.pkt_dts
+            self.ptr.pts = other.ptr.pts
 

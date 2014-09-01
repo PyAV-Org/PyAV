@@ -215,10 +215,7 @@ cdef class VideoFrame(Frame):
             )
 
         # Copy some properties.
-        frame.index = self.index
-        frame.time_base = self.time_base
-        frame.ptr.pts = self.ptr.pts
-
+        frame._copy_attributes_from(self)
         return frame
 
     property width:

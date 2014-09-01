@@ -12,3 +12,6 @@ cdef class Frame(object):
 
     cdef readonly tuple planes
     cdef _init_planes(self, cls=?)
+
+    cdef _copy_attributes_from(self, Frame source)
+

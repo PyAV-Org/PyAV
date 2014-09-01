@@ -117,8 +117,7 @@ cdef class AudioResampler(object):
         ))
 
         # Copy some attributes.
-        output.ptr.pts = frame.ptr.pts
-        output.time_base = frame.time_base
+        output._copy_attributes_from(frame)
 
         # Empty frame.
         if output.ptr.nb_samples <= 0:
