@@ -208,7 +208,7 @@ cdef class OutputContainer(Container):
     def __del__(self):
         self.close()
 
-    cpdef add_stream(self, codec_name, object rate=None):
+    cpdef add_stream(self, codec_name=None, object rate=None, Stream template=None):
         """add_stream(codec_name, rate=None)
 
         Create a new stream, and return it.
@@ -222,17 +222,26 @@ cdef class OutputContainer(Container):
 
         """
         
-        # Find encoder
+        if (codec_name is None and template is None) or (codec_name is not None and template is not None):
+            raise ValueError('needs one of codec_name or template')
+
         cdef lib.AVCodec *codec
         cdef lib.AVCodecDescriptor *codec_descriptor
 
-        codec = lib.avcodec_find_encoder_by_name(codec_name)
-        if not codec:
-            codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)
-            if codec_descriptor:
-                codec = lib.avcodec_find_encoder(codec_descriptor.id)
-        if not codec:
-            raise ValueError("unknown encoding codec: %r" % codec_name)
+        if codec_name is not None:
+            codec = lib.avcodec_find_encoder_by_name(codec_name)
+            if not codec:
+                codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)
+                if codec_descriptor:
+                    codec = lib.avcodec_find_encoder(codec_descriptor.id)
+            if not codec:
+                raise ValueError("unknown encoding codec: %r" % codec_name)
+        else:
+            if not template._codec:
+                raise ValueError("template has no codec")
+            if not template._codec_context:
+                raise ValueError("template has no codec context")
+            codec = template._codec
         
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(
@@ -249,10 +258,42 @@ cdef class OutputContainer(Container):
         lib.avcodec_get_context_defaults3(stream.codec, codec)
         stream.codec.codec = codec # Still have to manually set this though...
 
+        # Copy from the template.
+        if template is not None:
+
+            # Video properties (from below).
+            codec_context.time_base.num = template._codec_context.time_base.num
+            codec_context.time_base.den = template._codec_context.time_base.den
+            codec_context.pix_fmt = template._codec_context.pix_fmt
+            codec_context.width = template._codec_context.width
+            codec_context.height = template._codec_context.height
+            codec_context.bit_rate = template._codec_context.bit_rate
+            codec_context.bit_rate_tolerance = template._codec_context.bit_rate_tolerance
+            codec_context.ticks_per_frame = template._codec_context.ticks_per_frame
+            # From SO <https://stackoverflow.com/questions/17592120>
+            stream.sample_aspect_ratio.num = template._stream.sample_aspect_ratio.num
+            stream.sample_aspect_ratio.den = template._stream.sample_aspect_ratio.den
+            stream.time_base.num = template._stream.time_base.num
+            stream.time_base.den = template._stream.time_base.den
+            stream.r_frame_rate.num = template._stream.r_frame_rate.num
+            stream.r_frame_rate.den = template._stream.r_frame_rate.den
+            stream.avg_frame_rate.num = template._stream.avg_frame_rate.num
+            stream.avg_frame_rate.den = template._stream.avg_frame_rate.den
+            stream.duration = template._stream.duration
+            # More.
+            codec_context.sample_aspect_ratio.num = template._codec_context.sample_aspect_ratio.num
+            codec_context.sample_aspect_ratio.den = template._codec_context.sample_aspect_ratio.den
+
+            # Audio properties (from below that don't overlap above).
+            codec_context.sample_fmt = template._codec_context.sample_fmt
+            codec_context.sample_rate = template._codec_context.sample_rate
+            codec_context.channels = template._codec_context.channels
+            codec_context.channel_layout = template._codec_context.channel_layout
+            # From SO <https://stackoverflow.com/questions/17592120>
+            stream.pts = template._stream.pts
+
         # Now lets set some more sane video defaults
-        if codec.type == lib.AVMEDIA_TYPE_VIDEO:
-            codec_context.time_base.num = 1
-            codec_context.time_base.den = 12800 
+        elif codec.type == lib.AVMEDIA_TYPE_VIDEO:
             codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_context.width = 640
             codec_context.height = 480

@@ -1,7 +1,7 @@
 cimport libav as lib
 
 from av.format cimport ContainerFormat
-
+from av.stream cimport Stream
 
 # Since there are multiple objects that need to refer to a valid context, we
 # need this intermediate proxy object so that there aren't any reference cycles
@@ -35,5 +35,5 @@ cdef class OutputContainer(Container):
     cdef bint _started
     cdef bint _done
 
-    cpdef add_stream(self, codec_name, object rate=*)
+    cpdef add_stream(self, codec_name=*, object rate=*, Stream template=*)
     cpdef start_encoding(self)
