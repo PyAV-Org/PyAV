@@ -16,9 +16,11 @@ cdef class Packet(object):
         lib.av_free_packet(&self.struct)
     
     def __repr__(self):
-        return '<av.%s of %s at 0x%x>' % (
+        return '<av.%s of #%d, dts=%s, pts=%s at 0x%x>' % (
             self.__class__.__name__,
-            self.stream,
+            self.stream.index,
+            self.dts,
+            self.pts,
             id(self),
         )
     
@@ -29,7 +31,13 @@ cdef class Packet(object):
     property pts:
         def __get__(self): return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts
     property dts:
-        def __get__(self): return None if self.struct.dts == lib.AV_NOPTS_VALUE else self.struct.dts
+        def __get__(self):
+            return None if self.struct.dts == lib.AV_NOPTS_VALUE else self.struct.dts
+        def __set__(self, v):
+            if v is None:
+                self.struct.dts = lib.AV_NOPTS_VALUE
+            else:
+                self.struct.dts = v
     property size:
         def __get__(self): return self.struct.size
     property duration:
