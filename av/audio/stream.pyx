@@ -21,8 +21,9 @@ cdef class AudioStream(Stream):
         self.format = get_audio_format(self._codec_context.sample_fmt)
     
     def __repr__(self):
-        return '<av.%s %s at %dHz, %s, %s at 0x%x>' % (
+        return '<av.%s #%d %s at %dHz, %s, %s at 0x%x>' % (
             self.__class__.__name__,
+            self.index,
             self.name,
             self.rate,
             self.layout.name,
