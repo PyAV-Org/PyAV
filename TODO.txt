@@ -9,17 +9,14 @@ The Big Picture
 NEXT
 ====
 
-- Make able to build on various fedoras at Western Post
-  - PKG_CONFIG_PATH=/opt/ffmpeg/fedora-14/ffmpeg-0.11/lib/pkgconfig
-
-- Be able to read from devices: open(':0', 'r', 'x11grab')
-
-- Stream.encode should return a list of packets. Otherwise, resampling
-  can easily result in a massive buffer in a fifo or codec
+- see do_streamcopy in ffmpeg/ffmpeg.c for hints about how to proceed for remuxing
 
 
 Encoding
 ========
+
+- Stream.encode should return a list of packets. Otherwise, resampling
+  can easily result in a massive buffer in a fifo or codec
 
 - Make everything mutable. Later, we can introduce a PseudoMutable base class
   for everything that has a .assert_mutable() method and public is_read_only
