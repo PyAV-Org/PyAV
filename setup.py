@@ -7,7 +7,7 @@ import os
 import re
 
 
-version = '0.1.0'
+version = '0.2.0'
 
 
 # The "extras" to be supplied to every one of our modules.
