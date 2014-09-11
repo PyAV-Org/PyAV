@@ -28,6 +28,14 @@ cdef class Packet(object):
         """Decode the data in this packet into a list of Frames."""
         return self.stream.decode(self)
 
+    # Looks circular, but isn't. Silly Cython.
+    property stream:
+        def __get__(self):
+            return self.stream
+        def __set__(self, Stream value):
+            self.stream = value
+            self.struct.stream_index = value.index
+
     property pts:
         def __get__(self): return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts
     property dts:
@@ -38,6 +46,7 @@ cdef class Packet(object):
                 self.struct.dts = lib.AV_NOPTS_VALUE
             else:
                 self.struct.dts = v
+    
     property size:
         def __get__(self): return self.struct.size
     property duration:
