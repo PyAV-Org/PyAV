@@ -1,4 +1,4 @@
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 
 from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, free
@@ -26,11 +26,9 @@ cdef object _base_constructor_sentinel = object()
 
 def open(name, mode='r', format=None, options=None):
     if mode == 'r':
-        return InputContainer(_base_constructor_sentinel,
-                              name.encode('utf-8'), format, options)
+        return InputContainer(_base_constructor_sentinel, name, format, options)
     if mode == 'w':
-        return OutputContainer(_base_constructor_sentinel,
-                               name.encode('utf-8'), format, options)
+        return OutputContainer(_base_constructor_sentinel, name, format, options)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
 
 
@@ -55,7 +53,7 @@ cdef class Container(object):
         lib.av_dict_free(&self.options)
 
     def __repr__(self):
-        return '<av.{0} {1}>'.format(self.__class__.__name__, self.name.decode())
+        return '<av.{} {!r}>'.format(self.__class__.__name__, self.name)
 
     cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
         raise NotImplementedError()
@@ -87,7 +85,7 @@ cdef class InputContainer(Container):
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
 
     property name:
-        def __get__(self): return "{0}".format(self.name.decode('utf-8'))
+        def __get__(self): return self.name
 
     property start_time:
         def __get__(self): return self.proxy.ptr.start_time
@@ -234,10 +232,7 @@ cdef class OutputContainer(Container):
         cdef lib.AVCodec *codec
         cdef lib.AVCodecDescriptor *codec_descriptor
 
-        cdef char *codec_name_as_bytes
-        temp = bytes(codec_name, 'utf-8')
-        codec_name_as_bytes = temp
-        codec = lib.avcodec_find_encoder_by_name(codec_name_as_bytes)
+        codec = lib.avcodec_find_encoder_by_name(codec_name)
         if not codec:
             codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)
             if codec_descriptor:

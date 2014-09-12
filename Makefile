@@ -18,7 +18,7 @@ cythonize: $(C_SRC)
 
 src/%.c: %.pyx
 	@ mkdir -p $(shell dirname $@)
-	cython -I. -Iinclude -o $@ $<
+	cython -I. -Iinclude -X c_string_type=str -X c_string_encoding=ascii -o $@ $<
 
 build: cythonize
 	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace --debug

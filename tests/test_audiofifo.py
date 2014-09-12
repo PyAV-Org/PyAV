@@ -30,8 +30,8 @@ class TestAudioFifo(TestCase):
             if len(output) > 10:
                 break
 
-        input_ = ''.join(input_)
-        output = ''.join(output)
+        input_ = b''.join(input_)
+        output = b''.join(output)
         min_len = min(len(input_), len(output))
 
         self.assertTrue(min_len > 10 * 512 * 2 * 2)

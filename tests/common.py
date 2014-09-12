@@ -1,13 +1,12 @@
 from __future__ import division
 
-from six.moves import zip, range
+from fractions import Fraction
+from subprocess import check_call
+from unittest import TestCase as _Base
 import datetime
 import errno
 import os
 import sys
-from unittest import TestCase as _Base
-from fractions import Fraction
-from subprocess import check_call
 
 from nose.plugins.skip import SkipTest
 
@@ -20,6 +19,9 @@ from av.packet import Packet
 from av.stream import Stream
 from av.utils import AVError
 from av.video import VideoFrame
+
+
+is_py3 = sys.version_info[0] > 2
 
 
 def fate_suite(name):

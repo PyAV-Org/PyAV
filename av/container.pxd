@@ -12,7 +12,7 @@ cdef class ContainerProxy(object):
 
 cdef class Container(object):
     
-    cdef readonly bytes name
+    cdef readonly str name
     cdef readonly ContainerFormat format
     cdef lib.AVDictionary *options
 

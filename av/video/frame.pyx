@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from av.utils cimport err_check, ByteSource, bytesource
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.plane import VideoPlane
@@ -30,10 +28,7 @@ cdef class VideoFrame(Frame):
         if width is _cinit_bypass_sentinel:
             return
 
-        cdef char *format_as_bytes
-        temp = bytes(format, 'utf-8')
-        format_as_bytes = temp
-        cdef lib.AVPixelFormat c_format = lib.av_get_pix_fmt(format_as_bytes)
+        cdef lib.AVPixelFormat c_format = lib.av_get_pix_fmt(format)
         if c_format < 0:
             raise ValueError('invalid format %r' % format)
 
@@ -122,17 +117,13 @@ cdef class VideoFrame(Frame):
 
         :param int width: New width.
         :param int height: New height.
-        :param bytes format: New format; see :attr:`VideoFrame.format`.
+        :param str format: New format; see :attr:`VideoFrame.format`.
 
         """
 
-
-        cdef char *dst_format_str_as_bytes
-        temp = bytes(dst_format_str, 'utf-8')
-        dst_format_str_as_bytes = temp
-        cdef lib.AVPixelFormat dst_format = lib.av_get_pix_fmt(dst_format_str_as_bytes)
+        cdef lib.AVPixelFormat dst_format = lib.av_get_pix_fmt(dst_format_str)
         if dst_format == lib.AV_PIX_FMT_NONE:
-            raise ValueError("invalid format %s" % dst_format_str_as_bytes)
+            raise ValueError("invalid format %r" % dst_format_str)
 
 
         colorspace_dict = {'itu709': lib.SWS_CS_ITU709,

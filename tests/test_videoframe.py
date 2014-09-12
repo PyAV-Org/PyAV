@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-from six.moves import range
 from .common import *
 
 
@@ -55,6 +53,10 @@ class TestVideoFramePlanes(TestCase):
 class TestVideoFrameBuffers(TestCase):
 
     def test_buffer(self):
+        try:
+            buffer
+        except NameError:
+            raise SkipTest()
         frame = VideoFrame(640, 480, 'rgb24')
         frame.planes[0].update_from_string('01234' + ('x' * (640 * 480 * 3 - 5)))
         buf = buffer(frame.planes[0])
@@ -72,9 +74,9 @@ class TestVideoFrameBuffers(TestCase):
         self.assertEqual(mem.ndim, 1)
         self.assertEqual(mem.shape, (640 * 480 * 3, ))
         self.assertFalse(mem.readonly)
-        self.assertEqual(mem[1], b'1')
+        self.assertEqual(mem[1], 49 if is_py3 else b'1')
         self.assertEqual(mem[:7], b'01234xx')
-        mem[1] = '.'
+        mem[1] = 46 if is_py3 else b'.'
         self.assertEqual(mem[:7], b'0.234xx')
 
 

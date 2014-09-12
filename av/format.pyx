@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 cimport libav as lib
 
 
@@ -24,24 +23,21 @@ cdef class ContainerFormat(object):
         # We need to hold onto the original name because AVInputFormat.name
         # is actually comma-seperated, and so we need to remember which one
         # this was.
-        cdef char *name_as_bytes
-        temp = bytes(name, 'utf-8')
-        name_as_bytes = temp
-        self.name = name_as_bytes
+        self.name = name
 
         # Searches comma-seperated names.
-        self.in_ = lib.av_find_input_format(name_as_bytes)
+        self.in_ = lib.av_find_input_format(name)
 
         while True:
             self.out = lib.av_oformat_next(self.out)
-            if not self.out or self.out.name == name_as_bytes:
+            if not self.out or self.out.name == name:
                 break
 
         if not self.in_ and not self.out:
             raise ValueError('no container format %r' % name)
 
     def __repr__(self):
-        return "<av.{0} '{1}'>".format(self.__class__.__name__, self.name.decode())
+        return "<av.%s %r>" % (self.__class__.__name__, self.name)
 
     property is_input:
         def __get__(self):
@@ -55,7 +51,7 @@ cdef class ContainerFormat(object):
         def __get__(self):
             # We prefer the output names since the inputs may represent
             # multiple formats.
-            return self.out.long_name.decode() if self.out else self.in_.long_name.decode()
+            return self.out.long_name if self.out else self.in_.long_name
 
     property extensions:
         def __get__(self):

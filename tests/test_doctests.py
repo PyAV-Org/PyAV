@@ -3,9 +3,14 @@ import doctest
 import os
 import re
 import sys
-import six
 
 import av
+
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 def fix_doctests(suite):

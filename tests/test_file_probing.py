@@ -1,10 +1,12 @@
-import sys
 from fractions import Fraction
+import sys
+
 from .common import asset, av, TestCase
 
 # There is no good workaround for long ints in six.
 if sys.version_info[0] > 2:
     long = int
+
 
 class TestAudioProbe(TestCase):
     def setUp(self):

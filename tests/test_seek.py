@@ -1,9 +1,10 @@
+import math
+
 from .common import *
 
 from av.packet import Packet
-import math
+from av import time_base as AV_TIME_BASE
 
-AV_TIME_BASE = 1000000
 
 def timestamp_to_frame(timestamp, stream):
     

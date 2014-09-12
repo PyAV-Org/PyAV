@@ -1,6 +1,6 @@
 from .common import *
+
 from av.video.format import VideoFormat
-from six.moves import range
 
 
 class TestVideoFormats(TestCase):
