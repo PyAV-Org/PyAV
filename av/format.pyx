@@ -37,7 +37,7 @@ cdef class ContainerFormat(object):
             raise ValueError('no container format %r' % name)
 
     def __repr__(self):
-        return "<av.%s %r>" % (self.__class__.__name__, self.name)
+        return '<av.%s %r>' % (self.__class__.__name__, self.name)
 
     property is_input:
         def __get__(self):

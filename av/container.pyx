@@ -50,7 +50,7 @@ cdef class Container(object):
         lib.av_dict_free(&self.options)
 
     def __repr__(self):
-        return '<av.{} {!r}>'.format(self.__class__.__name__, self.name)
+        return '<av.%s %r>' % (self.__class__.__name__, self.name)
 
     cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
         raise NotImplementedError()

@@ -107,9 +107,7 @@ cdef class VideoFrame(Frame):
         """
         return self.reformat(self.width, self.height,colorspace)
 
-    def reformat(self, unsigned int width, unsigned int height,
-                 dst_format_str, src_colorspace = None,
-                 dst_colorspace = None):
+    def reformat(self, unsigned int width, unsigned int height, dst_format_str, src_colorspace = None, dst_colorspace = None):
 
         """reformat(width, height, format)
 
@@ -145,9 +143,7 @@ cdef class VideoFrame(Frame):
 
         return self._reformat(width, height, dst_format, cs_src, cs_dst)
 
-    cdef _reformat(self, unsigned int width, unsigned int height,
-                   lib.AVPixelFormat dst_format, int src_colorspace,
-                   int dst_colorspace):
+    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
 
         if self.ptr.format < 0:
             raise ValueError("invalid source format")
