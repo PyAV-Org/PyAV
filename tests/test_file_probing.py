@@ -1,7 +1,7 @@
 from fractions import Fraction
 import sys
 
-from .common import asset, av, TestCase
+from .common import fate_suite, av, TestCase
 
 try:
     long
@@ -11,7 +11,7 @@ except NameError:
 
 class TestAudioProbe(TestCase):
     def setUp(self):
-        self.file = av.open(asset('latm_stereo_to_51.ts'))
+        self.file = av.open(fate_suite('aac/latm_stereo_to_51.ts'))
 
     def test_container_probing(self):
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
@@ -41,7 +41,7 @@ class TestAudioProbe(TestCase):
 
 class TestVideoProbe(TestCase):
     def setUp(self):
-        self.file = av.open(asset('mpeg2_field_encoding.ts'))
+        self.file = av.open(fate_suite('mpeg2/mpeg2_field_encoding.ts'))
 
     def test_container_probing(self):
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
