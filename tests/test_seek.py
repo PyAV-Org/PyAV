@@ -1,3 +1,5 @@
+from __future__ import division
+
 import math
 
 from .common import *
@@ -50,7 +52,7 @@ class TestSeek(TestCase):
             total_packet_count += 1
         
         # seek to middle
-        container.seek(container.duration/2)
+        container.seek(container.duration // 2)
         
         seek_packet_count = 0
         for packet in container.demux():
@@ -63,7 +65,7 @@ class TestSeek(TestCase):
         container = av.open(asset('320x240x4.mov'))
         
         # seek to middle
-        container.seek(container.duration/2)
+        container.seek(container.duration // 2)
         middle_packet_count = 0
         
         for packet in container.demux():
@@ -95,7 +97,7 @@ class TestSeek(TestCase):
         self.assertEqual(video_stream.frames, total_frame_count)
         
         # set target frame to middle frame
-        target_frame = int(total_frame_count/ 2.0)
+        target_frame = int(total_frame_count / 2.0)
         target_timestamp = int((target_frame * AV_TIME_BASE) / float(video_stream.rate.denominator))
         
         # should seek to nearest keyframe before target_timestamp
@@ -116,7 +118,7 @@ class TestSeek(TestCase):
                 if current_frame is not None and current_frame >= target_frame:
                     frame_count += 1
 
-        self.assertEqual(frame_count, total_frame_count- target_frame)
+        self.assertEqual(frame_count, total_frame_count - target_frame)
 
 
 if __name__ == "__main__":
