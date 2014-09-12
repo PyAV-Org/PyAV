@@ -63,7 +63,7 @@ class TestSeek(TestCase):
         container = av.open(asset('320x240x4.mov'))
         
         # seek to middle
-        container.seek(container.duration/2)
+        container.seek(container.duration//2)
         middle_packet_count = 0
         
         for packet in container.demux():
