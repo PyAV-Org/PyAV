@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from __future__ import print_function
 
 import subprocess
@@ -33,7 +34,7 @@ if which('avconv'):
     avconv_cmd = [which('avconv'),'-y', '-filter_complex']
     
 if not ffmpeg_cmd and not avconv_cmd:
-    print("Unable to find ffmpeg or avconve command")
+    print('Unable to find ffmpeg or avconve command')
     sys.exit(-1)
 
 def testsrc(

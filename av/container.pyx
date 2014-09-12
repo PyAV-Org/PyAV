@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, free
 
@@ -47,7 +45,6 @@ cdef class Container(object):
 
         if options is not None:
             dict_to_avdict(&self.options, options)
-            print(options, <long>self.options, avdict_to_dict(self.options))
 
     def __dealloc__(self):
         lib.av_dict_free(&self.options)
@@ -83,9 +80,6 @@ cdef class InputContainer(Container):
             for i in range(self.proxy.ptr.nb_streams)
         )
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
-
-    property name:
-        def __get__(self): return self.name
 
     property start_time:
         def __get__(self): return self.proxy.ptr.start_time

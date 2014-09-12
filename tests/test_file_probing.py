@@ -3,8 +3,9 @@ import sys
 
 from .common import asset, av, TestCase
 
-# There is no good workaround for long ints in six.
-if sys.version_info[0] > 2:
+try:
+    long
+except NameError:
     long = int
 
 

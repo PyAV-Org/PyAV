@@ -1,18 +1,29 @@
 #!/usr/bin/env python
-from __future__ import unicode_literals
 import sys
 import wave
 import math
 import struct
 import random
 import optparse
-from six.moves import zip, map, range
-from itertools import islice, count, zip_longest
+
+try:
+    from itertools import izip, count, islice, imap, izip_longest
+except ImportError:
+    from itertools import count, zip_longest as izip_longest
+    izip = zip
+    islice = slice
+    imap = map
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 def grouper(n, iterable, fillvalue=None):
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
-    return zip_longest(fillvalue=fillvalue, *args)
+    return izip_longest(fillvalue=fillvalue, *args)
 
 def sine_wave(frequency=440.0, framerate=44100, amplitude=0.5):
     '''
@@ -21,7 +32,7 @@ def sine_wave(frequency=440.0, framerate=44100, amplitude=0.5):
     period = int(framerate / frequency)
     if amplitude > 1.0: amplitude = 1.0
     if amplitude < 0.0: amplitude = 0.0
-    lookup_table = [float(amplitude) * math.sin(2.0*math.pi*float(frequency)*(float(i%period)/float(framerate))) for i in range(period)]
+    lookup_table = [float(amplitude) * math.sin(2.0*math.pi*float(frequency)*(float(i%period)/float(framerate))) for i in xrange(period)]
     return (lookup_table[i%period] for i in count(0))
 
 def square_wave(frequency=440.0, framerate=44100, amplitude=0.5):
@@ -51,7 +62,7 @@ def compute_samples(channels, nsamples=None):
     essentially it creates a sequence of the sum of each function in the channel
     at each sample in the file for each channel.
     '''
-    return islice(zip(*(map(sum, zip(*channel)) for channel in channels)), nsamples)
+    return islice(izip(*(imap(sum, izip(*channel)) for channel in channels)), nsamples)
 
 def write_wavefile(filename, samples, nframes=None, nchannels=2, sampwidth=2, framerate=44100, bufsize=2048):
     "Write samples to a wavefile."
@@ -65,7 +76,7 @@ def write_wavefile(filename, samples, nframes=None, nchannels=2, sampwidth=2, fr
 
     # split the samples into chunks (to reduce memory consumption and improve performance)
     for chunk in grouper(bufsize, samples):
-        frames = ''.join(''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
+        frames = b''.join(b''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
         w.writeframesraw(frames)
     
     w.close()
@@ -78,7 +89,7 @@ def write_pcm(f, samples, sampwidth=2, framerate=44100, bufsize=2048):
 
     # split the samples into chunks (to reduce memory consumption and improve performance)
     for chunk in grouper(bufsize, samples):
-        frames = ''.join(''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
+        frames = b''.join(b''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
         f.write(frames)
     
     f.close()

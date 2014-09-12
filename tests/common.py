@@ -23,6 +23,9 @@ from av.video import VideoFrame
 
 is_py3 = sys.version_info[0] > 2
 
+if not is_py3:
+    from itertools import izip as zip
+
 
 def fate_suite(name):
     fate_dir = os.path.abspath(os.path.join(
