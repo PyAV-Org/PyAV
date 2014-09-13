@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import sys
 import wave
 import math
@@ -110,7 +111,7 @@ def main():
         filename = sys.stdout
     else:
         filename = args[0]
-    write_wavefile(filename, samples, options.rate * options.time, options.channels, options.bits / 8, options.rate)
+    write_wavefile(filename, samples, options.rate * options.time, options.channels, options.bits // 8, options.rate)
 
 if __name__ == "__main__":
     main()
