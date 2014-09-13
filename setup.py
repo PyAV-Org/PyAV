@@ -206,6 +206,7 @@ setup(
     author_email="pyav@mikeboers.com",
     
     url="https://github.com/mikeboers/PyAV",
+    install_requires = ['six'],
 
     packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
     
