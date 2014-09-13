@@ -1,4 +1,5 @@
 from .common import *
+
 from av.video.format import VideoFormat
 
 
@@ -15,7 +16,7 @@ class TestVideoFormats(TestCase):
         self.assertEqual(fmt.chroma_height(), 480)
         self.assertEqual(fmt.chroma_width(1024), 1024)
         self.assertEqual(fmt.chroma_height(1024), 1024)
-        for i in xrange(3):
+        for i in range(3):
             comp = fmt.components[i]
             self.assertEqual(comp.plane, 0)
             self.assertEqual(comp.bits, 8)

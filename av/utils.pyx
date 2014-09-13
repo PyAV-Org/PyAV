@@ -18,7 +18,7 @@ class AVError(EnvironmentError):
 AVError.__module__ = 'av'
 
 
-cdef int err_check(int res, filename=None) except -1:
+cdef int err_check(int res, str filename=None) except -1:
     cdef bytes py_buffer
     cdef char *c_buffer
     if res < 0:
@@ -45,15 +45,10 @@ cdef dict avdict_to_dict(lib.AVDictionary *input):
 
 
 cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
-    
     if clear:
         lib.av_dict_free(dst)
-
-    cdef bytes key_str, value_str
     for key, value in src.iteritems():
-        key_str = str(key)
-        value_str = str(value)
-        err_check(lib.av_dict_set(dst, key_str, value_str, 0))
+        err_check(lib.av_dict_set(dst, key, value, 0))
 
 
 cdef object avrational_to_faction(lib.AVRational *input):

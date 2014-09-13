@@ -45,7 +45,6 @@ cdef class Container(object):
 
         if options is not None:
             dict_to_avdict(&self.options, options)
-            print options, <long>self.options, avdict_to_dict(self.options)
 
     def __dealloc__(self):
         lib.av_dict_free(&self.options)
@@ -209,7 +208,7 @@ cdef class OutputContainer(Container):
     def __del__(self):
         self.close()
 
-    cpdef add_stream(self, bytes codec_name, object rate=None):
+    cpdef add_stream(self, codec_name, object rate=None):
         """add_stream(codec_name, rate=None)
 
         Create a new stream, and return it.
@@ -226,6 +225,7 @@ cdef class OutputContainer(Container):
         # Find encoder
         cdef lib.AVCodec *codec
         cdef lib.AVCodecDescriptor *codec_descriptor
+
         codec = lib.avcodec_find_encoder_by_name(codec_name)
         if not codec:
             codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)

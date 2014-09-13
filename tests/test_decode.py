@@ -1,3 +1,4 @@
+from __future__ import print_function
 from .common import *
 
 
@@ -22,7 +23,7 @@ class TestDecode(TestCase):
         
         sample_count = 0
         
-        print audio_stream.frames
+        print(audio_stream.frames)
         for packet in container.demux(audio_stream):
             for frame in packet.decode():
                 sample_count += frame.samples

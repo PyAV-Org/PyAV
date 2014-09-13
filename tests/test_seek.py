@@ -1,9 +1,10 @@
+import math
+
 from .common import *
 
 from av.packet import Packet
-import math
+from av import time_base as AV_TIME_BASE
 
-AV_TIME_BASE = 1000000
 
 def timestamp_to_frame(timestamp, stream):
     
@@ -62,7 +63,7 @@ class TestSeek(TestCase):
         container = av.open(asset('320x240x4.mov'))
         
         # seek to middle
-        container.seek(container.duration/2)
+        container.seek(container.duration//2)
         middle_packet_count = 0
         
         for packet in container.demux():

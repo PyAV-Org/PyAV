@@ -53,7 +53,7 @@ cdef class VideoFormat(object):
     property name:
         """Canonical name of the pixel format."""
         def __get__(self):
-            return self.ptr.name
+            return <str>self.ptr.name
 
     property is_big_endian:
         """Pixel format is big-endian."""

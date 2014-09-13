@@ -5,7 +5,7 @@ from cpython.buffer cimport Py_buffer
 cimport libav as lib
 
 
-cdef int err_check(int res, filename=*) except -1
+cdef int err_check(int res, str filename=*) except -1
 
 
 cdef dict avdict_to_dict(lib.AVDictionary *input)

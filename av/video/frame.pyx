@@ -23,7 +23,7 @@ cdef class VideoFrame(Frame):
 
     """
 
-    def __cinit__(self, width=0, height=0, format=b'yuv420p'):
+    def __cinit__(self, width=0, height=0, format='yuv420p'):
 
         if width is _cinit_bypass_sentinel:
             return
@@ -107,7 +107,7 @@ cdef class VideoFrame(Frame):
         """
         return self.reformat(self.width, self.height,colorspace)
 
-    def reformat(self, unsigned int width, unsigned int height, char* dst_format_str, src_colorspace = None, dst_colorspace = None):
+    def reformat(self, unsigned int width, unsigned int height, dst_format_str, src_colorspace = None, dst_colorspace = None):
 
         """reformat(width, height, format)
 
@@ -115,14 +115,13 @@ cdef class VideoFrame(Frame):
 
         :param int width: New width.
         :param int height: New height.
-        :param bytes format: New format; see :attr:`VideoFrame.format`.
+        :param str format: New format; see :attr:`VideoFrame.format`.
 
         """
 
-
         cdef lib.AVPixelFormat dst_format = lib.av_get_pix_fmt(dst_format_str)
         if dst_format == lib.AV_PIX_FMT_NONE:
-            raise ValueError("invalid format %s" % dst_format_str)
+            raise ValueError("invalid format %r" % dst_format_str)
 
 
         colorspace_dict = {'itu709': lib.SWS_CS_ITU709,
@@ -231,8 +230,8 @@ cdef class VideoFrame(Frame):
         def __get__(self): return self.ptr.key_frame
 
     def to_image(self):
-        import PIL.Image
-        return PIL.Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
+        from PIL import Image
+        return Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
 
     def to_nd_array(self,colorspace="bgr24"):
         """
