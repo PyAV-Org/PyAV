@@ -5,6 +5,30 @@ import ctypes.util
 import errno
 import os
 import re
+import platform
+
+
+if platform.system() == 'Windows':
+    raise NotImplementedError("PyAV cannot currently be built on Windows.")
+else:
+    # setup_requires doesn't catch this in time to do anything,
+    # so here's a user-friendly error message
+    try:
+        import pkgconfig
+    except ImportError:
+        raise ImportError("On Unix-based platforms, before installing PyAV the "
+                          "Python module pkgconfig must be installed. E.g., "
+                          "pip install pkgconfig")
+    else:
+        pkg_exists = pkgconfig.exists
+
+        def get_pkg_info(lib_name):
+            _pkg_info = pkgconfig.parse(lib_name)
+            # Restructure this into a dict of lists
+            pkg_info = {}
+            for k, v in _pkg_info.items():
+                pkg_info[k] = v
+            return pkg_info
 
 
 version = '0.2.0'
@@ -15,54 +39,57 @@ extension_extra = {
     'include_dirs': ['include'],
 }
 
+
 def update_extend(dst, src):
     for k, v in src.iteritems():
         dst.setdefault(k, []).extend(v)
 
+
+required_libs = ['libavformat', 'libavcodec', 'libavutil', 'libswscale',
+                 'libavdevice']
+resample_libs = ['libswresample', 'libavresample']  # require one
+
+
+# The "extras" to be supplied to every one of our modules.
+extension_extra = {
+    'include_dirs': ['include'],
+}
 config_macros = [
     ("PYAV_VERSION", version),
 ]
 
 
-def pkg_config(name):
-    """Get distutils compatible extension extras via pkg-config."""
+class LibraryNotFoundError(Exception):
+    pass
 
-    proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
-    raw_config, err = proc.communicate()
-    if proc.wait():
-        return
+import pkgconfig
 
-    config = {}
-    for chunk in raw_config.strip().split():
-        if chunk.startswith('-I'):
-            config.setdefault('include_dirs', []).append(chunk[2:])
-        elif chunk.startswith('-L'):
-            config.setdefault('library_dirs', []).append(chunk[2:])
-        elif chunk.startswith('-l'):
-            config.setdefault('libraries', []).append(chunk[2:])
-        elif chunk.startswith('-D'):
-            name = chunk[2:].split('=')[0]
-            config.setdefault('define_macros', []).append((name, None))
-
-    return config
 
 # Get the config for the libraries that we require.
-for name in 'libavformat', 'libavcodec', 'libavutil', 'libswscale':
-    config = pkg_config(name)
-    if config:
-        update_extend(extension_extra, config)
-        config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+for lib_name in required_libs:
+    missing = []
+    if pkg_exists(lib_name):
+        pkg_info = get_pkg_info(lib_name)
+        update_extend(extension_extra, pkg_info)  # just update??
+        config_macros.append(('PYAV_HAVE_' + lib_name.upper(), '1'))
     else:
-        print 'Could not find', name, 'with pkg-config.'
+        missing.append(lib_name)
+if missing:
+    raise LibraryNotFoundError(
+        "Could not find the required libraries: {0}".format(
+            ' '.join(missing)))
 
-for name in 'libswresample', 'libavresample':
-    config = pkg_config(name)
-    if config:
-        update_extend(extension_extra, config)
-        config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
-        break
-else:
-    print 'Could not find either of libswresample or libavresample with pkg-config.'
+for lib_name in resample_libs:  # require one
+    if pkg_exists(lib_name):
+        pkg_info = get_pkg_info(lib_name)
+        update_extend(extension_extra, pkg_info)  # just update??
+        config_macros.append(('PYAV_HAVE_' + lib_name.upper(), '1'))
+    else:
+        missing.append(lib_name)
+if len(missing) > 1:
+    raise LibraryNotFoundError(
+        "Could not find either of these libraries: {0}."
+        "One or the other is required.".format(' '.join(missing)))
 
 
 def check_for_header(header_name):
@@ -112,29 +139,6 @@ def check_for_func(lib_names, func_name):
             extension_extra.setdefault('define_macros', []).append(('HAVE_%s' % func_name.upper(), '1'))
             return
 
-
-extension_extra = {
-    'include_dirs': ['include'],
-}
-
-
-# Get the config for the libraries that we require.
-for name in 'libavformat libavcodec libavdevice libavutil libswscale'.split():
-    config = pkg_config(name)
-    if not config:
-        print 'Could not find', name, 'with pkg-config.'
-    else:
-        update_extend(extension_extra, config)
-
-
-# Get the config for either swresample OR avresample.
-config = pkg_config('libswresample')
-if not config:
-    config = pkg_config('libavresample')
-if not config:
-    print 'Could not find either of libswresample or libavresample with pkg-config.'
-else:
-    update_extend(extension_extra, config)
 
 # Check for some specific functions.
 for libs, func in (
@@ -206,6 +210,7 @@ setup(
     url="https://github.com/mikeboers/PyAV",
 
     packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
+    setup_requires=['pkgconfig'],
     
     zip_safe=False,
     ext_modules=ext_modules,
