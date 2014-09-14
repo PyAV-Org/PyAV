@@ -1,11 +1,26 @@
 #!/usr/bin/env python
+
+from __future__ import division
+
 import sys
 import wave
 import math
 import struct
 import random
 import optparse
-from itertools import *
+
+try:
+    from itertools import izip, count, islice, imap, izip_longest
+except ImportError:
+    from itertools import count, islice, zip_longest as izip_longest
+    izip = zip
+    imap = map
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 def grouper(n, iterable, fillvalue=None):
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
@@ -63,7 +78,7 @@ def write_wavefile(filename, samples, nframes=None, nchannels=2, sampwidth=2, fr
 
     # split the samples into chunks (to reduce memory consumption and improve performance)
     for chunk in grouper(bufsize, samples):
-        frames = ''.join(''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
+        frames = b''.join(b''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
         w.writeframesraw(frames)
     
     w.close()
@@ -76,7 +91,7 @@ def write_pcm(f, samples, sampwidth=2, framerate=44100, bufsize=2048):
 
     # split the samples into chunks (to reduce memory consumption and improve performance)
     for chunk in grouper(bufsize, samples):
-        frames = ''.join(''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
+        frames = b''.join(b''.join(struct.pack('h', int(max_amplitude * sample)) for sample in channels) for channels in chunk if channels is not None)
         f.write(frames)
     
     f.close()
@@ -108,7 +123,7 @@ def main():
         filename = sys.stdout
     else:
         filename = args[0]
-    write_wavefile(filename, samples, options.rate * options.time, options.channels, options.bits / 8, options.rate)
+    write_wavefile(filename, samples, options.rate * options.time, options.channels, options.bits // 8, options.rate)
 
 if __name__ == "__main__":
     main()

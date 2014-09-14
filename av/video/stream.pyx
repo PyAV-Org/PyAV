@@ -242,9 +242,6 @@ cdef class VideoStream(Stream):
 
     # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
     property pix_fmt:
-        def __set__(self, bytes value):
+        def __set__(self, value):
             self._codec_context.pix_fmt = lib.av_get_pix_fmt(value)
             self._build_format()
-
-    
-

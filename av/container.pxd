@@ -12,7 +12,7 @@ cdef class ContainerProxy(object):
 
 cdef class Container(object):
     
-    cdef readonly bytes name
+    cdef readonly str name
     cdef readonly ContainerFormat format
     cdef lib.AVDictionary *options
 
@@ -35,5 +35,5 @@ cdef class OutputContainer(Container):
     cdef bint _started
     cdef bint _done
 
-    cpdef add_stream(self, bytes codec_name, object rate=*)
+    cpdef add_stream(self, codec_name, object rate=*)
     cpdef start_encoding(self)

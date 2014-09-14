@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import subprocess
 import optparse
 import os
@@ -32,7 +34,7 @@ if which('avconv'):
     avconv_cmd = [which('avconv'),'-y', '-filter_complex']
     
 if not ffmpeg_cmd and not avconv_cmd:
-    print 'Unable to find ffmpeg or avconve command'
+    print('Unable to find ffmpeg or avconve command')
     sys.exit(-1)
 
 def testsrc(
@@ -66,7 +68,7 @@ def testsrc(
 
     exec_cmd.extend(['-t', str(time)])
     exec_cmd.extend([out_path])
-    print subprocess.list2cmdline(exec_cmd)
+    print(subprocess.list2cmdline(exec_cmd))
     subprocess.check_call(exec_cmd)
 
 def main():

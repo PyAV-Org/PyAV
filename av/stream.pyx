@@ -108,11 +108,11 @@ cdef class Stream(object):
 
     property name:
         def __get__(self):
-            return bytes(self._codec.name) if self._codec else None
+            return self._codec.name if self._codec else None
 
     property long_name:
         def __get__(self):
-            return bytes(self._codec.long_name) if self._codec else None
+            return self._codec.long_name if self._codec else None
     
     property profile:
         def __get__(self):

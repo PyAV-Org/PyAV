@@ -41,7 +41,7 @@ cdef class AudioFormat(object):
 
         """
         def __get__(self):
-            return lib.av_get_sample_fmt_name(self.sample_fmt)
+            return <str>lib.av_get_sample_fmt_name(self.sample_fmt)
 
     property bytes:
         """Number of bytes per sample.

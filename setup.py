@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
@@ -16,7 +18,7 @@ extension_extra = {
 }
 
 def update_extend(dst, src):
-    for k, v in src.iteritems():
+    for k, v in src.items():
         dst.setdefault(k, []).extend(v)
 
 config_macros = [
@@ -33,7 +35,7 @@ def pkg_config(name):
         return
 
     config = {}
-    for chunk in raw_config.strip().split():
+    for chunk in str(raw_config).strip().split():
         if chunk.startswith('-I'):
             config.setdefault('include_dirs', []).append(chunk[2:])
         elif chunk.startswith('-L'):
@@ -53,7 +55,7 @@ for name in 'libavformat', 'libavcodec', 'libavutil', 'libswscale':
         update_extend(extension_extra, config)
         config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
     else:
-        print 'Could not find', name, 'with pkg-config.'
+        print('Could not find', name, 'with pkg-config.')
 
 for name in 'libswresample', 'libavresample':
     config = pkg_config(name)
@@ -62,7 +64,7 @@ for name in 'libswresample', 'libavresample':
         config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
         break
 else:
-    print 'Could not find either of libswresample or libavresample with pkg-config.'
+    print('Could not find either of libswresample or libavresample with pkg-config.')
 
 
 def check_for_header(header_name):
@@ -85,7 +87,7 @@ def check_for_func(lib_names, func_name):
 
         lib_path = ctypes.util.find_library(lib_name)
         if not lib_path:
-            print 'Could not find', lib_name, 'with ctypes.util.find_library'
+            print('Could not find', lib_name, 'with ctypes.util.find_library')
             continue
 
         # Open the lib. Look in the path returned by find_library, but also all
@@ -103,8 +105,8 @@ def check_for_func(lib_names, func_name):
             except OSError:
                 pass
         else:
-            print 'Could not find', lib_name, 'with ctypes; looked in:'
-            print '\n'.join('\t' + path for path in lib_paths)
+            print('Could not find', lib_name, 'with ctypes; looked in:')
+            print('\n'.join('\t' + path for path in lib_paths))
             continue
 
 
@@ -122,7 +124,7 @@ extension_extra = {
 for name in 'libavformat libavcodec libavdevice libavutil libswscale'.split():
     config = pkg_config(name)
     if not config:
-        print 'Could not find', name, 'with pkg-config.'
+        print('Could not find', name, 'with pkg-config.')
     else:
         update_extend(extension_extra, config)
 
@@ -132,7 +134,7 @@ config = pkg_config('libswresample')
 if not config:
     config = pkg_config('libavresample')
 if not config:
-    print 'Could not find either of libswresample or libavresample with pkg-config.'
+    print('Could not find either of libswresample or libavresample with pkg-config.')
 else:
     update_extend(extension_extra, config)
 
@@ -147,7 +149,7 @@ for libs, func in (
         config_macros.append(('PYAV_HAVE_' + func.upper(), '1'))
 
 # Normalize the extras.
-extension_extra = dict((k, sorted(set(v))) for k, v in extension_extra.iteritems())
+extension_extra = dict((k, sorted(set(v))) for k, v in extension_extra.items())
 
 
 # Construct the modules that we find in the "build/cython" directory.
@@ -180,7 +182,7 @@ class my_build_ext(build_ext):
             if e.errno != errno.EEXIST:
                 raise
         header_path = os.path.join(pyav_dir, 'config.h')
-        print 'writing', header_path
+        print('writing', header_path)
         with open(header_path, 'w') as fh:
             fh.write('#ifndef PYAV_COMPAT_H\n')
             fh.write('#define PYAV_COMPAT_H\n')

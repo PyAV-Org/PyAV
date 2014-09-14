@@ -3,8 +3,15 @@ import doctest
 import os
 import re
 import sys
+import pkgutil
 
 import av
+
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 def fix_doctests(suite):
@@ -30,7 +37,7 @@ def fix_doctests(suite):
 def register_doctests(mod):
 
     if isinstance(mod, basestring):
-        mod = __import__(mod, fromlist=['.'])
+        mod = __import__(mod)
     try:
         suite = doctest.DocTestSuite(mod)
     except ValueError:
@@ -50,14 +57,7 @@ def register_doctests(mod):
     globals()[cls_name] = cls
 
 
-root = av.__path__[0]
-for dir_name, dir_names, file_names in os.walk(root):
-    for file_name in file_names:
-        base, ext = os.path.splitext(file_name)
-        if base in ('__init__', ):
-            continue
-        if ext not in ('.so', '.py'):
-            continue
-        mod_name = 'av.' + os.path.relpath(os.path.join(dir_name, base), root).replace('/', '.')
-        register_doctests(mod_name)
-
+for importer, mod_name, ispkg in pkgutil.walk_packages(path=av.__path__,
+                                                      prefix=av.__name__+'.',
+                                                      onerror=lambda x: None):
+    register_doctests(mod_name)

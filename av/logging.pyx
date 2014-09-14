@@ -96,8 +96,8 @@ cdef int async_log_callback(void *arg) except -1:
 
     cdef LogRequest *req = <LogRequest*>arg
     cdef int level
-    cdef bytes logger_name
-    cdef bytes item_name
+    cdef str logger_name
+    cdef str item_name
 
     if not lib.Py_IsInitialized():
         fprintf(stderr, "av.logging: callback after Python shutdown: %s[%d]: %s",
@@ -107,9 +107,10 @@ cdef int async_log_callback(void *arg) except -1:
 
     try:
         level = level_map.get(req.level, 20)
-        item_name = req.item_name if req.item_name else b''
-        logger_name = b'libav.' + item_name if item_name else b'libav.generic'
-        logging.getLogger(logger_name).log(level, req.message.strip())
+        item_name = req.item_name if req.item_name else ''
+        logger_name = 'libav.' + item_name if item_name else 'libav.generic'
+        logger = logging.getLogger(logger_name)
+        logger.log(level, req.message.strip())
     except Exception as e:
         fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
             req.item_name, req.level, req.message
