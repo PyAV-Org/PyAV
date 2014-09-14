@@ -48,14 +48,18 @@ def pkg_config(name):
 
     return config
 
+
+any_library_missing = False
+
 # Get the config for the libraries that we require.
-for name in 'libavformat', 'libavcodec', 'libavutil', 'libswscale':
+for name in 'libavformat', 'libavcodec', 'libavutil', 'libswscale', 'libavdevice':
     config = pkg_config(name)
     if config:
         update_extend(extension_extra, config)
         config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
     else:
         print('Could not find', name, 'with pkg-config.')
+        any_library_missing = True
 
 for name in 'libswresample', 'libavresample':
     config = pkg_config(name)
@@ -65,6 +69,10 @@ for name in 'libswresample', 'libavresample':
         break
 else:
     print('Could not find either of libswresample or libavresample with pkg-config.')
+    any_library_missing = True
+
+if any_library_missing:
+    exit(1)
 
 
 def check_for_header(header_name):
