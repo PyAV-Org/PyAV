@@ -21,6 +21,51 @@ Basic Demo
                 frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
 
 
+Dependencies
+------------
+
+PyAV depends upon the following components of the underlying libraries:
+
+- ``libavformat``
+- ``libavcodec``
+- ``libavdevice``
+- ``libavutil``
+- ``libswscale``
+- either ``libswresample`` or ``libavresample``
+
+
+Mac OS X
+^^^^^^^^
+
+On **Mac OS X** Homebrew_ saves the day::
+
+    brew install ffmpeg
+
+
+Ubuntu 14.04 LTS
+^^^^^^^^^^^^^^^^
+
+On **Ubuntu 14.04 LTS** everything can come from the default sources::
+
+    sudo apt-get install -y \
+        libavformat-dev libavcodec-dev libavdevice-dev \
+        libavutil-dev libswscale-dev libavresample-dev \
+
+
+Ubuntu 10.04 LTS
+^^^^^^^^^^^^^^^^
+
+On **Ubuntu 10.04 LTS** you will be unable to satisfy these requirements with the default package sources. We recomment compiling and installing FFmpeg or Libav from source. For FFmpeg::
+
+    wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
+    tar -xjf ffmpeg-1.2.2.tar.bz2
+    cd ffmpeg-1.2.2
+
+    ./configure --disable-static --enable-shared --disable-doc
+    make
+    sudo make install
+
+
 Installation
 ------------
 
@@ -38,6 +83,11 @@ From Source::
     $ pip install cython pil
     $ make
     $ python setup.py build_ext --inplace
+
+
+On **Mac OS X** you may have issues with regards to Python expecting gcc but finding clang. Try to export the following before installation::
+    
+    export ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
 
 
 Caveats
@@ -77,3 +127,7 @@ Other important documents include:
 - `HACKING.md <https://github.com/mikeboers/PyAV/blob/master/HACKING.md>`_ (developer docs);
 - `CHANGELOG.md <https://github.com/mikeboers/PyAV/blob/master/CHANGELOG.md>`_;
 - `LICENSE.txt <https://github.com/mikeboers/PyAV/blob/master/LICENSE.txt>`_.
+
+
+
+.. _homebrew: http://brew.sh/
