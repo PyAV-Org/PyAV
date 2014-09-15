@@ -1,6 +1,9 @@
 General
 ===============
 
+.. warning:: This is far from complete, and is just an automatic dump of the API. Most function/method signatures will be incorrect.
+
+
 Containers
 ----------
 
@@ -159,9 +162,21 @@ Subtitles
 
 .. automodule:: av.subtitles.subtitle
 
-    .. autoclass:: Subtitle
+    .. autoclass:: SubtitleSet
         :members:
         
-    .. autoclass:: SubtitleRect
+    .. autoclass:: Subtitle
+        :members:
+
+    .. autoclass:: BitmapSubtitle
+        :members:
+
+    .. autoclass:: BitmapSubtitlePlane
+        :members:
+
+    .. autoclass:: TextSubtitle
+        :members:
+
+    .. autoclass:: AssSubtitle
         :members:
 
