@@ -9,7 +9,7 @@ import os
 import re
 
 
-version = '0.2.0'
+version = '0.2.1'
 
 
 def library_config(name):
@@ -192,7 +192,7 @@ setup(
 
     name='av',
     version=version,
-    description='Pythonic bindings for libav.',
+    description='Pythonic bindings for FFmpeg/Libav.',
     
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
@@ -205,5 +205,25 @@ setup(
     ext_modules=ext_modules,
 
     cmdclass={'build_ext': my_build_ext},
+
+    classifiers=[
+       'Development Status :: 3 - Alpha',
+       'Intended Audience :: Developers',
+       'License :: OSI Approved :: BSD License',
+       'Natural Language :: English',
+       'Operating System :: MacOS :: MacOS X',
+       'Operating System :: POSIX',
+       'Operating System :: Unix',
+       'Programming Language :: Cython',
+       'Programming Language :: Python :: 2.6',
+       'Programming Language :: Python :: 2.7',
+       'Programming Language :: Python :: 3.3',
+       'Programming Language :: Python :: 2.4',
+       'Topic :: Software Development :: Libraries :: Python Modules',
+       'Topic :: Multimedia :: Sound/Audio',
+       'Topic :: Multimedia :: Sound/Audio :: Conversion',
+       'Topic :: Multimedia :: Video',
+       'Topic :: Multimedia :: Video :: Conversion',
+   ],
 
 )
