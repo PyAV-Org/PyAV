@@ -80,7 +80,8 @@ def check_for_func(lib_names, func_name):
 
         if hasattr(lib, func_name):
             extension_extra.setdefault('define_macros', []).append(('HAVE_%s' % func_name.upper(), '1'))
-            return
+        
+        return
 
     else:
         print('Could not find %r with ctypes.util.find_library' % (lib_names, ))
