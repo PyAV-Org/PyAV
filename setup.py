@@ -78,6 +78,8 @@ def check_for_func(lib_names, func_name):
 
     else:
         print('Could not find %r with ctypes.util.find_library' % (lib_names, ))
+        print('Some libraries can not be found for inspection; aborting!')
+        exit(2)
 
 
 # The "extras" to be supplied to every one of our modules.
@@ -127,7 +129,7 @@ if is_missing_libraries:
 
 # Check for some specific functions.
 for libs, func in (
-    (['avcodec', 'avutil', 'avcodec'], 'av_frame_get_best_effort_timestamp'),
+    (['avformat', 'avutil', 'avcodec'], 'av_frame_get_best_effort_timestamp'),
     (['avformat'], 'avformat_close_input'),
     (['avformat'], 'avformat_alloc_output_context2'),
     (['avutil'], 'av_calloc'),
