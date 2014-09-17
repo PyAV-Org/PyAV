@@ -1,26 +1,14 @@
-CYTHON_SRC = $(shell find av -name "*.pyx")
-C_SRC = $(CYTHON_SRC:%.pyx=src/%.c)
-MOD_SOS = $(CYTHON_SRC:%.pyx=%.so)
-
-TEST_MOV = sandbox/640x360.mp4
-
 LDFLAGS ?= ""
 CFLAGS ?= "-O0"
 
 .PHONY: default build cythonize clean clean-all info test docs
 
-default: cythonize
+default: build
 
-info:
-	@ echo Cython sources: $(CYTHON_SRC)
+cythonize:
+	python setup.py cythonize
 
-cythonize: $(C_SRC)
-
-src/%.c: %.pyx
-	@ mkdir -p $(shell dirname $@)
-	cython -I. -Iinclude -X c_string_type=str -X c_string_encoding=ascii -o $@ $<
-
-build: cythonize
+build:
 	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace --debug
 
 fate-suite:
@@ -28,10 +16,13 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 test-assets: tests/assets/lenna.png tests/assets/320x240x4.mov tests/assets/1KHz.wav
+
 tests/assets/1KHz.wav:
 	python scripts/generate_audio.py -c 2 -r 48000 -t 4 -a 0.5 -f 1000 $@
+
 tests/assets/320x240x4.mov:
 	python scripts/generate_video.py -s 320x240 -r 24 -b 200k -t 4 $@
+
 tests/assets/lenna.png:
 	@ mkdir -p $(@D)
 	wget -O $@ https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png
@@ -50,9 +41,6 @@ vtest-libav: cythonize
 
 vtest: vtest-ffmpeg vtest-libav
 
-debug: build
-	gdb python --args python -m examples.tutorial $(TEST_MOV)
-
 clean: clean-build
 
 clean-build:
@@ -60,7 +48,7 @@ clean-build:
 	- find av -name '*.so' -delete
 
 clean-sandbox:
-	- rm -rf sandbox/2013*
+	- rm -rf sandbox/201*
 	- rm sandbox/last
 
 clean-src:

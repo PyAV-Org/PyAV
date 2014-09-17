@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from distutils.core import Command
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
@@ -7,6 +8,11 @@ import ctypes.util
 import errno
 import os
 import re
+
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    cythonize = None
 
 
 version = '0.2.1'
@@ -142,25 +148,63 @@ for libs, func in (
 extension_extra = dict((k, sorted(set(v))) for k, v in extension_extra.items())
 
 
-# Construct the modules that we find in the "build/cython" directory.
+# Construct the modules that we find in the "av" directory.
 ext_modules = []
-build_dir = os.path.abspath(os.path.join(__file__, '..', 'src'))
-for dirname, dirnames, filenames in os.walk(build_dir):
+for dirname, dirnames, filenames in os.walk('av'):
     for filename in filenames:
-        if filename.startswith('.') or os.path.splitext(filename)[1] != '.c':
+
+        # We are looing for Cython sources.
+        if filename.startswith('.') or os.path.splitext(filename)[1] != '.pyx':
             continue
 
-        path = os.path.join(dirname, filename)
-        name = os.path.splitext(os.path.relpath(path, build_dir))[0].replace('/', '.')
+        pyx_path = os.path.join(dirname, filename)
+        base = os.path.splitext(pyx_path)[0]
+        mod_name = base.replace('/', '.')
+        c_path = os.path.join('src', base + '.c')
 
+        # We go with the C sources if Cython is not installed.
+        # We can't `cythonize` here, however, since the `pyav/include.h`
+        # must be generated first.
         ext_modules.append(Extension(
-            name,
-            sources=[path],
+            mod_name,
+            sources=[c_path if not cythonize else pyx_path],
             **extension_extra
         ))
 
 
-class my_build_ext(build_ext):
+
+class CythonizeCommand(Command):
+
+    user_options = []
+
+    def initialize_options(self):
+        self.extensions = None
+
+    def finalize_options(self):
+        self.extensions = self.distribution.ext_modules
+
+    def run(self):
+
+        # Cythonize, if required. We do it individually since we must update
+        # the existing extension instead of replacing them all.
+        for i, ext in enumerate(self.extensions[:]):
+            if any(s.endswith('.pyx') for s in ext.sources):
+                if not cythonize:
+                    print('Cython is required to build from raw sources.')
+                    exit(3)
+                new_ext = cythonize(ext,
+                    # Keep these in sync with the Makefile cythonize target.
+                    compiler_directives=dict(
+                        c_string_type='str',
+                        c_string_encoding='ascii',
+                    ),
+                    build_dir='src',
+                    include_path=ext.include_dirs,
+                )[0]
+                ext.sources = new_ext.sources
+
+
+class BuildExtCommand(build_ext):
 
     def run(self):
 
@@ -187,6 +231,8 @@ class my_build_ext(build_ext):
         self.include_dirs = self.include_dirs or []
         self.include_dirs.append(include_dir)
 
+        self.run_command('cythonize')
+
         return build_ext.run(self)
 
 
@@ -206,7 +252,12 @@ setup(
     zip_safe=False,
     ext_modules=ext_modules,
 
-    cmdclass={'build_ext': my_build_ext},
+    cmdclass={
+        'build_ext': BuildExtCommand,
+        'cythonize': CythonizeCommand,
+    },
+
+    test_suite = 'nose.collector',
 
     classifiers=[
        'Development Status :: 3 - Alpha',
