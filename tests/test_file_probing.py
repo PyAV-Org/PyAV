@@ -72,7 +72,6 @@ class TestVideoProbe(TestCase):
         self.assertEqual(stream.gop_size, 12)
         self.assertEqual(stream.format.name, 'yuv420p')
         self.assertFalse(stream.has_b_frames)
-        self.assertEqual(stream.guessed_rate, Fraction(25, 1))
         self.assertEqual(stream.average_rate, Fraction(25, 1))
         self.assertEqual(stream.width, 720)
         self.assertEqual(stream.height, 576)
