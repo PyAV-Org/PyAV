@@ -275,8 +275,6 @@ cdef class OutputContainer(Container):
             stream.sample_aspect_ratio.den = template._stream.sample_aspect_ratio.den
             stream.time_base.num = template._stream.time_base.num
             stream.time_base.den = template._stream.time_base.den
-            stream.r_frame_rate.num = template._stream.r_frame_rate.num
-            stream.r_frame_rate.den = template._stream.r_frame_rate.den
             stream.avg_frame_rate.num = template._stream.avg_frame_rate.num
             stream.avg_frame_rate.den = template._stream.avg_frame_rate.den
             stream.duration = template._stream.duration

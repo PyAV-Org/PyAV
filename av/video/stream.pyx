@@ -140,8 +140,7 @@ cdef class VideoStream(Stream):
             
             # There is no pts, so create one.
             else:
-                # pts_step = float(self._stream.r_frame_rate.den) / float(self._stream.r_frame_rate.num) * self._stream.time_base.den
-                formated_frame.ptr.pts = <int64_t>self.encoded_frame_count# (pts_step * self.encoded_frame_count)
+                formated_frame.ptr.pts = <int64_t>self.encoded_frame_count
                 
             
             self.encoded_frame_count += 1
@@ -177,18 +176,8 @@ cdef class VideoStream(Stream):
 
             return packet
 
-
-    property guessed_rate:
-        """The lowest framerate with which all timestamps can be represented.
-
-        Just a guess though, so be careful.
-
-        """
-        def __get__(self): return avrational_to_faction(&self._stream.r_frame_rate)
-
     property average_rate:
         def __get__(self): return avrational_to_faction(&self._stream.avg_frame_rate)
-
 
     property gop_size:
         def __get__(self):

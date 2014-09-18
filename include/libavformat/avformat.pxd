@@ -49,7 +49,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         AVCodecContext *codec
         
         AVFrac pts
-        AVRational r_frame_rate
         AVRational time_base
         
         int64_t start_time
