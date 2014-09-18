@@ -13,5 +13,5 @@ class TestCodecs(TestCase):
             self.assertEqual(c.id, 13)
 
             formats = c.video_formats
-            self.assertEqual(len(formats), 1)
-            self.assertEqual(formats[0].name, 'yuv420p')
+            self.assertTrue(formats)
+            self.assertTrue(any(f.name == 'yuv420p' for f in formats))
