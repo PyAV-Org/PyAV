@@ -160,15 +160,18 @@ for dirname, dirnames, filenames in os.walk('av'):
         mod_name = base.replace('/', '.')
         c_path = os.path.join('src', base + '.c')
 
-        # We go with the C sources if Cython is not installed.
-        # We can't `cythonize` here, however, since the `pyav/include.h`
-        # must be generated first.
+        # We go with the C sources if Cython is not installed, and fail if
+        # those also don't exist. We can't `cythonize` here though, since the
+        # `pyav/include.h` must be generated (by `build_ext`) first.
+        if not cythonize and not os.path.exists(c_path):
+            print('Cython is required to build PyAV from raw sources.')
+            print('Please `pip install Cython`.')
+            exit(3)
         ext_modules.append(Extension(
             mod_name,
             sources=[c_path if not cythonize else pyx_path],
             **extension_extra
         ))
-
 
 
 class CythonizeCommand(Command):
@@ -187,9 +190,6 @@ class CythonizeCommand(Command):
         # the existing extension instead of replacing them all.
         for i, ext in enumerate(self.extensions[:]):
             if any(s.endswith('.pyx') for s in ext.sources):
-                if not cythonize:
-                    print('Cython is required to build from raw sources.')
-                    exit(3)
                 new_ext = cythonize(ext,
                     # Keep these in sync with the Makefile cythonize target.
                     compiler_directives=dict(
