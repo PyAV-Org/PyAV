@@ -15,7 +15,7 @@ except ImportError:
     cythonize = None
 
 
-version = '0.2.1'
+version = '0.2.2'
 
 
 def library_config(name):
