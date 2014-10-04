@@ -155,7 +155,7 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         int flags
     )
     
-    cdef int avio_size(
+    cdef int64_t avio_size(
         AVIOContext *s
     )
 
