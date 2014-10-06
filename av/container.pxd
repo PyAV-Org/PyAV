@@ -7,7 +7,16 @@ from av.stream cimport Stream
 # need this intermediate proxy object so that there aren't any reference cycles
 # and the pointer can be freed when everything that depends upon it is deleted.
 cdef class ContainerProxy(object):
+
     cdef lib.AVFormatContext *ptr
+
+    # Python IO (via file-like objects).
+    cdef object filelike
+    cdef lib.AVIOContext *iocontext
+    cdef long bufsize
+    cdef unsigned char *buffer
+    
+    cdef object local
 
 
 cdef class Container(object):
@@ -18,7 +27,7 @@ cdef class Container(object):
 
     cdef ContainerProxy proxy
     cdef object __weakref__
-    
+
     cdef readonly list streams
     cdef readonly dict metadata
 

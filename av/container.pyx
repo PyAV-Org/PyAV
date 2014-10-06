@@ -1,5 +1,6 @@
 from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, free
+from libc.string cimport memcpy
 
 cimport libav as lib
 
@@ -9,15 +10,89 @@ from av.stream cimport Stream, build_stream
 from av.utils cimport err_check, avdict_to_dict, dict_to_avdict
 
 from fractions import Fraction
+from threading import local
 
 from av.utils import AVError
 
 
+
+cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
+    with gil:
+        return pyio_read_gil(opaque, buf, buf_size)
+
+cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
+    cdef ContainerProxy self
+    cdef bytes res
+    try:
+        self = <ContainerProxy>opaque
+        res = self.filelike.read(buf_size)
+        memcpy(buf, <void*><char*>res, len(res))
+        self.local.read_exception = None
+        # print 'pyio_read(%s) -> %s' % (buf_size, len(res))
+        if not res:
+            return lib.AVERROR_EOF
+        return len(res)
+    except Exception as e:
+        print 'pyio_read EXCEPTION', e
+        self.local.read_exception = e
+        return -1
+
+cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
+    with gil:
+        print 'pyio_write(%s)' % buf_size
+    return -1
+
+cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
+    if whence == lib.AVSEEK_SIZE:
+        return -1
+    with gil:
+        return pyio_seek_gil(opaque, offset, whence)
+
+cdef int pyio_seek_gil(void *opaque, int64_t offset, int whence):
+    cdef ContainerProxy self
+    try:
+        self = <ContainerProxy>opaque
+        res = self.filelike.seek(offset, whence)
+        res = self.filelike.tell() if res is None else res
+        self.local.seek_exception = None
+        # print 'pyio_seek(%s, %s)' % (offset, whence)
+        return res
+    except Exception as e:
+        print 'pyio_seek EXCEPTION', e
+        self.local.seek_exception = e
+        return -1
+
+
 cdef class ContainerProxy(object):
-    # Just a reference-counting wrapper for a pointer.
+
+    def __init__(self, filelike=None):
+        self.local = local()
+        self.ptr = lib.avformat_alloc_context()
+        if filelike is not None:
+            self.filelike = filelike
+            self.bufsize = 32 * 1024
+            self.buffer = <unsigned char*> lib.av_malloc(self.bufsize)
+            self.iocontext = lib.avio_alloc_context(
+                self.buffer, self.bufsize,
+                0, # Writeable.
+                <void*>self, # User data.
+                pyio_read, pyio_write, pyio_seek # Callbacks.
+            )
+            self.iocontext.direct = lib.AVIO_FLAG_DIRECT
+            self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
+            self.iocontext.max_packet_size = self.bufsize
+            self.ptr.pb = self.iocontext
+            self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
+
     def __dealloc__(self):
+        if self.iocontext:
+            lib.av_free(self.iocontext)
+            self.iocontext = self.ptr.pb = NULL
         if self.ptr and self.ptr.iformat:
             lib.avformat_close_input(&self.ptr)
+        elif self.buffer:
+            lib.av_free(self.buffer)
+            self.buffer = NULL
 
 
 cdef object _base_constructor_sentinel = object()
@@ -40,8 +115,11 @@ cdef class Container(object):
         if format_name is not None:
             self.format = ContainerFormat(format_name)
 
-        self.name = name
-        self.proxy = ContainerProxy()
+        if isinstance(name, basestring):
+            self.name = name
+            self.proxy = ContainerProxy()
+        else:
+            self.proxy = ContainerProxy(name)
 
         if options is not None:
             dict_to_avdict(&self.options, options)
@@ -50,7 +128,7 @@ cdef class Container(object):
         lib.av_dict_free(&self.options)
 
     def __repr__(self):
-        return '<av.%s %r>' % (self.__class__.__name__, self.name)
+        return '<av.%s %r>' % (self.__class__.__name__, self.proxy.filelike or self.name)
 
     cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
         raise NotImplementedError()
@@ -62,18 +140,17 @@ cdef class Container(object):
 cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
-
         err_check(
             lib.avformat_open_input(
                 &self.proxy.ptr,
-                self.name,
+                "" if self.proxy.filelike else self.name,
                 self.format.in_ if self.format else NULL,
                 &self.options if self.options else NULL
             ),
             self.name,
         )
-        err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
         self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
+        err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
 
         self.streams = list(
             build_stream(self, self.proxy.ptr.streams[i])
