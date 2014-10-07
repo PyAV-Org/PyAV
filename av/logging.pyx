@@ -39,6 +39,12 @@ def get_level():
 def set_level(int level):
     lib.av_log_set_level(level)
 
+cdef bint log_after_shutdown = False
+
+def set_log_after_shutdown(v):
+    global log_after_shutdown
+    log_after_shutdown = v
+
 
 # Threads sure are a mess!
 #
@@ -84,8 +90,8 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     # Python hasn't started finalizing yet.
     if lib.Py_IsInitialized():
         lib.Py_AddPendingCall(<void*>async_log_callback, <void*>req)
-    else:
-        fprintf(stderr, "av.logging: message after Python shutdown: %s[%d]: %s",
+    elif log_after_shutdown:
+        fprintf(stderr, "av.logging: %s[%d]: %s",
             req.item_name, req.level, req.message
         )
         free(req.message)
@@ -100,9 +106,10 @@ cdef int async_log_callback(void *arg) except -1:
     cdef str item_name
 
     if not lib.Py_IsInitialized():
-        fprintf(stderr, "av.logging: callback after Python shutdown: %s[%d]: %s",
-            req.item_name, req.level, req.message
-        )
+        if log_after_shutdown:
+            fprintf(stderr, "av.logging: %s[%d]: %s",
+                req.item_name, req.level, req.message
+            )
         return 0
 
     try:
