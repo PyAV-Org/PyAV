@@ -78,7 +78,9 @@ cdef class ContainerProxy(object):
                 <void*>self, # User data.
                 pyio_read, pyio_write, pyio_seek # Callbacks.
             )
-            self.iocontext.direct = lib.AVIO_FLAG_DIRECT
+            # Various tutorials say that we should set AVFormatContext.direct
+            # to AVIO_FLAG_DIRECT here, but that doesn't seem to do anything in
+            # FFMpeg and was deprecated.
             self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
             self.iocontext.max_packet_size = self.bufsize
             self.ptr.pb = self.iocontext
