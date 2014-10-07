@@ -27,6 +27,7 @@ cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
         self = <ContainerProxy>opaque
         res = self.fread(buf_size)
         memcpy(buf, <void*><char*>res, len(res))
+        self.pos += len(res)
         if not res:
             return lib.AVERROR_EOF
         return len(res)
@@ -46,6 +47,7 @@ cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
     try:
         self = <ContainerProxy>opaque
         res = self.fwrite(buf[:buf_size])
+        self.pos += res
         return res
     except Exception as e:
         print 'pyio_write EXCEPTION', e
@@ -67,8 +69,21 @@ cdef int pyio_seek_gil(void *opaque, int64_t offset, int whence):
     try:
         self = <ContainerProxy>opaque
         res = self.fseek(offset, whence)
-        res = self.ftell() if res is None else res
+
+        # Track the position for the user.
+        if whence == 0:
+            self.pos = offset
+        elif whence == 1:
+            self.pos += offset
+        else:
+            self.pos_is_valid = False
+        if res is None:
+            if self.pos_is_valid:
+                res = self.pos
+            else:
+                res = self.ftell()
         return res
+
     except Exception as e:
         print 'pyio_seek EXCEPTION', e
         self.local.exception = e
@@ -89,6 +104,8 @@ cdef class ContainerProxy(object):
 
         self.writeable = writeable
         self.ptr = lib.avformat_alloc_context()
+        self.pos = 0
+        self.pos_is_valid = True
 
         if file is not None:
 

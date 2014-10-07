@@ -22,6 +22,8 @@ cdef class ContainerProxy(object):
     cdef lib.AVIOContext *iocontext
     cdef long bufsize
     cdef unsigned char *buffer
+    cdef long pos
+    cdef bint pos_is_valid
     
     # Thread-local storage for exceptions.
     cdef object local
