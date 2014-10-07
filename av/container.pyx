@@ -25,24 +25,38 @@ cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
     cdef bytes res
     try:
         self = <ContainerProxy>opaque
-        res = self.filelike.read(buf_size)
+        res = self.fread(buf_size)
         memcpy(buf, <void*><char*>res, len(res))
-        self.local.read_exception = None
-        # print 'pyio_read(%s) -> %s' % (buf_size, len(res))
         if not res:
             return lib.AVERROR_EOF
         return len(res)
     except Exception as e:
         print 'pyio_read EXCEPTION', e
-        self.local.read_exception = e
+        self.local.exception = e
         return -1
+
 
 cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
     with gil:
-        print 'pyio_write(%s)' % buf_size
-    return -1
+        return pyio_write_gil(opaque, buf, buf_size)
+
+cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
+    cdef ContainerProxy self
+    cdef int res
+    try:
+        self = <ContainerProxy>opaque
+        res = self.fwrite(buf[:buf_size])
+        return res
+    except Exception as e:
+        print 'pyio_write EXCEPTION', e
+        self.local.exception = e
+        return -1
+
 
 cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
+    # Seek takes the standard flags, but also a ad-hoc one which means that
+    # the library wants to know how large the file is. We are generally
+    # allowed to ignore this.
     if whence == lib.AVSEEK_SIZE:
         return -1
     with gil:
@@ -52,29 +66,43 @@ cdef int pyio_seek_gil(void *opaque, int64_t offset, int whence):
     cdef ContainerProxy self
     try:
         self = <ContainerProxy>opaque
-        res = self.filelike.seek(offset, whence)
-        res = self.filelike.tell() if res is None else res
-        self.local.seek_exception = None
-        # print 'pyio_seek(%s, %s)' % (offset, whence)
+        res = self.fseek(offset, whence)
+        res = self.ftell() if res is None else res
         return res
     except Exception as e:
         print 'pyio_seek EXCEPTION', e
-        self.local.seek_exception = e
+        self.local.exception = e
         return -1
+
+
+cdef object _base_constructor_sentinel = object()
 
 
 cdef class ContainerProxy(object):
 
-    def __init__(self, filelike=None):
+    def __init__(self, sentinel, file, bint writeable):
+
+        if sentinel is not _base_constructor_sentinel:
+            raise RuntimeError('cannot construct ContainerProxy')
+
         self.local = local()
+
+        self.writeable = writeable
         self.ptr = lib.avformat_alloc_context()
-        if filelike is not None:
-            self.filelike = filelike
+
+        if file is not None:
+
+            self.file = file
+            self.fread = getattr(file, 'read', None)
+            self.fwrite = getattr(file, 'write', None)
+            self.fseek = getattr(file, 'seek', None)
+            self.ftell = getattr(file, 'tell', None)
+
             self.bufsize = 32 * 1024
             self.buffer = <unsigned char*> lib.av_malloc(self.bufsize)
             self.iocontext = lib.avio_alloc_context(
                 self.buffer, self.bufsize,
-                0, # Writeable.
+                self.writeable, # Writeable.
                 <void*>self, # User data.
                 pyio_read, pyio_write, pyio_seek # Callbacks.
             )
@@ -96,20 +124,25 @@ cdef class ContainerProxy(object):
             lib.av_free(self.buffer)
             self.buffer = NULL
 
+    cdef int raise_errors(self) except -1:
+        e = getattr(self.local, 'exception', None)
+        if e is not None:
+            self.local.exception = None
+            raise e
+        return 0
 
-cdef object _base_constructor_sentinel = object()
 
-def open(name, mode='r', format=None, options=None):
+def open(file, mode='r', format=None, options=None):
     if mode == 'r':
-        return InputContainer(_base_constructor_sentinel, name, format, options)
+        return InputContainer(_base_constructor_sentinel, False, file, format, options)
     if mode == 'w':
-        return OutputContainer(_base_constructor_sentinel, name, format, options)
+        return OutputContainer(_base_constructor_sentinel, True, file, format, options)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
 
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, name, format_name, options):
+    def __cinit__(self, sentinel, writing, file, format_name, options):
 
         if sentinel is not _base_constructor_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -117,11 +150,12 @@ cdef class Container(object):
         if format_name is not None:
             self.format = ContainerFormat(format_name)
 
-        if isinstance(name, basestring):
-            self.name = name
-            self.proxy = ContainerProxy()
+        if isinstance(file, basestring):
+            self.name = file
+            self.proxy = ContainerProxy(_base_constructor_sentinel, None, writing)
         else:
-            self.proxy = ContainerProxy(name)
+            self.file = file
+            self.proxy = ContainerProxy(_base_constructor_sentinel, file, writing)
 
         if options is not None:
             dict_to_avdict(&self.options, options)
@@ -130,7 +164,7 @@ cdef class Container(object):
         lib.av_dict_free(&self.options)
 
     def __repr__(self):
-        return '<av.%s %r>' % (self.__class__.__name__, self.proxy.filelike or self.name)
+        return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
 
     cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
         raise NotImplementedError()
@@ -145,7 +179,7 @@ cdef class InputContainer(Container):
         err_check(
             lib.avformat_open_input(
                 &self.proxy.ptr,
-                "" if self.proxy.filelike else self.name,
+                "" if self.proxy.file else self.name,
                 self.format.in_ if self.format else NULL,
                 &self.options if self.options else NULL
             ),

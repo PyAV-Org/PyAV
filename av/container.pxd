@@ -8,20 +8,31 @@ from av.stream cimport Stream
 # and the pointer can be freed when everything that depends upon it is deleted.
 cdef class ContainerProxy(object):
 
+    cdef bint writeable
     cdef lib.AVFormatContext *ptr
 
-    # Python IO (via file-like objects).
-    cdef object filelike
+    # File-like source.
+    cdef object file
+    cdef object fread
+    cdef object fwrite
+    cdef object fseek
+    cdef object ftell
+
+    # Custom IO for above.
     cdef lib.AVIOContext *iocontext
     cdef long bufsize
     cdef unsigned char *buffer
     
+    # Thread-local storage for exceptions.
     cdef object local
+    cdef int raise_errors(self) except -1
 
 
 cdef class Container(object):
     
     cdef readonly str name
+    cdef readonly object file
+
     cdef readonly ContainerFormat format
     cdef lib.AVDictionary *options
 
