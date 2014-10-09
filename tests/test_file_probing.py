@@ -17,10 +17,13 @@ class TestAudioProbe(TestCase):
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
         self.assertEqual(self.file.format.name, 'mpegts')
         self.assertEqual(self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
-        self.assertEqual(self.file.bit_rate, 270494)
+        self.assertEqual(self.file.size, 207740)
+
+        # This is a little odd, but on OS X with FFmpeg we get a different value.
+        self.assertIn(self.file.bit_rate, (269558, 270494))
+
         self.assertEqual(len(self.file.streams), 1)
         self.assertEqual(self.file.start_time, long(1400000))
-        self.assertEqual(self.file.size, 207740)
         self.assertEqual(self.file.metadata, {})
 
     def test_stream_probing(self):
@@ -47,9 +50,12 @@ class TestVideoProbe(TestCase):
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
         self.assertEqual(self.file.format.name, 'mpegts')
         self.assertEqual(self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
-        self.assertEqual(self.file.duration, long(1580000))
-        self.assertEqual(float(self.file.duration) / av.time_base, 1.58)
-        self.assertEqual(self.file.bit_rate, 4050632)
+        self.assertEqual(self.file.size, 800000)
+
+        # This is a little odd, but on OS X with FFmpeg we get a different value.
+        self.assertIn(self.file.duration, (1620000, 1580000))
+
+        self.assertEqual(self.file.bit_rate, 8 * self.file.size * av.time_base / self.file.duration)
         self.assertEqual(len(self.file.streams), 1)
         self.assertEqual(self.file.start_time, long(22953408322))
         self.assertEqual(self.file.size, 800000)
@@ -62,11 +68,15 @@ class TestVideoProbe(TestCase):
         self.assertEqual(stream.name, 'mpeg2video')
         self.assertEqual(stream.long_name, 'MPEG-2 video')
         self.assertEqual(stream.profile, 'Simple')
-        try:  # Libav is able to return a bit-rate for this file, but ffmpeg doesn't, so have to rely on rc_max_rate.
+
+        # Libav is able to return a bit-rate for this file, but ffmpeg doesn't,
+        # so have to rely on rc_max_rate.
+        try:
             self.assertEqual(stream.bit_rate, None)
             self.assertEqual(stream.max_bit_rate, 3364800)
         except AssertionError:
             self.assertEqual(stream.bit_rate, 3364800)
+
         self.assertEqual(stream.sample_aspect_ratio, Fraction(16, 15))
         self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
         self.assertEqual(stream.gop_size, 12)
