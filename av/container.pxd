@@ -11,6 +11,8 @@ cdef class ContainerProxy(object):
     cdef bint writeable
     cdef lib.AVFormatContext *ptr
 
+    cdef str name
+
     # File-like source.
     cdef object file
     cdef object fread
@@ -27,7 +29,7 @@ cdef class ContainerProxy(object):
     
     # Thread-local storage for exceptions.
     cdef object local
-    cdef int raise_errors(self) except -1
+    cdef int err_check(self, int value) except -1
 
 
 cdef class Container(object):

@@ -5,7 +5,7 @@ class TestPythonIO(TestCase):
 
     def test_reading(self):
 
-        fh = open(fate_suite('mpeg2/mpeg2_field_encoding.ts'))
+        fh = open(fate_suite('mpeg2/mpeg2_field_encoding.ts'), 'rb')
         container = av.open(fh)
 
         self.assertEqual(container.format.name, 'mpegts')
