@@ -132,9 +132,13 @@ cdef class ContainerProxy(object):
             self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
 
     def __dealloc__(self):
+        # This is all quite iffy; I'm not sure what the proper order to do all
+        # of this is.
         if self.iocontext:
             lib.av_free(self.iocontext)
-            self.iocontext = self.ptr.pb = NULL
+            self.iocontext = NULL
+            if self.ptr:
+                self.ptr.pb = NULL
         if self.ptr and self.ptr.iformat:
             lib.avformat_close_input(&self.ptr)
         elif self.buffer:
