@@ -1,3 +1,5 @@
+from __future__ import division
+
 from fractions import Fraction
 import sys
 
@@ -55,7 +57,7 @@ class TestVideoProbe(TestCase):
         # This is a little odd, but on OS X with FFmpeg we get a different value.
         self.assertIn(self.file.duration, (1620000, 1580000))
 
-        self.assertEqual(self.file.bit_rate, 8 * self.file.size * av.time_base / self.file.duration)
+        self.assertEqual(self.file.bit_rate, 8 * self.file.size * av.time_base // self.file.duration)
         self.assertEqual(len(self.file.streams), 1)
         self.assertEqual(self.file.start_time, long(22953408322))
         self.assertEqual(self.file.size, 800000)
