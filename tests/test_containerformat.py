@@ -10,7 +10,7 @@ class TestContainerFormats(TestCase):
         self.assertTrue(fmt.is_output)
         self.assertEqual(fmt.name, 'matroska')
         self.assertEqual(fmt.long_name, 'Matroska')
-        self.assertEqual(fmt.extensions, set(('mkv', )))
+        self.assertIn('mkv', fmt.extensions)
 
     def test_mov(self):
         fmt = ContainerFormat('mov')
