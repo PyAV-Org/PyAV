@@ -19,6 +19,34 @@ cdef class ContainerProxy(object):
         if self.ptr and self.ptr.iformat:
             lib.avformat_close_input(&self.ptr)
 
+    cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
+
+        cdef int flags = 0
+
+        if mode == 'frame':
+            flags |= lib.AVSEEK_FLAG_FRAME
+        elif mode == 'byte':
+            flags |= lib.AVSEEK_FLAG_BYTE
+        elif mode != 'time':
+            raise ValueError('mode must be one of "frame", "byte", or "time"')
+
+        if backward:
+            flags |= lib.AVSEEK_FLAG_BACKWARD
+
+        if any_frame:
+            flags |= lib.AVSEEK_FLAG_ANY
+
+        err_check(lib.av_seek_frame(self.ptr, stream_index, timestamp, flags))
+        self.flush_buffers()
+
+    cdef flush_buffers(self):
+        cdef int i
+        cdef lib.AVStream *stream
+        for i in range(self.ptr.nb_streams):
+            stream = self.ptr.streams[i]
+            if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
+                lib.avcodec_flush_buffers(stream.codec)
+
 
 cdef object _base_constructor_sentinel = object()
 
@@ -51,13 +79,6 @@ cdef class Container(object):
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
-
-    cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
-        raise NotImplementedError()
-
-    cdef _flush_buffers(self):
-        raise NotImplementedError()
-
 
 cdef class InputContainer(Container):
     
@@ -155,36 +176,7 @@ cdef class InputContainer(Container):
         """
         if isinstance(timestamp, float):
             timestamp = <long>(timestamp * lib.AV_TIME_BASE)
-        self._seek(-1, timestamp, mode, backward, any_frame)
-
-    cdef _seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
-
-        cdef int flags = 0
-
-        if mode == 'frame':
-            flags |= lib.AVSEEK_FLAG_FRAME
-        elif mode == 'byte':
-            flags |= lib.AVSEEK_FLAG_BYTE
-        elif mode != 'time':
-            raise ValueError('mode must be one of "frame", "byte", or "time"')
-
-        if backward:
-            flags |= lib.AVSEEK_FLAG_BACKWARD
-
-        if any_frame:
-            flags |= lib.AVSEEK_FLAG_ANY
-
-        err_check(lib.av_seek_frame(self.proxy.ptr, stream_index, timestamp, flags))
-        self._flush_buffers()
-
-    cdef _flush_buffers(self):
-        cdef int i
-        cdef lib.AVStream *stream
-        for i in range(self.proxy.ptr.nb_streams):
-            stream = self.proxy.ptr.streams[i]
-            if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
-                lib.avcodec_flush_buffers(stream.codec)
-
+        self.proxy.seek(-1, timestamp, mode, backward, any_frame)
 
 cdef class OutputContainer(Container):
 
