@@ -216,9 +216,9 @@ cdef class Stream(object):
         Seek to the keyframe at timestamp.
         """
         if isinstance(timestamp, float):
-            self._container._seek(-1, <long>(timestamp * lib.AV_TIME_BASE), mode, backward, any_frame)
+            self._container.seek(-1, <long>(timestamp * lib.AV_TIME_BASE), mode, backward, any_frame)
         else:
-            self._container._seek(self._stream.index, timestamp, mode, backward, any_frame)
+            self._container.seek(self._stream.index, timestamp, mode, backward, any_frame)
  
     cdef _setup_frame(self, Frame frame):
         # This PTS handling looks a little nuts, however it really seems like it
