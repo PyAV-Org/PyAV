@@ -119,7 +119,46 @@ class TestSeek(TestCase):
                     frame_count += 1
 
         self.assertEqual(frame_count, total_frame_count - target_frame)
+    
+    def test_stream_seek(self):
+        
+        container = av.open(asset('320x240x4.mov'))
+        
+        video_stream = next(s for s in container.streams if s.type == 'video')
+        total_frame_count = 0
+        
+        # Count number of frames in video
+        for packet in container.demux(video_stream):
+            for frame in packet.decode():
+                total_frame_count += 1
+            
+        target_frame = int(total_frame_count / 2.0)
+        time_base = float(video_stream.time_base)
+        
+        rate = float(video_stream.average_rate)
+        target_sec = target_frame * 1/rate
+        
+        target_timestamp = int(target_sec / time_base) + video_stream.start_time
+        
+        video_stream.seek(target_timestamp)
+        
+        current_frame = None
+        frame_count =  0
+        
+        for packet in container.demux(video_stream):
+            for frame in packet.decode():
+                if current_frame is None:
+                    current_frame = timestamp_to_frame(frame.pts, video_stream)
+                
+                else:
+                    current_frame += 1
+                
+                # start counting once we reach the target frame
+                if current_frame is not None and current_frame >= target_frame:
+                    frame_count += 1
 
+        self.assertEqual(frame_count, total_frame_count - target_frame)
+        
 
 if __name__ == "__main__":
     unittest.main()
