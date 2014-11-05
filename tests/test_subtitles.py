@@ -21,7 +21,8 @@ class TestSubtitle(TestCase):
 
         self.assertEqual(len(subs), 3)
         self.assertIsInstance(subs[0][0], AssSubtitle)
-        self.assertEqual(subs[0][0].ass, 'Dialogue: 0,0:00:00.97,0:00:02.54,Default,- Test 1.\\N- Test 2.\r\n')
+        self.assertIn(subs[0][0].ass, ('Dialogue: 0,0:00:00.97,0:00:02.54,Default,- Test 1.\\N- Test 2.\r\n',
+                                       'Dialogue: 0,0:00:00.97,0:00:02.54,Default,,0,0,0,,- Test 1.\\N- Test 2.\r\n'))
 
     def test_vobsub(self):
 
