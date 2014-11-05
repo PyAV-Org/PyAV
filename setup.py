@@ -198,6 +198,7 @@ class CythonizeCommand(Command):
                     ),
                     build_dir='src',
                     include_path=ext.include_dirs,
+                    embed=True,
                 )[0]
                 ext.sources = new_ext.sources
 
@@ -257,6 +258,12 @@ setup(
 
     test_suite = 'nose.collector',
 
+    entry_points = {
+        'console_scripts': [
+            'pyav = av.__main__:main',
+        ],
+    },
+    
     classifiers=[
        'Development Status :: 3 - Alpha',
        'Intended Audience :: Developers',

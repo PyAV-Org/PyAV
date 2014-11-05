@@ -1,17 +1,17 @@
+from libc.stdint cimport uint64_t
+
 cimport libav as lib
 
 
 cdef class Codec(object):
     
-    cdef lib.AVCodec *ptr
+    cdef lib.AVCodec *eptr
+    cdef lib.AVCodec *dptr
+    cdef lib.AVCodecDescriptor *desc
+    
+    cdef lib.AVCodec* ptr(self)
+    cdef uint64_t capabilities(self)
 
-
-cdef class Encoder(Codec):
-    pass
-
-
-cdef class Decoder(Codec):
-    pass
 
 
 cdef class CodecContext(object):

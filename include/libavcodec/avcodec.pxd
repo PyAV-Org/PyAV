@@ -7,24 +7,33 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef int64_t AV_NOPTS_VALUE
     cdef int CODEC_FLAG_GLOBAL_HEADER
 
-    cdef int CODEC_CAP_DRAW_HORIZ_BAND
-    cdef int CODEC_CAP_DR1
-    cdef int CODEC_CAP_TRUNCATED
-    cdef int CODEC_CAP_HWACCEL
-    cdef int CODEC_CAP_DELAY
-    cdef int CODEC_CAP_SMALL_LAST_FRAME
-    cdef int CODEC_CAP_HWACCEL_VDPAU
-    cdef int CODEC_CAP_SUBFRAMES
-    cdef int CODEC_CAP_EXPERIMENTAL
-    cdef int CODEC_CAP_CHANNEL_CONF
-    cdef int CODEC_CAP_NEG_LINESIZES
-    cdef int CODEC_CAP_FRAME_THREADS
-    cdef int CODEC_CAP_SLICE_THREADS
-    cdef int CODEC_CAP_PARAM_CHANGE
-    cdef int CODEC_CAP_AUTO_THREADS
-    cdef int CODEC_CAP_VARIABLE_FRAME_SIZE
-    cdef int CODEC_CAP_INTRA_ONLY
-    cdef int CODEC_CAP_LOSSLESS
+    # AVCodecDescriptor.props
+    cdef uint64_t AV_CODEC_PROP_INTRA_ONLY 
+    cdef uint64_t AV_CODEC_PROP_LOSSY      
+    cdef uint64_t AV_CODEC_PROP_LOSSLESS   
+    cdef uint64_t AV_CODEC_PROP_REORDER    
+    cdef uint64_t AV_CODEC_PROP_BITMAP_SUB  
+    cdef uint64_t AV_CODEC_PROP_TEXT_SUB    
+
+    #AVCodec.capabilities
+    cdef uint64_t CODEC_CAP_DRAW_HORIZ_BAND
+    cdef uint64_t CODEC_CAP_DR1
+    cdef uint64_t CODEC_CAP_TRUNCATED
+    cdef uint64_t CODEC_CAP_HWACCEL
+    cdef uint64_t CODEC_CAP_DELAY
+    cdef uint64_t CODEC_CAP_SMALL_LAST_FRAME
+    cdef uint64_t CODEC_CAP_HWACCEL_VDPAU
+    cdef uint64_t CODEC_CAP_SUBFRAMES
+    cdef uint64_t CODEC_CAP_EXPERIMENTAL
+    cdef uint64_t CODEC_CAP_CHANNEL_CONF
+    cdef uint64_t CODEC_CAP_NEG_LINESIZES
+    cdef uint64_t CODEC_CAP_FRAME_THREADS
+    cdef uint64_t CODEC_CAP_SLICE_THREADS
+    cdef uint64_t CODEC_CAP_PARAM_CHANGE
+    cdef uint64_t CODEC_CAP_AUTO_THREADS
+    cdef uint64_t CODEC_CAP_VARIABLE_FRAME_SIZE
+    cdef uint64_t CODEC_CAP_INTRA_ONLY
+    cdef uint64_t CODEC_CAP_LOSSLESS
     
     cdef int AV_PKT_FLAG_KEY
     
@@ -54,7 +63,20 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVPixelFormat* pix_fmts
         int* supported_samplerates
         
-            
+    cdef AVCodec* av_codec_next(AVCodec*)
+    cdef int av_codec_is_encoder(AVCodec*)
+    cdef int av_codec_is_decoder(AVCodec*)
+        
+    cdef struct AVCodecDescriptor:
+        AVCodecID id
+        char *name
+        char *long_name
+        int props
+        char **mime_types
+
+    AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)   
+
+
     # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     cdef struct AVCodecContext:
         
