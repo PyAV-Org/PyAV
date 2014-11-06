@@ -8,12 +8,13 @@ cdef class Packet(object):
 
     """
     def __init__(self):
-        lib.av_init_packet(&self.struct)
-        self.struct.data = NULL
-        self.struct.size = 0
+        with nogil:
+            lib.av_init_packet(&self.struct)
+            self.struct.data = NULL
+            self.struct.size = 0
 
     def __dealloc__(self):
-        lib.av_free_packet(&self.struct)
+        with nogil: lib.av_free_packet(&self.struct)
     
     def __repr__(self):
         return '<av.%s of #%d, dts=%s, pts=%s at 0x%x>' % (

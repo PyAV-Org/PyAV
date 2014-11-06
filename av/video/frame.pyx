@@ -35,32 +35,35 @@ cdef class VideoFrame(Frame):
         self._init(c_format, width, height)
 
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height):
-
-        self.ptr.width = width
-        self.ptr.height = height
-        self.ptr.format = format
-
         cdef int buffer_size
+        with nogil:
+            self.ptr.width = width
+            self.ptr.height = height
+            self.ptr.format = format
 
-        if width and height:
 
-            # Cleanup the old buffer.
-            lib.av_freep(&self._buffer)
+            if width and height:
 
-            # Get a new one.
-            buffer_size = err_check(lib.avpicture_get_size(format, width, height))
-            self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
-            if not self._buffer:
-                raise MemoryError("cannot allocate VideoFrame buffer")
+                # Cleanup the old buffer.
+                lib.av_freep(&self._buffer)
 
-            # Attach the AVPicture to our buffer.
-            lib.avpicture_fill(
-                    <lib.AVPicture *>self.ptr,
-                    self._buffer,
-                    format,
-                    width,
-                    height
-            )
+                # Get a new one.
+                buffer_size = lib.avpicture_get_size(format, width, height)
+                with gil: err_check(buffer_size)
+
+                self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
+
+                if not self._buffer:
+                    with gil: raise MemoryError("cannot allocate VideoFrame buffer")
+
+                # Attach the AVPicture to our buffer.
+                lib.avpicture_fill(
+                        <lib.AVPicture *>self.ptr,
+                        self._buffer,
+                        format,
+                        width,
+                        height
+                )
 
         self._init_properties()
 
@@ -184,17 +187,18 @@ cdef class VideoFrame(Frame):
 
         cdef int ret
 
-        ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
+        with nogil:
+            ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
 
-        # not all pix_fmt colorspace details supported should log...
-        if not ret < 0:
-            if src_colorspace != lib.SWS_CS_DEFAULT:
-                inv_tbl = lib.sws_getCoefficients(src_colorspace)
+            # not all pix_fmt colorspace details supported should log...
+            if not ret < 0:
+                if src_colorspace != lib.SWS_CS_DEFAULT:
+                    inv_tbl = lib.sws_getCoefficients(src_colorspace)
 
-            if dst_colorspace !=  lib.SWS_CS_DEFAULT:
-                tbl = lib.sws_getCoefficients(dst_colorspace)
+                if dst_colorspace !=  lib.SWS_CS_DEFAULT:
+                    tbl = lib.sws_getCoefficients(dst_colorspace)
 
-            lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
+                lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
 
         # Create a new VideoFrame
 

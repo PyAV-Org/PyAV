@@ -17,11 +17,12 @@ cdef class ContainerProxy(object):
     # Just a reference-counting wrapper for a pointer.
     def __dealloc__(self):
         if self.ptr and self.ptr.iformat:
-            lib.avformat_close_input(&self.ptr)
+            with nogil: lib.avformat_close_input(&self.ptr)
 
     cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
 
         cdef int flags = 0
+        cdef int ret
 
         if mode == 'frame':
             flags |= lib.AVSEEK_FLAG_FRAME
@@ -36,16 +37,21 @@ cdef class ContainerProxy(object):
         if any_frame:
             flags |= lib.AVSEEK_FLAG_ANY
 
-        err_check(lib.av_seek_frame(self.ptr, stream_index, timestamp, flags))
+        with nogil:
+            ret = lib.av_seek_frame(self.ptr, stream_index, timestamp, flags)
+        err_check(ret)
+
         self.flush_buffers()
 
     cdef flush_buffers(self):
         cdef int i
         cdef lib.AVStream *stream
-        for i in range(self.ptr.nb_streams):
-            stream = self.ptr.streams[i]
-            if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
-                lib.avcodec_flush_buffers(stream.codec)
+
+        with nogil:
+            for i in range(self.ptr.nb_streams):
+                stream = self.ptr.streams[i]
+                if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
+                    lib.avcodec_flush_buffers(stream.codec)
 
 
 cdef object _base_constructor_sentinel = object()
@@ -75,7 +81,7 @@ cdef class Container(object):
             dict_to_avdict(&self.options, options)
 
     def __dealloc__(self):
-        lib.av_dict_free(&self.options)
+        with nogil: lib.av_dict_free(&self.options)
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)
@@ -84,16 +90,21 @@ cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
 
-        err_check(
-            lib.avformat_open_input(
-                &self.proxy.ptr,
-                self.name,
-                self.format.in_ if self.format else NULL,
-                &self.options if self.options else NULL
-            ),
-            self.name,
-        )
-        err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
+        cdef char *name = self.name
+        cdef lib.AVInputFormat *fmt = NULL
+        if self.format:
+            fmt = self.format.in_
+        with nogil:
+            ret = lib.avformat_open_input(
+                    &self.proxy.ptr,
+                    name,
+                    fmt,
+                    &self.options if self.options else NULL
+                )
+            with gil: err_check(ret, self.name)
+            ret = lib.avformat_find_stream_info(self.proxy.ptr, NULL)
+        err_check(ret)
+
         self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
 
         self.streams = list(
@@ -131,7 +142,7 @@ cdef class InputContainer(Container):
         
         cdef int i
         cdef Packet packet
-        cdef int result
+        cdef int ret
 
         try:
             
@@ -144,7 +155,9 @@ cdef class InputContainer(Container):
                 
                 packet = Packet()
                 try:
-                    err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
+                    with nogil:
+                        ret = lib.av_read_frame(self.proxy.ptr, &packet.struct)
+                    err_check(ret)
                 except AVError:
                     break
                     
