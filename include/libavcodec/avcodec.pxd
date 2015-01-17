@@ -62,6 +62,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         char codec_name[32]
         AVCodecID codec_id
         int flags
+        int thread_count
         
         int profile
 

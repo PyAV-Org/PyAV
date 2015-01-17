@@ -159,6 +159,14 @@ cdef class Stream(object):
         def __get__(self):
             return self.metadata.get('language')
 
+    # TODO: Does it conceptually make sense that this is on streams, instead
+    # of on the container?
+    property thread_count:
+        def __get__(self):
+            return self._codec_context.thread_count
+        def __set__(self, int value):
+            self._codec_context.thread_count = value
+
     cpdef decode(self, Packet packet):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
 
