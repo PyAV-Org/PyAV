@@ -36,7 +36,7 @@ def library_config(name):
         return
 
     config = {}
-    for chunk in str(raw_config).strip().split():
+    for chunk in raw_config.decode('utf8').strip().split():
         if chunk.startswith('-I'):
             config.setdefault('include_dirs', []).append(chunk[2:])
         elif chunk.startswith('-L'):
