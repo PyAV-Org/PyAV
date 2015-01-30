@@ -64,7 +64,6 @@ for i, stream in enumerate(video.streams):
     elif stream.type == 'video':
         print '\t\tvideo:'
         print '\t\t\tformat:', stream.format
-        print '\t\t\tguessed_rate: %r' % stream.guessed_rate
         print '\t\t\taverage_rate: %r' % stream.average_rate
 
     print '\t\tmetadata:'

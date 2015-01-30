@@ -64,6 +64,9 @@ cdef class VideoFrame(Frame):
 
         self._init_properties()
 
+    cdef int _max_plane_count(self):
+        return self.format.ptr.nb_components
+
     cdef _init_properties(self):
         self.format = get_video_format(<lib.AVPixelFormat>self.ptr.format, self.ptr.width, self.ptr.height)
         self._init_planes(VideoPlane)
