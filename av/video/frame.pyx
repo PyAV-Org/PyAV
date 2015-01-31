@@ -87,67 +87,49 @@ cdef class VideoFrame(Frame):
             id(self),
         )
 
+    def reformat(self, width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None):
+        """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None)
 
-    def to_rgb(self):
-        """Get an RGB version of this frame.
+        Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
 
-        >>> frame = VideoFrame(1920, 1080)
-        >>> frame.format.name
-        'yuv420p'
-        >>> frame.to_rgb().format.name
-        'rgb24'
+        :param int width: New width, or ``None`` for the same width.
+        :param int height: New height, or ``None`` for the same height.
+        :param str format: New format, or ``None`` for the same format; see :attr:`VideoFrame.format`.
+        :param str src_colorspace: Current colorspace.
+        :param str dst_colorspace: Desired colorspace.
 
-        """
-        return self.reformat(self.width, self.height, "rgb24")
-
-    def to_colorspace(self,colorspace):
-        """Get an versio of this frame in a different colorspace.
-        :param str colorspace: New color format
-
-        >>> frame = VideoFrame(1920, 1080)
-        >>> frame.format.name
-        'yuv420p'
-        >>> frame.to_colorspace('rgb24').format.name
-        'rgb24'
-
-        """
-        return self.reformat(self.width, self.height,colorspace)
-
-    def reformat(self, unsigned int width, unsigned int height, dst_format_str, src_colorspace = None, dst_colorspace = None):
-
-        """reformat(width, height, format)
-
-        Create a new :class:`VideoFrame` with the given width/height/format.
-
-        :param int width: New width.
-        :param int height: New height.
-        :param str format: New format; see :attr:`VideoFrame.format`.
+        Supported colorspaces are currently:
+            - ``'itu709'``
+            - ``'fcc'``
+            - ``'itu601'``
+            - ``'itu624'``
+            - ``'smpte240'``
+            - ``'default'`` or ``None``
 
         """
 
-        cdef lib.AVPixelFormat dst_format = lib.av_get_pix_fmt(dst_format_str)
-        if dst_format == lib.AV_PIX_FMT_NONE:
-            raise ValueError("invalid format %r" % dst_format_str)
+        cdef VideoFormat video_format = VideoFormat(format or self.format)
 
+        colorspace_flags = {
+            'itu709': lib.SWS_CS_ITU709,
+            'fcc': lib.SWS_CS_FCC,
+            'itu601': lib.SWS_CS_ITU601,
+            'itu624': lib.SWS_CS_SMPTE170M,
+            'smpte240': lib.SWS_CS_SMPTE240M,
+            'default': lib.SWS_CS_DEFAULT,
+            None: lib.SWS_CS_DEFAULT,
+        }
+        cdef int c_src_colorspace, c_dst_colorspace
+        try:
+            c_src_colorspace = colorspace_flags[src_colorspace]
+        except KeyError:
+            raise ValueError('invalid src_colorspace %r' % src_colorspace)
+        try:
+            c_dst_colorspace = colorspace_flags[dst_colorspace]
+        except KeyError:
+            raise ValueError('invalid src_colorspace %r' % dst_colorspace)
 
-        colorspace_dict = {'itu709': lib.SWS_CS_ITU709,
-                           'fcc': lib.SWS_CS_FCC,
-                           'itu601': lib.SWS_CS_ITU601,
-                           'itu624': lib.SWS_CS_SMPTE170M,
-                           'smpte240': lib.SWS_CS_SMPTE240M,
-                           'default': lib.SWS_CS_DEFAULT}
-
-        cdef int cs_src = lib.SWS_CS_DEFAULT
-        cdef int cs_dst = lib.SWS_CS_DEFAULT
-
-        if not src_colorspace is None:
-            cs_src = colorspace_dict[src_colorspace.lower()]
-
-        if not dst_colorspace is None:
-            cs_dst = colorspace_dict[dst_colorspace.lower()]
-
-
-        return self._reformat(width, height, dst_format, cs_src, cs_dst)
+        return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace)
 
     cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
 
@@ -157,10 +139,15 @@ cdef class VideoFrame(Frame):
         cdef lib.AVPixelFormat src_format = <lib.AVPixelFormat> self.ptr.format
 
         # Shortcut!
-        if dst_format == src_format and width == self.ptr.width and height == self.ptr.height:
+        if (
+            dst_format == src_format and
+            width == self.ptr.width and
+            height == self.ptr.height and
+            dst_colorspace == src_colorspace
+        ):
             return self
 
-        # If VideoFrame doesn't have a SwsContextProxy create one
+        # If we don't have a SwsContextProxy, create one.
         if not self.reformatter:
             self.reformatter = VideoReformatter()
 
@@ -182,33 +169,23 @@ cdef class VideoFrame(Frame):
                 NULL
             )
 
-        cdef int *inv_tbl = NULL
-        cdef int *tbl = NULL
-        cdef int *rgbTbl = NULL
-
+        cdef int *inv_tbl, *tbl, *rgbTbl
         cdef int srcRange, dstRange, brightness, contrast, saturation
-
         cdef int ret
-
         with nogil:
             ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
-
-            # not all pix_fmt colorspace details supported should log...
             if not ret < 0:
                 if src_colorspace != lib.SWS_CS_DEFAULT:
                     inv_tbl = lib.sws_getCoefficients(src_colorspace)
-
-                if dst_colorspace !=  lib.SWS_CS_DEFAULT:
+                if dst_colorspace != lib.SWS_CS_DEFAULT:
                     tbl = lib.sws_getCoefficients(dst_colorspace)
-
                 lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
 
-        # Create a new VideoFrame
-
+        # Create a new VideoFrame.
         cdef VideoFrame frame = alloc_video_frame()
         frame._init(dst_format, width, height)
 
-        # Finally Scale the image
+        # Finally, scale the image.
         with nogil:
             lib.sws_scale(
                 self.reformatter.ptr,
@@ -236,30 +213,63 @@ cdef class VideoFrame(Frame):
         """Is this frame a key frame?"""
         def __get__(self): return self.ptr.key_frame
 
-    def to_image(self):
+    def to_rgb(self, **kwargs):
+        """Get an RGB version of this frame.
+
+        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+
+        >>> frame = VideoFrame(1920, 1080)
+        >>> frame.format.name
+        'yuv420p'
+        >>> frame.to_rgb().format.name
+        'rgb24'
+
+        """
+        return self.reformat(format="rgb24", **kwargs)
+
+    def to_image(self, **kwargs):
+        """Get an RGB ``PIL.Image`` of this frame.
+
+        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+
+        """
         from PIL import Image
-        return Image.frombuffer("RGB", (self.width, self.height), self.to_rgb().planes[0], "raw", "RGB", 0, 1)
+        return Image.frombuffer("RGB", (self.width, self.height), self.reformat(format="rgb24", **kwargs).planes[0], "raw", "RGB", 0, 1)
 
-    def to_nd_array(self,colorspace="bgr24"):
+    def to_nd_array(self, **kwargs):
+        """Get a numpy array of this frame.
+
+        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+
         """
-        numpy array from frame contents
-        :param str colorspace: color format of image; Defaults to OpenCV convention.
+
+        cdef VideoFrame frame = self.reformat(**kwargs)
+        if len(frame.planes) != 1:
+            raise ValueError('Cannot conveniently get numpy array from multiplane frame')
+
+        import np
+
+        # We only suppose this convenience for a few types.
+        if frame.format.name == 'rgb24':
+            np.frombuffer(frame.planes[0], np.uint8).reshape(frame.height, frame.width, -1)
+        else:
+            raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
+
+    def to_qimage(self, **kwargs):
+        """Get an RGB ``QImage`` of this frame.
+
+        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+        
+        Returns a ``(VideoFrame, QImage)`` tuple, where the ``QImage`` references
+        the data in the ``VideoFrame``.
         """
-        import numpy as np
-        return np.frombuffer(self.to_colorspace(colorspace).planes[0],np.uint8).reshape(self.height,self.width,-1)
-
-    def to_qimage(self, unsigned int width=0, unsigned int height=0):
-
         from PyQt4.QtGui import QImage
         from sip import voidptr
 
-        width = width or self.width
-        height = height or self.height
-
-        cdef VideoFrame rgb = self.reformat(width, height, 'rgb24')
+        cdef VideoFrame rgb = self.reformat(format='rgb24', **kwargs)
         ptr = voidptr(<long><void*>rgb.ptr.extended_data[0])
 
-        return rgb, QImage(ptr, width, height, QImage.Format_RGB888)
+        return rgb, QImage(ptr, rgb.ptr.width, rgb.ptr.height, QImage.Format_RGB888)
 
     @classmethod
     def from_image(cls, img):

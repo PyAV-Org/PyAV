@@ -4,7 +4,6 @@ from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 cdef object _cinit_bypass_sentinel = object()
 
 cdef VideoFormat get_video_format(lib.AVPixelFormat c_format, unsigned int width, unsigned int height):
-    """Make sure to call VideoFormat._init manually!"""
     if c_format == lib.AV_PIX_FMT_NONE:
         return None
     cdef VideoFormat format = VideoFormat.__new__(VideoFormat, _cinit_bypass_sentinel)
@@ -24,6 +23,12 @@ cdef class VideoFormat(object):
     def __cinit__(self, name, width=0, height=0):
 
         if name is _cinit_bypass_sentinel:
+            return
+
+        cdef VideoFormat other
+        if isinstance(name, VideoFormat):
+            other = <VideoFormat>name
+            self._init(other.pix_fmt, width or other.width, height or other.height)
             return
 
         cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name)
