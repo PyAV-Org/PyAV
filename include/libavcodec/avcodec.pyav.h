@@ -36,6 +36,10 @@
 #ifndef AV_CODEC_PROP_BITMAP_SUB
     #define AV_CODEC_PROP_BITMAP_SUB 0
 #endif
+#ifndef AV_CODEC_PROP_TEXT_SUB
+    #define AV_CODEC_PROP_TEXT_SUB 0
+#endif
+
 #ifndef CODEC_CAP_DRAW_HORIZ_BAND
     #define CODEC_CAP_DRAW_HORIZ_BAND 0
 #endif
