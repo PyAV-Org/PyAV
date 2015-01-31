@@ -69,7 +69,28 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     # http://ffmpeg.org/doxygen/trunk/structAVIOContext.html
     cdef struct AVIOContext:
         int write_flag
-        
+        int direct
+        int seekable
+        int max_packet_size
+
+    cdef int AVIO_FLAG_DIRECT
+    cdef int AVIO_SEEKABLE_NORMAL
+    
+    cdef int SEEK_SET
+    cdef int SEEK_CUR
+    cdef int SEEK_END
+    cdef int AVSEEK_SIZE
+
+    cdef AVIOContext* avio_alloc_context(
+        unsigned char *buffer,
+        int buffer_size,
+        int write_flag,
+        void *opaque,
+        int(*read_packet)(void *opaque, uint8_t *buf, int buf_size),
+        int(*write_packet)(void *opaque, uint8_t *buf, int buf_size),
+        int64_t(*seek)(void *opaque, int64_t offset, int whence)
+    )   
+
     # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
     cdef struct AVInputFormat:
         const char *name
@@ -79,6 +100,16 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         # const AVCodecTag* const *codec_tag
         # const AVClass *priv_class
     
+    cdef struct AVProbeData:
+        unsigned char *buf
+        int buf_size
+        const char *filename
+
+    cdef AVInputFormat* av_probe_input_format(
+        AVProbeData *pd,
+        int is_opened
+    )    
+
     # http://ffmpeg.org/doxygen/trunk/structAVOutputFormat.html  
     cdef struct AVOutputFormat:
         const char *name
@@ -101,6 +132,16 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     cdef int AVFMT_NOSTREAMS
     cdef int AVFMT_ALLOW_FLUSH
     cdef int AVFMT_TS_NONSTRICT
+    cdef int AVFMT_FLAG_CUSTOM_IO
+
+    cdef int av_probe_input_buffer(
+        AVIOContext *pb,
+        AVInputFormat **fmt,
+        const char *filename,
+        void *logctx,
+        unsigned int offset,
+        unsigned int max_probe_size 
+    )
 
     cdef AVInputFormat* av_find_input_format(const char *name)
     cdef AVInputFormat* av_iformat_next(AVInputFormat*)
@@ -127,6 +168,8 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         
         int flags
     
+    cdef AVFormatContext* avformat_alloc_context()
+
     cdef int avformat_open_input(
         AVFormatContext **ctx, # NULL will allocate for you.
         char *filename,

@@ -11,6 +11,19 @@ NEXT
 
 - see do_streamcopy in ffmpeg/ffmpeg.c for hints about how to proceed for remuxing
 
+- expose various protocols as a Protocol descriptor?
+- be able to add our own protocols
+  - "pycall" protocol for a general function callback?
+  - "pyiter" protocol for an iterator interface?
+  - "python" protocol for calling read/write/seek on an arbitrary object
+  - see avformat/file.c for a really simple protocol, and avformat/allformats.c
+    for how to register them
+  - AVIOContext is in avformat/avio.h
+  - avio_open2 is in avformat/aviobuf.c
+  - either (1) manually open a "__pycall__:" file, and then set a pointer to the
+    object to call, or (2) fully construct everything ourselves (via ffio_fdopen)
+    or (3) write our own version of ffio_fdopen from avformat/aviobef.c
+
 
 Encoding
 ========
