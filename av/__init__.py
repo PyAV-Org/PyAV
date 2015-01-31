@@ -1,7 +1,7 @@
 
 # MUST import the core before anything else in order to initalize the underlying
 # library that is being wrapped.
-from ._core import time_base
+from ._core import time_base, pyav_version as __version__
 
 # Capture logging (by importing it).
 from . import logging

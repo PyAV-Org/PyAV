@@ -1,6 +1,11 @@
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 
+
 cdef extern from "libavcodec/avcodec.pyav.h" nogil:
+
+    cdef int   avcodec_version()
+    cdef char* avcodec_configuration()
+    cdef char* avcodec_license()
 
     cdef void avcodec_register_all()
     

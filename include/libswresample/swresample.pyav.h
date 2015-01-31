@@ -21,3 +21,17 @@
        avresample_convert(ctx, out, 0, out_count, (uint8_t **)in, 0, in_count)
 
 #endif
+
+
+
+#ifndef PYAV_HAVE_LIBAVRESAMPLE
+    int avresample_version() { return -1; }
+    const char* avresample_configuration() { return ""; }
+    const char* avresample_license() { return ""; }
+#endif
+
+#ifndef PYAV_HAVE_LIBSWRESAMPLE
+    int swresample_version() { return -1; }
+    const char* swresample_configuration() { return ""; }
+    const char* swresample_license() { return ""; }
+#endif

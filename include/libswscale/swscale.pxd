@@ -1,5 +1,10 @@
+
 cdef extern from "libswscale/swscale.h" nogil:
     
+    cdef int   swscale_version()
+    cdef char* swscale_configuration()
+    cdef char* swscale_license()
+
     # See: http://ffmpeg.org/doxygen/trunk/structSwsContext.html
     cdef struct SwsContext:
         pass

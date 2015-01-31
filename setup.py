@@ -16,6 +16,9 @@ except ImportError:
 
 
 version = '0.2.2'
+proc = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE)
+commit, _ = proc.communicate()
+commit = commit.strip()
 
 
 def library_config(name):
@@ -97,6 +100,8 @@ def update_extend(dst, src):
 
 config_macros = [
     ("PYAV_VERSION", version),
+    ("PYAV_VERSION_STR", '"%s"' % version),
+    ("PYAV_COMMIT_STR", '"%s"' % (commit or 'unknown-commit'))
 ]
 
 is_missing_libraries = False
