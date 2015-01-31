@@ -133,21 +133,23 @@ cdef class ContainerProxy(object):
             self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
 
     def __dealloc__(self):
+        with nogil:
 
-        # Let FFmpeg handle it if it fully opened.
-        if self.ptr and not self.writeable:
-            lib.avformat_close_input(&self.ptr)
+            # Let FFmpeg handle it if it fully opened.
+            if self.ptr and not self.writeable:
+                lib.avformat_close_input(&self.ptr)
 
-        # Manually free things.
-        else:   
-            if self.buffer:
-                lib.av_freep(&self.buffer)
-            if self.iocontext:
-                lib.av_freep(&self.iocontext)
+            # Manually free things.
+            else:   
+                if self.buffer:
+                    lib.av_freep(&self.buffer)
+                if self.iocontext:
+                    lib.av_freep(&self.iocontext)
     
     cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
 
         cdef int flags = 0
+        cdef int ret
 
         if mode == 'frame':
             flags |= lib.AVSEEK_FLAG_FRAME
@@ -162,16 +164,21 @@ cdef class ContainerProxy(object):
         if any_frame:
             flags |= lib.AVSEEK_FLAG_ANY
 
-        err_check(lib.av_seek_frame(self.ptr, stream_index, timestamp, flags))
+        with nogil:
+            ret = lib.av_seek_frame(self.ptr, stream_index, timestamp, flags)
+        err_check(ret)
+
         self.flush_buffers()
 
     cdef flush_buffers(self):
         cdef int i
         cdef lib.AVStream *stream
-        for i in range(self.ptr.nb_streams):
-            stream = self.ptr.streams[i]
-            if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
-                lib.avcodec_flush_buffers(stream.codec)
+
+        with nogil:
+            for i in range(self.ptr.nb_streams):
+                stream = self.ptr.streams[i]
+                if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
+                    lib.avcodec_flush_buffers(stream.codec)
 
 
     cdef int err_check(self, int value) except -1:
@@ -211,7 +218,7 @@ cdef class Container(object):
             dict_to_avdict(&self.options, options)
 
     def __dealloc__(self):
-        lib.av_dict_free(&self.options)
+        with nogil: lib.av_dict_free(&self.options)
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
@@ -219,16 +226,23 @@ cdef class Container(object):
 cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
-        self.proxy.err_check(
-            lib.avformat_open_input(
+
+        cdef char *name = "" if self.proxy.file is not None else self.name
+        cdef lib.AVInputFormat *fmt = self.format.in_ if self.format else NULL
+        with nogil:
+            ret = lib.avformat_open_input(
                 &self.proxy.ptr,
-                "" if self.proxy.file is not None else self.name,
-                self.format.in_ if self.format else NULL,
+                name,
+                fmt,
                 &self.options if self.options else NULL
             )
-        )
+        self.proxy.err_check(ret)
+
         self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
-        self.proxy.err_check(lib.avformat_find_stream_info(self.proxy.ptr, NULL))
+
+        with nogil:
+            ret = lib.avformat_find_stream_info(self.proxy.ptr, NULL)
+        self.proxy.err_check(ret)
 
         self.streams = list(
             build_stream(self, self.proxy.ptr.streams[i])
@@ -265,7 +279,7 @@ cdef class InputContainer(Container):
         
         cdef int i
         cdef Packet packet
-        cdef int result
+        cdef int ret
 
         try:
             
@@ -278,7 +292,9 @@ cdef class InputContainer(Container):
                 
                 packet = Packet()
                 try:
-                    self.proxy.err_check(lib.av_read_frame(self.proxy.ptr, &packet.struct))
+                    with nogil:
+                        ret = lib.av_read_frame(self.proxy.ptr, &packet.struct)
+                    self.proxy.err_check(ret)
                 except AVError:
                     break
                     
