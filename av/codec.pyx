@@ -137,6 +137,18 @@ while ptr:
 
 def dump_codecs():
     """Print information about availible codecs."""
+    
+    print '''Codecs:
+ D..... = Decoding supported
+ .E.... = Encoding supported
+ ..V... = Video codec
+ ..A... = Audio codec
+ ..S... = Subtitle codec
+ ...I.. = Intra frame-only codec
+ ....L. = Lossy compression
+ .....S = Lossless compression
+ ------'''
+
     for name in sorted(codecs_availible):
         codec = Codec(name)
         print ' %s%s%s%s%s%s %-18s %s' % (
