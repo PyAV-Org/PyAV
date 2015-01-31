@@ -1,7 +1,17 @@
+from libc.stdint cimport uint64_t
+
 from av.utils cimport media_type_to_string
 from av.video.format cimport get_video_format
 
 cdef object _cinit_sentinel = object()
+
+
+cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
+    # Not every flag exists in every version of FFMpeg and LibAV, so we
+    # define them to 0.
+    if not flag:
+        return None
+    return bool(bitfield & flag)
 
 
 cdef class Codec(object):
@@ -16,7 +26,6 @@ cdef class Codec(object):
         self.desc = lib.avcodec_descriptor_get(self.ptr().id)
         if not self.desc:
             raise RuntimeError('no descriptor for %r' % name) 
-
 
     cdef lib.AVCodec* ptr(self):
         return self.eptr or self.dptr
@@ -62,63 +71,63 @@ cdef class Codec(object):
 
     # Capabilities.
     property draw_horiz_band:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_DRAW_HORIZ_BAND)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_DRAW_HORIZ_BAND)
     property dr1:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_DR1)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_DR1)
     property truncated:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_TRUNCATED)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_TRUNCATED)
     property hwaccel:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_HWACCEL)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_HWACCEL)
     property delay:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_DELAY)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_DELAY)
     property small_last_frame:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_SMALL_LAST_FRAME)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_SMALL_LAST_FRAME)
     property hwaccel_vdpau:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_HWACCEL_VDPAU)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_HWACCEL_VDPAU)
     property subframes:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_SUBFRAMES)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_SUBFRAMES)
     property experimental:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_EXPERIMENTAL)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_EXPERIMENTAL)
     property channel_conf:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_CHANNEL_CONF)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_CHANNEL_CONF)
     property neg_linesizes:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_NEG_LINESIZES)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_NEG_LINESIZES)
     property frame_threads:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_FRAME_THREADS)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_FRAME_THREADS)
     property slice_threads:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_SLICE_THREADS)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_SLICE_THREADS)
     property param_change:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_PARAM_CHANGE)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_PARAM_CHANGE)
     property auto_threads:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_AUTO_THREADS)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_AUTO_THREADS)
     property variable_frame_size:
-        def __get__(self): return bool(self.capabilities() & lib.CODEC_CAP_VARIABLE_FRAME_SIZE)
+        def __get__(self): return flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_VARIABLE_FRAME_SIZE)
 
     # Capabilities and properties overlap.
     # TODO: Is this really the right way to combine these things?
     property intra_only:
-        def __get__(self): return bool(
-            self.capabilities() & lib.CODEC_CAP_INTRA_ONLY or
-            self.desc.props & lib.AV_CODEC_PROP_INTRA_ONLY
+        def __get__(self): return (
+            flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_INTRA_ONLY) or
+            flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_INTRA_ONLY)
         )
     property lossless:
-        def __get__(self): return bool(
-            self.capabilities() & lib.CODEC_CAP_LOSSLESS or
-            self.desc.props & lib.AV_CODEC_PROP_LOSSLESS
+        def __get__(self): return (
+            flag_in_bitfield(self.capabilities(), lib.CODEC_CAP_LOSSLESS) or
+            flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_LOSSLESS)
         )
     property lossy:
-        def __get__(self): return bool(
-            self.desc.props & lib.AV_CODEC_PROP_LOSSY or
+        def __get__(self): return (
+            flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_LOSSY) or
             not self.lossless
         )
 
     # Properties.
-    # property reorder:
-    #    def __get__(self): return bool(self.desc.props & lib.AV_CODEC_PROP_REORDER)
+    property reorder:
+        def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_REORDER)
     property bitmap_sub:
-        def __get__(self): return bool(self.desc.props & lib.AV_CODEC_PROP_BITMAP_SUB)
+        def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_BITMAP_SUB)
     property text_sub:
-        def __get__(self): return bool(self.desc.props & lib.AV_CODEC_PROP_TEXT_SUB)
+        def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
 
 cdef class CodecContext(object):
@@ -137,7 +146,7 @@ while ptr:
 
 def dump_codecs():
     """Print information about availible codecs."""
-    
+
     print '''Codecs:
  D..... = Decoding supported
  .E.... = Encoding supported
