@@ -16,9 +16,8 @@ except ImportError:
 
 
 version = '0.2.2'
-proc = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE)
-commit, _ = proc.communicate()
-commit = commit.strip()
+git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
+git_commit = git_commit.strip()
 
 
 def library_config(name):
@@ -53,12 +52,22 @@ def library_config(name):
     return config
 
 
+def find_library(name):
+    for root in extension_extra.get('library_dirs'):
+        for prefix in '', 'lib':
+            for ext in '.so', '.dylib':
+                path = os.path.join(root, prefix + name + ext)
+                if os.path.exists(path):
+                    return path
+    return ctypes.util.find_library(name)
+
+
 def check_for_func(lib_names, func_name):
     """Define macros if we can find the given function in one of the given libraries."""
 
     for lib_name in lib_names:
 
-        lib_path = ctypes.util.find_library(lib_name)
+        lib_path = find_library(lib_name)
         if not lib_path:
             continue
 
@@ -96,12 +105,15 @@ extension_extra = {
 
 def update_extend(dst, src):
     for k, v in src.items():
-        dst.setdefault(k, []).extend(v)
+        existing = dst.setdefault(k, [])
+        for x in v:
+            if x not in existing:
+                existing.append(x)
 
 config_macros = [
     ("PYAV_VERSION", version),
     ("PYAV_VERSION_STR", '"%s"' % version),
-    ("PYAV_COMMIT_STR", '"%s"' % (commit or 'unknown-commit'))
+    ("PYAV_COMMIT_STR", '"%s"' % (git_commit or 'unknown-commit'))
 ]
 
 is_missing_libraries = False
