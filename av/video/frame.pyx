@@ -247,11 +247,11 @@ cdef class VideoFrame(Frame):
         if len(frame.planes) != 1:
             raise ValueError('Cannot conveniently get numpy array from multiplane frame')
 
-        import np
+        import numpy as np
 
         # We only suppose this convenience for a few types.
         if frame.format.name == 'rgb24':
-            np.frombuffer(frame.planes[0], np.uint8).reshape(frame.height, frame.width, -1)
+            return np.frombuffer(frame.planes[0], np.uint8).reshape(frame.height, frame.width, -1)
         else:
             raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
 

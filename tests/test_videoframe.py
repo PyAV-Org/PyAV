@@ -93,3 +93,13 @@ class TestVideoFrameTransforms(TestCase):
         img.save(self.sandboxed('lenna-roundtrip.jpg'))
         self.assertImagesAlmostEqual(self.lenna, img)
 
+
+class TestVideoFrameConveniences(TestCase):
+
+    def test_basic_to_nd_array(self):
+        frame = VideoFrame(640, 480, 'rgb24')
+        array = frame.to_nd_array()
+        self.assertEqual(array.shape, (480, 640, 3))
+
+
+
