@@ -1,6 +1,8 @@
 cimport libav as lib
 
-# Setup base library.
+# Setup base library. While the docs and experience may lead us to believe we
+# don't need to call all of these (e.g. avcodec_register_all is usually
+# unnessesary), some users have found contexts in which they are required.
 lib.av_register_all()
 lib.avformat_network_init()
 lib.avdevice_register_all()
