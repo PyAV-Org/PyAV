@@ -239,6 +239,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int flags
         
         int duration
+        
+        int64_t pos
 
         void (*destruct)(AVPacket*)
     
