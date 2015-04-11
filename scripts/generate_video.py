@@ -28,10 +28,16 @@ def which(program):
 ffmpeg_cmd = None
 avconv_cmd = None
 
-if which('ffmpeg'):
-    ffmpeg_cmd = [which('ffmpeg'), '-y', '-f', 'lavfi', '-i']
-if which('avconv'):
-    avconv_cmd = [which('avconv'),'-y', '-filter_complex']
+if os.name == 'nt':
+   ffmpeg_bin, avconv_bin = 'ffmpeg.exe', 'avconv.exe'
+else:
+   ffmpeg_bin, avconv_bin = 'ffmpeg', 'avconv'
+
+
+if which(ffmpeg_bin):
+    ffmpeg_cmd = [which(ffmpeg_bin), '-y', '-f', 'lavfi', '-i']
+if which(avconv_bin):
+    avconv_cmd = [which(avconv_bin),'-y', '-filter_complex']
     
 if not ffmpeg_cmd and not avconv_cmd:
     print('Unable to find ffmpeg or avconve command')

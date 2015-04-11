@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from distutils.core import Command
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
 import ctypes.util
@@ -135,13 +135,40 @@ if is_missing_libraries:
     print('Some required libraries are missing, and PyAV cannot be built; aborting!')
     exit(1)
 
+# ffmpeg/libav library names are different on windows and unix.
+if os.name == 'nt':
+    libnames = {'avformat':'avformat-56', 'avutil':'avutil-54',
+                'avcodec':'avcodec-56'}
+    dlls = ['avcodec-56.dll', 'avdevice-56.dll', 'avfilter-5.dll',
+            'avformat-56.dll', 'avutil-54.dll', 'postproc-53.dll',
+            'swresample-1.dll', 'swscale-3.dll',
+            'libgcc_s_dw2-1.dll', 'libwinpthread-1.dll']
+
+    # Ensure the libraries exist in the av-folder for proper wheel packaging
+    for dll in dlls:
+        if not os.path.isfile(os.path.join('av',dll)):
+            raise AssertionError("Missing DLL, please copy {} to the 'av' " \
+                                 "directory, next to the pxd files".format(dll))
+
+    # Since we're shipping a self contained unit on windows, we need to mark
+    # the package as such. On other systems, let it be universal.
+    class BinaryDistribution(Distribution):
+        def is_pure(self):
+            return False
+    distclass = BinaryDistribution
+
+else:
+    libnames = {'avformat':'avformat', 'avutil':'avutil', 'avcodec':'avcodec'}
+    dlls = []
+    distclass = Distribution
 
 # Check for some specific functions.
 for libs, func in (
-    (['avformat', 'avutil', 'avcodec'], 'av_frame_get_best_effort_timestamp'),
-    (['avformat'], 'avformat_close_input'),
-    (['avformat'], 'avformat_alloc_output_context2'),
-    (['avutil'], 'av_calloc'),
+    ([libnames['avformat'], libnames['avutil'], libnames['avcodec']],
+        'av_frame_get_best_effort_timestamp'),
+    ([libnames['avformat']], 'avformat_close_input'),
+    ([libnames['avformat']], 'avformat_alloc_output_context2'),
+    ([libnames['avutil']], 'av_calloc'),
 ):
     if check_for_func(libs, func):
         config_macros.append(('PYAV_HAVE_' + func.upper(), '1'))
@@ -209,6 +236,15 @@ class CythonizeCommand(Command):
 
 
 class BuildExtCommand(build_ext):
+
+    # fix incorrect pyd/dll init export function names produced on windows
+    # for the .def files.
+    if os.name == 'nt':
+        def get_export_symbols (self, ext):
+            initfunc_name = "init" + ext.name.split('\\')[-1]
+            if initfunc_name not in ext.export_symbols:
+                ext.export_symbols.append(initfunc_name)
+            return ext.export_symbols
 
     def run(self):
 
@@ -288,5 +324,8 @@ setup(
        'Topic :: Multimedia :: Video',
        'Topic :: Multimedia :: Video :: Conversion',
    ],
+
+    distclass=distclass,
+    package_data={ 'av': dlls, },
 
 )
