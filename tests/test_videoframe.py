@@ -86,11 +86,17 @@ class TestVideoFrameTransforms(TestCase):
         self.lenna = Image.open(asset('lenna.png'))
         self.width, self.height = self.lenna.size
 
-    def test_lena_roundtrip(self):
+    def test_lena_roundtrip_low_api(self):
         frame = VideoFrame(self.width, self.height, 'rgb24')
         frame.planes[0].update_from_string(self.lenna.tostring())
         img = frame.to_image()
-        img.save(self.sandboxed('lenna-roundtrip.jpg'))
+        img.save(self.sandboxed('lenna-roundtrip-low.jpg'))
+        self.assertImagesAlmostEqual(self.lenna, img)
+
+    def test_lena_roundtrip_high_api(self):
+        frame = VideoFrame.from_image(self.lenna)
+        img = frame.to_image()
+        img.save(self.sandboxed('lenna-roundtrip-high.jpg'))
         self.assertImagesAlmostEqual(self.lenna, img)
 
 

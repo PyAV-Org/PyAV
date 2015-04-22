@@ -281,7 +281,7 @@ cdef class VideoFrame(Frame):
         frame = cls(img.size[0], img.size[1], 'rgb24')
 
         # TODO: Use the buffer protocol.
-        frame.planes[0].update(img.to_string())
+        frame.planes[0].update(img.tostring())
         return frame
 
     @classmethod
