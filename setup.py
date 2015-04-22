@@ -80,11 +80,10 @@ def check_for_func(lib_names, func_name):
             for root in set(extension_extra.get('library_dirs', []))
         )
         for lib_path in lib_paths:
-            try:
-                lib = ctypes.CDLL(lib_path)
-                break
-            except OSError:
-                pass
+            if not os.path.exists(lib_path):
+                continue
+            lib = ctypes.CDLL(lib_path)
+            break
         else:
             print('Could not find', lib_name, 'with ctypes; looked in:')
             print('\n'.join('\t' + path for path in lib_paths))
