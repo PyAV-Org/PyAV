@@ -445,6 +445,9 @@ cdef class OutputContainer(Container):
             codec_context.time_base.num = rate.denominator
             codec_context.time_base.den = rate.numerator
 
+            stream.time_base.num = rate.denominator
+            stream.time_base.den = rate.numerator
+
         # Some Sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
             codec_context.sample_fmt = codec.sample_fmts[0]
@@ -453,6 +456,10 @@ cdef class OutputContainer(Container):
             codec_context.sample_rate = rate or 48000
             codec_context.channels = 2
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
+
+            rate = Fraction(rate)
+            stream.time_base.num = rate.denominator
+            stream.time_base.den = rate.numerator
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
