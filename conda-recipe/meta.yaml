@@ -7,14 +7,18 @@ source:
 
 build:
   string: {{ environ.get('GIT_BUILD_STR', '') }}_py{{ py }}
+  detect_binary_files_with_prefix: 1
 
 requirements:
   build:
     - ffmpeg
     - pkg-config
     - cython
+    - python
+    - setuptools
   run:
     - ffmpeg
+    - python
 
 
 test:
