@@ -1,0 +1,28 @@
+package:
+  name: pyav
+  version: {{ environ['GIT_DESCRIBE_TAG'] }}.post{{ environ['GIT_DESCRIBE_NUMBER'] }}
+
+source:
+  git_url: ../
+
+build:
+  string: {{ environ.get('GIT_BUILD_STR', '') }}_np{{ np }}py{{ py }}
+
+requirements:
+  build:
+    - ffmpeg
+    - pkg-config
+    - cython
+  run:
+    - ffmpeg
+
+
+test:
+  imports:
+    - av
+
+about:
+  home: http://www.freedesktop.org/wiki/Software/pkg-config/
+  license: GPL 2
+
+# vim:set ts=8 sw=2 sts=2 tw=78 et:
