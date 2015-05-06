@@ -1,4 +1,5 @@
 language: python
+sudo: false  # faster, container-based builds
 
 python:
     - "2.6"
@@ -6,17 +7,27 @@ python:
     - "3.3"
     - "3.4"
 
-env:
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=ffmpeg
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=libav
-
 before_install:
-    - scripts/test-setup
-    - pip install --use-mirrors -r tests/requirements.txt
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b -p /home/travis/mc
+  - export PATH=/home/travis/mc/bin:$PATH
+  - conda update --yes conda
+
 
 install:
-    - make build
-    - make test-assets
+  # Install deps officially distributed by conda.
+  - conda create -n testenv --yes pip nose setuptools cython pillow numpy python=$TRAVIS_PYTHON_VERSION
+  # Install deps not officially distributed by conda.
+  - conda install -n testenv --yes -c community ffmpeg pkg-config
+  - source activate testenv
+  # Python 2.6 did not have argparse in the standard library.
+  - if [ ${TRAVIS_PYTHON_VERSION} == "2.6" ]; then pip install argparse; fi
+  - pkg-config --list-all  # for debugging
+  - python setup.py build_ext
+  - python setup.py develop
+  - make test-assets
+  - cd .. # Importing doesn't work if we are sitting above av/
 
 script:
-    - nosetests
+  - nosetests PyAV
