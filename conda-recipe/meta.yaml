@@ -6,7 +6,7 @@ source:
   git_url: ../
 
 build:
-  string: {{ environ.get('GIT_BUILD_STR', '') }}_np{{ np }}py{{ py }}
+  string: {{ environ.get('GIT_BUILD_STR', '') }}_py{{ py }}
 
 requirements:
   build:
