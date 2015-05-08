@@ -68,6 +68,7 @@ On **Ubuntu 12.04 LTS** you will be unable to satisfy these requirements with th
 `See this script <https://gist.github.com/mkassner/1caa1b45c19521c884d5>`_ for a very detailed installation of all dependencies.
 
 
+
 Installation
 ------------
 
@@ -90,6 +91,51 @@ From Source::
 On **Mac OS X** you may have issues with regards to Python expecting gcc but finding clang. Try to export the following before installation::
     
     export ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
+
+
+Windows
+^^^^^^^
+
+
+#. Compile ffmpeg using the mingw64 compiler with shared libraries enabled.
+
+#. Make sure MinGW's GCC compiler is the first gcc found on the path.
+   *Important if you have Cygwin on the system as well.*
+
+#. Set the environment variable PKG_CONFIG_PATH to the where the pkgconf files for ffmpeg reside. E.g.::
+
+    set PKG_CONFIG_PATH=c:\ffmpeg_build\lib\pkgconfig
+
+#. Copy the following ffmpeg libraries to the project's av folder:
+
+    - avcodec-56.dll
+    - avdevice-56.dll
+    - avfilter-5.dll
+    - avformat-56.dll
+    - avutil-54.dll
+    - postproc-53.dll
+    - swresample-1.dll
+    - swscale-3.dll
+
+   Also copy the two dependent DLLs from mingw to the same folder:
+
+    - libgcc_s_dw2-1.dll
+    - libwinpthread-1.dll
+
+#. Build the project::
+
+    make build-mingw32
+
+#. Create a self contained wheel archive that you can install on any machine::
+
+    make wheel
+
+#. Install the package::
+
+    pip install dist/av-0.2.2-cp27-none-win32.whl
+
+.. note:: Don't try to ``import av`` while in the PyAV source directory, since
+    the source directory will get priority, and your build will not get imported.
 
 
 Caveats
