@@ -1,3 +1,8 @@
+# Add the native FFMPEG and MinGW libraries to executable path, so that the
+# AV pyd files can find them.
+import os
+if os.name == 'nt':
+    os.environ['PATH'] = os.path.abspath(os.path.dirname(__file__)) + os.pathsep + os.environ['PATH']
 
 # MUST import the core before anything else in order to initalize the underlying
 # library that is being wrapped.

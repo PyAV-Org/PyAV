@@ -8,6 +8,15 @@ default: build
 cythonize:
 	python setup.py cythonize
 
+wheel: build-mingw32
+	python setup.py bdist_wheel
+
+build-mingw32:
+	# before running, set PKG_CONFIG_PATH to the pkgconfig dir of the ffmpeg build.
+	# set PKG_CONFIG_PATH=D:\dev\3rd\media-autobuild_suite\local32\bin-video\ffmpegSHARED\lib\pkgconfig
+	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace -c mingw32
+	mv *.pyd av
+
 build:
 	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace --debug
 
