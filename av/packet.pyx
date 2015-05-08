@@ -48,6 +48,8 @@ cdef class Packet(object):
             else:
                 self.struct.dts = v
     
+    property pos:
+        def __get__(self): return None if self.struct.pos == -1 else self.struct.pos
     property size:
         def __get__(self): return self.struct.size
     property duration:

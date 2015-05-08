@@ -91,6 +91,9 @@ cdef class Stream(object):
             id(self),
         )
 
+    property id:
+        def __get__(self): return self._stream.id
+
     property type:
         def __get__(self): return media_type_to_string(self._codec_context.codec_type)
 
