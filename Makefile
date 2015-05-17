@@ -37,7 +37,7 @@ tests/assets/lenna.png:
 	wget -O $@ https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png
 
 test: build test-assets
-	nosetests -v
+	python setup.py test
 
 vagrant:
 	vagrant box list | grep -q precise32 || vagrant box add precise32 http://files.vagrantup.com/precise32.box

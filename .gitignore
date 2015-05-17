@@ -3,6 +3,7 @@
 *~
 /venv*
 /vendor
+/.eggs
 
 # Build products.
 /src

@@ -241,7 +241,6 @@ class CythonizeCommand(Command):
                     ),
                     build_dir='src',
                     include_path=ext.include_dirs,
-                    embed=True,
                 )[0]
                 ext.sources = new_ext.sources
 
@@ -337,6 +336,6 @@ setup(
    ],
 
     distclass=distclass,
-    package_data={ 'av': dlls, },
+    package_data={'av': dlls,},
 
 )
