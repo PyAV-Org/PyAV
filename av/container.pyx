@@ -412,7 +412,7 @@ cdef class OutputContainer(Container):
             codec_context.bit_rate = template._codec_context.bit_rate
             codec_context.bit_rate_tolerance = template._codec_context.bit_rate_tolerance
             codec_context.ticks_per_frame = template._codec_context.ticks_per_frame
-            # From SO <https://stackoverflow.com/questions/17592120>
+            # From <https://stackoverflow.com/questions/17592120>
             stream.sample_aspect_ratio.num = template._stream.sample_aspect_ratio.num
             stream.sample_aspect_ratio.den = template._stream.sample_aspect_ratio.den
             stream.time_base.num = template._stream.time_base.num
@@ -420,16 +420,16 @@ cdef class OutputContainer(Container):
             stream.avg_frame_rate.num = template._stream.avg_frame_rate.num
             stream.avg_frame_rate.den = template._stream.avg_frame_rate.den
             stream.duration = template._stream.duration
-            # More.
+            # More that we believe are nessesary.
             codec_context.sample_aspect_ratio.num = template._codec_context.sample_aspect_ratio.num
             codec_context.sample_aspect_ratio.den = template._codec_context.sample_aspect_ratio.den
 
-            # Audio properties (from below that don't overlap above).
+            # Audio properties (from defaults below that don't overlap above).
             codec_context.sample_fmt = template._codec_context.sample_fmt
             codec_context.sample_rate = template._codec_context.sample_rate
             codec_context.channels = template._codec_context.channels
             codec_context.channel_layout = template._codec_context.channel_layout
-            # From SO <https://stackoverflow.com/questions/17592120>
+            # From <https://stackoverflow.com/questions/17592120>
             stream.pts = template._stream.pts
 
         # Now lets set some more sane video defaults
@@ -445,10 +445,11 @@ cdef class OutputContainer(Container):
             codec_context.time_base.num = rate.denominator
             codec_context.time_base.den = rate.numerator
 
+            # TODO: Should this be inverted from the rate?
             stream.time_base.num = rate.denominator
             stream.time_base.den = rate.numerator
 
-        # Some Sane audio defaults
+        # Some sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
             codec_context.sample_fmt = codec.sample_fmts[0]
             codec_context.bit_rate = 128000
@@ -457,9 +458,9 @@ cdef class OutputContainer(Container):
             codec_context.channels = 2
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
-            rate = Fraction(rate)
-            stream.time_base.num = rate.denominator
-            stream.time_base.den = rate.numerator
+            # TODO: Should this be inverted from the rate?
+            stream.time_base.num = 1
+            stream.time_base.den = codec_context.sample_rate
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:

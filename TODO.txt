@@ -25,6 +25,12 @@ NEXT
     or (3) write our own version of ffio_fdopen from avformat/aviobef.c
 
 
+Testing
+=======
+
+- encoding video and audio (just API consistency is good enough for immediate use)
+
+
 Encoding
 ========
 
