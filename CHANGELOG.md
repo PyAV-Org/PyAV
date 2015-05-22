@@ -6,6 +6,14 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 `y` as a minor change (i.e. backwards compatible features).
 
 
+0.2.3
+=====
+- Python IO.
+- Agressively releases GIL.
+- Several new Stream/Packet/Frame attributes.
+- Many bug fixes.
+
+
 0.2.2
 =====
 - Cythonization in setup.py; mostly a development issue.

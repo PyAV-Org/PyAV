@@ -15,7 +15,7 @@ except ImportError:
     cythonize = None
 
 
-version = '0.2.2'
+version = '0.2.3'
 git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 git_commit = git_commit.strip()
 
