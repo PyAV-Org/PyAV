@@ -507,7 +507,10 @@ cdef class OutputContainer(Container):
             if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
                 err_check(lib.avio_open(&self.proxy.ptr.pb, self.name, lib.AVIO_FLAG_WRITE))
             dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
-            err_check(lib.avformat_write_header(self.proxy.ptr, NULL))
+            err_check(lib.avformat_write_header(
+                self.proxy.ptr, 
+                &self.options if self.options else NULL
+            ))
 
         self._started = True
             
