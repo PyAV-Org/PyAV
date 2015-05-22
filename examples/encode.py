@@ -37,14 +37,7 @@ for packet in input_file.demux([s for s in (input_video_stream, input_audio_stre
         if args.verbose:
             print '\t%s' % frame
 
-        # Signal to generate it's own timestamps.
-        frame.pts = None
-        
-        if packet.stream.type == b'audio':
-            output_packet = output_audio_stream.encode(frame)
-        else:
-            output_packet = output_video_stream.encode(frame)
-
+        if packet.stream.type == b'video':
             if frame_count % 10 == 0:
                 if frame_count:
                     print
@@ -53,11 +46,20 @@ for packet in input_file.demux([s for s in (input_video_stream, input_audio_stre
             sys.stdout.flush()
 
             frame_count += 1
+
+        # Signal to generate it's own timestamps.
+        frame.pts = None
+        
+        stream = output_audio_stream if packet.stream.type == b'audio' else output_video_stream
+        output_packets = [output_audio_stream.encode(frame)]
+        while output_packets[-1]:
+            output_packets.append(output_audio_stream.encode(None))
             
-        if output_packet:
-            if args.verbose:
-                print 'OUT', output_packet
-            output_file.mux(output_packet)
+        for p in output_packets:
+            if p:
+                if args.verbose:
+                    print 'OUT', p
+                output_file.mux(p)
         
     if frame_count >= 100:
         break

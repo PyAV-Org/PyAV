@@ -111,21 +111,15 @@ cdef class AudioStream(Stream):
                     self._codec_context.sample_rate,
                     self._codec_context.frame_size,
                 )
-        
-        # print 'fifo_frame.ptr.pts', fifo_frame.ptr.pts if fifo_frame else None
-        
+                
         err_check(lib.avcodec_encode_audio2(
             self._codec_context,
             &packet.struct,
             fifo_frame.ptr if fifo_frame is not None else NULL,
             &got_packet,
         ))
-
-        # print 'packet', packet if got_packet else None
-
         if not got_packet:
             return
-
         
         # Rescale some times which are in the codec's time_base to the
         # stream's time_base.
@@ -147,7 +141,9 @@ cdef class AudioStream(Stream):
                 self._codec_context.time_base,
                 self._stream.time_base
             )
-            
+           
+        # `coded_frame` is "the picture in the bitstream"; does this make
+        # sense for audio?  
         if self._codec_context.coded_frame:
             if self._codec_context.coded_frame.key_frame:
                 packet.struct.flags |= lib.AV_PKT_FLAG_KEY
