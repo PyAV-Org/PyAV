@@ -29,6 +29,7 @@ Testing
 =======
 
 - encoding video and audio (just API consistency is good enough for immediate use)
+- prepare FFmpeg and LibAV for travis, so it doesn't need to build them
 
 
 Encoding
@@ -40,6 +41,20 @@ Encoding
 - Make everything mutable. Later, we can introduce a PseudoMutable base class
   for everything that has a .assert_mutable() method and public is_read_only
 
+
+Documentation
+=============
+
+- Document/test the entire API (in the most casual way).
+- Relink everything back to the underlying library calls, so that cross
+  referencing can be done.
+    - Can we figure out links to Doxygen without doing it by hand?
+      See: http://stackoverflow.com/a/14243458/66502
+    - https://pythonhosted.org/sphinxcontrib-doxylink/
+    - Automatically scan the Cython source to establish when it uses
+      library functions? This may result in far too many links to be useful.
+- `make docs-tagfile` to `cd vendor/ffmpeg; doxygen doc/Doxyfile`
+  - set GENERATE_TAGFILE in Doxyfile externally
 
 Time
 ====
@@ -80,17 +95,13 @@ High-Level API (Conveniences)
 - Container.decode(*args_for_demux, **kwargs_for_demux) -> straight to frames
 - Stream.mux(frame) -> encode, flush, and mux
 - Container.__del__ -> flush the streams and close
-- Container.add_stream(template=stream)
+√ Container.add_stream(template=stream)
 
 
 Unsorted
 ========
 
 - atexit.register something to clean up FFmpeg threads
-
-
-- Investigate adding Python-defined formats. Then we could pull frames from
-  webcams via OS X APIs.
 
 - Directly use the Numpy C-API
   - see: http://docs.scipy.org/doc/numpy/reference/c-api.array.html
@@ -104,18 +115,13 @@ Unsorted
 
 - Create Codec Descriptor
 
-- Make av.utils.SmartPointer to wrap around a pointer?
+- Make av.utils.SmartPointer to wrap around a pointer? All this would do is
+  hold a reference to said pointer and make sure it isn't garbage collected.
 
 runtime_library_dirs
 
 - Look at how stream alloc works; can we manually do this and register the
   stream on a format context later?
-
-- Context use a StringIO or similar to write into/from?
-    - Create wrapper around AVIOContext for arbitrary Python object with read/write
-      methods.
-
-- libavdevice? Pull from video input?
 
 - Various AudioLayout/AudioFormat/VideoFormat attributes should be writable.
     - is_mutable flags on various objects (including formats, layouts, contexts,

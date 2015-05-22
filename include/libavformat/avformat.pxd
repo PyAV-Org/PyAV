@@ -170,6 +170,12 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     
     cdef AVFormatContext* avformat_alloc_context()
 
+    # .. c:function:: avformat_open_input(...)
+    #
+    #       Options are passed via :func:`av.open`.
+    #
+    #       .. seealso:: FFmpeg's docs: :ffmpeg:`avformat_open_input`
+    #
     cdef int avformat_open_input(
         AVFormatContext **ctx, # NULL will allocate for you.
         char *filename,
@@ -179,6 +185,13 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     
     cdef int avformat_close_input(AVFormatContext **ctx)
     
+    # .. c:function:: avformat_write_header(...)
+    #
+    #       Options are passed via :func:`av.open`; called in
+    #       :meth:`av.container.OutputContainer.start_encoding`.
+    #
+    #       .. seealso:: FFmpeg's docs: :ffmpeg:`avformat_write_header`
+    #
     cdef int avformat_write_header(
         AVFormatContext *ctx,
         AVDictionary **options # Can be NULL

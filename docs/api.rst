@@ -4,6 +4,12 @@ General
 .. warning:: This is far from complete, and is just an automatic dump of the API. Most function/method signatures will be incorrect.
 
 
+Global
+------
+
+.. autofunction:: av.open
+
+
 Containers
 ----------
 

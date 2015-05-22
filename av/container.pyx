@@ -190,6 +190,23 @@ cdef class ContainerProxy(object):
 
 
 def open(file, mode='r', format=None, options=None):
+    """open(file, mode='r', format=None, options=None)
+
+    Main entrypoint to opening files/streams.
+
+    :param str file: The file to open.
+    :param str mode: ``"r"`` for reading and ``"w"`` for writing.
+    :param str format: Specific format to use. Defaults to autodect.
+    :param dict options: Options to pass to :c:func:`avformat_open_input`
+        (for reading) or :c:func:`avformat_write_header` (for writing).
+
+    For devices (via `libavdevice`), pass the name of the device to ``format``,
+    e.g.::
+
+        >>> # Open webcam on OS X.
+        >>> av.open(format='avfoundation', file='0')
+
+    """
     if mode == 'r':
         return InputContainer(_base_constructor_sentinel, False, file, format, options)
     if mode == 'w':
