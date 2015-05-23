@@ -240,12 +240,13 @@ cdef class Container(object):
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
 
+
 cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
 
         cdef char *name = "" if self.proxy.file is not None else self.name
-        cdef lib.AVInputFormat *fmt = self.format.in_ if self.format else NULL
+        cdef lib.AVInputFormat *fmt = self.format.iptr if self.format else NULL
         with nogil:
             ret = lib.avformat_open_input(
                 &self.proxy.ptr,
@@ -280,9 +281,11 @@ cdef class InputContainer(Container):
         def __get__(self): return lib.avio_size(self.proxy.ptr.pb)
 
     def demux(self, streams=None):
-        """Yields a series of :class:`.Packet` from the given set of :class:`.Stream`
+        """demux(streams=None)
 
-        The last packet is a dummy packet, that when decoded will flush the buffers.
+        Yields a series of :class:`.Packet` from the given set of :class:`.Stream`
+
+        The last packets are dummy packets that when decoded will flush the buffers.
 
         """
         
@@ -345,11 +348,12 @@ cdef class InputContainer(Container):
             timestamp = <long>(timestamp * lib.AV_TIME_BASE)
         self.proxy.seek(-1, timestamp, mode, backward, any_frame)
 
+
 cdef class OutputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
 
-        cdef lib.AVOutputFormat* format = self.format.out if self.format else lib.av_guess_format(NULL, self.name, NULL)
+        cdef lib.AVOutputFormat* format = self.format.optr if self.format else lib.av_guess_format(NULL, self.name, NULL)
         if not format:
             raise ValueError("Could not deduce output format")
 

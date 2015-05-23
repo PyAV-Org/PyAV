@@ -10,8 +10,8 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 
 default: html
 
-includes.rst : $(PXDS)
-	python includes.py $^ > $@
+includes.rst: includes.py $(PXDS)
+	python $^ > $@
 
 clean:
 	- rm -rf $(BUILDDIR)/*
