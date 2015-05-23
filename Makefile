@@ -1,12 +1,18 @@
 LDFLAGS ?= ""
 CFLAGS ?= "-O0"
 
-.PHONY: default build cythonize clean clean-all info test docs
+.PHONY: default build cythonize clean clean-all info test fate-suite test-assets docs
 
 default: build
 
+
+build:
+	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace --debug
+
 cythonize:
 	python setup.py cythonize
+
+
 
 wheel: build-mingw32
 	python setup.py bdist_wheel
@@ -17,8 +23,7 @@ build-mingw32:
 	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace -c mingw32
 	mv *.pyd av
 
-build:
-	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace --debug
+
 
 fate-suite:
 	# Grab ALL of the samples from the ffmpeg site.
@@ -39,6 +44,8 @@ tests/assets/lenna.png:
 test: build test-assets
 	python setup.py test
 
+
+
 vagrant:
 	vagrant box list | grep -q precise32 || vagrant box add precise32 http://files.vagrantup.com/precise32.box
 
@@ -49,6 +56,26 @@ vtest-libav: cythonize
 	vagrant ssh libav -c /vagrant/scripts/vagrant-test
 
 vtest: vtest-ffmpeg vtest-libav
+
+
+
+vendor/ffmpeg:
+	git clone git://source.ffmpeg.org/ffmpeg.git vendor/ffmpeg
+
+vendor/Doxyfile: vendor/ffmpeg
+	cp vendor/ffmpeg/doc/Doxyfile vendor/
+	echo "GENERATE_TAGFILE = ../tagfile.xml" >> vendor/Doxyfile
+
+vendor/tagfile.xml: vendor/Doxyfile
+	cd vendor/ffmpeg; doxygen ../Doxyfile
+
+docs: build vendor/tagfile.xml
+	PYTHONPATH=.. make -C docs html
+
+deploy-docs: docs
+	./scripts/sphinx-to-github docs
+
+
 
 clean: clean-build
 
@@ -63,11 +90,9 @@ clean-sandbox:
 clean-src:
 	- rm -rf src
 
-clean-all: clean-build clean-sandbox clean-src
+clean-docs:
+	- rm vendor/Doxyfile
+	- rm vendor/tagfile.xml
 	- make -C docs clean
 
-docs: build
-	PYTHONPATH=.. make -C docs html
-
-deploy-docs: docs
-	./scripts/sphinx-to-github docs
+clean-all: clean-build clean-sandbox clean-src clean-docs

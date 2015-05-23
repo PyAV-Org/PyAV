@@ -194,7 +194,7 @@ autodoc_default_flags = ['undoc-members', 'show-inheritance']
 
 
 doxylink = {}
-ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', 'ffmpeg.tag'))
+ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', '..', 'vendor', 'tagfile.xml'))
 if os.path.exists(ffmpeg_tagfile):
     doxylink['ffmpeg'] = (ffmpeg_tagfile, 'https://ffmpeg.org/doxygen/trunk/')
 else:
