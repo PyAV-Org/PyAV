@@ -94,11 +94,7 @@ class TestCase(_Base):
     @classmethod
     def _sandbox(cls, timed=True):
         path = os.path.join(_sandbox(timed=timed), cls.__name__)
-        try:
-            os.makedirs(path)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        makedirs(path)
         return path
 
     @property

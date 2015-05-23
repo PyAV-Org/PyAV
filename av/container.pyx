@@ -204,7 +204,7 @@ def open(file, mode='r', format=None, options=None):
     e.g.::
 
         >>> # Open webcam on OS X.
-        >>> av.open(format='avfoundation', file='0')
+        >>> av.open(format='avfoundation', file='0') # doctest: SKIP
 
     """
     if mode == 'r':

@@ -7,6 +7,8 @@ import pkgutil
 
 import av
 
+from .common import is_py3
+
 
 try:
     basestring
@@ -25,22 +27,23 @@ def fix_doctests(suite):
             doctest.NORMALIZE_WHITESPACE
         )
 
-        if sys.version_info[0] >= 3:
-            continue
-        
-        # Remove b prefix from strings.
+        case._dt_test.globs['av'] = av
+
         for example in case._dt_test.examples:
-            if example.want.startswith("b'"):
+
+            # Remove b prefix from strings.
+            if is_py3 and example.want.startswith("b'"):
                 example.want = example.want[1:]
 
 
 def register_doctests(mod):
 
     if isinstance(mod, basestring):
-        mod = __import__(mod)
+        mod = __import__(mod, fromlist=['.'])
     try:
         suite = doctest.DocTestSuite(mod)
-    except ValueError:
+    except ValueError as e:
+        print e
         return
 
     fix_doctests(suite)
@@ -57,7 +60,9 @@ def register_doctests(mod):
     globals()[cls_name] = cls
 
 
-for importer, mod_name, ispkg in pkgutil.walk_packages(path=av.__path__,
-                                                      prefix=av.__name__+'.',
-                                                      onerror=lambda x: None):
+for importer, mod_name, ispkg in pkgutil.walk_packages(
+    path=av.__path__,
+    prefix=av.__name__+'.',
+    onerror=lambda x: None
+):
     register_doctests(mod_name)

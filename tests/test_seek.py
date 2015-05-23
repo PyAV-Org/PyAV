@@ -9,20 +9,19 @@ from av import time_base as AV_TIME_BASE
 
 
 def timestamp_to_frame(timestamp, stream):
-    
     fps = stream.rate
     time_base = stream.time_base
     start_time = stream.start_time
-    
     frame = (timestamp - start_time ) * float(time_base) / float(fps)
     return frame
 
+
 def step_forward(container, stream):
-    
     for packet in container.demux(stream):
         for frame in packet.decode():
             if frame:
                 return frame
+
 
 class TestSeek(TestCase):
     def test_seek_start(self):
