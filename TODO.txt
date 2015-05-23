@@ -56,6 +56,12 @@ Documentation
 - `make docs-tagfile` to `cd vendor/ffmpeg; doxygen doc/Doxyfile`
   - set GENERATE_TAGFILE in Doxyfile externally
 
+
+Build
+=====
+
+- include build discovery info into the module, retrievable by `python -m av --version`
+
 Time
 ====
 

@@ -1,7 +1,10 @@
+API Reference
+^^^^^^^^^^^^^
+
 General
 ===============
 
-.. warning:: This is far from complete, and is just an automatic dump of the API. Most function/method signatures will be incorrect.
+.. warning:: This is far from complete, and is mostly an automatic dump of the API. Most function/method signatures will not have parameters displayed.
 
 
 Global
