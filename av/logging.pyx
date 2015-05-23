@@ -34,14 +34,19 @@ level_map = {
 
 
 def get_level():
+    """Return current logging threshold."""
     return lib.av_log_get_level()
 
 def set_level(int level):
+    """set_level(level)
+
+    Set logging threshold."""
     lib.av_log_set_level(level)
 
 cdef bint log_after_shutdown = False
 
 def set_log_after_shutdown(v):
+    """Set if logging should continue after Python shutdown."""
     global log_after_shutdown
     log_after_shutdown = v
 

@@ -14,6 +14,7 @@ cdef int AV_ERROR_MAX_STRING_SIZE = 64
 
 
 class AVError(EnvironmentError):
+    """Exception class for errors from within the underlying FFmpeg/Libav."""
     pass
 AVError.__module__ = 'av'
 
