@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from unittest import TestCase
 import doctest
 import os
@@ -43,7 +45,7 @@ def register_doctests(mod):
     try:
         suite = doctest.DocTestSuite(mod)
     except ValueError as e:
-        print e
+        print(e)
         return
 
     fix_doctests(suite)
