@@ -274,25 +274,25 @@ cdef class VideoFrame(Frame):
 
         return rgb, QImage(ptr, rgb.ptr.width, rgb.ptr.height, QImage.Format_RGB888)
 
-    @classmethod
-    def from_image(cls, img):
+    @staticmethod
+    def from_image(img):
         if img.mode != 'RGB':
             img = img.convert('RGB')
-        frame = cls(img.size[0], img.size[1], 'rgb24')
+        frame = VideoFrame(img.size[0], img.size[1], 'rgb24')
 
         # TODO: Use the buffer protocol.
         frame.planes[0].update(img.tostring())
         return frame
 
-    @classmethod
-    def from_ndarray(cls, array, format='rgb24'):
+    @staticmethod
+    def from_ndarray(array, format='rgb24'):
 
         # TODO: We could stand to be more accepting.
         assert array.ndim == 3
         assert array.shape[2] == 3
         assert array.dtype == 'uint8'
 
-        frame = cls(array.shape[1], array.shape[0], format)
+        frame = VideoFrame(array.shape[1], array.shape[0], format)
         frame.planes[0].update(array)
 
         return frame
