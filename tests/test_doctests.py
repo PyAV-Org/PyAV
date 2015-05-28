@@ -41,7 +41,7 @@ def fix_doctests(suite):
 def register_doctests(mod):
 
     if isinstance(mod, basestring):
-        mod = __import__(mod, fromlist=['.'])
+        mod = __import__(mod, fromlist=[''])
     try:
         suite = doctest.DocTestSuite(mod)
     except ValueError as e:
