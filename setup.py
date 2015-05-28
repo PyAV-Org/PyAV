@@ -53,7 +53,7 @@ def library_config(name):
 
 
 def find_library(name):
-    for root in extension_extra.get('library_dirs'):
+    for root in extension_extra.get('library_dirs', ()):
         for prefix in '', 'lib':
             for ext in '.so', '.dylib':
                 path = os.path.join(root, prefix + name + ext)
@@ -217,6 +217,26 @@ for dirname, dirnames, filenames in os.walk('av'):
         ))
 
 
+class DoctorCommand(Command):
+
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        print('PyAV', version, git_commit)
+        print('extension_extra:')
+        for k, vs in extension_extra.items():
+            print('\t%s:' % k)
+            for v in vs:
+                print('\t\t%s' % v)
+        print('config_macros:')
+        for x in sorted(config_macros):
+            print('\t%s=%s' % x)
+
+
 class CythonizeCommand(Command):
 
     user_options = []
@@ -305,6 +325,7 @@ setup(
     cmdclass={
         'build_ext': BuildExtCommand,
         'cythonize': CythonizeCommand,
+        'doctor': DoctorCommand,
     },
 
     test_suite = 'nose.collector',
