@@ -3,11 +3,13 @@ from __future__ import print_function
 from distutils.core import Command
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 import ctypes.util
 import errno
+import itertools
 import os
 import re
+import sys
 
 try:
     from Cython.Build import cythonize
@@ -20,13 +22,25 @@ git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).c
 git_commit = git_commit.strip()
 
 
+# Newer Libav on Ubuntu 14.04.2 does not provide `-L` flags via pkg-config
+# (if they are on the default path?), so we need to determine the default path.
+# This may become less nessesary if we embrace `distutils.ccompiler.CCompiler.has_function`.
+if sys.platform.startswith('linux'):
+    proc = Popen(['ld', '--verbose'], stdout=PIPE, stderr=STDOUT)
+    out, _ = proc.communicate()
+    system_library_dirs = re.findall(r'SEARCH_DIR\("=?(.+?)"\)', out)
+elif sys.platform == 'darwin':
+    system_library_dirs = ['/usr/local/lib', '/lib', '/usr/lib']
+else:
+    system_library_dirs = []
+
+
 def library_config(name):
     """Get distutils compatible extension extras for the given library.
 
     When availible, this uses ``pkg-config``.
 
     """
-
     try:
         proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
     except OSError:
@@ -36,7 +50,6 @@ def library_config(name):
     raw_config, err = proc.communicate()
     if proc.wait():
         return
-
     config = {}
     for chunk in raw_config.decode('utf8').strip().split():
         if chunk.startswith('-I'):
@@ -53,12 +66,19 @@ def library_config(name):
 
 
 def find_library(name):
-    for root in extension_extra.get('library_dirs', ()):
+    """Find a shared library with the given name.
+
+    Works best after library_config has been called for the given name.
+    
+    """
+    for root in itertools.chain(extension_extra.get('library_dirs', ()), system_library_dirs):
         for prefix in '', 'lib':
             for ext in '.so', '.dylib':
                 path = os.path.join(root, prefix + name + ext)
                 if os.path.exists(path):
                     return path
+    # It is not very likely that we will fall all the way back here,
+    # but just in case...
     return ctypes.util.find_library(name)
 
 
