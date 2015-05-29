@@ -27,7 +27,8 @@ git_commit = git_commit.strip()
 # This may become less nessesary if we embrace `distutils.ccompiler.CCompiler.has_function`.
 if sys.platform.startswith('linux'):
     proc = Popen(['ld', '--verbose'], stdout=PIPE, stderr=STDOUT)
-    out, _ = proc.communicate()
+    raw_out, _ = proc.communicate()
+    out = raw_out.decode('utf8')
     system_library_dirs = re.findall(r'SEARCH_DIR\("=?(.+?)"\)', out)
 elif sys.platform == 'darwin':
     system_library_dirs = ['/usr/local/lib', '/lib', '/usr/lib']
