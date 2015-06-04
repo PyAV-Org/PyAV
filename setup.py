@@ -17,7 +17,7 @@ except ImportError:
     cythonize = None
 
 
-version = '0.2.3'
+version = '0.2.4'
 git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 git_commit = git_commit.strip()
 
@@ -378,6 +378,7 @@ setup(
    ],
 
     distclass=distclass,
+
     package_data={'av': dlls,},
 
 )
