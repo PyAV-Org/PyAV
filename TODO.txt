@@ -9,16 +9,6 @@ The Big Picture
 NEXT
 ====
 
-- fix linking on Ubuntu 14.04.2
-
-  It is definitely libav. It isn't in any of the search paths that ctypes use.
-
-  - <https://stackoverflow.com/questions/9922949/how-to-print-the-ldlinker-search-path>
-  - ld --verbose | grep SEARCH_DIR
-  - ldconfig -vNX | grep '^/'
-  - gcc --print-search-dirs
-  - gcc -m64 -Xlinker --verbose | grep SEARCH
-
 - see do_streamcopy in ffmpeg/ffmpeg.c for hints about how to proceed for remuxing
 
 - expose various protocols as a Protocol descriptor?
