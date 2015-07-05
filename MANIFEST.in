@@ -1,6 +1,7 @@
 include *.txt *.md
+recursive-include av *.pyx *.pxd
 recursive-include docs *.rst *.py
 recursive-include examples *.py
-recursive-include include *.h
+recursive-include include *.pxd *.h
 recursive-include src *.c
 recursive-include tests *.py
