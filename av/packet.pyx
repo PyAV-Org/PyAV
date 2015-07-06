@@ -39,11 +39,17 @@ cdef class Packet(object):
             self.struct.stream_index = value.index
 
     property pts:
-        def __get__(self): return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts
+        def __get__(self):
+            return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts
+        def __set__(self,int v):
+            if v is None:
+                self.struct.pts = lib.AV_NOPTS_VALUE
+            else:
+                self.struct.pts = v
     property dts:
         def __get__(self):
             return None if self.struct.dts == lib.AV_NOPTS_VALUE else self.struct.dts
-        def __set__(self, v):
+        def __set__(self,int v):
             if v is None:
                 self.struct.dts = lib.AV_NOPTS_VALUE
             else:
@@ -57,6 +63,8 @@ cdef class Packet(object):
 
     property pos:
         def __get__(self): return None if self.struct.pos == -1 else self.struct.pos
+        def __set__(self,pos): self.struct.pos = pos
+
     property size:
         def __get__(self): return self.struct.size
     property duration:
