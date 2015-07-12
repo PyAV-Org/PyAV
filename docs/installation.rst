@@ -14,13 +14,18 @@ PyAV depends upon the following components of the underlying libraries:
 - ``libswscale``
 - ``libswresample`` or ``libavresample``
 
+and a few other tools in general:
+
+- ``pkg-config``
+- Python's development headers
+
 
 Mac OS X
 ^^^^^^^^
 
 On **Mac OS X**, Homebrew_ saves the day::
 
-    brew install ffmpeg
+    brew install ffmpeg pkg-config
 
 .. _homebrew: http://brew.sh/
 
@@ -30,6 +35,10 @@ Ubuntu 14.04 LTS
 
 On **Ubuntu 14.04 LTS** everything can come from the default sources::
 
+    # general dependencies
+    sudo apt-get install -y python-dev pkg-config
+
+    # library components
     sudo apt-get install -y \
         libavformat-dev libavcodec-dev libavdevice-dev \
         libavutil-dev libswscale-dev libavresample-dev \
