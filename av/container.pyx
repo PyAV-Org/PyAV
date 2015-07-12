@@ -197,8 +197,7 @@ def open(file, mode='r', format=None, options=None):
     :param str file: The file to open.
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
     :param str format: Specific format to use. Defaults to autodect.
-    :param dict options: Options to pass to :c:func:`avformat_open_input`
-        (for reading) or :c:func:`avformat_write_header` (for writing).
+    :param dict options: Options to pass to the container and streams.
 
     For devices (via `libavdevice`), pass the name of the device to ``format``,
     e.g.::
@@ -259,7 +258,13 @@ cdef class InputContainer(Container):
         self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
 
         with nogil:
-            ret = lib.avformat_find_stream_info(self.proxy.ptr, NULL)
+            ret = lib.avformat_find_stream_info(
+                self.proxy.ptr,
+                # Our understanding is that there is little overlap bettween
+                # options for containers and streams, so we use the same dict.
+                # Possible TODO: expose per-stream options.
+                &self.options if self.options else NULL
+            )
         self.proxy.err_check(ret)
 
         self.streams = list(
@@ -502,7 +507,14 @@ cdef class OutputContainer(Container):
         cdef Stream stream
         for stream in self.streams:
             if not lib.avcodec_is_open(stream._codec_context):
-                self.proxy.err_check(lib.avcodec_open2(stream._codec_context, stream._codec, NULL))
+                self.proxy.err_check(lib.avcodec_open2(
+                    stream._codec_context,
+                    stream._codec,
+                    # Our understanding is that there is little overlap bettween
+                    # options for containers and streams, so we use the same dict.
+                    # Possible TODO: expose per-stream options.
+                    &self.options if self.options else NULL
+                ))
             dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
 
         # Open the output file, if needed.
