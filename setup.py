@@ -251,7 +251,7 @@ class ConfigCommand(Command):
         )
 
         for ext in self.distribution.ext_modules:
-            for key, value in extension_extra.iteritems():
+            for key, value in extension_extra.items():
                 setattr(ext, key, value)
 
 
