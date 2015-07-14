@@ -170,7 +170,7 @@ cdef class Stream(object):
         def __set__(self, int value):
             self._codec_context.thread_count = value
 
-    cpdef decode(self, Packet packet):
+    cpdef decode(self, Packet packet, int count=0):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
 
         If the packet is None, the buffers will be flushed. This is useful if
@@ -205,10 +205,17 @@ cdef class Stream(object):
             packet.struct.size -= data_consumed
 
             if decoded:
+
                 if isinstance(decoded, Frame):
                     self._setup_frame(decoded)
                 decoded_objs.append(decoded)
-            
+
+                # Sometimes we will error if we try to flush the stream
+                # (e.g. MJPEG webcam streams), and so we must be able to
+                # bail after the first, even though buffers may build up.
+                if count and len(decoded_objs) >= count:
+                    break
+
             # Sometimes there are no frames, and no data is consumed, and this
             # is ok. However, no more frames are going to be pulled out of here.
             # (It is possible for data to not be consumed as long as there are

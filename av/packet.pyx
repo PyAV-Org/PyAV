@@ -25,9 +25,16 @@ cdef class Packet(object):
             id(self),
         )
     
-    def decode(self):
+    def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
-        return self.stream.decode(self)
+        return self.stream.decode(self, count)
+
+    def decode_one(self):
+        """Decode the first frame from this packet.
+
+        Returns ``None`` if there is no frame."""
+        res = self.stream.decode(self, count=1)
+        return res[0] if res else None
 
     # Looks circular, but isn't. Silly Cython.
     property stream:
