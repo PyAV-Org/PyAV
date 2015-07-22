@@ -266,7 +266,7 @@ class ConfigCommand(Command):
             config = get_library_config(name)
             if config:
                 update_extend(extension_extra, config)
-                config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+                # We don't need macros for these, since they all must exist.
             else:
                 errors.append('Could not find', name, 'with pkg-config.')
 
@@ -321,7 +321,7 @@ class ReflectCommand(Command):
             if e.errno != errno.EEXIST:
                 raise
 
-        found = set()
+        found = []
 
         reflection_includes = [
             'libavcodec/avcodec.h',
@@ -351,7 +351,7 @@ class ReflectCommand(Command):
                 library_dirs=extension_extra['library_dirs']
             ):
                 print('found')
-                found.add(func_name)
+                found.append(func_name)
             else:
                 print('missing')
 
@@ -373,25 +373,31 @@ class ReflectCommand(Command):
                 link=False
             ):
                 print('found')
-                found.add('%s__%s' % (struct_name, member_name))
+                # Double-unscores for members.
+                found.append('%s__%s' % (struct_name, member_name))
             else:
                 print('missing')
 
+        canaries = {
+            'pyav_function_should_not_exist': ('function', False),
+            'PyAV__struct_should_not_exist': ('member', False),
+            'avformat_open_input': ('function', True),
+            'AVStream__index': ('member', True),
+        }
 
         # Create macros for the things that we found.
         # There is potential for naming collisions between functions and
         # structure members, but until we actually have one, we won't
         # worry about it.
-        config_macros.extend(('PYAV_HAVE_%s' % name.upper(), '1') for name in found)
+        config_macros.extend(
+            ('PYAV_HAVE_%s' % name.upper(), '1')
+            for name in found
+            if name not in canaries
+        )
 
 
         # Make sure our canaries report back properly.
-        for type_, name, should_exist in (
-            ('function', 'pyav_function_should_not_exist', False),
-            ('member', 'PyAV__struct_should_not_exist', False),
-            ('function', 'avformat_open_input', True),
-            ('member', 'AVStream__index', True),
-        ):
+        for name, (type_, should_exist) in canaries.items():
             if should_exist != (name in found):
                 print('\nWe %s `%s` in the libraries.' % (
                     'didn\'t find' if should_exist else 'found',
@@ -419,6 +425,7 @@ class DoctorCommand(Command):
     def run(self):
         self.run_command('config')
         self.run_command('reflect')
+        print()
         dump_config()
 
 
