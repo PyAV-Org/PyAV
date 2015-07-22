@@ -18,7 +18,10 @@ For example:
 FFmpeg vs Libav
 ---------------
 
-Right now we ctypes-based discovery to determine what functions are availible, and some very small shim headers to smooth out the differences. Do try to test all changes on platforms which default to both libraries.
+We test compile and link tiny executables to determine what functions and
+structure members are availible, and some very small shim headers to smooth
+out the differences. Do try to test all changes on platforms which default
+to both libraries.
 
 
 Library Detection
@@ -33,7 +36,16 @@ Function Detection
 
 Macros will be defined for a few functions that are only in one of FFmpeg or
 LibAV. For example, there may be a `PYAV_HAVE_AVFORMAT_CLOSE_INPUT` macro.
-See where `check_for_func` is used in `setup.py` to add more.
+See the `reflect` command in `setup.py` to add more.
+
+
+Struct Member Detection
+-----------------------
+
+Macros will be defined for structure members that are not garunteed to exist
+(usually because LibAV deprecated and removed them, while FFmpeg did not).
+For example, there may be a `PYAV_HAVE_AVFRAME__MB_TYPE` macro if the
+`AVFrame.mb_type` member exists.
 
 
 Class Relationships
