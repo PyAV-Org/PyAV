@@ -1,51 +1,43 @@
 from __future__ import print_function
 
+from distutils.errors import DistutilsExecError
+from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
 from distutils.core import Command
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE, STDOUT
-import ctypes.util
 import errno
 import itertools
 import os
 import re
 import sys
 
+
+
 try:
     from Cython.Build import cythonize
 except ImportError:
+    # We don't need Cython all the time; just for building from original source.
     cythonize = None
 
 
+# We will embed this metadata into the package so it can be recalled for debugging.
 version = '0.2.4'
 git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 git_commit = git_commit.strip()
 
 
-# Newer Libav on Ubuntu 14.04.2 does not provide `-L` flags via pkg-config
-# (if they are on the default path?), so we need to determine the default path.
-# This may become less nessesary if we embrace `distutils.ccompiler.CCompiler.has_function`.
-if sys.platform.startswith('linux'):
-    proc = Popen(['ld', '--verbose'], stdout=PIPE, stderr=STDOUT)
-    raw_out, _ = proc.communicate()
-    out = raw_out.decode('utf8')
-    system_library_dirs = re.findall(r'SEARCH_DIR\("=?(.+?)"\)', out)
-elif sys.platform == 'darwin':
-    system_library_dirs = ['/usr/local/lib', '/lib', '/usr/lib']
-else:
-    system_library_dirs = []
 
+def get_library_config(name):
+    """Get distutils-compatible extension extras for the given library.
 
-def library_config(name):
-    """Get distutils compatible extension extras for the given library.
-
-    When availible, this uses ``pkg-config``.
+    This requires ``pkg-config``.
 
     """
     try:
         proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
     except OSError:
-        print('pkg-config is required for building PyAV; aborting!')
+        print('pkg-config is required for building PyAV')
         exit(1)
 
     raw_config, err = proc.communicate()
@@ -66,121 +58,67 @@ def library_config(name):
     return config
 
 
-def find_library(name):
-    """Find a shared library with the given name.
-
-    Works best after library_config has been called for the given name.
-    
-    """
-    for root in itertools.chain(extension_extra.get('library_dirs', ()), system_library_dirs):
-        for prefix in '', 'lib':
-            for ext in '.so', '.dylib':
-                path = os.path.join(root, prefix + name + ext)
-                if os.path.exists(path):
-                    return path
-    # It is not very likely that we will fall all the way back here,
-    # but just in case...
-    return ctypes.util.find_library(name)
-
-
-def check_for_func(lib_names, func_name):
-    """Define macros if we can find the given function in one of the given libraries."""
-
-    for lib_name in lib_names:
-
-        lib_path = find_library(lib_name)
-        if not lib_path:
-            continue
-
-        # Open the lib. Look in the path returned by find_library, but also all
-        # the paths returned by pkg-config (since we don't get an absolute path
-        # on linux).
-        lib_paths = [lib_path]
-        lib_paths.extend(
-            os.path.join(root, os.path.basename(lib_path))
-            for root in set(extension_extra.get('library_dirs', []))
-        )
-        for lib_path in lib_paths:
-            if not os.path.exists(lib_path):
-                continue
-            lib = ctypes.CDLL(lib_path)
-            break
-        else:
-            print('Could not find', lib_name, 'with ctypes; looked in:')
-            print('\n'.join('\t' + path for path in lib_paths))
-            continue
-
-        return hasattr(lib, func_name)
-
-    else:
-        print('Could not find %r with ctypes.util.find_library' % (lib_names, ))
-        print('Some libraries can not be found for inspection; aborting!')
-        exit(2)
-
-
-# The "extras" to be supplied to every one of our modules.
-extension_extra = {
-    'include_dirs': ['include'],
-}
-
 def update_extend(dst, src):
+    """Update the `dst` with the `src`, extending values where lists.
+
+    Primiarily useful for integrating results from `get_library_config`.
+
+    """
     for k, v in src.items():
         existing = dst.setdefault(k, [])
         for x in v:
             if x not in existing:
                 existing.append(x)
 
+
+
+# The "extras" to be supplied to every one of our modules.
+# This is expanded heavily by the `config` command.
+extension_extra = {
+    'include_dirs': ['include'], # These are PyAV's includes.
+}
+
+# The macros which describe what functions and structure members we have
+# from the underlying libraries. This is expanded heavily by `reflect` command.
 config_macros = [
     ("PYAV_VERSION", version),
     ("PYAV_VERSION_STR", '"%s"' % version),
     ("PYAV_COMMIT_STR", '"%s"' % (git_commit or 'unknown-commit'))
 ]
 
-is_missing_libraries = False
 
 
-# Get the config for the libraries that we require.
-for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libswscale':
-    config = library_config(name)
-    if config:
-        update_extend(extension_extra, config)
-        config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
-    else:
-        print('Could not find', name, 'with pkg-config.')
-        is_missing_libraries = True
-
-# Get the config for either swresample OR avresample.
-for name in 'libswresample', 'libavresample':
-    config = library_config(name)
-    if config:
-        update_extend(extension_extra, config)
-        config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
-        break
-else:
-    print('Could not find either of libswresample or libavresample with pkg-config.')
-    is_missing_libraries = True
 
 
-if is_missing_libraries:
-    # TODO: Warn Ubuntu 12 users that they can't satisfy requirements with the
-    # default package sources.
-    print('Some required libraries are missing, and PyAV cannot be built; aborting!')
-    exit(1)
 
-# ffmpeg/libav library names are different on windows and unix.
 if os.name == 'nt':
-    libnames = {'avformat':'avformat-56', 'avutil':'avutil-54',
-                'avcodec':'avcodec-56'}
-    dlls = ['avcodec-56.dll', 'avdevice-56.dll', 'avfilter-5.dll',
-            'avformat-56.dll', 'avutil-54.dll', 'postproc-53.dll',
-            'swresample-1.dll', 'swscale-3.dll',
-            'libgcc_s_dw2-1.dll', 'libwinpthread-1.dll']
 
-    # Ensure the libraries exist in the av-folder for proper wheel packaging
+    # Library names are different on Windows.
+    # NOTE: This mapping used to be used as part of the function discovery
+    # process, and will likely need to be restored.
+    libnames = {
+        'avcodec':'avcodec-56',
+        'avformat':'avformat-56',
+        'avutil':'avutil-54',
+    }
+
+    dlls = [
+        'avcodec-56.dll',
+        'avdevice-56.dll',
+        'avfilter-5.dll',
+        'avformat-56.dll',
+        'avutil-54.dll',
+        'libgcc_s_dw2-1.dll',
+        'libwinpthread-1.dll',
+        'postproc-53.dll',
+        'swresample-1.dll',
+        'swscale-3.dll',
+    ]
+
+    # Ensure the libraries exist for proper wheel packaging
     for dll in dlls:
-        if not os.path.isfile(os.path.join('av',dll)):
-            raise AssertionError("Missing DLL, please copy {} to the 'av' " \
-                                 "directory, next to the pxd files".format(dll))
+        if not os.path.isfile(os.path.join('av', dll)):
+            print("missing %s; please find and copy it into the 'av' directory" % dll)
 
     # Since we're shipping a self contained unit on windows, we need to mark
     # the package as such. On other systems, let it be universal.
@@ -190,24 +128,55 @@ if os.name == 'nt':
     distclass = BinaryDistribution
 
 else:
-    libnames = {'avformat':'avformat', 'avutil':'avutil', 'avcodec':'avcodec'}
-    dlls = []
+
     distclass = Distribution
 
-# Check for some specific functions.
-for libs, func in (
-    ([libnames['avformat'], libnames['avutil'], libnames['avcodec']],
-        'av_frame_get_best_effort_timestamp'),
-    ([libnames['avformat']], 'avformat_close_input'),
-    ([libnames['avformat']], 'avformat_alloc_output_context2'),
-    ([libnames['avutil']], 'av_calloc'),
+
+
+def _cc_spawn(cmd, dry_run=None):
+    """Spawn a process, and each the stdio."""
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    out, err = proc.communicate()
+    if proc.returncode:
+        raise DistutilsExecError(err)
+
+
+def new_compiler(*args, **kwargs):
+    """Create a C compiler which eats stdio."""
+    cc = _new_compiler()
+    cc.spawn = _cc_spawn
+    return cc
+
+
+def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
+    library_dirs=None, link=True
 ):
-    if check_for_func(libs, func):
-        config_macros.append(('PYAV_HAVE_' + func.upper(), '1'))
+    """Check that we can compile and link the given source."""
+    exec_path = name + '.out'
+    source_path = name + '.c'
+
+    with open(source_path, 'w') as fh:
+        for include in includes or ():
+            fh.write('#include "%s"\n' % include)
+        fh.write('main(int argc, char **argv)\n{ %s; }\n' % code)
+
+    cc = new_compiler()
+
+    try:
+        objects = cc.compile([source_path], include_dirs=include_dirs)
+    except CompileError:
+        return False
+
+    if link:   
+        try:
+            cc.link_executable(objects, exec_path, libraries=libraries, library_dirs=library_dirs)
+        except (LinkError, TypeError):
+            return False
+
+    return True
 
 
-# Normalize the extras.
-extension_extra = dict((k, sorted(set(v))) for k, v in extension_extra.items())
+
 
 
 # Construct the modules that we find in the "av" directory.
@@ -234,8 +203,158 @@ for dirname, dirnames, filenames in os.walk('av'):
         ext_modules.append(Extension(
             mod_name,
             sources=[c_path if not cythonize else pyx_path],
-            **extension_extra
         ))
+
+
+
+class ConfigCommand(Command):
+
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+
+    def run(self):
+
+        errors = []
+
+        # Get the config for the libraries that we require.
+        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libswscale':
+            config = get_library_config(name)
+            if config:
+                update_extend(extension_extra, config)
+                config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+            else:
+                errors.append('Could not find', name, 'with pkg-config.')
+
+        # Get the config for either swresample OR avresample.
+        for name in 'libswresample', 'libavresample':
+            config = get_library_config(name)
+            if config:
+                update_extend(extension_extra, config)
+                config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+                break
+        else:
+            errors.append('Could not find either libswresample or libavresample with pkg-config.')
+
+        # Don't continue if we have errors.
+        # TODO: Warn Ubuntu 12 users that they can't satisfy requirements with the
+        # default package sources.
+        if errors:
+            print('\n'.join(errors))
+            exit(1)
+
+        # Normalize the extras.
+        extension_extra.update(
+            dict((k, sorted(set(v))) for k, v in extension_extra.items())
+        )
+
+        for ext in self.distribution.ext_modules:
+            for key, value in extension_extra.items():
+                setattr(ext, key, value)
+
+
+
+class ReflectCommand(Command):
+
+    user_options = []
+
+    def initialize_options(self):
+        self.build_temp = None
+
+    def finalize_options(self):
+        self.set_undefined_options('build',
+            ('build_temp', 'build_temp'),
+        )
+
+    def run(self):
+
+        self.run_command('config')
+
+        tmp_dir = os.path.join(self.build_temp, 'reflection')
+        try:
+            os.makedirs(tmp_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        found = set()
+
+        reflection_includes = [
+            'libavcodec/avcodec.h',
+            'libavformat/avformat.h',
+            'libavutil/avutil.h',
+        ]
+
+        # Check for some specific functions.
+        cc = new_compiler()
+        for func_name in (
+
+            'avformat_open_input', # Canary that should exist.
+            'pyav_function_should_not_exist', # Canary that should not exist.
+
+            # This we actually care about:
+            'av_calloc',
+            'av_frame_get_best_effort_timestamp',
+            'avformat_alloc_output_context2',
+            'avformat_close_input',
+
+        ):
+            print("looking for %s... " % func_name, end='')
+            if compile_check(
+                name=os.path.join(tmp_dir, func_name),
+                code='%s()' % func_name,
+                libraries=extension_extra['libraries'],
+                library_dirs=extension_extra['library_dirs']
+            ):
+                print('found')
+                found.add(func_name)
+            else:
+                print('missing')
+
+        for struct_name, member_name in (
+
+            ('AVStream', 'index'), # Canary that should exist
+            ('PyAV', 'struct_should_not_exist'), # Canary that should not exist.
+
+            # Things we actually care about:
+            ('AVFrame', 'mb_type'),
+
+        ):
+            print("looking for %s.%s... " % (struct_name, member_name), end='')
+            if compile_check(
+                name=os.path.join(tmp_dir, '%s.%s' % (struct_name, member_name)),
+                code='struct %s x; x.%s;' % (struct_name, member_name),
+                includes=reflection_includes,
+                include_dirs=extension_extra['include_dirs'],
+                link=False
+            ):
+                print('found')
+                found.add('%s_%s' % (struct_name, member_name))
+            else:
+                print('missing')
+
+        # Make sure our canaries report back properly.
+        for type_, name, should_exist in (
+            ('function', 'pyav_function_should_not_exist', False),
+            ('member', 'PyAV_struct_should_not_exist', False),
+            ('function', 'avformat_open_input', True),
+            ('member', 'AVStream_index', True),
+        ):
+            if should_exist != (name in found):
+                print('We %s %s in the libraries; aborting build.' % (
+                    'didn\'t find' if should_exist else 'found',
+                    name
+                ))
+                exit(1)
+
+        # Create macros for the things that we found.
+        # There is potential for naming collisions between functions and
+        # structure members, but until we actually have one, we won't
+        # worry about it.
+        config_macros.extend(('PYAV_HAVE_%s' % name.upper(), '1') for name in found)
+
 
 
 class DoctorCommand(Command):
@@ -247,6 +366,10 @@ class DoctorCommand(Command):
         pass
 
     def run(self):
+
+        self.run_command('config')
+        self.run_command('reflect')
+
         print('PyAV', version, git_commit)
         print('extension_extra:')
         for k, vs in extension_extra.items():
@@ -258,21 +381,20 @@ class DoctorCommand(Command):
             print('\t%s=%s' % x)
 
 
+
 class CythonizeCommand(Command):
 
     user_options = []
-
     def initialize_options(self):
-        self.extensions = None
-
+        pass
     def finalize_options(self):
-        self.extensions = self.distribution.ext_modules
+        pass
 
     def run(self):
 
         # Cythonize, if required. We do it individually since we must update
         # the existing extension instead of replacing them all.
-        for i, ext in enumerate(self.extensions[:]):
+        for i, ext in enumerate(self.distribution.ext_modules):
             if any(s.endswith('.pyx') for s in ext.sources):
                 new_ext = cythonize(ext,
                     # Keep these in sync with the Makefile cythonize target.
@@ -284,6 +406,7 @@ class CythonizeCommand(Command):
                     include_path=ext.include_dirs,
                 )[0]
                 ext.sources = new_ext.sources
+
 
 
 class BuildExtCommand(build_ext):
@@ -298,6 +421,9 @@ class BuildExtCommand(build_ext):
             return ext.export_symbols
 
     def run(self):
+
+        self.run_command('config')
+        self.run_command('reflect')
 
         # We write a header file containing everything we have discovered by
         # inspecting the libraries which exist. This is the main mechanism we
@@ -327,6 +453,7 @@ class BuildExtCommand(build_ext):
         return build_ext.run(self)
 
 
+
 setup(
 
     name='av',
@@ -345,8 +472,10 @@ setup(
 
     cmdclass={
         'build_ext': BuildExtCommand,
+        'config': ConfigCommand,
         'cythonize': CythonizeCommand,
         'doctor': DoctorCommand,
+        'reflect': ReflectCommand,
     },
 
     test_suite = 'nose.collector',
@@ -378,7 +507,5 @@ setup(
    ],
 
     distclass=distclass,
-
-    package_data={'av': dlls,},
 
 )
