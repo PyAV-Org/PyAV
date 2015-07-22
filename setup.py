@@ -1,17 +1,18 @@
 from __future__ import print_function
 
-from distutils.errors import DistutilsExecError
 from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
 from distutils.core import Command
+from distutils.errors import DistutilsExecError
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE, STDOUT
 import errno
 import itertools
+import json
 import os
+import platform
 import re
 import sys
-
 
 
 try:
@@ -87,11 +88,30 @@ config_macros = [
 ]
 
 
+def dump_config():
+    """Print out all the config information we have so far (for debugging)."""
+    print('PyAV:', version, git_commit)
+    print('Python:', sys.version.encode('string-escape'))
+    print('platform:', platform.platform())
+    print('extension_extra:')
+    for k, vs in extension_extra.items():
+        print('\t%s: %s' % (k, [x.encode('utf8') for x in vs]))
+    print('config_macros:')
+    for x in config_macros:
+        print('\t%s=%s' % x)
+
 
 
 
 
 if os.name == 'nt':
+
+    print(
+        'Building on Windows is not officially supported, and is likely broken\n'
+        'due to a refactoring of the build process.\n\n'
+        'Please read http://mikeboers.github.io/PyAV/installation.html#on-windows\n'
+        'and document issues in https://github.com/mikeboers/PyAV/issues/38'
+    )
 
     # Library names are different on Windows.
     # NOTE: This mapping used to be used as part of the function discovery
@@ -133,27 +153,48 @@ else:
 
 
 
-def _cc_spawn(cmd, dry_run=None):
-    """Spawn a process, and each the stdio."""
+# Monkey-patch for CCompiler to be silent.
+def _CCompiler_spawn_silent(cmd, dry_run=None):
+    """Spawn a process, and eat the stdio."""
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
     if proc.returncode:
         raise DistutilsExecError(err)
 
-
 def new_compiler(*args, **kwargs):
-    """Create a C compiler which eats stdio."""
+    """Create a C compiler.
+
+    :param bool silent: Eat all stdio? Defaults to ``True``.
+
+    All other arguments passed to ``distutils.ccompiler.new_compiler``.
+
+    """
     cc = _new_compiler()
-    cc.spawn = _cc_spawn
+    if kwargs.pop('silent', True):
+        cc.spawn = _CCompiler_spawn_silent
     return cc
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
     library_dirs=None, link=True
 ):
-    """Check that we can compile and link the given source."""
+    """Check that we can compile and link the given source.
+
+    Caches results; delete the ``build`` directory to reset.
+
+    Writes source (``*.c``), builds (``*.o``), executables (``*.out``),
+    and cached results (``*.json``) in ``build/temp.$platform/reflection``.
+
+    """
     exec_path = name + '.out'
     source_path = name + '.c'
+    result_path = name + '.json'
+
+    if os.path.exists(result_path):
+        try:
+            return json.load(open(result_path))
+        except ValueError:
+            pass
 
     with open(source_path, 'w') as fh:
         for include in includes or ():
@@ -164,16 +205,17 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
 
     try:
         objects = cc.compile([source_path], include_dirs=include_dirs)
-    except CompileError:
-        return False
-
-    if link:   
-        try:
+        if link:
             cc.link_executable(objects, exec_path, libraries=libraries, library_dirs=library_dirs)
-        except (LinkError, TypeError):
-            return False
+    except (CompileError, LinkError, TypeError):
+        res = False
+    else:
+        res = True
 
-    return True
+    with open(result_path, 'w') as fh:
+        fh.write(json.dumps(res))
+
+    return res
 
 
 
@@ -331,29 +373,38 @@ class ReflectCommand(Command):
                 link=False
             ):
                 print('found')
-                found.add('%s_%s' % (struct_name, member_name))
+                found.add('%s__%s' % (struct_name, member_name))
             else:
                 print('missing')
 
-        # Make sure our canaries report back properly.
-        for type_, name, should_exist in (
-            ('function', 'pyav_function_should_not_exist', False),
-            ('member', 'PyAV_struct_should_not_exist', False),
-            ('function', 'avformat_open_input', True),
-            ('member', 'AVStream_index', True),
-        ):
-            if should_exist != (name in found):
-                print('We %s %s in the libraries; aborting build.' % (
-                    'didn\'t find' if should_exist else 'found',
-                    name
-                ))
-                exit(1)
 
         # Create macros for the things that we found.
         # There is potential for naming collisions between functions and
         # structure members, but until we actually have one, we won't
         # worry about it.
         config_macros.extend(('PYAV_HAVE_%s' % name.upper(), '1') for name in found)
+
+
+        # Make sure our canaries report back properly.
+        for type_, name, should_exist in (
+            ('function', 'pyav_function_should_not_exist', False),
+            ('member', 'PyAV__struct_should_not_exist', False),
+            ('function', 'avformat_open_input', True),
+            ('member', 'AVStream__index', True),
+        ):
+            if should_exist != (name in found):
+                print('\nWe %s `%s` in the libraries.' % (
+                    'didn\'t find' if should_exist else 'found',
+                    name
+                ))
+                print('We look for it only as a sanity check to make sure the build\n'
+                      'process is working as expected. It is not, so we must abort.\n'
+                      '\n'
+                      'Please open a ticket at https://github.com/mikeboers/PyAV/issues\n'
+                      'with the folowing information:\n')
+                dump_config()
+                exit(1)
+
 
 
 
@@ -366,19 +417,9 @@ class DoctorCommand(Command):
         pass
 
     def run(self):
-
         self.run_command('config')
         self.run_command('reflect')
-
-        print('PyAV', version, git_commit)
-        print('extension_extra:')
-        for k, vs in extension_extra.items():
-            print('\t%s:' % k)
-            for v in vs:
-                print('\t\t%s' % v)
-        print('config_macros:')
-        for x in sorted(config_macros):
-            print('\t%s=%s' % x)
+        dump_config()
 
 
 
