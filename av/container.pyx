@@ -63,7 +63,7 @@ cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
     with gil:
         return pyio_seek_gil(opaque, offset, whence)
 
-cdef int pyio_seek_gil(void *opaque, int64_t offset, int whence):
+cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
     cdef ContainerProxy self
     try:
         self = <ContainerProxy>opaque
