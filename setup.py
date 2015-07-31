@@ -77,6 +77,7 @@ def update_extend(dst, src):
 # This is expanded heavily by the `config` command.
 extension_extra = {
     'include_dirs': ['include'], # These are PyAV's includes.
+    'libraries'   : [],
     'library_dirs': [],
 }
 
