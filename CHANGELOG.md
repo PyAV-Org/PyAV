@@ -4,6 +4,14 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 `y` as a minor change (i.e. backwards compatible features).
 
 
+0.2.4-dev
+=========
+- Add `Packet.decode_one()` to skip packet flushing for codecs that would
+  otherwise error
+- Improve build system to use Python's C compiler for function detection
+- Fix bug when using Python IO on files larger than 2GB (#109 by @xxr3376)
+
+
 0.2.4
 =====
 - fix library search path for current Libav/Ubuntu 14.04 (#97)
