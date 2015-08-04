@@ -270,7 +270,7 @@ class ConfigCommand(Command):
                 update_extend(extension_extra, config)
                 # We don't need macros for these, since they all must exist.
             else:
-                errors.append('Could not find', name, 'with pkg-config.')
+                errors.append('Could not find ' + name + ' with pkg-config.')
 
         # Get the config for either swresample OR avresample.
         for name in 'libswresample', 'libavresample':
