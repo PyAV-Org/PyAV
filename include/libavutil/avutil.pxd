@@ -216,6 +216,55 @@ cdef extern from "stdio.h" nogil:
     )
 
 
+cdef extern from "libavutil/opt.h" nogil:
+
+    cdef enum AVOptionType:
+
+        AV_OPT_TYPE_FLAGS   
+        AV_OPT_TYPE_INT     
+        AV_OPT_TYPE_INT64   
+        AV_OPT_TYPE_DOUBLE  
+        AV_OPT_TYPE_FLOAT   
+        AV_OPT_TYPE_STRING  
+        AV_OPT_TYPE_RATIONAL    
+        AV_OPT_TYPE_BINARY  
+
+        #offset must point to a pointer immediately followed by an int for the length
+        AV_OPT_TYPE_DICT    
+        AV_OPT_TYPE_CONST   
+        AV_OPT_TYPE_IMAGE_SIZE  
+
+        #offset must point to two consecutive integers
+        AV_OPT_TYPE_PIXEL_FMT   
+        AV_OPT_TYPE_SAMPLE_FMT  
+        AV_OPT_TYPE_VIDEO_RATE  
+
+        #offset must point to AVRational
+        AV_OPT_TYPE_DURATION    
+        AV_OPT_TYPE_COLOR   
+        AV_OPT_TYPE_CHANNEL_LAYOUT
+
+    cdef struct AVOption_default_val:
+        int64_t i64
+        double dbl
+        const char *str
+        AVRational q
+
+    cdef struct AVOption:
+
+        const char *name
+        const char *help
+        AVOptionType type
+        int offset
+
+        AVOption_default_val default_val 
+
+        double min
+        double max
+        int flags
+        const char *unit
+
+
 cdef extern from "libavutil/log.h" nogil:
 
     cdef enum AVClassCategory:
@@ -233,10 +282,14 @@ cdef extern from "libavutil/log.h" nogil:
         AV_CLASS_CATEGORY_NB
 
     cdef struct AVClass:
+
         const char *class_name
         const char *(*item_name)(void*) nogil
+        
         AVClassCategory category
         int parent_log_context_offset
+
+        AVOption *option
 
     int AV_LOG_QUIET
     int AV_LOG_PANIC
