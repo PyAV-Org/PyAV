@@ -1,5 +1,6 @@
 from libc.stdlib cimport malloc, free
 
+from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
 from av.stream cimport Stream, build_stream
 from av.utils cimport err_check, avdict_to_dict
@@ -11,13 +12,14 @@ cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
 
+        cdef _Dictionary options = self.options.copy()
         with nogil:
             ret = lib.avformat_find_stream_info(
                 self.proxy.ptr,
                 # Our understanding is that there is little overlap bettween
                 # options for containers and streams, so we use the same dict.
                 # Possible TODO: expose per-stream options.
-                &self.options if self.options else NULL
+                &options.ptr
             )
         self.proxy.err_check(ret)
 

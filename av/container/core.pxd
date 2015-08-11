@@ -1,5 +1,6 @@
 cimport libav as lib
 
+from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
 
 
@@ -41,7 +42,7 @@ cdef class Container(object):
     cdef readonly bint writeable
 
     cdef readonly ContainerFormat format
-    cdef lib.AVDictionary *options
+    cdef _Dictionary options
 
     cdef ContainerProxy proxy
     cdef object __weakref__

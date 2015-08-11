@@ -11,8 +11,8 @@ from av.container.output cimport OutputContainer
 from av.format cimport build_container_format
 from av.utils cimport err_check, stash_exception, dict_to_avdict
 
+from av.dictionary import Dictionary # not cimport
 from av.utils import AVError # not cimport
-
 
 
 cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
@@ -107,6 +107,7 @@ cdef class ContainerProxy(object):
 
         cdef char *name = self.name
 
+
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:
 
@@ -160,14 +161,16 @@ cdef class ContainerProxy(object):
             #self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt
+        cdef _Dictionary options
         if not self.writeable:
             ifmt = container.format.iptr if container.format else NULL
+            options = container.options.copy()
             with nogil:
                 res = lib.avformat_open_input(
                     &self.ptr,
                     name,
                     ifmt,
-                    &container.options if container.options else NULL
+                    &options.ptr
                 )
             self.err_check(res)
 
@@ -245,17 +248,12 @@ cdef class Container(object):
         if format_name is not None:
             self.format = ContainerFormat(format_name)
 
-        if options is not None:
-            dict_to_avdict(&self.options, options)
+        self.options = Dictionary(**(options or {}))
 
         self.proxy = ContainerProxy(_cinit_sentinel, self)
 
         if format_name is None:
             self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
-
-    def __dealloc__(self):
-        with nogil:
-            lib.av_dict_free(&self.options)
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)

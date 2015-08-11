@@ -1,5 +1,6 @@
 from fractions import Fraction
 
+from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
 from av.stream cimport Stream, build_stream
 from av.utils cimport err_check, dict_to_avdict
@@ -143,15 +144,17 @@ cdef class OutputContainer(Container):
 
         # Make sure all of the streams are open.
         cdef Stream stream
+        cdef _Dictionary options
         for stream in self.streams:
             if not lib.avcodec_is_open(stream._codec_context):
+                options = self.options.copy()
                 self.proxy.err_check(lib.avcodec_open2(
                     stream._codec_context,
                     stream._codec,
                     # Our understanding is that there is little overlap bettween
                     # options for containers and streams, so we use the same dict.
                     # Possible TODO: expose per-stream options.
-                    &self.options if self.options else NULL
+                    &options.ptr
                 ))
             dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
 
@@ -162,10 +165,13 @@ cdef class OutputContainer(Container):
         if self.proxy.ptr.pb == NULL and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
+        # Copy the metadata dict.
         dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
+
+        options = self.options.copy()
         self.proxy.err_check(lib.avformat_write_header(
             self.proxy.ptr, 
-            &self.options if self.options else NULL
+            &options.ptr
         ))
 
         self._started = True
