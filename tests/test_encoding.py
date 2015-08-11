@@ -11,6 +11,9 @@ class TestBasicVideoEncoding(TestCase):
 
     def test_rgb_rotate(self):
 
+        if not Image:
+            raise SkipTest()
+        
         width = 320
         height = 240
         duration = 48

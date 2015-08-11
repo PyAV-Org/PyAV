@@ -10,9 +10,11 @@ import sys
 
 from nose.plugins.skip import SkipTest
 
-import PIL.Image as Image
-import PIL.ImageFilter as ImageFilter
-
+try:
+    import PIL.Image as Image
+    import PIL.ImageFilter as ImageFilter
+except ImportError:
+    Image = ImageFilter = None
 
 
 import av
