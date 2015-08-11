@@ -227,6 +227,7 @@ cdef class Container(object):
             self.name = file
             self.proxy = ContainerProxy(_base_constructor_sentinel, file, None, writing)
         else:
+            self.name = getattr(file, 'name', '')
             self.file = file
             self.proxy = ContainerProxy(_base_constructor_sentinel, None, file, writing)
 
