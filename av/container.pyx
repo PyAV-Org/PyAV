@@ -281,7 +281,8 @@ cdef class Container(object):
             self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
 
     def __dealloc__(self):
-        with nogil: lib.av_dict_free(&self.options)
+        with nogil:
+            lib.av_dict_free(&self.options)
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)

@@ -10,6 +10,9 @@ import traceback
 cimport libav as lib
 
 
+# === ERROR HANDLING ===
+# ======================
+
 # Would love to use the built-in constant, but it doesn't appear to
 # exist on Travis, or my Linux workstation. Could this be because they
 # are actually libav?
@@ -78,6 +81,13 @@ cdef int err_check(int res=0, str filename=None) except -1:
     return res
 
 
+
+# === DICTIONARIES ===
+# ====================
+
+
+
+
 cdef dict avdict_to_dict(lib.AVDictionary *input):
     
     cdef lib.AVDictionaryEntry *element = NULL
@@ -97,6 +107,10 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
         err_check(lib.av_dict_set(dst, key, value, 0))
 
 
+
+# === FRACTIONS ===
+# =================
+
 cdef object avrational_to_faction(lib.AVRational *input):
     return Fraction(input.num, input.den) if input.den else Fraction(0, 1)
 
@@ -115,6 +129,10 @@ cdef object to_avrational(object value, lib.AVRational *input):
 cdef object av_frac_to_fraction(lib.AVFrac *input):
     return Fraction(input.val * input.num, input.den)
 
+
+
+# === BYTE SOURCES ===
+# ====================
 
 cdef class ByteSource(object):
 
@@ -152,6 +170,10 @@ cdef ByteSource bytesource(obj, bint allow_none=False):
     else:
         return ByteSource(obj)
 
+
+
+# === OTHER ===
+# =============
 
 cdef str media_type_to_string(lib.AVMediaType media_type):
 
