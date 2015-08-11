@@ -39,7 +39,7 @@ cdef int stash_exception(exc_info=None):
         traceback.print_exception(*existing)
         _err_count -= 1
 
-    exc_info = exc_info or exc_info()
+    exc_info = exc_info or sys.exc_info()
     _local.exc_info = exc_info
     if exc_info:
         _err_count += 1
@@ -82,8 +82,6 @@ cdef int err_check(int res=0, str filename=None) except -1:
 
 # === DICTIONARIES ===
 # ====================
-
-
 
 
 cdef dict avdict_to_dict(lib.AVDictionary *input):
