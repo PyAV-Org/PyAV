@@ -93,31 +93,58 @@ cdef object _base_constructor_sentinel = object()
 
 cdef class ContainerProxy(object):
 
-    def __init__(self, sentinel, name, file, bint writeable):
+    def __init__(self, sentinel, Container container):
+
+        cdef int res
 
         if sentinel is not _base_constructor_sentinel:
             raise RuntimeError('cannot construct ContainerProxy')
 
         self.local = local()
 
-        self.name = name
+        # Copy key attributes.
+        self.name = container.name
+        self.file = container.file
+        self.writeable = container.writeable
 
-        self.writeable = writeable
-        self.ptr = lib.avformat_alloc_context()
-        self.pos = 0
-        self.pos_is_valid = True
+        cdef char *name = self.name
 
+        cdef lib.AVOutputFormat *ofmt
+        if self.writeable:
 
-        if file is not None:
+            ofmt = container.format.optr if container.format else lib.av_guess_format(NULL, name, NULL)
+            if ofmt == NULL:
+                raise ValueError("Could not determine output format")
 
-            self.file = file
-            self.fread = getattr(file, 'read', None)
-            self.fwrite = getattr(file, 'write', None)
-            self.fseek = getattr(file, 'seek', None)
-            self.ftell = getattr(file, 'tell', None)
+            with nogil:
+                # This does not actually open the file.
+                res = lib.avformat_alloc_output_context2(
+                    &self.ptr,
+                    ofmt,
+                    NULL,
+                    name,
+                )
+            self.err_check(res)
+
+        else:
+            # We need the context before we open the input AND setup Python IO.
+            self.ptr = lib.avformat_alloc_context()
+
+        # Setup Python IO.
+        if self.file is not None:
+
+            # TODO: Make sure we actually have these.
+            self.fread = getattr(self.file, 'read', None)
+            self.fwrite = getattr(self.file, 'write', None)
+            self.fseek = getattr(self.file, 'seek', None)
+            self.ftell = getattr(self.file, 'tell', None)
+
+            self.pos = 0
+            self.pos_is_valid = True
 
             self.bufsize = 32 * 1024
-            self.buffer = <unsigned char*> lib.av_malloc(self.bufsize)
+            self.buffer = <unsigned char*>lib.av_malloc(self.bufsize)
+
             self.iocontext = lib.avio_alloc_context(
                 self.buffer, self.bufsize,
                 self.writeable, # Writeable.
@@ -132,6 +159,18 @@ cdef class ContainerProxy(object):
             self.ptr.pb = self.iocontext
             self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
 
+        cdef lib.AVInputFormat *ifmt
+        if not self.writeable:
+            ifmt = container.format.iptr if container.format else NULL
+            with nogil:
+                res = lib.avformat_open_input(
+                    &self.ptr,
+                    name,
+                    ifmt,
+                    &container.options if container.options else NULL
+                )
+            self.err_check(res)
+
     def __dealloc__(self):
         with nogil:
 
@@ -142,7 +181,7 @@ cdef class ContainerProxy(object):
             # Manually free things.
             else:   
                 if self.buffer:
-                    lib.av_freep(&self.buffer)
+                    pass #lib.av_freep(&self.buffer)
                 if self.iocontext:
                     lib.av_freep(&self.iocontext)
     
@@ -189,7 +228,7 @@ cdef class ContainerProxy(object):
         return err_check(value, filename=self.name)
 
 
-def open(file, mode='r', format=None, options=None):
+def open(file, mode=None, format=None, options=None):
     """open(file, mode='r', format=None, options=None)
 
     Main entrypoint to opening files/streams.
@@ -206,33 +245,46 @@ def open(file, mode='r', format=None, options=None):
         >>> av.open(format='avfoundation', file='0') # doctest: SKIP
 
     """
-    if mode == 'r':
-        return InputContainer(_base_constructor_sentinel, False, file, format, options)
-    if mode == 'w':
-        return OutputContainer(_base_constructor_sentinel, True, file, format, options)
+
+    if mode is None:
+        mode = getattr(file, 'mode', None)
+    if mode is None:
+        mode = 'r'
+
+    if mode.startswith('r'):
+        return InputContainer(_base_constructor_sentinel, file, format, options)
+    if mode.startswith('w'):
+        return OutputContainer(_base_constructor_sentinel, file, format, options)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
 
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, writing, file, format_name, options):
+    def __cinit__(self, sentinel, file_, format_name, options):
 
         if sentinel is not _base_constructor_sentinel:
             raise RuntimeError('cannot construct base Container')
 
+        self.writeable = isinstance(self, OutputContainer)
+        if not self.writeable and not isinstance(self, InputContainer):
+            raise RuntimeError('Container cannot be extended except')
+
+        if isinstance(file_, basestring):
+            self.name = file_
+        else:
+            self.name = str(getattr(file_, 'name', ''))
+            self.file = file_
+
         if format_name is not None:
             self.format = ContainerFormat(format_name)
 
-        if isinstance(file, basestring):
-            self.name = file
-            self.proxy = ContainerProxy(_base_constructor_sentinel, file, None, writing)
-        else:
-            self.name = getattr(file, 'name', '')
-            self.file = file
-            self.proxy = ContainerProxy(_base_constructor_sentinel, None, file, writing)
-
         if options is not None:
             dict_to_avdict(&self.options, options)
+
+        self.proxy = ContainerProxy(_base_constructor_sentinel, self)
+
+        if format_name is None:
+            self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
 
     def __dealloc__(self):
         with nogil: lib.av_dict_free(&self.options)
@@ -244,19 +296,6 @@ cdef class Container(object):
 cdef class InputContainer(Container):
     
     def __cinit__(self, *args, **kwargs):
-
-        cdef char *name = "" if self.proxy.file is not None else self.name
-        cdef lib.AVInputFormat *fmt = self.format.iptr if self.format else NULL
-        with nogil:
-            ret = lib.avformat_open_input(
-                &self.proxy.ptr,
-                name,
-                fmt,
-                &self.options if self.options else NULL
-            )
-        self.proxy.err_check(ret)
-
-        self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
 
         with nogil:
             ret = lib.avformat_find_stream_info(
@@ -358,19 +397,6 @@ cdef class InputContainer(Container):
 cdef class OutputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
-
-        cdef lib.AVOutputFormat* format = self.format.optr if self.format else lib.av_guess_format(NULL, self.name, NULL)
-        if not format:
-            raise ValueError("Could not deduce output format")
-
-        self.proxy.err_check(lib.avformat_alloc_output_context2(
-            &self.proxy.ptr,
-            format,
-            NULL,
-            self.name,
-        ))
-
-        self.format = self.format or build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
         self.streams = []
         self.metadata = {}
 
@@ -520,14 +546,19 @@ cdef class OutputContainer(Container):
 
         # Open the output file, if needed.
         # TODO: is the avformat_write_header in the right place here?
-        if not self.proxy.ptr.pb:
-            if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-                err_check(lib.avio_open(&self.proxy.ptr.pb, self.name, lib.AVIO_FLAG_WRITE))
-            dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
-            err_check(lib.avformat_write_header(
-                self.proxy.ptr, 
-                &self.options if self.options else NULL
-            ))
+        cdef char *name = "" if self.proxy.file is not None else self.name
+
+        if self.proxy.ptr.pb == NULL and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
+            err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
+
+        print self.format
+        print self.proxy.ptr.oformat.name
+        
+        dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
+        err_check(lib.avformat_write_header(
+            self.proxy.ptr, 
+            &self.options if self.options else NULL
+        ))
 
         self._started = True
             
@@ -555,3 +586,4 @@ cdef class OutputContainer(Container):
         self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
 
 
+    

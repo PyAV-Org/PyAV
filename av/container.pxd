@@ -40,6 +40,8 @@ cdef class Container(object):
     cdef readonly str name
     cdef readonly object file
 
+    cdef readonly bint writeable
+
     cdef readonly ContainerFormat format
     cdef lib.AVDictionary *options
 
