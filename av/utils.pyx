@@ -3,6 +3,9 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 from cpython.buffer cimport PyObject_CheckBuffer, PyObject_GetBuffer, PyBUF_SIMPLE, PyBuffer_Release
 
 from fractions import Fraction
+from threading import local
+import sys
+import traceback
 
 cimport libav as lib
 
@@ -12,6 +15,9 @@ cimport libav as lib
 # are actually libav?
 cdef int AV_ERROR_MAX_STRING_SIZE = 64
 
+# Our custom error.
+cdef int PYAV_ERROR = -0x50794156 # 'PyAV'
+
 
 class AVError(EnvironmentError):
     """Exception class for errors from within the underlying FFmpeg/Libav."""
@@ -19,17 +25,56 @@ class AVError(EnvironmentError):
 AVError.__module__ = 'av'
 
 
-cdef int err_check(int res, str filename=None) except -1:
+cdef object _local = local()
+cdef int _err_count = 0
+
+cdef int stash_exception(exc_info=None):
+    
+    global _err_count
+
+    existing = getattr(_local, 'exc_info', None)
+    if existing is not None:
+        print >> sys.stderr, 'PyAV library exception being dropped:'
+        traceback.print_exception(*existing)
+        _err_count -= 1
+
+    exc_info = exc_info or exc_info()
+    _local.exc_info = exc_info
+    if exc_info:
+        _err_count += 1
+
+    return PYAV_ERROR
+
+
+cdef int err_check(int res=0, str filename=None) except -1:
+    
+    global _err_count
+
+    # Check for stashed exceptions.
+    if _err_count:
+        exc_info = getattr(_local, 'exc_info', None)
+        if exc_info is not None:
+            _err_count -= 1
+            _local.exc_info = None
+            raise exc_info[0], exc_info[1], exc_info[2]
+
     cdef bytes py_buffer
     cdef char *c_buffer
     if res < 0:
-        py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
-        c_buffer = py_buffer
-        lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
-        if filename:
-            raise AVError(-res, c_buffer, filename)
+
+        if res == PYAV_ERROR:
+            py_buffer = b'Error in PyAV callback'
         else:
-            raise AVError(-res, c_buffer)
+            py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
+            c_buffer = py_buffer
+            lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
+            py_buffer = c_buffer
+
+        if filename:
+            raise AVError(-res, py_buffer, filename)
+        else:
+            raise AVError(-res, py_buffer)
+
     return res
 
 

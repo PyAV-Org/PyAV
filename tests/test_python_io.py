@@ -9,6 +9,7 @@ from av.video.stream import VideoStream
 
 
 
+
 class TestPythonIO(TestCase):
 
     def test_reading(self):
@@ -27,6 +28,10 @@ class TestPythonIO(TestCase):
         # Make sure it did actually call "read".
         reads = wrapped._filter('read')
         self.assertTrue(reads)
+
+    def test_basic_errors(self):
+        self.assertRaises(Exception, av.open, None)
+        self.assertRaises(Exception, av.open, None, 'w')
 
     def test_writing(self):
 

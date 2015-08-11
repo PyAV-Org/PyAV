@@ -30,8 +30,6 @@ cdef class ContainerProxy(object):
     cdef long pos
     cdef bint pos_is_valid
     
-    # Thread-local storage for exceptions.
-    cdef object local
     cdef int err_check(self, int value) except -1
 
 

@@ -3,18 +3,16 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 
 import sys
+from fractions import Fraction
 
 cimport libav as lib
 
 from av.format cimport build_container_format
 from av.packet cimport Packet
 from av.stream cimport Stream, build_stream
-from av.utils cimport err_check, avdict_to_dict, dict_to_avdict
+from av.utils cimport err_check, stash_exception, avdict_to_dict, dict_to_avdict
 
-from fractions import Fraction
-from threading import local
-
-from av.utils import AVError
+from av.utils import AVError # not cimport
 
 
 cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
@@ -33,8 +31,7 @@ cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
             return lib.AVERROR_EOF
         return len(res)
     except Exception as e:
-        self.local.exc_info = sys.exc_info()
-        return -1
+        return stash_exception()
 
 
 cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
@@ -53,8 +50,7 @@ cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
         self.pos += bytes_written
         return bytes_written
     except Exception as e:
-        self.local.exc_info = sys.exc_info()
-        return -1
+        return stash_exception()
 
 
 cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
@@ -87,8 +83,7 @@ cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
         return res
 
     except Exception as e:
-        self.local.exc_info = sys.exc_info()
-        return -1
+        return stash_exception()
 
 
 cdef object _base_constructor_sentinel = object()
@@ -102,8 +97,6 @@ cdef class ContainerProxy(object):
 
         if sentinel is not _base_constructor_sentinel:
             raise RuntimeError('cannot construct ContainerProxy')
-
-        self.local = local()
 
         # Copy key attributes.
         self.name = container.name
@@ -226,10 +219,6 @@ cdef class ContainerProxy(object):
 
 
     cdef int err_check(self, int value) except -1:
-        e = getattr(self.local, 'exc_info', None)
-        if e is not None:
-            self.local.exc_info = None
-            raise e[0], e[1], e[2]
         return err_check(value, filename=self.name)
 
 
@@ -277,7 +266,7 @@ cdef class Container(object):
         if isinstance(file_, basestring):
             self.name = file_
         else:
-            self.name = str(getattr(file_, 'name', ''))
+            self.name = str(getattr(file_, 'name', None))
             self.file = file_
 
         if format_name is not None:
