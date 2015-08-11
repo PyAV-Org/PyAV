@@ -30,11 +30,11 @@ class TestPythonIO(TestCase):
 
     def test_writing(self):
 
-        path = self.sandboxed('writing.mp4')
+        path = self.sandboxed('writing.mov')
         fh = open(path, 'wb')
         wrapped = MethodLogger(fh)
 
-        output = av.open(fh, 'w')
+        output = av.open(wrapped, 'w')
         write_rgb_rotate(output)
 
         # Make sure it did actually write.
@@ -46,8 +46,6 @@ class TestPythonIO(TestCase):
 
     def test_buffer_read_write(self):
 
-        raise SkipTest()
-
         buffer_ = StringIO()
         wrapped = MethodLogger(buffer_)
         write_rgb_rotate(av.open(wrapped, 'w', 'mp4'))
@@ -56,6 +54,8 @@ class TestPythonIO(TestCase):
         writes = wrapped._filter('write')
         self.assertTrue(writes)
 
+        self.assertTrue(buffer_.tell())
+        
         # Standard assertions.
         buffer_.seek(0)
         assert_rgb_rotate(self, av.open(buffer_))

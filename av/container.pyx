@@ -43,12 +43,15 @@ cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
 
 cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
     cdef ContainerProxy self
-    cdef int res
+    cdef str str_to_write
+    cdef int bytes_written
     try:
         self = <ContainerProxy>opaque
-        res = self.fwrite(buf[:buf_size])
-        self.pos += res
-        return res
+        str_to_write = buf[:buf_size]
+        ret_value = self.fwrite(str_to_write)
+        bytes_written = ret_value if isinstance(ret_value, int) else buf_size
+        self.pos += bytes_written
+        return bytes_written
     except Exception as e:
         self.local.exc_info = sys.exc_info()
         return -1
@@ -149,7 +152,9 @@ cdef class ContainerProxy(object):
                 self.buffer, self.bufsize,
                 self.writeable, # Writeable.
                 <void*>self, # User data.
-                pyio_read, pyio_write, pyio_seek # Callbacks.
+                pyio_read,
+                pyio_write,
+                pyio_seek
             )
             # Various tutorials say that we should set AVFormatContext.direct
             # to AVIO_FLAG_DIRECT here, but that doesn't seem to do anything in
@@ -157,7 +162,7 @@ cdef class ContainerProxy(object):
             self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
             self.iocontext.max_packet_size = self.bufsize
             self.ptr.pb = self.iocontext
-            self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
+            #self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt
         if not self.writeable:
@@ -181,7 +186,7 @@ cdef class ContainerProxy(object):
             # Manually free things.
             else:   
                 if self.buffer:
-                    pass #lib.av_freep(&self.buffer)
+                    lib.av_freep(&self.buffer)
                 if self.iocontext:
                     lib.av_freep(&self.iocontext)
     
@@ -551,11 +556,8 @@ cdef class OutputContainer(Container):
         if self.proxy.ptr.pb == NULL and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
-        print self.format
-        print self.proxy.ptr.oformat.name
-        
         dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
-        err_check(lib.avformat_write_header(
+        self.proxy.err_check(lib.avformat_write_header(
             self.proxy.ptr, 
             &self.options if self.options else NULL
         ))
@@ -576,7 +578,7 @@ cdef class OutputContainer(Container):
         for stream in self.streams:
             lib.avcodec_close(stream._codec_context)
             
-        if not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
+        if self.file is None and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.proxy.ptr.pb)
 
         self._done = True
