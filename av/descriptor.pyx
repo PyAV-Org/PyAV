@@ -5,19 +5,19 @@ from .option cimport Option, wrap_option
 
 cdef object _cinit_sentinel = object()
 
-cdef Class wrap_class(lib.AVClass *ptr):
+cdef Descriptor wrap_avclass(lib.AVClass *ptr):
     if ptr == NULL:
         return None
-    cdef Class obj = Class(_cinit_sentinel)
+    cdef Descriptor obj = Descriptor(_cinit_sentinel)
     obj.ptr = ptr
     return obj
 
 
-cdef class Class(object):
+cdef class Descriptor(object):
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('Cannot construct av.Class')
+            raise RuntimeError('Cannot construct av.Descriptor')
 
     property name:
         def __get__(self): return self.ptr.class_name if self.ptr.class_name else None

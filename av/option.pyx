@@ -11,7 +11,6 @@ cdef Option wrap_option(lib.AVOption *ptr):
     return obj
 
 
-
 cdef dict _TYPE_NAMES = {
     lib.AV_OPT_TYPE_FLAGS: 'FLAGS',   
     lib.AV_OPT_TYPE_INT: 'INT',     
@@ -37,7 +36,7 @@ cdef class Option(object):
 
     def __cinit__(self, sentinel):
         if sentinel != _cinit_sentinel:
-            raise RuntimeError('Cannot create Option')
+            raise RuntimeError('Cannot construct av.Option')
 
     property name:
         def __get__(self):
