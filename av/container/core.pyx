@@ -40,12 +40,12 @@ cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
 
 cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
     cdef ContainerProxy self
-    cdef str str_to_write
+    cdef bytes bytes_to_write
     cdef int bytes_written
     try:
         self = <ContainerProxy>opaque
-        str_to_write = buf[:buf_size]
-        ret_value = self.fwrite(str_to_write)
+        bytes_to_write = buf[:buf_size]
+        ret_value = self.fwrite(bytes_to_write)
         bytes_written = ret_value if isinstance(ret_value, int) else buf_size
         self.pos += bytes_written
         return bytes_written

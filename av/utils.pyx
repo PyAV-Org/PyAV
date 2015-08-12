@@ -66,15 +66,16 @@ cdef int err_check(int res=0, str filename=None) except -1:
         if res == PYAV_ERROR:
             py_buffer = b'Error in PyAV callback'
         else:
+            # This is kinda gross.
             py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
             c_buffer = py_buffer
             lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
             py_buffer = c_buffer
 
         if filename:
-            raise AVError(-res, py_buffer, filename)
+            raise AVError(-res, py_buffer.decode('latin1'), filename)
         else:
-            raise AVError(-res, py_buffer)
+            raise AVError(-res, py_buffer.decode('latin1'))
 
     return res
 

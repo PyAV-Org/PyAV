@@ -108,7 +108,6 @@ class MethodLogger(object):
             return value
 
     def _method(self, name, meth, *args, **kwargs):
-        print '__METHOD__', name
         self._log.append((name, args, kwargs))
         return meth(*args, **kwargs)
 

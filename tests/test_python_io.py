@@ -1,7 +1,10 @@
 from __future__ import division
 
 import math
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 from .common import *
 from .test_encoding import write_rgb_rotate, assert_rgb_rotate
