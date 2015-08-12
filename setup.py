@@ -33,7 +33,6 @@ git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE,
 git_commit = git_commit.strip()
 
 
-
 def get_library_config(name):
     """Get distutils-compatible extension extras for the given library.
 
@@ -177,15 +176,14 @@ def new_compiler(*args, **kwargs):
     All other arguments passed to ``distutils.ccompiler.new_compiler``.
 
     """
-    cc = _new_compiler()
+    cc = _new_compiler(*args, **kwargs)
     if kwargs.pop('silent', True):
         cc.spawn = _CCompiler_spawn_silent
     return cc
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
-    library_dirs=None, link=True
-):
+                  library_dirs=None, link=True, compiler=None):
     """Check that we can compile and link the given source.
 
     Caches results; delete the ``build`` directory to reset.
@@ -211,7 +209,7 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
             fh.write('#include "%s"\n' % include)
         fh.write('main(int argc, char **argv)\n{ %s; }\n' % code)
 
-    cc = new_compiler()
+    cc = new_compiler(compiler=compiler)
 
     try:
         objects = cc.compile([source_path], include_dirs=include_dirs)
@@ -262,9 +260,11 @@ class ConfigCommand(Command):
     user_options = []
 
     def initialize_options(self):
-        pass
+        self.compiler = None
+
     def finalize_options(self):
-        pass
+        self.set_undefined_options('build',
+                                   ('compiler', 'compiler'),)
 
     def run(self):
 
@@ -308,18 +308,20 @@ class ConfigCommand(Command):
                 setattr(ext, key, value)
 
 
-
 class ReflectCommand(Command):
 
-    user_options = []
+    user_options = [
+        ('compiler=', 'c',
+         "specify the compiler type")]
 
     def initialize_options(self):
+        self.compiler = None
         self.build_temp = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
-            ('build_temp', 'build_temp'),
-        )
+                                   ('build_temp', 'build_temp'),
+                                   ('compiler', 'compiler'),)
 
     def run(self):
 
@@ -356,6 +358,7 @@ class ReflectCommand(Command):
                 code='%s()' % func_name,
                 libraries=extension_extra['libraries'],
                 library_dirs=extension_extra['library_dirs']
+                compiler=self.compiler
             ):
                 print('found')
                 found.append(func_name)
@@ -375,7 +378,8 @@ class ReflectCommand(Command):
                 code='struct %s x; x.%s;' % (struct_name, member_name),
                 includes=reflection_includes,
                 include_dirs=extension_extra['include_dirs'],
-                link=False
+                link=False,
+                compiler=self.compiler
             ):
                 print('found')
                 # Double-unscores for members.
@@ -501,6 +505,9 @@ class BuildExtCommand(build_ext):
     def run(self):
 
         self.run_command('config')
+        # Propagate options
+        obj = self.distribution.get_command_obj('reflect')
+        obj.compiler = self.compiler
         self.run_command('reflect')
 
         # We write a header file containing everything we have discovered by
