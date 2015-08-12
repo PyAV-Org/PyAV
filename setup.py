@@ -83,8 +83,8 @@ def update_extend(dst, src):
                 existing.append(x)
 
 
-def is_msvc():
-    cc = _new_compiler()
+def is_msvc(cc=None):
+    cc = _new_compiler() if cc is None else cc
     return isinstance(cc, msvc_compiler_classes)
 
 
@@ -122,8 +122,6 @@ def dump_config():
 
 
 if os.name == 'nt':
-    if is_msvc():
-        config_macros.append(('inline', '__inline'))
 
     print(
         'Building on Windows is not officially supported, and is likely broken\n'
@@ -131,6 +129,9 @@ if os.name == 'nt':
         'Please read http://mikeboers.github.io/PyAV/installation.html#on-windows\n'
         'and document issues in https://github.com/mikeboers/PyAV/issues/38'
     )
+
+    if is_msvc():
+        config_macros.append(('inline', '__inline'))
 
     # Library names are different on Windows.
     # NOTE: This mapping used to be used as part of the function discovery
@@ -214,14 +215,15 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
         except ValueError:
             pass
 
+    cc = new_compiler(compiler=compiler)
+
     with open(source_path, 'w') as fh:
-        if is_msvc():
+        if is_msvc(cc):
             fh.write("#define inline __inline\n")
         for include in includes or ():
             fh.write('#include "%s"\n' % include)
         fh.write('main(int argc, char **argv)\n{ %s; }\n' % code)
 
-    cc = new_compiler(compiler=compiler)
 
     try:
         objects = cc.compile([source_path], include_dirs=include_dirs)
@@ -281,7 +283,8 @@ class ConfigCommand(Command):
 
     def finalize_options(self):
         self.set_undefined_options('build',
-                                   ('compiler', 'compiler'),)
+           ('compiler', 'compiler'),
+        )
 
     def run(self):
 
@@ -335,8 +338,9 @@ class ReflectCommand(Command):
 
     def finalize_options(self):
         self.set_undefined_options('build',
-                                   ('build_temp', 'build_temp'),
-                                   ('compiler', 'compiler'),)
+           ('build_temp', 'build_temp'),
+           ('compiler', 'compiler'),
+        )
 
     def run(self):
 
@@ -358,7 +362,6 @@ class ReflectCommand(Command):
         ]
 
         # Check for some specific functions.
-        cc = new_compiler()
         for func_name in (
 
             'avformat_open_input', # Canary that should exist.
@@ -376,8 +379,8 @@ class ReflectCommand(Command):
                 name=os.path.join(tmp_dir, func_name),
                 code='%s()' % func_name,
                 libraries=extension_extra['libraries'],
-                library_dirs=extension_extra['library_dirs']
-                compiler=self.compiler
+                library_dirs=extension_extra['library_dirs'],
+                compiler=self.compiler,
             ):
                 print('found')
                 found.append(func_name)
@@ -400,7 +403,7 @@ class ReflectCommand(Command):
                 includes=reflection_includes,
                 include_dirs=extension_extra['include_dirs'],
                 link=False,
-                compiler=self.compiler
+                compiler=self.compiler,
             ):
                 print('found')
                 # Double-unscores for members.
@@ -462,8 +465,8 @@ class DoctorCommand(Command):
 class CleanCommand(clean):
 
     user_options = clean.user_options + [
-        ('sources', None,
-         "remove Cython build output (C sources)")]
+        ('sources', None, "remove Cython build output (C sources)"),
+    ]
 
     boolean_options = clean.boolean_options + ['sources']
 
