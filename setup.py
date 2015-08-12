@@ -2,6 +2,8 @@ from __future__ import print_function
 
 from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
 from distutils.command.clean import clean, log
+from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
+from distutils.msvccompiler import MSVCCompiler
 from distutils.core import Command
 from distutils.dir_util import remove_tree
 from distutils.errors import DistutilsExecError
@@ -74,6 +76,10 @@ def update_extend(dst, src):
                 existing.append(x)
 
 
+def is_msvc():
+    cc = _new_compiler()
+    return isinstance(cc, (MSVCCompiler, MSVC9Compiler))
+
 
 # The "extras" to be supplied to every one of our modules.
 # This is expanded heavily by the `config` command.
@@ -109,6 +115,8 @@ def dump_config():
 
 
 if os.name == 'nt':
+    if is_msvc():
+        config_macros.append(('inline', '__inline'))
 
     print(
         'Building on Windows is not officially supported, and is likely broken\n'
@@ -201,6 +209,8 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
             pass
 
     with open(source_path, 'w') as fh:
+        if is_msvc():
+            fh.write("#define inline __inline\n")
         for include in includes or ():
             fh.write('#include "%s"\n' % include)
         fh.write('main(int argc, char **argv)\n{ %s; }\n' % code)
@@ -472,7 +482,10 @@ class CythonizeCommand(Command):
         # the existing extension instead of replacing them all.
         for i, ext in enumerate(self.distribution.ext_modules):
             if any(s.endswith('.pyx') for s in ext.sources):
-                new_ext = cythonize(ext,
+                if is_msvc():
+                    ext.define_macros.append(('inline', '__inline'))
+                new_ext = cythonize(
+                    ext,
                     # Keep these in sync with the Makefile cythonize target.
                     compiler_directives=dict(
                         c_string_type='str',
