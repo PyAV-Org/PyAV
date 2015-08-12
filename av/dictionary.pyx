@@ -15,17 +15,17 @@ cdef class _Dictionary(object):
         if self.ptr != NULL:
             lib.av_dict_free(&self.ptr)
 
-    def __getitem__(self, bytes key):
+    def __getitem__(self, str key):
         cdef lib.AVDictionaryEntry *element = lib.av_dict_get(self.ptr, key, NULL, 0)
         if element != NULL:
             return element.value
         else:
             raise KeyError(key)
 
-    def __setitem__(self, bytes key, bytes value):
+    def __setitem__(self, str key, str value):
         err_check(lib.av_dict_set(&self.ptr, key, value, 0))
 
-    def __delitem__(self, bytes key):
+    def __delitem__(self, str key):
         err_check(lib.av_dict_set(&self.ptr, key, NULL, 0))
 
     def __len__(self):
