@@ -328,19 +328,34 @@ class ConfigCommand(Command):
 
 class ReflectCommand(Command):
 
+    sep_by = " (separated by '%s')" % os.pathsep
     user_options = [
+        ('build-temp=', 't',
+         "directory for temporary files (build by-products)"),
+        ('include-dirs=', 'I',
+         "list of directories to search for header files" + sep_by),
+        ('libraries=', 'l',
+         "external C libraries to link with"),
+        ('library-dirs=', 'L',
+         "directories to search for external C libraries" + sep_by),
         ('compiler=', 'c',
          "specify the compiler type")]
 
     def initialize_options(self):
         self.compiler = None
         self.build_temp = None
+        self.include_dirs = None
+        self.libraries = None
+        self.library_dirs = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
-           ('build_temp', 'build_temp'),
-           ('compiler', 'compiler'),
-        )
+                                   ('build_temp', 'build_temp'),
+                                   ('compiler', 'compiler'),)
+        self.set_undefined_options('build_ext',
+                                   ('include_dirs', 'include_dirs'),
+                                   ('libraries', 'libraries'),
+                                   ('library_dirs', 'library_dirs'),)
 
     def run(self):
 
@@ -360,6 +375,11 @@ class ReflectCommand(Command):
             'libavformat/avformat.h',
             'libavutil/avutil.h',
         ]
+
+        config = extension_extra.copy()
+        config['include_dirs'] += self.include_dirs
+        config['libraries'] += self.libraries
+        config['library_dirs'] += self.library_dirs
 
         # Check for some specific functions.
         for func_name in (
@@ -401,7 +421,7 @@ class ReflectCommand(Command):
                 name=os.path.join(tmp_dir, '%s.%s' % (struct_name, member_name)),
                 code='struct %s x; x.%s;' % (struct_name, member_name),
                 includes=reflection_includes,
-                include_dirs=extension_extra['include_dirs'],
+                include_dirs=config['include_dirs'],
                 link=False,
                 compiler=self.compiler,
             ):
@@ -521,6 +541,9 @@ class BuildExtCommand(build_ext):
         # Propagate options
         obj = self.distribution.get_command_obj('reflect')
         obj.compiler = self.compiler
+        obj.include_dirs = self.include_dirs
+        obj.libraries = self.libraries
+        obj.library_dirs = self.library_dirs
         self.run_command('reflect')
 
         # We write a header file containing everything we have discovered by
@@ -546,6 +569,13 @@ class BuildExtCommand(build_ext):
         self.include_dirs = self.include_dirs or []
         self.include_dirs.append(include_dir)
 
+        def unique_extend(a, *args):
+            a[:] = list(set().union(a, *args))
+
+        for i, ext in enumerate(self.distribution.ext_modules):
+            unique_extend(ext.include_dirs, self.include_dirs)
+            unique_extend(ext.library_dirs, self.library_dirs)
+            unique_extend(ext.libraries, self.libraries)
         self.run_command('cythonize')
 
         return build_ext.run(self)
