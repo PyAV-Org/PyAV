@@ -2,11 +2,10 @@ from __future__ import print_function
 
 from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
 from distutils.command.clean import clean, log
-from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
-from distutils.msvccompiler import MSVCCompiler
 from distutils.core import Command
 from distutils.dir_util import remove_tree
 from distutils.errors import DistutilsExecError
+from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
@@ -17,6 +16,15 @@ import os
 import platform
 import re
 import sys
+
+try:
+    # This depends on _winreg, which is not availible on not-Windows.
+    from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
+except ImportError:
+    MSVC9Compiler = None
+    msvc_compiler_classes = (MSVCCompiler, )
+else:
+    msvc_compiler_classes = (MSVCCompiler, MSVC9Compiler)
 
 
 try:
@@ -78,7 +86,7 @@ def update_extend(dst, src):
 
 def is_msvc():
     cc = _new_compiler()
-    return isinstance(cc, (MSVCCompiler, MSVC9Compiler))
+    return isinstance(cc, msvc_compiler_classes)
 
 
 # The "extras" to be supplied to every one of our modules.
