@@ -124,43 +124,9 @@ def dump_config():
 
 if os.name == 'nt':
 
-    print(
-        'Building on Windows is not officially supported, and is likely broken\n'
-        'due to a refactoring of the build process.\n\n'
-        'Please read http://mikeboers.github.io/PyAV/installation.html#on-windows\n'
-        'and document issues in https://github.com/mikeboers/PyAV/issues/38'
-    )
 
     if is_msvc():
         config_macros.append(('inline', '__inline'))
-
-    # Library names are different on Windows.
-    # NOTE: This mapping used to be used as part of the function discovery
-    # process, and will likely need to be restored.
-    libnames = {
-        'avcodec':'avcodec-56',
-        'avformat':'avformat-56',
-        'avutil':'avutil-54',
-    }
-
-    dlls = [
-        'avcodec-56.dll',
-        'avdevice-56.dll',
-        'avfilter-5.dll',
-        'avformat-56.dll',
-        'avutil-54.dll',
-        'libgcc_s_dw2-1.dll',
-        'libwinpthread-1.dll',
-        'postproc-53.dll',
-        'swresample-1.dll',
-        'swscale-3.dll',
-    ]
-
-    # Ensure the libraries exist for proper wheel packaging
-    for dll in dlls:
-        if not os.path.isfile(os.path.join('av', dll)):
-            print("missing %s; please find and copy it into the 'av' directory" % dll)
-
     # Since we're shipping a self contained unit on windows, we need to mark
     # the package as such. On other systems, let it be universal.
     class BinaryDistribution(Distribution):
@@ -276,17 +242,43 @@ for dirname, dirnames, filenames in os.walk('av'):
 
 class ConfigCommand(Command):
 
-    user_options = []
+    user_options = [
+        ('no-pkg-config', None,
+         "do not use pkg-config to configure dependencies"),
+        ('compiler=', 'c',
+         "specify the compiler type")]
+
+    boolean_options = ['no-pkg-config']
+
     def initialize_options(self):
         self.compiler = None
+        self.no_pkg_config = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
-            ('compiler', 'compiler'),
-        )
+            ('compiler', 'compiler'),)
+        self.set_undefined_options('build_ext',
+            ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
+        # Check if we're using pkg-config or not
+        if self.no_pkg_config:
+            # Simply assume we have everything we need!
+            config = {
+                'libraries':    ['avformat', 'avcodec', 'avdevice', 'avutil',
+                                 'swscale'],
+                'library_dirs': [],
+                'include_dirs': []
+            }
+            config['libraries'].append('swresample')
+            config_macros.append(('PYAV_HAVE_LIBSWRESAMPLE', 1))
+            update_extend(extension_extra, config)
+            for ext in self.distribution.ext_modules:
+                for key, value in extension_extra.items():
+                    setattr(ext, key, value)
+            return
 
+        # We're using pkg-config:
         errors = []
 
         # Get the config for the libraries that we require.
@@ -334,8 +326,11 @@ class ReflectCommand(Command):
         ('include-dirs=', 'I', "list of directories to search for header files" + sep_by),
         ('libraries=', 'l', "external C libraries to link with"),
         ('library-dirs=', 'L', "directories to search for external C libraries" + sep_by),
+        ('no-pkg-config', None, "do not use pkg-config to configure dependencies"),
         ('compiler=', 'c', "specify the compiler type"),
     ]
+
+    boolean_options = ['no-pkg-config']
 
     def initialize_options(self):
         self.compiler = None
@@ -343,6 +338,7 @@ class ReflectCommand(Command):
         self.include_dirs = None
         self.libraries = None
         self.library_dirs = None
+        self.no_pkg_config = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
@@ -353,10 +349,20 @@ class ReflectCommand(Command):
             ('include_dirs', 'include_dirs'),
             ('libraries', 'libraries'),
             ('library_dirs', 'library_dirs'),
-        )
+            ('no_pkg_config', 'no_pkg_config'),
+		)
+		# Need to do this ourself, since no inheritance from build_ext:
+        if isinstance(self.include_dirs, basestring):
+            self.include_dirs = self.include_dirs.split(os.pathsep)
+        if isinstance(self.library_dirs, basestring):
+            self.library_dirs = str.split(self.library_dirs, os.pathsep)
 
     def run(self):
 
+        # Propagate options
+        obj = self.distribution.get_command_obj('config')
+        obj.no_pkg_config = self.no_pkg_config
+        obj.compiler = self.compiler
         self.run_command('config')
 
         tmp_dir = os.path.join(self.build_temp, 'reflection')
@@ -551,16 +557,27 @@ class CythonizeCommand(Command):
                 ext.sources = new_ext.sources
 
 
-
 class BuildExtCommand(build_ext):
 
-    def run(self):
+    if os.name != 'nt':
+        user_options = build_ext.user_options + [
+            ('no-pkg-config', None,
+             "do not use pkg-config to configure dependencies")]
 
-        self.run_command('config')
+        boolean_options = build_ext.boolean_options + ['no-pkg-config']
+
+        def initialize_options(self):
+            build_ext.initialize_options(self)
+            self.no_pkg_config = None
+    else:
+        no_pkg_config = 1
+
+    def run(self):
 
         # Propagate build options to reflect
         obj = self.distribution.get_command_obj('reflect')
         obj.compiler = self.compiler
+        obj.no_pkg_config = self.no_pkg_config
         obj.include_dirs = self.include_dirs
         obj.libraries = self.libraries
         obj.library_dirs = self.library_dirs
@@ -604,20 +621,19 @@ class BuildExtCommand(build_ext):
         return build_ext.run(self)
 
 
-
 setup(
 
     name='av',
     version=version,
     description='Pythonic bindings for FFmpeg/Libav.',
-    
+
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
-    
+
     url="https://github.com/mikeboers/PyAV",
 
     packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
-    
+
     zip_safe=False,
     ext_modules=ext_modules,
 
