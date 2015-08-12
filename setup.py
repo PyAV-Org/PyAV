@@ -234,7 +234,11 @@ for dirname, dirnames, filenames in os.walk('av'):
 
         pyx_path = os.path.join(dirname, filename)
         base = os.path.splitext(pyx_path)[0]
-        mod_name = base.replace(os.path.sep, '.').replace(os.path.altsep, '.')
+        
+        # Need to be a little careful because Windows will accept / or \
+        # (where os.sep will be \ on Windows).
+        mod_name = base.replace('/', '.').replace(os.sep, '.')
+
         c_path = os.path.join('src', base + '.c')
 
         # We go with the C sources if Cython is not installed, and fail if
