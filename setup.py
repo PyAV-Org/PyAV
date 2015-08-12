@@ -26,7 +26,6 @@ except ImportError:
 else:
     msvc_compiler_classes = (MSVCCompiler, MSVC9Compiler)
 
-
 try:
     from Cython.Build import cythonize
 except ImportError:
@@ -241,8 +240,6 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
 
 
 
-
-
 # Construct the modules that we find in the "av" directory.
 ext_modules = []
 for dirname, dirnames, filenames in os.walk('av'):
@@ -283,7 +280,7 @@ class ConfigCommand(Command):
 
     def finalize_options(self):
         self.set_undefined_options('build',
-           ('compiler', 'compiler'),
+            ('compiler', 'compiler'),
         )
 
     def run(self):
@@ -326,20 +323,17 @@ class ConfigCommand(Command):
                 setattr(ext, key, value)
 
 
+
 class ReflectCommand(Command):
 
     sep_by = " (separated by '%s')" % os.pathsep
     user_options = [
-        ('build-temp=', 't',
-         "directory for temporary files (build by-products)"),
-        ('include-dirs=', 'I',
-         "list of directories to search for header files" + sep_by),
-        ('libraries=', 'l',
-         "external C libraries to link with"),
-        ('library-dirs=', 'L',
-         "directories to search for external C libraries" + sep_by),
-        ('compiler=', 'c',
-         "specify the compiler type")]
+        ('build-temp=', 't', "directory for temporary files (build by-products)"),
+        ('include-dirs=', 'I', "list of directories to search for header files" + sep_by),
+        ('libraries=', 'l', "external C libraries to link with"),
+        ('library-dirs=', 'L', "directories to search for external C libraries" + sep_by),
+        ('compiler=', 'c', "specify the compiler type"),
+    ]
 
     def initialize_options(self):
         self.compiler = None
@@ -350,12 +344,14 @@ class ReflectCommand(Command):
 
     def finalize_options(self):
         self.set_undefined_options('build',
-                                   ('build_temp', 'build_temp'),
-                                   ('compiler', 'compiler'),)
+            ('build_temp', 'build_temp'),
+            ('compiler', 'compiler'),
+        )
         self.set_undefined_options('build_ext',
-                                   ('include_dirs', 'include_dirs'),
-                                   ('libraries', 'libraries'),
-                                   ('library_dirs', 'library_dirs'),)
+            ('include_dirs', 'include_dirs'),
+            ('libraries', 'libraries'),
+            ('library_dirs', 'library_dirs'),
+        )
 
     def run(self):
 
@@ -466,7 +462,6 @@ class ReflectCommand(Command):
 
 
 
-
 class DoctorCommand(Command):
 
     user_options = []
@@ -480,6 +475,7 @@ class DoctorCommand(Command):
         self.run_command('reflect')
         print()
         dump_config()
+
 
 
 class CleanCommand(clean):
@@ -501,6 +497,7 @@ class CleanCommand(clean):
                 remove_tree('src', dry_run=self.dry_run)
             else:
                 log.info("'%s' does not exist -- can't clean it", 'src')
+
 
 
 class CythonizeCommand(Command):
@@ -538,17 +535,19 @@ class BuildExtCommand(build_ext):
     def run(self):
 
         self.run_command('config')
-        # Propagate options
+
+        # Propagate build options to reflect
         obj = self.distribution.get_command_obj('reflect')
         obj.compiler = self.compiler
         obj.include_dirs = self.include_dirs
         obj.libraries = self.libraries
         obj.library_dirs = self.library_dirs
+
         self.run_command('reflect')
 
         # We write a header file containing everything we have discovered by
         # inspecting the libraries which exist. This is the main mechanism we
-        # use to detect differenced between FFmpeg anf Libav.
+        # use to detect differenced between FFmpeg and Libav.
 
         include_dir = os.path.join(self.build_temp, 'include')
         pyav_dir = os.path.join(include_dir, 'pyav')
@@ -569,13 +568,14 @@ class BuildExtCommand(build_ext):
         self.include_dirs = self.include_dirs or []
         self.include_dirs.append(include_dir)
 
+        # Propagate config to cythonize.
         def unique_extend(a, *args):
             a[:] = list(set().union(a, *args))
-
         for i, ext in enumerate(self.distribution.ext_modules):
             unique_extend(ext.include_dirs, self.include_dirs)
             unique_extend(ext.library_dirs, self.library_dirs)
             unique_extend(ext.libraries, self.libraries)
+
         self.run_command('cythonize')
 
         return build_ext.run(self)
@@ -600,16 +600,16 @@ setup(
 
     cmdclass={
         'build_ext': BuildExtCommand,
+        'clean': CleanCommand,
         'config': ConfigCommand,
         'cythonize': CythonizeCommand,
         'doctor': DoctorCommand,
         'reflect': ReflectCommand,
-        'clean': CleanCommand
     },
 
-    test_suite = 'nose.collector',
+    test_suite='nose.collector',
 
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'pyav = av.__main__:main',
         ],
