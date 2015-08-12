@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from libc.stdlib cimport malloc, free
-from libc.stdio cimport printf, fprintf, stderr
+from libc.stdio cimport printf, fprintf, stderr, snprintf
 
 cimport libav as lib
 
@@ -84,10 +84,12 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         # it doesn't matter if the AVClass that returned it vanishes or not.
         req.item_name = cls.item_name(ptr)
 
-    lib.vasprintf(&req.message, format, args)
+    cdef int cn = snprintf(NULL, 0, format, args)
+    req.message = <char*>malloc(cn+1)
+    snprintf(req.message, cn+1, format, args)
     if not req.message:
         # Assume that the format has a trailing newline.
-        printf("av.logging: vasprintf errored on %s: %s", req.item_name, format)
+        printf("av.logging: snprintf errored on %s: %s", req.item_name, format)
         free(req)
         return
 
