@@ -7,6 +7,7 @@ cdef extern from "pyav/config.h" nogil:
 
 
 include "libavutil/avutil.pxd"
+include "libavutil/bprint.pxd"
 include "libavutil/channel_layout.pxd"
 include "libavutil/dict.pxd"
 include "libavutil/samplefmt.pxd"
