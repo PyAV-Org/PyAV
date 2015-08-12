@@ -10,6 +10,7 @@ to signal a major change (i.e. backwards incompatibilities) and increment
   otherwise error
 - Improve build system to use Python's C compiler for function detection
 - Fix bug when using Python IO on files larger than 2GB (#109 by @xxr3376)
+- MSVC support (#115 by @vidartf)
 
 
 0.2.4
