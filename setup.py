@@ -1,11 +1,14 @@
 from __future__ import print_function
 
 from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
+from distutils.command.clean import clean, log
 from distutils.core import Command
+from distutils.dir_util import remove_tree
 from distutils.errors import DistutilsExecError
+from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 import errno
 import itertools
 import json
@@ -14,6 +17,14 @@ import platform
 import re
 import sys
 
+try:
+    # This depends on _winreg, which is not availible on not-Windows.
+    from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
+except ImportError:
+    MSVC9Compiler = None
+    msvc_compiler_classes = (MSVCCompiler, )
+else:
+    msvc_compiler_classes = (MSVCCompiler, MSVC9Compiler)
 
 try:
     from Cython.Build import cythonize
@@ -26,7 +37,6 @@ except ImportError:
 version = '0.2.4'
 git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 git_commit = git_commit.strip()
-
 
 
 def get_library_config(name):
@@ -72,6 +82,10 @@ def update_extend(dst, src):
                 existing.append(x)
 
 
+def is_msvc(cc=None):
+    cc = _new_compiler() if cc is None else cc
+    return isinstance(cc, msvc_compiler_classes)
+
 
 # The "extras" to be supplied to every one of our modules.
 # This is expanded heavily by the `config` command.
@@ -114,6 +128,9 @@ if os.name == 'nt':
         'Please read http://mikeboers.github.io/PyAV/installation.html#on-windows\n'
         'and document issues in https://github.com/mikeboers/PyAV/issues/38'
     )
+
+    if is_msvc():
+        config_macros.append(('inline', '__inline'))
 
     # Library names are different on Windows.
     # NOTE: This mapping used to be used as part of the function discovery
@@ -171,15 +188,14 @@ def new_compiler(*args, **kwargs):
     All other arguments passed to ``distutils.ccompiler.new_compiler``.
 
     """
-    cc = _new_compiler()
+    cc = _new_compiler(*args, **kwargs)
     if kwargs.pop('silent', True):
         cc.spawn = _CCompiler_spawn_silent
     return cc
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
-    library_dirs=None, link=True
-):
+                  library_dirs=None, link=True, compiler=None):
     """Check that we can compile and link the given source.
 
     Caches results; delete the ``build`` directory to reset.
@@ -198,12 +214,15 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
         except ValueError:
             pass
 
+    cc = new_compiler(compiler=compiler)
+
     with open(source_path, 'w') as fh:
+        if is_msvc(cc):
+            fh.write("#define inline __inline\n")
         for include in includes or ():
             fh.write('#include "%s"\n' % include)
         fh.write('main(int argc, char **argv)\n{ %s; }\n' % code)
 
-    cc = new_compiler()
 
     try:
         objects = cc.compile([source_path], include_dirs=include_dirs)
@@ -221,8 +240,6 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
 
 
 
-
-
 # Construct the modules that we find in the "av" directory.
 ext_modules = []
 for dirname, dirnames, filenames in os.walk('av'):
@@ -234,7 +251,11 @@ for dirname, dirnames, filenames in os.walk('av'):
 
         pyx_path = os.path.join(dirname, filename)
         base = os.path.splitext(pyx_path)[0]
-        mod_name = base.replace('/', '.')
+        
+        # Need to be a little careful because Windows will accept / or \
+        # (where os.sep will be \ on Windows).
+        mod_name = base.replace('/', '.').replace(os.sep, '.')
+
         c_path = os.path.join('src', base + '.c')
 
         # We go with the C sources if Cython is not installed, and fail if
@@ -255,9 +276,12 @@ class ConfigCommand(Command):
 
     user_options = []
     def initialize_options(self):
-        pass
+        self.compiler = None
+
     def finalize_options(self):
-        pass
+        self.set_undefined_options('build',
+            ('compiler', 'compiler'),
+        )
 
     def run(self):
 
@@ -302,14 +326,31 @@ class ConfigCommand(Command):
 
 class ReflectCommand(Command):
 
-    user_options = []
+    sep_by = " (separated by '%s')" % os.pathsep
+    user_options = [
+        ('build-temp=', 't', "directory for temporary files (build by-products)"),
+        ('include-dirs=', 'I', "list of directories to search for header files" + sep_by),
+        ('libraries=', 'l', "external C libraries to link with"),
+        ('library-dirs=', 'L', "directories to search for external C libraries" + sep_by),
+        ('compiler=', 'c', "specify the compiler type"),
+    ]
 
     def initialize_options(self):
+        self.compiler = None
         self.build_temp = None
+        self.include_dirs = None
+        self.libraries = None
+        self.library_dirs = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
             ('build_temp', 'build_temp'),
+            ('compiler', 'compiler'),
+        )
+        self.set_undefined_options('build_ext',
+            ('include_dirs', 'include_dirs'),
+            ('libraries', 'libraries'),
+            ('library_dirs', 'library_dirs'),
         )
 
     def run(self):
@@ -331,8 +372,12 @@ class ReflectCommand(Command):
             'libavutil/avutil.h',
         ]
 
+        config = extension_extra.copy()
+        config['include_dirs'] += self.include_dirs
+        config['libraries'] += self.libraries
+        config['library_dirs'] += self.library_dirs
+
         # Check for some specific functions.
-        cc = new_compiler()
         for func_name in (
 
             'avformat_open_input', # Canary that should exist.
@@ -350,7 +395,8 @@ class ReflectCommand(Command):
                 name=os.path.join(tmp_dir, func_name),
                 code='%s()' % func_name,
                 libraries=extension_extra['libraries'],
-                library_dirs=extension_extra['library_dirs']
+                library_dirs=extension_extra['library_dirs'],
+                compiler=self.compiler,
             ):
                 print('found')
                 found.append(func_name)
@@ -371,8 +417,9 @@ class ReflectCommand(Command):
                 name=os.path.join(tmp_dir, '%s.%s' % (struct_name, member_name)),
                 code='struct %s x; x.%s;' % (struct_name, member_name),
                 includes=reflection_includes,
-                include_dirs=extension_extra['include_dirs'],
-                link=False
+                include_dirs=config['include_dirs'],
+                link=False,
+                compiler=self.compiler,
             ):
                 print('found')
                 # Double-unscores for members.
@@ -415,7 +462,6 @@ class ReflectCommand(Command):
 
 
 
-
 class DoctorCommand(Command):
 
     user_options = []
@@ -429,6 +475,28 @@ class DoctorCommand(Command):
         self.run_command('reflect')
         print()
         dump_config()
+
+
+
+class CleanCommand(clean):
+
+    user_options = clean.user_options + [
+        ('sources', None, "remove Cython build output (C sources)"),
+    ]
+
+    boolean_options = clean.boolean_options + ['sources']
+
+    def initialize_options(self):
+        clean.initialize_options(self)
+        self.sources = None
+
+    def run(self):
+        clean.run(self)
+        if self.sources:
+            if os.path.exists('src'):
+                remove_tree('src', dry_run=self.dry_run)
+            else:
+                log.info("'%s' does not exist -- can't clean it", 'src')
 
 
 
@@ -446,7 +514,10 @@ class CythonizeCommand(Command):
         # the existing extension instead of replacing them all.
         for i, ext in enumerate(self.distribution.ext_modules):
             if any(s.endswith('.pyx') for s in ext.sources):
-                new_ext = cythonize(ext,
+                if is_msvc():
+                    ext.define_macros.append(('inline', '__inline'))
+                new_ext = cythonize(
+                    ext,
                     # Keep these in sync with the Makefile cythonize target.
                     compiler_directives=dict(
                         c_string_type='str',
@@ -461,23 +532,22 @@ class CythonizeCommand(Command):
 
 class BuildExtCommand(build_ext):
 
-    # fix incorrect pyd/dll init export function names produced on windows
-    # for the .def files.
-    if os.name == 'nt':
-        def get_export_symbols (self, ext):
-            initfunc_name = "init" + ext.name.split('\\')[-1]
-            if initfunc_name not in ext.export_symbols:
-                ext.export_symbols.append(initfunc_name)
-            return ext.export_symbols
-
     def run(self):
 
         self.run_command('config')
+
+        # Propagate build options to reflect
+        obj = self.distribution.get_command_obj('reflect')
+        obj.compiler = self.compiler
+        obj.include_dirs = self.include_dirs
+        obj.libraries = self.libraries
+        obj.library_dirs = self.library_dirs
+
         self.run_command('reflect')
 
         # We write a header file containing everything we have discovered by
         # inspecting the libraries which exist. This is the main mechanism we
-        # use to detect differenced between FFmpeg anf Libav.
+        # use to detect differenced between FFmpeg and Libav.
 
         include_dir = os.path.join(self.build_temp, 'include')
         pyav_dir = os.path.join(include_dir, 'pyav')
@@ -497,6 +567,14 @@ class BuildExtCommand(build_ext):
 
         self.include_dirs = self.include_dirs or []
         self.include_dirs.append(include_dir)
+
+        # Propagate config to cythonize.
+        def unique_extend(a, *args):
+            a[:] = list(set().union(a, *args))
+        for i, ext in enumerate(self.distribution.ext_modules):
+            unique_extend(ext.include_dirs, self.include_dirs)
+            unique_extend(ext.library_dirs, self.library_dirs)
+            unique_extend(ext.libraries, self.libraries)
 
         self.run_command('cythonize')
 
@@ -522,15 +600,16 @@ setup(
 
     cmdclass={
         'build_ext': BuildExtCommand,
+        'clean': CleanCommand,
         'config': ConfigCommand,
         'cythonize': CythonizeCommand,
         'doctor': DoctorCommand,
         'reflect': ReflectCommand,
     },
 
-    test_suite = 'nose.collector',
+    test_suite='nose.collector',
 
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'pyav = av.__main__:main',
         ],
