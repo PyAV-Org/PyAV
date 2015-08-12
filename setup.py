@@ -6,6 +6,8 @@ from distutils.core import Command
 from distutils.errors import DistutilsExecError
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
+from distutils.command.clean import clean, log
+from distutils.dir_util import remove_tree
 from subprocess import Popen, PIPE
 import errno
 import json
@@ -422,6 +424,26 @@ class DoctorCommand(Command):
         dump_config()
 
 
+class CleanCommand(clean):
+
+    user_options = clean.user_options + [
+        ('sources', None,
+         "remove Cython build output (C sources)")]
+
+    boolean_options = clean.boolean_options + ['sources']
+
+    def initialize_options(self):
+        clean.initialize_options(self)
+        self.sources = None
+
+    def run(self):
+        clean.run(self)
+        if self.sources:
+            if os.path.exists('src'):
+                remove_tree('src', dry_run=self.dry_run)
+            else:
+                log.info("'%s' does not exist -- can't clean it", 'src')
+
 
 class CythonizeCommand(Command):
 
@@ -519,6 +541,7 @@ setup(
         'cythonize': CythonizeCommand,
         'doctor': DoctorCommand,
         'reflect': ReflectCommand,
+        'clean': CleanCommand
     },
 
     test_suite='nose.collector',
