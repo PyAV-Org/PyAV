@@ -234,7 +234,7 @@ for dirname, dirnames, filenames in os.walk('av'):
 
         pyx_path = os.path.join(dirname, filename)
         base = os.path.splitext(pyx_path)[0]
-        mod_name = base.replace('/', '.')
+        mod_name = base.replace(os.path.sep, '.').replace(os.path.altsep, '.')
         c_path = os.path.join('src', base + '.c')
 
         # We go with the C sources if Cython is not installed, and fail if
@@ -460,15 +460,6 @@ class CythonizeCommand(Command):
 
 
 class BuildExtCommand(build_ext):
-
-    # fix incorrect pyd/dll init export function names produced on windows
-    # for the .def files.
-    if os.name == 'nt':
-        def get_export_symbols (self, ext):
-            initfunc_name = "init" + ext.name.split('\\')[-1]
-            if initfunc_name not in ext.export_symbols:
-                ext.export_symbols.append(initfunc_name)
-            return ext.export_symbols
 
     def run(self):
 
