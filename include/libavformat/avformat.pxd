@@ -98,7 +98,7 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         const char *extensions
         int flags
         # const AVCodecTag* const *codec_tag
-        # const AVClass *priv_class
+        const AVClass *priv_class
     
     cdef struct AVProbeData:
         unsigned char *buf
@@ -120,7 +120,7 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         AVCodecID subtitle_codec
         int flags
         # const AVCodecTag* const *codec_tag
-        # const AVClass *priv_class
+        const AVClass *priv_class
 
     cdef int AVFMT_NOFILE
     cdef int AVFMT_NEEDNUMBER

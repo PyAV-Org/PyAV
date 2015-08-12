@@ -1,10 +1,15 @@
 from __future__ import division
 
 import math
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 from .common import *
-
+from .test_encoding import write_rgb_rotate, assert_rgb_rotate
 from av.video.stream import VideoStream
+
 
 
 
@@ -13,7 +18,9 @@ class TestPythonIO(TestCase):
     def test_reading(self):
 
         fh = open(fate_suite('mpeg2/mpeg2_field_encoding.ts'), 'rb')
-        container = av.open(fh)
+        wrapped = MethodLogger(fh)
+
+        container = av.open(wrapped)
 
         self.assertEqual(container.format.name, 'mpegts')
         self.assertEqual(container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
@@ -21,70 +28,45 @@ class TestPythonIO(TestCase):
         self.assertEqual(container.size, 800000)
         self.assertEqual(container.metadata, {})
 
+        # Make sure it did actually call "read".
+        reads = wrapped._filter('read')
+        self.assertTrue(reads)
+
+    def test_basic_errors(self):
+        self.assertRaises(Exception, av.open, None)
+        self.assertRaises(Exception, av.open, None, 'w')
+
     def test_writing(self):
 
-        # TODO: refactor this (and test_encoding tests) into a common function.
-        
-        if not Image:
-            raise SkipTest()
-        
-        path = self.sandboxed('writing.mp4')
+        path = self.sandboxed('writing.mov')
         fh = open(path, 'wb')
+        wrapped = MethodLogger(fh)
 
-        width = 320
-        height = 240
-        duration = 48
+        output = av.open(wrapped, 'w')
+        write_rgb_rotate(output)
 
-        output = av.open(fh, 'w')
+        # Make sure it did actually write.
+        writes = wrapped._filter('write')
+        self.assertTrue(writes)
 
-        output.metadata['title'] = 'container'
-        output.metadata['key'] = 'value'
+        # Standard assertions.
+        assert_rgb_rotate(self, av.open(path))
 
-        stream = output.add_stream("mpeg4", 24)
-        stream.width = width
-        stream.height = height
-        stream.pix_fmt = "yuv420p"
+    def test_buffer_read_write(self):
 
-        for frame_i in range(duration):
-            frame = VideoFrame(width, height, 'rgb24')
-            image = Image.new('RGB', (width, height), (
-                int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi))),
-                int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi + 2 / 3 * math.pi))),
-                int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi + 4 / 3 * math.pi))),
-            ))
-            frame.planes[0].update_from_string(image.tostring())
-            packet = stream.encode(frame)
-            if packet:
-                output.mux(packet)
+        buffer_ = StringIO()
+        wrapped = MethodLogger(buffer_)
+        write_rgb_rotate(av.open(wrapped, 'w', 'mp4'))
 
-        while True:
-            packet = stream.encode()
-            if packet:
-                output.mux(packet)
-            else:
-                break
+        # Make sure it did actually write.
+        writes = wrapped._filter('write')
+        self.assertTrue(writes)
 
-        # Done!
-        output.close()
-
-
-        # Now inspect it a little.
-        input_ = av.open(path)
-        self.assertEqual(input_.name, path)
-        self.assertEqual(len(input_.streams), 1)
-        self.assertEqual(input_.metadata.get('title'), 'container', input_.metadata)
-        self.assertEqual(input_.metadata.get('key'), None)
-        stream = input_.streams[0]
-        self.assertIsInstance(stream, VideoStream)
-        self.assertEqual(stream.type, 'video')
-        self.assertEqual(stream.name, 'mpeg4')
-        self.assertEqual(stream.average_rate, 24) # Only because we constructed is precisely.
-        self.assertEqual(stream.rate, Fraction(1, 24))
-        self.assertEqual(stream.time_base * stream.duration, 2)
-        self.assertEqual(stream.format.name, 'yuv420p')
-        self.assertEqual(stream.format.width, width)
-        self.assertEqual(stream.format.height, height)
-
+        self.assertTrue(buffer_.tell())
+        
+        # Standard assertions.
+        buffer_.seek(0)
+        assert_rgb_rotate(self, av.open(buffer_))
 
 
 

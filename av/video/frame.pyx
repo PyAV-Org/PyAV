@@ -1,6 +1,7 @@
-from av.utils cimport err_check, ByteSource, bytesource
+from av.bytesource cimport ByteSource, bytesource
+from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
-from av.video.plane import VideoPlane
+from av.video.plane cimport VideoPlane
 
 
 cdef object _cinit_bypass_sentinel

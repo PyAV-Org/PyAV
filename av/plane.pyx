@@ -1,7 +1,8 @@
 from libc.string cimport memcpy
+
 from cpython cimport PyBuffer_FillInfo
 
-from .utils cimport ByteSource, bytesource
+from av.bytesource cimport ByteSource, bytesource
 
 
 cdef class Plane(object):

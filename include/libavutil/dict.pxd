@@ -26,3 +26,13 @@ cdef extern from "libavutil/dict.h" nogil:
         const char *value,
         int flags
     )
+
+    cdef int av_dict_count(
+        AVDictionary *m
+    )
+
+    cdef int av_dict_copy(
+        AVDictionary **dst,
+        AVDictionary *src,
+        int flags
+    )

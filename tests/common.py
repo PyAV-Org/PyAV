@@ -7,6 +7,8 @@ import datetime
 import errno
 import os
 import sys
+import functools
+import types
 
 from nose.plugins.skip import SkipTest
 
@@ -89,6 +91,29 @@ def sandboxed(*args, **kwargs):
     if do_makedirs:
         makedirs(os.path.dirname(path))
     return path
+
+
+class MethodLogger(object):
+
+    def __init__(self, obj):
+        self._obj = obj
+        self._log = []
+
+    def __getattr__(self, name):
+        value = getattr(self._obj, name)
+        if isinstance(value, (types.MethodType, types.FunctionType, types.BuiltinFunctionType, types.BuiltinMethodType)):
+            return functools.partial(self._method, name, value)
+        else:
+            self._log.append(('__getattr__', (name, ), {}))
+            return value
+
+    def _method(self, name, meth, *args, **kwargs):
+        self._log.append((name, args, kwargs))
+        return meth(*args, **kwargs)
+
+    def _filter(self, type_):
+        return [log for log in self._log if log[0] == type_]
+
 
 
 class TestCase(_Base):

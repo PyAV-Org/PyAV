@@ -1,5 +1,6 @@
-from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 from libc.limits cimport INT_MAX
+
+from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 
 from av.plane cimport Plane
 
