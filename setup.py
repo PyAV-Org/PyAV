@@ -396,8 +396,8 @@ class ReflectCommand(Command):
             if compile_check(
                 name=os.path.join(tmp_dir, func_name),
                 code='%s()' % func_name,
-                libraries=extension_extra['libraries'],
-                library_dirs=extension_extra['library_dirs'],
+                libraries=config['libraries'],
+                library_dirs=config['library_dirs'],
                 compiler=self.compiler,
             ):
                 print('found')
@@ -593,6 +593,7 @@ class BuildExtCommand(build_ext):
         # Propagate config to cythonize.
         def unique_extend(a, *args):
             a[:] = list(set().union(a, *args))
+
         for i, ext in enumerate(self.distribution.ext_modules):
             unique_extend(ext.include_dirs, self.include_dirs)
             unique_extend(ext.library_dirs, self.library_dirs)
