@@ -1,30 +1,31 @@
 from __future__ import print_function
 
-from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
+from distutils.ccompiler import new_compiler as _new_compiler, LinkError, \
+    CompileError
 from distutils.core import Command
 from distutils.errors import DistutilsExecError
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 import errno
-import itertools
 import json
 import os
 import platform
-import re
 import sys
 
 
 try:
     from Cython.Build import cythonize
 except ImportError:
-    # We don't need Cython all the time; just for building from original source.
+    # We don't need Cython all the time; just for building from original source
     cythonize = None
 
 
-# We will embed this metadata into the package so it can be recalled for debugging.
+# We will embed this metadata into the package so it can be recalled for
+# debugging.
 version = '0.2.4'
-git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
+git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE,
+                      stderr=PIPE).communicate()
 git_commit = git_commit.strip()
 
 
@@ -36,7 +37,8 @@ def get_library_config(name):
 
     """
     try:
-        proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
+        proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE,
+                     stderr=PIPE)
     except OSError:
         print('pkg-config is required for building PyAV')
         exit(1)
@@ -55,7 +57,6 @@ def get_library_config(name):
         elif chunk.startswith('-D'):
             name = chunk[2:].split('=')[0]
             config.setdefault('define_macros', []).append((name, None))
-
     return config
 
 
@@ -76,8 +77,8 @@ def update_extend(dst, src):
 # The "extras" to be supplied to every one of our modules.
 # This is expanded heavily by the `config` command.
 extension_extra = {
-    'include_dirs': ['include'], # These are PyAV's includes.
-    'libraries'   : [],
+    'include_dirs': ['include'],    # These are PyAV's includes.
+    'libraries':    [],
     'library_dirs': [],
 }
 
@@ -101,9 +102,6 @@ def dump_config():
     print('config_macros:')
     for x in config_macros:
         print('\t%s=%s' % x)
-
-
-
 
 
 if os.name == 'nt':
@@ -148,11 +146,8 @@ if os.name == 'nt':
         def is_pure(self):
             return False
     distclass = BinaryDistribution
-
 else:
-
     distclass = Distribution
-
 
 
 # Monkey-patch for CCompiler to be silent.
@@ -162,6 +157,7 @@ def _CCompiler_spawn_silent(cmd, dry_run=None):
     out, err = proc.communicate()
     if proc.returncode:
         raise DistutilsExecError(err)
+
 
 def new_compiler(*args, **kwargs):
     """Create a C compiler.
@@ -208,7 +204,8 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
     try:
         objects = cc.compile([source_path], include_dirs=include_dirs)
         if link:
-            cc.link_executable(objects, exec_path, libraries=libraries, library_dirs=library_dirs)
+            cc.link_executable(objects, exec_path, libraries=libraries,
+                               library_dirs=library_dirs)
     except (CompileError, LinkError, TypeError):
         res = False
     else:
@@ -218,9 +215,6 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
         fh.write(json.dumps(res))
 
     return res
-
-
-
 
 
 # Construct the modules that we find in the "av" directory.
@@ -244,16 +238,17 @@ for dirname, dirnames, filenames in os.walk('av'):
             print('Cython is required to build PyAV from raw sources.')
             print('Please `pip install Cython`.')
             exit(3)
+
         ext_modules.append(Extension(
             mod_name,
             sources=[c_path if not cythonize else pyx_path],
         ))
 
 
-
 class ConfigCommand(Command):
 
     user_options = []
+
     def initialize_options(self):
         pass
     def finalize_options(self):
@@ -264,7 +259,8 @@ class ConfigCommand(Command):
         errors = []
 
         # Get the config for the libraries that we require.
-        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libswscale':
+        for name in ('libavformat', 'libavcodec', 'libavdevice', 'libavutil',
+                     'libswscale'):
             config = get_library_config(name)
             if config:
                 update_extend(extension_extra, config)
@@ -280,11 +276,12 @@ class ConfigCommand(Command):
                 config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
                 break
         else:
-            errors.append('Could not find either libswresample or libavresample with pkg-config.')
+            errors.append('Could not find either libswresample or '
+                          'libavresample with pkg-config.')
 
         # Don't continue if we have errors.
-        # TODO: Warn Ubuntu 12 users that they can't satisfy requirements with the
-        # default package sources.
+        # TODO: Warn Ubuntu 12 users that they can't satisfy requirements with
+        # the default package sources.
         if errors:
             print('\n'.join(errors))
             exit(1)
@@ -332,19 +329,15 @@ class ReflectCommand(Command):
         ]
 
         # Check for some specific functions.
-        cc = new_compiler()
         for func_name in (
+                'avformat_open_input',               # Should exist
+                'pyav_function_should_not_exist',    # Should not exist
 
-            'avformat_open_input', # Canary that should exist.
-            'pyav_function_should_not_exist', # Canary that should not exist.
-
-            # This we actually care about:
-            'av_calloc',
-            'av_frame_get_best_effort_timestamp',
-            'avformat_alloc_output_context2',
-            'avformat_close_input',
-
-        ):
+                # This we actually care about:
+                'av_calloc',
+                'av_frame_get_best_effort_timestamp',
+                'avformat_alloc_output_context2',
+                'avformat_close_input'):
             print("looking for %s... " % func_name, end='')
             if compile_check(
                 name=os.path.join(tmp_dir, func_name),
@@ -358,17 +351,15 @@ class ReflectCommand(Command):
                 print('missing')
 
         for struct_name, member_name in (
+                ('AVStream', 'index'),                  # Should exist
+                ('PyAV', 'struct_should_not_exist'),    # Should not exist
 
-            ('AVStream', 'index'), # Canary that should exist
-            ('PyAV', 'struct_should_not_exist'), # Canary that should not exist.
-
-            # Things we actually care about:
-            ('AVFrame', 'mb_type'),
-
-        ):
+                # Things we actually care about:
+                ('AVFrame', 'mb_type'),):
             print("looking for %s.%s... " % (struct_name, member_name), end='')
             if compile_check(
-                name=os.path.join(tmp_dir, '%s.%s' % (struct_name, member_name)),
+                name=os.path.join(
+                    tmp_dir, '%s.%s' % (struct_name, member_name)),
                 code='struct %s x; x.%s;' % (struct_name, member_name),
                 includes=reflection_includes,
                 include_dirs=extension_extra['include_dirs'],
@@ -397,7 +388,6 @@ class ReflectCommand(Command):
             if name not in canaries
         )
 
-
         # Make sure our canaries report back properly.
         for name, (type_, should_exist) in canaries.items():
             if should_exist != (name in found):
@@ -405,22 +395,23 @@ class ReflectCommand(Command):
                     'didn\'t find' if should_exist else 'found',
                     name
                 ))
-                print('We look for it only as a sanity check to make sure the build\n'
-                      'process is working as expected. It is not, so we must abort.\n'
-                      '\n'
-                      'Please open a ticket at https://github.com/mikeboers/PyAV/issues\n'
+                print('We look for it only as a sanity check to make sure '
+                      'the build\nprocess is working as expected. It is not,'
+                      'so we must abort.\n\n'
+                      'Please open a ticket at '
+                      'https://github.com/mikeboers/PyAV/issues\n'
                       'with the folowing information:\n')
                 dump_config()
                 exit(1)
 
 
-
-
 class DoctorCommand(Command):
 
     user_options = []
+
     def initialize_options(self):
         pass
+
     def finalize_options(self):
         pass
 
@@ -435,8 +426,10 @@ class DoctorCommand(Command):
 class CythonizeCommand(Command):
 
     user_options = []
+
     def initialize_options(self):
         pass
+
     def finalize_options(self):
         pass
 
@@ -528,14 +521,14 @@ setup(
         'reflect': ReflectCommand,
     },
 
-    test_suite = 'nose.collector',
+    test_suite='nose.collector',
 
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'pyav = av.__main__:main',
         ],
     },
-    
+
     classifiers=[
        'Development Status :: 3 - Alpha',
        'Intended Audience :: Developers',
@@ -554,7 +547,7 @@ setup(
        'Topic :: Multimedia :: Sound/Audio :: Conversion',
        'Topic :: Multimedia :: Video',
        'Topic :: Multimedia :: Video :: Conversion',
-   ],
+    ],
 
     distclass=distclass,
 
