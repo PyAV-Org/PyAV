@@ -207,15 +207,6 @@ cdef extern from "Python.h" nogil:
     void PyErr_Display(object, object, object)
 
 
-cdef extern from "stdio.h" nogil:
-
-    cdef int vasprintf(
-        char **output,
-        const char *format,
-        va_list ap
-    )
-
-
 cdef extern from "libavutil/opt.h" nogil:
 
     cdef enum AVOptionType:
