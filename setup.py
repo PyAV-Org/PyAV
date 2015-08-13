@@ -261,6 +261,13 @@ class ConfigCommand(Command):
             ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
+        if is_msvc(new_compiler(compiler=self.compiler)):
+            # Assume we have to disable /OPT:REF for MSVC with ffmpeg
+            config = {
+                'extra_link_args': ['/OPT:NOREF'],
+            }
+            update_extend(extension_extra, config)
+
         # Check if we're using pkg-config or not
         if self.no_pkg_config:
             # Simply assume we have everything we need!
