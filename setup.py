@@ -223,7 +223,7 @@ for dirname, dirnames, filenames in os.walk('av'):
 
         pyx_path = os.path.join(dirname, filename)
         base = os.path.splitext(pyx_path)[0]
-        
+
         # Need to be a little careful because Windows will accept / or \
         # (where os.sep will be \ on Windows).
         mod_name = base.replace('/', '.').replace(os.sep, '.')
@@ -250,7 +250,7 @@ class ConfigCommand(Command):
         ('no-pkg-config', None,
          "do not use pkg-config to configure dependencies"),
         ('compiler=', 'c',
-         "specify the compiler type")]
+         "specify the compiler type"), ]
 
     boolean_options = ['no-pkg-config']
 
@@ -683,7 +683,7 @@ setup(
             'pyav = av.__main__:main',
         ],
     },
-    
+
     classifiers=[
        'Development Status :: 3 - Alpha',
        'Intended Audience :: Developers',
