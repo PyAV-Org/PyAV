@@ -7,6 +7,7 @@ lib.av_register_all()
 lib.avformat_network_init()
 lib.avdevice_register_all()
 lib.avcodec_register_all()
+lib.avfilter_register_all()
 
 # Exports.
 time_base = lib.AV_TIME_BASE
