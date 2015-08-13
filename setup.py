@@ -84,6 +84,10 @@ def update_extend(dst, src):
                 existing.append(x)
 
 
+def unique_extend(a, *args):
+    a[:] = list(set().union(a, *args))
+
+
 def is_msvc(cc=None):
     cc = _new_compiler() if cc is None else cc
     return isinstance(cc, msvc_compiler_classes)
@@ -579,6 +583,28 @@ class BuildExtCommand(build_ext):
     else:
         no_pkg_config = 1
 
+        user_options = build_ext.user_options + [
+            ('ffmpeg-dir=', None,
+             "directory containing lib and include folders of ffmpeg")]
+
+        def initialize_options(self):
+            build_ext.initialize_options(self)
+            self.ffmpeg_dir = None
+
+        def finalize_options(self):
+            build_ext.finalize_options(self)
+            if self.ffmpeg_dir and os.path.exists(self.ffmpeg_dir):
+                sublib = os.path.join(self.ffmpeg_dir, 'lib')
+                subinc = os.path.join(self.ffmpeg_dir, 'include')
+                if os.path.exists(sublib):
+                    unique_extend(self.library_dirs, [sublib])
+                else:
+                    unique_extend(self.library_dirs, [self.ffmpeg_dir])
+                if os.path.exists(subinc):
+                    unique_extend(self.include_dirs, [subinc])
+                else:
+                    unique_extend(self.include_dirs, [self.ffmpeg_dir])
+
     def run(self):
 
         # Propagate build options to reflect
@@ -613,11 +639,7 @@ class BuildExtCommand(build_ext):
 
         self.include_dirs = self.include_dirs or []
         self.include_dirs.append(include_dir)
-
         # Propagate config to cythonize.
-        def unique_extend(a, *args):
-            a[:] = list(set().union(a, *args))
-
         for i, ext in enumerate(self.distribution.ext_modules):
             unique_extend(ext.include_dirs, self.include_dirs)
             unique_extend(ext.library_dirs, self.library_dirs)
