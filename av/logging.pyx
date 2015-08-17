@@ -88,11 +88,22 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     cdef lib.AVBPrint buf
     lib.av_bprint_init(&buf, 0, 65536);
     lib.av_vbprintf(&buf, format, args);
-    lib.av_bprint_finalize(&buf, &req.message);
+    cdef int res = lib.av_bprint_finalize(&buf, &req.message);
 
-    if not req.message:
-        # Assume that the format has a trailing newline.
-        printf("av.logging: av_vbprintf errored on %s: %s", req.item_name, format)
+    # This may be the only place we don't get to use err_check.
+    cdef char *no_message_flag_strp, *format_or_message_strp;
+    if res < 0 or req.message == NULL:
+        no_message_flag_strp = " with a NULL message" if req.message == NULL else ""
+        format_or_message_strp = format if req.message == NULL else req.message
+        # Assume that the format/message has a trailing newline.
+        fprintf(stderr, "av.logging: av_vbprintf returned %d%s for %s: %s",
+            res,
+            no_message_flag_strp,
+            req.item_name,
+            format_or_message_strp
+        )
+        if req.message != NULL:
+            lib.av_freep(&req.message)
         free(req)
         return
 
