@@ -7,8 +7,8 @@ python:
     - "3.4"
 
 env:
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=ffmpeg
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=libav
+    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=ffmpeg LIBRARY_VERSION=2.7
+    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=libav  LIBRARY_VERSION=11.4
 
 before_install:
     - scripts/test-setup

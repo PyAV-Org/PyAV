@@ -1,4 +1,4 @@
-#!/bin/bash
+cd ffm#!/bin/bash
 
 # PIL dependencies are a little complex, since PIL does not look in the
 # right place for them.
@@ -29,11 +29,15 @@ if [[ $exists != 0 ]]; then
 
     if [[ $LIBRARY == ffmpeg ]]; then
         
-        if [[ ! -d ffmpeg-1.2.2 ]]; then
-            wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
-            tar -xjf ffmpeg-1.2.2.tar.bz2
+        if [[ ! "$LIBRARY_VERSION" ]]; then
+            LIBRARY_VERSION=2.7
         fi
-        cd ffmpeg-1.2.2
+
+        if [[ ! -d ffmpeg-$LIBRARY_VERSION ]]; then
+            wget https://ffmpeg.org/releases/ffmpeg-$LIBRARY_VERSION.tar.bz2
+            tar -xjf ffmpeg-$LIBRARY_VERSION.tar.bz2
+        fi
+        cd ffmpeg-$LIBRARY_VERSION
 
         echo ./configure
         ./configure \
@@ -50,11 +54,15 @@ if [[ $exists != 0 ]]; then
 
     elif [[ $LIBRARY == libav ]]; then
         
-        if [[ ! -d libav-9.10 ]]; then
-            wget https://libav.org/releases/libav-9.10.tar.gz
-            tar -xzf libav-9.10.tar.gz
+        if [[ ! "$LIBRARY_VERSION" ]]; then
+            LIBRARY_VERSION=11.4
         fi
-        cd libav-9.10
+
+        if [[ ! -d libav-$LIBRARY_VERSION ]]; then
+            wget https://libav.org/releases/libav-$LIBRARY_VERSION.tar.gz
+            tar -xzf libav-$LIBRARY_VERSION.tar.gz
+        fi
+        cd libav-$LIBRARY_VERSION
 
         echo ./configure
         ./configure \
