@@ -8,6 +8,7 @@
 # Build products.
 /src
 /build
+/av/**/*.pyd
 *.c
 *.so
 *.pyc
@@ -29,3 +30,4 @@
 /tests/assets
 /tests/samples
 /.vagrant
+*.spyderproject

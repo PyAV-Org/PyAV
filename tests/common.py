@@ -74,7 +74,8 @@ def _sandbox(timed=False):
 
 
 def asset(*args):
-    return os.path.abspath(os.path.join(__file__, '..', 'assets', *args))
+    adir = os.path.dirname(__file__)
+    return os.path.abspath(os.path.join(adir, 'assets', *args))
 
 
 def sandboxed(*args, **kwargs):
