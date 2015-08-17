@@ -1,22 +1,40 @@
 language: python
 
+sudo: false
+
+addons:
+    apt:
+        packages:
+            - libjpeg-dev
+            - libfreetype6-dev
+            - zlib1g-dev
+            - yasm
+            - ffmpeg # We will install our own, but we need the dependencies
+
+cache:
+    directories:
+        - $HOME/venv
+        - $HOME/vendor
+        - tests/assets
+
 python:
-    - "2.6"
+    - "2.6" # Retire??
     - "2.7"
-    - "3.3"
+    - "3.3" # Retire??
     - "3.4"
 
 env:
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=ffmpeg LIBRARY_VERSION=2.7
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=libav  LIBRARY_VERSION=11.4
+    - LIBRARY=ffmpeg LIBRARY_VERSION=1.2.2
+    - LIBRARY=ffmpeg LIBRARY_VERSION=2.2.4
+    - LIBRARY=ffmpeg LIBRARY_VERSION=2.7
+    - LIBRARY=libav  LIBRARY_VERSION=9.10
+    - LIBRARY=libav  LIBRARY_VERSION=11.4
 
 before_install:
-    - scripts/test-setup
-    - pip install --use-mirrors -r tests/requirements.txt
+    - scripts/travis-before-install
 
 install:
-    - make build
-    - make test-assets
+    - scripts/travis-install
 
 script:
-    - nosetests
+    - scripts/travis-test

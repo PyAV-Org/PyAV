@@ -37,7 +37,7 @@ else:
 if which(ffmpeg_bin):
     ffmpeg_cmd = [which(ffmpeg_bin), '-y', '-f', 'lavfi', '-i']
 if which(avconv_bin):
-    avconv_cmd = [which(avconv_bin),'-y', '-filter_complex']
+    avconv_cmd = [which(avconv_bin), '-y', '-filter_complex']
     
 if not ffmpeg_cmd and not avconv_cmd:
     print('Unable to find ffmpeg or avconve command')

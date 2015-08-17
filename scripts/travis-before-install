@@ -1,0 +1,57 @@
+#!/bin/bash
+
+if [[ ! "$LIBRARY" || ! "$LIBRARY_VERSION" ]]; then
+    echo Please set \$LIBRARY and \$LIBRARY_VERSION
+    exit 1
+fi
+LIBNAME=$LIBRARY-$LIBRARY_VERSION
+
+# Travis does not tend to operate out of the home.
+cd ~
+
+# Always try to install the Python dependencies as it is cheap.
+if [[ ! -e venv/bin/pip ]]; then
+    virtualenv venv
+    venv/bin/pip install --upgrade pip setuptools
+fi
+venv/bin/pip install -r $TRAVIS_BUILD_DIR/tests/requirements.txt
+
+export PREFIX="$HOME/vendor/$LIBNAME"
+
+# Skip the rest of the build if it already exists.
+if [[ -e "$PREFIX/bin/ffmpeg" ]]; then
+    echo "We have a cached build of $LIBNAME; skipping re-build."
+    exit 0
+fi
+
+
+mkdir -p src
+cd src
+
+# Download and expand the source.
+if [[ ! -d $LIBNAME ]]; then
+    wget https://$LIBRARY.org/releases/$LIBNAME.tar.gz
+    tar -xzf $LIBNAME.tar.gz
+fi
+cd $LIBNAME
+
+echo
+echo ./configure
+./configure \
+    --disable-static \
+    --enable-shared \
+    --disable-doc \
+    --prefix="$PREFIX"
+
+echo
+echo make
+make -j4
+
+echo
+echo make install
+make install
+
+echo
+echo Build products:
+cd ~
+find vendor/$LIBNAME -name '*libav*'

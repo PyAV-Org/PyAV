@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [[ ! "$LIBRARY" || ! "$LIBRARY_VERSION" ]]; then
+    echo Please set \$LIBRARY and \$LIBRARY_VERSION
+    exit 1
+fi
+LIBNAME=$LIBRARY-$LIBRARY_VERSION
+
+. $HOME/venv/bin/activate
+export PKG_CONFIG_PATH=$HOME/vendor/$LIBNAME/lib/pkgconfig
+export LD_LIBRARY_PATH=$HOME/vendor/$LIBNAME/lib
+
+echo PKG_CONFIG_PATH: $PKG_CONFIG_PATH
+echo LD_LIBRARY_PATH: $LD_LIBRARY_PATH
+echo
+echo which ffmpeg: $(which ffmpeg)
+echo ffmpeg -version:
+ffmpeg -version
+echo
+
+python setup.py doctor build_ext --inplace || exit 1
+make test-assets
