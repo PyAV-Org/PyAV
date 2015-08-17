@@ -39,7 +39,7 @@ tests/assets/320x240x4.mov:
 
 tests/assets/lenna.png:
 	@ mkdir -p $(@D)
-	wget -O $@ https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png
+	wget --no-check-certificate -O $@ https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png
 
 test: build test-assets
 	python setup.py test
