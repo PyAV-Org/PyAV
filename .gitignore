@@ -8,6 +8,7 @@
 # Build products.
 /src
 /build
+/av/**/*.pyd
 *.c
 *.so
 *.pyc
@@ -15,9 +16,18 @@
 /docs/includes.rst
 /dist
 *.egg-info
+/av/**/*.exp
+/av/**/*.lib
+/av/**/*.pdb
+/msvc-projects
+/*.sln
+/*.suo
+/*.sdf
+/ipch
 
 # Testing.
 /sandbox
 /tests/assets
 /tests/samples
 /.vagrant
+*.spyderproject

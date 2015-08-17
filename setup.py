@@ -8,6 +8,8 @@ from distutils.errors import DistutilsExecError
 from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
+from distutils.command.clean import clean, log
+from distutils.dir_util import remove_tree
 from subprocess import Popen, PIPE
 import errno
 import itertools
@@ -82,6 +84,10 @@ def update_extend(dst, src):
                 existing.append(x)
 
 
+def unique_extend(a, *args):
+    a[:] = list(set().union(a, *args))
+
+
 def is_msvc(cc=None):
     cc = _new_compiler() if cc is None else cc
     return isinstance(cc, msvc_compiler_classes)
@@ -122,43 +128,9 @@ def dump_config():
 
 if os.name == 'nt':
 
-    print(
-        'Building on Windows is not officially supported, and is likely broken\n'
-        'due to a refactoring of the build process.\n\n'
-        'Please read http://mikeboers.github.io/PyAV/installation.html#on-windows\n'
-        'and document issues in https://github.com/mikeboers/PyAV/issues/38'
-    )
 
     if is_msvc():
         config_macros.append(('inline', '__inline'))
-
-    # Library names are different on Windows.
-    # NOTE: This mapping used to be used as part of the function discovery
-    # process, and will likely need to be restored.
-    libnames = {
-        'avcodec':'avcodec-56',
-        'avformat':'avformat-56',
-        'avutil':'avutil-54',
-    }
-
-    dlls = [
-        'avcodec-56.dll',
-        'avdevice-56.dll',
-        'avfilter-5.dll',
-        'avformat-56.dll',
-        'avutil-54.dll',
-        'libgcc_s_dw2-1.dll',
-        'libwinpthread-1.dll',
-        'postproc-53.dll',
-        'swresample-1.dll',
-        'swscale-3.dll',
-    ]
-
-    # Ensure the libraries exist for proper wheel packaging
-    for dll in dlls:
-        if not os.path.isfile(os.path.join('av', dll)):
-            print("missing %s; please find and copy it into the 'av' directory" % dll)
-
     # Since we're shipping a self contained unit on windows, we need to mark
     # the package as such. On other systems, let it be universal.
     class BinaryDistribution(Distribution):
@@ -251,7 +223,7 @@ for dirname, dirnames, filenames in os.walk('av'):
 
         pyx_path = os.path.join(dirname, filename)
         base = os.path.splitext(pyx_path)[0]
-        
+
         # Need to be a little careful because Windows will accept / or \
         # (where os.sep will be \ on Windows).
         mod_name = base.replace('/', '.').replace(os.sep, '.')
@@ -274,17 +246,50 @@ for dirname, dirnames, filenames in os.walk('av'):
 
 class ConfigCommand(Command):
 
-    user_options = []
+    user_options = [
+        ('no-pkg-config', None,
+         "do not use pkg-config to configure dependencies"),
+        ('compiler=', 'c',
+         "specify the compiler type"), ]
+
+    boolean_options = ['no-pkg-config']
+
     def initialize_options(self):
         self.compiler = None
+        self.no_pkg_config = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
-            ('compiler', 'compiler'),
-        )
+            ('compiler', 'compiler'),)
+        self.set_undefined_options('build_ext',
+            ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
+        if is_msvc(new_compiler(compiler=self.compiler)):
+            # Assume we have to disable /OPT:REF for MSVC with ffmpeg
+            config = {
+                'extra_link_args': ['/OPT:NOREF'],
+            }
+            update_extend(extension_extra, config)
 
+        # Check if we're using pkg-config or not
+        if self.no_pkg_config:
+            # Simply assume we have everything we need!
+            config = {
+                'libraries':    ['avformat', 'avcodec', 'avdevice', 'avutil',
+                                 'swscale'],
+                'library_dirs': [],
+                'include_dirs': []
+            }
+            config['libraries'].append('swresample')
+            config_macros.append(('PYAV_HAVE_LIBSWRESAMPLE', 1))
+            update_extend(extension_extra, config)
+            for ext in self.distribution.ext_modules:
+                for key, value in extension_extra.items():
+                    setattr(ext, key, value)
+            return
+
+        # We're using pkg-config:
         errors = []
 
         # Get the config for the libraries that we require.
@@ -332,8 +337,11 @@ class ReflectCommand(Command):
         ('include-dirs=', 'I', "list of directories to search for header files" + sep_by),
         ('libraries=', 'l', "external C libraries to link with"),
         ('library-dirs=', 'L', "directories to search for external C libraries" + sep_by),
+        ('no-pkg-config', None, "do not use pkg-config to configure dependencies"),
         ('compiler=', 'c', "specify the compiler type"),
     ]
+
+    boolean_options = ['no-pkg-config']
 
     def initialize_options(self):
         self.compiler = None
@@ -341,6 +349,7 @@ class ReflectCommand(Command):
         self.include_dirs = None
         self.libraries = None
         self.library_dirs = None
+        self.no_pkg_config = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
@@ -351,10 +360,20 @@ class ReflectCommand(Command):
             ('include_dirs', 'include_dirs'),
             ('libraries', 'libraries'),
             ('library_dirs', 'library_dirs'),
-        )
+            ('no_pkg_config', 'no_pkg_config'),
+		)
+		# Need to do this ourself, since no inheritance from build_ext:
+        if isinstance(self.include_dirs, basestring):
+            self.include_dirs = self.include_dirs.split(os.pathsep)
+        if isinstance(self.library_dirs, basestring):
+            self.library_dirs = str.split(self.library_dirs, os.pathsep)
 
     def run(self):
 
+        # Propagate options
+        obj = self.distribution.get_command_obj('config')
+        obj.no_pkg_config = self.no_pkg_config
+        obj.compiler = self.compiler
         self.run_command('config')
 
         tmp_dir = os.path.join(self.build_temp, 'reflection')
@@ -394,8 +413,8 @@ class ReflectCommand(Command):
             if compile_check(
                 name=os.path.join(tmp_dir, func_name),
                 code='%s()' % func_name,
-                libraries=extension_extra['libraries'],
-                library_dirs=extension_extra['library_dirs'],
+                libraries=config['libraries'],
+                library_dirs=config['library_dirs'],
                 compiler=self.compiler,
             ):
                 print('found')
@@ -477,6 +496,26 @@ class DoctorCommand(Command):
         dump_config()
 
 
+class CleanCommand(clean):
+
+    user_options = clean.user_options + [
+        ('sources', None,
+         "remove Cython build output (C sources)")]
+
+    boolean_options = clean.boolean_options + ['sources']
+
+    def initialize_options(self):
+        clean.initialize_options(self)
+        self.sources = None
+
+    def run(self):
+        clean.run(self)
+        if self.sources:
+            if os.path.exists('src'):
+                remove_tree('src', dry_run=self.dry_run)
+            else:
+                log.info("'%s' does not exist -- can't clean it", 'src')
+
 
 class CleanCommand(clean):
 
@@ -529,16 +568,49 @@ class CythonizeCommand(Command):
                 ext.sources = new_ext.sources
 
 
-
 class BuildExtCommand(build_ext):
 
-    def run(self):
+    if os.name != 'nt':
+        user_options = build_ext.user_options + [
+            ('no-pkg-config', None,
+             "do not use pkg-config to configure dependencies")]
 
-        self.run_command('config')
+        boolean_options = build_ext.boolean_options + ['no-pkg-config']
+
+        def initialize_options(self):
+            build_ext.initialize_options(self)
+            self.no_pkg_config = None
+    else:
+        no_pkg_config = 1
+
+        user_options = build_ext.user_options + [
+            ('ffmpeg-dir=', None,
+             "directory containing lib and include folders of ffmpeg")]
+
+        def initialize_options(self):
+            build_ext.initialize_options(self)
+            self.ffmpeg_dir = None
+
+        def finalize_options(self):
+            build_ext.finalize_options(self)
+            if self.ffmpeg_dir and os.path.exists(self.ffmpeg_dir):
+                sublib = os.path.join(self.ffmpeg_dir, 'lib')
+                subinc = os.path.join(self.ffmpeg_dir, 'include')
+                if os.path.exists(sublib):
+                    unique_extend(self.library_dirs, [sublib])
+                else:
+                    unique_extend(self.library_dirs, [self.ffmpeg_dir])
+                if os.path.exists(subinc):
+                    unique_extend(self.include_dirs, [subinc])
+                else:
+                    unique_extend(self.include_dirs, [self.ffmpeg_dir])
+
+    def run(self):
 
         # Propagate build options to reflect
         obj = self.distribution.get_command_obj('reflect')
         obj.compiler = self.compiler
+        obj.no_pkg_config = self.no_pkg_config
         obj.include_dirs = self.include_dirs
         obj.libraries = self.libraries
         obj.library_dirs = self.library_dirs
@@ -567,10 +639,7 @@ class BuildExtCommand(build_ext):
 
         self.include_dirs = self.include_dirs or []
         self.include_dirs.append(include_dir)
-
         # Propagate config to cythonize.
-        def unique_extend(a, *args):
-            a[:] = list(set().union(a, *args))
         for i, ext in enumerate(self.distribution.ext_modules):
             unique_extend(ext.include_dirs, self.include_dirs)
             unique_extend(ext.library_dirs, self.library_dirs)
@@ -581,20 +650,19 @@ class BuildExtCommand(build_ext):
         return build_ext.run(self)
 
 
-
 setup(
 
     name='av',
     version=version,
     description='Pythonic bindings for FFmpeg/Libav.',
-    
+
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
-    
+
     url="https://github.com/mikeboers/PyAV",
 
     packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
-    
+
     zip_safe=False,
     ext_modules=ext_modules,
 
@@ -605,6 +673,7 @@ setup(
         'cythonize': CythonizeCommand,
         'doctor': DoctorCommand,
         'reflect': ReflectCommand,
+        'clean': CleanCommand
     },
 
     test_suite='nose.collector',
@@ -614,7 +683,7 @@ setup(
             'pyav = av.__main__:main',
         ],
     },
-    
+
     classifiers=[
        'Development Status :: 3 - Alpha',
        'Intended Audience :: Developers',

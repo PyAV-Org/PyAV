@@ -86,7 +86,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
 
     # Use the library's formatting functions (which are cross platform).
     cdef lib.AVBPrint buf
-    lib.av_bprint_init(&buf, 0, 65536);
+    lib.av_bprint_init(&buf, 0, -1);
     lib.av_vbprintf(&buf, format, args);
     lib.av_bprint_finalize(&buf, &req.message);
 
@@ -104,7 +104,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         fprintf(stderr, "av.logging: %s[%d]: %s",
             req.item_name, req.level, req.message
         )
-        free(req.message)
+        lib.av_freep(&req.message)
         free(req)
 
 
@@ -136,7 +136,7 @@ cdef int async_log_callback(void *arg) except -1:
         exc, type_, tb = sys.exc_info()
         lib.PyErr_Display(exc, type_, tb)
     finally:
-        free(req.message)
+        lib.av_freep(&req.message)
         free(req)
 
     return 0
