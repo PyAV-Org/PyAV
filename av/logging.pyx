@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from libc.stdlib cimport malloc, free
-from libc.stdio cimport printf, fprintf, stderr, snprintf
+from libc.stdio cimport printf, fprintf, stderr
 
 cimport libav as lib
 
@@ -84,28 +84,8 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         # it doesn't matter if the AVClass that returned it vanishes or not.
         req.item_name = cls.item_name(ptr)
 
-    # Use the library's formatting functions (which are cross platform).
-    cdef lib.AVBPrint buf
-    lib.av_bprint_init(&buf, 0, -1);
-    lib.av_vbprintf(&buf, format, args);
-    cdef int res = lib.av_bprint_finalize(&buf, &req.message);
-
-    # This may be the only place we don't get to use err_check.
-    cdef char *no_message_flag_strp, *format_or_message_strp;
-    if res < 0 or req.message == NULL:
-        no_message_flag_strp = " with a NULL message" if req.message == NULL else ""
-        format_or_message_strp = format if req.message == NULL else req.message
-        # Assume that the format/message has a trailing newline.
-        fprintf(stderr, "av.logging: av_vbprintf returned %d%s for %s: %s",
-            res,
-            no_message_flag_strp,
-            req.item_name,
-            format_or_message_strp
-        )
-        if req.message != NULL:
-            lib.av_freep(&req.message)
-        free(req)
-        return
+    req.message = <char*>malloc(4096)
+    lib.vsnprintf(req.message, 4095, format, args)
 
     # Schedule this to be called in the main Python thread, but only if
     # Python hasn't started finalizing yet.
@@ -115,7 +95,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         fprintf(stderr, "av.logging: %s[%d]: %s",
             req.item_name, req.level, req.message
         )
-        lib.av_freep(&req.message)
+        free(req.message)
         free(req)
 
 
@@ -147,7 +127,7 @@ cdef int async_log_callback(void *arg) except -1:
         exc, type_, tb = sys.exc_info()
         lib.PyErr_Display(exc, type_, tb)
     finally:
-        lib.av_freep(&req.message)
+        free(req.message)
         free(req)
 
     return 0
