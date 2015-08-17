@@ -28,6 +28,7 @@ from av.video import VideoFrame
 
 
 is_py3 = sys.version_info[0] > 2
+is_windows = os.name == 'nt'
 
 if not is_py3:
     from itertools import izip as zip
