@@ -86,7 +86,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
 
     # Use the library's formatting functions (which are cross platform).
     cdef lib.AVBPrint buf
-    lib.av_bprint_init(&buf, 0, 65536);
+    lib.av_bprint_init(&buf, 0, -1);
     lib.av_vbprintf(&buf, format, args);
     lib.av_bprint_finalize(&buf, &req.message);
 
