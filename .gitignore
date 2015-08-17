@@ -16,6 +16,14 @@
 /docs/includes.rst
 /dist
 *.egg-info
+/av/**/*.exp
+/av/**/*.lib
+/av/**/*.pdb
+/msvc-projects
+/*.sln
+/*.suo
+/*.sdf
+/ipch
 
 # Testing.
 /sandbox
