@@ -219,21 +219,15 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_STRING  
         AV_OPT_TYPE_RATIONAL    
         AV_OPT_TYPE_BINARY  
-
-        #offset must point to a pointer immediately followed by an int for the length
-        AV_OPT_TYPE_DICT    
+        #AV_OPT_TYPE_DICT # Missing from FFmpeg
         AV_OPT_TYPE_CONST   
-        AV_OPT_TYPE_IMAGE_SIZE  
-
-        #offset must point to two consecutive integers
-        AV_OPT_TYPE_PIXEL_FMT   
-        AV_OPT_TYPE_SAMPLE_FMT  
-        AV_OPT_TYPE_VIDEO_RATE  
-
-        #offset must point to AVRational
-        AV_OPT_TYPE_DURATION    
-        AV_OPT_TYPE_COLOR   
-        AV_OPT_TYPE_CHANNEL_LAYOUT
+        #AV_OPT_TYPE_IMAGE_SIZE # Missing from LibAV
+        #AV_OPT_TYPE_PIXEL_FMT # Missing from LibAV
+        #AV_OPT_TYPE_SAMPLE_FMT # Missing from LibAV
+        #AV_OPT_TYPE_VIDEO_RATE # Missing from FFmpeg
+        #AV_OPT_TYPE_DURATION # Missing from FFmpeg
+        #AV_OPT_TYPE_COLOR # Missing from FFmpeg
+        #AV_OPT_TYPE_CHANNEL_LAYOUT # Missing from FFmpeg
 
     cdef struct AVOption_default_val:
         int64_t i64
