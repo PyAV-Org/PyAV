@@ -104,7 +104,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         fprintf(stderr, "av.logging: %s[%d]: %s",
             req.item_name, req.level, req.message
         )
-        free(req.message)
+        lib.av_freep(&req.message)
         free(req)
 
 
@@ -136,7 +136,7 @@ cdef int async_log_callback(void *arg) except -1:
         exc, type_, tb = sys.exc_info()
         lib.PyErr_Display(exc, type_, tb)
     finally:
-        free(req.message)
+        lib.av_freep(&req.message)
         free(req)
 
     return 0
