@@ -223,7 +223,7 @@ for dirname, dirnames, filenames in os.walk('av'):
 
         pyx_path = os.path.join(dirname, filename)
         base = os.path.splitext(pyx_path)[0]
-        
+
         # Need to be a little careful because Windows will accept / or \
         # (where os.sep will be \ on Windows).
         mod_name = base.replace('/', '.').replace(os.sep, '.')
@@ -250,7 +250,7 @@ class ConfigCommand(Command):
         ('no-pkg-config', None,
          "do not use pkg-config to configure dependencies"),
         ('compiler=', 'c',
-         "specify the compiler type")]
+         "specify the compiler type"), ]
 
     boolean_options = ['no-pkg-config']
 
@@ -361,11 +361,15 @@ class ReflectCommand(Command):
             ('libraries', 'libraries'),
             ('library_dirs', 'library_dirs'),
             ('no_pkg_config', 'no_pkg_config'),
-		)
-		# Need to do this ourself, since no inheritance from build_ext:
-        if isinstance(self.include_dirs, basestring):
+        )
+        # Need to do this ourself, since no inheritance from build_ext:
+        try:
+            str_base = basestring
+        except NameError:
+            str_base = str
+        if isinstance(self.include_dirs, str_base):
             self.include_dirs = self.include_dirs.split(os.pathsep)
-        if isinstance(self.library_dirs, basestring):
+        if isinstance(self.library_dirs, str_base):
             self.library_dirs = str.split(self.library_dirs, os.pathsep)
 
     def run(self):
@@ -683,7 +687,7 @@ setup(
             'pyav = av.__main__:main',
         ],
     },
-    
+
     classifiers=[
        'Development Status :: 3 - Alpha',
        'Intended Audience :: Developers',
