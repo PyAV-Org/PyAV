@@ -13,28 +13,27 @@ addons:
 
 cache:
     directories:
-        - $HOME/venv
-        - $HOME/vendor
-        - tests/assets
+        - tests/assets # Cache files from the FATE suite.
+        - venvs # Python virtualenvs and compiled FFmpeg/Libav.
 
 python:
-    - "2.6" # Retire??
+    #- "2.6" # Retire??
     - "2.7"
-    - "3.3" # Retire??
+    #- "3.3" # Retire??
     - "3.4"
 
 env:
     - LIBRARY=ffmpeg LIBRARY_VERSION=1.2.2
-    - LIBRARY=ffmpeg LIBRARY_VERSION=2.2.4
+    #- LIBRARY=ffmpeg LIBRARY_VERSION=2.2.4
     - LIBRARY=ffmpeg LIBRARY_VERSION=2.7
-    - LIBRARY=libav  LIBRARY_VERSION=9.10
+    #- LIBRARY=libav  LIBRARY_VERSION=9.10
     - LIBRARY=libav  LIBRARY_VERSION=11.4
 
 before_install:
-    - scripts/travis-before-install
+    - scripts/build-deps
 
 install:
-    - scripts/travis-install
+    - scripts/build
 
 script:
-    - scripts/travis-test
+    - scripts/test

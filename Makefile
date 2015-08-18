@@ -1,6 +1,9 @@
 LDFLAGS ?= ""
 CFLAGS ?= "-O0"
 
+FFMPEG_VERSION = 2.7
+
+
 .PHONY: default build cythonize clean clean-all info test fate-suite test-assets docs
 
 default: build
@@ -37,31 +40,27 @@ test:
 vagrant:
 	vagrant box list | grep -q precise32 || vagrant box add precise32 http://files.vagrantup.com/precise32.box
 
-vtest-ffmpeg: cythonize
-	vagrant ssh ffmpeg -c /vagrant/scripts/vagrant-test
-
-vtest-libav: cythonize
-	vagrant ssh libav -c /vagrant/scripts/vagrant-test
-
-vtest: vtest-ffmpeg vtest-libav
+vtest:
+	vagrant ssh -c /vagrant/scripts/vagrant-test
 
 
 
-vendor/ffmpeg:
-	git clone git://source.ffmpeg.org/ffmpeg.git vendor/ffmpeg
+tmp/ffmpeg-git:
+	@ mkdir -p tmp/ffmpeg-git
+	git clone --depth=1 git://source.ffmpeg.org/ffmpeg.git tmp/ffmpeg-git
 
-vendor/Doxyfile: vendor/ffmpeg
-	cp vendor/ffmpeg/doc/Doxyfile vendor/
-	echo "GENERATE_TAGFILE = ../tagfile.xml" >> vendor/Doxyfile
+tmp/Doxyfile: tmp/ffmpeg-git
+	cp tmp/ffmpeg-git/doc/Doxyfile $@
+	echo "GENERATE_TAGFILE = ../tagfile.xml" >> $@
 
-vendor/tagfile.xml: vendor/Doxyfile
-	cd vendor/ffmpeg; doxygen ../Doxyfile
+tmp/tagfile.xml: tmp/Doxyfile
+	cd tmp/ffmpeg-git; doxygen ../Doxyfile
 
-docs: build vendor/tagfile.xml
+docs: tmp/tagfile.xml
 	PYTHONPATH=.. make -C docs html
 
 deploy-docs: docs
-	./scripts/sphinx-to-github docs
+	./docs/upload docs
 
 
 
@@ -79,8 +78,8 @@ clean-src:
 	- rm -rf src
 
 clean-docs:
-	- rm vendor/Doxyfile
-	- rm vendor/tagfile.xml
+	- rm tmp/Doxyfile
+	- rm tmp/tagfile.xml
 	- make -C docs clean
 
 clean-all: clean-build clean-sandbox clean-src clean-docs
