@@ -85,7 +85,7 @@ class TestVideoFrameTransforms(TestCase):
     def setUp(self):
         if not Image:
             raise SkipTest()
-        self.lenna = Image.open(asset('lenna.png'))
+        self.lenna = Image.open(fate_suite('png1/lena-rgb24.png'))
         self.width, self.height = self.lenna.size
 
     def test_lena_roundtrip_low_api(self):

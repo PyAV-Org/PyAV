@@ -1,9 +1,4 @@
 
-branches:
-  only:
-    - master
-    - AppVeyorTest
-
 environment:
 
   global:
@@ -124,11 +119,6 @@ build: false  # Not a C# project, build stuff at the test step instead.
 before_test:
   # Need to build before tests
   - "%CMD_IN_ENV% %PYTHON%/python setup.py build_ext --inplace --ffmpeg-dir=%cd%\\ffmpeg-2.7-win%PYTHON_ARCH%-dev --include-dirs=%cd%\\msinttypes"
-  # Make/fetch test assets
-  - "%CMD_IN_ENV% mkdir -p tests\\assets"
-  - "%CMD_IN_ENV% %PYTHON%/python scripts/generate_audio.py -c 2 -r 48000 -t 4 -a 0.5 -f 1000 tests/assets/1KHz.wav"
-  - "%CMD_IN_ENV% %PYTHON%/python scripts/generate_video.py -s 320x240 -r 24 -b 200k -t 4 tests/assets/320x240x4.mov"
-  - ps: Start-FileDownload ('https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png' )
 
 test_script:
   # Build the compiled extension and run the project tests

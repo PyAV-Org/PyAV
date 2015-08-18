@@ -5,7 +5,7 @@ from .common import *
 class TestDecode(TestCase):
     def test_decoded_video_frame_count(self):
         
-        container = av.open(asset('320x240x4.mov'))
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         video_stream = next(s for s in container.streams if s.type == 'video')
 
         frame_count = 0
@@ -17,7 +17,7 @@ class TestDecode(TestCase):
         self.assertEqual(frame_count, video_stream.frames)
         
     def test_decode_audio_sample_count(self):
-        container = av.open(asset('1KHz.wav'))
+        container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         audio_stream = next(s for s in container.streams if s.type == 'audio')
         
         
