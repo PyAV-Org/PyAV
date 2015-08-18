@@ -9,6 +9,7 @@ LIBNAME=$LIBRARY-$LIBRARY_VERSION
 . $HOME/venv/bin/activate
 export PKG_CONFIG_PATH=$HOME/vendor/$LIBNAME/lib/pkgconfig
 export LD_LIBRARY_PATH=$HOME/vendor/$LIBNAME/lib
+export PATH=$HOME/vendor/$LIBNAME/bin:$PATH
 
 echo PKG_CONFIG_PATH: $PKG_CONFIG_PATH
 echo LD_LIBRARY_PATH: $LD_LIBRARY_PATH

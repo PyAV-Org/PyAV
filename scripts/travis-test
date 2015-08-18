@@ -8,5 +8,6 @@ LIBNAME=$LIBRARY-$LIBRARY_VERSION
 
 . $HOME/venv/bin/activate
 export LD_LIBRARY_PATH=$HOME/vendor/$LIBNAME/lib
+export PATH=$HOME/vendor/$LIBNAME/bin:$PATH
 
 nosetests || exit 1
