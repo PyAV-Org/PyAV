@@ -16,20 +16,57 @@ cache:
         - tests/assets # Cache files from the FATE suite.
         - venvs # Python virtualenvs and compiled FFmpeg/Libav.
 
-python:
-    #- "2.6" # Retire??
-    - "2.7"
-    #- "3.3" # Retire??
-    - "3.4"
 
-env:
-    - LIBRARY=ffmpeg LIBRARY_VERSION=1.2.2
-    #- LIBRARY=ffmpeg LIBRARY_VERSION=2.2.4
-    - LIBRARY=ffmpeg LIBRARY_VERSION=2.7
-    #- LIBRARY=libav  LIBRARY_VERSION=9.10
-    - LIBRARY=libav  LIBRARY_VERSION=11.4
+matrix:
+
+    fast_finish: true
+
+    # We are still working on this.
+    allow_failures:
+        - os: osx
+
+    include:
+
+        # Primary targets.
+        - python: "2.7"
+          env: FFMPEG=2.7
+          os: linux
+        - python: "2.7"
+          env: FFMPEG=2.7
+          os: osx
+
+        # Python 3.
+        - python: "3.4"
+          env: FFMPEG=2.7
+          os: linux
+
+        # Libav.
+        - python: "2.7"
+          env: LIBAV=11.4
+          os: linux
+
+        # Older Pythons.
+        - python: "2.6"
+          env: FFMPEG=2.7
+          os: linux
+        - python: "3.3"
+          env: FFMPEG=2.7
+          os: linux
+
+        # Older libraries.
+        - python: "2.7"
+          env: FFMPEG=1.2.2
+          os: linux
+        - python: "2.7"
+          env: FFMPEG=2.2.4
+          os: linux
+        - python: "2.7"
+          env: LIBAV=9.10
+          os: linux
+
 
 before_install:
+    - scripts/travis-setup
     - scripts/build-deps
 
 install:
