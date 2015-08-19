@@ -23,9 +23,9 @@ if [[ ! "$PYAV_LIBRARY_NAME" ]]; then
 
     # Pull from command line argument.
     elif [[ "$1" ]]; then
-        PYAV_LIBRARY_VERSION="$1"
+        PYAV_LIBRARY_NAME="$1"
     else
-        PYAV_LIBRARY_VERSION=ffmpeg
+        PYAV_LIBRARY_NAME=ffmpeg
         echo "No \$PYAV_LIBRARY_NAME set; defaulting to $PYAV_LIBRARY_NAME"
     fi
 fi
