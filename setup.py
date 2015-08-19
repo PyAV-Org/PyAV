@@ -214,6 +214,30 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
     return res
 
 
+# Monkey-patch Cython to not overwrite embedded signatures.
+if cythonize:
+
+    from Cython.Compiler.AutoDocTransforms import EmbedSignature
+
+    old_embed_signature = EmbedSignature._embed_signature 
+    def new_embed_signature(self, sig, doc):
+
+        # Strip any `self` parameters from the front.
+        sig = re.sub(r'\(self(,\s+)?', '(', sig)
+
+        # If they both start with the same signature; skip it.
+        if sig and doc:
+            new_name = sig.split('(')[0].strip()
+            old_name = doc.split('(')[0].strip()
+            if new_name == old_name:
+                return doc
+            if new_name.endswith('.' + old_name):
+                return doc
+
+        return old_embed_signature(self, sig, doc)
+
+    EmbedSignature._embed_signature = new_embed_signature
+
 
 # Construct the modules that we find in the "av" directory.
 ext_modules = []
@@ -542,10 +566,10 @@ class CythonizeCommand(Command):
                     ext.define_macros.append(('inline', '__inline'))
                 new_ext = cythonize(
                     ext,
-                    # Keep these in sync with the Makefile cythonize target.
                     compiler_directives=dict(
                         c_string_type='str',
                         c_string_encoding='ascii',
+                        embedsignature=True,
                     ),
                     build_dir='src',
                     include_path=ext.include_dirs,
@@ -680,7 +704,7 @@ setup(
        'Programming Language :: Python :: 2.6',
        'Programming Language :: Python :: 2.7',
        'Programming Language :: Python :: 3.3',
-       'Programming Language :: Python :: 2.4',
+       'Programming Language :: Python :: 3.4',
        'Topic :: Software Development :: Libraries :: Python Modules',
        'Topic :: Multimedia :: Sound/Audio',
        'Topic :: Multimedia :: Sound/Audio :: Conversion',
