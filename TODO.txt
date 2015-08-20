@@ -4,32 +4,13 @@ The Big Picture
 - Lots of documentation
 - Uniform time representation
 - High-level APIs
+- Filters
 
 
-NEXT
-====
+Remuxing Without Transcoding
+============================
 
-- see do_streamcopy in ffmpeg/ffmpeg.c for hints about how to proceed for remuxing
-
-- expose various protocols as a Protocol descriptor?
-- be able to add our own protocols
-  - "pycall" protocol for a general function callback?
-  - "pyiter" protocol for an iterator interface?
-  - "python" protocol for calling read/write/seek on an arbitrary object
-  - see avformat/file.c for a really simple protocol, and avformat/allformats.c
-    for how to register them
-  - AVIOContext is in avformat/avio.h
-  - avio_open2 is in avformat/aviobuf.c
-  - either (1) manually open a "__pycall__:" file, and then set a pointer to the
-    object to call, or (2) fully construct everything ourselves (via ffio_fdopen)
-    or (3) write our own version of ffio_fdopen from avformat/aviobef.c
-
-
-Testing
-=======
-
-- encoding video and audio (just API consistency is good enough for immediate use)
-- prepare FFmpeg and LibAV for travis, so it doesn't need to build them
+- See do_streamcopy in ffmpeg/ffmpeg.c for hints about how to proceed for remuxing.
 
 
 Encoding
@@ -48,19 +29,15 @@ Documentation
 - Document/test the entire API (in the most casual way).
 - Relink everything back to the underlying library calls, so that cross
   referencing can be done.
-    - Can we figure out links to Doxygen without doing it by hand?
-      See: http://stackoverflow.com/a/14243458/66502
-    - https://pythonhosted.org/sphinxcontrib-doxylink/
-    - Automatically scan the Cython source to establish when it uses
-      library functions? This may result in far too many links to be useful.
-- `make docs-tagfile` to `cd vendor/ffmpeg; doxygen doc/Doxyfile`
-  - set GENERATE_TAGFILE in Doxyfile externally
+- Automatically scan the Cython source to establish when it uses
+  library functions? This may result in far too many links to be useful.
 
 
 Build
 =====
 
-- include build discovery info into the module, retrievable by `python -m av --version`
+- Include build discovery info into the module, retrievable by `python -m av --version`
+
 
 Time
 ====
@@ -92,12 +69,11 @@ Time
     - see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02647
 
 
-High-Level API (Conveniences)
-=============================
+High-Level API
+==============
 
 - Container.demux(video=True)
-- Container.demux(video=2, audio=2) first 2 video and audio streams OR
-  Container.demux(video=0, audio=0) first video and audio
+- Container.demux(video=0, audio=0) first video and audio
 - Container.decode(*args_for_demux, **kwargs_for_demux) -> straight to frames
 - Stream.mux(frame) -> encode, flush, and mux
 - Container.__del__ -> flush the streams and close
@@ -107,7 +83,7 @@ High-Level API (Conveniences)
 Unsorted
 ========
 
-- atexit.register something to clean up FFmpeg threads
+- `atexit.register` something to clean up FFmpeg threads
 
 - Directly use the Numpy C-API
   - see: http://docs.scipy.org/doc/numpy/reference/c-api.array.html
