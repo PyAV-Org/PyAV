@@ -1,6 +1,8 @@
 from Cython.Compiler.Main import compile_single, CompilationOptions
 from Cython.Compiler.TreeFragment import parse_from_strings
 from Cython.Compiler.Visitor import TreeVisitor
+from Cython.Compiler import Nodes
+from Cython.Compiler.AutoDocTransforms import EmbedSignature
 
 options = CompilationOptions()
 options.include_path.append('include')
@@ -12,51 +14,52 @@ options.compiler_directives = dict(
 
 ctx = options.create_context()
 
-tree = parse_from_strings('av.packet', open('av/dictionary.pyx').read().decode('utf8'), ctx)
+tree = parse_from_strings('include.libavutil.avutil', open('scratchpad/test.pxd').read().decode('utf8'), ctx)
 
 class Visitor(TreeVisitor):
 
-    def __init__(self):
+    def __init__(self, state=None):
         super(Visitor, self).__init__()
-        self.current_class = None
-        self.current_func = None
-        self.current_property = None
-        self.current_module = None
+        self.state = dict(state or {})
+        self.events = []
+
+    def record_event(self, node, **kw):
+        state = self.state.copy()
+        state.update(**kw)
+        state['pos'] = node.pos
+        state['end_pos'] = node.end_pos()
+        self.events.append(state)
 
     def visit_Node(self, node):
         self.visitchildren(node)
 
-    def visit_ModuleNode(self, node):
-        self.current_module = node.full_module_name
+    def visit_CDefExternNode(self, node):
+        self.state['extern_from'] = node.include_file
         self.visitchildren(node)
+        self.state.pop('extern_from')
 
-    def visit_CClassDefNode(self, node):
-        self.current_class = node.class_name
-        self.visitchildren(node)
-        self.current_class = None
+    def visit_CStructOrUnionDefNode(self, node):
+        self.record_event(node, struct=node.name)
+        # self.visitchildren(node)
 
-    def visit_PropertyNode(self, node):
-        self.current_property = node.name
-        self.visitchildren(node)
-        self.current_property = None
+    def visit_CFuncDeclaratorNode(self, node):
+        if isinstance(node.base, Nodes.CNameDeclaratorNode):
+            self.record_event(node, function=node.base.name)
+            print EmbedSignature(ctx)._fmt_arglist(node.args)
+        else:
+            self.visitchildren(node)
 
-    def visit_DefNode(self, node):
-        self.current_func = node.name
-        self.visitchildren(node)
-        self.current_func = None
-
-    def visit_AttributeNode(self, node):
-        if getattr(node.obj, 'name', None) == 'lib':
-            print 'line %s, char %s: %s:%s.%s -> %s' % (
-                node.pos[1], node.pos[2],
-                self.current_module,
-                self.current_class,
-                self.current_property or self.current_func,
-                node.attribute
-            )
-        self.visitchildren(node)
+    def visit_CVarDefNode(self, node):
+        if isinstance(node.declarators[0], Nodes.CNameDeclaratorNode):
+            self.record_event(node, variable=node.declarators[0].name)
+        else:
+            self.visitchildren(node)
 
 
-Visitor().visit(tree)
+v = Visitor()
+v.visit(tree)
+for e in v.events:
+    pass
+    #print e
 
 #print tree.dump()

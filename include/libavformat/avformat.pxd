@@ -17,13 +17,11 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     
 
     cdef int AVIO_FLAG_WRITE
-    
-    # .. c:function:: av_register_all()
-    #
-    #       Initialize libavformat 
+
+    #: Initialize all formats.    
     cdef void av_register_all()
 
-    # Initialize global network.
+    #: Initialize network use in formats.
     cdef void avformat_network_init()
     
     cdef enum AVMediaType:
@@ -35,17 +33,11 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         AVMEDIA_TYPE_ATTACHMENT
         AVMEDIA_TYPE_NB
     
-    # .. c:type:: struct AVFrac
-    #
-    #       See: :ffstruct:`FFmpeg's docs <AVFrac>`.
     cdef struct AVFrac:
         int64_t val
         int64_t num
         int64_t den
-    
-    # .. c:type:: struct AVStream
-    #
-    #       See: :ffstruct:`FFmpeg's docs <AVStream>`.
+
     cdef struct AVStream:
         
         int index
