@@ -22,31 +22,54 @@ DEBUG = lib.AV_LOG_DEBUG
 
 # Map from AV levels to logging levels.
 level_map = {
-    lib.AV_LOG_QUIET: 0,
-    lib.AV_LOG_PANIC: 50,
-    lib.AV_LOG_FATAL: 50,
-    lib.AV_LOG_ERROR: 40,
-    lib.AV_LOG_WARNING: 30,
-    lib.AV_LOG_INFO: 20,
-    lib.AV_LOG_VERBOSE: 10,
-    lib.AV_LOG_DEBUG: 0,
+    # lib.AV_LOG_QUIET is not actually a level.
+    lib.AV_LOG_PANIC: 50,   # logging.CRITICAL
+    lib.AV_LOG_FATAL: 50,   # logging.CRITICAL
+    lib.AV_LOG_ERROR: 40,   # logging.ERROR
+    lib.AV_LOG_WARNING: 30, # logging.WARNING
+    lib.AV_LOG_INFO: 20,    # logging.INFO
+    lib.AV_LOG_VERBOSE: 10, # logging.DEBUG
+    lib.AV_LOG_DEBUG: 5,    # This is below any logging constant.
 }
 
 
+# While we start with the level quite low, Python defaults to INFO, and so
+# they will not show. This seems for the best as it allows 
+cdef int log_level = lib.AV_LOG_VERBOSE
+
 def get_level():
-    """Return current logging threshold."""
-    return lib.av_log_get_level()
+    """Return current logging threshold. See :func:`set_level`."""
+    return log_level
 
 def set_level(int level):
     """set_level(level)
 
-    Set logging threshold."""
-    lib.av_log_set_level(level)
+    Sets logging threshold when converting from the library's logging system
+    to Python's. It is recommended to use the constants availible in this
+    module to set the level: ``QUIET``, ``PANIC``, ``FATAL``, ``ERROR``,
+    ``WARNING``, ``INFO``, ``VERBOSE``, and ``DEBUG``.
+
+    While less efficient, it is generally preferable to modify logging
+    with Python's :mod:`logging`, e.g.::
+
+        logging.getLogger('libav').setLevel(logging.ERROR)
+
+    PyAV defaults to translating everything except ``AV_LOG_DEBUG``, so this
+    function is only nessesary to use if you want to see those messages as well.
+    ``AV_LOG_DEBUG`` will be translated to a level 5 message, which is lower
+    than any builting Python logging level, so you must lower that as well::
+
+        logging.getLogger().setLevel(5)
+
+    """
+    global log_level
+    log_level = level
+
 
 cdef bint log_after_shutdown = False
 
 def set_log_after_shutdown(v):
-    """Set if logging should continue after Python shutdown."""
+    """Set if logging should continue to ``stderr`` after Python shutdown."""
     global log_after_shutdown
     log_after_shutdown = v
 
@@ -70,6 +93,11 @@ cdef struct LogRequest:
     char *message
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
+    
+    # We have to filter it ourselves.
+    # Note that FFmpeg's levels are backwards from Python's.
+    if level > log_level:
+        return
 
     cdef LogRequest *req = <LogRequest*>malloc(sizeof(LogRequest))
     req.level = level
@@ -84,8 +112,8 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         # it doesn't matter if the AVClass that returned it vanishes or not.
         req.item_name = cls.item_name(ptr)
 
-    req.message = <char*>malloc(4096)
-    lib.vsnprintf(req.message, 4095, format, args)
+    req.message = <char*>malloc(1024) # This is the default size in FFmpeg.
+    lib.vsnprintf(req.message, 1023, format, args)
 
     # Schedule this to be called in the main Python thread, but only if
     # Python hasn't started finalizing yet.

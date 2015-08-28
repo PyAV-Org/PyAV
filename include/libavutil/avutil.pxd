@@ -285,9 +285,6 @@ cdef extern from "libavutil/log.h" nogil:
     int AV_LOG_VERBOSE
     int AV_LOG_DEBUG
 
-    int av_log_get_level()
-    void av_log_set_level(int)
-
     # Send a log.
     void av_log(void *ptr, int level, const char *fmt, ...)       
 
