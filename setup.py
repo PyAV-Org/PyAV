@@ -17,7 +17,7 @@ except ImportError:
     cythonize = None
 
 
-version = '0.2.4'
+version = '0.2.5'
 git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 git_commit = git_commit.strip()
 
@@ -70,7 +70,7 @@ def find_library(name):
     """Find a shared library with the given name.
 
     Works best after library_config has been called for the given name.
-    
+
     """
     for root in itertools.chain(extension_extra.get('library_dirs', ()), system_library_dirs):
         for prefix in '', 'lib':
@@ -332,14 +332,14 @@ setup(
     name='av',
     version=version,
     description='Pythonic bindings for FFmpeg/Libav.',
-    
+
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
-    
+
     url="https://github.com/mikeboers/PyAV",
 
     packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
-    
+
     zip_safe=False,
     ext_modules=ext_modules,
 
@@ -356,7 +356,7 @@ setup(
             'pyav = av.__main__:main',
         ],
     },
-    
+
     classifiers=[
        'Development Status :: 3 - Alpha',
        'Intended Audience :: Developers',
