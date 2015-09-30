@@ -208,7 +208,12 @@ cdef class Stream(object):
                 if isinstance(decoded, Frame):
                     self._setup_frame(decoded)
                 decoded_objs.append(decoded)
-            
+
+            # Sometimes we will error if we try to flush the stream
+            # (e.g. MJPEG webcam streams), and so we must be able to
+            # bail after the first, even though buffers may build up.
+            if str(self._codec.name) == 'mjpeg' and len(decoded_objs) >= 1:
+                break
             # Sometimes there are no frames, and no data is consumed, and this
             # is ok. However, no more frames are going to be pulled out of here.
             # (It is possible for data to not be consumed as long as there are
