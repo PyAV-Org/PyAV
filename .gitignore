@@ -13,7 +13,6 @@
 *.pyc
 /docs/_build
 /docs/includes.rst
-/dist
 *.egg-info
 
 # Testing.
