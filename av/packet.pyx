@@ -25,6 +25,12 @@ cdef class Packet(object):
             id(self),
         )
     
+    # Buffer protocol.
+    cdef size_t _buffer_size(self):
+        return self.struct.size
+    cdef void*  _buffer_ptr(self):
+        return self.struct.data
+
     def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
         return self.stream.decode(self, count)
