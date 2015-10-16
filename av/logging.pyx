@@ -34,8 +34,12 @@ level_map = {
 
 
 # While we start with the level quite low, Python defaults to INFO, and so
-# they will not show. This seems for the best as it allows 
+# they will not show.
 cdef int log_level = lib.AV_LOG_VERBOSE
+
+# ... but lets limit ourselves to WARNING immediately.
+logging.getLogger('libav').setLevel(logging.WARNING)
+
 
 def get_level():
     """Return current logging threshold. See :func:`set_level`."""
