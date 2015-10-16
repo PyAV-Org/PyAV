@@ -25,6 +25,11 @@ Containers
     .. autoclass:: OutputContainer
         :members:
 
+.. automodule:: av.container.streams
+
+    .. autoclass:: StreamContainer
+        :members:
+        
 .. automodule:: av.format
 
     .. autoclass:: ContainerFormat

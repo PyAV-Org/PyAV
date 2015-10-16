@@ -43,8 +43,8 @@ cdef class InputContainer(Container):
     property size:
         def __get__(self): return lib.avio_size(self.proxy.ptr.pb)
 
-    def demux(self, streams=None):
-        """demux(streams=None)
+    def demux(self, *args, **kwargs):
+        """demux(streams=None, video=None, audio=None, subtitles=None)
 
         Yields a series of :class:`.Packet` from the given set of :class:`.Stream`
 
@@ -52,9 +52,7 @@ cdef class InputContainer(Container):
 
         """
         
-        streams = streams or self.streams
-        if isinstance(streams, Stream):
-            streams = (streams, )
+        streams = self.streams.select(*args, **kwargs)
 
         cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
         if include_stream == NULL:
@@ -69,7 +67,10 @@ cdef class InputContainer(Container):
             for i in range(self.proxy.ptr.nb_streams):
                 include_stream[i] = False
             for stream in streams:
-                include_stream[stream.index] = True
+                i = stream.index
+                if i >= self.proxy.ptr.nb_streams:
+                    raise ValueError('stream index %d out of range' % i)
+                include_stream[i] = True
         
             while True:
                 
@@ -100,6 +101,11 @@ cdef class InputContainer(Container):
         finally:
             free(include_stream)
             
+    def decode(self, *args, **kwargs):
+        for packet in self.demux(*args, **kwargs):
+            for frame in packet.decode():
+                yield frame
+    
     def seek(self, timestamp, mode='time', backward=True, any_frame=False):
         """Seek to the keyframe at the given timestamp.
 

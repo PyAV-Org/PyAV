@@ -26,11 +26,9 @@ Basic Demo
     import av
 
     container = av.open('/path/to/video.mp4')
-    video = next(s for s in container.streams if s.type == b'video')
 
-    for packet in container.demux(video):
-        for frame in packet.decode():
-            frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
+    for frame in container.decode(video=0):
+        frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
 
 
 Contents

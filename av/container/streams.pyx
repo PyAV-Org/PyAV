@@ -31,3 +31,30 @@ cdef class StreamContainer(object):
     def __getitem__(self, index):
         return self._streams[index]
 
+    def select(self, streams=None, **typed):
+
+        selection = []
+
+        if isinstance(streams, Stream):
+            selection.append(streams)
+        elif isinstance(streams, (tuple, list)):
+            for x in streams:
+                if isinstance(x, Stream):
+                    selection.append(x)
+                elif isinstance(x, int):
+                    selection.append(self._streams[x])
+                else:
+                    raise TypeError('streams element must be Stream or int')
+        elif streams is not None:
+            raise TypeError('streams must be Stream or tuple')
+
+        for type_, indices in typed.iteritems():
+            streams = getattr(self, type_)
+            if not isinstance(indices, (tuple, list)):
+                indices = [indices]
+            for i in indices:
+                selection.append(streams[i])
+
+        return selection or self._streams[:]
+
+
