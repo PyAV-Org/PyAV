@@ -22,3 +22,19 @@ cdef class Plane(Buffer):
 
     cdef void*  _buffer_ptr(self):
         return self.frame.ptr.extended_data[self.index]
+
+    def update(self, input):
+        """Replace the data in this plane with the given string.
+
+        Deprecated; use :meth:`Plane.update_buffer` instead.
+
+        """
+        self.update_buffer(input)
+
+    def update_from_string(self, input):
+        """Replace the data in this plane with the given string.
+
+        Deprecated; use :meth:`Plane.update_buffer` instead.
+
+        """
+        self.update_buffer(input)

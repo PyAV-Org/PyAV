@@ -52,7 +52,7 @@ cdef class Buffer(_Buffer):
     def to_bytes(self):
         return <bytes>(<char*>self._buffer_ptr())[:self._buffer_size()]
 
-    def update(self, input):
+    def update_buffer(self, input):
         """Replace the data in this object with the given buffer."""
         cdef ByteSource source = bytesource(input)
         cdef size_t size = self._buffer_size()
@@ -60,10 +60,3 @@ cdef class Buffer(_Buffer):
             raise ValueError('got %d bytes; need %d bytes' % (len(input), size))
         memcpy(self._buffer_ptr(), source.ptr, size)
 
-    def update_from_string(self, input):
-        """Replace the data in this plane with the given string.
-
-        Deprecated; use :meth:`Plane.update` instead.
-
-        """
-        self.update(input)
