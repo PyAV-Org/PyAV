@@ -52,7 +52,7 @@ cdef class InputContainer(Container):
 
         """
         
-        streams = self.streams.select(*args, **kwargs)
+        streams = self.streams.get(*args, **kwargs)
 
         cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
         if include_stream == NULL:
@@ -105,7 +105,7 @@ cdef class InputContainer(Container):
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame
-    
+
     def seek(self, timestamp, mode='time', backward=True, any_frame=False):
         """Seek to the keyframe at the given timestamp.
 

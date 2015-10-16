@@ -31,7 +31,7 @@ cdef class StreamContainer(object):
     def __getitem__(self, index):
         return self._streams[index]
 
-    def select(self, streams=None, **typed):
+    def get(self, streams=None, **typed):
 
         selection = []
 

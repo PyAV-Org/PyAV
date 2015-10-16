@@ -22,7 +22,7 @@ class TestStreams(TestCase):
         #audio_stream = container.streams.audio[0]
         #audio_streams = list(container.streams.audio[0:2])
 
-        self.assertEqual([video], container.streams.select(video=0))
-        self.assertEqual([video], container.streams.select(video=(0, )))
+        self.assertEqual([video], container.streams.get(video=0))
+        self.assertEqual([video], container.streams.get(video=(0, )))
 
         # TODO: Find something in the fate suite with video, audio, and subtitles.
