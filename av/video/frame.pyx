@@ -282,7 +282,11 @@ cdef class VideoFrame(Frame):
         frame = VideoFrame(img.size[0], img.size[1], 'rgb24')
 
         # TODO: Use the buffer protocol.
-        frame.planes[0].update(img.tostring())
+        try:
+            frame.planes[0].update(img.tobytes())
+        except AttributeError:
+            frame.plates[0].update(img.tostring())
+
         return frame
 
     @staticmethod

@@ -33,7 +33,7 @@ def write_rgb_rotate(output):
             int(255 * (0.5 + 0.5 * math.sin(frame_i / DURATION * 2 * math.pi + 2 / 3 * math.pi))),
             int(255 * (0.5 + 0.5 * math.sin(frame_i / DURATION * 2 * math.pi + 4 / 3 * math.pi))),
         ))
-        frame.planes[0].update_from_string(image.tostring())
+        frame.planes[0].update_from_string(image.tobytes())
 
         packet = stream.encode(frame)
         if packet:

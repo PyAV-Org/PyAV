@@ -92,7 +92,7 @@ class TestVideoFrameTransforms(TestCase):
         if not Image:
             raise SkipTest()
         frame = VideoFrame(self.width, self.height, 'rgb24')
-        frame.planes[0].update_from_string(self.lenna.tostring())
+        frame.planes[0].update_from_string(self.lenna.tobytes())
         img = frame.to_image()
         img.save(self.sandboxed('lenna-roundtrip-low.jpg'))
         self.assertImagesAlmostEqual(self.lenna, img)
