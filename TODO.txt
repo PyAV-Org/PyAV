@@ -83,6 +83,9 @@ High-Level API
 Unsorted
 ========
 
+- Buffer and ByteSource renamed to represent they are opposite directions of
+  the same operation.
+
 - `atexit.register` something to clean up FFmpeg threads
 
 - Directly use the Numpy C-API

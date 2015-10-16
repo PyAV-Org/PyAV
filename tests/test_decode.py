@@ -8,6 +8,8 @@ class TestDecode(TestCase):
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         video_stream = next(s for s in container.streams if s.type == 'video')
 
+        self.assertIs(video_stream, container.streams.video[0])
+
         frame_count = 0
         
         for packet in container.demux(video_stream):
@@ -20,6 +22,7 @@ class TestDecode(TestCase):
         container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         audio_stream = next(s for s in container.streams if s.type == 'audio')
         
+        self.assertIs(audio_stream, container.streams.audio[0])
         
         sample_count = 0
         

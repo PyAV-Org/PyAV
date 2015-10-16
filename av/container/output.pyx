@@ -1,5 +1,6 @@
 from fractions import Fraction
 
+from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
 from av.stream cimport Stream, build_stream
@@ -9,7 +10,7 @@ from av.utils cimport err_check, dict_to_avdict
 cdef class OutputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
-        self.streams = []
+        self.streams = StreamContainer()
         self.metadata = {}
 
     def __del__(self):
@@ -133,7 +134,7 @@ cdef class OutputContainer(Container):
         
         # Finally construct the user-land stream.
         cdef Stream py_stream = build_stream(self, stream)
-        self.streams.append(py_stream)
+        self.streams.add_stream(py_stream)
         return py_stream
     
     cpdef start_encoding(self):

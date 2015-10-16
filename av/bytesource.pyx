@@ -15,6 +15,7 @@ cdef class ByteSource(object):
             return
 
         if PyObject_CheckBuffer(owner):
+            # Can very likely use PyBUF_ND instead of PyBUF_SIMPLE
             res = PyObject_GetBuffer(owner, &self.view, PyBUF_SIMPLE)
             if not res:
                 self.has_view = True

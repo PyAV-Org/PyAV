@@ -1,8 +1,9 @@
 cimport libav as lib
 
+from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
-
+from av.stream cimport Stream
 
 # Since there are multiple objects that need to refer to a valid context, we
 # need this intermediate proxy object so that there aren't any reference cycles
@@ -47,6 +48,6 @@ cdef class Container(object):
     cdef ContainerProxy proxy
     cdef object __weakref__
 
-    cdef readonly list streams
+    cdef readonly StreamContainer streams
     cdef readonly dict metadata
 
