@@ -47,7 +47,7 @@ On **Ubuntu 14.04 LTS** everything can come from the default sources::
 Ubuntu 12.04 LTS
 ^^^^^^^^^^^^^^^^
 
-On **Ubuntu 12.04 LTS** you will be unable to satisfy these requirements with the default package sources. We recomment compiling and installing FFmpeg or Libav from source. For FFmpeg::
+On **Ubuntu 12.04 LTS** you will be unable to satisfy these requirements with the default package sources. We recommend compiling and installing FFmpeg or Libav from source. For FFmpeg::
 
     wget http://ffmpeg.org/releases/ffmpeg-2.7.tar.bz2
     tar -xjf ffmpeg-2.7.tar.bz2
