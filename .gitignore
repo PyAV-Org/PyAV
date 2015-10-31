@@ -6,6 +6,7 @@
 /.eggs
 
 # Build products.
+dist/
 /src
 /build
 *.c
