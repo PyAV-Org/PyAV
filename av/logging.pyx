@@ -84,7 +84,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         # it doesn't matter if the AVClass that returned it vanishes or not.
         req.item_name = cls.item_name(ptr)
 
-    #lib.vasprintf(&req.message, format, args)
+    lib.vasprintf(&req.message, format, args)
     if not req.message:
         # Assume that the format has a trailing newline.
         printf("av.logging: vasprintf errored on %s: %s", req.item_name, format)
