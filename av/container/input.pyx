@@ -52,6 +52,10 @@ cdef class InputContainer(Container):
 
         """
         
+        # For whatever reason, Cython does not like us directly passing kwargs
+        # from one method to another. Without kwargs, it ends up passing a
+        # NULL reference, which segfaults. So we force it to do something with it.
+        kwargs = kwargs or {}
         streams = self.streams.get(*args, **kwargs)
 
         cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
