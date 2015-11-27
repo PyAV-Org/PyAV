@@ -125,6 +125,7 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     cdef int AVFMT_ALLOW_FLUSH
     cdef int AVFMT_TS_NONSTRICT
     cdef int AVFMT_FLAG_CUSTOM_IO
+    cdef int AVFMT_FLAG_GENPTS
 
     cdef int av_probe_input_buffer(
         AVIOContext *pb,
