@@ -129,6 +129,7 @@ cdef class ContainerProxy(object):
             # We need the context before we open the input AND setup Python IO.
             self.ptr = lib.avformat_alloc_context()
 
+        self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         # Setup Python IO.
         if self.file is not None:
 
@@ -159,7 +160,7 @@ cdef class ContainerProxy(object):
             self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
             self.iocontext.max_packet_size = self.bufsize
             self.ptr.pb = self.iocontext
-            #self.ptr.flags = lib.AVFMT_FLAG_CUSTOM_IO
+            #self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt
         cdef _Dictionary options
