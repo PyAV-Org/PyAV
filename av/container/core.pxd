@@ -1,5 +1,7 @@
 cimport libav as lib
 
+from av.container.streams cimport StreamContainer
+from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
 from av.stream cimport Stream
 
@@ -30,8 +32,6 @@ cdef class ContainerProxy(object):
     cdef long pos
     cdef bint pos_is_valid
     
-    # Thread-local storage for exceptions.
-    cdef object local
     cdef int err_check(self, int value) except -1
 
 
@@ -40,23 +40,14 @@ cdef class Container(object):
     cdef readonly str name
     cdef readonly object file
 
+    cdef readonly bint writeable
+
     cdef readonly ContainerFormat format
-    cdef lib.AVDictionary *options
+    cdef _Dictionary options
 
     cdef ContainerProxy proxy
     cdef object __weakref__
 
-    cdef readonly list streams
+    cdef readonly StreamContainer streams
     cdef readonly dict metadata
 
-cdef class InputContainer(Container):
-    pass
-
-
-cdef class OutputContainer(Container):
-
-    cdef bint _started
-    cdef bint _done
-
-    cpdef add_stream(self, codec_name=*, object rate=*, Stream template=*)
-    cpdef start_encoding(self)

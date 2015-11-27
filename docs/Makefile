@@ -1,4 +1,3 @@
-PXDS := $(shell find ../include -name '*.pxd') 
 
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
@@ -10,8 +9,8 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 
 default: html
 
-includes.rst: includes.py $(PXDS)
-	python $^ > $@
+includes.rst: includes.py $(shell find ../include ../av -name '*.pyx' -or -name '*.pxd')
+	python includes.py > $@
 
 clean:
 	- rm -rf $(BUILDDIR)/*

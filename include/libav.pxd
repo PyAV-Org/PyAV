@@ -16,3 +16,8 @@ include "libavdevice/avdevice.pxd"
 include "libavformat/avformat.pxd"
 include "libswresample/swresample.pxd"
 include "libswscale/swscale.pxd"
+
+
+cdef extern from "stdio.h" nogil:
+
+    cdef int vsnprintf(char *output, int n, const char *format, va_list args)

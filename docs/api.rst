@@ -4,7 +4,7 @@ API Reference
 General
 ===============
 
-.. warning:: This is far from complete, and is mostly an automatic dump of the API. Most function/method signatures will not have parameters displayed.
+.. warning:: This is far from complete, and is mostly an automatic dump of the API.
 
 
 Global
@@ -25,6 +25,11 @@ Containers
     .. autoclass:: OutputContainer
         :members:
 
+.. automodule:: av.container.streams
+
+    .. autoclass:: StreamContainer
+        :members:
+        
 .. automodule:: av.format
 
     .. autoclass:: ContainerFormat

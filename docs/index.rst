@@ -1,7 +1,7 @@
 **PyAV** Documentation
 ======================
 
-**PyAV** aims to be a Pythonic binding for FFmpeg_ or Libav_. We aim to provide all of the power and control of the underlying library, but manage the gritty details for you as much as possible.
+**PyAV** is a Pythonic binding for FFmpeg_ or Libav_. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
 
 Currently we provide the basics of:
 
@@ -26,11 +26,9 @@ Basic Demo
     import av
 
     container = av.open('/path/to/video.mp4')
-    video = next(s for s in container.streams if s.type == b'video')
 
-    for packet in container.demux(video):
-        for frame in packet.decode():
-            frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
+    for frame in container.decode(video=0):
+        frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
 
 
 Contents
@@ -42,6 +40,7 @@ Contents
     about
     installation
     api
+    hacking
     includes
 
 

@@ -2,6 +2,7 @@ from libc.stdint cimport uint64_t
 
 from av.utils cimport media_type_to_string
 from av.video.format cimport get_video_format
+from av.descriptor cimport wrap_avclass
 
 cdef object _cinit_sentinel = object()
 
@@ -32,6 +33,9 @@ cdef class Codec(object):
 
     cdef uint64_t capabilities(self):
         return (self.eptr.capabilities if self.eptr else 0) | (self.dptr.capabilities if self.dptr else 0)
+
+    property descriptor:
+        def __get__(self): return wrap_avclass(self.ptr().priv_class)
 
     property name:
         def __get__(self): return self.ptr().name or ''

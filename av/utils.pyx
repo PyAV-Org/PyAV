@@ -1,16 +1,23 @@
 from libc.stdint cimport int64_t, uint8_t, uint64_t
 
-from cpython.buffer cimport PyObject_CheckBuffer, PyObject_GetBuffer, PyBUF_SIMPLE, PyBuffer_Release
-
 from fractions import Fraction
+from threading import local
+import sys
+import traceback
 
 cimport libav as lib
 
+
+# === ERROR HANDLING ===
+# ======================
 
 # Would love to use the built-in constant, but it doesn't appear to
 # exist on Travis, or my Linux workstation. Could this be because they
 # are actually libav?
 cdef int AV_ERROR_MAX_STRING_SIZE = 64
+
+# Our custom error.
+cdef int PYAV_ERROR = -0x50794156 # 'PyAV'
 
 
 class AVError(EnvironmentError):
@@ -19,18 +26,63 @@ class AVError(EnvironmentError):
 AVError.__module__ = 'av'
 
 
-cdef int err_check(int res, str filename=None) except -1:
+cdef object _local = local()
+cdef int _err_count = 0
+
+cdef int stash_exception(exc_info=None):
+    
+    global _err_count
+
+    existing = getattr(_local, 'exc_info', None)
+    if existing is not None:
+        print >> sys.stderr, 'PyAV library exception being dropped:'
+        traceback.print_exception(*existing)
+        _err_count -= 1
+
+    exc_info = exc_info or sys.exc_info()
+    _local.exc_info = exc_info
+    if exc_info:
+        _err_count += 1
+
+    return PYAV_ERROR
+
+
+cdef int err_check(int res=0, str filename=None) except -1:
+    
+    global _err_count
+
+    # Check for stashed exceptions.
+    if _err_count:
+        exc_info = getattr(_local, 'exc_info', None)
+        if exc_info is not None:
+            _err_count -= 1
+            _local.exc_info = None
+            raise exc_info[0], exc_info[1], exc_info[2]
+
     cdef bytes py_buffer
     cdef char *c_buffer
     if res < 0:
-        py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
-        c_buffer = py_buffer
-        lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
-        if filename:
-            raise AVError(-res, c_buffer, filename)
+
+        if res == PYAV_ERROR:
+            py_buffer = b'Error in PyAV callback'
         else:
-            raise AVError(-res, c_buffer)
+            # This is kinda gross.
+            py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
+            c_buffer = py_buffer
+            lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
+            py_buffer = c_buffer
+
+        if filename:
+            raise AVError(-res, py_buffer.decode('latin1'), filename)
+        else:
+            raise AVError(-res, py_buffer.decode('latin1'))
+
     return res
+
+
+
+# === DICTIONARIES ===
+# ====================
 
 
 cdef dict avdict_to_dict(lib.AVDictionary *input):
@@ -52,6 +104,10 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
         err_check(lib.av_dict_set(dst, key, value, 0))
 
 
+
+# === FRACTIONS ===
+# =================
+
 cdef object avrational_to_faction(lib.AVRational *input):
     return Fraction(input.num, input.den) if input.den else Fraction(0, 1)
 
@@ -71,42 +127,9 @@ cdef object av_frac_to_fraction(lib.AVFrac *input):
     return Fraction(input.val * input.num, input.den)
 
 
-cdef class ByteSource(object):
 
-    def __cinit__(self, owner):
-        self.owner = owner
-
-        try:
-            self.ptr = owner
-        except TypeError:
-            pass
-        else:
-            self.length = len(owner)
-            return
-
-        if PyObject_CheckBuffer(owner):
-            res = PyObject_GetBuffer(owner, &self.view, PyBUF_SIMPLE)
-            if not res:
-                self.has_view = True
-                self.ptr = <unsigned char *>self.view.buf
-                self.length = self.view.len
-                return
-        
-        raise TypeError('expected bytes, bytearray or memoryview')
-
-    def __dealloc__(self):
-        if self.has_view:
-            PyBuffer_Release(&self.view)
-
-
-cdef ByteSource bytesource(obj, bint allow_none=False):
-    if allow_none and obj is None:
-        return
-    elif isinstance(obj, ByteSource):
-        return obj
-    else:
-        return ByteSource(obj)
-
+# === OTHER ===
+# =============
 
 cdef str media_type_to_string(lib.AVMediaType media_type):
 

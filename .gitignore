@@ -1,23 +1,36 @@
-# General.
-.DS_Store
+# General
 *~
-/venv*
-/vendor
-/.eggs
+.DS_Store
 
-# Build products.
-/src
-/build
-*.c
-*.so
+# Environment
 *.pyc
+/.eggs
+/tmp
+/vendor
+/venv*
+
+# Build products
+*.c
+*.egg-info
+*.so
+/*.sdf
+/*.sln
+/*.suo
+/av/**/*.exp
+/av/**/*.lib
+/av/**/*.pdb
+/av/**/*.pyd
+/build
+/dist
 /docs/_build
 /docs/includes.rst
-/dist
-*.egg-info
+/ipch
+/msvc-projects
+/src
 
 # Testing.
+*.spyderproject
+/.vagrant
 /sandbox
 /tests/assets
 /tests/samples
-/.vagrant

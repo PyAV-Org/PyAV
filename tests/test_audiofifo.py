@@ -6,7 +6,7 @@ class TestAudioFifo(TestCase):
 
     def test_1khz(self):
 
-        container = av.open(asset('1KHz.wav'))
+        container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         stream = next(s for s in container.streams if s.type == 'audio')
 
         fifo = av.AudioFifo()

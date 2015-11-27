@@ -207,13 +207,47 @@ cdef extern from "Python.h" nogil:
     void PyErr_Display(object, object, object)
 
 
-cdef extern from "stdio.h" nogil:
+cdef extern from "libavutil/opt.h" nogil:
 
-    cdef int vasprintf(
-        char **output,
-        const char *format,
-        va_list ap
-    )
+    cdef enum AVOptionType:
+
+        AV_OPT_TYPE_FLAGS   
+        AV_OPT_TYPE_INT     
+        AV_OPT_TYPE_INT64   
+        AV_OPT_TYPE_DOUBLE  
+        AV_OPT_TYPE_FLOAT   
+        AV_OPT_TYPE_STRING  
+        AV_OPT_TYPE_RATIONAL    
+        AV_OPT_TYPE_BINARY  
+        #AV_OPT_TYPE_DICT # Missing from FFmpeg
+        AV_OPT_TYPE_CONST   
+        #AV_OPT_TYPE_IMAGE_SIZE # Missing from LibAV
+        #AV_OPT_TYPE_PIXEL_FMT # Missing from LibAV
+        #AV_OPT_TYPE_SAMPLE_FMT # Missing from LibAV
+        #AV_OPT_TYPE_VIDEO_RATE # Missing from FFmpeg
+        #AV_OPT_TYPE_DURATION # Missing from FFmpeg
+        #AV_OPT_TYPE_COLOR # Missing from FFmpeg
+        #AV_OPT_TYPE_CHANNEL_LAYOUT # Missing from FFmpeg
+
+    cdef struct AVOption_default_val:
+        int64_t i64
+        double dbl
+        const char *str
+        AVRational q
+
+    cdef struct AVOption:
+
+        const char *name
+        const char *help
+        AVOptionType type
+        int offset
+
+        AVOption_default_val default_val 
+
+        double min
+        double max
+        int flags
+        const char *unit
 
 
 cdef extern from "libavutil/log.h" nogil:
@@ -233,10 +267,14 @@ cdef extern from "libavutil/log.h" nogil:
         AV_CLASS_CATEGORY_NB
 
     cdef struct AVClass:
+
         const char *class_name
         const char *(*item_name)(void*) nogil
+        
         AVClassCategory category
         int parent_log_context_offset
+
+        AVOption *option
 
     int AV_LOG_QUIET
     int AV_LOG_PANIC
@@ -246,9 +284,6 @@ cdef extern from "libavutil/log.h" nogil:
     int AV_LOG_INFO
     int AV_LOG_VERBOSE
     int AV_LOG_DEBUG
-
-    int av_log_get_level()
-    void av_log_set_level(int)
 
     # Send a log.
     void av_log(void *ptr, int level, const char *fmt, ...)       
