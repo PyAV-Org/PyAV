@@ -108,6 +108,20 @@ cdef class AudioFrame(Frame):
         def __get__(self):
             return self.ptr.sample_rate
 
-            
-        
-        
+    def to_nd_array(self, **kwargs):
+      """Get a numpy array of this frame.
+      Any ``**kwargs`` are passed to :meth:`AudioFrame.reformat`.
+      """
+
+
+      # map avcodec type to numpy type
+      try:
+        type = {
+          's16p':'<i2'
+          }[self.format.name]
+      except:
+        raise AssertionError("Don't know how to convert data type", self.format.name)
+
+      # convert and return data
+      import numpy as np
+      return np.vstack( map( lambda x: np.frombuffer(x, np.dtype(type)), self.planes))
