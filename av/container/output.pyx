@@ -68,35 +68,7 @@ cdef class OutputContainer(Container):
 
         # Copy from the template.
         if template is not None:
-
-            # Video properties (from below).
-            codec_context.time_base.num = template._codec_context.time_base.num
-            codec_context.time_base.den = template._codec_context.time_base.den
-            codec_context.pix_fmt = template._codec_context.pix_fmt
-            codec_context.width = template._codec_context.width
-            codec_context.height = template._codec_context.height
-            codec_context.bit_rate = template._codec_context.bit_rate
-            codec_context.bit_rate_tolerance = template._codec_context.bit_rate_tolerance
-            codec_context.ticks_per_frame = template._codec_context.ticks_per_frame
-            # From <https://stackoverflow.com/questions/17592120>
-            stream.sample_aspect_ratio.num = template._stream.sample_aspect_ratio.num
-            stream.sample_aspect_ratio.den = template._stream.sample_aspect_ratio.den
-            stream.time_base.num = template._stream.time_base.num
-            stream.time_base.den = template._stream.time_base.den
-            stream.avg_frame_rate.num = template._stream.avg_frame_rate.num
-            stream.avg_frame_rate.den = template._stream.avg_frame_rate.den
-            stream.duration = template._stream.duration
-            # More that we believe are nessesary.
-            codec_context.sample_aspect_ratio.num = template._codec_context.sample_aspect_ratio.num
-            codec_context.sample_aspect_ratio.den = template._codec_context.sample_aspect_ratio.den
-
-            # Audio properties (from defaults below that don't overlap above).
-            codec_context.sample_fmt = template._codec_context.sample_fmt
-            codec_context.sample_rate = template._codec_context.sample_rate
-            codec_context.channels = template._codec_context.channels
-            codec_context.channel_layout = template._codec_context.channel_layout
-            # From <https://stackoverflow.com/questions/17592120>
-            stream.pts = template._stream.pts
+            lib.avcodec_copy_context(codec_context, template._codec_context)
 
         # Now lets set some more sane video defaults
         elif codec.type == lib.AVMEDIA_TYPE_VIDEO:

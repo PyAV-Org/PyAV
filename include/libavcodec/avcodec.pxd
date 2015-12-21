@@ -146,7 +146,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         
         # User Data
         void *opaque
-        
+    
+    cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
+
     cdef struct AVCodecDescriptor:
         AVCodecID id
         AVMediaType type
