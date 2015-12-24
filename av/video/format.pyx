@@ -65,26 +65,26 @@ cdef class VideoFormat(object):
 
     property is_big_endian:
         """Pixel format is big-endian."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_BE)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BE)
 
     property has_palette:
         """Pixel format has a palette in data[1], values are indexes in this palette."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_PAL)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PAL)
 
     property is_bit_stream:
         """All values of a component are bit-wise packed end to end."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_BITSTREAM)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BITSTREAM)
 
     # Skipping PIX_FMT_HWACCEL
     # """Pixel format is an HW accelerated format."""
 
     property is_planar:
         """At least one pixel component is not in the first data plane."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_PLANAR)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PLANAR)
 
     property is_rgb:
         """The pixel format contains RGB-like data (as opposed to YUV/grayscale)."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_RGB)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_RGB)
 
     cpdef chroma_width(self, int luma_width=0):
         """chroma_width(luma_width=0)

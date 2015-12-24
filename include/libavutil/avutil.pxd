@@ -103,6 +103,8 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         int search_flags
     )
 
+
+
 cdef extern from "libavutil/pixdesc.h" nogil:
 
 
@@ -116,12 +118,12 @@ cdef extern from "libavutil/pixdesc.h" nogil:
         unsigned int depth_minus1
 
     cdef enum AVPixFmtFlags:
-        PIX_FMT_BE
-        PIX_FMT_PAL
-        PIX_FMT_BITSTREAM
-        PIX_FMT_HWACCEL
-        PIX_FMT_PLANAR
-        PIX_FMT_RGB
+        AV_PIX_FMT_FLAG_BE
+        AV_PIX_FMT_FLAG_PAL
+        AV_PIX_FMT_FLAG_BITSTREAM
+        AV_PIX_FMT_FLAG_HWACCEL
+        AV_PIX_FMT_FLAG_PLANAR
+        AV_PIX_FMT_FLAG_RGB
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVPixFmtDescriptor.html
     cdef struct AVPixFmtDescriptor:
@@ -141,7 +143,7 @@ cdef extern from "libavutil/pixdesc.h" nogil:
 
         
     
-cdef extern from "libavutil/audioconvert.h" nogil:
+cdef extern from "libavutil/channel_layout.h" nogil:
     
     # Layouts.
     cdef uint64_t av_get_channel_layout(char* name)
