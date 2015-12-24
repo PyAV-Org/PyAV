@@ -205,7 +205,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         uint8_t **base
         void *opaque
         
-    cdef AVFrame* avcodec_alloc_frame()
+    cdef AVFrame* av_frame_alloc()
     
     cdef int avpicture_alloc(
         AVPicture *picture, 
@@ -282,7 +282,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int align
     )
     
-    cdef void avcodec_free_frame(AVFrame **frame)
+    cdef void av_frame_free(AVFrame **frame)
     
     cdef void av_free_packet(AVPacket*)
     cdef void av_init_packet(AVPacket*)
@@ -332,7 +332,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     
     cdef void avsubtitle_free(AVSubtitle*)
     
-    cdef void avcodec_get_frame_defaults(AVFrame* frame)
+    cdef void av_frame_unref(AVFrame* frame)
     
     cdef int avcodec_get_context_defaults3(
         AVCodecContext *ctx, 

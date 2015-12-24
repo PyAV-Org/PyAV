@@ -10,11 +10,11 @@ cdef class Frame(object):
     
     def __cinit__(self, *args, **kwargs):
         with nogil:
-            self.ptr = lib.avcodec_alloc_frame()
-            lib.avcodec_get_frame_defaults(self.ptr)
+            self.ptr = lib.av_frame_alloc()
+            lib.av_frame_unref(self.ptr)
 
     def __dealloc__(self):
-        with nogil: lib.avcodec_free_frame(&self.ptr)
+        with nogil: lib.av_frame_free(&self.ptr)
     
     def __repr__(self):
         return 'av.%s #%d at 0x%x>' % (
