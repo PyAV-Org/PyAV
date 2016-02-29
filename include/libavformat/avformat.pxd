@@ -160,6 +160,8 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         int bit_rate
         
         int flags
+        int64_t max_analyze_duration
+
     
     cdef AVFormatContext* avformat_alloc_context()
 
