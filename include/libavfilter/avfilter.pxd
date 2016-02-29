@@ -38,6 +38,9 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         unsigned int output_count
         AVFilterPad *output_pads
 
+    cdef int avfilter_init_str(AVFilterContext *ctx, const char *args)
+    cdef int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options)
+    cdef void avfilter_free(AVFilterContext*)
 
     cdef struct AVFilterBuffer:
 

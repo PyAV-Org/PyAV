@@ -21,6 +21,12 @@ cdef extern from "libavfilter/avfiltergraph.h" nogil:
         AVFilterInOut **outputs
     )
 
+    cdef AVFilterContext* avfilter_graph_alloc_filter(
+        AVFilterGraph *graph,
+        const AVFilter *filter,
+        const char *name
+    )
+    
     cdef int avfilter_graph_create_filter(
         AVFilterContext **filt_ctx,
         AVFilter *filt,

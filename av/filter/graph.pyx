@@ -1,5 +1,7 @@
 from libc.string cimport memcpy
 
+from av.filter.context cimport FilterContext, make_filter_context
+from av.filter.filter cimport Filter
 from av.utils cimport err_check
 from av.video.frame cimport VideoFrame, alloc_video_frame
 
@@ -7,10 +9,13 @@ from av.video.frame cimport VideoFrame, alloc_video_frame
 cdef class Graph(object):
 
     def __cinit__(self):
-
-        filter_str = "mandelbrot"
-
+        
         self.ptr = lib.avfilter_graph_alloc()
+        
+    
+    def _junk(self):
+        
+        filter_str = "mandelbrot"
 
         err_check(lib.avfilter_graph_parse2(self.ptr, filter_str, &self.inputs, &self.outputs))
 
@@ -39,12 +44,14 @@ cdef class Graph(object):
 
         err_check(lib.avfilter_graph_config(self.ptr, NULL))
 
+
     def __dealloc__(self):
         if self.inputs:
             lib.avfilter_inout_free(&self.inputs)
         if self.outputs:
             lib.avfilter_inout_free(&self.outputs)
-        lib.avfilter_graph_free(&self.ptr)
+        if self.ptr:
+            lib.avfilter_graph_free(&self.ptr)
 
     def dump(self):
         cdef char *buf = lib.avfilter_graph_dump(self.ptr, "")
@@ -52,24 +59,30 @@ cdef class Graph(object):
         lib.av_free(buf)
         return ret
 
-    def pull(self):
+    def add(self, filter, name=None, args=None, **kwargs):
+        
+        cdef Filter c_filter
+        if isinstance(filter, basestring):
+            c_filter = Filter(filter)
+        elif isinstance(filter, Filter):
+            c_filter = filter
+        else:
+            raise TypeError("filter must be a string or Filter")
+        
+        cdef char *c_name = NULL
+        if name:
+            c_name = name
+        
+        cdef FilterContext ctx = make_filter_context()
+        ctx.graph = self
+        ctx.filter = c_filter
+        ctx.ptr = lib.avfilter_graph_alloc_filter(self.ptr, c_filter.ptr, c_name)
+        if not ctx.ptr:
+            raise RuntimeError("Could not allocate AVFilterContext")
+        
+        ctx.init(args, **kwargs)
+        
+        return ctx
 
-        cdef lib.AVFilterBufferRef *bufref
-        err_check(lib.av_buffersink_get_buffer_ref(self.sink_ctx, &bufref, 0))
-
-        cdef VideoFrame frame = alloc_video_frame()
-
-        memcpy(frame.ptr.data, bufref.data, sizeof(frame.ptr.data))
-        memcpy(frame.ptr.linesize, bufref.linesize, sizeof(frame.ptr.linesize))
-        memcpy(frame.ptr.extended_data, bufref.extended_data, sizeof(frame.ptr.extended_data))
-        frame.ptr.width = bufref.buf.w
-        frame.ptr.height = bufref.buf.h
-        frame.ptr.format = <lib.AVPixelFormat>bufref.format
-        frame.ptr.pts = bufref.pts
-        frame._init_properties()
-
-        lib.avfilter_unref_bufferp(&bufref)
-
-        return frame
-
-
+    def config(self):
+        err_check(lib.avfilter_graph_config(self.ptr, NULL))
