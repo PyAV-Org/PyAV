@@ -130,6 +130,7 @@ cdef class ContainerProxy(object):
             self.ptr = lib.avformat_alloc_context()
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
+        self.ptr.max_analyze_duration = 10000000
         # Setup Python IO.
         if self.file is not None:
 
