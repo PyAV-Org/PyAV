@@ -16,6 +16,8 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         const char *name
         const char *description
 
+        const int flags
+        
         const AVFilterPad *inputs
         const AVFilterPad *outputs
 
