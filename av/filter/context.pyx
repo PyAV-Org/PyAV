@@ -66,22 +66,9 @@ cdef class FilterContext(object):
         if self.filter.name != 'buffersink':
             raise RuntimeError('cannot pull on %s' % self.filter.name)
         
-        cdef lib.AVFilterBufferRef *bufref
-        err_check(lib.av_buffersink_get_buffer_ref(self.ptr, &bufref, 0))
-
         cdef VideoFrame frame = alloc_video_frame()
-
-        memcpy(frame.ptr.data, bufref.data, sizeof(frame.ptr.data))
-        memcpy(frame.ptr.linesize, bufref.linesize, sizeof(frame.ptr.linesize))
-        memcpy(frame.ptr.extended_data, bufref.extended_data, sizeof(frame.ptr.extended_data))
-        frame.ptr.width = bufref.buf.w
-        frame.ptr.height = bufref.buf.h
-        frame.ptr.format = <lib.AVPixelFormat>bufref.format
-        frame.ptr.pts = bufref.pts
+        err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
         frame._init_properties()
-
-        lib.avfilter_unref_bufferp(&bufref)
-
         return frame
 
         

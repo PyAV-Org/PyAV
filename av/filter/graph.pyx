@@ -9,14 +9,10 @@ from av.video.frame cimport VideoFrame, alloc_video_frame
 cdef class Graph(object):
 
     def __cinit__(self):
-        
         self.ptr = lib.avfilter_graph_alloc()
         
-    
-    def _junk(self):
+    def parse_string(self, str filter_str):
         
-        filter_str = "mandelbrot"
-
         err_check(lib.avfilter_graph_parse2(self.ptr, filter_str, &self.inputs, &self.outputs))
 
         cdef lib.AVFilterInOut *input_ = self.inputs
