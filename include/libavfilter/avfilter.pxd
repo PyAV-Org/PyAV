@@ -1,5 +1,9 @@
 
 cdef extern from "libavfilter/avfilter.h" nogil:
+
+    cdef int   avfilter_version()
+    cdef char* avfilter_configuration()
+    cdef char* avfilter_license()
     
     cdef void avfilter_register_all()
 

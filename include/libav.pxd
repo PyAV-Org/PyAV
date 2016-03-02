@@ -18,10 +18,11 @@ include "libavformat/avformat.pxd"
 include "libswresample/swresample.pxd"
 include "libswscale/swscale.pxd"
 
+include "libavfilter/avcodec.pxd"
 include "libavfilter/avfilter.pxd"
 include "libavfilter/avfiltergraph.pxd"
-include "libavfilter/avcodec.pxd"
 include "libavfilter/buffersink.pxd"
+include "libavfilter/buffersrc.pxd"
 
 
 cdef extern from "stdio.h" nogil:

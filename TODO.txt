@@ -4,7 +4,21 @@ The Big Picture
 - Lots of documentation
 - Uniform time representation
 - High-level APIs
-- Filters
+
+
+Reference Counting
+==================
+
+- Switch everything to av_*_unref ??
+    - av_frame_unref
+    - av_packet_unret
+
+
+Filters
+=======
+
+- expose options on filter classes
+- Graph.add_buffer(template=frame)
 
 
 Remuxing Without Transcoding

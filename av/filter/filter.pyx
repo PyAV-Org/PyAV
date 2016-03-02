@@ -14,7 +14,7 @@ cdef class FilterPad(object):
         if not pads:
             raise ValueError('no %s pads' % ('input' if is_input else 'output'))
         
-        cdef int i
+        cdef int i = 0
         while i <= index:
             if not pads[i].name:
                 raise ValueError('no %s pad %d' % ('input' if is_input else 'output', index))
@@ -60,8 +60,7 @@ cdef class Filter(object):
             
         self.inputs = tuple(get_pads(self, True))
         self.outputs = tuple(get_pads(self, False))
-        
-
+    
     property name:
         def __get__(self):
             return self.ptr.name

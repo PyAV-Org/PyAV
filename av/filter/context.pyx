@@ -2,7 +2,10 @@ from libc.string cimport memcpy
 
 from av.utils cimport err_check
 from av.dictionary cimport _Dictionary
+from av.dictionary import Dictionary
 from av.video.frame cimport VideoFrame, alloc_video_frame
+from av.audio.frame cimport AudioFrame, alloc_audio_frame
+from av.frame cimport Frame
 
 
 cdef object _cinit_sentinel = object()
@@ -51,7 +54,7 @@ cdef class FilterContext(object):
                 c_args = args
             err_check(lib.avfilter_init_str(self.ptr, c_args))
         else:
-            dict_ = _Dictionary(kwargs)
+            dict_ = Dictionary(kwargs)
             err_check(lib.avfilter_init_dict(self.ptr, &dict_.ptr))
         
         self.inited = True
@@ -61,12 +64,25 @@ cdef class FilterContext(object):
     def link(self, int output_idx, FilterContext input_, int input_idx):
         err_check(lib.avfilter_link(self.ptr, output_idx, input_.ptr, input_idx))
     
+    def push(self, Frame frame):
+        if self.filter.name != 'buffer':
+            raise RuntimeError('cannot push on %s' % self.filter.name)
+        err_check(lib.av_buffersrc_write_frame(self.ptr, frame.ptr))
+    
     def pull(self):
 
         if self.filter.name != 'buffersink':
             raise RuntimeError('cannot pull on %s' % self.filter.name)
         
-        cdef VideoFrame frame = alloc_video_frame()
+        # TODO: Have this determine the correct type.
+        cdef Frame frame = alloc_video_frame()
+        # if self.filter.type == 'video':
+        #     frame = alloc_video_frame()
+        # elif self.filter.type == 'audio':
+        #     frame = alloc_audio_frame()
+        # else:
+        #     frame = Frame()
+        
         err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
         frame._init_properties()
         return frame

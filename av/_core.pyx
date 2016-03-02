@@ -46,6 +46,11 @@ versions = {
         configuration=lib.avdevice_configuration(),
         license=lib.avdevice_license()
     ),
+    'libavfilter': dict(
+        version=decode_version(lib.avfilter_version()),
+        configuration=lib.avfilter_configuration(),
+        license=lib.avfilter_license()
+    ),
     'libavresample': dict(
         version=decode_version(lib.avresample_version()),
         configuration=lib.avresample_configuration(),
