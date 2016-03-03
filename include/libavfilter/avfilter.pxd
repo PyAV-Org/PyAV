@@ -46,23 +46,19 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options)
     cdef void avfilter_free(AVFilterContext*)
 
-    cdef struct AVFilterBuffer:
-
-        unsigned int refcount
-
+    cdef struct AVFilterLink:
+        
+        AVFilterContext *src
+        AVFilterPad *srcpad
+        AVFilterContext *dst
+        AVFilterPad *dstpad
+        
+        AVMediaType Type
         int w
         int h
-
-    cdef struct AVFilterBufferRef:
-
-        AVFilterBuffer *buf
-
-        uint8_t **data
-        int *linesize
+        AVRational sample_aspect_ratio
+        uint64_t channel_layout
+        int sample_rate
         int format
-
-        int64_t pts
-        int64_t pos
-        int perms
-        AVMediaType type
-        uint8_t **extended_data
+        AVRational time_base
+        
