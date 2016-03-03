@@ -49,7 +49,7 @@ cdef class Stream(object):
 
     cdef _init(self, Container container, lib.AVStream *stream):
         
-        self._container = container.proxy        
+        self._container = container.proxy
         self._weak_container = PyWeakref_NewRef(container, None)
         self._stream = stream
         self._codec_context = stream.codec
@@ -119,7 +119,7 @@ cdef class Stream(object):
         def __get__(self): return avrational_to_faction(&self._stream.time_base)
 
     property rate:
-        def __get__(self): 
+        def __get__(self):
             if self._codec_context:
                 return self._codec_context.ticks_per_frame * avrational_to_faction(&self._codec_context.time_base)
     

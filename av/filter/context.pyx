@@ -70,18 +70,17 @@ cdef class FilterContext(object):
         err_check(lib.av_buffersrc_write_frame(self.ptr, frame.ptr))
     
     def pull(self):
-
-        if self.filter.name != 'buffersink':
+        
+        cdef Frame frame
+        if self.filter.name == 'buffersink':
+            frame = alloc_video_frame()
+        elif self.filter.name == 'abuffersink':
+            frame = alloc_audio_frame()
+        else:
+            # TODO: defer this request to our inputs.
             raise RuntimeError('cannot pull on %s' % self.filter.name)
         
-        # TODO: Have this determine the correct type.
-        cdef Frame frame = alloc_video_frame()
-        # if self.filter.type == 'video':
-        #     frame = alloc_video_frame()
-        # elif self.filter.type == 'audio':
-        #     frame = alloc_audio_frame()
-        # else:
-        #     frame = Frame()
+        self.graph.configure()
         
         err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
         frame._init_properties()

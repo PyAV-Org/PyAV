@@ -4,7 +4,10 @@ cimport libav as lib
 cdef class Graph(object):
 
     cdef lib.AVFilterGraph *ptr
-    cdef lib.AVFilterInOut *inputs
-    cdef lib.AVFilterInOut *outputs
     
-    cdef lib.AVFilterContext *sink_ctx
+    cdef readonly bint configured
+    cpdef configure(self, bint force=*)
+    
+    cdef dict name_counts
+    cdef str get_unique_name(self, str name)
+    

@@ -17,14 +17,42 @@ Reference Counting
 Filters
 =======
 
-- expose options on filter classes
-- Graph.add_buffer(template=frame)
+- Move FilterPad into av.filter.pad
+    - Give it a `context` attribute.
+    - alloc_filter_pad(filter, index, is_input, context=None)
+    - get_filter_pads(filter, ptr, is_input, context=None) -> tuple of FilterPad
+    - FilterPad.link_to(other_pad)
+    - FilterPad.link is FilterLink instance (or None)
+    
+- Expose options on filter classes.
+
+- Graph.add_buffer(template_frame)
+- Graph.add_abuffer(template_frame)
+- Graph.add_sink(template_frame)
+- Graph.add_asink(template_frame)
+
+- Graph.parse()
+    - create FilterContext objects for every newly created filter
+    - return inputs/outputs
+
+- FilterContext.push(frame, input=None) -> If this is not a (a)buffer, check the given input
+  (or the only input if there is one). If nothing is linked to that input, create a buffer there.
+  Then push it in.
+- FilterContext.pull(frame, output=None) -> Similar semantics to push above.
+
+- Graph.push(frame) -> push the frame into the single input, if it exists.
+- Graph.pull(frame) -> pull the frame from the single output, if it exists.
+
+- FilterContext.send_command(cmd, arg)
+- FilterContext.{inputs,outputs} -> tuple of FilterPad
 
 
 Remuxing Without Transcoding
 ============================
 
 - See do_streamcopy in ffmpeg/ffmpeg.c for hints about how to proceed for remuxing.
+  Even better: see the remuxing example: https://ffmpeg.org/doxygen/2.8/remuxing_8c-example.html
+  It has an amazing avcodec_copy_context which we should be using.
 
 
 Encoding
@@ -97,7 +125,26 @@ High-Level API
 Unsorted
 ========
 
-- Buffer and ByteSource renamed to represent they are opposite directions of
+- VideoFrame.from_file(file_or_path); opens the file and decodes the first frame)
+
+- InternalObject class for stopping construction:
+
+    __cinit__(self, sentinel):
+        assert sentinel
+    
+    @classmethod
+    cdef alloc(cls, ...):
+        self = cls(sentinel)
+        self._init(*args, **kwargs)
+    
+- isdeferredinstance loads the module via sys.modules, then getattr on it, and
+  finally do an isinstance.
+  
+  isdeferredinstance(x, ('PIL.Image', 'Image'))
+
+- Expose CodecContext as stream.context, and move properties to it.
+
+- Rename Buffer and ByteSource to represent they are opposite directions of
   the same operation.
 
 - `atexit.register` something to clean up FFmpeg threads
