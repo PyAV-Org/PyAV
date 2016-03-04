@@ -28,7 +28,8 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
     cdef AVFilter* avfilter_get_by_name(const char *name)
 
-
+    cdef struct AVFilterLink # Defined later.
+    
     cdef struct AVFilterContext:
 
         AVClass *av_class
@@ -36,11 +37,13 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
         char *name
 
-        unsigned int input_count
+        unsigned int nb_inputs
         AVFilterPad *input_pads
-
-        unsigned int output_count
+        AVFilterLink **inputs
+        
+        unsigned int nb_outputs
         AVFilterPad *output_pads
+        AVFilterLink **outputs
 
     cdef int avfilter_init_str(AVFilterContext *ctx, const char *args)
     cdef int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options)

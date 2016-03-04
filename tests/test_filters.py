@@ -24,7 +24,9 @@ class TestFilters(TestCase):
         sink = graph.add('buffersink')
         mandelbrot.link(0, lutrgb, 0)
         lutrgb.link(0, sink, 0)
-                
+        
+        self.assertIs(mandelbrot.outputs[0].linked_to, lutrgb.inputs[0])
+        
         frame = sink.pull()
         self.assertIsInstance(frame, VideoFrame)
         frame.to_image().save('sandbox/mandelbrot2.png')
@@ -50,6 +52,10 @@ class TestFilters(TestCase):
         hald_source.link(0, hald_filter, 1)
         hald_filter.link(0, sink, 0)
         graph.config()
+        
+        self.assertIs(img_source.outputs[0].linked_to, hald_filter.inputs[0])
+        self.assertIs(hald_source.outputs[0].linked_to, hald_filter.inputs[1])
+        self.assertIs(hald_filter.outputs[0].linked_to, sink.inputs[0])
         
         hald_source.push(hald_frame)
         

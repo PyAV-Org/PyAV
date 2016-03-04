@@ -11,15 +11,18 @@ cdef class Graph(object):
     def __cinit__(self):
         self.ptr = lib.avfilter_graph_alloc()
         self.configured = False
-        self.name_counts = {}
+        self._name_counts = {}
+        self._context_by_ptr = {}
+        self._context_by_name = {}
 
     def __dealloc__(self):
         if self.ptr:
+            # This frees the graph, filter contexts, links, etc..
             lib.avfilter_graph_free(&self.ptr)
     
-    cdef str get_unique_name(self, str name):
-        count = self.name_counts.get(name, 0)
-        self.name_counts[name] = count + 1
+    cdef str _get_unique_name(self, str name):
+        count = self._name_counts.get(name, 0)
+        self._name_counts[name] = count + 1
         if count:
             return '%s_%s' % name
         else:
@@ -62,7 +65,7 @@ cdef class Graph(object):
         else:
             raise TypeError("filter must be a string or Filter")
         
-        cdef str name = self.get_unique_name(kwargs.pop('name', None) or c_filter.name)
+        cdef str name = self._get_unique_name(kwargs.pop('name', None) or c_filter.name)
         
         cdef FilterContext ctx = make_filter_context()
         ctx.graph = self
@@ -72,6 +75,9 @@ cdef class Graph(object):
             raise RuntimeError("Could not allocate AVFilterContext")
         
         ctx.init(args, **kwargs)
+        
+        self._context_by_ptr[<long>ctx.ptr] = ctx
+        self._context_by_name[name] = ctx
         
         return ctx
     

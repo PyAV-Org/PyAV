@@ -17,13 +17,6 @@ Reference Counting
 Filters
 =======
 
-- Move FilterPad into av.filter.pad
-    - Give it a `context` attribute.
-    - alloc_filter_pad(filter, index, is_input, context=None)
-    - get_filter_pads(filter, ptr, is_input, context=None) -> tuple of FilterPad
-    - FilterPad.link_to(other_pad)
-    - FilterPad.link is FilterLink instance (or None)
-    
 - Expose options on filter classes.
 
 - Graph.add_buffer(template_frame)

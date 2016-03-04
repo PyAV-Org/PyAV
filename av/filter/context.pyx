@@ -1,11 +1,12 @@
 from libc.string cimport memcpy
 
-from av.utils cimport err_check
+from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
-from av.video.frame cimport VideoFrame, alloc_video_frame
-from av.audio.frame cimport AudioFrame, alloc_audio_frame
+from av.filter.pad cimport alloc_filter_pads
 from av.frame cimport Frame
+from av.utils cimport err_check
+from av.video.frame cimport VideoFrame, alloc_video_frame
 
 
 cdef object _cinit_sentinel = object()
@@ -20,11 +21,6 @@ cdef class FilterContext(object):
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct FilterContext')
-        self.ptr = NULL
-    
-    def __dealloc__(self):
-        if self.ptr:
-            lib.avfilter_free(self.ptr)
 
     def __repr__(self):
         return '<av.FilterContext %s of %r at 0x%x>' % (
@@ -32,6 +28,18 @@ cdef class FilterContext(object):
             self.filter.ptr.name if self.filter and self.filter.ptr != NULL else None,
             id(self),
         )
+    
+    property inputs:
+        def __get__(self):
+            if self._inputs is None:
+                self._inputs = alloc_filter_pads(self.filter, self.ptr.input_pads, True, self)
+            return self._inputs
+    
+    property outputs:
+        def __get__(self):
+            if self._outputs is None:
+                self._outputs = alloc_filter_pads(self.filter, self.ptr.output_pads, False, self)
+            return self._outputs
     
     property name:
         def __get__(self):
