@@ -53,6 +53,14 @@ matrix:
           env: FFMPEG=2.7
           os: linux
 
+        # Newer libraries.
+        - python: "2.7"
+          env: FFMPEG=2.8
+          os: linux
+        - python: "2.7"
+          env: FFMPEG=3.0
+          os: linux
+
         # Older libraries.
         - python: "2.7"
           env: FFMPEG=1.2.2
@@ -63,6 +71,7 @@ matrix:
         - python: "2.7"
           env: LIBAV=9.10
           os: linux
+
 
 
 before_install:
