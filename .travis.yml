@@ -27,49 +27,43 @@ matrix:
 
     include:
 
-        # Primary targets.
+        # Primary target.
         - python: "2.7"
-          env: FFMPEG=2.7
+          env: FFMPEG=3.0
           os: linux
+
+        # Mac OS X.
         - python: "2.7"
-          env: FFMPEG=2.7
+          env: FFMPEG=3.0
           os: osx
 
         # Python 3.
         - python: "3.4"
-          env: FFMPEG=2.7
+          env: FFMPEG=3.0
           os: linux
 
         # Libav.
         - python: "2.7"
-          env: LIBAV=11.4
+          env: LIBAV=11.6
           os: linux
 
         # Older Pythons.
         - python: "2.6"
-          env: FFMPEG=2.7
+          env: FFMPEG=3.0
           os: linux
         - python: "3.3"
-          env: FFMPEG=2.7
-          os: linux
-
-        # Newer libraries.
-        - python: "2.7"
-          env: FFMPEG=2.8
-          os: linux
-        - python: "2.7"
           env: FFMPEG=3.0
           os: linux
 
         # Older libraries.
         - python: "2.7"
-          env: FFMPEG=1.2.2
+          env: FFMPEG=2.7
           os: linux
         - python: "2.7"
           env: FFMPEG=2.2.4
           os: linux
         - python: "2.7"
-          env: LIBAV=9.10
+          env: LIBAV=11.4
           os: linux
 
 
