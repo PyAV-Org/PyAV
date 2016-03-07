@@ -143,6 +143,7 @@ cdef class ContainerProxy(object):
             self.pos = 0
             self.pos_is_valid = True
 
+            # This is effectively the maximum size of reads.
             self.bufsize = 32 * 1024
             self.buffer = <unsigned char*>lib.av_malloc(self.bufsize)
 
@@ -184,12 +185,12 @@ cdef class ContainerProxy(object):
                 lib.avformat_close_input(&self.ptr)
 
             # Manually free things.
-            else:   
+            else:
                 if self.buffer:
                     lib.av_freep(&self.buffer)
                 if self.iocontext:
                     lib.av_freep(&self.iocontext)
-    
+
     cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
 
         cdef int flags = 0
@@ -290,6 +291,3 @@ def open(file, mode=None, format=None, options=None):
     if mode.startswith('w'):
         return OutputContainer(_cinit_sentinel, file, format, options)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
-
-
-

@@ -73,5 +73,4 @@ source "$PYAV_VENV/bin/activate"
 # Just a flag so that we know this was supposedly run.
 export _PYAV_ACTIVATED=1
 
-
-
+export PKG_CONFIG_PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/lib/pkgconfig:$PKG_CONFIG_PATH"

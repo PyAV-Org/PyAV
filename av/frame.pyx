@@ -8,15 +8,15 @@ from av.plane cimport Plane
 cdef class Frame(object):
 
     """Frame Base Class"""
-    
+
     def __cinit__(self, *args, **kwargs):
         with nogil:
-            self.ptr = lib.avcodec_alloc_frame()
-            lib.avcodec_get_frame_defaults(self.ptr)
+            self.ptr = lib.av_frame_alloc()
 
     def __dealloc__(self):
-        with nogil: lib.avcodec_free_frame(&self.ptr)
-    
+        with nogil:
+            lib.av_frame_free(&self.ptr)
+
     def __repr__(self):
         return 'av.%s #%d at 0x%x>' % (
             self.__class__.__name__,
@@ -45,7 +45,7 @@ cdef class Frame(object):
                 self.ptr.pts = value
 
     property time:
-    
+
         def __get__(self):
             if self.ptr.pts == lib.AV_NOPTS_VALUE:
                 return None
@@ -91,4 +91,3 @@ cdef class Frame(object):
             self.ptr.pkt_pts = other.ptr.pkt_pts
             self.ptr.pkt_dts = other.ptr.pkt_dts
             self.ptr.pts = other.ptr.pts
-
