@@ -39,7 +39,7 @@ is_py3 = sys.version_info[0] >= 3
 
 
 # We will embed this metadata into the package so it can be recalled for debugging.
-version = '0.2.4'
+version = '0.3.0'
 git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 git_commit = git_commit.strip()
 
@@ -219,7 +219,7 @@ if cythonize:
 
     from Cython.Compiler.AutoDocTransforms import EmbedSignature
 
-    old_embed_signature = EmbedSignature._embed_signature 
+    old_embed_signature = EmbedSignature._embed_signature
     def new_embed_signature(self, sig, doc):
 
         # Strip any `self` parameters from the front.
