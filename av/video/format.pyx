@@ -42,7 +42,7 @@ cdef class VideoFormat(object):
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-        
+
         self.components = PyTuple_New(self.ptr.nb_components)
         for i in range(self.ptr.nb_components):
             # We are constructing this tuple manually, but since Cython does
@@ -65,26 +65,26 @@ cdef class VideoFormat(object):
 
     property is_big_endian:
         """Pixel format is big-endian."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_BE)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BE)
 
     property has_palette:
         """Pixel format has a palette in data[1], values are indexes in this palette."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_PAL)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PAL)
 
     property is_bit_stream:
         """All values of a component are bit-wise packed end to end."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_BITSTREAM)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BITSTREAM)
 
     # Skipping PIX_FMT_HWACCEL
     # """Pixel format is an HW accelerated format."""
 
     property is_planar:
         """At least one pixel component is not in the first data plane."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_PLANAR)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PLANAR)
 
     property is_rgb:
         """The pixel format contains RGB-like data (as opposed to YUV/grayscale)."""
-        def __get__(self): return bool(self.ptr.flags & lib.PIX_FMT_RGB)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_RGB)
 
     cpdef chroma_width(self, int luma_width=0):
         """chroma_width(luma_width=0)
@@ -130,7 +130,7 @@ cdef class VideoFormatComponent(object):
     property is_alpha:
         """Is this component an alpha channel?"""
         def __get__(self):
-            return ((self.index == 1 and self.format.ptr.nb_components == 2) or 
+            return ((self.index == 1 and self.format.ptr.nb_components == 2) or
                     (self.index == 3 and self.format.ptr.nb_components == 4))
 
     property is_luma:
