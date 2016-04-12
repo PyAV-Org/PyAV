@@ -10,7 +10,6 @@ cd "$PYAV_ROOT"
 # Always try to install the Python dependencies they are cheap.
 pip install -r tests/requirements.txt
 
-export PYAV_LIBRARY_PREFIX="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG"
 
 # Skip the rest of the build if it already exists.
 if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
@@ -19,8 +18,9 @@ if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
 fi
 
 
-mkdir -p tmp/src
-cd tmp/src
+mkdir -p "$PYAV_LIBRARY_BUILD_ROOT"
+cd "$PYAV_LIBRARY_BUILD_ROOT"
+
 
 # Download and expand the source.
 if [[ ! -d $PYAV_LIBRARY_SLUG ]]; then

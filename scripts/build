@@ -7,8 +7,6 @@ fi
 
 cd "$PYAV_ROOT"
 
-export PKG_CONFIG_PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/lib/pkgconfig"
-export LD_LIBRARY_PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/lib"
 export PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/bin:$PATH"
 
 
@@ -24,4 +22,3 @@ ffmpeg -version || exit 3
 echo
 
 python setup.py doctor build_ext --inplace || exit 1
-

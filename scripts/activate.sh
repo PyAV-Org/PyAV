@@ -8,7 +8,6 @@ fi
 
 export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 
-
 PYAV_LIBRARY_NAME="${PYAV_LIBRARY_NAME}"
 PYAV_LIBRARY_VERSION="${PYAV_LIBRARY_VERSION}"
 
@@ -40,7 +39,7 @@ if [[ ! "$PYAV_LIBRARY_VERSION" ]]; then
     else
         case "$PYAV_LIBRARY_NAME" in
             ffmpeg)
-                PYAV_LIBRARY_VERSION=2.7
+                PYAV_LIBRARY_VERSION=3.0
                 ;;
             libav)
                 PYAV_LIBRARY_VERSION=11.4
@@ -57,8 +56,8 @@ export PYAV_LIBRARY_NAME
 export PYAV_LIBRARY_VERSION
 export PYAV_LIBRARY_SLUG=$PYAV_LIBRARY_NAME-$PYAV_LIBRARY_VERSION
 
-
-export PYAV_VENV_NAME="$(uname -s).$(uname -r).cpython$(python -c 'import sys; print "%d.%d" % sys.version_info[:2]')"
+export PYAV_PLATFORM_SLUG="$(uname -s).$(uname -r)"
+export PYAV_VENV_NAME="$PYAV_PLATFORM_SLUG.cpython$(python -c 'import sys; print "%d.%d" % sys.version_info[:2]')"
 export PYAV_VENV="$PYAV_ROOT/venvs/$PYAV_VENV_NAME"
 
 if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
@@ -73,4 +72,16 @@ source "$PYAV_VENV/bin/activate"
 # Just a flag so that we know this was supposedly run.
 export _PYAV_ACTIVATED=1
 
-export PKG_CONFIG_PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/lib/pkgconfig:$PKG_CONFIG_PATH"
+if [[ ! "$PYAV_LIBRARY_BUILD_ROOT" && -d /vagrant ]]; then
+    # On Vagrant, building the library in the shared directory causes some
+    # problems, so we move it to the user's home.
+    PYAV_LIBRARY_BUILD_ROOT="/home/vagrant/vendor"
+fi
+export PYAV_LIBRARY_BUILD_ROOT="${PYAV_LIBRARY_BUILD_ROOT-$PYAV_ROOT/vendor}"
+export PYAV_LIBRARY_PREFIX="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG"
+
+export PATH="$PYAV_LIBRARY_PREFIX/bin:$PATH"
+export PYTHONPATH="$PYAV_ROOT:$PYTHONPATH"
+export PKG_CONFIG_PATH="$PYAV_LIBRARY_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
+export LD_LIBRARY_PATH="$PYAV_LIBRARY_PREFIX/lib:$LD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH="$PYAV_LIBRARY_PREFIX/lib:$DYLD_LIBRARY_PATH"
