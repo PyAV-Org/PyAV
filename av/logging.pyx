@@ -97,7 +97,6 @@ cdef struct LogRequest:
     char message[1024]
     bint handled
 
-cdef int count = 0
 cdef LogRequest req
 
 
@@ -129,15 +128,13 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         fprintf(stderr, "av.logging: %s[%d]: %s",
             item_name, level, req.message
         )
-        #free(message)
         return
-
-    req.level = level
-    req.item_name = item_name
-    req.handled = 0
 
     # Schedule this to be called in the main Python thread. This does not always
     # work, so we might lose a few logs. Whoops.
+    req.level = level
+    req.item_name = item_name
+    req.handled = 0
     lib.Py_AddPendingCall(<void*>async_log_callback, NULL)
 
 cdef int async_log_callback(void *arg) except -1:
@@ -146,6 +143,11 @@ cdef int async_log_callback(void *arg) except -1:
     cdef str logger_name
     cdef str item_name
 
+    # Sometimes a few logs can be pushed at the main thread before they are
+    # handled; this makes sure that the Py_AddPendingCall does not result in
+    # a single message being handled multiple times.
+    # TODO: Come up with some sort of queue that we can use that is thread-safe
+    # and requires no locks at all.
     if req.handled:
         return 0
     req.handled = 1
@@ -175,4 +177,3 @@ cdef int async_log_callback(void *arg) except -1:
 
 # Start the magic!
 lib.av_log_set_callback(log_callback)
-#lib.av_log_set_level(lib.AV_LOG_ERROR)
