@@ -94,76 +94,85 @@ def set_log_after_shutdown(v):
 cdef struct LogRequest:
     int level
     const char *item_name
-    char *message
+    char message[1024]
+    bint handled
+
+cdef int count = 0
+cdef LogRequest req
+
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
-    
+
     # We have to filter it ourselves.
     # Note that FFmpeg's levels are backwards from Python's.
     if level > log_level:
         return
 
-    cdef LogRequest *req = <LogRequest*>malloc(sizeof(LogRequest))
-    req.level = level
-    req.item_name = NULL
+    cdef bint inited = lib.Py_IsInitialized()
+    if not inited and not log_after_shutdown:
+        return
 
     # We need to do everything with the `void *ptr` in this function, since
     # the object it represents may be freed by the time the async_log_callback
     # is run by Python.
     cdef lib.AVClass *cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
+    cdef char *item_name = NULL;
     if cls and cls.item_name:
         # I'm not 100% on this, but a `const char*` should be static, and so
         # it doesn't matter if the AVClass that returned it vanishes or not.
-        req.item_name = cls.item_name(ptr)
+        item_name = cls.item_name(ptr)
 
-    req.message = <char*>malloc(1024) # This is the default size in FFmpeg.
     lib.vsnprintf(req.message, 1023, format, args)
 
-    # Schedule this to be called in the main Python thread, but only if
-    # Python hasn't started finalizing yet.
-    if lib.Py_IsInitialized():
-        lib.Py_AddPendingCall(<void*>async_log_callback, <void*>req)
-    elif log_after_shutdown:
+    # This log came after Python shutdown.
+    if not inited:
         fprintf(stderr, "av.logging: %s[%d]: %s",
-            req.item_name, req.level, req.message
+            item_name, level, req.message
         )
-        free(req.message)
-        free(req)
+        #free(message)
+        return
 
+    req.level = level
+    req.item_name = item_name
+    req.handled = 0
+
+    # Schedule this to be called in the main Python thread. This does not always
+    # work, so we might lose a few logs. Whoops.
+    lib.Py_AddPendingCall(<void*>async_log_callback, NULL)
 
 cdef int async_log_callback(void *arg) except -1:
 
-    cdef LogRequest *req = <LogRequest*>arg
     cdef int level
     cdef str logger_name
     cdef str item_name
 
-    if not lib.Py_IsInitialized():
-        if log_after_shutdown:
-            fprintf(stderr, "av.logging: %s[%d]: %s",
+    if req.handled:
+        return 0
+    req.handled = 1
+
+    if lib.Py_IsInitialized():
+        try:
+            level = level_map.get(req.level, 20)
+            item_name = req.item_name if req.item_name else ''
+            logger_name = 'libav.' + item_name if item_name else 'libav.generic'
+            logger = logging.getLogger(logger_name)
+            logger.log(level, req.message.strip())
+        except Exception as e:
+            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
                 req.item_name, req.level, req.message
             )
-        return 0
+            # For some reason lib.PyErr_PrintEx(0) won't work.
+            exc, type_, tb = sys.exc_info()
+            lib.PyErr_Display(exc, type_, tb)
 
-    try:
-        level = level_map.get(req.level, 20)
-        item_name = req.item_name if req.item_name else ''
-        logger_name = 'libav.' + item_name if item_name else 'libav.generic'
-        logger = logging.getLogger(logger_name)
-        logger.log(level, req.message.strip())
-    except Exception as e:
-        fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
+    elif log_after_shutdown:
+        fprintf(stderr, "av.logging: %s[%d]: %s",
             req.item_name, req.level, req.message
         )
-        # For some reason lib.PyErr_PrintEx(0) won't work.
-        exc, type_, tb = sys.exc_info()
-        lib.PyErr_Display(exc, type_, tb)
-    finally:
-        free(req.message)
-        free(req)
 
     return 0
 
 
 # Start the magic!
 lib.av_log_set_callback(log_callback)
+#lib.av_log_set_level(lib.AV_LOG_ERROR)
