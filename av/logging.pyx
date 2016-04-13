@@ -35,8 +35,9 @@ level_map = {
 
 
 # While we start with the level quite low, Python defaults to INFO, and so
-# they will not show.
-cdef int log_level = lib.AV_LOG_VERBOSE
+# they will not show. The logging system can add significant overhead, so
+# be wary of dropping this lower.
+cdef int _level_threshold = lib.AV_LOG_WARNING
 
 # ... but lets limit ourselves to WARNING immediately.
 logging.getLogger('libav').setLevel(logging.WARNING)
@@ -44,7 +45,7 @@ logging.getLogger('libav').setLevel(logging.WARNING)
 
 def get_level():
     """Return current logging threshold. See :func:`set_level`."""
-    return log_level
+    return _level_threshold
 
 def set_level(int level):
     """set_level(level)
@@ -67,8 +68,8 @@ def set_level(int level):
         logging.getLogger().setLevel(5)
 
     """
-    global log_level
-    log_level = level
+    global _level_threshold
+    _level_threshold = level
 
 
 cdef bint log_after_shutdown = False
@@ -101,12 +102,23 @@ cdef struct _QueuedRecord:
 
 cdef _QueuedRecord *_queue_start = NULL
 cdef _QueuedRecord *_queue_end = NULL
+cdef int _queue_size
+cdef bint _print_queue_size = False
 
 cdef bint _push_record(_QueuedRecord *record) nogil:
-    global _queue_start, _queue_end
+    global _queue_start, _queue_end, _queue_size
     record.next = NULL
     if not pythread.PyThread_acquire_lock(_lock, 1): # 1 -> wait
         return False
+
+    global _queue_size
+    if _print_queue_size and _queue_size:
+        if _queue_start == NULL:
+            fprintf(stderr, "av.logging has lost %d records!\n", _queue_size)
+        else:
+            fprintf(stderr, "av.logging queued %d records\n", _queue_size)
+    _queue_size += 1
+
     if _queue_start == NULL:
         _queue_start = record
     else:
@@ -116,29 +128,24 @@ cdef bint _push_record(_QueuedRecord *record) nogil:
     return True
 
 cdef _QueuedRecord* _pop_record():
-    global _queue_start, _queue_end
+    global _queue_start, _queue_end, _queue_size
     if not pythread.PyThread_acquire_lock(_lock, 1): # 1 -> wait
         return NULL
     cdef _QueuedRecord *record = NULL
     if _queue_start:
         record = _queue_start
         _queue_start = record.next
+        _queue_size -= 1
     pythread.PyThread_release_lock(_lock)
     return record
 
-cdef int count
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
 
     # We have to filter it ourselves.
     # Note that FFmpeg's levels are backwards from Python's.
-    if level > log_level:
+    if level > _level_threshold:
         return
-
-    global count
-    if count:
-        printf("already pending %d\n", count)
-    count += 1
 
     cdef bint inited = lib.Py_IsInitialized()
     if not inited and not log_after_shutdown:
@@ -174,8 +181,6 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
 
 cdef int async_log_callback(void *arg) except -1:
 
-    global count
-
     cdef int level
     cdef str logger_name
     cdef str item_name
@@ -188,8 +193,6 @@ cdef int async_log_callback(void *arg) except -1:
         record = _pop_record()
         if record == NULL:
             return 0
-
-        count -= 1
 
         if inited:
             try:
