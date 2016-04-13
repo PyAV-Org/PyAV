@@ -67,6 +67,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVSampleFormat* sample_fmts
         AVPixelFormat* pix_fmts
         int* supported_samplerates
+
+        AVClass *priv_class
+        
         
     cdef AVCodec* av_codec_next(AVCodec*)
     cdef int av_codec_is_encoder(AVCodec*)

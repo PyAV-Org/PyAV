@@ -127,12 +127,12 @@ html_theme = 'nature'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = 'logo-250.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = 'favicon.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -194,7 +194,7 @@ autodoc_default_flags = ['undoc-members', 'show-inheritance']
 
 
 doxylink = {}
-ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', '..', 'vendor', 'tagfile.xml'))
+ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', '..', 'tmp', 'tagfile.xml'))
 if os.path.exists(ffmpeg_tagfile):
     doxylink['ffmpeg'] = (ffmpeg_tagfile, 'https://ffmpeg.org/doxygen/trunk/')
 else:

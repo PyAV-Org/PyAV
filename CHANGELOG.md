@@ -4,6 +4,30 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 `y` as a minor change (i.e. backwards compatible features).
 
 
+0.3.0
+=====
+
+Major:
+- Python IO can write
+- Improve build system to use Python's C compiler for function detection;
+  build system is much more robust
+- MSVC support (#115 by @vidartf)
+- Continuous integration on Windows via AppVeyor (by @vidartf)
+
+Minor:
+- Add `Packet.decode_one()` to skip packet flushing for codecs that would
+  otherwise error
+- `StreamContainer` for easier selection of streams
+- Add buffer protocol support to Packet
+
+Fixes:
+- Fix bug when using Python IO on files larger than 2GB (#109 by @xxr3376)
+- Fix usage of changed Pillow API
+
+Known Issues:
+- VideoFrame is suspected to leak memory in narrow cases on Linux (#128)
+
+
 0.2.4
 =====
 - fix library search path for current Libav/Ubuntu 14.04 (#97)
@@ -18,16 +42,16 @@ Cython to be installed.
 
 Major:
 - Python IO.
-- agressively releases GIL
-- add experimental Windows build (#84)
+- Agressively releases GIL
+- Add experimental Windows build (#84)
 
 Minor:
-- several new Stream/Packet/Frame attributes
+- Several new Stream/Packet/Frame attributes
 
 Fixes:
-- fix segfault in audio handling (#86 and #93)
-- fix use of PIL/Pillow API (#85)
-- fix bad assumptions about plane counts (#76)
+- Fix segfault in audio handling (#86 and #93)
+- Fix use of PIL/Pillow API (#85)
+- Fix bad assumptions about plane counts (#76)
 
 
 0.2.2

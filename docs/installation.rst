@@ -14,13 +14,18 @@ PyAV depends upon the following components of the underlying libraries:
 - ``libswscale``
 - ``libswresample`` or ``libavresample``
 
+and a few other tools in general:
+
+- ``pkg-config``
+- Python's development headers
+
 
 Mac OS X
 ^^^^^^^^
 
 On **Mac OS X**, Homebrew_ saves the day::
 
-    brew install ffmpeg
+    brew install ffmpeg pkg-config
 
 .. _homebrew: http://brew.sh/
 
@@ -30,9 +35,13 @@ Ubuntu 14.04 LTS
 
 On **Ubuntu 14.04 LTS** everything can come from the default sources::
 
+    # General dependencies
+    sudo apt-get install -y python-dev pkg-config
+
+    # Library components
     sudo apt-get install -y \
         libavformat-dev libavcodec-dev libavdevice-dev \
-        libavutil-dev libswscale-dev libavresample-dev \
+        libavutil-dev libswscale-dev libavresample-dev
 
 
 Ubuntu 12.04 LTS
@@ -40,9 +49,9 @@ Ubuntu 12.04 LTS
 
 On **Ubuntu 12.04 LTS** you will be unable to satisfy these requirements with the default package sources. We recomment compiling and installing FFmpeg or Libav from source. For FFmpeg::
 
-    wget http://ffmpeg.org/releases/ffmpeg-1.2.2.tar.bz2
-    tar -xjf ffmpeg-1.2.2.tar.bz2
-    cd ffmpeg-1.2.2
+    wget http://ffmpeg.org/releases/ffmpeg-2.7.tar.bz2
+    tar -xjf ffmpeg-2.7.tar.bz2
+    cd ffmpeg-2.7
 
     ./configure --disable-static --enable-shared --disable-doc
     make
@@ -71,8 +80,7 @@ Via Source
     $ cd PyAV
     $ virtualenv venv
     $ . venv/bin/activate
-    $ pip install cython pil
-    $ make
+    $ pip install cython
     $ python setup.py build_ext --inplace
 
 

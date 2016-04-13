@@ -26,9 +26,22 @@ cdef class Packet(object):
             id(self),
         )
 
-    def decode(self):
+    # Buffer protocol.
+    cdef size_t _buffer_size(self):
+        return self.struct.size
+    cdef void*  _buffer_ptr(self):
+        return self.struct.data
+
+    def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
-        return self.stream.decode(self)
+        return self.stream.decode(self, count)
+
+    def decode_one(self):
+        """Decode the first frame from this packet.
+
+        Returns ``None`` if there is no frame."""
+        res = self.stream.decode(self, count=1)
+        return res[0] if res else None
 
     # Looks circular, but isn't. Silly Cython.
     property stream:
@@ -63,8 +76,6 @@ cdef class Packet(object):
 
     property pos:
         def __get__(self): return None if self.struct.pos == -1 else self.struct.pos
-        def __set__(self,pos): self.struct.pos = pos
-
     property size:
         def __get__(self): return self.struct.size
     property duration:

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [[ ! "$TRAVIS" ]]; then
+    echo "This isn't travis..."
+    exit 1
+fi
+
+if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+
+    echo Updating homebrew
+    brew update
+    echo
+
+    echo Installing library dependencies
+    brew install libjpeg libpng # For pillow
+    # We will use our own ffmpeg, but this is the easiest way for us
+    # to get all of the dependencies.
+    brew install ffmpeg
+    echo
+    
+fi

@@ -17,3 +17,6 @@ cdef class AudioPlane(Plane):
             <lib.AVSampleFormat>frame.ptr.format,
             frame.align
         )
+
+    cdef size_t _buffer_size(self):
+        return self.buffer_size

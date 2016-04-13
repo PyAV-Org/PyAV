@@ -1,8 +1,11 @@
-cimport libav as lib
-from av.packet cimport Packet
-from av.container cimport Container, ContainerProxy
-from av.frame cimport Frame
 from libc.stdint cimport int64_t
+
+cimport libav as lib
+
+from av.container.core cimport Container, ContainerProxy
+from av.frame cimport Frame
+from av.packet cimport Packet
+
 
 cdef class Stream(object):
     
@@ -24,7 +27,7 @@ cdef class Stream(object):
     cdef _decode_one(self, lib.AVPacket*, int *data_consumed)
 
     # Public API.
-    cpdef decode(self, Packet packet)
+    cpdef decode(self, Packet packet, int count=?)
 
 
 cdef Stream build_stream(Container, lib.AVStream*)

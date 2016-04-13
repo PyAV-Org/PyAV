@@ -25,7 +25,7 @@ def step_forward(container, stream):
 
 class TestSeek(TestCase):
     def test_seek_start(self):
-        container = av.open(asset('320x240x4.mov'))
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
 
         # count all the packets
         total_packet_count = 0 
@@ -43,7 +43,7 @@ class TestSeek(TestCase):
         self.assertEqual(total_packet_count, seek_packet_count)
         
     def test_seek_middle(self):
-        container = av.open(asset('320x240x4.mov'))
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         
         # count all the packets
         total_packet_count = 0 
@@ -61,7 +61,7 @@ class TestSeek(TestCase):
         self.assertTrue(seek_packet_count < total_packet_count)
         
     def test_seek_end(self):
-        container = av.open(asset('320x240x4.mov'))
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         
         # seek to middle
         container.seek(container.duration // 2)
@@ -83,7 +83,7 @@ class TestSeek(TestCase):
     
     def test_decode_half(self):
         
-        container = av.open(asset('320x240x4.mov'))
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         
         video_stream = next(s for s in container.streams if s.type == 'video')
         total_frame_count = 0
@@ -121,7 +121,7 @@ class TestSeek(TestCase):
     
     def test_stream_seek(self):
         
-        container = av.open(asset('320x240x4.mov'))
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         
         video_stream = next(s for s in container.streams if s.type == 'video')
         total_frame_count = 0

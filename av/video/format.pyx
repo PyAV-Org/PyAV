@@ -42,7 +42,7 @@ cdef class VideoFormat(object):
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-        
+
         self.components = PyTuple_New(self.ptr.nb_components)
         for i in range(self.ptr.nb_components):
             # We are constructing this tuple manually, but since Cython does
@@ -130,7 +130,7 @@ cdef class VideoFormatComponent(object):
     property is_alpha:
         """Is this component an alpha channel?"""
         def __get__(self):
-            return ((self.index == 1 and self.format.ptr.nb_components == 2) or 
+            return ((self.index == 1 and self.format.ptr.nb_components == 2) or
                     (self.index == 3 and self.format.ptr.nb_components == 4))
 
     property is_luma:

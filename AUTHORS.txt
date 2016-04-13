@@ -15,4 +15,5 @@ Jonas Tingeborn <tinjon@gmail.com>;
 Moritz Kassner <moritzkassner@gmail.com>; @mkassner (Pupil Labs)
 Radek Senfeld <rush@logic.cz>; @radek-senfeld
 Thomas A Caswell <tcaswell@gmail.com>; @tacaswell
-Will Patera <willpatera@gmail.com; @willpatera (Pupil Labs)
+Will Patera <willpatera@gmail.com>; @willpatera (Pupil Labs)
+vidartf <vidartf@gmail.com>; @vidartf

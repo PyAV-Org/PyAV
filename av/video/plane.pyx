@@ -17,6 +17,9 @@ cdef class VideoPlane(Plane):
         # ignore it's direction.
         self.buffer_size = abs(self.frame.ptr.linesize[self.index]) * self.component.height
 
+    cdef size_t _buffer_size(self):
+        return self.buffer_size
+    
     property width:
         """Pixel width of this plane."""
         def __get__(self):

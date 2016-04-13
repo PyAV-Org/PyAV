@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [[ ! "$_PYAV_ACTIVATED" ]]; then
+    export here="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+    source "$here/activate.sh"
+fi
+
+cd "$PYAV_ROOT"
+
+export PKG_CONFIG_PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/lib/pkgconfig"
+export LD_LIBRARY_PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/lib"
+export PATH="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG/bin:$PATH"
+
+
+nosetests || exit 1

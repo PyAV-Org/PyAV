@@ -1,22 +1,79 @@
 language: python
 
-python:
-    - "2.6"
-    - "2.7"
-    - "3.3"
-    - "3.4"
+sudo: false
 
-env:
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=ffmpeg
-    - LD_LIBRARY_PATH=/usr/local/lib LIBRARY=libav
+addons:
+    apt:
+        packages:
+            - libjpeg-dev
+            - libfreetype6-dev
+            - zlib1g-dev
+            - yasm
+            - ffmpeg # We will install our own, but we need the dependencies
+
+cache:
+    directories:
+        - tests/assets # Cache files from the FATE suite.
+        - venvs # Python virtualenvs and compiled FFmpeg/Libav.
+
+
+matrix:
+
+    fast_finish: true
+
+    # We are still working on this.
+    allow_failures:
+        - os: osx
+
+    include:
+
+        # Primary target.
+        - python: "2.7"
+          env: FFMPEG=3.0
+          os: linux
+
+        # Mac OS X.
+        - python: "2.7"
+          env: FFMPEG=3.0
+          os: osx
+
+        # Python 3.
+        - python: "3.4"
+          env: FFMPEG=3.0
+          os: linux
+
+        # Libav.
+        - python: "2.7"
+          env: LIBAV=11.6
+          os: linux
+
+        # Older Pythons.
+        - python: "2.6"
+          env: FFMPEG=3.0
+          os: linux
+        - python: "3.3"
+          env: FFMPEG=3.0
+          os: linux
+
+        # Older libraries.
+        - python: "2.7"
+          env: FFMPEG=2.7
+          os: linux
+        - python: "2.7"
+          env: FFMPEG=2.2.4
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.4
+          os: linux
+
+
 
 before_install:
-    - scripts/test-setup
-    - pip install --use-mirrors -r tests/requirements.txt
+    - scripts/travis-setup
+    - scripts/build-deps
 
 install:
-    - make build
-    - make test-assets
+    - scripts/build
 
 script:
-    - nosetests
+    - scripts/test

@@ -19,12 +19,12 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         AV_PIX_FMT_RGB24
         PIX_FMT_RGB24
         PIX_FMT_RGBA
-        
+
     cdef enum AVSampleFormat:
         AV_SAMPLE_FMT_NONE
         AV_SAMPLE_FMT_S16
         AV_SAMPLE_FMT_FLTP
-        
+
     cdef enum AVRounding:
         AV_ROUND_ZERO
         AV_ROUND_INF
@@ -32,31 +32,31 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         AV_ROUND_UP
         AV_ROUND_NEAR_INF
         AV_ROUND_PASS_MINMAX
-    
+
     cdef int AV_ERROR_MAX_STRING_SIZE
     cdef int AVERROR_EOF
     cdef int AVERROR_NOMEM "AVERROR(ENOMEM)"
-    
+
     cdef int AV_CH_LAYOUT_STEREO
-    
+
     cdef int ENOMEM
-    
+
     cdef int EAGAIN
-    
+
     cdef double M_PI
-    
+
     cdef int AVERROR(int error)
     cdef int av_strerror(int errno, char *output, size_t output_size)
     cdef char* av_err2str(int errnum)
 
     cdef void* av_malloc(size_t size)
     cdef void *av_calloc(size_t nmemb, size_t size)
-    
+
     cdef void av_free(void* ptr)
     cdef void av_freep(void *ptr)
-    
+
     cdef int av_get_bytes_per_sample(AVSampleFormat sample_fmt)
-    
+
     cdef int av_samples_get_buffer_size(
         int *linesize,
         int nb_channels,
@@ -64,46 +64,44 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         AVSampleFormat sample_fmt,
         int align
     )
-    
+
     # See: http://ffmpeg.org/doxygen/trunk/structAVRational.html
     ctypedef struct AVRational:
         int num
         int den
-        
+
     cdef AVRational AV_TIME_BASE_Q
-    
+
     # Rescales from one time base to another
     cdef int64_t av_rescale_q(
         int64_t a, # time stamp
         AVRational bq, # source time base
         AVRational cq  # target time base
     )
-    
+
     # Rescale a 64-bit integer with specified rounding.
     # A simple a*b/c isn't possible as it can overflow
     cdef int64_t av_rescale_rnd(
         int64_t a,
-        int64_t b, 
+        int64_t b,
         int64_t c,
         AVRounding r
     )
-    
+
     cdef int64_t av_rescale(
-        int64_t a, 
-        int64_t b, 
+        int64_t a,
+        int64_t b,
         int64_t c
     )
-    
+
     cdef char* av_strdup(char *s)
-    
+
     cdef int av_opt_set_int(
         void *obj,
         char *name,
         int64_t value,
         int search_flags
     )
-
-
 
 cdef extern from "libavutil/pixdesc.h" nogil:
 
@@ -141,10 +139,10 @@ cdef extern from "libavutil/pixdesc.h" nogil:
     cdef AVPixelFormat av_get_pix_fmt(char* name)
 
 
-        
-    
+
+
 cdef extern from "libavutil/channel_layout.h" nogil:
-    
+
     # Layouts.
     cdef uint64_t av_get_channel_layout(char* name)
     cdef int av_get_channel_layout_nb_channels(uint64_t channel_layout)
@@ -161,34 +159,34 @@ cdef extern from "libavutil/channel_layout.h" nogil:
     cdef char* av_get_channel_name(uint64_t channel)
     cdef char* av_get_channel_description(uint64_t channel)
 
-    
-    
-    
+
+
+
 cdef extern from "libavutil/audio_fifo.h" nogil:
-    
+
     cdef struct AVAudioFifo:
         pass
-    
+
     cdef void av_audio_fifo_free(AVAudioFifo *af)
-    
+
     cdef AVAudioFifo* av_audio_fifo_alloc(
          AVSampleFormat sample_fmt,
          int channels,
          int nb_samples
     )
-    
+
     cdef int av_audio_fifo_write(
-        AVAudioFifo *af, 
-        void **data, 
+        AVAudioFifo *af,
+        void **data,
         int nb_samples
     )
-    
+
     cdef int av_audio_fifo_read(
         AVAudioFifo *af,
-        void **data, 
+        void **data,
         int nb_samples
     )
-    
+
     cdef int av_audio_fifo_size(AVAudioFifo *af)
     cdef int av_audio_fifo_space (AVAudioFifo *af)
 
@@ -209,36 +207,74 @@ cdef extern from "Python.h" nogil:
     void PyErr_Display(object, object, object)
 
 
-cdef extern from "stdio.h" nogil:
+cdef extern from "libavutil/opt.h" nogil:
 
-    cdef int vasprintf(
-        char **output,
-        const char *format,
-        va_list ap
-    )
+    cdef enum AVOptionType:
+
+        AV_OPT_TYPE_FLAGS
+        AV_OPT_TYPE_INT
+        AV_OPT_TYPE_INT64
+        AV_OPT_TYPE_DOUBLE
+        AV_OPT_TYPE_FLOAT
+        AV_OPT_TYPE_STRING
+        AV_OPT_TYPE_RATIONAL
+        AV_OPT_TYPE_BINARY
+        #AV_OPT_TYPE_DICT # Missing from FFmpeg
+        AV_OPT_TYPE_CONST
+        #AV_OPT_TYPE_IMAGE_SIZE # Missing from LibAV
+        #AV_OPT_TYPE_PIXEL_FMT # Missing from LibAV
+        #AV_OPT_TYPE_SAMPLE_FMT # Missing from LibAV
+        #AV_OPT_TYPE_VIDEO_RATE # Missing from FFmpeg
+        #AV_OPT_TYPE_DURATION # Missing from FFmpeg
+        #AV_OPT_TYPE_COLOR # Missing from FFmpeg
+        #AV_OPT_TYPE_CHANNEL_LAYOUT # Missing from FFmpeg
+
+    cdef struct AVOption_default_val:
+        int64_t i64
+        double dbl
+        const char *str
+        AVRational q
+
+    cdef struct AVOption:
+
+        const char *name
+        const char *help
+        AVOptionType type
+        int offset
+
+        AVOption_default_val default_val
+
+        double min
+        double max
+        int flags
+        const char *unit
 
 
 cdef extern from "libavutil/log.h" nogil:
 
     cdef enum AVClassCategory:
-        AV_CLASS_CATEGORY_NA    
-        AV_CLASS_CATEGORY_INPUT     
-        AV_CLASS_CATEGORY_OUTPUT    
-        AV_CLASS_CATEGORY_MUXER     
-        AV_CLASS_CATEGORY_DEMUXER   
-        AV_CLASS_CATEGORY_ENCODER   
-        AV_CLASS_CATEGORY_DECODER   
-        AV_CLASS_CATEGORY_FILTER    
-        AV_CLASS_CATEGORY_BITSTREAM_FILTER  
-        AV_CLASS_CATEGORY_SWSCALER  
-        AV_CLASS_CATEGORY_SWRESAMPLER   
+        AV_CLASS_CATEGORY_NA
+        AV_CLASS_CATEGORY_INPUT
+        AV_CLASS_CATEGORY_OUTPUT
+        AV_CLASS_CATEGORY_MUXER
+        AV_CLASS_CATEGORY_DEMUXER
+        AV_CLASS_CATEGORY_ENCODER
+        AV_CLASS_CATEGORY_DECODER
+        AV_CLASS_CATEGORY_FILTER
+        AV_CLASS_CATEGORY_BITSTREAM_FILTER
+        AV_CLASS_CATEGORY_SWSCALER
+        AV_CLASS_CATEGORY_SWRESAMPLER
         AV_CLASS_CATEGORY_NB
 
     cdef struct AVClass:
+
         const char *class_name
         const char *(*item_name)(void*) nogil
+
         AVClassCategory category
         int parent_log_context_offset
+
+        AVOption *option
 
     int AV_LOG_QUIET
     int AV_LOG_PANIC
@@ -249,11 +285,8 @@ cdef extern from "libavutil/log.h" nogil:
     int AV_LOG_VERBOSE
     int AV_LOG_DEBUG
 
-    int av_log_get_level()
-    void av_log_set_level(int)
-
     # Send a log.
-    void av_log(void *ptr, int level, const char *fmt, ...)       
+    void av_log(void *ptr, int level, const char *fmt, ...)
 
     # Get the logs.
     ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
