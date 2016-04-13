@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from libc.stdlib cimport malloc, free
 from libc.stdio cimport printf, fprintf, stderr
+from libc.string cimport strncmp, strcpy
 from cpython cimport pythread
 
 cimport libav as lib
@@ -37,7 +38,7 @@ level_map = {
 # While we start with the level quite low, Python defaults to INFO, and so
 # they will not show. The logging system can add significant overhead, so
 # be wary of dropping this lower.
-cdef int _level_threshold = lib.AV_LOG_WARNING
+cdef int _level_threshold = lib.AV_LOG_INFO
 
 # ... but lets limit ourselves to WARNING immediately.
 logging.getLogger('libav').setLevel(logging.WARNING)
@@ -72,12 +73,28 @@ def set_level(int level):
     _level_threshold = level
 
 
-cdef bint log_after_shutdown = False
+cdef bint _print_after_shutdown = False
 
-def set_log_after_shutdown(v):
+def get_print_after_shutdown():
+    """Will logging continue to ``stderr`` after Python shutdown?"""
+    return _print_after_shutdown
+
+def set_print_after_shutdown(v):
     """Set if logging should continue to ``stderr`` after Python shutdown."""
-    global log_after_shutdown
-    log_after_shutdown = v
+    global _print_after_shutdown
+    _print_after_shutdown = bool(v)
+
+
+cdef bint _skip_repeated = True
+
+def get_skip_repeated():
+    """Will identical logs be emitted?"""
+    return _skip_repeated
+
+def set_skip_repeated(v):
+    """Set if identical logs will be emitted"""
+    global _skip_repeated
+    _skip_repeated = bool(v)
 
 
 # Threads sure are a mess!
@@ -92,7 +109,8 @@ def set_log_after_shutdown(v):
 # call to run in the main Python thread. That call dumps the message into the
 # Python logging system.
 
-cdef pythread.PyThread_type_lock _lock = pythread.PyThread_allocate_lock()
+cdef pythread.PyThread_type_lock _queue_lock = pythread.PyThread_allocate_lock()
+cdef pythread.PyThread_type_lock _skip_lock = pythread.PyThread_allocate_lock()
 
 cdef struct _QueuedRecord:
     const char *name
@@ -105,10 +123,13 @@ cdef _QueuedRecord *_queue_end = NULL
 cdef int _queue_size
 cdef bint _print_queue_size = False
 
+cdef char _last_message[1024] # For repeat check.
+cdef int _skip_count = 0
+
 cdef bint _push_record(_QueuedRecord *record) nogil:
     global _queue_start, _queue_end, _queue_size
     record.next = NULL
-    if not pythread.PyThread_acquire_lock(_lock, 1): # 1 -> wait
+    if not pythread.PyThread_acquire_lock(_queue_lock, 1): # 1 -> wait
         return False
 
     global _queue_size
@@ -124,23 +145,25 @@ cdef bint _push_record(_QueuedRecord *record) nogil:
     else:
         _queue_end.next = record
     _queue_end = record
-    pythread.PyThread_release_lock(_lock)
+    pythread.PyThread_release_lock(_queue_lock)
     return True
 
 cdef _QueuedRecord* _pop_record():
     global _queue_start, _queue_end, _queue_size
-    if not pythread.PyThread_acquire_lock(_lock, 1): # 1 -> wait
+    if not pythread.PyThread_acquire_lock(_queue_lock, 1): # 1 -> wait
         return NULL
     cdef _QueuedRecord *record = NULL
     if _queue_start:
         record = _queue_start
         _queue_start = record.next
         _queue_size -= 1
-    pythread.PyThread_release_lock(_lock)
+    pythread.PyThread_release_lock(_queue_lock)
     return record
 
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
+
+    global _skip_count
 
     # We have to filter it ourselves.
     # Note that FFmpeg's levels are backwards from Python's.
@@ -148,12 +171,28 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         return
 
     cdef bint inited = lib.Py_IsInitialized()
-    if not inited and not log_after_shutdown:
+    if not inited and not _print_after_shutdown:
         return
 
     cdef _QueuedRecord *record = <_QueuedRecord*>malloc(sizeof(_QueuedRecord))
     record.level = level
     lib.vsnprintf(record.message, 1023, format, args)
+
+    # Skip messages which are identical to the previous.
+    cdef bint is_repeated
+    if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
+        is_repeated = _skip_repeated and _last_message[0] and strncmp(_last_message, record.message, 1024) == 0
+        strcpy(_last_message, record.message)
+        if is_repeated:
+            _skip_count += 1
+        elif _skip_count:
+            # Now that we have hit the end of the repeat cycle, tally up how many.
+            lib.snprintf(record.message, 1023, "last message repeated %d times", _skip_count)
+            _skip_count = 0
+        pythread.PyThread_release_lock(_skip_lock)
+        if is_repeated:
+            free(record)
+            return
 
     # We need to do everything with the `void *ptr` in this function, since
     # the object it represents may be freed by the time the async_log_callback
@@ -209,7 +248,7 @@ cdef int async_log_callback(void *arg) except -1:
                 exc, type_, tb = sys.exc_info()
                 lib.PyErr_Display(exc, type_, tb)
 
-        elif log_after_shutdown:
+        elif _print_after_shutdown:
             fprintf(stderr, "av.logging: %s[%d]: %s",
                 record.name, record.level, record.message
             )
