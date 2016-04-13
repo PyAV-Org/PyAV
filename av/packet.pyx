@@ -1,11 +1,11 @@
+
 cimport libav as lib
 
 from av.bytesource cimport bytesource
 from av.utils cimport avrational_to_faction, to_avrational, err_check
-
+from libc.stdint cimport uint8_t
 
 cdef class Packet(Buffer):
-
     """A packet of encoded data within a :class:`~av.format.Stream`.
 
     This may, or may not include a complete object within a stream.
@@ -132,23 +132,26 @@ cdef class Packet(Buffer):
 
     property pts:
         def __get__(self):
-            if self.struct.pts != lib.AV_NOPTS_VALUE:
-                return self.struct.pts
-        def __set__(self, v):
+            return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts
+        def __set__(self,int v):
             if v is None:
                 self.struct.pts = lib.AV_NOPTS_VALUE
             else:
                 self.struct.pts = v
-
     property dts:
         def __get__(self):
-            if self.struct.dts != lib.AV_NOPTS_VALUE:
-                return self.struct.dts
-        def __set__(self, v):
+            return None if self.struct.dts == lib.AV_NOPTS_VALUE else self.struct.dts
+        def __set__(self,int v):
             if v is None:
                 self.struct.dts = lib.AV_NOPTS_VALUE
             else:
                 self.struct.dts = v
+
+    property payload:
+        def __set__(self,uint8_t[::1] payload):
+            self.struct.data = &payload[0]
+            self.struct.size = len(payload)
+
 
     property pos:
         def __get__(self): return None if self.struct.pos == -1 else self.struct.pos
