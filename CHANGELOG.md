@@ -4,6 +4,18 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 `y` as a minor change (i.e. backwards compatible features).
 
 
+0.3.1
+=====
+
+Minor:
+- `av.logging.set_log_after_shutdown` renamed to `set_print_after_shutdown`
+- Repeating log messages will be skipped, much like ffmpeg's does by default
+
+Fixes:
+- Fix memory leak in logging system when under heavy logging loads while
+  threading (#128 with help from @mkassner and @ksze)
+
+
 0.3.0
 =====
 
