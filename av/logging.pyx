@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from libc.stdlib cimport malloc, free
 from libc.stdio cimport printf, fprintf, stderr
+from cpython cimport pythread
 
 cimport libav as lib
 
@@ -90,15 +91,42 @@ def set_log_after_shutdown(v):
 # call to run in the main Python thread. That call dumps the message into the
 # Python logging system.
 
+cdef pythread.PyThread_type_lock _lock = pythread.PyThread_allocate_lock()
 
-cdef struct LogRequest:
+cdef struct _QueuedRecord:
+    const char *name
     int level
-    const char *item_name
     char message[1024]
-    bint handled
+    _QueuedRecord *next
 
-cdef LogRequest req
+cdef _QueuedRecord *_queue_start = NULL
+cdef _QueuedRecord *_queue_end = NULL
 
+cdef bint _push_record(_QueuedRecord *record) nogil:
+    global _queue_start, _queue_end
+    record.next = NULL
+    if not pythread.PyThread_acquire_lock(_lock, 1): # 1 -> wait
+        return False
+    if _queue_start == NULL:
+        _queue_start = record
+    else:
+        _queue_end.next = record
+    _queue_end = record
+    pythread.PyThread_release_lock(_lock)
+    return True
+
+cdef _QueuedRecord* _pop_record():
+    global _queue_start, _queue_end
+    if not pythread.PyThread_acquire_lock(_lock, 1): # 1 -> wait
+        return NULL
+    cdef _QueuedRecord *record = NULL
+    if _queue_start:
+        record = _queue_start
+        _queue_start = record.next
+    pythread.PyThread_release_lock(_lock)
+    return record
+
+cdef int count
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
 
@@ -107,9 +135,18 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     if level > log_level:
         return
 
+    global count
+    if count:
+        printf("already pending %d\n", count)
+    count += 1
+
     cdef bint inited = lib.Py_IsInitialized()
     if not inited and not log_after_shutdown:
         return
+
+    cdef _QueuedRecord *record = <_QueuedRecord*>malloc(sizeof(_QueuedRecord))
+    record.level = level
+    lib.vsnprintf(record.message, 1023, format, args)
 
     # We need to do everything with the `void *ptr` in this function, since
     # the object it represents may be freed by the time the async_log_callback
@@ -117,60 +154,64 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     cdef lib.AVClass *cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
     cdef char *item_name = NULL;
     if cls and cls.item_name:
-        # I'm not 100% on this, but a `const char*` should be static, and so
+        # I'm not 100% on this, but this should be static, and so
         # it doesn't matter if the AVClass that returned it vanishes or not.
-        item_name = cls.item_name(ptr)
+        record.name = cls.item_name(ptr)
 
-    lib.vsnprintf(req.message, 1023, format, args)
-
-    # This log came after Python shutdown.
-    if not inited:
+    if inited and _push_record(record):
+        # Schedule this to be called in the main Python thread. This does not always
+        # work, so a few logs might get delayed.
+        lib.Py_AddPendingCall(<void*>async_log_callback, NULL)
+    else:
+        # After Python shutdown, or the lock did not acquire.
         fprintf(stderr, "av.logging: %s[%d]: %s",
-            item_name, level, req.message
+            item_name, level, record.message
         )
+        free(record)
         return
 
-    # Schedule this to be called in the main Python thread. This does not always
-    # work, so we might lose a few logs. Whoops.
-    req.level = level
-    req.item_name = item_name
-    req.handled = 0
-    lib.Py_AddPendingCall(<void*>async_log_callback, NULL)
+
 
 cdef int async_log_callback(void *arg) except -1:
+
+    global count
 
     cdef int level
     cdef str logger_name
     cdef str item_name
 
-    # Sometimes a few logs can be pushed at the main thread before they are
-    # handled; this makes sure that the Py_AddPendingCall does not result in
-    # a single message being handled multiple times.
-    # TODO: Come up with some sort of queue that we can use that is thread-safe
-    # and requires no locks at all.
-    if req.handled:
-        return 0
-    req.handled = 1
+    cdef _QueuedRecord *record
+    cdef bint inited = lib.Py_IsInitialized()
 
-    if lib.Py_IsInitialized():
-        try:
-            level = level_map.get(req.level, 20)
-            item_name = req.item_name if req.item_name else ''
-            logger_name = 'libav.' + item_name if item_name else 'libav.generic'
-            logger = logging.getLogger(logger_name)
-            logger.log(level, req.message.strip())
-        except Exception as e:
-            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
-                req.item_name, req.level, req.message
+    while True:
+
+        record = _pop_record()
+        if record == NULL:
+            return 0
+
+        count -= 1
+
+        if inited:
+            try:
+                level = level_map.get(record.level, 20)
+                item_name = record.name if record.name else ''
+                logger_name = 'libav.' + item_name if item_name else 'libav.generic'
+                logger = logging.getLogger(logger_name)
+                logger.log(level, record.message.strip())
+            except Exception as e:
+                fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
+                    record.name, record.level, record.message
+                )
+                # For some reason lib.PyErr_PrintEx(0) won't work.
+                exc, type_, tb = sys.exc_info()
+                lib.PyErr_Display(exc, type_, tb)
+
+        elif log_after_shutdown:
+            fprintf(stderr, "av.logging: %s[%d]: %s",
+                record.name, record.level, record.message
             )
-            # For some reason lib.PyErr_PrintEx(0) won't work.
-            exc, type_, tb = sys.exc_info()
-            lib.PyErr_Display(exc, type_, tb)
 
-    elif log_after_shutdown:
-        fprintf(stderr, "av.logging: %s[%d]: %s",
-            req.item_name, req.level, req.message
-        )
+        free(record)
 
     return 0
 
