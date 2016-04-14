@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from libc.stdlib cimport malloc, free
 from libc.stdio cimport printf, fprintf, stderr
-from libc.string cimport strncmp, strcpy
+from libc.string cimport strncmp, strcpy, memcpy
 from cpython cimport pythread
 
 cimport libav as lib
@@ -112,29 +112,34 @@ def set_skip_repeated(v):
 cdef pythread.PyThread_type_lock _queue_lock = pythread.PyThread_allocate_lock()
 cdef pythread.PyThread_type_lock _skip_lock = pythread.PyThread_allocate_lock()
 
-cdef struct _QueuedRecord:
+cdef struct _Record:
     const char *name
     int level
     char message[1024]
-    _QueuedRecord *next
+    _Record *next
 
-cdef _QueuedRecord *_queue_start = NULL
-cdef _QueuedRecord *_queue_end = NULL
+cdef _Record *_queue_start = NULL
+cdef _Record *_queue_end = NULL
 cdef int _queue_size
 cdef bint _print_queue_size = False
 
-cdef char _last_message[1024] # For repeat check.
+cdef _Record _last_record # For repeat check.
 cdef int _skip_count = 0
 
-cdef bint _push_record(_QueuedRecord *record) nogil:
+cdef bint _push_record(_Record *src) nogil:
+    """Copies the given record, and puts it onto the queue."""
+
     global _queue_start, _queue_end, _queue_size
-    record.next = NULL
     if not pythread.PyThread_acquire_lock(_queue_lock, 1): # 1 -> wait
         return False
 
-    global _queue_size
+    cdef _Record *record = <_Record*>malloc(sizeof(_Record))
+    memcpy(record, src, sizeof(_Record))
+    record.next = NULL
+
     if _print_queue_size and _queue_size:
         if _queue_start == NULL:
+            # I've never seen it get here.
             fprintf(stderr, "av.logging has lost %d records!\n", _queue_size)
         else:
             fprintf(stderr, "av.logging queued %d records\n", _queue_size)
@@ -145,25 +150,45 @@ cdef bint _push_record(_QueuedRecord *record) nogil:
     else:
         _queue_end.next = record
     _queue_end = record
+
     pythread.PyThread_release_lock(_queue_lock)
     return True
 
-cdef _QueuedRecord* _pop_record():
+cdef bint _pop_record(_Record *dst):
+    """Copies the first record on the queue to the given pointer."""
+
     global _queue_start, _queue_end, _queue_size
     if not pythread.PyThread_acquire_lock(_queue_lock, 1): # 1 -> wait
-        return NULL
-    cdef _QueuedRecord *record = NULL
+        return False
+
+    cdef _Record *record = NULL
     if _queue_start:
         record = _queue_start
         _queue_start = record.next
         _queue_size -= 1
+
     pythread.PyThread_release_lock(_queue_lock)
-    return record
+
+    if record == NULL:
+        return False
+    
+    # This free is what makes this whole copying thing worth it, since it
+    # heavily simplifies a few of the lower functions, since their records can
+    # be on the stack, and the queue functions fully deal with free-ing memory.
+    # This has led to memory leaks in the past, so I'm okay with a little
+    # wasted memory copying.
+    memcpy(dst, record, sizeof(_Record))
+    free(record)
+    return True
 
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
 
     global _skip_count
+
+    # We need to do everything with the `void *ptr` in this function, since
+    # the object it represents may be freed by the time the async_log_callback
+    # is run by Python.
 
     # We have to filter it ourselves.
     # Note that FFmpeg's levels are backwards from Python's.
@@ -174,29 +199,11 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     if not inited and not _print_after_shutdown:
         return
 
-    cdef _QueuedRecord *record = <_QueuedRecord*>malloc(sizeof(_QueuedRecord))
+    cdef _Record record
     record.level = level
     lib.vsnprintf(record.message, 1023, format, args)
 
-    # Skip messages which are identical to the previous.
-    cdef bint is_repeated
-    if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
-        is_repeated = _skip_repeated and _last_message[0] and strncmp(_last_message, record.message, 1024) == 0
-        strcpy(_last_message, record.message)
-        if is_repeated:
-            _skip_count += 1
-        elif _skip_count:
-            # Now that we have hit the end of the repeat cycle, tally up how many.
-            lib.snprintf(record.message, 1023, "last message repeated %d times", _skip_count)
-            _skip_count = 0
-        pythread.PyThread_release_lock(_skip_lock)
-        if is_repeated:
-            free(record)
-            return
-
-    # We need to do everything with the `void *ptr` in this function, since
-    # the object it represents may be freed by the time the async_log_callback
-    # is run by Python.
+    # Get the name.
     cdef lib.AVClass *cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
     cdef char *item_name = NULL;
     if cls and cls.item_name:
@@ -204,7 +211,27 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         # it doesn't matter if the AVClass that returned it vanishes or not.
         record.name = cls.item_name(ptr)
 
-    if inited and _push_record(record):
+    # Skip messages which are identical to the previous.
+    cdef bint is_repeated
+    if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
+        is_repeated = _skip_repeated and _last_record.message[0] and strncmp(_last_record.message, record.message, 1024) == 0
+        if is_repeated:
+            _skip_count += 1
+        elif _skip_count:
+            # Now that we have hit the end of the repeat cycle, tally up how many.
+            # We are both abusing the _last_record (assuming that the next message
+            # won't also be about repeated messages), but also assuming that putting
+            # the message onto the queue will get it seen.
+            lib.snprintf(_last_record.message, 1023, "last message repeated %d times", _skip_count)
+            _push_record(&_last_record)
+            _skip_count = 0
+        memcpy(&_last_record, &record, sizeof(_Record))
+        pythread.PyThread_release_lock(_skip_lock)
+        if is_repeated:
+            return
+
+
+    if inited and _push_record(&record):
         # Schedule this to be called in the main Python thread. This does not always
         # work, so a few logs might get delayed.
         lib.Py_AddPendingCall(<void*>async_log_callback, NULL)
@@ -213,7 +240,6 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         fprintf(stderr, "av.logging: %s[%d]: %s",
             item_name, level, record.message
         )
-        free(record)
         return
 
 
@@ -224,14 +250,10 @@ cdef int async_log_callback(void *arg) except -1:
     cdef str logger_name
     cdef str item_name
 
-    cdef _QueuedRecord *record
+    cdef _Record record
     cdef bint inited = lib.Py_IsInitialized()
 
-    while True:
-
-        record = _pop_record()
-        if record == NULL:
-            return 0
+    while _pop_record(&record):
 
         if inited:
             try:
@@ -253,7 +275,6 @@ cdef int async_log_callback(void *arg) except -1:
                 record.name, record.level, record.message
             )
 
-        free(record)
 
     return 0
 
