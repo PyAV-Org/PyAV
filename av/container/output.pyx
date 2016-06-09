@@ -69,6 +69,11 @@ cdef class OutputContainer(Container):
         # Copy from the template.
         if template is not None:
             lib.avcodec_copy_context(codec_context, template._codec_context)
+            # Reset the codec tag assuming we are remuxing.
+            codec_context.codec_tag = 0
+            # Copy flags assuming we are remuxing.s
+            if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+                codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
 
         # Now lets set some more sane video defaults
         elif codec.type == lib.AVMEDIA_TYPE_VIDEO:

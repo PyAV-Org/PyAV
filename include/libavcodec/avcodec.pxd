@@ -90,7 +90,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         
         AVMediaType codec_type
         char codec_name[32]
+        unsigned int codec_tag
         AVCodecID codec_id
+
         int flags
         int thread_count
         
