@@ -53,16 +53,24 @@ for i, stream in enumerate(input_.streams):
         (stream.type == b'subtitle' and not args.nosubtitle) or
         (stream.type == b'data' and not args.nodata)
     ):
-        in_to_out[stream] = output.add_stream(template=stream)
+        in_to_out[stream] = ostream = output.add_stream(template=stream)
 
 for i, packet in enumerate(input_.demux(in_to_out.keys())):
+
     if args.count and i >= args.count:
         break
     print '%02d %r' % (i, packet)
     print '\tin: ', packet.stream
 
-    packet.dts = packet.dts or 0
+    if packet.dts is None:
+        continue
+
     packet.stream = in_to_out[packet.stream]
+
     print '\tout:', packet.stream
+
     output.mux(packet)
+
+
+output.close()
 
