@@ -85,7 +85,14 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         int64_t a,
         int64_t b,
         int64_t c,
-        AVRounding r
+        int r # should be AVRounding, but then we can't use bitwise logic.
+    )
+
+    cdef int64_t av_rescale_q_rnd(
+        int64_t a,
+        AVRational bq,
+        AVRational cq,
+        int r # should be AVRounding, but then we can't use bitwise logic.
     )
 
     cdef int64_t av_rescale(
