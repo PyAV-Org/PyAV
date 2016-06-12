@@ -5,12 +5,9 @@ cimport libav as lib
 
 cdef class Codec(object):
     
-    cdef lib.AVCodec *eptr
-    cdef lib.AVCodec *dptr
+    cdef lib.AVCodec *ptr
     cdef lib.AVCodecDescriptor *desc
-    
-    cdef lib.AVCodec* ptr(self)
-    cdef uint64_t capabilities(self)
+    cdef readonly bint is_encoder
 
 
 
