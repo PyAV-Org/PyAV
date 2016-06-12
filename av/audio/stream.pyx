@@ -102,7 +102,7 @@ cdef class AudioStream(Stream):
             if fifo_frame.ptr.pts != lib.AV_NOPTS_VALUE:
                 fifo_frame.ptr.pts = lib.av_rescale_q(
                     fifo_frame.ptr.pts, 
-                    fifo_frame.time_base,
+                    fifo_frame._time_base,
                     self._codec_context.time_base
                 )
             else:

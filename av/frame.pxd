@@ -7,8 +7,8 @@ cdef class Frame(object):
 
     cdef lib.AVFrame *ptr
 
-    # Attributes from the stream.
-    cdef lib.AVRational time_base
+    # Attributes copied from the stream.
+    cdef lib.AVRational _time_base
     cdef readonly int index
 
     cdef readonly tuple planes

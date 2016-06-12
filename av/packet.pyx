@@ -1,4 +1,5 @@
 cimport libav as lib
+from av.utils cimport avrational_to_faction
 
 
 cdef class Packet(object):
@@ -61,6 +62,15 @@ cdef class Packet(object):
 
             self.stream = value
             self.struct.stream_index = value.index
+
+    property time_base:
+
+        def __get__(self):
+            return avrational_to_faction(&self._time_base)
+
+        def __set__(self, value):
+            self._time_base.num = value.numerator
+            self._time_base.den = value.denominator
 
     property pts:
         def __get__(self): return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts

@@ -3,6 +3,7 @@ from libc.limits cimport INT_MAX
 from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 
 from av.plane cimport Plane
+from av.utils cimport avrational_to_faction
 
 
 cdef class Frame(object):
@@ -50,16 +51,16 @@ cdef class Frame(object):
             if self.ptr.pts == lib.AV_NOPTS_VALUE:
                 return None
             else:
-                return float(self.ptr.pts) * self.time_base.num / self.time_base.den
+                return float(self.ptr.pts) * self._time_base.num / self._time_base.den
 
     property time_base:
 
         def __get__(self):
-            return self.time_base
+            return avrational_to_faction(&self._time_base)
 
         def __set__(self, value):
-            self.time_base.num = value.numerator
-            self.time_base.den = value.denominator
+            self._time_base.num = value.numerator
+            self._time_base.den = value.denominator
 
     cdef _init_planes(self, cls=Plane):
 
@@ -86,7 +87,7 @@ cdef class Frame(object):
 
     cdef _copy_attributes_from(self, Frame other):
         self.index = other.index
-        self.time_base = other.time_base
+        self._time_base = other._time_base
         if self.ptr and other.ptr:
             self.ptr.pkt_pts = other.ptr.pkt_pts
             self.ptr.pkt_dts = other.ptr.pkt_dts

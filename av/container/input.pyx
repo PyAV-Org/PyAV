@@ -101,6 +101,8 @@ cdef class InputContainer(Container):
                     # TODO: find better way to handle this
                     if packet.struct.stream_index < len(self.streams):
                         packet.stream = self.streams[packet.struct.stream_index]
+                        # Keep track of this so that remuxing is easier.
+                        packet._time_base = packet.stream._stream.time_base
                         yield packet
 
             # Flush!
