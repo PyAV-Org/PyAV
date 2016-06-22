@@ -21,11 +21,11 @@ cdef class FilterPad(object):
 
     property name:
         def __get__(self):
-            return self.ptr.name
+            return lib.avfilter_pad_get_name(self.base_ptr, self.index)
     
     property type:
         def __get__(self):
-            return media_type_to_string(self.ptr.type)
+            return media_type_to_string(lib.avfilter_pad_get_type(self.base_ptr, self.index))
 
 
 cdef class FilterContextPad(FilterPad):
@@ -67,10 +67,10 @@ cdef class FilterContextPad(FilterPad):
                 pads = context.inputs
             
             # We need to find it by looking, because there is no
-            cdef FilterPad pad
-            for pad in pads:
-                if pad.ptr == c_pad:
-                    return pad
+            # cdef FilterPad pad
+            # for pad in pads:
+                # if pad.base_ptr[pad.index] == c_pad:
+                    # return pad
             raise RuntimeError('could not find matching pad')
 
 
@@ -83,14 +83,14 @@ cdef tuple alloc_filter_pads(Filter filter, lib.AVFilterPad *ptr, bint is_input,
     
     cdef int i = 0
     cdef FilterPad pad
-    while ptr[i].name:
+    while lib.avfilter_pad_get_name(ptr, i):
         pad = FilterPad(_cinit_sentinel) if context is None else FilterContextPad(_cinit_sentinel)
         pads.append(pad)
         pad.filter = filter
         pad.context = context
         pad.is_input = is_input
+        pad.base_ptr = ptr
         pad.index = i
-        pad.ptr = &ptr[i]
         i += 1
     
     return tuple(pads)

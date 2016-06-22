@@ -8,10 +8,11 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef void avfilter_register_all()
 
     cdef struct AVFilterPad:
+        # This struct is opaque.
+        pass
 
-        const char *name
-        AVMediaType type
-
+    const char* avfilter_pad_get_name(const AVFilterPad *pads, int index)
+    AVMediaType avfilter_pad_get_type(const AVFilterPad *pads, int index)
 
     cdef struct AVFilter:
 

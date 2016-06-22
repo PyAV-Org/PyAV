@@ -11,7 +11,7 @@ cdef class FilterPad(object):
     cdef bint is_input
     cdef int index
 
-    cdef lib.AVFilterPad *ptr
+    cdef lib.AVFilterPad *base_ptr
 
 
 cdef class FilterContextPad(FilterPad):
