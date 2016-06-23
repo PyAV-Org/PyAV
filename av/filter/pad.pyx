@@ -1,4 +1,5 @@
 from av.utils cimport media_type_to_string
+from av.filter.link cimport wrap_filter_link
 
 
 cdef object _cinit_sentinel = object()
@@ -18,6 +19,10 @@ cdef class FilterPad(object):
             self.name,
             self.type,
         )
+
+    property is_output:
+        def __get__(self):
+            return not self.is_input
 
     property name:
         def __get__(self):
@@ -41,37 +46,22 @@ cdef class FilterContextPad(FilterPad):
             self.type,
         )
     
-    property linked_to:
+    property link:
         def __get__(self):
-            
+            if self._link:
+                return self._link
             cdef lib.AVFilterLink **links = self.context.ptr.inputs if self.is_input else self.context.ptr.outputs
             cdef lib.AVFilterLink *link = links[self.index]
             if not link:
                 return
-            
-            # Get the "other" context.
-            cdef lib.AVFilterContext *c_context
-            if self.is_input:
-                c_context = link.src
-            else:
-                c_context = link.dst
-            cdef FilterContext context = self.context.graph._context_by_ptr[<long>c_context]
-            
-            # Get the "other" pad.
-            cdef lib.AVFilterPad *c_pad
-            if self.is_input:
-                c_pad = link.srcpad
-                pads = context.outputs
-            else:
-                c_pad = link.dstpad
-                pads = context.inputs
-            
-            # We need to find it by looking, because there is no
-            # cdef FilterPad pad
-            # for pad in pads:
-                # if pad.base_ptr[pad.index] == c_pad:
-                    # return pad
-            raise RuntimeError('could not find matching pad')
+            self._link = wrap_filter_link(self.context.graph, link)
+            return self._link
+
+    property linked:
+        def __get__(self):
+            cdef FilterLink link = self.link
+            if link:
+                return link.input if self.is_input else link.output
 
 
 cdef tuple alloc_filter_pads(Filter filter, lib.AVFilterPad *ptr, bint is_input, FilterContext context=None):

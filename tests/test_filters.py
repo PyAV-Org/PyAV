@@ -6,16 +6,26 @@ from av.filter import Graph, Filter
 
 class TestFilters(TestCase):
 
-    def test_filter_descriptors(self):
+    def test_filter_descriptor(self):
 
         f = Filter('mandelbrot')
         self.assertEqual(f.name, 'mandelbrot')
         self.assertEqual(f.description, 'Render a Mandelbrot fractal.')
+        self.assertFalse(f.dynamic_inputs)
         self.assertEqual(len(f.inputs), 0)
+        self.assertFalse(f.dynamic_outputs)
         self.assertEqual(len(f.outputs), 1)
         self.assertEqual(f.outputs[0].name, 'default')
         self.assertEqual(f.outputs[0].type, 'video')
     
+    def test_dynamic_filter_descriptor(self):
+
+        f = Filter('extractplanes')
+        self.assertFalse(f.dynamic_inputs)
+        self.assertEqual(len(f.inputs), 1)
+        self.assertTrue(f.dynamic_outputs)
+        self.assertEqual(len(f.outputs), 0)
+
     def test_generator_graph(self):
         
         graph = Graph()
@@ -25,7 +35,9 @@ class TestFilters(TestCase):
         mandelbrot.link(0, lutrgb, 0)
         lutrgb.link(0, sink, 0)
         
-        self.assertIs(mandelbrot.outputs[0].linked_to, lutrgb.inputs[0])
+        # pads and links
+        self.assertIs(mandelbrot.outputs[0].link.output, lutrgb.inputs[0])
+        self.assertIs(lutrgb.inputs[0].link.input, mandelbrot.outputs[0])
         
         frame = sink.pull()
         self.assertIsInstance(frame, VideoFrame)

@@ -2,6 +2,7 @@ cimport libav as lib
 
 from av.filter.context cimport FilterContext
 from av.filter.filter cimport Filter
+from av.filter.link cimport FilterLink
 
 
 cdef class FilterPad(object):
@@ -15,7 +16,8 @@ cdef class FilterPad(object):
 
 
 cdef class FilterContextPad(FilterPad):
-    pass
+
+    cdef FilterLink _link
 
 
 cdef tuple alloc_filter_pads(Filter, lib.AVFilterPad *ptr, bint is_input, FilterContext context=?)
