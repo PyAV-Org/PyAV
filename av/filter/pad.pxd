@@ -7,10 +7,10 @@ from av.filter.link cimport FilterLink
 
 cdef class FilterPad(object):
 
-    cdef Filter filter
-    cdef FilterContext context
-    cdef bint is_input
-    cdef int index
+    cdef readonly Filter filter
+    cdef readonly FilterContext context
+    cdef readonly bint is_input
+    cdef readonly int index
 
     cdef lib.AVFilterPad *base_ptr
 

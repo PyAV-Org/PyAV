@@ -32,8 +32,8 @@ class TestFilters(TestCase):
         mandelbrot = graph.add('mandelbrot')
         lutrgb = graph.add('lutrgb', "r=maxval+minval-val:g=maxval+minval-val:b=maxval+minval-val", name='invert')
         sink = graph.add('buffersink')
-        mandelbrot.link(0, lutrgb, 0)
-        lutrgb.link(0, sink, 0)
+        mandelbrot.link_to(lutrgb)
+        lutrgb.link_to(sink)
         
         # pads and links
         self.assertIs(mandelbrot.outputs[0].link.output, lutrgb.inputs[0])
@@ -43,6 +43,28 @@ class TestFilters(TestCase):
         self.assertIsInstance(frame, VideoFrame)
         frame.to_image().save('sandbox/mandelbrot2.png')
     
+    def test_auto_find_sink(self):
+
+        graph = Graph()
+        mandelbrot = graph.add('mandelbrot')
+        mandelbrot.link_to(graph.add('buffersink'))
+        graph.configure()
+
+        frame = graph.pull()
+        frame.to_image().save('sandbox/mandelbrot3.png')
+
+    def test_delegate_sink(self):
+
+        graph = Graph()
+        mandelbrot = graph.add('mandelbrot')
+        mandelbrot.link_to(graph.add('buffersink'))
+        graph.configure()
+
+        print mandelbrot.outputs
+        
+        frame = mandelbrot.pull()
+        frame.to_image().save('sandbox/mandelbrot4.png')
+
     def test_haldclut_graph(self):
         
         return

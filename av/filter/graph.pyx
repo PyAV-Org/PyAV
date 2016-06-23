@@ -1,6 +1,6 @@
 from libc.string cimport memcpy
 
-from av.filter.context cimport FilterContext, make_filter_context
+from av.filter.context cimport FilterContext, wrap_filter_context
 from av.filter.filter cimport Filter
 from av.utils cimport err_check
 from av.video.frame cimport VideoFrame, alloc_video_frame
@@ -14,6 +14,7 @@ cdef class Graph(object):
         self._name_counts = {}
         self._context_by_ptr = {}
         self._context_by_name = {}
+        self._context_by_type = {}
 
     def __dealloc__(self):
         if self.ptr:
@@ -28,10 +29,19 @@ cdef class Graph(object):
         else:
             return name
     
-    cpdef configure(self, bint force=False):
-        if force or not self.configured:
-            err_check(lib.avfilter_graph_config(self.ptr, NULL))
-            self.configured = True
+    cpdef configure(self, bint auto_buffer=True, bint force=False):
+        if self.configured and not force:
+            return
+
+        # if auto_buffer:
+        #     for ctx in self._context_by_ptr.itervalues():
+        #         for in_ in ctx.inputs:
+        #             if not in_.link:
+        #                 if in_.type == 'video':
+        #                     pass
+
+        err_check(lib.avfilter_graph_config(self.ptr, NULL))
+        self.configured = True
     
     # def parse_string(self, str filter_str):
         # err_check(lib.avfilter_graph_parse2(self.ptr, filter_str, &self.inputs, &self.outputs))
@@ -57,25 +67,27 @@ cdef class Graph(object):
 
     def add(self, filter, args=None, **kwargs):
         
-        cdef Filter c_filter
+        cdef Filter cy_filter
         if isinstance(filter, basestring):
-            c_filter = Filter(filter)
+            cy_filter = Filter(filter)
         elif isinstance(filter, Filter):
-            c_filter = filter
+            cy_filter = filter
         else:
             raise TypeError("filter must be a string or Filter")
         
-        cdef str name = self._get_unique_name(kwargs.pop('name', None) or c_filter.name)
+        cdef str name = self._get_unique_name(kwargs.pop('name', None) or cy_filter.name)
         
-        cdef lib.AVFilterContext *ptr = lib.avfilter_graph_alloc_filter(self.ptr, c_filter.ptr, name)
+        cdef lib.AVFilterContext *ptr = lib.avfilter_graph_alloc_filter(self.ptr, cy_filter.ptr, name)
         if not ptr:
             raise RuntimeError("Could not allocate AVFilterContext")
-        cdef FilterContext ctx = wrap_filter_context(self, c_filter, ptr)
+        cdef FilterContext ctx = wrap_filter_context(self, cy_filter, ptr)
         ctx.init(args, **kwargs)
         
+        # We need to find these by a pile of different ways.
         self._context_by_ptr[<long>ctx.ptr] = ctx
         self._context_by_name[name] = ctx
-        
+        self._context_by_type.setdefault(cy_filter.name, []).append(ctx)
+
         return ctx
     
     def add_buffer(self, template=None, width=None, height=None, format=None, name=None):
@@ -102,4 +114,30 @@ cdef class Graph(object):
         )
         
         return self.add('buffer', args, name=name)
+
+    def push(self, frame):
+
+        if isinstance(frame, VideoFrame):
+            contexts = self._context_by_type.get('buffer', [])
+        else:
+            raise ValueError('can only push VideoFrame', type(frame))
+
+        if len(contexts) != 1:
+            raise ValueError('can only auto-push with single buffer; found %s' % len(contexts))
+        
+        contexts[0].push(frame)
+
+    def pull(self):
+
+        vsinks = self._context_by_type.get('buffersink', [])
+        asinks = self._context_by_type.get('abuffersink', [])
+
+        nsinks = len(vsinks) + len(asinks)
+        if nsinks != 1:
+            raise ValueError('can only auto-pull with single sink; found %s' % nsinks)
+
+        return (vsinks or asinks)[0].pull()
+
+
+
 

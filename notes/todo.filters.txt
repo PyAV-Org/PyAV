@@ -6,8 +6,8 @@ API:
             - create an instance of the filter
             - autogen a name if not given one
             - link up inputs and outputs if given
-        graph.push(frame) -> pushes into a buffer, if there is only one buffer
-        graph.pull() -> pulls from a buffer, if there is only one buffer
+        √ graph.push(frame) -> pushes into a buffer, if there is only one buffer
+        √ graph.pull() -> pulls from a buffer, if there is only one buffer
         graph.process(frame) -> push, followed by pull
 
     Filter is a filter descriptor.

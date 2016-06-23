@@ -37,7 +37,7 @@ cdef class FilterContext(object):
         def __get__(self):
             if self.ptr.name != NULL:
                 return self.ptr.name
-    
+
     property inputs:
         def __get__(self):
             if self._inputs is None:
@@ -72,13 +72,21 @@ cdef class FilterContext(object):
         if dict_:
             raise ValueError('unused config: %s' % ', '.join(sorted(dict_)))
     
-    def link(self, int output_idx, FilterContext input_, int input_idx):
+    def link_to(self, FilterContext input_, int output_idx=0, int input_idx=0):
         err_check(lib.avfilter_link(self.ptr, output_idx, input_.ptr, input_idx))
     
     def push(self, Frame frame):
-        if self.filter.name != 'buffer':
-            raise RuntimeError('cannot push on %s' % self.filter.name)
-        err_check(lib.av_buffersrc_write_frame(self.ptr, frame.ptr))
+    
+        if self.filter.name in ('abuffer', 'buffer'):
+            err_check(lib.av_buffersrc_write_frame(self.ptr, frame.ptr))
+            return
+
+        # Delegate to the input.
+        if len(self.inputs) != 1:
+            raise ValueError('cannot delegate push without single input; found %d' % len(self.inputs))
+        if not self.inputs[0].link:
+            raise ValueError('cannot delegate push without linked input')
+        self.inputs[0].linked.context.push(frame)
     
     def pull(self):
         
@@ -88,8 +96,12 @@ cdef class FilterContext(object):
         elif self.filter.name == 'abuffersink':
             frame = alloc_audio_frame()
         else:
-            # TODO: defer this request to our inputs.
-            raise RuntimeError('cannot pull on %s' % self.filter.name)
+            # Delegate to the output.
+            if len(self.outputs) != 1:
+                raise ValueError('cannot delegate pull without single output; found %d' % len(self.outputs))
+            if not self.outputs[0].link:
+                raise ValueError('cannot delegate pull without linked output')
+            return self.outputs[0].linked.context.pull()
         
         self.graph.configure()
         
