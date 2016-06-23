@@ -16,5 +16,5 @@ cdef class FilterContext(object):
     cdef bint inited
 
     
-cdef FilterContext make_filter_context()
+cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterContext *ptr)
 

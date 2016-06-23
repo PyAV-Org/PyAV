@@ -67,13 +67,10 @@ cdef class Graph(object):
         
         cdef str name = self._get_unique_name(kwargs.pop('name', None) or c_filter.name)
         
-        cdef FilterContext ctx = make_filter_context()
-        ctx.graph = self
-        ctx.filter = c_filter
-        ctx.ptr = lib.avfilter_graph_alloc_filter(self.ptr, c_filter.ptr, name)
-        if not ctx.ptr:
+        cdef lib.AVFilterContext *ptr = lib.avfilter_graph_alloc_filter(self.ptr, c_filter.ptr, name)
+        if not ptr:
             raise RuntimeError("Could not allocate AVFilterContext")
-        
+        cdef FilterContext ctx = wrap_filter_context(self, c_filter, ptr)
         ctx.init(args, **kwargs)
         
         self._context_by_ptr[<long>ctx.ptr] = ctx

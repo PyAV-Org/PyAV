@@ -12,8 +12,12 @@ from av.video.frame cimport VideoFrame, alloc_video_frame
 cdef object _cinit_sentinel = object()
 
 
-cdef FilterContext make_filter_context():
-    return FilterContext(_cinit_sentinel)
+cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterContext *ptr):
+    cdef FilterContext self = FilterContext(_cinit_sentinel)
+    self.graph = graph
+    self.filter = filter
+    self.ptr = ptr
+    return self
 
 
 cdef class FilterContext(object):
@@ -29,6 +33,11 @@ cdef class FilterContext(object):
             id(self),
         )
     
+    property name:
+        def __get__(self):
+            if self.ptr.name != NULL:
+                return self.ptr.name
+    
     property inputs:
         def __get__(self):
             if self._inputs is None:
@@ -41,12 +50,6 @@ cdef class FilterContext(object):
                 self._outputs = alloc_filter_pads(self.filter, self.ptr.output_pads, False, self)
             return self._outputs
     
-    property name:
-        def __get__(self):
-            if not self.ptr:
-                raise RuntimeError('no pointer')
-            if self.ptr.name != NULL:
-                return self.ptr.name
     
     def init(self, args=None, **kwargs):
         
