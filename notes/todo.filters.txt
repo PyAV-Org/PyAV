@@ -1,11 +1,14 @@
 API:
     
     Graph contains everything.
-
         ~ graph.add(filter, options={}, name=None, inputs=None, outputs=None)
             - create an instance of the filter
             - autogen a name if not given one
             - link up inputs and outputs if given
+        - graph.auto_buffer(template_frame)
+        - graph.auto_sink()
+        - graph.configure(auto_buffer_template=frame) -> find the single video input
+          that has no buffer, and create it with the template
         √ graph.push(frame) -> pushes into a buffer, if there is only one buffer
         √ graph.pull() -> pulls from a buffer, if there is only one buffer
         graph.process(frame) -> push, followed by pull
@@ -16,17 +19,17 @@ API:
         √ filter.outputs -> FilterPadSet of outputs
 
     FilterContext is a filter instance.
-        
         √ ctx.name -> name of this instance
         √ ctx.filter -> Filter
         √ ctx.inputs -> FilterPadSet of input FilterContextPad
         √ ctx.outputs -> FilterPadSet of input FilterContextPad
-
-        ctx.link_to(dst, src_pad=None, dst_pad=None)
+        ~ ctx.link_to(dst, src_pad=None, dst_pad=None)
             - determines pads automatically
-
-        √ ctx.push(frame) -> buffers only
-        √ ctx.pull() -> buffersink only
+            - pads can be pads or indexes
+            - should be assume index 0, or check that there is only one input/output?
+            - should this be "link"??
+        √ ctx.push(frame) -> buffers only, or delegate to single input (which must be a buffer)
+        √ ctx.pull() -> buffersink only, or delegate to single output (which must be a buffer)
 
     FilterPad is a connection descriptor.
         √ pad.name -> name of the pad
@@ -35,17 +38,12 @@ API:
 
     FilterContextPad(FilterPad) for a FilterContext
         √ pad.context -> FilterContext
-        x pad.links -> list of FilterLink this is a part of
-            - will this auto-update?! if so, should it be a list, or tuple?
-              Maybe a custom class around collections.Sequence
-            - this doesn't seem great, since FFmpeg only allows a single link
-              to any given pad. A "split" filter needs to be used
-
         √ pad.link -> FilterLink
-        √ pad.linked -> FilterContext
+        ~ pad.linked -> FilterContextPad
+            OR should this be to a FilterContext??
 
     FilterLink is a link between two FilterContext's
-        link.width/height/format/etc
+        - link.width/height/format/etc
         √ link.input -> FilterContextPad
         √ link.output -> FilterContextPad
 
