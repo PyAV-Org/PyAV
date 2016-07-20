@@ -118,6 +118,7 @@ cdef class InputContainer(Container):
         cdef Packet packet
         cdef int ret
 
+        self.set_timeout(self.read_timeout)
         try:
 
             for i in range(self.ptr.nb_streams):
@@ -132,6 +133,7 @@ cdef class InputContainer(Container):
 
                 packet = Packet()
                 try:
+                    self.start_timeout()
                     with nogil:
                         ret = lib.av_read_frame(self.ptr, &packet.struct)
                     self.err_check(ret)
@@ -158,6 +160,7 @@ cdef class InputContainer(Container):
                     yield packet
 
         finally:
+            self.set_timeout(None)
             free(include_stream)
 
     def decode(self, *args, **kwargs):
