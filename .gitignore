@@ -3,6 +3,7 @@
 .DS_Store
 .nfs.*
 ._*
+.idea
 
 # Environment
 /.eggs

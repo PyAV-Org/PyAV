@@ -95,6 +95,8 @@ cdef class InputContainer(Container):
         cdef Packet packet
         cdef int ret
 
+        self.proxy.__set_callback_timeout__(self.read_timeout)
+
         try:
 
             for i in range(self.proxy.ptr.nb_streams):
@@ -109,6 +111,7 @@ cdef class InputContainer(Container):
 
                 packet = Packet()
                 try:
+                    self.proxy.__reset_start_time__()
                     with nogil:
                         ret = lib.av_read_frame(self.proxy.ptr, &packet.struct)
                     self.proxy.err_check(ret)

@@ -4,6 +4,11 @@ from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
 from av.stream cimport Stream
+from av.utils cimport timeval
+
+ctypedef struct cb_info:
+    int timeout
+    timeval start_time
 
 # Since there are multiple objects that need to refer to a valid context, we
 # need this intermediate proxy object so that there aren't any reference cycles
@@ -38,6 +43,7 @@ cdef class ContainerProxy(object):
 
     cdef int err_check(self, int value) except -1
 
+    cdef cb_info callback_info
 
 cdef class Container(object):
 
@@ -57,3 +63,7 @@ cdef class Container(object):
 
     cdef readonly str metadata_encoding
     cdef readonly str metadata_errors
+
+    cdef readonly int open_timeout
+    cdef readonly int read_timeout
+

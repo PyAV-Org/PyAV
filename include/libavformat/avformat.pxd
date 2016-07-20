@@ -142,6 +142,11 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     cdef AVInputFormat* av_iformat_next(AVInputFormat*)
     cdef AVOutputFormat* av_oformat_next(AVOutputFormat*)
 
+    # http://ffmpeg.org/doxygen/trunk/structAVIOInterruptCB.html
+    cdef struct AVIOInterruptCB:
+        int (*callback)(void*)
+        void *opaque
+
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
 
@@ -155,6 +160,8 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         AVIOContext *pb
 
         AVDictionary *metadata
+
+        AVIOInterruptCB interrupt_callback
 
         char filename
         int64_t start_time
