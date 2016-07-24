@@ -6,6 +6,20 @@ The Big Picture
 - High-level APIs
 
 
+Encoding/Decoding Without Streams
+=================================
+
+- See: http://ffmpeg.org/doxygen/trunk/decoding_encoding_8c-example.html
+- Some codecs need width/height/pix_fmt(??) before decoding, because that
+  isn't in the bitstream.
+- Some codecs need packets that contain exactly a frame, but some can deal with
+  streams.
+- It feels like we might need a mutable Packet
+  Have the packet retain it's original data/size, and appear to deplete as it
+  is consumed.
+- Parsers are interesting: https://www.ffmpeg.org/doxygen/trunk/structAVCodecParser.html
+
+
 Reference Counting
 ==================
 

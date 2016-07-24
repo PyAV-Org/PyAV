@@ -37,6 +37,10 @@ echo ./configure
     --disable-static \
     --enable-shared \
     --disable-doc \
+    --disable-optimizations \
+    --disable-mmx \
+    --disable-stripping \
+    --enable-debug=3 \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo

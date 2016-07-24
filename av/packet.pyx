@@ -1,8 +1,12 @@
 cimport libav as lib
+from libc.stdlib cimport malloc
+from libc.string cimport memcpy
+
+from av.bytesource cimport bytesource
 from av.utils cimport avrational_to_faction
 
 
-cdef class Packet(object):
+cdef class Packet(Buffer):
     
     """A packet of encoded data within a :class:`~av.format.Stream`.
 
@@ -10,21 +14,32 @@ cdef class Packet(object):
     :meth:`decode` must be called to extract encoded data.
 
     """
-    def __init__(self):
+    def __init__(self, input=None):
+        cdef ByteSource source = bytesource(input, True)
         with nogil:
             lib.av_init_packet(&self.struct)
-            self.struct.data = NULL
-            self.struct.size = 0
+            if source is not None:
+                self.struct.data = <unsigned char*>malloc(source.length)
+                memcpy(self.struct.data, source.ptr, source.length)
+                self.struct.size = source.length
+            else:
+                self.struct.data = NULL
+                self.struct.size = 0
 
     def __dealloc__(self):
-        with nogil: lib.av_free_packet(&self.struct)
+        with nogil:
+            if self.source is not None:
+                self.struct.data = NULL
+            # TODO: WTF happens with ref-counting?!
+            lib.av_free_packet(&self.struct)
     
     def __repr__(self):
-        return '<av.%s of #%d, dts=%s, pts=%s at 0x%x>' % (
+        return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
             self.__class__.__name__,
-            self.stream.index,
+            self.stream.index if self.stream else 0,
             self.dts,
             self.pts,
+            self.struct.size,
             id(self),
         )
     
@@ -33,6 +48,15 @@ cdef class Packet(object):
         return self.struct.size
     cdef void*  _buffer_ptr(self):
         return self.struct.data
+    cdef bint _buffer_writable(self):
+        return self.source is None
+
+    def copy(self):
+        raise NotImplementedError()
+        cdef Packet copy = Packet()
+        # copy.struct.size = self.struct.size
+        # copy.struct.data = NULL
+        return copy
 
     def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""

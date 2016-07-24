@@ -7,6 +7,15 @@ from av.descriptor cimport wrap_avclass
 cdef object _cinit_sentinel = object()
 
 
+
+cdef Codec wrap_codec(lib.AVCodec *ptr):
+    cdef Codec codec = Codec(_cinit_sentinel)
+    codec.ptr = ptr
+    codec.is_encoder = lib.av_codec_is_encoder(ptr)
+    codec._init()
+    return codec
+
+
 cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     # Not every flag exists in every version of FFMpeg and LibAV, so we
     # define them to 0.
@@ -31,9 +40,11 @@ cdef class Codec(object):
         else:
             raise ValueError('invalid mode; must be "r" or "w"', mode)
 
+        self._init(name)
+
+    cdef _init(self, name=None):
         if not self.ptr:
             raise ValueError('no codec %r' % name)
-
         self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
             raise RuntimeError('no descriptor for %r' % name) 
@@ -135,12 +146,6 @@ cdef class Codec(object):
     property text_sub:
         def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
-
-cdef class CodecContext(object):
-
-    def __cinit__(self, x):
-        if x is not _cinit_sentinel:
-            raise RuntimeError('cannot instantiate CodecContext')
 
 
 codecs_availible = set()

@@ -117,6 +117,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         float rc_max_available_vbv_use
         float rc_min_vbv_overflow_use
         
+        AVRational framerate
         AVRational time_base
         int ticks_per_frame
         
@@ -148,6 +149,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         
         # User Data
         void *opaque
+    
+    cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
+    cdef void avcodec_free_context(AVCodecContext **ctx)
     
     cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
