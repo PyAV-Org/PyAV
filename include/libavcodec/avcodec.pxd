@@ -90,7 +90,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         
         AVMediaType codec_type
         char codec_name[32]
+        unsigned int codec_tag
         AVCodecID codec_id
+
         int flags
         int thread_count
         
@@ -146,7 +148,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         
         # User Data
         void *opaque
-        
+    
+    cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
+
     cdef struct AVCodecDescriptor:
         AVCodecID id
         AVMediaType type

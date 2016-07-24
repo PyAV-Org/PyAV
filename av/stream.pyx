@@ -243,7 +243,7 @@ cdef class Stream(object):
         # is the way to go. The PTS from a packet is the correct one while
         # decoding, and it is copied to pkt_pts during creation of a frame.
         frame.ptr.pts = frame.ptr.pkt_pts
-        frame.time_base = self._stream.time_base
+        frame._time_base = self._stream.time_base
         frame.index = self._codec_context.frame_number - 1
 
     cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):

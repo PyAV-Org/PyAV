@@ -7,10 +7,26 @@ The Big Picture
 - Filters
 
 
-Remuxing Without Transcoding
-============================
+Uniform time
+============
 
-- See do_streamcopy in ffmpeg/ffmpeg.c for hints about how to proceed for remuxing.
+class Time():
+
+  # Tracks the last value set.
+  cdef bint is_rational
+
+  cdef AVRational base
+  cdef uint64_t i
+  cdef double d
+
+  def __int__(self):
+    # return i or transform d
+
+  def __float__(self):
+    # return d or transform i
+  
+  def rebase(self, new_base):
+    # Replace the base, and rescale i (if important)
 
 
 Encoding

@@ -134,7 +134,7 @@ cdef class VideoStream(Stream):
             if formated_frame.ptr.pts != lib.AV_NOPTS_VALUE:
                 formated_frame.ptr.pts = lib.av_rescale_q(
                     formated_frame.ptr.pts,
-                    formated_frame.time_base, #src
+                    formated_frame._time_base, #src
                     self._codec_context.time_base,
                 )
             
