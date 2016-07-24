@@ -39,7 +39,10 @@ cdef class FilterLink(object):
                     break
             else:
                 raise RuntimeError('could not find link in context')
-            ctx = self.graph._context_by_ptr[<long>cctx]
+            try:
+                ctx = self.graph._context_by_ptr[<long>cctx]
+            except KeyError:
+                raise RuntimeError('could not find context in graph', (cctx.name, cctx.filter.name))
             self._output = ctx.inputs[i]
             return self._output
 
