@@ -8,9 +8,9 @@ class TestFilters(TestCase):
 
     def test_filter_descriptor(self):
 
-        f = Filter('mandelbrot')
-        self.assertEqual(f.name, 'mandelbrot')
-        self.assertEqual(f.description, 'Render a Mandelbrot fractal.')
+        f = Filter('testsrc')
+        self.assertEqual(f.name, 'testsrc')
+        self.assertEqual(f.description, 'Generate test pattern.')
         self.assertFalse(f.dynamic_inputs)
         self.assertEqual(len(f.inputs), 0)
         self.assertFalse(f.dynamic_outputs)
@@ -20,7 +20,7 @@ class TestFilters(TestCase):
     
     def test_dynamic_filter_descriptor(self):
 
-        f = Filter('extractplanes')
+        f = Filter('split')
         self.assertFalse(f.dynamic_inputs)
         self.assertEqual(len(f.inputs), 1)
         self.assertTrue(f.dynamic_outputs)
@@ -29,15 +29,15 @@ class TestFilters(TestCase):
     def test_generator_graph(self):
         
         graph = Graph()
-        mandelbrot = graph.add('mandelbrot')
+        src = graph.add('testsrc')
         lutrgb = graph.add('lutrgb', "r=maxval+minval-val:g=maxval+minval-val:b=maxval+minval-val", name='invert')
         sink = graph.add('buffersink')
-        mandelbrot.link_to(lutrgb)
+        src.link_to(lutrgb)
         lutrgb.link_to(sink)
         
         # pads and links
-        self.assertIs(mandelbrot.outputs[0].link.output, lutrgb.inputs[0])
-        self.assertIs(lutrgb.inputs[0].link.input, mandelbrot.outputs[0])
+        self.assertIs(src.outputs[0].link.output, lutrgb.inputs[0])
+        self.assertIs(lutrgb.inputs[0].link.input, src.outputs[0])
         
         frame = sink.pull()
         self.assertIsInstance(frame, VideoFrame)
@@ -46,8 +46,8 @@ class TestFilters(TestCase):
     def test_auto_find_sink(self):
 
         graph = Graph()
-        mandelbrot = graph.add('mandelbrot')
-        mandelbrot.link_to(graph.add('buffersink'))
+        src = graph.add('testsrc')
+        src.link_to(graph.add('buffersink'))
         graph.configure()
 
         frame = graph.pull()
@@ -56,19 +56,19 @@ class TestFilters(TestCase):
     def test_delegate_sink(self):
 
         graph = Graph()
-        mandelbrot = graph.add('mandelbrot')
-        mandelbrot.link_to(graph.add('buffersink'))
+        src = graph.add('testsrc')
+        src.link_to(graph.add('buffersink'))
         graph.configure()
 
-        print mandelbrot.outputs
+        print src.outputs
         
-        frame = mandelbrot.pull()
+        frame = src.pull()
         frame.to_image().save('sandbox/mandelbrot4.png')
 
     def test_haldclut_graph(self):
         
-        return
-        
+        raise SkipTest()
+
         graph = Graph()
         
         img = Image.open(fate_suite('png1/lena-rgb24.png'))
@@ -79,7 +79,12 @@ class TestFilters(TestCase):
         hald_frame = VideoFrame.from_image(hald_img)
         hald_source = graph.add_buffer(hald_frame)
         
-        hald_filter = graph.add('haldclut')
+        try:
+            hald_filter = graph.add('haldclut')
+        except ValueError:
+            # Not in Libav.
+            raise SkipTest()
+
         sink = graph.add('buffersink')
         
         img_source.link(0, hald_filter, 0)
