@@ -71,9 +71,13 @@ cdef tuple alloc_filter_pads(Filter filter, lib.AVFilterPad *ptr, bint is_input,
     
     pads = []
     
+    # We need to be careful and check our bounds if we know what they are,
+    # since the arrays on a AVFilterContext are not NULL terminated.
     cdef int i = 0
+    cdef int count = (context.ptr.nb_inputs if is_input else context.ptr.nb_outputs) if context is not None else -1
+
     cdef FilterPad pad
-    while lib.avfilter_pad_get_name(ptr, i):
+    while (i < count or count < 0) and lib.avfilter_pad_get_name(ptr, i):
         pad = FilterPad(_cinit_sentinel) if context is None else FilterContextPad(_cinit_sentinel)
         pads.append(pad)
         pad.filter = filter
