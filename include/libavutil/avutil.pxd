@@ -31,7 +31,8 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         AV_ROUND_DOWN
         AV_ROUND_UP
         AV_ROUND_NEAR_INF
-        AV_ROUND_PASS_MINMAX
+        # This is nice, but only in FFMpeg:
+        # AV_ROUND_PASS_MINMAX
 
     cdef int AV_ERROR_MAX_STRING_SIZE
     cdef int AVERROR_EOF

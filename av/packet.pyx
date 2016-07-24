@@ -54,10 +54,10 @@ cdef class Packet(object):
             # Rescale times.
             cdef lib.AVStream *old = self.stream._stream
             cdef lib.AVStream *new = value._stream
-            self.struct.pts = lib.av_rescale_q_rnd(self.struct.pts, old.time_base, new.time_base,
-                lib.AV_ROUND_NEAR_INF | lib.AV_ROUND_PASS_MINMAX)
-            self.struct.dts = lib.av_rescale_q_rnd(self.struct.dts, old.time_base, new.time_base,
-                lib.AV_ROUND_NEAR_INF | lib.AV_ROUND_PASS_MINMAX)
+            if self.struct.pts != lib.AV_NOPTS_VALUE:
+                self.struct.pts = lib.av_rescale_q_rnd(self.struct.pts, old.time_base, new.time_base, lib.AV_ROUND_NEAR_INF)
+            if self.struct.dts != lib.AV_NOPTS_VALUE:
+                self.struct.dts = lib.av_rescale_q_rnd(self.struct.dts, old.time_base, new.time_base, lib.AV_ROUND_NEAR_INF)
             self.struct.duration = lib.av_rescale_q(self.struct.duration, old.time_base, new.time_base)
 
             self.stream = value
