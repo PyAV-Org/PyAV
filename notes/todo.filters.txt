@@ -1,0 +1,68 @@
+API:
+    
+    Graph contains everything.
+        ~ graph.add(filter, options={}, name=None, inputs=None, outputs=None)
+            - create an instance of the filter
+            - autogen a name if not given one
+            - link up inputs and outputs if given
+        - graph.auto_buffer(template_frame)
+        - graph.auto_sink()
+        - graph.configure(auto_buffer_template=frame) -> find the single video input
+          that has no buffer, and create it with the template
+        √ graph.push(frame) -> pushes into a buffer, if there is only one buffer
+        √ graph.pull() -> pulls from a buffer, if there is only one buffer
+        graph.process(frame) -> push, followed by pull
+
+    Filter is a filter descriptor.
+        √ filter.name -> name of the filter
+        √ filter.inputs -> FilterPadSet of inputs
+        √ filter.outputs -> FilterPadSet of outputs
+
+    FilterContext is a filter instance.
+        √ ctx.name -> name of this instance
+        √ ctx.filter -> Filter
+        √ ctx.inputs -> FilterPadSet of input FilterContextPad
+        √ ctx.outputs -> FilterPadSet of input FilterContextPad
+        ~ ctx.link_to(dst, src_pad=None, dst_pad=None)
+            - determines pads automatically
+            - pads can be pads or indexes
+            - should be assume index 0, or check that there is only one input/output?
+            - should this be "link"??
+        √ ctx.push(frame) -> buffers only, or delegate to single input (which must be a buffer)
+        √ ctx.pull() -> buffersink only, or delegate to single output (which must be a buffer)
+
+    FilterPad is a connection descriptor.
+        √ pad.name -> name of the pad
+        √ pad.type -> string type of the pad
+        √ pad.is_input/is_output
+
+    FilterContextPad(FilterPad) for a FilterContext
+        √ pad.context -> FilterContext
+        √ pad.link -> FilterLink
+        ~ pad.linked -> FilterContextPad
+            OR should this be to a FilterContext??
+
+    FilterLink is a link between two FilterContext's
+        - link.width/height/format/etc
+        √ link.input -> FilterContextPad
+        √ link.output -> FilterContextPad
+
+Examples
+    
+    clut = graph.add('clut', {...})
+    frame = graph.process(frame)
+
+    ###
+
+    src = graph.add('buffer')
+    inv = graph.add('invert')
+    
+    src.outputs[0].link_to(inv)
+    # or
+    src.link_to(inv, 0, 0)
+    # or
+    src.link_to(inv)
+
+    src.outputs[0].link.output is inv
+    src.outputs[0].linked is inv
+

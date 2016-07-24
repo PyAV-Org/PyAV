@@ -92,3 +92,7 @@ cdef class Frame(object):
             self.ptr.pkt_pts = other.ptr.pkt_pts
             self.ptr.pkt_dts = other.ptr.pkt_dts
             self.ptr.pts = other.ptr.pts
+    
+    cdef _init_properties(self):
+        pass # Dummy to match the API of the others.
+

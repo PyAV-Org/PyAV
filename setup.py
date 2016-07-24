@@ -320,7 +320,7 @@ class ConfigCommand(Command):
         errors = []
 
         # Get the config for the libraries that we require.
-        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libswscale':
+        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libavfilter', 'libswscale':
             config = get_library_config(name)
             if config:
                 update_extend(extension_extra, config)

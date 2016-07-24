@@ -3,7 +3,7 @@
 .DS_Store
 
 # Environment
-*.pyc
+.nfs.*
 /.eggs
 /tmp
 /vendor
@@ -12,6 +12,7 @@
 # Build products
 *.c
 *.egg-info
+*.pyc
 *.so
 /*.sdf
 /*.sln

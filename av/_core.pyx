@@ -7,6 +7,7 @@ lib.av_register_all()
 lib.avformat_network_init()
 lib.avdevice_register_all()
 lib.avcodec_register_all()
+lib.avfilter_register_all()
 
 # Exports.
 time_base = lib.AV_TIME_BASE
@@ -44,6 +45,11 @@ versions = {
         version=decode_version(lib.avdevice_version()),
         configuration=lib.avdevice_configuration(),
         license=lib.avdevice_license()
+    ),
+    'libavfilter': dict(
+        version=decode_version(lib.avfilter_version()),
+        configuration=lib.avfilter_configuration(),
+        license=lib.avfilter_license()
     ),
     'libavresample': dict(
         version=decode_version(lib.avresample_version()),
