@@ -9,6 +9,7 @@ from av.video.format cimport VideoFormat
 cdef class Graph(object):
 
     def __cinit__(self):
+
         self.ptr = lib.avfilter_graph_alloc()
         self.configured = False
         self._name_counts = {}
@@ -44,6 +45,9 @@ cdef class Graph(object):
 
         err_check(lib.avfilter_graph_config(self.ptr, NULL))
         self.configured = True
+
+        # We get auto-inserted stuff here.
+        self._auto_register()
     
     # def parse_string(self, str filter_str):
         # err_check(lib.avfilter_graph_parse2(self.ptr, filter_str, &self.inputs, &self.outputs))
@@ -87,7 +91,8 @@ cdef class Graph(object):
         self._register_context(ctx)
 
         # There might have been automatic contexts added (e.g. resamplers,
-        # fifos, and scalers).
+        # fifos, and scalers). It is more likely to see them after the graph
+        # is configured, but we wan't to be safe.
         self._auto_register()
 
         return ctx
@@ -102,13 +107,15 @@ cdef class Graph(object):
         cdef lib.AVFilterContext *c_ctx
         cdef Filter filter_
         cdef FilterContext py_ctx
+        # We assume that filters are never removed from the graph. At this
+        # point we don't expose that in the API, so we should be okay...
         for i in range(self._nb_filters_seen, self.ptr.nb_filters):
             c_ctx = self.ptr.filters[i]
             if <long>c_ctx in self._context_by_ptr:
                 continue
             filter_ = wrap_filter(c_ctx.filter)
             py_ctx = wrap_filter_context(self, filter_, c_ctx)
-            self._add(py_ctx)
+            self._register_context(py_ctx)
         self._nb_filters_seen = self.ptr.nb_filters
     
     def add_buffer(self, template=None, width=None, height=None, format=None, name=None):
