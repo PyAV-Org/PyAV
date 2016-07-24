@@ -1,7 +1,7 @@
 from libc.string cimport memcpy
 
 from av.filter.context cimport FilterContext, wrap_filter_context
-from av.filter.filter cimport Filter
+from av.filter.filter cimport Filter, wrap_filter
 from av.utils cimport err_check
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.format cimport VideoFormat
@@ -12,6 +12,8 @@ cdef class Graph(object):
         self.ptr = lib.avfilter_graph_alloc()
         self.configured = False
         self._name_counts = {}
+
+        self._nb_filters_seen = 0
         self._context_by_ptr = {}
         self._context_by_name = {}
         self._context_by_type = {}
@@ -78,15 +80,36 @@ cdef class Graph(object):
         cdef lib.AVFilterContext *ptr = lib.avfilter_graph_alloc_filter(self.ptr, cy_filter.ptr, name)
         if not ptr:
             raise RuntimeError("Could not allocate AVFilterContext")
+
+        # Manually construct this context (so we can return it).
         cdef FilterContext ctx = wrap_filter_context(self, cy_filter, ptr)
         ctx.init(args, **kwargs)
-        
-        # We need to find these by a pile of different ways.
-        self._context_by_ptr[<long>ctx.ptr] = ctx
-        self._context_by_name[name] = ctx
-        self._context_by_type.setdefault(cy_filter.name, []).append(ctx)
+        self._register_context(ctx)
+
+        # There might have been automatic contexts added (e.g. resamplers,
+        # fifos, and scalers).
+        self._auto_register()
 
         return ctx
+
+    cdef _register_context(self, FilterContext ctx):
+        self._context_by_ptr[<long>ctx.ptr] = ctx
+        self._context_by_name[ctx.ptr.name] = ctx
+        self._context_by_type.setdefault(ctx.filter.ptr.name, []).append(ctx)
+
+    cdef _auto_register(self):
+        cdef int i
+        cdef lib.AVFilterContext *c_ctx
+        cdef Filter filter_
+        cdef FilterContext py_ctx
+        for i in range(self._nb_filters_seen, self.ptr.nb_filters):
+            c_ctx = self.ptr.filters[i]
+            if <long>c_ctx in self._context_by_ptr:
+                continue
+            filter_ = wrap_filter(c_ctx.filter)
+            py_ctx = wrap_filter_context(self, filter_, c_ctx)
+            self._add(py_ctx)
+        self._nb_filters_seen = self.ptr.nb_filters
     
     def add_buffer(self, template=None, width=None, height=None, format=None, name=None):
 

@@ -9,3 +9,4 @@ cdef class Filter(object):
     cdef object _outputs
     
     
+cdef Filter wrap_filter(lib.AVFilter *ptr)

@@ -2,7 +2,8 @@
 cdef extern from "libavfilter/avfiltergraph.h" nogil:
     
     cdef struct AVFilterGraph:
-        pass
+        int nb_filters
+        AVFilterContext **filters
 
     cdef struct AVFilterInOut:
         char *name

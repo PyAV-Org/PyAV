@@ -3,9 +3,20 @@ cimport libav as lib
 from av.filter.pad cimport alloc_filter_pads
 
 
+cdef object _cinit_sentinel = object()
+
+
+cdef Filter wrap_filter(lib.AVFilter *ptr):
+    cdef Filter filter_ = Filter(_cinit_sentinel)
+    filter_.ptr = ptr
+    return filter_
+
+
 cdef class Filter(object):
 
     def __cinit__(self, name):
+        if name is _cinit_sentinel:
+            return
         if not isinstance(name, basestring):
             raise TypeError('takes a filter name as a string')
         self.ptr = lib.avfilter_get_by_name(name)
