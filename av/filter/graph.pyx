@@ -56,14 +56,12 @@ cdef class Graph(object):
         #     print 'out', output.pad_idx, (output.name if output.name != NULL else ''), output.filter_ctx.name, output.filter_ctx.filter.name
         #     output = output.next
 
-
-
-
-    def dump(self):
-        cdef char *buf = lib.avfilter_graph_dump(self.ptr, "")
-        cdef str ret = buf
-        lib.av_free(buf)
-        return ret
+    # NOTE: Only FFmpeg supports this.
+    # def dump(self):
+    #     cdef char *buf = lib.avfilter_graph_dump(self.ptr, "")
+    #     cdef str ret = buf
+    #     lib.av_free(buf)
+    #     return ret
 
     def add(self, filter, args=None, **kwargs):
         
