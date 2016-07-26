@@ -13,8 +13,10 @@ cdef class Packet(Buffer):
     cdef Stream stream
     cdef lib.AVPacket struct
 
-    # Attributes copied from the stream.
+    # We hold onto our own time_base because we may become isolated from
+    # our parent.
     cdef lib.AVRational _time_base
+    cdef int _retime(self, lib.AVRational, lib.AVRational) except -1
 
     cdef size_t _buffer_size(self)
     cdef void*  _buffer_ptr(self)

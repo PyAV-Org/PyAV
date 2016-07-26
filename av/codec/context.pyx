@@ -1,10 +1,11 @@
 from libc.stdint cimport uint8_t, int64_t
 from libc.string cimport memcpy
+from libc.stdlib cimport malloc, realloc, free
 from cpython cimport PyWeakref_NewRef
 
 cimport libav as lib
 
-from av.codec cimport Codec, wrap_codec
+from av.codec.codec cimport Codec, wrap_codec
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 
@@ -51,16 +52,27 @@ cdef class CodecContext(object):
         return lib.avcodec_is_open(self.ptr)
 
     cpdef open(self, bint strict=True):
+
         if lib.avcodec_is_open(self.ptr):
             if strict:
                 raise ValueError('is already open')
             return
+
+        # We might pass partial frames.
+        if self.codec.ptr.capabilities & lib.CODEC_CAP_TRUNCATED:
+            self.ptr.flags |= lib.CODEC_FLAG_TRUNCATED
+
         # TODO: Options
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, NULL))
 
     def __dealloc__(self):
         if self.ptr:
             lib.avcodec_close(self.ptr)
+        if self.parser:
+            lib.av_parser_close(self.parser)
+        if self.parse_buffer:
+            free(self.parse_buffer)
+
 
     def __repr__(self):
         return '<av.%s %s/%s at 0x%x>' % (
@@ -76,6 +88,66 @@ cdef class CodecContext(object):
     property name:
         def __get__(self):
             return self.codec.name
+
+    def parse(self, str input_, allow_stream=False):
+
+        if not self.parser:
+            self.parser = lib.av_parser_init(self.codec.ptr.id)
+        if not self.parser:
+            if allow_stream:
+                return [Packet(input_)]
+            else:
+                raise ValueError('no parser for %s' % self.codec.name)
+
+        cdef size_t new_buffer_size
+        cdef unsigned char *c_input
+        if input_ is not None:
+
+            # Make sure we have enough buffer.
+            new_buffer_size = self.parse_buffer_size + len(input_)
+            if new_buffer_size > self.parse_buffer_max_size:
+                self.parse_buffer = <unsigned char*>realloc(<void*>self.parse_buffer, new_buffer_size)
+                self.parse_buffer_max_size = new_buffer_size
+
+            # Copy to the end of the buffer.
+            c_input = input_ # for casting
+            memcpy(self.parse_buffer + self.parse_buffer_size, c_input, len(input_))
+            self.parse_buffer_size = new_buffer_size
+
+        cdef size_t base = 0
+        cdef size_t used = 0 # To signal to the while.
+        cdef Packet packet = None
+        packets = []
+
+        while base < self.parse_buffer_size:
+            packet = Packet()
+            with nogil:
+                used = lib.av_parser_parse2(
+                    self.parser,
+                    self.ptr,
+                    &packet.struct.data, &packet.struct.size,
+                    self.parse_buffer + base, self.parse_buffer_size - base,
+                    0, 0,
+                    self.parse_pos
+                )
+            err_check(used)
+
+            if packet.struct.size:
+                packets.append(packet)
+            if used:
+                self.parse_pos += used
+                base += used
+
+            if not (used or packet.struct.size):
+                break
+
+        if base:
+            # Shuffle the buffer.
+            memcpy(self.parse_buffer, self.parse_buffer + base, base)
+            self.parse_buffer_size -= base
+
+        return packets
+
 
     cpdef encode(self, Frame frame=None):
         pass

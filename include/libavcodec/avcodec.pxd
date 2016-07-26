@@ -40,6 +40,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef uint64_t CODEC_CAP_INTRA_ONLY
     cdef uint64_t CODEC_CAP_LOSSLESS
     
+    cdef uint64_t CODEC_FLAG_TRUNCATED
+    
     cdef int AV_PKT_FLAG_KEY
     
     cdef int FF_COMPLIANCE_VERY_STRICT
@@ -357,4 +359,32 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
     cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
     
+    
+    # === Parsers
+
+    cdef struct AVCodecParser:
+        int codec_ids[5]
+
+    cdef AVCodecParser* av_parser_next(AVCodecParser *c)
+
+    cdef struct AVCodecParserContext:
+        pass
+
+    cdef AVCodecParserContext *av_parser_init(int codec_id)
+    cdef int av_parser_parse2(
+        AVCodecParserContext *s,
+        AVCodecContext *avctx,
+        uint8_t **poutbuf, int *poutbuf_size,
+        const uint8_t *buf, int buf_size,
+        int64_t pts, int64_t dts,
+        int64_t pos
+    )
+    cdef int av_parser_change(
+        AVCodecParserContext *s,
+        AVCodecContext *avctx,
+        uint8_t **poutbuf, int *poutbuf_size,
+        const uint8_t *buf, int buf_size,
+        int keyframe
+    )
+    cdef void av_parser_close(AVCodecParserContext *s)
     

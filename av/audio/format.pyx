@@ -124,7 +124,6 @@ cdef class AudioFormat(object):
 
             if self.sample_fmt == lib.AV_SAMPLE_FMT_U8:
                 return 'u8'
-
             elif self.sample_fmt == lib.AV_SAMPLE_FMT_S16:
                 return 's16' + container_format_postfix
             elif self.sample_fmt == lib.AV_SAMPLE_FMT_S32:

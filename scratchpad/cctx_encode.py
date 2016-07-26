@@ -1,23 +1,25 @@
 import logging
 
-logging.basicConfig()
-
-
-import av
-from av.codeccontext import CodecContext
-from av.video import VideoFrame
 from PIL import Image, ImageFont, ImageDraw
 
+logging.basicConfig()
 
-cc = CodecContext.create('mpeg4', 'w')
+import av
+from av.codec import CodecContext
+from av.video import VideoFrame
+
+from tests.common import fate_suite
+
+
+cc = CodecContext.create('flv', 'w')
 print cc
 
-base_img = Image.open('tests/assets/lenna.png')
+base_img = Image.open(fate_suite('png1/lena-rgb24.png'))
 font = ImageFont.truetype("/System/Library/Fonts/Menlo.ttc", 15)
 
 
 
-fh = open('test.mp4', 'w')
+fh = open('test.flv', 'w')
 
 for i in range(30):
 

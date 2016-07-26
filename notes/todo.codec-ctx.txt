@@ -1,0 +1,126 @@
+
+Encoding/Decoding Without Streams
+=================================
+
+- See: http://ffmpeg.org/doxygen/trunk/decoding_encoding_8c-example.html
+- Some codecs need width/height/pix_fmt(??) before decoding, because that
+  isn't in the bitstream.
+- Some codecs need packets that contain exactly a frame, but some can deal with
+  streams.
+- It feels like we might need a mutable Packet
+  Have the packet retain it's original data/size, and appear to deplete as it
+  is consumed.
+- Parsers are interesting: https://www.ffmpeg.org/doxygen/trunk/structAVCodecParser.html
+
+- How to keep this in order:
+  
+  - Determine everything the existing streams do; each method, and the
+    main building blocks of those methods.
+  - Split up those blocks into the new stream and new context.
+
+
+- New API:
+
+  - Container
+      .streams -> StreamContainer
+
+  - Stream
+      .context -> CodecContext
+      .codec -> Codec
+      .mux()
+      .encode() -> CodecContext.encode()
+      .decode() -> CodecContext.decode()
+
+  - CodecContext
+      .encode(Frame) -> Packet
+      .decode(Packet) -> Frame
+
+  - Packet
+      ._retime(src_timebase, dst_timebase)
+  - Frame
+      ._retime(src_timebase, dst_timebase)
+
+
+
+
+
+OLD
+---
+
+Stream
+
+    def _init(container, stream):
+        * Reference container.
+        * Convert metadata for Python.
+        - if decoder:
+            - Find decoder codec.
+            - Open decoder context.
+        - else:
+            - Copy encoder codec.
+
+    def __dealloc__():
+        - Close codec.
+        - Free options (which are set elsewhere).
+
+    def decode(Packet, count):
+        - Basic mechanics around _decode_one(packet).
+
+    def seek():
+        * Proxy call to container.
+
+    def _setup_frame():
+        - Copy timing to the frame (after decode).
+
+
+VideoStream
+
+    def _init(container, stream):
+        - Build video format object.
+
+    def _decode_one(Packet):
+        - Allocate a Frame.
+        - Decode Packet into Frame.
+        - Prep a shared VideoReformatter, and copy to Frame.
+        - Frame._init_properties()
+
+    def encode(VideoFrame):
+        - Start the container encoding.
+        - Prep a shared VideoReformatter.
+        - Reformat Frame if it doesn't match the format.
+        - Create a Packet.
+        - Rescale Frame time to context time_base, OR create one from scratch.
+        - Encode or flush via context.
+        - Rescale Packet time to stream time.
+
+
+AudioStream
+
+    def _init(container, stream):
+        - Build layout and format objects.
+        - Initialize context layout if not set.
+
+    def _decode_one(packet):
+        - Allocate a frame.
+        - Decode audio with context.
+        - Frame._init_properties()
+
+    def encode(Frame):
+        - Start the container encoding.
+        - Prep a resampler.
+        - Prep a fifo.
+        - Resample.
+        - Chunk with fifo.
+        - Create a Packet
+        - Rescale Frame time to context time_base OR create one from scratch
+        - Encode with context
+        - Rescale Packet time to stream time
+        - Relate to stream
+
+OutputContainer
+
+    def start_encoding():
+        - Opens context for all streams. Doesn't have to happen here.
+        - Opens the format. This likely needs
+          all streams open.
+        - Replace with open(), and call it during mux()
+

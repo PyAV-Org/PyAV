@@ -58,6 +58,37 @@ cdef class Packet(Buffer):
         # copy.struct.data = NULL
         return copy
 
+    cdef int _retime(self, lib.AVRational src, lib.AVRational dst) except -1:
+
+        if not src.num:
+            src = self._time_base
+        if not dst.num:
+            dst = self._time_base
+
+        if not src.num:
+            raise ValueError('No src time_base.')
+        if not dst.num:
+            raise ValueError('No dst time_base.')
+
+        if self.struct.pts != lib.AV_NOPTS_VALUE:
+            self.struct.pts = lib.av_rescale_q(
+                self.struct.pts,
+                src, dst
+            )
+        if self.struct.dts != lib.AV_NOPTS_VALUE:
+            self.struct.dts = lib.av_rescale_q(
+                self.struct.dts,
+                src, dst
+            )
+        if self.struct.duration > 0:
+            self.struct.duration = lib.av_rescale_q(
+                self.struct.duration,
+                src, dst
+            )
+
+        self._time_base = dst
+        return 0 # Just for exception.
+
     def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
         return self.stream.decode(self, count)

@@ -38,7 +38,7 @@ cdef class Codec(object):
             self.ptr = lib.avcodec_find_decoder_by_name(name)
             self.is_encoder = False
         else:
-            raise ValueError('invalid mode; must be "r" or "w"', mode)
+            raise ValueError('Invalid mode; must be "r" or "w".', mode)
 
         self._init(name)
 

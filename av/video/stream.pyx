@@ -153,6 +153,7 @@ cdef class VideoStream(Stream):
             
             # rescale the packet pts and dts, which are in codec time_base, to the streams time_base
 
+            
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
                 packet.struct.pts = lib.av_rescale_q(packet.struct.pts, 
                                                          self._codec_context.time_base,
