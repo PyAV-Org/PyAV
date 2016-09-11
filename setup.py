@@ -309,7 +309,7 @@ class ConfigCommand(Command):
         if self.no_pkg_config:
             # Simply assume we have everything we need!
             config = {
-                'libraries':    ['avformat', 'avcodec', 'avdevice', 'avutil',
+                'libraries':    ['avformat', 'avcodec', 'avdevice', 'avutil', 'avfilter',
                                  'swscale'],
                 'library_dirs': [],
                 'include_dirs': []
