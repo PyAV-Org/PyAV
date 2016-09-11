@@ -414,6 +414,9 @@ class ReflectCommand(Command):
         self.run_command('config')
 
         tmp_dir = os.path.join(self.build_temp, 'reflection')
+        # delete tests done in previous build attempts
+        if os.path.isdir(tmp_dir):
+            remove_tree(tmp_dir)
         try:
             os.makedirs(tmp_dir)
         except OSError as e:
