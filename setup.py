@@ -170,7 +170,9 @@ def new_compiler(*args, **kwargs):
 
     """
     cc = _new_compiler(*args, **kwargs)
-    if kwargs.pop('silent', True):
+    # monkey-patch compiler to suppress stdout and stderr. As msvc requires some custom
+    # steps before the process is spawned, we can't monkey-patch msvc compileres.
+    if not is_msvc(cc) and kwargs.pop('silent', True):
         cc.spawn = _CCompiler_spawn_silent
     return cc
 
