@@ -101,13 +101,48 @@ def is_msvc(cc=None):
     cc = _new_compiler() if cc is None else cc
     return isinstance(cc, msvc_compiler_classes)
 
+# Obtain the ffmpeg dir from the "--ffmpeg-dir=<dir>" argument
+FFMPEG_DIR = None
+for i, arg in enumerate(sys.argv):
+    if arg.startswith('--ffmpeg-dir='):
+        FFMPEG_DIR = arg.split('=')[1]
+        break
+
+if FFMPEG_DIR is not None:
+    # delete the --ffmpeg-dir arg so that distutils does not see it
+    del sys.argv[i]
+    if not os.path.isdir(FFMPEG_DIR):
+        print('The specified ffmpeg directory does not exist')
+        exit(1)
+else:
+    # Check the environment variable FFMPEG_DIR
+    FFMPEG_DIR = os.environ.get('FFMPEG_DIR')
+    if FFMPEG_DIR is not None:
+        if not os.path.isdir(FFMPEG_DIR):
+            FFMPEG_DIR = None
+
+if FFMPEG_DIR is not None:
+    ffmpeg_lib = os.path.join(FFMPEG_DIR, 'lib')
+    ffmpeg_include = os.path.join(FFMPEG_DIR, 'include')
+    if os.path.exists(ffmpeg_lib):
+        ffmpeg_lib = [ffmpeg_lib]
+    else:
+        ffmpeg_lib = [FFMPEG_DIR]
+    if os.path.exists(ffmpeg_include):
+        ffmpeg_include = [ffmpeg_include]
+    else:
+        ffmpeg_include = [FFMPEG_DIR]
+else:
+    ffmpeg_lib = []
+    ffmpeg_include = []
+
 
 # The "extras" to be supplied to every one of our modules.
 # This is expanded heavily by the `config` command.
 extension_extra = {
-    'include_dirs': ['include'], # These are PyAV's includes.
+    'include_dirs': ['include'] + ffmpeg_include,  # The first are PyAV's includes.
     'libraries'   : [],
-    'library_dirs': [],
+    'library_dirs': ffmpeg_lib,
 }
 
 # The macros which describe what functions and structure members we have
@@ -276,7 +311,6 @@ for dirname, dirnames, filenames in os.walk('av'):
             mod_name,
             sources=[c_path if not cythonize else pyx_path],
         ))
-
 
 
 class ConfigCommand(Command):
@@ -602,28 +636,6 @@ class BuildExtCommand(build_ext):
             self.no_pkg_config = None
     else:
         no_pkg_config = 1
-
-        user_options = build_ext.user_options + [
-            ('ffmpeg-dir=', None,
-             "directory containing lib and include folders of ffmpeg")]
-
-        def initialize_options(self):
-            build_ext.initialize_options(self)
-            self.ffmpeg_dir = None
-
-        def finalize_options(self):
-            build_ext.finalize_options(self)
-            if self.ffmpeg_dir and os.path.exists(self.ffmpeg_dir):
-                sublib = os.path.join(self.ffmpeg_dir, 'lib')
-                subinc = os.path.join(self.ffmpeg_dir, 'include')
-                if os.path.exists(sublib):
-                    unique_extend(self.library_dirs, [sublib])
-                else:
-                    unique_extend(self.library_dirs, [self.ffmpeg_dir])
-                if os.path.exists(subinc):
-                    unique_extend(self.include_dirs, [subinc])
-                else:
-                    unique_extend(self.include_dirs, [self.ffmpeg_dir])
 
     def run(self):
 
