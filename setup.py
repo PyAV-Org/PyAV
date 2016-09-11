@@ -24,9 +24,15 @@ try:
     from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
 except ImportError:
     MSVC9Compiler = None
-    msvc_compiler_classes = (MSVCCompiler, )
-else:
-    msvc_compiler_classes = (MSVCCompiler, MSVC9Compiler)
+
+try:
+    from distutils._msvccompiler import MSVCCompiler as MSVC14Compiler
+except ImportError:
+    MSVC14Compiler = None
+
+
+msvc_compiler_classes = tuple([cls for cls in (MSVCCompiler, MSVC9Compiler,
+                                               MSVC14Compiler) if cls is not None])
 
 try:
     from Cython.Build import cythonize
