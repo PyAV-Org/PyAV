@@ -27,7 +27,7 @@ cdef class InputContainer(Container):
                 # Our understanding is that there is little overlap bettween
                 # options for containers and streams, so we use the same dict.
                 # FIXME: This expects per-stream options.
-                &options.ptr
+                &options.ptr if options.ptr else NULL
             )
         self.proxy.err_check(ret)
 
