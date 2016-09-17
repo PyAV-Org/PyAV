@@ -216,7 +216,7 @@ def new_compiler(*args, **kwargs):
         if get_build_version() == 10:
             cc.initialize()
             for ldflags in [cc.ldflags_shared, cc.ldflags_shared_debug]:
-                unique_extend(ldflags, ['\MANIFEST'])
+                unique_extend(ldflags, ['/MANIFEST'])
     return cc
 
 
