@@ -111,7 +111,7 @@ install:
   - "SET PATH=%cd%\\ffmpeg-2.7-win%PYTHON_ARCH%-shared\\bin;%PATH%"
 
   # Install missing C99 headers for MSVC
-  - ps: Start-FileDownload ('https://msinttypes.googlecode.com/files/msinttypes-r26.zip' ) msinttypes.zip
+  - ps: Start-FileDownload ('https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/msinttypes/msinttypes-r26.zip' ) msinttypes.zip
   - 7z e msinttypes.zip -omsinttypes > NULL
 
 build: false  # Not a C# project, build stuff at the test step instead.
