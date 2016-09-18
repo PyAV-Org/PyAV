@@ -21,3 +21,5 @@ from av.container import open
 from av.utils import AVError
 from av.video.format import VideoFormat
 from av.video.frame import VideoFrame
+from av.encode import Encoder
+from av.decode import Decoder

@@ -114,7 +114,13 @@ cdef class AudioFifo:
             self.pts_offset -= nb_samples
         
         return frame
-    
+
+    def iter(self, unsigned int nb_samples=0, bint partial=False):
+        frame = self.read(nb_samples, partial)
+        while frame:
+            yield frame
+            frame = self.read(nb_samples, partial)
+
     property samples:
         """Number of audio samples (per channel) """
         def __get__(self):

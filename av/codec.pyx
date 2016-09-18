@@ -1,8 +1,12 @@
-from libc.stdint cimport uint64_t
-
-from av.utils cimport media_type_to_string
+from libc.stdint cimport uint64_t,int64_t
+from av.utils cimport media_type_to_string, avrational_to_faction, err_check
 from av.video.format cimport get_video_format
+from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
+from av.dictionary cimport _Dictionary
+
+from av.dictionary import Dictionary
+from fractions import Fraction
 
 cdef object _cinit_sentinel = object()
 
@@ -73,7 +77,17 @@ cdef class Codec(object):
             return ret
 
     property audio_formats:
-        def __get__(self): return <int>self.ptr.sample_fmts
+        def __get__(self):
+            if not self.ptr.sample_fmts:
+                return
+            cdef char* name
+            ret = []
+            cdef lib.AVSampleFormat *ptr = self.ptr.sample_fmts
+            while ptr[0] != -1:
+                ret.append(get_audio_format(ptr[0]))
+                ptr += 1
+
+            return ret
 
     # Capabilities.
     property draw_horiz_band:
@@ -138,10 +152,132 @@ cdef class Codec(object):
 
 cdef class CodecContext(object):
 
-    def __cinit__(self, x):
-        if x is not _cinit_sentinel:
-            raise RuntimeError('cannot instantiate CodecContext')
+    def __cinit__(self):
+        self.ptr = NULL
+        self._container = None
+        self.options = {}
 
+    def __init__(self):
+        raise TypeError("%s cannot be instantiated from Python" %  self.__class__.__name__)
+
+    def __dealloc__(self):
+        if self.ptr and lib.avcodec_is_open(self.ptr):
+            lib.avcodec_close(self.ptr)
+
+        if self.ptr and not self._container:
+            lib.avcodec_free_context(&self.ptr)
+
+    def open(self):
+        if lib.avcodec_is_open(self.ptr):
+            return
+
+        cdef _Dictionary _options = Dictionary(self.options or {})
+        err_check(lib.avcodec_open2(self.ptr, self.ptr.codec, &_options.ptr))
+        # avcodec_open2 will consume the options is uses
+        return dict(_options)
+
+    property codec:
+        def __get__(self):
+            if not self.ptr or not self.ptr.codec:
+                return None
+            cdef Codec codec = Codec(_cinit_sentinel)
+            codec.ptr = self.ptr.codec
+            return codec
+
+    property type:
+        def __get__(self): return media_type_to_string(self.ptr.codec_type)
+
+    property profile:
+        def __get__(self):
+            if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
+                return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
+            else:
+                return None
+
+    property bit_rate:
+        def __get__(self):
+            return self.ptr.bit_rate
+        def __set__(self, int64_t value):
+            self.ptr.bit_rate = value
+
+    property max_bit_rate:
+        def __get__(self):
+            if self.ptr and self.ptr.rc_max_rate > 0:
+                return self.ptr.rc_max_rate
+            else:
+                return None
+
+    property bit_rate_tolerance:
+        def __get__(self):
+            return self.ptr.bit_rate_tolerance if self.ptr else None
+        def __set__(self, int value):
+            self.ptr.bit_rate_tolerance = value
+
+    # should replace with format
+    property pix_fmt:
+        def __get__(self):
+            cdef char* name = lib.av_get_pix_fmt_name(self.ptr.pix_fmt)
+            return <str>name if name else None
+
+        def __set__(self, value):
+            cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(value)
+            if pix_fmt < 0:
+                raise ValueError('not a pixel format: %r' % value)
+            self.ptr.pix_fmt = pix_fmt
+
+    property time_base:
+        def __get__(self):
+            return avrational_to_faction(&self.ptr.time_base)
+
+        def __set__(self, value):
+            rate = Fraction(value or 24)
+            self.ptr.time_base.num = rate.denominator
+            self.ptr.time_base.den = rate.numerator
+
+    property width:
+        def __get__(self):
+            return self.ptr.width
+        def __set__(self, value):
+            self.ptr.width = value
+
+    property height:
+        def __get__(self):
+            return self.ptr.height
+        def __set__(self, value):
+            self.ptr.height = value
+
+    property sample_rate:
+        """samples per second """
+        def __get__(self): return self.ptr.sample_rate
+        def __set__(self, int value): self.ptr.sample_rate = value
+
+    property sample_fmt:
+        def __get__(self):
+            cdef char* name = lib.av_get_sample_fmt_name(self.ptr.sample_fmt)
+            return <str>name if name else None
+
+        def __set__(self, value):
+            cdef lib.AVSampleFormat sample_fmt = lib.av_get_sample_fmt(value)
+            if sample_fmt < 0:
+                raise ValueError('not a sample format: %r' % value)
+            self.ptr.sample_fmt = sample_fmt
+
+    property frame_size:
+        def __get__(self):
+            return self.ptr.frame_size
+        def __set__(self, value):
+            self.ptr.frame_size = value
+
+    property channels:
+        def __get__(self):
+            return self.ptr.channels
+        def __set__(self, value):
+            self.ptr.channels = value
+            self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
+
+    property channel_layout:
+        def __get__(self):
+            return self.ptr.channel_layout
 
 codecs_availible = set()
 cdef lib.AVCodec *ptr = lib.av_codec_next(NULL)

@@ -99,8 +99,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int profile
 
         AVFrame* coded_frame
-        
-        int bit_rate
+
+        int64_t bit_rate
         int bit_rate_tolerance
         int mb_decision
         
@@ -148,7 +148,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         
         # User Data
         void *opaque
-    
+
+    cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
+    cdef void avcodec_free_context(AVCodecContext **pavctx)
     cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
     cdef struct AVCodecDescriptor:
