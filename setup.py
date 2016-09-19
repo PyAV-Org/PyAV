@@ -595,9 +595,6 @@ class CleanCommand(clean):
                 remove_tree('src', dry_run=self.dry_run)
             else:
                 log.info("'%s' does not exist -- can't clean it", 'src')
-        # delete tests done in previous build attempts
-        if os.path.isdir(tmp_dir):
-            remove_tree(tmp_dir)
 
 
 class CythonizeCommand(Command):
