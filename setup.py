@@ -3,7 +3,6 @@ from __future__ import print_function
 from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
 from distutils.command.clean import clean, log
 from distutils.core import Command
-from distutils.dir_util import remove_tree
 from distutils.errors import DistutilsExecError
 from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
@@ -458,9 +457,6 @@ class ReflectCommand(Command):
         self.run_command('config')
 
         tmp_dir = os.path.join(self.build_temp, 'reflection')
-        # delete tests done in previous build attempts
-        if os.path.isdir(tmp_dir):
-            remove_tree(tmp_dir)
         try:
             os.makedirs(tmp_dir)
         except OSError as e:
@@ -599,6 +595,9 @@ class CleanCommand(clean):
                 remove_tree('src', dry_run=self.dry_run)
             else:
                 log.info("'%s' does not exist -- can't clean it", 'src')
+        # delete tests done in previous build attempts
+        if os.path.isdir(tmp_dir):
+            remove_tree(tmp_dir)
 
 
 class CythonizeCommand(Command):
