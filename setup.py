@@ -204,10 +204,7 @@ def new_compiler(*args, **kwargs):
 
     """
     cc = _new_compiler(*args, **kwargs)
-    # monkey-patch compiler to suppress stdout and stderr. As msvc requires some custom
-    # steps before the process is spawned, we can't monkey-patch msvc compileres.
-    if not is_msvc(cc) and kwargs.pop('silent', True):
-        cc.spawn = _CCompiler_spawn_silent
+    make_silent = True
     # If MSVC10, initialize the compiler here and add /MANIFEST to linker flags.
     # See Python issue 4431 (https://bugs.python.org/issue4431)
     if is_msvc(cc):
@@ -216,6 +213,13 @@ def new_compiler(*args, **kwargs):
             cc.initialize()
             for ldflags in [cc.ldflags_shared, cc.ldflags_shared_debug]:
                 unique_extend(ldflags, ['/MANIFEST'])
+        # If MSVC14, do not silence. As msvc14 requires some custom
+        # steps before the process is spawned, we can't monkey-patch this.
+        elif get_build_version() == 14:
+            make_silent = False
+    # monkey-patch compiler to suppress stdout and stderr.
+    if make_silent and kwargs.pop('silent', True):
+        cc.spawn = _CCompiler_spawn_silent
     return cc
 
 

@@ -19,15 +19,15 @@ environment:
       CONDA_NPY: "19"
 
     - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "32"
-      CONDA_PY: "34"
-      CONDA_NPY: "110"
-
-    - PYTHON: "C:\\Miniconda3"
       PYTHON_VERSION: "3.3"
       PYTHON_ARCH: "32"
       CONDA_PY: "33"
+      CONDA_NPY: "110"
+
+    - PYTHON: "C:\\Miniconda3"
+      PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "32"
+      CONDA_PY: "34"
       CONDA_NPY: "110"
 
     - PYTHON: "C:\\Miniconda35"
