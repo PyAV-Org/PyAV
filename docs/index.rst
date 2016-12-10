@@ -39,6 +39,7 @@ Contents
 
     about
     installation
+    examples
     api
     hacking
     includes
