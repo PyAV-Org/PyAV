@@ -60,7 +60,7 @@ class TestFilters(TestCase):
         src.link_to(graph.add('buffersink'))
         graph.configure()
 
-        print src.outputs
+        print(src.outputs)
         
         frame = src.pull()
         frame.to_image().save('sandbox/mandelbrot4.png')
