@@ -41,7 +41,7 @@ class TestFilters(TestCase):
         
         frame = sink.pull()
         self.assertIsInstance(frame, VideoFrame)
-        frame.to_image().save('sandbox/mandelbrot2.png')
+        frame.to_image().save(self.sandboxed('mandelbrot2.png'))
     
     def test_auto_find_sink(self):
 
@@ -51,7 +51,7 @@ class TestFilters(TestCase):
         graph.configure()
 
         frame = graph.pull()
-        frame.to_image().save('sandbox/mandelbrot3.png')
+        frame.to_image().save(self.sandboxed('mandelbrot3.png'))
 
     def test_delegate_sink(self):
 
@@ -63,7 +63,7 @@ class TestFilters(TestCase):
         print(src.outputs)
         
         frame = src.pull()
-        frame.to_image().save('sandbox/mandelbrot4.png')
+        frame.to_image().save(self.sandboxed('mandelbrot4.png'))
 
     def test_haldclut_graph(self):
         
@@ -102,5 +102,5 @@ class TestFilters(TestCase):
         
         frame = sink.pull()
         self.assertIsInstance(frame, VideoFrame)
-        frame.to_image().save('sandbox/filtered.png')
+        frame.to_image().save(self.sandboxed('filtered.png'))
         
