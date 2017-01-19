@@ -5,7 +5,7 @@ import math
 from .common import *
 
 from av.video.stream import VideoStream
-
+from av.audio.stream import AudioStream
 
 
 WIDTH = 320
@@ -35,16 +35,12 @@ def write_rgb_rotate(output):
         ))
         frame.planes[0].update_from_string(image.tobytes())
 
-        packet = stream.encode(frame)
-        if packet:
+        for packet in stream.encode(frame):
             output.mux(packet)
 
-    while True:
-        packet = stream.encode()
-        if packet:
-            output.mux(packet)
-        else:
-            break
+
+    for packet in stream.encode(None):
+        output.mux(packet)
 
     # Done!
     output.close()
@@ -79,5 +75,51 @@ class TestBasicVideoEncoding(TestCase):
         write_rgb_rotate(output)
         assert_rgb_rotate(self, av.open(path))
 
+class TestBasicAudioEncoding(TestCase):
+
+    def test_audio_transcode(self):
+
+        path = self.sandboxed('audio_transcode.mov')
+        output = av.open(path, 'w')
+        output.metadata['title'] = 'container'
+        output.metadata['key'] = 'value'
+
+        sample_rate = 48000
+        channel_layout = "stereo"
+        channels = 2
+        sample_fmt = 's16'
+
+        stream = output.add_stream("mp2", sample_rate)
+
+        encoder = stream.coder
+        encoder.time_base = sample_rate
+        encoder.sample_rate = sample_rate
+        encoder.sample_fmt = sample_fmt
+        encoder.channels = channels
+
+        src = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
+        for frame in src.decode(audio=0):
+            for packet in stream.encode(frame):
+                output.mux(packet)
+
+        for packet in stream.encode(None):
+            output.mux(packet)
+
+        output.close()
 
 
+        container = av.open(path)
+        self.assertEqual(len(container.streams), 1)
+        self.assertEqual(container.metadata.get('title'), 'container', container.metadata)
+        self.assertEqual(container.metadata.get('key'), None)
+        stream = container.streams[0]
+        self.assertIsInstance(stream, AudioStream)
+        self.assertEqual(stream.coder.sample_rate, sample_rate)
+        self.assertEqual(stream.coder.sample_fmt, 's16p')
+        self.assertEqual(stream.coder.channels, channels)
+
+if __name__ == "__main__":
+    import logging
+    logging.basicConfig()
+    import unittest
+    unittest.main()

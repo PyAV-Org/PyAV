@@ -1,20 +1,22 @@
 cimport libav as lib
 from av.utils cimport avrational_to_faction
+from av.utils cimport err_check
 
+cdef class Packet(Buffer):
 
-cdef class Packet(object):
-    
     """A packet of encoded data within a :class:`~av.format.Stream`.
 
     This may, or may not include a complete object within a stream.
     :meth:`decode` must be called to extract encoded data.
 
     """
-    def __init__(self):
+    def __init__(self, size_t size=0):
         with nogil:
             lib.av_init_packet(&self.struct)
             self.struct.data = NULL
             self.struct.size = 0
+        if size:
+            err_check(lib.av_new_packet(&self.struct, size))
 
     def __dealloc__(self):
         with nogil: lib.av_free_packet(&self.struct)
@@ -22,7 +24,7 @@ cdef class Packet(object):
     def __repr__(self):
         return '<av.%s of #%d, dts=%s, pts=%s at 0x%x>' % (
             self.__class__.__name__,
-            self.stream.index,
+            self.stream.index if self.stream else 0,
             self.dts,
             self.pts,
             id(self),

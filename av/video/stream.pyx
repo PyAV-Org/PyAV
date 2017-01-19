@@ -34,56 +34,8 @@ cdef class VideoStream(Stream):
             self.format = get_video_format(<lib.AVPixelFormat>self._codec_context.pix_fmt, self._codec_context.width, self._codec_context.height)
         else:
             self.format = None
-        
-    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
-        
-        # Create a frame if we don't have one ready.
-        if not self.next_frame:
-            self.next_frame = alloc_video_frame()
 
-        # Decode video into the frame.
-        cdef int completed_frame = 0
-        
-        cdef int result
-        
-        with nogil:
-            result = lib.avcodec_decode_video2(self._codec_context, self.next_frame.ptr, &completed_frame, packet)
-        data_consumed[0] = err_check(result)
-        
-        if not completed_frame:
-            return
-        
-        # Check if the frame size has changed so that we can always have a
-        # SwsContext that is ready to go.
-        if self.last_w != self._codec_context.width or self.last_h != self._codec_context.height:
-            
-            self.last_w = self._codec_context.width
-            self.last_h = self._codec_context.height
-            
-            self.buffer_size = lib.avpicture_get_size(
-                self._codec_context.pix_fmt,
-                self._codec_context.width,
-                self._codec_context.height,
-            )
-            
-            # Create a new SwsContextProxy
-            self.reformatter = VideoReformatter()
-
-        # We are ready to send this one off into the world!
-        cdef VideoFrame frame = self.next_frame
-        self.next_frame = None
-        
-        # Tell frame to finish constructing user properties.
-        frame._init_properties()
-
-        # Share our SwsContext with the frames. Most of the time they will end
-        # up using the same settings as each other, so it makes sense to cache
-        # it like this.
-        frame.reformatter = self.reformatter
-
-        return frame
-    
-    cpdef encode(self, VideoFrame frame=None):
+    def encode(self, VideoFrame frame=None):
         """Encodes a frame of video, returns a packet if one is ready.
         The output packet does not necessarily contain data for the most recent frame, 
         as encoders can delay, split, and combine input frames internally as needed.
@@ -98,9 +50,6 @@ cdef class VideoStream(Stream):
             self.reformatter = VideoReformatter()
             
         cdef VideoFrame formated_frame
-        cdef Packet packet
-        cdef int got_output
-        
         cdef VideoFormat pixel_format
         
         if frame:
@@ -124,10 +73,6 @@ cdef class VideoStream(Stream):
             # Flushing
             formated_frame = None
 
-        packet = Packet()
-        packet.struct.data = NULL #packet data will be allocated by the encoder
-        packet.struct.size = 0
-        
         if formated_frame:
             
             # It has a pts, so adjust it.
@@ -144,13 +89,9 @@ cdef class VideoStream(Stream):
                 
             
             self.encoded_frame_count += 1
-            ret = err_check(lib.avcodec_encode_video2(self._codec_context, &packet.struct, formated_frame.ptr, &got_output))
-        else:
-            # Flushing
-            ret = err_check(lib.avcodec_encode_video2(self._codec_context, &packet.struct, NULL, &got_output))
 
-        if got_output:
-            
+        cdef Packet packet
+        for packet in self.coder.encode(formated_frame):
             # rescale the packet pts and dts, which are in codec time_base, to the streams time_base
 
             if packet.struct.pts != lib.AV_NOPTS_VALUE:
@@ -174,7 +115,7 @@ cdef class VideoStream(Stream):
             packet.struct.stream_index = self._stream.index
             packet.stream = self
 
-            return packet
+            yield packet
 
     property average_rate:
         def __get__(self): return avrational_to_faction(&self._stream.avg_frame_rate)

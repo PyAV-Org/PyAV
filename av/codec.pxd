@@ -12,6 +12,6 @@ cdef class Codec(object):
 
 
 cdef class CodecContext(object):
-
+    cdef public dict options
+    cdef object _container
     cdef lib.AVCodecContext *ptr
-    cdef readonly Codec

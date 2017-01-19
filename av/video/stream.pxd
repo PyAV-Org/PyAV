@@ -12,9 +12,6 @@ cdef class VideoStream(Stream):
     cdef _build_format(self)
 
     cdef readonly int buffer_size
-    
-    # Hold onto the frames that we will decode until we have a full one.
-    cdef VideoFrame next_frame
 
     # Common reformatter shared with all frames since it is likely to get reused.
     cdef VideoReformatter reformatter
@@ -25,5 +22,3 @@ cdef class VideoStream(Stream):
     cdef int last_h
     
     cdef int encoded_frame_count
-    
-    cpdef encode(self, VideoFrame frame=*)

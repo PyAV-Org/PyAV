@@ -124,17 +124,7 @@ cdef class OutputContainer(Container):
         cdef Stream stream
         cdef _Dictionary options
         for stream in self.streams:
-            if not lib.avcodec_is_open(stream._codec_context):
-                options = self.options.copy()
-                self.proxy.err_check(lib.avcodec_open2(
-                    stream._codec_context,
-                    stream._codec,
-                    # Our understanding is that there is little overlap bettween
-                    # options for containers and streams, so we use the same dict.
-                    # Possible TODO: expose per-stream options.
-                    &options.ptr
-                ))
-            dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
+            stream.coder.open()
 
         # Open the output file, if needed.
         # TODO: is the avformat_write_header in the right place here?

@@ -5,7 +5,7 @@ cimport libav as lib
 from av.container.core cimport Container, ContainerProxy
 from av.frame cimport Frame
 from av.packet cimport Packet
-
+from av.codec cimport CodecContext
 
 cdef class Stream(object):
     
@@ -16,6 +16,8 @@ cdef class Stream(object):
     cdef lib.AVStream *_stream
     cdef readonly dict metadata
 
+    cdef readonly CodecContext coder
+
     # CodecContext attributes.
     cdef lib.AVCodecContext *_codec_context
     cdef lib.AVCodec *_codec
@@ -24,7 +26,6 @@ cdef class Stream(object):
     # Private API.
     cdef _init(self, Container, lib.AVStream*)
     cdef _setup_frame(self, Frame)
-    cdef _decode_one(self, lib.AVPacket*, int *data_consumed)
 
     # Public API.
     cpdef decode(self, Packet packet, int count=?)

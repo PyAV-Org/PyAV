@@ -10,6 +10,22 @@
 
 #endif
 
+#ifndef PYAV_HAVE_AVCODEC_FREE_CONTEXT
+    void avcodec_free_context(AVCodecContext **pavctx)
+    {
+        AVCodecContext *avctx = *pavctx;
+
+        if (!avctx)
+            return;
+
+        avcodec_close(avctx);
+
+        av_freep(&avctx->extradata);
+        av_freep(&avctx->subtitle_header);
+
+        av_freep(pavctx);
+    }
+#endif
 
 #ifdef PYAV_HAVE_FFMPEG
 

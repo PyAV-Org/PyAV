@@ -10,6 +10,8 @@ from av.subtitles.stream cimport SubtitleStream
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 from av.video.stream cimport VideoStream
 
+from encode cimport Encoder
+from decode cimport Decoder
 
 cdef object _cinit_bypass_sentinel = object()
 
@@ -55,30 +57,36 @@ cdef class Stream(object):
         self._codec_context = stream.codec
         
         self.metadata = avdict_to_dict(stream.metadata)
-        
+
+        cdef CodecContext coder
         # This is an input container!
         if self._container.ptr.iformat:
 
             # Find the codec.
-            self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
+            self._codec = lib.avcodec_find_decoder(stream.codec.codec_id)
             if self._codec == NULL:
                 return
-            
-            # Open the codec.
-            try:
-                err_check(lib.avcodec_open2(self._codec_context, self._codec, &self._codec_options))
-            except:
-                # Signal that we don't need to close it.
-                self._codec = NULL
-                raise
-            
+
+            coder = Decoder.__new__(Decoder)
+            coder.ptr = stream.codec
+            coder.ptr.codec = self._codec
+            coder.channels = coder.channels # small hack to set channel_layout
+            coder._container = container.proxy
+            coder.open()
+
         # This is an output container!
         else:
-            self._codec = self._codec_context.codec
+            coder = Encoder.__new__(Encoder)
+            coder._container = container.proxy
+            coder.ptr = stream.codec
+
+            # use codec codec config by OutputContainer
+            self._codec = stream.codec.codec
+
+        self.coder = coder
+        self._codec_context = coder.ptr
 
     def __dealloc__(self):
-        if self._codec:
-            lib.avcodec_close(self._codec_context)
         if self._codec_options:
             lib.av_dict_free(&self._codec_options)
 
@@ -185,50 +193,22 @@ cdef class Stream(object):
         if not self._codec:
             raise ValueError('cannot decode unknown codec')
 
-        cdef int data_consumed = 0
         cdef list decoded_objs = []
-
-        cdef uint8_t *original_data = packet.struct.data
-        cdef int      original_size = packet.struct.size
-
         cdef bint is_flushing = not (packet.struct.data and packet.struct.size)
 
-        # Keep decoding while there is data.
-        while is_flushing or packet.struct.size > 0:
-
-            if is_flushing:
-                packet.struct.data = NULL
-                packet.struct.size = 0
-
-            decoded = self._decode_one(&packet.struct, &data_consumed)
-            packet.struct.data += data_consumed
-            packet.struct.size -= data_consumed
-
-            if decoded:
-
-                if isinstance(decoded, Frame):
-                    self._setup_frame(decoded)
-                decoded_objs.append(decoded)
-
-                # Sometimes we will error if we try to flush the stream
-                # (e.g. MJPEG webcam streams), and so we must be able to
-                # bail after the first, even though buffers may build up.
-                if count and len(decoded_objs) >= count:
-                    break
-
-            # Sometimes there are no frames, and no data is consumed, and this
-            # is ok. However, no more frames are going to be pulled out of here.
-            # (It is possible for data to not be consumed as long as there are
-            # frames, e.g. during flushing.)
-            elif not data_consumed:
-                break
-
-        # Restore the packet.
-        packet.struct.data = original_data
-        packet.struct.size = original_size
+        if is_flushing:
+            for frame in self.coder.flush():
+                if isinstance(frame, Frame):
+                    self._setup_frame(frame)
+                decoded_objs.append(frame)
+        else:
+            for frame in self.coder.decode(packet):
+                if isinstance(frame, Frame):
+                    self._setup_frame(frame)
+                decoded_objs.append(frame)
 
         return decoded_objs
-    
+
     def seek(self, timestamp, mode='time', backward=True, any_frame=False):
         """
         Seek to the keyframe at timestamp.
@@ -245,7 +225,3 @@ cdef class Stream(object):
         frame.ptr.pts = frame.ptr.pkt_pts
         frame._time_base = self._stream.time_base
         frame.index = self._codec_context.frame_number - 1
-
-    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
-        raise NotImplementedError('base stream cannot decode packets')
-
