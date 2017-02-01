@@ -41,7 +41,7 @@ On **Ubuntu 14.04 LTS** everything can come from the default sources::
     # Library components
     sudo apt-get install -y \
         libavformat-dev libavcodec-dev libavdevice-dev \
-        libavutil-dev libswscale-dev libavresample-dev
+        libavutil-dev libswscale-dev libavresample-dev libavfilter-dev
 
 
 Ubuntu 12.04 LTS
