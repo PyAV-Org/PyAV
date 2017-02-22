@@ -8,8 +8,11 @@ fi
 
 export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 
-PYAV_LIBRARY_NAME="${PYAV_LIBRARY_NAME}"
-PYAV_LIBRARY_VERSION="${PYAV_LIBRARY_VERSION}"
+
+if [[ ! "$PYAV_PYTHON" ]]; then
+    PYAV_PYTHON="$(python -c 'import sys; print sys.prefix')"
+fi
+
 
 if [[ ! "$PYAV_LIBRARY_NAME" ]]; then
     # We allow $FFMPEG and $LIBAV on Travis to make the build matrix pretty.
@@ -66,7 +69,12 @@ if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
     "$PYAV_VENV/bin/pip" install --upgrade pip setuptools
 fi
 
-source "$PYAV_VENV/bin/activate"
+if [[ -e "$PYAV_VENV/bin/activate" ]]; then
+    source "$PYAV_VENV/bin/activate"
+else
+    # Not a virtualenv; lets manually "activate" it.
+    PATH="$PYAV_VENV/bin:$PATH"
+fi
 
 
 # Just a flag so that we know this was supposedly run.

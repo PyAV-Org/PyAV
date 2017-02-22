@@ -80,3 +80,12 @@ decoding all times are in ``AVStream.time_base``.
 When there is no time_base (such as on ``AVFormatContext``), there is an
 implicit time_base of ``1/AV_TIME_BASE``.
 
+
+Debugging
+---------
+
+```
+./configure --with-pydebug --with-pymalloc
+make -j12
+```
+
