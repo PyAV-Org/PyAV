@@ -13,6 +13,7 @@ cdef class Packet(object):
             lib.av_init_packet(&self.struct)
             self.struct.data = NULL
             self.struct.size = 0
+            self.timestamp = 0.
 
     def __dealloc__(self):
         with nogil: lib.av_free_packet(&self.struct)
