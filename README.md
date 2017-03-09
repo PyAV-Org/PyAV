@@ -1,6 +1,8 @@
 PyAV
 ====
 
+[![Join the chat at https://gitter.im/mikeboers/PyAV](https://badges.gitter.im/mikeboers/PyAV.svg)](https://gitter.im/mikeboers/PyAV?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Pythonic bindings for [FFmpeg][ffmpeg]/[Libav][libav].
 
 [ffmpeg]: http://ffmpeg.org/
