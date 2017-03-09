@@ -222,7 +222,7 @@ cdef class ContainerProxy(object):
         with nogil:
             for i in range(self.ptr.nb_streams):
                 stream = self.ptr.streams[i]
-                if stream.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
+                if stream.codec and stream.codec.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
                     lib.avcodec_flush_buffers(stream.codec)
 
 

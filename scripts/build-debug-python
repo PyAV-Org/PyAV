@@ -19,6 +19,7 @@ fi
 
 cd "$PYAV_PYTHON_SRC" || exit 4
 
+# TODO: Make generic.
 export CPPFLAGS="-I$(brew --prefix openssl)/include"
 export LDFLAGS="-L$(brew --prefix openssl)/lib"
 
