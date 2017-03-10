@@ -1,6 +1,15 @@
 Installation
 ============
 
+Conda
+-----
+
+Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install. The most straight-foward install is via `conda-forge <https://conda-forge.github.io>`_::
+
+    conda install av -c conda-forge
+
+See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs to get started with (mini)Conda.
+
 
 Dependencies
 ------------
