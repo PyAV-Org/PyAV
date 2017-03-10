@@ -4,6 +4,29 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 `y` as a minor change (i.e. backwards compatible features).
 
 
+0.3.3
+=====
+
+Fixes:
+- Fix segfault due to buffer overflow in handling of stream options.
+  (#163 and #169.)
+- Fix segfault due to seek not properly checking if codecs were open before
+  using avcodec_flush_buffers. (#201.)
+
+
+0.3.2
+=====
+
+Minor:
+- Expose basics of avfilter via `Filter`.
+- Add `Packet.time_base`.
+- Add `AudioFrame.to_nd_array` to match same on `VideoFrame`.
+- Update Windows build process.
+
+Fixes:
+- Further improvements to the logging system, continued from #128.
+
+
 0.3.1
 =====
 
