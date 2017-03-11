@@ -72,7 +72,7 @@ install:
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Prepend to the PATH of this build
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%CONDA_ROOT%\\Library\\bin;%PATH%"
 
   # Install dependencies
   - conda config --set always_yes true
@@ -95,7 +95,7 @@ build: false  # Not a C# project, build stuff at the test step instead.
 
 before_test:
   # Need to build before tests
-  - "%CMD_IN_ENV% python setup.py build_ext --inplace"
+  - "%CMD_IN_ENV% python setup.py build_ext --inplace --ffmpeg-dir=%CONDA_PREFIX%\\Library"
 
 test_script:
   # Build the compiled extension and run the project tests
