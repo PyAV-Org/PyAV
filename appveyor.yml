@@ -72,15 +72,16 @@ install:
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Prepend to the PATH of this build
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%CONDA_ROOT%\\Library\\bin;%PATH%"
 
   # Install dependencies
   - conda config --set always_yes true
+  - conda config --add channels conda-forge
   - conda update conda
   - conda install --yes conda-build jinja2 anaconda-client
   - conda create -q -n test-environment python=%PYTHON_VERSION%
     pip "setuptools>=0.24" Pillow "Cython>=0.22" "nose>=1.3"
-    "numpy>=1.9" "wheel>=0.24"
+    "numpy>=1.9" "wheel>=0.24" "ffmpeg=2.8.6" msinttypes
   - activate test-environment
 
   # workaround for missing vcvars64.bat in py34 64bit
@@ -90,23 +91,11 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # Install ffmpeg
-  - ps: Start-FileDownload ('http://ffmpeg.zeranoe.com/builds/win' + $env:PYTHON_ARCH + '/shared/ffmpeg-2.7-win' + $env:PYTHON_ARCH + '-shared.7z' ) ffmpeg-shared.7z
-  - ps: Start-FileDownload ('http://ffmpeg.zeranoe.com/builds/win' + $env:PYTHON_ARCH + '/dev/ffmpeg-2.7-win' + $env:PYTHON_ARCH + '-dev.7z' ) ffmpeg-dev.7z
-  - 7z x ffmpeg-shared.7z > NULL
-  - 7z x ffmpeg-dev.7z > NULL
-  - "SET PATH=%cd%\\ffmpeg-2.7-win%PYTHON_ARCH%-shared\\bin;%PATH%"
-
-  # Install missing C99 headers for MSVC
-  # Other option: pull msinttypes from conda-forge
-  - ps: Start-FileDownload ('https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/msinttypes/msinttypes-r26.zip' ) msinttypes.zip
-  - 7z e msinttypes.zip -omsinttypes > NULL
-
 build: false  # Not a C# project, build stuff at the test step instead.
 
 before_test:
   # Need to build before tests
-  - "%CMD_IN_ENV% python setup.py build_ext --inplace --ffmpeg-dir=%cd%\\ffmpeg-2.7-win%PYTHON_ARCH%-dev --include-dirs=%cd%\\msinttypes"
+  - "%CMD_IN_ENV% python setup.py build_ext --inplace --ffmpeg-dir=%CONDA_PREFIX%\\Library"
 
 test_script:
   # Build the compiled extension and run the project tests
