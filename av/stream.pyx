@@ -93,6 +93,11 @@ cdef class Stream(object):
 
     property id:
         def __get__(self): return self._stream.id
+        def __set__(self, v):
+            if v is None:
+                self._stream.id = 0
+            else:
+                self._stream.id = v
 
     property type:
         def __get__(self): return media_type_to_string(self._codec_context.codec_type)
