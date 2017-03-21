@@ -21,14 +21,20 @@ Currently we provide the basics of:
 Basic Demo
 ----------
 
-::
+.. testsetup::
+
+    path_to_video = common.fate_png() # We don't need a full QT here.
+
+
+.. testcode::
 
     import av
+    import os
 
-    container = av.open('/path/to/video.mp4')
+    container = av.open(path_to_video)
 
     for frame in container.decode(video=0):
-        frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
+        frame.to_image().save('frame-%04d.jpg' % frame.index)
 
 
 Contents

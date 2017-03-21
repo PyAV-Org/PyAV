@@ -39,6 +39,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
+    'sphinx.ext.doctest',
 ]
 if has_doxylink:
     extensions.append('sphinxcontrib.doxylink')
@@ -127,12 +128,12 @@ html_theme = 'nature'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'logo-250.png'
+html_logo = '_static/logo-250.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = 'favicon.png'
+html_favicon = '_static/favicon.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -179,6 +180,34 @@ html_static_path = ['_static']
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 #html_file_suffix = None
+
+doctest_global_setup = '''
+
+import os
+
+import av
+from tests import common
+from tests.common import fate_suite, sandboxed as _sandboxed
+
+def sandboxed(*args, **kwargs):
+    kwargs['timed'] = True
+    return _sandboxed(*args, **kwargs)
+
+_cwd = os.getcwd()
+here = sandboxed('docs')
+os.makedirs(here)
+os.chdir(here)
+
+'''
+
+doctest_global_cleanup = '''
+
+os.chdir(_cwd)
+
+'''
+
+
+doctest_test_doctest_blocks = ''
 
 
 extlinks = {

@@ -45,7 +45,8 @@ def register_doctests(mod):
     try:
         suite = doctest.DocTestSuite(mod)
     except ValueError as e:
-        print(e)
+        if e.args[-1] != 'has no docstrings':
+            print('test_doctest load error:', e, file=sys.__stdout__)
         return
 
     fix_doctests(suite)

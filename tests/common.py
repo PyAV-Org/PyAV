@@ -46,6 +46,9 @@ def fate_suite(name):
         check_call(['curl', '-o', path, url])
     return path
 
+def fate_png():
+    return fate_suite('png1/55c99e750a5fd6_50314226.png')
+
 
 def makedirs(path):
     try:
