@@ -167,10 +167,6 @@ cdef class VideoStream(Stream):
                                                      self._codec_context.time_base,
                                                      self._stream.time_base)
                 
-            if self._codec_context.coded_frame:
-                if self._codec_context.coded_frame.key_frame:
-                    packet.struct.flags |= lib.AV_PKT_FLAG_KEY
-                
             packet.struct.stream_index = self._stream.index
             packet.stream = self
 
