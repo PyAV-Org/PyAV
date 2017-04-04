@@ -42,7 +42,7 @@ if [[ ! "$PYAV_LIBRARY_VERSION" ]]; then
     else
         case "$PYAV_LIBRARY_NAME" in
             ffmpeg)
-                PYAV_LIBRARY_VERSION=3.0
+                PYAV_LIBRARY_VERSION=3.2
                 ;;
             libav)
                 PYAV_LIBRARY_VERSION=11.4
