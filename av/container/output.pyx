@@ -1,10 +1,14 @@
 from fractions import Fraction
+import logging
 
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
 from av.stream cimport Stream, build_stream
 from av.utils cimport err_check, dict_to_avdict
+
+
+log = logging.getLogger(__name__)
 
 
 cdef class OutputContainer(Container):
@@ -120,6 +124,8 @@ cdef class OutputContainer(Container):
         if self._started:
             return
 
+        used_options = set()
+
         # Make sure all of the streams are open.
         cdef Stream stream
         cdef _Dictionary options
@@ -134,6 +140,12 @@ cdef class OutputContainer(Container):
                     # Possible TODO: expose per-stream options.
                     &options.ptr
                 ))
+                
+                # Track option usage.
+                for k in self.options:
+                    if k not in options:
+                        used_options.add(k)
+
             dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
 
         # Open the output file, if needed.
@@ -151,6 +163,15 @@ cdef class OutputContainer(Container):
             self.proxy.ptr, 
             &options.ptr
         ))
+
+        # Track option usage...
+        for k in self.options:
+            if k not in options:
+                used_options.add(k)
+        # ... and warn if any weren't used.
+        unused_options = {k: v for k, v in self.options.iteritems() if k not in used_options}
+        if unused_options:
+            log.warning('Some options were not used: %s' % unused_options)
 
         self._started = True
             
