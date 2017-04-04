@@ -154,15 +154,18 @@ cdef class OutputContainer(Container):
 
         self._started = True
             
-    def close(self):
+    def close(self, strict=False):
 
+        # Normally, we just ignore that we've already done this.
         if self._done:
+            if strict:
+                raise ValueError("Already closed.")
             return
         if not self._started:
-            raise RuntimeError('not started')
-        if not self.proxy.ptr.pb:
-            raise IOError("file not opened")
-        
+            if strict:
+                raise ValueError("Encoding hasn't started.")
+            return
+
         self.proxy.err_check(lib.av_write_trailer(self.proxy.ptr))
         cdef Stream stream
         for stream in self.streams:
