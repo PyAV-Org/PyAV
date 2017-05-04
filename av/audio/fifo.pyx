@@ -85,6 +85,9 @@ cdef class AudioFifo:
         if not partial and self.samples < nb_samples:
             return
 
+        if partial:
+            nb_samples = min(self.samples, nb_samples)
+
         cdef int ret
         cdef int linesize
         cdef int sample_size

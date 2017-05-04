@@ -44,7 +44,7 @@ matrix:
 
         # Libav.
         - python: "2.7"
-          env: LIBAV=12.0
+          env: LIBAV=12
           os: linux
 
         # Older Pythons.
