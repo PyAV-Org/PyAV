@@ -9,7 +9,7 @@ from av.utils cimport err_check
 
 cdef class AudioCodecContext(CodecContext):
 
-    cpdef encode(self, Frame input_frame=None):
+    cdef _encode(self, Frame input_frame):
         """Encodes a frame of audio, returns a packet if one is ready.
         The output packet does not necessarily contain data for the most recent frame, 
         as encoders can delay, split, and combine input frames internally as needed.
@@ -69,11 +69,10 @@ cdef class AudioCodecContext(CodecContext):
         ))
 
         if got_packet:
-            packet._time_base = self.ptr.time_base
             return packet
         
 
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
 
         if not self.next_frame:
             self.next_frame = alloc_audio_frame()
@@ -89,4 +88,17 @@ cdef class AudioCodecContext(CodecContext):
         frame._init_properties()
         
         return frame
+
+    property frame_size:
+        """Number of samples per channel in an audio frame."""
+        def __get__(self): return self.ptr.frame_size
+        
+    property rate:
+        """samples per second """
+        def __get__(self): return self.ptr.sample_rate
+        def __set__(self, int value): self.ptr.sample_rate = value
+
+    property channels:
+        def __get__(self):
+            return self.ptr.channels
     

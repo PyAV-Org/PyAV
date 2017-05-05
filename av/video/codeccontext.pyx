@@ -4,21 +4,27 @@ cimport libav as lib
 
 from av.codec.context cimport CodecContext
 from av.frame cimport Frame
+from av.packet cimport Packet
+from av.utils cimport avrational_to_faction, to_avrational
+from av.utils cimport err_check
+from av.video.format cimport get_video_format, VideoFormat
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
-from av.packet cimport Packet
-from av.utils cimport err_check
-from av.video.format cimport VideoFormat
+
 
 
 cdef class VideoCodecContext(CodecContext):
     
     def __cinit__(self, *args, **kwargs):
-        super(VideoCodecContext, self).__cinit__(*args, **kwargs)
         self.last_w = 0
         self.last_h = 0
 
-    cpdef encode(self, Frame frame=None):
+    cdef _init(self, lib.AVCodecContext *ptr):
+        CodecContext._init(self, ptr) # TODO: Can this be `super`?
+        self._build_format()
+        self.encoded_frame_count = 0
+
+    cdef _encode(self, Frame frame):
         """Encodes a frame of video, returns a packet if one is ready.
 
         The output packet does not necessarily contain data for the most recent frame, 
@@ -37,15 +43,15 @@ cdef class VideoCodecContext(CodecContext):
 
             # TODO codec-ctx: Only set these if not already set.
             # TODO codec-ctx: Assert frame is not None.
-            self.ptr.pix_fmt = vframe.format.pix_fmt
-            self.ptr.width = vframe.width
-            self.ptr.height = vframe.height
+            #self.ptr.pix_fmt = vframe.format.pix_fmt
+            #self.ptr.width = vframe.width
+            #self.ptr.height = vframe.height
 
             # TODO codec-ctx: Take these from the Frame's time_base.
-            self.ptr.framerate.num = 30
-            self.ptr.framerate.den = 1
-            self.ptr.time_base.num = 1
-            self.ptr.time_base.den = 30 
+            #self.ptr.framerate.num = 30
+            #self.ptr.framerate.den = 1
+            #self.ptr.time_base.num = 1
+            #self.ptr.time_base.den = 30 
 
             self.open()
 
@@ -71,15 +77,11 @@ cdef class VideoCodecContext(CodecContext):
                     lib.SWS_CS_DEFAULT
                 )
 
+            # TODO: Don't mutate the frame's times.
+
             if vframe.ptr.pts != lib.AV_NOPTS_VALUE:
-                # It has a pts, so adjust it.
-                # TODO: Don't mutate the frame.
-                vframe.ptr.pts = lib.av_rescale_q(
-                    vframe.ptr.pts,
-                    vframe._time_base, #src
-                    self.ptr.time_base,
-                )
-            
+                # Assert we're in the same time base.
+                vframe._retime(vframe._time_base, self.ptr.time_base)
             else:
                 # There is no pts, so create one.
                 vframe.ptr.pts = <int64_t>self.encoded_frame_count
@@ -93,12 +95,10 @@ cdef class VideoCodecContext(CodecContext):
             ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, NULL, &got_packet))
 
         if got_packet:
-            # TODO codec-ctx: stream rebased pts/dts/duration from self.ptr.time_base to self._stream.time_base
-            packet._time_base = self.ptr.time_base
             return packet
 
         
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         
         # Create a frame if we don't have one ready.
         if not self.next_frame:
@@ -138,3 +138,67 @@ cdef class VideoCodecContext(CodecContext):
         #frame.reformatter = self.reformatter
 
         return frame
+
+
+    cdef _build_format(self):
+        if self.ptr:
+            self.format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
+        else:
+            self.format = None
+        
+    property gop_size:
+        def __get__(self):
+            return self.ptr.gop_size if self.ptr else None
+        def __set__(self, int value):
+            self.ptr.gop_size = value
+
+    property sample_aspect_ratio:
+        def __get__(self):
+            return avrational_to_faction(&self.ptr.sample_aspect_ratio) if self.ptr else None
+        def __set__(self, value):
+            to_avrational(value, &self.ptr.sample_aspect_ratio)
+            
+    property display_aspect_ratio:
+        def __get__(self):
+            cdef lib.AVRational dar
+            
+            lib.av_reduce(
+                &dar.num, &dar.den,
+                self.ptr.width * self.ptr.sample_aspect_ratio.num,
+                self.ptr.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
+
+            return avrational_to_faction(&dar)
+
+    property has_b_frames:
+        def __get__(self):
+            if self.ptr.has_b_frames:
+                return True
+            return False
+
+    property coded_width:
+        def __get__(self):
+            return self.ptr.coded_width if self.ptr else None
+
+    property coded_height:
+        def __get__(self):
+            return self.ptr.coded_height if self.ptr else None
+
+    property width:
+        def __get__(self):
+            return self.ptr.width if self.ptr else None
+        def __set__(self, unsigned int value):
+            self.ptr.width = value
+            self._build_format()
+
+    property height:
+        def __get__(self):
+            return self.ptr.height if self.ptr else None
+        def __set__(self, unsigned int value):
+            self.ptr.height = value
+            self._build_format()
+
+    # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
+    property pix_fmt:
+        def __set__(self, value):
+            self.ptr.pix_fmt = lib.av_get_pix_fmt(value)
+            self._build_format()

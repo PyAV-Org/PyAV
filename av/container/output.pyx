@@ -89,12 +89,14 @@ cdef class OutputContainer(Container):
             codec_context.ticks_per_frame = 1
 
             rate = Fraction(rate or 24)
-            codec_context.time_base.num = rate.denominator
+
+            codec_context.framerate.num = rate.numerator
+            codec_context.framerate.den = rate.denominator
+
+            codec_context.time_base.num = rate.denominator # Inverted!
             codec_context.time_base.den = rate.numerator
 
-            # TODO: Should this be inverted from the rate?
-            stream.time_base.num = rate.denominator
-            stream.time_base.den = rate.numerator
+            stream.time_base = codec_context.time_base
 
         # Some sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
@@ -105,9 +107,8 @@ cdef class OutputContainer(Container):
             codec_context.channels = 2
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
-            # TODO: Should this be inverted from the rate?
             stream.time_base.num = 1
-            stream.time_base.den = codec_context.sample_rate
+            stream.time_base.den = codec_context.sample_rate # Inverted!
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:

@@ -22,17 +22,12 @@ cdef class CodecContext(object):
 
     cdef readonly Codec codec
 
-    # Private API.
-    #cdef _init(self, lib.AVCodecContext*)
-    #cdef _setup_frame(self, Frame)
-    #cdef _decode_one(self, lib.AVPacket*, int *data_consumed)
-
     # Public API.
     cpdef open(self, bint strict=?)
     cpdef encode(self, Frame frame=?)
+    cdef _encode(self, Frame frame)
     cpdef decode(self, Packet packet, int count=?)
-
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed)
+    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed)
 
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext*, bint owns_ptr=?)

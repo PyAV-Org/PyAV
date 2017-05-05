@@ -7,8 +7,10 @@ cdef class Frame(object):
 
     cdef lib.AVFrame *ptr
 
-    # Attributes copied from the stream.
+    # We define our own time.
     cdef lib.AVRational _time_base
+    cdef int _retime(self, lib.AVRational, lib.AVRational) except -1
+
     cdef readonly int index
 
     cdef readonly tuple planes

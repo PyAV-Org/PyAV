@@ -13,8 +13,7 @@ cdef class Packet(Buffer):
     cdef Stream stream
     cdef lib.AVPacket struct
 
-    # We hold onto our own time_base because we may become isolated from
-    # our parent.
+    # We define our own time.
     cdef lib.AVRational _time_base
     cdef int _retime(self, lib.AVRational, lib.AVRational) except -1
 

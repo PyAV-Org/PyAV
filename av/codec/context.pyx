@@ -9,9 +9,9 @@ from av.codec.codec cimport Codec, wrap_codec
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 
-from av.audio.codeccontext cimport AudioCodecContext
-from av.video.codeccontext cimport VideoCodecContext
-from av.subtitles.codeccontext cimport SubtitleCodecContext
+
+
+
 
 
 cdef object _cinit_sentinel = object()
@@ -24,10 +24,13 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, bint owns_ptr = 
 
     # TODO: This.
     if c_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        from av.video.codeccontext import VideoCodecContext
         py_ctx = VideoCodecContext(_cinit_sentinel)
     elif c_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+        from av.audio.codeccontext import AudioCodecContext
         py_ctx = AudioCodecContext(_cinit_sentinel)
     elif c_ctx.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
+        from av.subtitles.codeccontext import SubtitleCodecContext
         py_ctx = SubtitleCodecContext(_cinit_sentinel)
     else:
         py_ctx = CodecContext(_cinit_sentinel)
@@ -49,6 +52,7 @@ cdef class CodecContext(object):
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('Cannot instantiate CodecContext')
+        self.ptr = NULL # Required?
 
     cdef _init(self, lib.AVCodecContext *ptr):
         self.ptr = ptr
@@ -73,11 +77,12 @@ cdef class CodecContext(object):
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, NULL))
 
     def __dealloc__(self):
-        if self.ptr:
-            lib.avcodec_close(self.ptr)
-            if self._owns_ptr:
-                # TODO: Free it with avcodec_free_context
-                pass
+        # TODO: Why does it crash when not behind this barrier?!
+        if self._owns_ptr:
+            if self.ptr:
+                lib.avcodec_close(self.ptr)
+            # TODO: Free it with avcodec_free_context
+            pass
         if self.parser:
             lib.av_parser_close(self.parser)
         if self.parse_buffer:
@@ -91,13 +96,6 @@ cdef class CodecContext(object):
             self.name or '<nocodec>',
             id(self),
         )
-
-    property type:
-        def __get__(self):
-            return self.codec.type
-    property name:
-        def __get__(self):
-            return self.codec.name
 
     def parse(self, str input_, allow_stream=False):
 
@@ -158,8 +156,13 @@ cdef class CodecContext(object):
 
         return packets
 
-
     cpdef encode(self, Frame frame=None):
+        cdef Packet packet = self._encode(frame)
+        if packet:
+            packet._time_base = self.ptr.time_base
+            return packet
+
+    cdef _encode(self, Frame frame):
         raise NotImplementedError('Base CodecContext cannot encode frames.')
 
     cpdef decode(self, Packet packet, int count=0):
@@ -224,7 +227,41 @@ cdef class CodecContext(object):
         return decoded_objs
     
  
-    cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('Base CodecContext cannot decode packets.')
+
+
+    property name:
+        def __get__(self):
+            return self.codec.name
+
+    property type:
+        def __get__(self):
+            return self.codec.type
+        
+    property rate:
+        def __get__(self):
+            if self.ptr:
+                return self.ptr.ticks_per_frame * avrational_to_faction(&self.ptr.time_base)
+
+    property bit_rate:
+        def __get__(self):
+            return self.ptr.bit_rate if self.ptr and self.ptr.bit_rate > 0 else None
+        def __set__(self, int value):
+            self.ptr.bit_rate = value
+
+    property max_bit_rate:
+        def __get__(self):
+            if self.ptr and self.ptr.rc_max_rate > 0:
+                return self.ptr.rc_max_rate
+            else:
+                return None
+            
+    property bit_rate_tolerance:
+        def __get__(self):
+            return self.ptr.bit_rate_tolerance if self.ptr else None
+        def __set__(self, int value):
+            self.ptr.bit_rate_tolerance = value
+
 
 

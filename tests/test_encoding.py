@@ -61,7 +61,7 @@ def assert_rgb_rotate(self, input_):
     self.assertIsInstance(stream, VideoStream)
     self.assertEqual(stream.type, 'video')
     self.assertEqual(stream.name, 'mpeg4')
-    self.assertEqual(stream.average_rate, 24) # Only because we constructed is precisely.
+    self.assertEqual(stream.average_rate, 24) # Only because we constructed it precisely.
     self.assertEqual(stream.rate, Fraction(1, 24))
     self.assertEqual(stream.time_base * stream.duration, 2)
     self.assertEqual(stream.format.name, 'yuv420p')
