@@ -74,19 +74,9 @@ cdef class Frame(object):
         if not dst.num:
             raise ValueError('No dst time_base.')
 
-        if self.struct.pts != lib.AV_NOPTS_VALUE:
-            self.struct.pts = lib.av_rescale_q(
-                self.struct.pts,
-                src, dst
-            )
-        if self.struct.dts != lib.AV_NOPTS_VALUE:
-            self.struct.dts = lib.av_rescale_q(
-                self.struct.dts,
-                src, dst
-            )
-        if self.struct.duration > 0:
-            self.struct.duration = lib.av_rescale_q(
-                self.struct.duration,
+        if self.ptr.pts != lib.AV_NOPTS_VALUE:
+            self.ptr.pts = lib.av_rescale_q(
+                self.ptr.pts,
                 src, dst
             )
 
