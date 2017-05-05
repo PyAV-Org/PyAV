@@ -64,7 +64,7 @@ cdef class VideoCodecContext(CodecContext):
         if vframe is not None:
 
             # Reformat if it doesn't match.
-            if (vframe.format.pix_fmt != self.format.pix_fmt or
+            if (vframe.format.pix_fmt != self._format.pix_fmt or
                 vframe.width != self.ptr.width or
                 vframe.height != self.ptr.height
             ):
@@ -72,7 +72,7 @@ cdef class VideoCodecContext(CodecContext):
                 vframe = vframe._reformat(
                     self.ptr.width,
                     self.ptr.height,
-                    self.format.pix_fmt,
+                    self._format.pix_fmt,
                     lib.SWS_CS_DEFAULT,
                     lib.SWS_CS_DEFAULT
                 )
@@ -142,9 +142,45 @@ cdef class VideoCodecContext(CodecContext):
 
     cdef _build_format(self):
         if self.ptr:
-            self.format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
+            self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
         else:
-            self.format = None
+            self._format = None
+    
+    property format:
+        def __get__(self):
+            return self._format
+        def __set__(self, VideoFormat format):
+            self.ptr.pix_fmt = format.pix_fmt
+            self.ptr.width = format.width
+            self.ptr.height = format.height
+            self._build_format() # Kinda wasteful.
+
+    property width:
+        def __get__(self):
+            return self.ptr.width if self.ptr else None
+        def __set__(self, unsigned int value):
+            self.ptr.width = value
+            self._build_format()
+
+    property height:
+        def __get__(self):
+            return self.ptr.height if self.ptr else None
+        def __set__(self, unsigned int value):
+            self.ptr.height = value
+            self._build_format()
+
+    property pix_fmt:
+        def __get__(self):
+            return self._format.name
+        def __set__(self, value):
+            self.ptr.pix_fmt = lib.av_get_pix_fmt(value)
+            self._build_format()
+
+    property framerate:
+        def __get__(self):
+            return avrational_to_faction(&self.ptr.framerate)
+        def __set__(self, value):
+            to_avrational(value, &self.ptr.framerate)
         
     property gop_size:
         def __get__(self):
@@ -182,23 +218,3 @@ cdef class VideoCodecContext(CodecContext):
     property coded_height:
         def __get__(self):
             return self.ptr.coded_height if self.ptr else None
-
-    property width:
-        def __get__(self):
-            return self.ptr.width if self.ptr else None
-        def __set__(self, unsigned int value):
-            self.ptr.width = value
-            self._build_format()
-
-    property height:
-        def __get__(self):
-            return self.ptr.height if self.ptr else None
-        def __set__(self, unsigned int value):
-            self.ptr.height = value
-            self._build_format()
-
-    # TEMPORARY WRITE-ONLY PROPERTIES to get encoding working again.
-    property pix_fmt:
-        def __set__(self, value):
-            self.ptr.pix_fmt = lib.av_get_pix_fmt(value)
-            self._build_format()

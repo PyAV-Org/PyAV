@@ -7,7 +7,7 @@ from av.video.reformatter cimport VideoReformatter
 
 cdef class VideoCodecContext(CodecContext):
 
-    cdef readonly VideoFormat format
+    cdef VideoFormat _format
     cdef _build_format(self)
     
     cdef int last_w

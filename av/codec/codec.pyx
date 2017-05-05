@@ -44,10 +44,14 @@ cdef class Codec(object):
 
     cdef _init(self, name=None):
         if not self.ptr:
-            raise ValueError('no codec %r' % name)
+            raise ValueError('No codec %r.' % name)
         self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
-            raise RuntimeError('no descriptor for %r' % name) 
+            raise RuntimeError('No codec descriptor for %r.' % name) 
+
+    def create(self):
+        from .context import CodecContext
+        return CodecContext.create(self)
 
     property is_decoder:
         def __get__(self): return not self.is_encoder

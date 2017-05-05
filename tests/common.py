@@ -20,6 +20,7 @@ except ImportError:
 
 
 import av
+from av.codec import Codec, CodecContext
 from av.frame import Frame
 from av.packet import Packet
 from av.stream import Stream

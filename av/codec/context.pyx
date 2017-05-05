@@ -242,6 +242,11 @@ cdef class CodecContext(object):
     cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('Base CodecContext cannot decode packets.')
 
+    property time_base:
+        def __get__(self):
+            return avrational_to_faction(&self.ptr.time_base)
+        def __set__(self, value):
+            to_avrational(value, &self.ptr.time_base)
 
     property name:
         def __get__(self):
