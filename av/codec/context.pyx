@@ -202,7 +202,7 @@ cdef class CodecContext(object):
             if decoded:
 
                 if isinstance(decoded, Frame):
-                    pass #self._setup_frame(decoded)
+                    self._setup_decoded_frame(decoded)
                 decoded_objs.append(decoded)
 
                 # Sometimes we will error if we try to flush the stream
@@ -224,6 +224,20 @@ cdef class CodecContext(object):
 
         return decoded_objs
     
+    cdef _setup_decoded_frame(self, Frame frame):
+
+        # In FFMpeg <= 3.0, and all LibAV we know of, the frame's pts may be
+        # unset at this stage, and he PTS from a packet is the correct one while
+        # decoding, and it is copied to pkt_pts during creation of a frame.
+        # TODO: Look into deprecation of pkt_pts in FFmpeg > 3.0
+        if frame.ptr.pts == lib.AV_NOPTS_VALUE:
+            frame.ptr.pts = frame.ptr.pkt_pts
+
+        # We don't have to worry about context vs. stream time_base during decoding
+        # as they should be the same.
+        frame._time_base = self.ptr.time_base
+        
+        frame.index = self.ptr.frame_number - 1
  
     cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('Base CodecContext cannot decode packets.')

@@ -31,6 +31,8 @@ cdef class CodecContext(object):
     cdef _encode(self, Frame frame)
     cpdef decode(self, Packet packet, int count=?)
     cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed)
+    cdef _setup_decoded_frame(self, Frame)
 
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext*, lib.AVCodec*, bint owns_ptr)
+

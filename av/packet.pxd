@@ -7,16 +7,15 @@ from av.bytesource cimport ByteSource
 
 cdef class Packet(Buffer):
 
-    # Hold onto the original reference.
-    cdef ByteSource source
-
-    cdef Stream stream
     cdef lib.AVPacket struct
 
-    # We define our own time.
+    cdef Stream stream
+
+    # We track our own time.
     cdef lib.AVRational _time_base
     cdef int _retime(self, lib.AVRational, lib.AVRational) except -1
 
+    # Hold onto the original reference.
+    cdef ByteSource source
     cdef size_t _buffer_size(self)
     cdef void*  _buffer_ptr(self)
-    

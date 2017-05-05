@@ -124,15 +124,6 @@ cdef class Stream(object):
             self._container.seek(-1, <long>(timestamp * lib.AV_TIME_BASE), mode, backward, any_frame)
         else:
             self._container.seek(self._stream.index, timestamp, mode, backward, any_frame)
- 
-    cdef _setup_frame(self, Frame frame):
-        # This PTS handling looks a little nuts, however it really seems like it
-        # is the way to go. The PTS from a packet is the correct one while
-        # decoding, and it is copied to pkt_pts during creation of a frame.
-        # TODO: Look into deprecation of pkt_pts.
-        frame.ptr.pts = frame.ptr.pkt_pts
-        frame._time_base = self._stream.time_base
-        frame.index = self._codec_context.frame_number - 1
 
     property id:
         def __get__(self):
