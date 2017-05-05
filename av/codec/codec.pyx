@@ -1,8 +1,9 @@
 from libc.stdint cimport uint64_t
 
+from av.audio.format cimport get_audio_format
+from av.descriptor cimport wrap_avclass
 from av.utils cimport media_type_to_string
 from av.video.format cimport get_video_format
-from av.descriptor cimport wrap_avclass
 
 cdef object _cinit_sentinel = object()
 
@@ -22,6 +23,10 @@ cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     if not flag:
         return None
     return bool(bitfield & flag)
+
+
+class UnknownCodecError(ValueError):
+    pass
 
 
 cdef class Codec(object):
@@ -44,7 +49,7 @@ cdef class Codec(object):
 
     cdef _init(self, name=None):
         if not self.ptr:
-            raise ValueError('No codec %r.' % name)
+            raise UnknownCodecError(name)
         self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
             raise RuntimeError('No codec descriptor for %r.' % name) 
@@ -84,11 +89,21 @@ cdef class Codec(object):
             while ptr[0] != -1:
                 ret.append(get_video_format(ptr[0], 0, 0))
                 ptr += 1
-
             return ret
 
     property audio_formats:
-        def __get__(self): return <int>self.ptr.sample_fmts
+       def __get__(self):
+
+           if not self.ptr.sample_fmts:
+               return
+
+           ret = []
+           cdef lib.AVSampleFormat *ptr = self.ptr.sample_fmts
+           while ptr[0] != -1:
+               ret.append(get_audio_format(ptr[0]))
+               ptr += 1
+           return ret
+
 
     # Capabilities.
     property draw_horiz_band:

@@ -1,5 +1,5 @@
 cimport libav as lib
-from libc.stdlib cimport malloc
+from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 
 from av.bytesource cimport bytesource
@@ -19,20 +19,34 @@ cdef class Packet(Buffer):
         lib.av_init_packet(&self.struct)
         self.struct.data = NULL
         self.struct.size = 0
+        self.must_free = False
 
     def __init__(self, input=None):
+        
+        if isinstance(input, (int, long)):
+            self.struct.size = input
+            with nogil:
+                self.struct.data = <unsigned char*>malloc(self.struct.size)
+                self.must_free = True
+            return
+
         cdef ByteSource source = bytesource(input, True)
         if source is not None:
+            self.source = source
             with nogil:
                 self.struct.data = <unsigned char*>malloc(source.length)
+                self.must_free = True
+                # TODO: Take the pointer directly instead of copying it.
                 memcpy(self.struct.data, source.ptr, source.length)
                 self.struct.size = source.length
 
     def __dealloc__(self):
         with nogil:
-            if self.source is not None:
-                self.struct.data = NULL
-            # TODO: WTF happens with ref-counting?!
+            
+            if self.must_free and self.struct.data:
+                free(self.struct.data)
+            self.struct.data = NULL
+
             lib.av_free_packet(&self.struct)
     
     def __repr__(self):

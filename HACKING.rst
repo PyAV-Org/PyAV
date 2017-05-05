@@ -77,6 +77,9 @@ Both ``AVStream`` and ``AVCodecContext`` have a time_base. While encoding, they
 are for the ``AVPacket`` and ``AVFrame`` times respectively. However, while
 decoding all times are in ``AVStream.time_base``.
 
+TODO: I have seen the decode time_base be different in the codec_context JPEG
+	  sequence tests!
+
 When there is no time_base (such as on ``AVFormatContext``), there is an
 implicit time_base of ``1/AV_TIME_BASE``.
 

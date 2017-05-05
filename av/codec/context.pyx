@@ -78,6 +78,13 @@ cdef class CodecContext(object):
         # TODO: Options
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, NULL))
 
+    cpdef close(self, bint strict=True):
+        if not lib.avcodec_is_open(self.ptr):
+            if strict:
+                raise ValueError('CodecContext is already closed.')
+            return
+        err_check(lib.avcodec_close(self.ptr))
+
     def __dealloc__(self):
         if self.ptr and self._owns_ptr:
             lib.avcodec_close(self.ptr)
@@ -173,7 +180,7 @@ cdef class CodecContext(object):
         """
 
         if packet is None:
-            raise TypeError('packet must not be None')
+            packet = Packet() # Makes our control flow easier.
 
         if not self.codec.ptr:
             raise ValueError('cannot decode unknown codec')
@@ -198,7 +205,7 @@ cdef class CodecContext(object):
             decoded = self._decode_one(&packet.struct, &data_consumed)
             packet.struct.data += data_consumed
             packet.struct.size -= data_consumed
-
+            
             if decoded:
 
                 if isinstance(decoded, Frame):

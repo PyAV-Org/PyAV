@@ -1,6 +1,7 @@
 cimport libav as lib
 
 from av.audio.format cimport get_audio_format
+from av.audio.layout cimport get_audio_layout
 from av.audio.frame cimport alloc_audio_frame
 from av.frame cimport Frame
 from av.packet cimport Packet
@@ -92,7 +93,23 @@ cdef class AudioCodecContext(CodecContext):
     property frame_size:
         """Number of samples per channel in an audio frame."""
         def __get__(self): return self.ptr.frame_size
-        
+    
+    property sample_rate:
+        """samples per second """
+        def __get__(self): return self.ptr.sample_rate
+        def __set__(self, int value): self.ptr.sample_rate = value
+
+    property sample_fmt:
+        def __get__(self):
+            cdef char* name = lib.av_get_sample_fmt_name(self.ptr.sample_fmt)
+            return <str>name if name else None
+
+        def __set__(self, value):
+            cdef lib.AVSampleFormat sample_fmt = lib.av_get_sample_fmt(value)
+            if sample_fmt < 0:
+                raise ValueError('not a sample format: %r' % value)
+            self.ptr.sample_fmt = sample_fmt
+
     property rate:
         """samples per second """
         def __get__(self): return self.ptr.sample_rate
@@ -101,4 +118,25 @@ cdef class AudioCodecContext(CodecContext):
     property channels:
         def __get__(self):
             return self.ptr.channels
+        def __set__(self, value):
+            self.ptr.channels = value
+            self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
+
+    property channel_layout:
+        def __get__(self):
+            return self.ptr.channel_layout
+
+    property layout:
+        def __get__(self):
+            # Sometimes there isn't a layout set, but there are a number of
+            # channels. Assume it is the default layout.
+            # TODO:
+            #if not self._codec_context.channel_layout:
+                #self._codec_context.channel_layout = self.layout.layout
+            return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
+
+    property format:
+        def __get__(self):
+            return get_audio_format(self.ptr.sample_fmt)
+
     

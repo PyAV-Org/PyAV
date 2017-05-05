@@ -27,6 +27,7 @@ cdef class CodecContext(object):
 
     # Public API.
     cpdef open(self, bint strict=?)
+    cpdef close(self, bint strict=?)
     cpdef encode(self, Frame frame=?)
     cdef _encode(self, Frame frame)
     cpdef decode(self, Packet packet, int count=?)

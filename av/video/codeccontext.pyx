@@ -39,21 +39,7 @@ cdef class VideoCodecContext(CodecContext):
 
         cdef VideoFrame vframe = frame
 
-        if not self.is_open:
-
-            # TODO codec-ctx: Only set these if not already set.
-            # TODO codec-ctx: Assert frame is not None.
-            #self.ptr.pix_fmt = vframe.format.pix_fmt
-            #self.ptr.width = vframe.width
-            #self.ptr.height = vframe.height
-
-            # TODO codec-ctx: Take these from the Frame's time_base.
-            #self.ptr.framerate.num = 30
-            #self.ptr.framerate.den = 1
-            #self.ptr.time_base.num = 1
-            #self.ptr.time_base.den = 30 
-
-            self.open()
+        self.open(strict=False)
 
         if not self.reformatter:
             self.reformatter = VideoReformatter()

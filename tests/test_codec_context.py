@@ -10,16 +10,38 @@ class TestVideoCodecContext(TestCase):
             break
         self.yuv420p = frame.reformat(format='yuv420p')
 
-    def test_encoding(self):
+    def test_round_trip(self):
+
+        print 'START OF TEST'
+
         ctx = Codec('mpeg4', 'w').create()
         ctx.format = self.yuv420p.format
-        ctx.framerate = 24
         ctx.time_base = '1/24'
-        print ctx.framerate
-        print ctx.time_base
-        ctx.open()
-        packet = ctx.encode(self.yuv420p)
-        if not packet:
-            packet = ctx.encode(None)
-        self.assertIsInstance(packet, Packet)
 
+        ctx.open()
+        packets = [ctx.encode(self.yuv420p)]
+        packet = ctx.encode(None)
+        ctx.close()
+
+        while packet:
+            packets.append(packet)
+            packet = ctx.encode(None)
+
+        print packets
+        self.assertEqual(len(packets), 1)
+
+        packet = Packet(packets[0]) # Wipe out context.
+        print packet
+
+        ctx = Codec('mpeg4', 'r').create()
+        ctx.format = self.yuv420p.format
+        ctx.time_base = '1/24'
+
+        ctx.open()
+        frames = ctx.decode(packet)
+        frames.extend(ctx.decode(None))
+        ctx.close()
+        frames.extend(ctx.decode(None))
+
+        self.assertEqual(len(frames), 1)
+        self.assertIsInstance(frames[0], VideoFrame)

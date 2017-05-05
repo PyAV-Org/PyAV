@@ -8,7 +8,8 @@ from av.bytesource cimport ByteSource
 cdef class Packet(Buffer):
 
     cdef lib.AVPacket struct
-
+    cdef bint must_free
+    
     cdef Stream stream
 
     # We track our own time.
