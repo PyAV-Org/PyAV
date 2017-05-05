@@ -10,7 +10,8 @@ from av.packet cimport Packet
 cdef class CodecContext(object):
 
     cdef lib.AVCodecContext *ptr
-    
+    cdef bint _owns_ptr
+
     cdef lib.AVCodecParserContext *parser
     cdef unsigned char *parse_buffer
     cdef size_t parse_buffer_size
@@ -34,4 +35,4 @@ cdef class CodecContext(object):
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed)
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, bint owns_ptr=?)

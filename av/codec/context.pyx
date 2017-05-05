@@ -9,13 +9,15 @@ from av.codec.codec cimport Codec, wrap_codec
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 
+from av.audio.codeccontext cimport AudioCodecContext
 from av.video.codeccontext cimport VideoCodecContext
+from av.subtitles.codeccontext cimport SubtitleCodecContext
 
 
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, bint owns_ptr = False):
     """Build an av.CodecContext for an existing AVCodecContext."""
     
     cdef CodecContext py_ctx
@@ -23,9 +25,14 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx):
     # TODO: This.
     if c_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
         py_ctx = VideoCodecContext(_cinit_sentinel)
+    elif c_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+        py_ctx = AudioCodecContext(_cinit_sentinel)
+    elif c_ctx.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
+        py_ctx = SubtitleCodecContext(_cinit_sentinel)
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
+    py_ctx._owns_ptr = owns_ptr
     py_ctx._init(c_ctx)
 
     return py_ctx
@@ -41,7 +48,7 @@ cdef class CodecContext(object):
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('cannot instantiate CodecContext')
+            raise RuntimeError('Cannot instantiate CodecContext')
 
     cdef _init(self, lib.AVCodecContext *ptr):
         self.ptr = ptr
@@ -68,6 +75,9 @@ cdef class CodecContext(object):
     def __dealloc__(self):
         if self.ptr:
             lib.avcodec_close(self.ptr)
+            if self._owns_ptr:
+                # TODO: Free it with avcodec_free_context
+                pass
         if self.parser:
             lib.av_parser_close(self.parser)
         if self.parse_buffer:
@@ -150,7 +160,7 @@ cdef class CodecContext(object):
 
 
     cpdef encode(self, Frame frame=None):
-        pass
+        raise NotImplementedError('Base CodecContext cannot encode frames.')
 
     cpdef decode(self, Packet packet, int count=0):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
@@ -215,6 +225,6 @@ cdef class CodecContext(object):
     
  
     cdef Frame _decode_one(self, lib.AVPacket *packet, int *data_consumed):
-        raise NotImplementedError('base stream cannot decode packets')
+        raise NotImplementedError('Base CodecContext cannot decode packets.')
 
 

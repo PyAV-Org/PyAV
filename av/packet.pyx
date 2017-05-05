@@ -14,17 +14,19 @@ cdef class Packet(Buffer):
     :meth:`decode` must be called to extract encoded data.
 
     """
+
+    def __cinit__(self, input=None):
+        lib.av_init_packet(&self.struct)
+        self.struct.data = NULL
+        self.struct.size = 0
+
     def __init__(self, input=None):
         cdef ByteSource source = bytesource(input, True)
-        with nogil:
-            lib.av_init_packet(&self.struct)
-            if source is not None:
+        if source is not None:
+            with nogil:
                 self.struct.data = <unsigned char*>malloc(source.length)
                 memcpy(self.struct.data, source.ptr, source.length)
                 self.struct.size = source.length
-            else:
-                self.struct.data = NULL
-                self.struct.size = 0
 
     def __dealloc__(self):
         with nogil:

@@ -4,7 +4,7 @@ import logging
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
-from av.stream cimport Stream, build_stream
+from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, dict_to_avdict
 
 
@@ -114,7 +114,7 @@ cdef class OutputContainer(Container):
             codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
         
         # Finally construct the user-land stream.
-        cdef Stream py_stream = build_stream(self, stream)
+        cdef Stream py_stream = wrap_stream(self, stream)
         self.streams.add_stream(py_stream)
         return py_stream
     

@@ -14,7 +14,7 @@ from av.video.stream cimport VideoStream
 cdef object _cinit_bypass_sentinel = object()
 
 
-cdef Stream build_stream(Container container, lib.AVStream *c_stream):
+cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
     """Build an av.Stream for an existing AVStream.
 
     The AVStream MUST be fully constructed and ready for use before this is

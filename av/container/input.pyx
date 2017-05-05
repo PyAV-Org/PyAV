@@ -3,7 +3,7 @@ from libc.stdlib cimport malloc, free
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
-from av.stream cimport Stream, build_stream
+from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
 
 from av.utils import AVError # not cimport
@@ -47,7 +47,7 @@ cdef class InputContainer(Container):
 
         self.streams = StreamContainer()
         for i in range(self.proxy.ptr.nb_streams):
-            self.streams.add_stream(build_stream(self, self.proxy.ptr.streams[i]))
+            self.streams.add_stream(wrap_stream(self, self.proxy.ptr.streams[i]))
 
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
 

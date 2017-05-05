@@ -31,15 +31,17 @@ cdef class VideoCodecContext(CodecContext):
         if not (isinstance(frame, VideoFrame) or frame is None):
             raise TypeError('frame must be None or VideoFrame')
 
-        cdef VideoFrame vframe = frame # TODO
+        cdef VideoFrame vframe = frame
 
         if not self.is_open:
 
+            # TODO codec-ctx: Only set these if not already set.
+            # TODO codec-ctx: Assert frame is not None.
             self.ptr.pix_fmt = vframe.format.pix_fmt
             self.ptr.width = vframe.width
             self.ptr.height = vframe.height
 
-            # TODO: Take these from the Frame's time_base.
+            # TODO codec-ctx: Take these from the Frame's time_base.
             self.ptr.framerate.num = 30
             self.ptr.framerate.den = 1
             self.ptr.time_base.num = 1
@@ -50,21 +52,18 @@ cdef class VideoCodecContext(CodecContext):
         if not self.reformatter:
             self.reformatter = VideoReformatter()
 
-        cdef Packet packet
-        cdef int got_output
-        
-        cdef VideoFormat pixel_format
-        
-        if frame:
-            # don't reformat if format matches
-            pixel_format = frame.format
-            if pixel_format.pix_fmt == self.format.pix_fmt and \
-                        frame.width == self.ptr.width and frame.height == self.ptr.height:
-                formated_frame = frame
-            else:
-            
-                frame.reformatter = self.reformatter
-                formated_frame = frame._reformat(
+        cdef Packet packet = Packet()
+        cdef int got_packet
+
+        if vframe is not None:
+
+            # Reformat if it doesn't match.
+            if (vframe.format.pix_fmt != self.format.pix_fmt or
+                vframe.width != self.ptr.width or
+                vframe.height != self.ptr.height
+            ):
+                vframe.reformatter = self.reformatter
+                vframe = vframe._reformat(
                     self.ptr.width,
                     self.ptr.height,
                     self.format.pix_fmt,
@@ -72,40 +71,30 @@ cdef class VideoCodecContext(CodecContext):
                     lib.SWS_CS_DEFAULT
                 )
 
-        else:
-            # Flushing
-            formated_frame = None
-
-        packet = Packet()
-        packet.struct.data = NULL #packet data will be allocated by the encoder
-        packet.struct.size = 0
-        
-        if vframe:
-            
-            # It has a pts, so adjust it.
-            if formated_frame.ptr.pts != lib.AV_NOPTS_VALUE:
-                formated_frame.ptr.pts = lib.av_rescale_q(
-                    formated_frame.ptr.pts,
-                    formated_frame._time_base, #src
+            if vframe.ptr.pts != lib.AV_NOPTS_VALUE:
+                # It has a pts, so adjust it.
+                # TODO: Don't mutate the frame.
+                vframe.ptr.pts = lib.av_rescale_q(
+                    vframe.ptr.pts,
+                    vframe._time_base, #src
                     self.ptr.time_base,
                 )
             
-            # There is no pts, so create one.
             else:
-                formated_frame.ptr.pts = <int64_t>self.encoded_frame_count
+                # There is no pts, so create one.
+                vframe.ptr.pts = <int64_t>self.encoded_frame_count
                 
             self.encoded_frame_count += 1
 
-            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, vframe.ptr, &got_output))
+            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, vframe.ptr, &got_packet))
+
         else:
             # Flushing
-            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, NULL, &got_output))
+            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, NULL, &got_packet))
 
-        if got_output:
-            
-            # TODO: Assert we need to do this.
+        if got_packet:
+            # TODO codec-ctx: stream rebased pts/dts/duration from self.ptr.time_base to self._stream.time_base
             packet._time_base = self.ptr.time_base
-                
             return packet
 
         
@@ -130,17 +119,9 @@ cdef class VideoCodecContext(CodecContext):
         # Check if the frame size has changed so that we can always have a
         # SwsContext that is ready to go.
         if self.last_w != self.ptr.width or self.last_h != self.ptr.height:
-            
             self.last_w = self.ptr.width
             self.last_h = self.ptr.height
-            
-            self.buffer_size = lib.avpicture_get_size(
-                self.ptr.pix_fmt,
-                self.ptr.width,
-                self.ptr.height,
-            )
-            
-            # Create a new SwsContextProxy
+            # TODO codec-ctx: Stream would calculate self.buffer_size here.
             self.reformatter = VideoReformatter()
 
         # We are ready to send this one off into the world!
@@ -153,6 +134,7 @@ cdef class VideoCodecContext(CodecContext):
         # Share our SwsContext with the frames. Most of the time they will end
         # up using the same settings as each other, so it makes sense to cache
         # it like this.
-        # frame.reformatter = self.reformatter
+        # TODO codec-ctx: Stream did this.
+        #frame.reformatter = self.reformatter
 
         return frame
