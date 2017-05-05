@@ -17,7 +17,7 @@ from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrat
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, bint owns_ptr = False):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_codec, bint owns_ptr):
     """Build an av.CodecContext for an existing AVCodecContext."""
     
     cdef CodecContext py_ctx
@@ -36,7 +36,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, bint owns_ptr = 
         py_ctx = CodecContext(_cinit_sentinel)
 
     py_ctx._owns_ptr = owns_ptr
-    py_ctx._init(c_ctx)
+    py_ctx._init(c_ctx, c_codec)
 
     return py_ctx
 
@@ -47,16 +47,18 @@ cdef class CodecContext(object):
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        return wrap_codec_context(c_ctx)
+        err_check(lib.avcodec_get_context_defaults3(c_ctx, cy_codec.ptr))
+        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('Cannot instantiate CodecContext')
-        self.ptr = NULL # Required?
 
-    cdef _init(self, lib.AVCodecContext *ptr):
+    cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
         self.ptr = ptr
-        self.codec = wrap_codec(self.ptr.codec)
+        if self.ptr.codec and codec and self.ptr.codec != codec:
+            raise RuntimeError('Wrapping CodecContext with mismatched codec.')
+        self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
 
     @property
     def is_open(self):
@@ -66,7 +68,7 @@ cdef class CodecContext(object):
 
         if lib.avcodec_is_open(self.ptr):
             if strict:
-                raise ValueError('is already open')
+                raise ValueError('CodecContext is already open.')
             return
 
         # We might pass partial frames.
@@ -77,17 +79,13 @@ cdef class CodecContext(object):
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, NULL))
 
     def __dealloc__(self):
-        # TODO: Why does it crash when not behind this barrier?!
-        if self._owns_ptr:
-            if self.ptr:
-                lib.avcodec_close(self.ptr)
-            # TODO: Free it with avcodec_free_context
-            pass
+        if self.ptr and self._owns_ptr:
+            lib.avcodec_close(self.ptr)
+            lib.avcodec_free_context(&self.ptr)
         if self.parser:
             lib.av_parser_close(self.parser)
         if self.parse_buffer:
             free(self.parse_buffer)
-
 
     def __repr__(self):
         return '<av.%s %s/%s at 0x%x>' % (
@@ -262,6 +260,14 @@ cdef class CodecContext(object):
             return self.ptr.bit_rate_tolerance if self.ptr else None
         def __set__(self, int value):
             self.ptr.bit_rate_tolerance = value
+
+    # TODO: Does it conceptually make sense that this is on streams, instead
+    # of on the container?
+    property thread_count:
+        def __get__(self):
+            return self.ptr.thread_count
+        def __set__(self, int value):
+            self.ptr.thread_count = value
 
 
 
