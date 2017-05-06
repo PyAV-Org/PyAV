@@ -191,7 +191,7 @@ cdef class OutputContainer(Container):
         self.proxy.err_check(lib.av_write_trailer(self.proxy.ptr))
         cdef Stream stream
         for stream in self.streams:
-            stream.codec.close()
+            stream.codec_context.close()
             
         if self.file is None and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.proxy.ptr.pb)

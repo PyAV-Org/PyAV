@@ -122,7 +122,7 @@ class TestCoders(TestCase):
                    'pix_fmt':'yuv422p',
                    'width':  1920,
                    'height': 1080,
-                   'time_base': Fraction(30000, 1001),
+                   'time_base': '1001/30000',
                    'max_frames': 5}
         self.video_encoding('dnxhd', options)
 
@@ -146,6 +146,7 @@ class TestCoders(TestCase):
         ctx.width = width
         ctx.height = height
         ctx.time_base = time_base
+        ctx.framerate = 1 / ctx.time_base
         ctx.pix_fmt = pix_fmt
         #ctx.options = options # TODO!
         ctx.open()
@@ -187,8 +188,6 @@ class TestCoders(TestCase):
 
                 if frame_count >= max_frames:
                     break
-
-            print len(packet_sizes), 'before flush'
 
             while True:
                 new_packet = ctx.encode(None)
@@ -240,7 +239,8 @@ class TestCoders(TestCase):
 
         ctx.time_base = Fraction(1) / sample_rate
         ctx.sample_rate = sample_rate
-        ctx.sample_fmt = sample_fmt
+        ctx.format = sample_fmt
+        ctx.layout = channel_layout
         ctx.channels = channels
 
         ctx.open()
@@ -249,6 +249,7 @@ class TestCoders(TestCase):
 
         container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         audio_stream = container.streams.audio[0]
+
         path = self.sandboxed('encoder.%s' % codec)
 
         samples = 0
@@ -301,7 +302,8 @@ class TestCoders(TestCase):
         ctx = Codec(codec_name, 'r').create()
         ctx.time_base = Fraction(1) / sample_rate
         ctx.sample_rate = sample_rate
-        ctx.sample_fmt = sample_fmt
+        ctx.format = sample_fmt
+        ctx.layout = channel_layout
         ctx.channels = channels
         ctx.open()
 
@@ -310,7 +312,7 @@ class TestCoders(TestCase):
         # should have more asserts but not sure what to check
         # libav and ffmpeg give different results
         # so can really use checksums
-        for frame in iter_raw_frames(path, packet_sizes, decoder):
+        for frame in iter_raw_frames(path, packet_sizes, ctx):
             result_samples += frame.samples
             self.assertEqual(frame.rate, sample_rate)
             self.assertEqual(len(frame.layout.channels), channels)

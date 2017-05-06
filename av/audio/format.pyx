@@ -22,9 +22,15 @@ cdef class AudioFormat(object):
         if name is _cinit_bypass_sentinel:
             return
 
-        cdef lib.AVSampleFormat sample_fmt = lib.av_get_sample_fmt(name)
+        cdef lib.AVSampleFormat sample_fmt
+        if isinstance(name, AudioFormat):
+            sample_fmt = (<AudioFormat>name).sample_fmt
+        else:
+            sample_fmt = lib.av_get_sample_fmt(name)
+
         if sample_fmt < 0:
-            raise ValueError('not a sample format: %r' % name)
+            raise ValueError('Not a sample format: %r' % name)
+        
         self._init(sample_fmt)
 
     cdef _init(self, lib.AVSampleFormat sample_fmt):

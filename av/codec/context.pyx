@@ -266,6 +266,14 @@ cdef class CodecContext(object):
         def __get__(self):
             return self.codec.type
         
+    property profile:
+        def __get__(self):
+            if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
+                return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
+            else:
+                return None
+
+    # TODO: Deprecate.
     property rate:
         def __get__(self):
             if self.ptr:
