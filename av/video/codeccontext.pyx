@@ -24,7 +24,7 @@ cdef class VideoCodecContext(CodecContext):
         self._build_format()
         self.encoded_frame_count = 0
 
-    cdef _encode(self, Frame frame):
+    cdef _encode_one(self, Frame frame):
         """Encodes a frame of video, returns a packet if one is ready.
 
         The output packet does not necessarily contain data for the most recent frame, 

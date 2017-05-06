@@ -180,12 +180,31 @@ cdef class CodecContext(object):
         if self.container:
             self.container.start_encoding()
 
-        cdef Packet packet = self._encode(frame)
-        if packet:
-            packet._time_base = self.ptr.time_base
-            return packet
+        cdef Packet packet
 
-    cdef _encode(self, Frame frame):
+        res = []
+
+        # If flushing, keep going until we get nothing back.
+        if frame is None:
+            while True:
+                packet = self._encode_one(None)
+                if packet:
+                    self._setup_encoded_packet(packet)
+                    res.append(packet)
+                else:
+                    break
+        else:
+            packet = self._encode_one(frame)
+            if packet:
+                self._setup_encoded_packet(packet)
+                res.append(packet)
+
+        return res
+
+    cdef _setup_encoded_packet(self, Packet packet):
+        packet._time_base = self.ptr.time_base
+
+    cdef _encode_one(self, Frame frame):
         raise NotImplementedError('Base CodecContext cannot encode frames.')
 
     cpdef decode(self, Packet packet, int count=0):
@@ -213,7 +232,7 @@ cdef class CodecContext(object):
 
         cdef bint is_flushing = not (packet.struct.data and packet.struct.size)
 
-        # Keep decoding while there is data.
+        # Keep decoding while there is data in this packet.
         while is_flushing or packet.struct.size > 0:
 
             if is_flushing:

@@ -108,10 +108,14 @@ cdef class Stream(object):
         setattr(self.codec_context, name, value)
 
     def encode(self, frame=None):
-        cdef Packet packet = self.codec_context.encode(frame)
-        if packet is not None:
+
+        packets = self.codec_context.encode(frame)
+        
+        cdef Packet packet
+        for packet in packets:
             packet._retime(self._codec_context.time_base, self._stream.time_base)
-            return packet
+        
+        return packets
 
     def decode(self, packet=None, count=0):
         return self.codec_context.decode(packet, count)

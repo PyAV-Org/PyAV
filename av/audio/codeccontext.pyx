@@ -21,7 +21,7 @@ cdef class AudioCodecContext(CodecContext):
         if self.ptr.channels and not self.ptr.channel_layout:
             self.ptr.channel_layout = get_audio_layout(self.ptr.channels, 0).layout
 
-    cdef _encode(self, Frame input_frame):
+    cdef _encode_one(self, Frame input_frame):
         """Encodes a frame of audio, returns a packet if one is ready.
         The output packet does not necessarily contain data for the most recent frame, 
         as encoders can delay, split, and combine input frames internally as needed.
@@ -43,7 +43,6 @@ cdef class AudioCodecContext(CodecContext):
 
         cdef bint use_fifo = not (self.ptr.codec.capabilities & lib.CODEC_CAP_VARIABLE_FRAME_SIZE)
         if use_fifo:
-            print 'USING FIFO; frame_size:', self.ptr.frame_size
             if not self.fifo:
                 self.fifo = AudioFifo()
             if frame:
@@ -139,7 +138,6 @@ cdef class AudioCodecContext(CodecContext):
             return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
         def __set__(self, value):
             cdef AudioLayout layout = AudioLayout(value)
-            print 'SETTING LAYOUT TO', layout
             self.ptr.channel_layout = layout.layout
             self.ptr.channels = layout.nb_channels
 

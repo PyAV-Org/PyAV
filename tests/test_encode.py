@@ -35,17 +35,15 @@ def write_rgb_rotate(output):
         ))
         frame.planes[0].update_from_string(image.tobytes())
 
-        packet = stream.encode(frame)
-        if packet:
+        print 'HERE2a'
+        for packet in stream.encode(frame):
+            print 'HERE2', packet
             output.mux(packet)
 
-
-    while True:
-        packet = stream.encode(None)
-        if packet:
-            output.mux(packet)
-        else:
-            break
+    print 'HERE3a'
+    for packet in stream.encode(None):
+        print 'HERE3', packet
+        output.mux(packet)
 
     # Done!
     output.close()
@@ -105,32 +103,22 @@ class TestBasicAudioEncoding(TestCase):
 
         src = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         for frame in src.decode(audio=0):
-            packet = stream.encode(frame)
-            if packet:
+            for packet in stream.encode(frame):
                 output.mux(packet)
 
-        while True:
-            packet = stream.encode(None)
-            if packet:
-                output.mux(packet)
-            else:
-                break
+        for packet in stream.encode(None):
+            output.mux(packet)
 
         output.close()
-
 
         container = av.open(path)
         self.assertEqual(len(container.streams), 1)
         self.assertEqual(container.metadata.get('title'), 'container', container.metadata)
         self.assertEqual(container.metadata.get('key'), None)
+
         stream = container.streams[0]
         self.assertIsInstance(stream, AudioStream)
         self.assertEqual(stream.codec_context.sample_rate, sample_rate)
         self.assertEqual(stream.codec_context.format.name, 's16p')
         self.assertEqual(stream.codec_context.channels, channels)
 
-if __name__ == '__main__':
-    import logging
-    logging.basicConfig()
-    import unittest
-    unittest.main()
