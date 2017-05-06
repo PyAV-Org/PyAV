@@ -1,5 +1,7 @@
 from libc.stdint cimport uint64_t
 
+from warnings import warn
+
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
 from av.utils cimport media_type_to_string
@@ -38,28 +40,35 @@ cdef class Codec(object):
 
         if mode == 'w':
             self.ptr = lib.avcodec_find_encoder_by_name(name)
-            self.is_encoder = True
         elif mode == 'r':
             self.ptr = lib.avcodec_find_decoder_by_name(name)
-            self.is_encoder = False
         else:
             raise ValueError('Invalid mode; must be "r" or "w".', mode)
 
         self._init(name)
 
     cdef _init(self, name=None):
+
         if not self.ptr:
             raise UnknownCodecError(name)
+        
         self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
-            raise RuntimeError('No codec descriptor for %r.' % name) 
+            raise RuntimeError('No codec descriptor for %r.' % name)
+
+        self.is_encoder = lib.av_codec_is_encoder(self.ptr)
+
+        # Sanity check.
+        if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
+            warn('%s is both encoder and decoder. Please notify PyAV developers.')
 
     def create(self):
         from .context import CodecContext
         return CodecContext.create(self)
 
     property is_decoder:
-        def __get__(self): return not self.is_encoder
+        def __get__(self):
+            return not self.is_encoder
 
     property descriptor:
         def __get__(self): return wrap_avclass(self.ptr.priv_class)
@@ -189,15 +198,20 @@ def dump_codecs():
  ------'''
 
     for name in sorted(codecs_availible):
+
         try:
             e_codec = Codec(name, 'w')
         except ValueError:
             e_codec = None
+
         try:
             d_codec = Codec(name, 'r')
         except ValueError:
             d_codec = None
+
+        # TODO: Assert these always have the same properties.
         codec = e_codec or d_codec
+
         print ' %s%s%s%s%s%s %-18s %s' % (
             '.D'[bool(d_codec)],
             '.E'[bool(e_codec)],

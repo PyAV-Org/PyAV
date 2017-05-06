@@ -63,9 +63,16 @@ cdef class CodecContext(object):
         # Signal that we want to reference count.
         self.ptr.refcounted_frames = 1
 
-    @property
-    def is_open(self):
-        return lib.avcodec_is_open(self.ptr)
+    property is_open:
+        def __get__(self):
+            return lib.avcodec_is_open(self.ptr)
+
+    property is_encoder:
+        def __get__(self):
+            return lib.av_codec_is_encoder(self.ptr.codec)
+    property is_decoder:
+        def __get__(self):
+            return lib.av_codec_is_decoder(self.ptr.codec)
 
     cpdef open(self, bint strict=True):
 
