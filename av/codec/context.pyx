@@ -8,7 +8,8 @@ cimport libav as lib
 from av.codec.codec cimport Codec, wrap_codec
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
-
+from av.dictionary cimport _Dictionary
+from av.dictionary import Dictionary
 
 
 
@@ -78,8 +79,15 @@ cdef class CodecContext(object):
         # if self.codec.ptr.capabilities & lib.CODEC_CAP_TRUNCATED:
         #     self.ptr.flags |= lib.CODEC_FLAG_TRUNCATED
 
-        # TODO: Options
-        err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, NULL))
+        # TODO: Do this better.
+        cdef _Dictionary options = Dictionary()
+        options.update(self.options or {})
+        # for k, v in self.options.iteritems():
+        #     options[k] = v
+
+        err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
+
+        self.options = dict(options)
 
     cpdef close(self, bint strict=True):
         if not lib.avcodec_is_open(self.ptr):

@@ -13,6 +13,8 @@ cdef class CodecContext(object):
 
     # Does this object own its `ptr`? If it is from a stream, it does not.
     # If it is standalone, it does.
+    # TODO: This should be a reference to the ContainerProxy, as that
+    # is the only reason we would have to not own the poitner at this point.
     cdef bint _owns_ptr
 
     cdef lib.AVCodecParserContext *parser
@@ -24,6 +26,8 @@ cdef class CodecContext(object):
     cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec)
 
     cdef readonly Codec codec
+
+    cdef public dict options
 
     # Public API.
     cpdef open(self, bint strict=?)

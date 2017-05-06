@@ -148,7 +148,7 @@ class TestCoders(TestCase):
         ctx.time_base = time_base
         ctx.framerate = 1 / ctx.time_base
         ctx.pix_fmt = pix_fmt
-        #ctx.options = options # TODO!
+        ctx.options = options # TODO!
         ctx.open()
 
         path = self.sandboxed('encoder.%s' % codec_name)
