@@ -7,6 +7,8 @@ import traceback
 
 cimport libav as lib
 
+from av.logging cimport _get_last_error
+
 
 # === ERROR HANDLING ===
 # ======================
@@ -22,7 +24,14 @@ cdef int PYAV_ERROR = -0x50794156 # 'PyAV'
 
 class AVError(EnvironmentError):
     """Exception class for errors from within the underlying FFmpeg/Libav."""
-    pass
+    def __init__(self, code, message, filename=None, error_log=None):
+        if filename:
+            super(AVError, self).__init__(code, message, filename)
+        else:
+            super(AVError, self).__init__(code, message)
+        self.error_log = error_log
+        if error_log:
+            self.strerror = '%s (%s: %s)' % (self.strerror, error_log[0], error_log[1])
 AVError.__module__ = 'av'
 
 
@@ -47,9 +56,12 @@ cdef int stash_exception(exc_info=None):
     return PYAV_ERROR
 
 
+cdef int _last_log_count = 0
+
 cdef int err_check(int res=0, str filename=None) except -1:
     
     global _err_count
+    global _last_log_count
 
     # Check for stashed exceptions.
     if _err_count:
@@ -59,23 +71,34 @@ cdef int err_check(int res=0, str filename=None) except -1:
             _local.exc_info = None
             raise exc_info[0], exc_info[1], exc_info[2]
 
+    if res >= 0:
+        return res
+
     cdef bytes py_buffer
     cdef char *c_buffer
-    if res < 0:
 
-        if res == PYAV_ERROR:
-            py_buffer = b'Error in PyAV callback'
-        else:
-            # This is kinda gross.
-            py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
-            c_buffer = py_buffer
-            lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
-            py_buffer = c_buffer
 
-        if filename:
-            raise AVError(-res, py_buffer.decode('latin1'), filename)
-        else:
-            raise AVError(-res, py_buffer.decode('latin1'))
+    if res == PYAV_ERROR:
+        py_buffer = b'Error in PyAV callback'
+    else:
+        # This is kinda gross.
+        py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
+        c_buffer = py_buffer
+        lib.av_strerror(res, c_buffer, AV_ERROR_MAX_STRING_SIZE)
+        py_buffer = c_buffer
+    cdef unicode message = py_buffer.decode('latin1')
+
+    # Add details from the last log onto the end.
+    error_log = None
+    log_count, last_log = _get_last_error()
+    if log_count > _last_log_count:
+        error_log = (last_log[0].strip(), last_log[2].strip())
+        _last_log_count = log_count
+
+    if filename:
+        raise AVError(-res, message, filename, error_log)
+    else:
+        raise AVError(-res, message, None,     error_log)
 
     return res
 

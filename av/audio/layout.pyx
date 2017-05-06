@@ -15,6 +15,7 @@ cdef AudioLayout get_audio_layout(int channels, uint64_t c_layout):
 
 
 # These are the defaults given by FFmpeg; Libav is different.
+# TODO: What about av_get_default_channel_layout(...)?
 cdef uint64_t default_layouts[17]
 default_layouts[0] = 0
 default_layouts[1] = lib.AV_CH_LAYOUT_MONO
@@ -68,6 +69,7 @@ cdef dict channel_descriptions = {
 cdef class AudioLayout(object):
 
     def __init__(self, layout):
+
         if layout is _cinit_bypass_sentinel:
             return
 
@@ -78,6 +80,8 @@ cdef class AudioLayout(object):
             c_layout = default_layouts[layout]
         elif isinstance(layout, basestring):
             c_layout = lib.av_get_channel_layout(layout)
+        elif isinstance(layout, AudioLayout):
+            c_layout = layout.layout
         else:
             raise TypeError('layout must be str or int')
 
@@ -87,7 +91,6 @@ cdef class AudioLayout(object):
         self._init(c_layout)
 
     cdef _init(self, uint64_t layout):
-
         self.layout = layout
         self.nb_channels = lib.av_get_channel_layout_nb_channels(layout)
         self.channels = PyTuple_New(self.nb_channels)

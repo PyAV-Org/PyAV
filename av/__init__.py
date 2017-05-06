@@ -17,6 +17,8 @@ from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
 from av.audio.layout import AudioLayout
 from av.audio.resampler import AudioResampler
+from av.codec.codec import Codec
+from av.codec.context import CodecContext
 from av.container import open
 from av.utils import AVError
 from av.video.format import VideoFormat

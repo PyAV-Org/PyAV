@@ -5,6 +5,8 @@ from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 from av.plane cimport Plane
 from av.utils cimport avrational_to_faction
 
+from fractions import Fraction
+
 
 cdef class Frame(object):
 
@@ -24,43 +26,6 @@ cdef class Frame(object):
             self.index,
             id(self),
         )
-
-    property dts:
-
-        def __get__(self):
-            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
-                return None
-            return self.ptr.pkt_dts
-
-    property pts:
-
-        def __get__(self):
-            if self.ptr.pts == lib.AV_NOPTS_VALUE:
-                return None
-            return self.ptr.pts
-
-        def __set__(self, value):
-            if value is None:
-                self.ptr.pts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.pts = value
-
-    property time:
-
-        def __get__(self):
-            if self.ptr.pts == lib.AV_NOPTS_VALUE:
-                return None
-            else:
-                return float(self.ptr.pts) * self._time_base.num / self._time_base.den
-
-    property time_base:
-
-        def __get__(self):
-            return avrational_to_faction(&self._time_base)
-
-        def __set__(self, value):
-            self._time_base.num = value.numerator
-            self._time_base.den = value.denominator
 
     cdef _init_planes(self, cls=Plane):
 
@@ -95,4 +60,58 @@ cdef class Frame(object):
     
     cdef _init_properties(self):
         pass # Dummy to match the API of the others.
+
+
+    cdef int _retime(self, lib.AVRational src, lib.AVRational dst) except -1:
+
+        if not src.num:
+            src = self._time_base
+        if not dst.num:
+            dst = self._time_base
+
+        if not src.num:
+            raise ValueError('No src time_base.')
+        if not dst.num:
+            raise ValueError('No dst time_base.')
+
+        if self.ptr.pts != lib.AV_NOPTS_VALUE:
+            self.ptr.pts = lib.av_rescale_q(
+                self.ptr.pts,
+                src, dst
+            )
+
+        self._time_base = dst
+        return 0 # Just for exception.
+
+    property dts:
+        def __get__(self):
+            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
+                return None
+            return self.ptr.pkt_dts
+
+    property pts:
+        def __get__(self):
+            if self.ptr.pts == lib.AV_NOPTS_VALUE:
+                return None
+            return self.ptr.pts
+        def __set__(self, value):
+            if value is None:
+                self.ptr.pts = lib.AV_NOPTS_VALUE
+            else:
+                self.ptr.pts = value
+
+    property time:
+        def __get__(self):
+            if self.ptr.pts == lib.AV_NOPTS_VALUE:
+                return None
+            else:
+                return float(self.ptr.pts) * self._time_base.num / self._time_base.den
+
+    property time_base:
+        def __get__(self):
+            return avrational_to_faction(&self._time_base)
+        def __set__(self, value):
+            value = Fraction(value)
+            self._time_base.num = value.numerator
+            self._time_base.den = value.denominator
 

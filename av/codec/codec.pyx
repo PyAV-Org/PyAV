@@ -1,10 +1,20 @@
 from libc.stdint cimport uint64_t
 
+from av.audio.format cimport get_audio_format
+from av.descriptor cimport wrap_avclass
 from av.utils cimport media_type_to_string
 from av.video.format cimport get_video_format
-from av.descriptor cimport wrap_avclass
 
 cdef object _cinit_sentinel = object()
+
+
+
+cdef Codec wrap_codec(lib.AVCodec *ptr):
+    cdef Codec codec = Codec(_cinit_sentinel)
+    codec.ptr = ptr
+    codec.is_encoder = lib.av_codec_is_encoder(ptr)
+    codec._init()
+    return codec
 
 
 cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
@@ -13,6 +23,10 @@ cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     if not flag:
         return None
     return bool(bitfield & flag)
+
+
+class UnknownCodecError(ValueError):
+    pass
 
 
 cdef class Codec(object):
@@ -29,14 +43,20 @@ cdef class Codec(object):
             self.ptr = lib.avcodec_find_decoder_by_name(name)
             self.is_encoder = False
         else:
-            raise ValueError('invalid mode; must be "r" or "w"', mode)
+            raise ValueError('Invalid mode; must be "r" or "w".', mode)
 
+        self._init(name)
+
+    cdef _init(self, name=None):
         if not self.ptr:
-            raise ValueError('no codec %r' % name)
-
+            raise UnknownCodecError(name)
         self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
-            raise RuntimeError('no descriptor for %r' % name) 
+            raise RuntimeError('No codec descriptor for %r.' % name) 
+
+    def create(self):
+        from .context import CodecContext
+        return CodecContext.create(self)
 
     property is_decoder:
         def __get__(self): return not self.is_encoder
@@ -69,11 +89,21 @@ cdef class Codec(object):
             while ptr[0] != -1:
                 ret.append(get_video_format(ptr[0], 0, 0))
                 ptr += 1
-
             return ret
 
     property audio_formats:
-        def __get__(self): return <int>self.ptr.sample_fmts
+       def __get__(self):
+
+           if not self.ptr.sample_fmts:
+               return
+
+           ret = []
+           cdef lib.AVSampleFormat *ptr = self.ptr.sample_fmts
+           while ptr[0] != -1:
+               ret.append(get_audio_format(ptr[0]))
+               ptr += 1
+           return ret
+
 
     # Capabilities.
     property draw_horiz_band:
@@ -135,12 +165,6 @@ cdef class Codec(object):
     property text_sub:
         def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
-
-cdef class CodecContext(object):
-
-    def __cinit__(self, x):
-        if x is not _cinit_sentinel:
-            raise RuntimeError('cannot instantiate CodecContext')
 
 
 codecs_availible = set()

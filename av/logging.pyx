@@ -12,14 +12,15 @@ import sys
 
 
 # Levels.
-QUIET = lib.AV_LOG_QUIET
-PANIC = lib.AV_LOG_PANIC
-FATAL = lib.AV_LOG_FATAL
+QUIET = lib.AV_LOG_QUIET # -8
+PANIC = lib.AV_LOG_PANIC # 0
+FATAL = lib.AV_LOG_FATAL # 8
 ERROR = lib.AV_LOG_ERROR
 WARNING = lib.AV_LOG_WARNING
 INFO = lib.AV_LOG_INFO
 VERBOSE = lib.AV_LOG_VERBOSE
 DEBUG = lib.AV_LOG_DEBUG
+#TRACE = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
 
 
 # Map from AV levels to logging levels.
@@ -123,8 +124,30 @@ cdef _Record *_queue_end = NULL
 cdef int _queue_size
 cdef bint _print_queue_size = False
 
-cdef _Record _last_record # For repeat check.
+# For repeat check.
+cdef _Record _last_record 
 cdef int _skip_count = 0
+
+
+# For error reporting.
+cdef _Record _last_error_record
+cdef int _error_count = 0
+
+cdef _get_last_error():
+    """Get the (name, level, message) for the last error log."""
+    if _error_count:
+        # Manual locking FTW!
+        if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
+            res = _error_count, (
+                'libav.' + _last_error_record.name if _last_error_record.name else '',
+                _last_error_record.level,
+                _last_error_record.message if _last_error_record.message[0] else '',
+            )
+            pythread.PyThread_release_lock(_skip_lock)
+        return res
+    else:
+        return 0, None
+
 
 cdef bint _push_record(_Record *src) nogil:
     """Copies the given record, and puts it onto the queue."""
@@ -184,16 +207,12 @@ cdef bint _pop_record(_Record *dst):
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
 
-    global _skip_count
-
     # We need to do everything with the `void *ptr` in this function, since
     # the object it represents may be freed by the time the async_log_callback
     # is run by Python.
 
-    # We have to filter it ourselves.
-    # Note that FFmpeg's levels are backwards from Python's.
-    if level > _level_threshold:
-        return
+    global _error_count
+    global _skip_count
 
     cdef bint inited = lib.Py_IsInitialized()
     if not inited and not _print_after_shutdown:
@@ -211,22 +230,46 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         # it doesn't matter if the AVClass that returned it vanishes or not.
         record.name = cls.item_name(ptr)
 
+    # We have to filter it ourselves, but we will still process it in general so
+    # it is availible to our error handling.
+    # Note that FFmpeg's levels are backwards from Python's.
+    cdef bint is_interesting = level <= _level_threshold
+
     # Skip messages which are identical to the previous.
-    cdef bint is_repeated
+    cdef bint is_repeated = False
     if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
-        is_repeated = _skip_repeated and _last_record.message[0] and strncmp(_last_record.message, record.message, 1024) == 0
-        if is_repeated:
-            _skip_count += 1
-        elif _skip_count:
-            # Now that we have hit the end of the repeat cycle, tally up how many.
-            # We are both abusing the _last_record (assuming that the next message
-            # won't also be about repeated messages), but also assuming that putting
-            # the message onto the queue will get it seen.
-            lib.snprintf(_last_record.message, 1023, "last message repeated %d times", _skip_count)
-            _push_record(&_last_record)
-            _skip_count = 0
-        memcpy(&_last_record, &record, sizeof(_Record))
+        
+        if is_interesting:
+
+            is_repeated = (
+                _skip_repeated and
+                _last_record.message[0] and
+                strncmp(_last_record.message, record.message, 1024) == 0
+            )
+
+            if is_repeated:
+                _skip_count += 1
+
+            elif _skip_count:
+                # Now that we have hit the end of the repeat cycle, tally up how many.
+                # We are both abusing the _last_record (assuming that the next message
+                # won't also be about repeated messages), but also assuming that putting
+                # the message onto the queue will get it seen.
+                lib.snprintf(_last_record.message, 1023, "last message repeated %d times", _skip_count)
+                _push_record(&_last_record)
+                _skip_count = 0
+
+            memcpy(&_last_record, &record, sizeof(_Record))
+
+        # Hold onto errors for err_check.
+        if level == lib.AV_LOG_ERROR:
+            _error_count += 1
+            memcpy(&_last_error_record, &record, sizeof(_Record))
+
         pythread.PyThread_release_lock(_skip_lock)
+        
+        if not is_interesting:
+            return
         if is_repeated:
             return
 
@@ -241,7 +284,6 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
             item_name, level, record.message
         )
         return
-
 
 
 cdef int async_log_callback(void *arg) except -1:

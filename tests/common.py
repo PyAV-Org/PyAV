@@ -18,8 +18,9 @@ try:
 except ImportError:
     Image = ImageFilter = None
 
-
 import av
+from av.buffer import Buffer
+from av.codec import Codec, CodecContext
 from av.frame import Frame
 from av.packet import Packet
 from av.stream import Stream

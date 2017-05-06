@@ -40,6 +40,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef uint64_t CODEC_CAP_INTRA_ONLY
     cdef uint64_t CODEC_CAP_LOSSLESS
     
+    cdef uint64_t CODEC_FLAG_TRUNCATED
+    
     cdef int AV_PKT_FLAG_KEY
     
     cdef int FF_COMPLIANCE_VERY_STRICT
@@ -117,6 +119,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         float rc_max_available_vbv_use
         float rc_min_vbv_overflow_use
         
+        AVRational framerate
         AVRational time_base
         int ticks_per_frame
         
@@ -149,6 +152,10 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         # User Data
         void *opaque
     
+    cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
+    cdef void avcodec_free_context(AVCodecContext **ctx)
+    
+    cdef int avcodec_get_context_defaults3(AVCodecContext *ctx, AVCodec *codec)
     cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
     cdef struct AVCodecDescriptor:
@@ -291,8 +298,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     
     cdef void avcodec_free_frame(AVFrame **frame)
     
-    cdef void av_free_packet(AVPacket*)
     cdef void av_init_packet(AVPacket*)
+    cdef int av_new_packet(AVPacket*, int)
+    cdef void av_free_packet(AVPacket*)
     cdef void av_packet_unref(AVPacket *pkt)   
     cdef int av_copy_packet(AVPacket *dst, AVPacket *src)
     cdef int av_dup_packet(AVPacket *pkt)
@@ -353,4 +361,32 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
     cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
     
+    
+    # === Parsers
+
+    cdef struct AVCodecParser:
+        int codec_ids[5]
+
+    cdef AVCodecParser* av_parser_next(AVCodecParser *c)
+
+    cdef struct AVCodecParserContext:
+        pass
+
+    cdef AVCodecParserContext *av_parser_init(int codec_id)
+    cdef int av_parser_parse2(
+        AVCodecParserContext *s,
+        AVCodecContext *avctx,
+        uint8_t **poutbuf, int *poutbuf_size,
+        const uint8_t *buf, int buf_size,
+        int64_t pts, int64_t dts,
+        int64_t pos
+    )
+    cdef int av_parser_change(
+        AVCodecParserContext *s,
+        AVCodecContext *avctx,
+        uint8_t **poutbuf, int *poutbuf_size,
+        const uint8_t *buf, int buf_size,
+        int keyframe
+    )
+    cdef void av_parser_close(AVCodecParserContext *s)
     

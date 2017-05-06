@@ -12,7 +12,7 @@ def timestamp_to_frame(timestamp, stream):
     fps = stream.rate
     time_base = stream.time_base
     start_time = stream.start_time
-    frame = (timestamp - start_time ) * float(time_base) / float(fps)
+    frame = (timestamp - start_time) * float(time_base) / float(fps)
     return frame
 
 
@@ -109,7 +109,6 @@ class TestSeek(TestCase):
             for frame in packet.decode():
                 if current_frame is None:
                     current_frame = timestamp_to_frame(frame.pts, video_stream)
-                
                 else:
                     current_frame += 1
                 

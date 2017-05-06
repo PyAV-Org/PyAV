@@ -88,7 +88,7 @@ class TestVideoFrameTransforms(TestCase):
         self.image = Image.open(fate_png())
         self.width, self.height = self.image.size
 
-    def test_lena_roundtrip_low_api(self):
+    def test_roundtrip_low_api(self):
         if not Image:
             raise SkipTest()
         frame = VideoFrame(self.width, self.height, 'rgb24')
@@ -97,7 +97,7 @@ class TestVideoFrameTransforms(TestCase):
         img.save(self.sandboxed('roundtrip-low.jpg'))
         self.assertImagesAlmostEqual(self.image, img)
 
-    def test_lena_roundtrip_high_api(self):
+    def test_roundtrip_high_api(self):
         if not Image:
             raise SkipTest()
         frame = VideoFrame.from_image(self.image)

@@ -1,8 +1,10 @@
 cimport libav as lib
-from av.utils cimport avrational_to_faction
+
+from av.bytesource cimport bytesource
+from av.utils cimport avrational_to_faction, err_check
 
 
-cdef class Packet(object):
+cdef class Packet(Buffer):
     
     """A packet of encoded data within a :class:`~av.format.Stream`.
 
@@ -10,21 +12,45 @@ cdef class Packet(object):
     :meth:`decode` must be called to extract encoded data.
 
     """
-    def __init__(self):
+
+    def __cinit__(self, input=None):
         with nogil:
             lib.av_init_packet(&self.struct)
-            self.struct.data = NULL
-            self.struct.size = 0
+
+    def __init__(self, input=None):
+        
+        cdef size_t size = 0
+        cdef ByteSource source = None
+
+        if input is None:
+            return
+
+        if isinstance(input, (int, long)):
+            size = input
+        else:
+            source = bytesource(input)
+            size = source.length
+
+        if size:
+            err_check(lib.av_new_packet(&self.struct, size))
+
+        if source is not None:
+            self.update_buffer(source)
+            # TODO: Hold onto the source, and copy its pointer
+            # instead of its data.
+            #self.source = source
 
     def __dealloc__(self):
-        with nogil: lib.av_free_packet(&self.struct)
+        with nogil:
+            lib.av_free_packet(&self.struct)
     
     def __repr__(self):
-        return '<av.%s of #%d, dts=%s, pts=%s at 0x%x>' % (
+        return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
             self.__class__.__name__,
-            self.stream.index,
+            self.stream.index if self.stream else 0,
             self.dts,
             self.pts,
+            self.struct.size,
             id(self),
         )
     
@@ -33,6 +59,46 @@ cdef class Packet(object):
         return self.struct.size
     cdef void*  _buffer_ptr(self):
         return self.struct.data
+    #cdef bint _buffer_writable(self):
+    #    return self.source is None
+
+    def copy(self):
+        raise NotImplementedError()
+        cdef Packet copy = Packet()
+        # copy.struct.size = self.struct.size
+        # copy.struct.data = NULL
+        return copy
+
+    cdef int _retime(self, lib.AVRational src, lib.AVRational dst) except -1:
+
+        if not src.num:
+            src = self._time_base
+        if not dst.num:
+            dst = self._time_base
+
+        if not src.num:
+            raise ValueError('No src time_base.')
+        if not dst.num:
+            raise ValueError('No dst time_base.')
+
+        if self.struct.pts != lib.AV_NOPTS_VALUE:
+            self.struct.pts = lib.av_rescale_q(
+                self.struct.pts,
+                src, dst
+            )
+        if self.struct.dts != lib.AV_NOPTS_VALUE:
+            self.struct.dts = lib.av_rescale_q(
+                self.struct.dts,
+                src, dst
+            )
+        if self.struct.duration > 0:
+            self.struct.duration = lib.av_rescale_q(
+                self.struct.duration,
+                src, dst
+            )
+
+        self._time_base = dst
+        return 0 # Just for exception.
 
     def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
