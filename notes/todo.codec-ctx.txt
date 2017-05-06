@@ -1,14 +1,8 @@
 
 Unsorted
 ========
-- avcodec_get_context_defaults3
-- https://github.com/mikeboers/PyAV/pull/189/commits/8645c79a9e8f5c8a4377e24e2a927d8e73bad270#diff-c7078bc4ed35ae1143510c56c8ee2775R30
-- https://github.com/mikeboers/PyAV/pull/189/commits/8645c79a9e8f5c8a4377e24e2a927d8e73bad270#diff-eed50cca8aa39531b57bb07deaa6d693R72
-- restore option handling in containers
 - assert layout behaviour
-- older FFmpeg does not have AVCodecContext.framerate
 - new list returning API
   - add feature flags on containers/whatnot to control behaviour,
     e.g.: returning single packets from `encode(frame)`.
 - document the minimum encoding requirements for CodecContext, e.g. width, height, format, layout
-

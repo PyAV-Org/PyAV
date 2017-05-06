@@ -54,10 +54,14 @@ cdef class CodecContext(object):
             raise RuntimeError('Cannot instantiate CodecContext')
 
     cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
+
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError('Wrapping CodecContext with mismatched codec.')
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
+
+        # Signal that we want to reference count.
+        self.ptr.refcounted_frames = 1
 
     @property
     def is_open(self):

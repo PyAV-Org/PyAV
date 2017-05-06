@@ -97,6 +97,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
         int flags
         int thread_count
+        int refcounted_frames
         
         int profile
 

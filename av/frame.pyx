@@ -18,6 +18,8 @@ cdef class Frame(object):
 
     def __dealloc__(self):
         with nogil:
+            # This calls av_frame_unref, and then frees the pointer.
+            # Thats it.
             lib.av_frame_free(&self.ptr)
 
     def __repr__(self):

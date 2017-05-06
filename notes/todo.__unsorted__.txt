@@ -1,26 +1,3 @@
-The Big Picture
-===============
-
-- Lots of documentation
-- Uniform time representation
-- High-level APIs
-
-
-  
-
-
-Reference Counting
-==================
-
-- Switch everything to av_*_unref ??
-    - av_frame_unref
-    - av_packet_unref
-
-
-
-
-
-
 Encoding
 ========
 
