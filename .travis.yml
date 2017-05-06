@@ -21,9 +21,25 @@ matrix:
 
     fast_finish: true
 
-    # We are still working on this.
+    
     allow_failures:
+        
+        # We are still working on this.
         - os: osx
+        
+        # Deprecation while we consider removing support.
+        - python: "2.7"
+          env: FFMPEG=2.2.4
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.9
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.6
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.4
+          os: linux
 
     include:
 
@@ -63,7 +79,15 @@ matrix:
           env: FFMPEG=2.7
           os: linux
         - python: "2.7"
+          env: FFMPEG=2.5
+          os: linux
+        
+        # Deprecated libraries.
+        - python: "2.7"
           env: FFMPEG=2.2.4
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.9
           os: linux
         - python: "2.7"
           env: LIBAV=11.6
