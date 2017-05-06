@@ -131,21 +131,27 @@ cdef class OutputContainer(Container):
         cdef Stream stream
         cdef _Dictionary options
         for stream in self.streams:
-            if not lib.avcodec_is_open(stream._codec_context):
-                options = self.options.copy()
-                self.proxy.err_check(lib.avcodec_open2(
-                    stream._codec_context,
-                    stream._codec,
-                    # Our understanding is that there is little overlap bettween
-                    # options for containers and streams, so we use the same dict.
-                    # Possible TODO: expose per-stream options.
-                    &options.ptr
-                ))
+            
+            # TODO: Restore option handling
+            ctx = stream.codec_context
+            ctx.options.update(self.options)
+            ctx.open(strict=False)
+
+            # if not lib.avcodec_is_open(stream._codec_context):
+            #     options = self.options.copy()
+            #     self.proxy.err_check(lib.avcodec_open2(
+            #         stream._codec_context,
+            #         stream._codec,
+            #         # Our understanding is that there is little overlap bettween
+            #         # options for containers and streams, so we use the same dict.
+            #         # Possible TODO: expose per-stream options.
+            #         &options.ptr
+            #     ))
                 
-                # Track option usage.
-                for k in self.options:
-                    if k not in options:
-                        used_options.add(k)
+            #     # Track option usage.
+            #     for k in self.options:
+            #         if k not in options:
+            #             used_options.add(k)
 
             dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
 

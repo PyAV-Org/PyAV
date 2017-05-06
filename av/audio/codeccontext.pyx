@@ -2,7 +2,7 @@ cimport libav as lib
 
 from av.audio.format cimport AudioFormat, get_audio_format
 from av.audio.layout cimport AudioLayout, get_audio_layout
-from av.audio.frame cimport alloc_audio_frame
+from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport err_check
@@ -29,42 +29,46 @@ cdef class AudioCodecContext(CodecContext):
         packets until there are none left, at which it will return None.
         """
 
+        cdef bint is_flushing = input_frame is None
+        cdef AudioFrame frame = input_frame
+
+        # Resample. A None frame will flush the resampler, and then the fifo (if used).
         if not self.resampler:
             self.resampler = AudioResampler(
                 self.format,
                 self.layout,
                 self.ptr.sample_rate
             )
-        if not self.fifo:
-            self.fifo = AudioFifo()
+        frame = self.resampler.resample(frame)
 
-        # Resample, and re-chunk. A None frame will flush the resampler,
-        # and then flush the fifo.
-        cdef AudioFrame resampled_frame = self.resampler.resample(input_frame)
-        if resampled_frame:
-            self.fifo.write(resampled_frame)
-            # print 'resampled_frame.ptr.pts', resampled_frame.ptr.pts
+        cdef bint use_fifo = not (self.ptr.codec.capabilities & lib.CODEC_CAP_VARIABLE_FRAME_SIZE)
+        if use_fifo:
+            print 'USING FIFO; frame_size:', self.ptr.frame_size
+            if not self.fifo:
+                self.fifo = AudioFifo()
+            if frame:
+                self.fifo.write(frame)
 
-        # Pull partial frames if we were requested to flush (via a None frame).
-        cdef AudioFrame fifo_frame = self.fifo.read(self.ptr.frame_size, partial=input_frame is None)
+            # Pull partial frames if we were requested to flush (via a None frame).
+            frame = self.fifo.read(self.ptr.frame_size, partial=is_flushing)
 
         cdef Packet packet = Packet()
         cdef int got_packet = 0
 
-        if fifo_frame is not None:
+        if frame is not None:
 
             # TODO: Centralize time handling.
 
-            # If the fifo_frame has a valid pts, scale it to the codec's time_base.
+            # If the frame has a valid pts, scale it to the codec's time_base.
             # Remember that the AudioFifo time_base is always 1/sample_rate!
-            if fifo_frame.ptr.pts != lib.AV_NOPTS_VALUE:
-                fifo_frame.ptr.pts = lib.av_rescale_q(
-                    fifo_frame.ptr.pts, 
-                    fifo_frame._time_base,
+            if frame.ptr.pts != lib.AV_NOPTS_VALUE:
+                frame.ptr.pts = lib.av_rescale_q(
+                    frame.ptr.pts, 
+                    frame._time_base,
                     self.ptr.time_base
                 )
             else:
-                fifo_frame.ptr.pts = lib.av_rescale(
+                frame.ptr.pts = lib.av_rescale(
                     self.ptr.frame_number,
                     self.ptr.sample_rate,
                     self.ptr.frame_size,
@@ -75,7 +79,7 @@ cdef class AudioCodecContext(CodecContext):
         err_check(lib.avcodec_encode_audio2(
             self.ptr,
             &packet.struct,
-            fifo_frame.ptr if fifo_frame is not None else NULL,
+            frame.ptr if frame is not None else NULL,
             &got_packet,
         ))
 

@@ -18,7 +18,7 @@ from av.dictionary import Dictionary
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_codec, bint owns_ptr):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_codec, ContainerProxy container):
     """Build an av.CodecContext for an existing AVCodecContext."""
     
     cdef CodecContext py_ctx
@@ -36,7 +36,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_c
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
-    py_ctx._owns_ptr = owns_ptr
+    py_ctx.container = container
     py_ctx._init(c_ctx, c_codec)
 
     return py_ctx
@@ -49,7 +49,7 @@ cdef class CodecContext(object):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
         err_check(lib.avcodec_get_context_defaults3(c_ctx, cy_codec.ptr))
-        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
+        return wrap_codec_context(c_ctx, cy_codec.ptr, None)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -97,7 +97,7 @@ cdef class CodecContext(object):
         err_check(lib.avcodec_close(self.ptr))
 
     def __dealloc__(self):
-        if self.ptr and self._owns_ptr:
+        if self.ptr and self.container is None:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)
         if self.parser:
@@ -173,6 +173,11 @@ cdef class CodecContext(object):
         return packets
 
     cpdef encode(self, Frame frame=None):
+        
+        self.open(strict=False)
+        if self.container:
+            self.container.start_encoding()
+
         cdef Packet packet = self._encode(frame)
         if packet:
             packet._time_base = self.ptr.time_base

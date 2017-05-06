@@ -80,6 +80,7 @@ class TestBasicVideoEncoding(TestCase):
         write_rgb_rotate(output)
         assert_rgb_rotate(self, av.open(path))
 
+
 class TestBasicAudioEncoding(TestCase):
 
     def test_audio_transcode(self):
@@ -90,25 +91,30 @@ class TestBasicAudioEncoding(TestCase):
         output.metadata['key'] = 'value'
 
         sample_rate = 48000
-        channel_layout = "stereo"
+        channel_layout = 'stereo'
         channels = 2
         sample_fmt = 's16'
 
-        stream = output.add_stream("mp2", sample_rate)
+        stream = output.add_stream('mp2', sample_rate)
 
-        encoder = stream.codec_context
-        encoder.time_base = sample_rate
-        encoder.sample_rate = sample_rate
-        encoder.format = sample_fmt
-        encoder.channels = channels
+        ctx = stream.codec_context
+        ctx.time_base = sample_rate
+        ctx.sample_rate = sample_rate
+        ctx.format = sample_fmt
+        ctx.channels = channels
 
         src = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         for frame in src.decode(audio=0):
-            for packet in stream.encode(frame):
+            packet = stream.encode(frame)
+            if packet:
                 output.mux(packet)
 
-        for packet in stream.encode(None):
-            output.mux(packet)
+        while True:
+            packet = stream.encode(None)
+            if packet:
+                output.mux(packet)
+            else:
+                break
 
         output.close()
 
@@ -120,10 +126,10 @@ class TestBasicAudioEncoding(TestCase):
         stream = container.streams[0]
         self.assertIsInstance(stream, AudioStream)
         self.assertEqual(stream.codec_context.sample_rate, sample_rate)
-        self.assertEqual(stream.codec_context.format, 's16p')
+        self.assertEqual(stream.codec_context.format.name, 's16p')
         self.assertEqual(stream.codec_context.channels, channels)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import logging
     logging.basicConfig()
     import unittest
