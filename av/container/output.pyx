@@ -64,20 +64,24 @@ cdef class OutputContainer(Container):
             raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
+        # As of last check, avformat_new_stream only calls avcodec_alloc_context3 to create
+        # the context, but doesn't modify it in any other way. Ergo, we can allow CodecContext
+        # to finish initializing it.
         lib.avformat_new_stream(self.proxy.ptr, codec)
         cdef lib.AVStream *stream = self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1]
         cdef lib.AVCodecContext *codec_context = stream.codec # For readibility.
         lib.avcodec_get_context_defaults3(stream.codec, codec)
         stream.codec.codec = codec # Still have to manually set this though...
 
+        # Construct the user-land stream so we have access to CodecContext.
+        cdef Stream py_stream = wrap_stream(self, stream)
+        self.streams.add_stream(py_stream)
+
         # Copy from the template.
         if template is not None:
             lib.avcodec_copy_context(codec_context, template._codec_context)
             # Reset the codec tag assuming we are remuxing.
             codec_context.codec_tag = 0
-            # Copy flags assuming we are remuxing.s
-            if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
-                codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
 
         # Now lets set some more sane video defaults
         elif codec.type == lib.AVMEDIA_TYPE_VIDEO:
@@ -114,9 +118,6 @@ cdef class OutputContainer(Container):
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
         
-        # Finally construct the user-land stream.
-        cdef Stream py_stream = wrap_stream(self, stream)
-        self.streams.add_stream(py_stream)
         return py_stream
     
     cpdef start_encoding(self):
@@ -132,26 +133,16 @@ cdef class OutputContainer(Container):
         cdef _Dictionary options
         for stream in self.streams:
             
-            # TODO: Restore option handling
             ctx = stream.codec_context
-            ctx.options.update(self.options)
-            ctx.open(strict=False)
+            if not ctx.is_open:
 
-            # if not lib.avcodec_is_open(stream._codec_context):
-            #     options = self.options.copy()
-            #     self.proxy.err_check(lib.avcodec_open2(
-            #         stream._codec_context,
-            #         stream._codec,
-            #         # Our understanding is that there is little overlap bettween
-            #         # options for containers and streams, so we use the same dict.
-            #         # Possible TODO: expose per-stream options.
-            #         &options.ptr
-            #     ))
-                
-            #     # Track option usage.
-            #     for k in self.options:
-            #         if k not in options:
-            #             used_options.add(k)
+                ctx.options.update(self.options)
+                ctx.open()
+
+                # Track option consumption.
+                for k in self.options:
+                    if k not in ctx.options:
+                        used_options.add(k)
 
             dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
 

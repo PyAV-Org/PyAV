@@ -13,8 +13,6 @@ from av.dictionary import Dictionary
 
 
 
-
-
 cdef object _cinit_sentinel = object()
 
 
