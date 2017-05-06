@@ -20,7 +20,7 @@ WARNING = lib.AV_LOG_WARNING
 INFO = lib.AV_LOG_INFO
 VERBOSE = lib.AV_LOG_VERBOSE
 DEBUG = lib.AV_LOG_DEBUG
-TRACE = lib.AV_LOG_TRACE # 56
+#TRACE = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
 
 
 # Map from AV levels to logging levels.
@@ -33,7 +33,6 @@ level_map = {
     lib.AV_LOG_INFO: 20,    # logging.INFO
     lib.AV_LOG_VERBOSE: 10, # logging.DEBUG
     lib.AV_LOG_DEBUG: 5,    # This is below any logging constant.
-    lib.AV_LOG_TRACE: 1,    # Same.
 }
 
 
