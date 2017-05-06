@@ -64,7 +64,7 @@ cdef class VideoCodecContext(CodecContext):
                 )
 
             # TODO: Don't mutate the frame's times.
-
+            # TODO: Generalize this to all types.
             if vframe.ptr.pts != lib.AV_NOPTS_VALUE:
                 # Assert we're in the same time base.
                 vframe._retime(vframe._time_base, self.ptr.time_base)

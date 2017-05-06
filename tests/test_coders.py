@@ -31,11 +31,11 @@ def iter_raw_frames(path, packet_sizes, ctx):
                 yield frame
         print 'flushing...'
         while True:
-            frame = ctx.decode(None)
-            if frame:
+            frames = ctx.decode(None)
+            for frame in frames:
                 print '   ', frame
                 yield frame
-            else:
+            if not frames:
                 break
 
 
@@ -315,5 +315,3 @@ class TestCoders(TestCase):
             self.assertEqual(frame.rate, sample_rate)
             self.assertEqual(len(frame.layout.channels), channels)
 
-# import logging
-# logging.basicConfig()

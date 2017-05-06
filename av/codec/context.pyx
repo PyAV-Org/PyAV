@@ -72,8 +72,11 @@ cdef class CodecContext(object):
             return
 
         # We might pass partial frames.
-        if self.codec.ptr.capabilities & lib.CODEC_CAP_TRUNCATED:
-            self.ptr.flags |= lib.CODEC_FLAG_TRUNCATED
+        # TODO: What is this for?! This is causing problems with raw decoding
+        # as the internal parser doesn't seem to see a frame until it sees
+        # the next one.
+        # if self.codec.ptr.capabilities & lib.CODEC_CAP_TRUNCATED:
+        #     self.ptr.flags |= lib.CODEC_FLAG_TRUNCATED
 
         # TODO: Options
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, NULL))
