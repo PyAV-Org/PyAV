@@ -1,9 +1,7 @@
 cimport libav as lib
-from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy
 
 from av.bytesource cimport bytesource
-from av.utils cimport avrational_to_faction
+from av.utils cimport avrational_to_faction, err_check
 
 
 cdef class Packet(Buffer):
@@ -16,37 +14,34 @@ cdef class Packet(Buffer):
     """
 
     def __cinit__(self, input=None):
-        lib.av_init_packet(&self.struct)
-        self.struct.data = NULL
-        self.struct.size = 0
-        self.must_free = False
+        with nogil:
+            lib.av_init_packet(&self.struct)
 
     def __init__(self, input=None):
         
-        if isinstance(input, (int, long)):
-            self.struct.size = input
-            with nogil:
-                self.struct.data = <unsigned char*>malloc(self.struct.size)
-                self.must_free = True
+        cdef size_t size = 0
+        cdef ByteSource source = None
+
+        if input is None:
             return
 
-        cdef ByteSource source = bytesource(input, True)
+        if isinstance(input, (int, long)):
+            size = input
+        else:
+            source = bytesource(input)
+            size = source.length
+
+        if size:
+            err_check(lib.av_new_packet(&self.struct, size))
+
         if source is not None:
-            self.source = source
-            with nogil:
-                self.struct.data = <unsigned char*>malloc(source.length)
-                self.must_free = True
-                # TODO: Take the pointer directly instead of copying it.
-                memcpy(self.struct.data, source.ptr, source.length)
-                self.struct.size = source.length
+            self.update_buffer(source)
+            # TODO: Hold onto the source, and copy its pointer
+            # instead of its data.
+            #self.source = source
 
     def __dealloc__(self):
         with nogil:
-            
-            if self.must_free and self.struct.data:
-                free(self.struct.data)
-            self.struct.data = NULL
-
             lib.av_free_packet(&self.struct)
     
     def __repr__(self):
@@ -64,8 +59,8 @@ cdef class Packet(Buffer):
         return self.struct.size
     cdef void*  _buffer_ptr(self):
         return self.struct.data
-    cdef bint _buffer_writable(self):
-        return self.source is None
+    #cdef bint _buffer_writable(self):
+    #    return self.source is None
 
     def copy(self):
         raise NotImplementedError()
