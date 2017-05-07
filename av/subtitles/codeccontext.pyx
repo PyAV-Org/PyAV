@@ -7,7 +7,7 @@ from av.utils cimport err_check
 
 cdef class SubtitleCodecContext(CodecContext):
     
-    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
         
         cdef SubtitleProxy proxy = SubtitleProxy()
         

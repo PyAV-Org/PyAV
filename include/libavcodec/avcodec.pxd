@@ -362,7 +362,12 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
     cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
     
-    
+    # === New-style Transcoding
+    cdef int avcodec_send_packet(AVCodecContext *avctx, AVPacket *packet)
+    cdef int avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame)
+    cdef int avcodec_send_frame(AVCodecContext *avctx, AVFrame *frame)
+    cdef int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt)
+       
     # === Parsers
 
     cdef struct AVCodecParser:

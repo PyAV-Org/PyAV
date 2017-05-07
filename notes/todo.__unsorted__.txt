@@ -29,12 +29,16 @@ Build
 High-Level API
 ==============
 
-- Container.demux(video=True)
-- Container.demux(video=0, audio=0) first video and audio
-- Container.decode(*args_for_demux, **kwargs_for_demux) -> straight to frames
+√ Container.demux(video=True)
+√ Container.demux(video=0, audio=0) first video and audio
+√ Container.decode(*args_for_demux, **kwargs_for_demux) -> straight to frames
 - Stream.mux(frame) -> encode, flush, and mux
-- Container.__del__ -> flush the streams and close
+√ Container.__del__ -> flush the streams and close
 √ Container.add_stream(template=stream)
+
+- CodecContext.encode(...) -> list of Packet
+- OutputContainer.encode(..., count=0) -> list of Packet, unless some flag
+  signaling legacy behaviour.
 
 
 Unsorted
@@ -44,7 +48,7 @@ Unsorted
   These return strings which are re-dented to match the level at the start of
   themselves.
 
-- VideoFrame.from_file(file_or_path); opens the file and decodes the first frame)
+- VideoFrame.from_file(file_or_path); opens the file and decodes the first frame
 
 - InternalObject class for stopping construction:
 
@@ -61,8 +65,6 @@ Unsorted
   
   isdeferredinstance(x, ('PIL.Image', 'Image'))
 
-- Expose CodecContext as stream.context, and move properties to it.
-
 - Rename Buffer and ByteSource to represent they are opposite directions of
   the same operation.
 
@@ -78,12 +80,8 @@ Unsorted
 - Protocol for streams to pull packets from iterators. Then secondary streams
   get easier: container.add_stream('audio_codec', source=av.open('music.aiff').iter_packets(only_primary=True))
 
-- Create Codec Descriptor
-
 - Make av.utils.SmartPointer to wrap around a pointer? All this would do is
   hold a reference to said pointer and make sure it isn't garbage collected.
-
-runtime_library_dirs
 
 - Look at how stream alloc works; can we manually do this and register the
   stream on a format context later?
@@ -102,21 +100,12 @@ runtime_library_dirs
 - Plane.update(input_)
     And then it tries if it is a buffer, memoryview, bytes, etc..
 
-- Stream.encode(...) -> list of packets, automatically checking buffer)
+- Stream.encode(...) -> list of packets, automatically checking buffer
 - Context.mux(...) -> take a single packet, or an iterator of them:
         context.mux(stream.encode(frame))
 
-- Context.add_stream(codec_name, frame_rate) -> Context.streams.append(Stream(codec_name, frame_rate))?
-
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
 - try to wrap API of testsrc filters
-
-- FFmpeg tutorial: http://dranger.com/ffmpeg/
-	- also has function reference: http://dranger.com/ffmpeg/functions.html
-	- updated tutorial code: https://github.com/chelyaev/ffmpeg-tutorial
-
-- Even out more of the differences:
-    - See README of https://github.com/chelyaev/ffmpeg-tutorial
 
 - Replicate av_frame_get_best_effort_timestamp
 

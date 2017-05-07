@@ -7,7 +7,7 @@ except ImportError:
     from io import BytesIO as StringIO
 
 from .common import *
-from .test_encoding import write_rgb_rotate, assert_rgb_rotate
+from .test_encode import write_rgb_rotate, assert_rgb_rotate
 from av.video.stream import VideoStream
 
 

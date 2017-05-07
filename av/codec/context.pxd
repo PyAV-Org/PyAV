@@ -29,12 +29,26 @@ cdef class CodecContext(object):
     # Public API.
     cpdef open(self, bint strict=?)
     cpdef close(self, bint strict=?)
-    cpdef encode(self, Frame frame=?)
-    cdef _encode_one(self, Frame frame)
+
+    # Public version of the send/receive API.
+    cdef Frame _next_frame
+    cdef Frame _alloc_next_frame(self)
+    
+    cpdef send(self, input=?)
+    cpdef recv(self)
+
+    # Wraps both versions of the APIs, returning lists.
+    cpdef encode(self, Frame frame=?, unsigned int count=?, bint prefer_send_recv=?)
+    cpdef decode(self, Packet packet=?, unsigned int count=?, bint prefer_send_recv=?)
+
+    # Used by all APIs to setup user-land objects.
+    cdef _prepare_frames_for_encode(self, Frame frame, bint drain)
     cdef _setup_encoded_packet(self, Packet)
-    cpdef decode(self, Packet packet, int count=?)
-    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed)
     cdef _setup_decoded_frame(self, Frame)
+
+    # Implemented by children for the encode/decode API.
+    cdef _encode(self, Frame frame)
+    cdef _decode(self, lib.AVPacket *packet, int *data_consumed)
 
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext*, lib.AVCodec*, ContainerProxy)
