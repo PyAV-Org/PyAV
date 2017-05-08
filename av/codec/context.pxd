@@ -29,12 +29,35 @@ cdef class CodecContext(object):
     # Public API.
     cpdef open(self, bint strict=?)
     cpdef close(self, bint strict=?)
-    cpdef encode(self, Frame frame=?)
-    cdef _encode_one(self, Frame frame)
+    
+    # Wraps both versions of the transcode API, returning lists.
+    cpdef encode(self, Frame frame=?, unsigned int count=?, bint prefer_send_recv=?)
+    cpdef decode(self, Packet packet=?, unsigned int count=?, bint prefer_send_recv=?)
+
+    # Used by both transcode APIs to setup user-land objects.
+    cdef _prepare_frames_for_encode(self, Frame frame)
     cdef _setup_encoded_packet(self, Packet)
-    cpdef decode(self, Packet packet, int count=?)
-    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed)
     cdef _setup_decoded_frame(self, Frame)
+
+    # Implemented by children for the encode/decode API.
+    cdef _encode(self, Frame frame)
+    cdef _decode(self, lib.AVPacket *packet, int *data_consumed)
+
+    # Implemented by base for the generic send/recv API.
+    # Note that the user cannot send without recieving. This is because
+    # _prepare_frames_for_encode may expand a frame into multiple (e.g. when
+    # resampling audio to a higher rate but with fixed size frames), and the
+    # send/recv buffer may be limited to a single frame. Ergo, we need to flush
+    # the buffer as often as possible.
+    cdef _send_frame_and_recv(self, Frame frame)
+    cdef _recv_packet(self)
+    cdef _send_packet_and_recv(self, Packet packet)
+    cdef _recv_frame(self)
+
+    # Implemented by children for the generic send/recv API, so we have the
+    # correct subclass of Frame.
+    cdef Frame _next_frame
+    cdef Frame _alloc_next_frame(self)
 
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext*, lib.AVCodec*, ContainerProxy)

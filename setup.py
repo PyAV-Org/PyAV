@@ -491,6 +491,7 @@ class ReflectCommand(Command):
             'av_frame_get_best_effort_timestamp',
             'avformat_alloc_output_context2',
             'avformat_close_input',
+            'avcodec_send_packet',
 
         ):
             print("looking for %s... " % func_name, end='')

@@ -181,40 +181,120 @@ cdef class CodecContext(object):
 
         return packets
 
-    cpdef encode(self, Frame frame=None):
-        
-        self.open(strict=False)
-        if self.container:
-            self.container.start_encoding()
+    cdef _send_frame_and_recv(self, Frame frame):
 
         cdef Packet packet
 
+        err_check(lib.avcodec_send_frame(self.ptr, frame.ptr if frame else NULL))
+
+        res = []
+        while True:
+            packet = self._recv_packet()
+            if packet:
+                res.append(packet)
+            else:
+                break
+        return res
+
+    cdef _send_packet_and_recv(self, Packet packet):
+
+        cdef Frame frame
+
+        cdef lib.AVPacket *packet_ptr = &packet.struct if packet else NULL
+        err_check(lib.avcodec_send_packet(self.ptr, packet_ptr))
+
+        res = []
+        while True:
+            frame = self._recv_frame()
+            if frame:
+                res.append(frame)
+            else:
+                break
+        return res
+
+    cdef _prepare_frames_for_encode(self, Frame frame):
+        return [frame]
+
+    cdef Frame _alloc_next_frame(self):
+        raise NotImplementedError('Base CodecContext cannot decode.')
+
+    cdef _recv_frame(self):
+
+        if not self._next_frame:
+            self._next_frame = self._alloc_next_frame()
+        cdef Frame frame = self._next_frame
+
+        cdef int res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
+        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+            return
+        err_check(res)
+
+        if not res:
+            self._next_frame = None
+            self._setup_decoded_frame(frame)
+            return frame
+
+    cdef _recv_packet(self):
+
+        cdef Packet packet = Packet()
+            
+        cdef int res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
+        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+            return
+        err_check(res)
+
+        if not res:
+            self._setup_encoded_packet(packet)
+            return packet
+
+    cpdef encode(self, Frame frame=None, unsigned int count=0, bint prefer_send_recv=True):
+        """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
+
+        self.open(strict=False)
+
+        cdef bint is_flushing = frame is None
+        frames = self._prepare_frames_for_encode(frame)
+
         res = []
 
-        # If flushing, keep going until we get nothing back.
-        if frame is None:
-            while True:
-                packet = self._encode_one(None)
-                if packet:
+        if (
+            prefer_send_recv and
+            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
+            (
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
+            )
+        ):
+            for frame in frames:
+                for packet in self._send_frame_and_recv(frame):
                     self._setup_encoded_packet(packet)
                     res.append(packet)
-                else:
-                    break
-        else:
-            packet = self._encode_one(frame)
+            return res
+
+
+        for frame in frames:
+            packet = self._encode(frame)
             if packet:
                 self._setup_encoded_packet(packet)
                 res.append(packet)
+
+        while is_flushing and (not count or count > len(res)):
+            packet = self._encode(None)
+            if packet:
+                self._setup_encoded_packet(packet)
+                res.append(packet)
+            else:
+                break
 
         return res
 
     cdef _setup_encoded_packet(self, Packet packet):
         packet._time_base = self.ptr.time_base
 
-    cdef _encode_one(self, Frame frame):
+    cdef _encode(self, Frame frame):
         raise NotImplementedError('Base CodecContext cannot encode frames.')
 
-    cpdef decode(self, Packet packet, int count=0):
+    cpdef decode(self, Packet packet=None, unsigned int count=0, bint prefer_send_recv=True):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
 
         If the packet is None, the buffers will be flushed. This is useful if
@@ -223,13 +303,27 @@ cdef class CodecContext(object):
 
         """
 
-        if packet is None:
-            packet = Packet() # Makes our control flow easier.
-
         if not self.codec.ptr:
             raise ValueError('cannot decode unknown codec')
 
         self.open(strict=False)
+
+        if (
+            prefer_send_recv and
+            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
+            (
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
+            )
+        ):
+            res = []
+            for frame in self._send_packet_and_recv(packet):
+                self._setup_decoded_frame(frame)
+                res.append(frame)
+            return res
+
+        if packet is None:
+            packet = Packet() # Makes our control flow easier.
 
         cdef int data_consumed = 0
         cdef list decoded_objs = []
@@ -246,7 +340,7 @@ cdef class CodecContext(object):
                 packet.struct.data = NULL
                 packet.struct.size = 0
 
-            decoded = self._decode_one(&packet.struct, &data_consumed)
+            decoded = self._decode(&packet.struct, &data_consumed)
             packet.struct.data += data_consumed
             packet.struct.size -= data_consumed
             
@@ -274,7 +368,7 @@ cdef class CodecContext(object):
         packet.struct.size = original_size
 
         return decoded_objs
-    
+
     cdef _setup_decoded_frame(self, Frame frame):
 
         # In FFMpeg <= 3.0, and all LibAV we know of, the frame's pts may be
@@ -290,7 +384,7 @@ cdef class CodecContext(object):
         
         frame.index = self.ptr.frame_number - 1
  
-    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('Base CodecContext cannot decode packets.')
 
     property time_base:

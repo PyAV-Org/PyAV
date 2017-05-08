@@ -24,7 +24,44 @@ cdef class VideoCodecContext(CodecContext):
         self._build_format()
         self.encoded_frame_count = 0
 
-    cdef _encode_one(self, Frame frame):
+    cdef _prepare_frames_for_encode(self, Frame input):
+        
+        if not input:
+            return [None]
+
+        cdef VideoFrame vframe = input
+
+        if not self.reformatter:
+            self.reformatter = VideoReformatter()
+
+        # Reformat if it doesn't match.
+        if (vframe.format.pix_fmt != self._format.pix_fmt or
+            vframe.width != self.ptr.width or
+            vframe.height != self.ptr.height
+        ):
+            vframe.reformatter = self.reformatter
+            vframe = vframe._reformat(
+                self.ptr.width,
+                self.ptr.height,
+                self._format.pix_fmt,
+                lib.SWS_CS_DEFAULT,
+                lib.SWS_CS_DEFAULT
+            )
+
+        # TODO: Don't mutate the frame's times.
+        # TODO: Generalize this to all types.
+        if vframe.ptr.pts != lib.AV_NOPTS_VALUE:
+            # Assert we're in the same time base.
+            vframe._retime(vframe._time_base, self.ptr.time_base)
+        else:
+            # There is no pts, so create one.
+            vframe.ptr.pts = <int64_t>self.encoded_frame_count
+
+        self.encoded_frame_count += 1
+        
+        return [vframe]
+
+    cdef _encode(self, Frame frame):
         """Encodes a frame of video, returns a packet if one is ready.
 
         The output packet does not necessarily contain data for the most recent frame, 
@@ -33,58 +70,30 @@ cdef class VideoCodecContext(CodecContext):
         packets until there are none left, at which it will return None.
 
         """
-        
-        if not (isinstance(frame, VideoFrame) or frame is None):
-            raise TypeError('frame must be None or VideoFrame')
 
         cdef VideoFrame vframe = frame
 
-        self.open(strict=False)
-
-        if not self.reformatter:
-            self.reformatter = VideoReformatter()
 
         cdef Packet packet = Packet()
         cdef int got_packet
 
         if vframe is not None:
-
-            # Reformat if it doesn't match.
-            if (vframe.format.pix_fmt != self._format.pix_fmt or
-                vframe.width != self.ptr.width or
-                vframe.height != self.ptr.height
-            ):
-                vframe.reformatter = self.reformatter
-                vframe = vframe._reformat(
-                    self.ptr.width,
-                    self.ptr.height,
-                    self._format.pix_fmt,
-                    lib.SWS_CS_DEFAULT,
-                    lib.SWS_CS_DEFAULT
-                )
-
-            # TODO: Don't mutate the frame's times.
-            # TODO: Generalize this to all types.
-            if vframe.ptr.pts != lib.AV_NOPTS_VALUE:
-                # Assert we're in the same time base.
-                vframe._retime(vframe._time_base, self.ptr.time_base)
-            else:
-                # There is no pts, so create one.
-                vframe.ptr.pts = <int64_t>self.encoded_frame_count
-                
-            self.encoded_frame_count += 1
-
             ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, vframe.ptr, &got_packet))
-
         else:
-            # Flushing
             ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, NULL, &got_packet))
 
         if got_packet:
             return packet
 
+    cdef Frame _alloc_next_frame(self):
+        return alloc_video_frame()
         
-    cdef _decode_one(self, lib.AVPacket *packet, int *data_consumed):
+    cdef _setup_decoded_frame(self, Frame frame):
+        CodecContext._setup_decoded_frame(self, frame)
+        cdef VideoFrame vframe = frame
+        vframe._init_properties()
+
+    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
         
         # Create a frame if we don't have one ready.
         if not self.next_frame:
@@ -113,9 +122,6 @@ cdef class VideoCodecContext(CodecContext):
         # We are ready to send this one off into the world!
         cdef VideoFrame frame = self.next_frame
         self.next_frame = None
-        
-        # Tell frame to finish constructing user properties.
-        frame._init_properties()
 
         # Share our SwsContext with the frames. Most of the time they will end
         # up using the same settings as each other, so it makes sense to cache
