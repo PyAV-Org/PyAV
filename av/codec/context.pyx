@@ -181,97 +181,96 @@ cdef class CodecContext(object):
 
         return packets
 
-    cpdef send(self, input=None):
+    cdef _send_frame_and_recv(self, Frame frame):
 
-        if not lib.PYAV_HAVE_AVCODEC_SEND_PACKET:
-            raise RuntimeError('Underlying library does not implement send/recv.')
+        cdef Packet packet
 
-        self.open(strict=False)
+        err_check(lib.avcodec_send_frame(self.ptr, frame.ptr if frame else NULL))
+
+        res = []
+        while True:
+            packet = self._recv_packet()
+            if packet:
+                res.append(packet)
+            else:
+                break
+        return res
+
+    cdef _send_packet_and_recv(self, Packet packet):
 
         cdef Frame frame
-        cdef Packet packet
-        cdef lib.AVPacket *packet_ptr = NULL
 
-        if lib.av_codec_is_encoder(self.ptr.codec):
-            if input is not None and not isinstance(input, Frame):
-                raise TypeError('Encoder takes frames.', input)
-            if input:
-                for frame in self._prepare_frames_for_encode(input, drain=True):
-                    print 'HEREA', frame
-                    err_check(lib.avcodec_send_frame(self.ptr, frame.ptr))
+        cdef lib.AVPacket *packet_ptr = &packet.struct if packet else NULL
+        err_check(lib.avcodec_send_packet(self.ptr, packet_ptr))
+
+        res = []
+        while True:
+            frame = self._recv_frame()
+            if frame:
+                res.append(frame)
             else:
-                err_check(lib.avcodec_send_frame(self.ptr, NULL))
+                break
+        return res
 
-        else:
-            if input is not None and not isinstance(input, Packet):
-                raise TypeError('Decoder takes packets.', input)
-            packet = input
-            packet_ptr = &packet.struct if packet else NULL
-            err_check(lib.avcodec_send_packet(self.ptr, packet_ptr))
-
-    cdef _prepare_frames_for_encode(self, Frame frame, bint drain):
+    cdef _prepare_frames_for_encode(self, Frame frame):
         return [frame]
 
     cdef Frame _alloc_next_frame(self):
         raise NotImplementedError('Base CodecContext cannot decode.')
 
-    cpdef recv(self):
+    cdef _recv_frame(self):
 
-        if not lib.PYAV_HAVE_AVCODEC_SEND_PACKET:
-            raise RuntimeError('Underlying library does not implement send/recv.')
+        if not self._next_frame:
+            self._next_frame = self._alloc_next_frame()
+        cdef Frame frame = self._next_frame
 
-        cdef Frame frame
-        cdef Packet packet
-        cdef int res
+        cdef int res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
+        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+            return
+        err_check(res)
 
-        if lib.av_codec_is_encoder(self.ptr.codec):
-            packet = Packet()
+        if not res:
+            self._next_frame = None
+            self._setup_decoded_frame(frame)
+            return frame
+
+    cdef _recv_packet(self):
+
+        cdef Packet packet = Packet()
             
-            res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
-            if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
-                return
-            err_check(res)
+        cdef int res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
+        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+            return
+        err_check(res)
 
-            if not res:
-                self._setup_encoded_packet(packet)
-                return packet
-
-        else:
-            if not self._next_frame:
-                self._next_frame = self._alloc_next_frame()
-            frame = self._next_frame
-
-            res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
-            if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
-                return
-            err_check(res)
-
-            if not res:
-                self._next_frame = None
-                self._setup_decoded_frame(frame)
-                return frame
+        if not res:
+            self._setup_encoded_packet(packet)
+            return packet
 
     cpdef encode(self, Frame frame=None, unsigned int count=0, bint prefer_send_recv=True):
         """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
 
         self.open(strict=False)
 
+        cdef bint is_flushing = frame is None
+        frames = self._prepare_frames_for_encode(frame)
+
         res = []
 
-        if lib.PYAV_HAVE_AVCODEC_SEND_PACKET and prefer_send_recv:
-            self.send(frame)
-            while not count or count > len(res):
-                packet = self.recv()
-                if packet:
+        if (
+            prefer_send_recv and
+            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
+            (
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
+            )
+        ):
+            for frame in frames:
+                for packet in self._send_frame_and_recv(frame):
                     self._setup_encoded_packet(packet)
                     res.append(packet)
-                else:
-                    break
             return res
 
-        cdef bint is_flushing = frame is None
-
-        frames = self._prepare_frames_for_encode(frame, drain=is_flushing)
 
         for frame in frames:
             packet = self._encode(frame)
@@ -309,18 +308,18 @@ cdef class CodecContext(object):
 
         self.open(strict=False)
 
-        if lib.PYAV_HAVE_AVCODEC_SEND_PACKET and prefer_send_recv:
-            print 'HERE1', packet
-            self.send(packet)
+        if (
+            prefer_send_recv and
+            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
+            (
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
+                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
+            )
+        ):
             res = []
-            while not count or count > len(res):
-                frame = self.recv()
-                print 'HERE2', frame
-                if frame:
-                    self._setup_decoded_frame(frame)
-                    res.append(frame)
-                else:
-                    break
+            for frame in self._send_packet_and_recv(packet):
+                self._setup_decoded_frame(frame)
+                res.append(frame)
             return res
 
         if packet is None:

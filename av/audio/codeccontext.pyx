@@ -21,7 +21,7 @@ cdef class AudioCodecContext(CodecContext):
         if self.ptr.channels and not self.ptr.channel_layout:
             self.ptr.channel_layout = get_audio_layout(self.ptr.channels, 0).layout
 
-    cdef _prepare_frames_for_encode(self, Frame input_frame, bint drain):
+    cdef _prepare_frames_for_encode(self, Frame input_frame):
 
         cdef AudioFrame frame = input_frame
 
@@ -47,10 +47,12 @@ cdef class AudioCodecContext(CodecContext):
                 self.fifo.write(frame)
 
             # Pull partial frames if we were requested to flush (via a None frame).
-            while (self.fifo.samples >= self.ptr.frame_size and (drain or not frames)) or ((is_flushing or not frames) and self.fifo.samples):
+            while (self.fifo.samples >= self.ptr.frame_size) or (self.fifo.samples and is_flushing):
                 frame = self.fifo.read(self.ptr.frame_size, partial=is_flushing)
                 if frame or not frames:
                     frames.append(frame)
+                else:
+                    break
 
         else:
             frames.append(frame)

@@ -24,7 +24,7 @@ cdef class VideoCodecContext(CodecContext):
         self._build_format()
         self.encoded_frame_count = 0
 
-    cdef _prepare_frames_for_encode(self, Frame input, bint drain):
+    cdef _prepare_frames_for_encode(self, Frame input):
         
         if not input:
             return [None]

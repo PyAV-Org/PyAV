@@ -13,7 +13,6 @@ def iter_frames(container, stream):
     for packet in container.demux(stream):
         for frame in packet.decode():
             yield frame
-    yield None
 
 
 def iter_raw_frames(path, packet_sizes, ctx):
@@ -31,7 +30,12 @@ def iter_raw_frames(path, packet_sizes, ctx):
                 yield frame
         print 'flushing...'
         while True:
-            frames = ctx.decode(None)
+            try:
+                frames = ctx.decode(None)
+            except AVError as e:
+                if e.errno != 541478725: # EOF
+                    raise
+                break
             for frame in frames:
                 print '   ', frame
                 yield frame
