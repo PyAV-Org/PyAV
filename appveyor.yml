@@ -14,52 +14,54 @@ environment:
 
     - PYTHON: "C:\\Miniconda"
       PYTHON_VERSION: "2.7"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "32"
       CONDA_PY: "27"
       CONDA_NPY: "19"
-
-    - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.3"
-      PYTHON_ARCH: "32"
-      CONDA_PY: "33"
-      CONDA_NPY: "110"
-
-    - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "32"
-      CONDA_PY: "34"
-      CONDA_NPY: "110"
 
     - PYTHON: "C:\\Miniconda35"
       PYTHON_VERSION: "3.5"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "32"
       CONDA_PY: "35"
       CONDA_NPY: "110"
 
+    - PYTHON: "C:\\Miniconda36"
+      PYTHON_VERSION: "3.6"
+      FFMPEG_VERSION: "3.2.4"
+      PYTHON_ARCH: "32"
+      CONDA_PY: "36"
+      CONDA_NPY: "112"
+
     - PYTHON: "C:\\Miniconda-x64"
       PYTHON_VERSION: "2.7"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "64"
       CONDA_PY: "27"
       CONDA_NPY: "19"
 
-    - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.3"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "33"
-      CONDA_NPY: "110"
-
-    - PYTHON: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "34"
-      CONDA_NPY: "110"
-
     - PYTHON: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "64"
       CONDA_PY: "35"
       CONDA_NPY: "110"
 
+    - PYTHON: "C:\\Miniconda36-x64"
+      PYTHON_VERSION: "3.6"
+      FFMPEG_VERSION: "3.2.4"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "36"
+      CONDA_NPY: "112"
+
+    # older FFMPEG versions
+
+    - PYTHON: "C:\\Miniconda36-x64"
+      PYTHON_VERSION: "3.5"
+      FFMPEG_VERSION: "2.8.6"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "35"
+      CONDA_NPY: "110"
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
@@ -81,11 +83,11 @@ install:
   - conda install --yes conda-build jinja2 anaconda-client
   - conda create -q -n test-environment python=%PYTHON_VERSION%
     pip "setuptools>=0.24" Pillow "Cython>=0.22" "nose>=1.3"
-    "numpy>=1.9" "wheel>=0.24" "ffmpeg=2.8.6" msinttypes
+    "numpy>=1.9" "wheel>=0.24" ffmpeg=%FFMPEG_VERSION% msinttypes
   - activate test-environment
 
   # workaround for missing vcvars64.bat in py34 64bit
-  - "cp appveyor/vcvars64.bat \"C:/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64\""
+  # - "cp appveyor/vcvars64.bat \"C:/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64\""
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
