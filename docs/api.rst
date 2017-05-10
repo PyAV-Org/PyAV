@@ -51,6 +51,20 @@ Packets
     .. autoclass:: Packet
         :members:
 
+Codecs
+------
+
+.. automodule:: av.codec.codec
+
+    .. autoclass:: Codec
+        :members:
+
+.. automodule:: av.codec.context
+
+    .. autoclass:: CodecContext
+        :members:
+
+
 Frames
 ------
 
@@ -77,6 +91,14 @@ Video Streams
 .. automodule:: av.video.stream
 
     .. autoclass:: VideoStream
+        :members:
+
+Video Codecs
+-------------
+
+.. automodule:: av.video.codeccontext
+
+    .. autoclass:: VideoCodecContext
         :members:
 
 Video Formats
@@ -122,6 +144,14 @@ Audio Streams
 .. automodule:: av.audio.stream
 
     .. autoclass:: AudioStream
+        :members:
+
+Audio CodecContext
+-------------
+
+.. automodule:: av.audio.codeccontext
+
+    .. autoclass:: AudioCodecContext
         :members:
 
 Audio Formats

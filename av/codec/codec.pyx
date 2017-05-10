@@ -33,6 +33,23 @@ class UnknownCodecError(ValueError):
 
 cdef class Codec(object):
     
+    """A single encoding or decoding codec.
+
+    This object exposes information about an availible codec, and an avenue to
+    create a :class:`.CodecContext` to encode/decode directly.
+
+    ::
+
+        >>> codec = Codec('mpeg4', 'r')
+        >>> codec.name
+        mpeg4
+        >>> codec.type
+        video
+        >>> codec.is_encoder
+        False
+
+    """
+
     def __cinit__(self, name, mode='r'):
 
         if name is _cinit_sentinel:

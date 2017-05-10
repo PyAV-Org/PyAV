@@ -273,7 +273,7 @@ def open(file, mode=None, format=None, options=None):
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and streams.
 
-    For devices (via `libavdevice`), pass the name of the device to ``format``,
+    For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
 
         >>> # Open webcam on OS X.

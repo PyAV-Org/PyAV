@@ -5,13 +5,17 @@
 
 Currently we provide the basics of:
 
-- :class:`containers <.Container>`
-- devices (by specifying a format)
-- audio/video/subtitle :class:`streams <.Stream>`
-- :class:`packets <.Packet>`
-- audio/video :class:`frames <.Frame>`
-- :class:`data planes <.Plane>`
-- :class:`subtitles <.Subtitle>`
+- libavformat:
+    - :class:`containers <.Container>`
+    - audio/video/subtitle :class:`streams <.Stream>`
+    - :class:`packets <.Packet>`
+- libavdevice (by specifying a format to containers)
+- libavcodec:
+    - :class:`.Codec`
+    - :class:`.CodecContext`
+    - audio/video :class:`frames <.Frame>`
+    - :class:`data planes <.Plane>`
+    - :class:`subtitles <.Subtitle>`
 - and a few more utilities.
 
 .. _FFmpeg: http://ffmpeg.org

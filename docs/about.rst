@@ -11,8 +11,7 @@ let us know if there are any odd compiler errors or something won't link due to
 missing functions.
 
 Additionally, we are far from wrapping the full extents of the libraries.
-Notable omissions include device and filter support, but there are many C
-struct members which are currently unexposed.
+There are many functions and C struct members which are currently unexposed.
 
 .. _FFmpeg: http://ffmpeg.org
 .. _Libav: http://libav.org
