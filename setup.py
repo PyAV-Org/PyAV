@@ -163,14 +163,15 @@ def new_compiler(*args, **kwargs):
     All other arguments passed to ``distutils.ccompiler.new_compiler``.
 
     """
+    silent = kwargs.pop('silent', True)
     cc = _new_compiler(*args, **kwargs)
-    if kwargs.pop('silent', True):
+    if silent:
         cc.spawn = _CCompiler_spawn_silent
     return cc
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
-                  library_dirs=None, link=True, compiler=None):
+                  library_dirs=None, link=True, compiler=None, verbose=False):
     """Check that we can compile and link the given source.
 
     Caches results; delete the ``build`` directory to reset.
@@ -189,7 +190,7 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
         except ValueError:
             pass
 
-    cc = new_compiler(compiler=compiler)
+    cc = new_compiler(compiler=compiler, silent=not verbose)
 
     with open(source_path, 'w') as fh:
         if is_msvc(cc):
@@ -428,7 +429,7 @@ class ReflectCommand(Command):
         config['library_dirs'] += self.library_dirs
 
         # Check for some specific functions.
-        for func_name in (
+        for i, func_name in enumerate((
 
             'avformat_open_input', # Canary that should exist.
             'pyav_function_should_not_exist', # Canary that should not exist.
@@ -439,7 +440,7 @@ class ReflectCommand(Command):
             'avformat_alloc_output_context2',
             'avformat_close_input',
 
-        ):
+        )):
             print("looking for %s... " % func_name, end='')
             if compile_check(
                 name=os.path.join(tmp_dir, func_name),
@@ -447,6 +448,7 @@ class ReflectCommand(Command):
                 libraries=config['libraries'],
                 library_dirs=config['library_dirs'],
                 compiler=self.compiler,
+                verbose=True,
             ):
                 print('found')
                 found.append(func_name)
