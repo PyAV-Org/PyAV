@@ -13,7 +13,7 @@ cdef class Packet(Buffer):
 
     # We track our own time.
     cdef lib.AVRational _time_base
-    cdef int _retime(self, lib.AVRational, lib.AVRational) except -1
+    cdef _rebase_time(self, lib.AVRational)
 
     # Hold onto the original reference.
     cdef ByteSource source

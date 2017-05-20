@@ -42,9 +42,9 @@ cdef class Codec(object):
 
         >>> codec = Codec('mpeg4', 'r')
         >>> codec.name
-        mpeg4
+        'mpeg4'
         >>> codec.type
-        video
+        'video'
         >>> codec.is_encoder
         False
 

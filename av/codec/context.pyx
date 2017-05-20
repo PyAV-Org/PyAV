@@ -63,6 +63,8 @@ cdef class CodecContext(object):
         # Signal that we want to reference count.
         self.ptr.refcounted_frames = 1
 
+        self.stream_index = -1
+
     property is_open:
         def __get__(self):
             return lib.avcodec_is_open(self.ptr)
@@ -255,6 +257,12 @@ cdef class CodecContext(object):
         cdef bint is_flushing = frame is None
         frames = self._prepare_frames_for_encode(frame)
 
+        # Assert the frames are in our time base.
+        # TODO: Don't mutate time.
+        for frame in frames:
+            if frame is not None:
+                frame._rebase_time(self.ptr.time_base)
+
         res = []
 
         if (
@@ -289,6 +297,8 @@ cdef class CodecContext(object):
         return res
 
     cdef _setup_encoded_packet(self, Packet packet):
+        # The packet's timing was simply copied across from the source frame.
+        # The muxer will take care of rebasing time if it needs to.
         packet._time_base = self.ptr.time_base
 
     cdef _encode(self, Frame frame):
@@ -378,9 +388,16 @@ cdef class CodecContext(object):
         if frame.ptr.pts == lib.AV_NOPTS_VALUE:
             frame.ptr.pts = frame.ptr.pkt_pts
 
-        # We don't have to worry about context vs. stream time_base during decoding
-        # as they should be the same.
-        frame._time_base = self.ptr.time_base
+        if self.stream_index >= 0 and self.container and self.stream_index < self.container.ptr.nb_streams:
+            # If we are decoding in the context of a stream, assume the time
+            # base came from there.
+            # TODO: Actually track that packets have a consistent time_base,
+            # and pull it from there.
+            frame._time_base = self.container.ptr.streams[self.stream_index].time_base
+        else:
+            # This is a bad assumption to make, as it seems like AVCodecContext
+            # barely cares about timing information.
+            frame._time_base = self.ptr.time_base
         
         frame.index = self.ptr.frame_number - 1
  

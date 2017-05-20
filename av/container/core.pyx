@@ -277,7 +277,7 @@ def open(file, mode=None, format=None, options=None):
     e.g.::
 
         >>> # Open webcam on OS X.
-        >>> av.open(format='avfoundation', file='0') # doctest: SKIP
+        >>> av.open(format='avfoundation', file='0') # doctest: +SKIP
 
     """
 

@@ -48,13 +48,8 @@ cdef class VideoCodecContext(CodecContext):
                 lib.SWS_CS_DEFAULT
             )
 
-        # TODO: Don't mutate the frame's times.
-        # TODO: Generalize this to all types.
-        if vframe.ptr.pts != lib.AV_NOPTS_VALUE:
-            # Assert we're in the same time base.
-            vframe._retime(vframe._time_base, self.ptr.time_base)
-        else:
-            # There is no pts, so create one.
+        # There is no pts, so create one.
+        if vframe.ptr.pts == lib.AV_NOPTS_VALUE:
             vframe.ptr.pts = <int64_t>self.encoded_frame_count
 
         self.encoded_frame_count += 1

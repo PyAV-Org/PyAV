@@ -197,6 +197,13 @@ cdef class OutputContainer(Container):
         
     def mux(self, Packet packet not None):
         self.start_encoding()
+
+        # Assert the packet is in stream time.
+        if packet.struct.stream_index < 0 or packet.struct.stream_index >= self.proxy.ptr.nb_streams:
+            raise ValueError('Bad Packet stream_index.')
+        cdef lib.AVStream *stream = self.proxy.ptr.streams[packet.struct.stream_index]
+        packet._rebase_time(stream.time_base)
+
         self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
 
 

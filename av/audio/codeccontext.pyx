@@ -33,7 +33,7 @@ cdef class AudioCodecContext(CodecContext):
                 self.ptr.sample_rate
             )
         frame = self.resampler.resample(frame)
-
+        
         cdef bint is_flushing = input_frame is None
         cdef bint use_fifo = not (self.ptr.codec.capabilities & lib.CODEC_CAP_VARIABLE_FRAME_SIZE)
 
@@ -56,26 +56,6 @@ cdef class AudioCodecContext(CodecContext):
 
         else:
             frames.append(frame)
-
-        for frame in frames:
-
-            # TODO: Centralize time handling.
-            # TODO codec-ctx: streams rebased pts/dts/duration from self.ptr.time_base to self._stream.time_base
-
-            # If the frame has a valid pts, scale it to the codec's time_base.
-            # Remember that the AudioFifo time_base is always 1/sample_rate!
-            if frame.ptr.pts != lib.AV_NOPTS_VALUE:
-                frame.ptr.pts = lib.av_rescale_q(
-                    frame.ptr.pts, 
-                    frame._time_base,
-                    self.ptr.time_base
-                )
-            else:
-                frame.ptr.pts = lib.av_rescale(
-                    self.ptr.frame_number,
-                    self.ptr.sample_rate,
-                    self.ptr.frame_size,
-                )
 
         return frames
 

@@ -79,6 +79,8 @@ cdef class Stream(object):
             self._codec = self._codec_context.codec
 
         self.codec_context = wrap_codec_context(self._codec_context, self._codec, False)
+        self.codec_context.stream_index = stream.index
+        
         # if self._container.ptr.iformat:
             # self.codec_context.open(strict=False)
 
@@ -108,14 +110,7 @@ cdef class Stream(object):
         setattr(self.codec_context, name, value)
 
     def encode(self, frame=None):
-
-        packets = self.codec_context.encode(frame)
-        
-        cdef Packet packet
-        for packet in packets:
-            packet._retime(self._codec_context.time_base, self._stream.time_base)
-        
-        return packets
+        return self.codec_context.encode(frame)
 
     def decode(self, packet=None, count=0):
         return self.codec_context.decode(packet, count)

@@ -14,6 +14,11 @@ cdef class CodecContext(object):
 
     cdef ContainerProxy container
 
+    # Used as a signal that this is within a stream, and also for us to access
+    # that stream. This is set "manually" by the stream after constructing
+    # this object.
+    cdef int stream_index
+
     cdef lib.AVCodecParserContext *parser
     cdef unsigned char *parse_buffer
     cdef size_t parse_buffer_size
