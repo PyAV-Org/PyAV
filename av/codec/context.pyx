@@ -11,7 +11,7 @@ from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrat
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 
-
+from errno import EAGAIN
 
 cdef object _cinit_sentinel = object()
 
@@ -227,7 +227,7 @@ cdef class CodecContext(object):
         cdef Frame frame = self._next_frame
 
         cdef int res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
-        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+        if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)
 
@@ -241,7 +241,7 @@ cdef class CodecContext(object):
         cdef Packet packet = Packet()
             
         cdef int res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
-        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+        if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)
 
