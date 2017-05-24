@@ -227,7 +227,7 @@ cdef class CodecContext(object):
         cdef Frame frame = self._next_frame
 
         cdef int res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
-        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+        if res in (-35, -11) or res == lib.AVERROR_EOF: # EAGAIN
             return
         err_check(res)
 
@@ -241,7 +241,7 @@ cdef class CodecContext(object):
         cdef Packet packet = Packet()
             
         cdef int res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
-        if res == -35 or res == lib.AVERROR_EOF: # EAGAIN
+        if res in (-35, -11) or res == lib.AVERROR_EOF: # EAGAIN
             return
         err_check(res)
 
