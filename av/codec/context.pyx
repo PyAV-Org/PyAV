@@ -1,17 +1,17 @@
-from libc.stdint cimport uint8_t, int64_t
-from libc.string cimport memcpy
-from libc.stdlib cimport malloc, realloc, free
 from cpython cimport PyWeakref_NewRef
+from libc.errno cimport EAGAIN
+from libc.stdint cimport uint8_t, int64_t
+from libc.stdlib cimport malloc, realloc, free
+from libc.string cimport memcpy
 
 cimport libav as lib
 
 from av.codec.codec cimport Codec, wrap_codec
-from av.packet cimport Packet
-from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
+from av.packet cimport Packet
+from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 
-from errno import EAGAIN
 
 cdef object _cinit_sentinel = object()
 
