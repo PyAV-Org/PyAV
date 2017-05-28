@@ -9,7 +9,7 @@ cdef object _cinit_bypass_sentinel
 cdef AudioFrame alloc_audio_frame():
     """Get a mostly uninitialized AudioFrame.
 
-    You MUST call AudioFrame._init(...) or AudioFrame._init_properties()
+    You MUST call AudioFrame._init(...) or AudioFrame._init_user_attributes()
     before exposing to the user.
 
     """
@@ -33,7 +33,7 @@ cdef class AudioFrame(Frame):
         self.ptr.channel_layout = layout
 
         # HACK: It really sucks to do this twice.
-        self._init_properties()
+        self._init_user_attributes()
 
         cdef size_t buffer_size
         if self.layout.channels and nb_samples:
@@ -77,7 +77,7 @@ cdef class AudioFrame(Frame):
         # an easy, if inefficient way.
         self._init_planes(AudioPlane)
 
-    cdef _init_properties(self):
+    cdef _init_user_attributes(self):
         self.layout = get_audio_layout(0, self.ptr.channel_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
         self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)

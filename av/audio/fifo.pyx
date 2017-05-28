@@ -7,9 +7,6 @@ from av.utils cimport err_check
 cdef class AudioFifo:
 
     """A simple Audio FIFO (First In First Out) Buffer."""
-
-    def __dealloc__(self):
-        lib.av_audio_fifo_free(self.ptr)
         
     def __repr__(self):
         return '<av.%s nb_samples:%s %dhz %s %s at 0x%x>' % (
@@ -27,6 +24,10 @@ cdef class AudioFifo:
         self.time_base.num = 1
         self.time_base.den = 1
         
+    def __dealloc__(self):
+        if self.ptr:
+            lib.av_audio_fifo_free(self.ptr)
+
     cpdef write(self, AudioFrame frame):
         """Push some samples into the queue."""
 
@@ -99,6 +100,8 @@ cdef class AudioFifo:
             nb_samples,
             1, # Align?
         )
+
+        # TODO: Copy all parameters from a template frame.
 
         err_check(lib.av_audio_fifo_read(
             self.ptr,

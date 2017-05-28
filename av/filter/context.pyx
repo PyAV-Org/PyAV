@@ -106,7 +106,7 @@ cdef class FilterContext(object):
         self.graph.configure()
         
         err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
-        frame._init_properties()
+        frame._init_user_attributes()
         return frame
 
         

@@ -17,8 +17,8 @@ cdef class Frame(object):
     cdef _init_planes(self, cls=?)
     cdef int _max_plane_count(self)
 
-    cdef _copy_attributes_from(self, Frame source, bint pts=?)
+    cdef _copy_internal_attributes(self, Frame source)
     
-    cdef _init_properties(self)
+    cdef _init_user_attributes(self)
     
 

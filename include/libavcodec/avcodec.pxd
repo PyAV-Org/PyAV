@@ -199,27 +199,33 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
     # This is a strict superset of AVPicture.
     cdef struct AVFrame:
+
         uint8_t **data
         int *linesize
         uint8_t **extended_data
-        
+
+        int format # Should be AVPixelFormat or AVSampleFormat
+        int key_frame # 0 or 1.
+
         int width
         int height
+
         int nb_samples # Audio samples
         #int channels # Audio channels
         int sample_rate #Audio Sample rate 
         int channel_layout # Audio channel_layout
-        int format # Should be AVPixelFormat or AV...Format
-        int key_frame # 0 or 1.
         
+
         int64_t pts
-        int64_t pkt_pts
-        int64_t pkt_dts
+        int64_t pkt_pts # Deprecated.
+        int64_t pkt_dts # Deprecated.
         
         int pkt_size
         
         uint8_t **base
         void *opaque
+        AVDictionary *metadata
+
         
     cdef AVFrame* avcodec_alloc_frame()
     

@@ -86,7 +86,7 @@ cdef class VideoCodecContext(CodecContext):
     cdef _setup_decoded_frame(self, Frame frame):
         CodecContext._setup_decoded_frame(self, frame)
         cdef VideoFrame vframe = frame
-        vframe._init_properties()
+        vframe._init_user_attributes()
 
     cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
         

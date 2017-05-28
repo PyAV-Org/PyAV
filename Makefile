@@ -69,6 +69,7 @@ clean: clean-build
 clean-build:
 	- rm -rf build
 	- find av -name '*.so' -delete
+	- find av -name '*.c' -delete
 
 clean-sandbox:
 	- rm -rf sandbox/201*

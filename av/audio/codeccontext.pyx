@@ -96,14 +96,14 @@ cdef class AudioCodecContext(CodecContext):
         cdef AudioFrame frame = self.next_frame
         self.next_frame = None
         
-        frame._init_properties()
+        frame._init_user_attributes()
 
         return frame
 
     cdef _setup_decoded_frame(self, Frame frame):
         CodecContext._setup_decoded_frame(self, frame)
         cdef AudioFrame aframe = frame
-        aframe._init_properties()
+        aframe._init_user_attributes()
 
     property frame_size:
         """Number of samples per channel in an audio frame."""

@@ -100,6 +100,9 @@ cdef class AudioResampler(object):
             return
 
         cdef AudioFrame output = alloc_audio_frame()
+        if frame:
+            # TODO: Hold onto a template frame for this when flushing.
+            output._copy_internal_attributes(frame)
         output.ptr.sample_rate = self.rate
         output._init(
             self.format.sample_fmt,
@@ -115,9 +118,6 @@ cdef class AudioResampler(object):
             frame.ptr.extended_data if frame else NULL,
             frame.ptr.nb_samples if frame else 0
         ))
-
-        # Copy some attributes.
-        output._copy_attributes_from(frame)
 
         # Empty frame.
         if output.ptr.nb_samples <= 0:

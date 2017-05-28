@@ -52,17 +52,14 @@ cdef class Frame(object):
     cdef int _max_plane_count(self):
         return INT_MAX
 
-    cdef _copy_attributes_from(self, Frame other, bint pts=False):
-        self.index = other.index
-        self._time_base = other._time_base
-        if pts and self.ptr and other.ptr:
-            self.ptr.pkt_pts = other.ptr.pkt_pts
-            self.ptr.pkt_dts = other.ptr.pkt_dts
-            self.ptr.pts = other.ptr.pts
+    cdef _copy_internal_attributes(self, Frame source):
+        """Mimic another frame."""
+        self.index = source.index
+        self._time_base = source._time_base
+        lib.av_frame_copy_props(self.ptr, source.ptr)
     
-    cdef _init_properties(self):
+    cdef _init_user_attributes(self):
         pass # Dummy to match the API of the others.
-
 
     cdef _rebase_time(self, lib.AVRational dst):
 
