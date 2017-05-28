@@ -30,8 +30,12 @@ class AVError(EnvironmentError):
         else:
             super(AVError, self).__init__(code, message)
         self.error_log = error_log
-        if error_log:
-            self.strerror = '%s (%s: %s)' % (self.strerror, error_log[0], error_log[1])
+    def __str__(self):
+        strerror = super(AVError, self).__str__(self)
+        if self.error_log:
+            return '%s (%s: %s)' % (strerror, self.error_log[0], self.error_log[1])
+        else:
+            return strerror
 AVError.__module__ = 'av'
 
 
