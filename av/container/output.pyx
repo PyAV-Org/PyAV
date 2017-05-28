@@ -195,7 +195,17 @@ cdef class OutputContainer(Container):
 
         self._done = True
         
-    def mux(self, Packet packet not None):
+    def mux(self, packets):
+        # We accept either a Packet, or a sequence of packets. This should
+        # smooth out the transition to the new encode API which returns a
+        # sequence of packets.
+        if isinstance(packets, Packet):
+            self.mux_one(packets)
+        else:
+            for packet in packets:
+                self.mux_one(packet)
+
+    def mux_one(self, Packet packet not None):
         self.start_encoding()
 
         # Assert the packet is in stream time.
