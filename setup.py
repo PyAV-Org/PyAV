@@ -44,8 +44,12 @@ is_py3 = sys.version_info[0] >= 3
 
 # We will embed this metadata into the package so it can be recalled for debugging.
 version = '0.3.3'
-git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
-git_commit = git_commit.strip()
+try:
+    git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
+except OSError:
+    git_commit = None
+else:
+    git_commit = git_commit.strip()
 
 
 def get_library_config(name):
@@ -154,7 +158,7 @@ config_macros = [
 
 def dump_config():
     """Print out all the config information we have so far (for debugging)."""
-    print('PyAV:', version, git_commit)
+    print('PyAV:', version, git_commit or '(unknown commit)')
     print('Python:', sys.version.encode('unicode_escape' if is_py3 else 'string-escape'))
     print('platform:', platform.platform())
     print('extension_extra:')
