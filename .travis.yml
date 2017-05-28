@@ -27,10 +27,12 @@ matrix:
         # We are still working on this.
         - os: osx
         
-        # Deprecation while we consider removing support.
+        # Deprecation while we consider removing support for old FFmpeg.
         - python: "2.7"
           env: FFMPEG=2.2.4
           os: linux
+
+        # Deprecation while we consider removing support for Libav entirely.
         - python: "2.7"
           env: LIBAV=12
           os: linux
@@ -42,6 +44,14 @@ matrix:
           os: linux
         - python: "2.7"
           env: LIBAV=11.4
+          os: linux
+
+        # Still setting up for PyPy.
+        - python: "pypy"
+          env: FFMPEG=3.2
+          os: linux
+        - python: "pypy3"
+          env: FFMPEG=3.2
           os: linux
 
     include:
@@ -58,6 +68,14 @@ matrix:
 
         # Python 3.
         - python: "3.4"
+          env: FFMPEG=3.2
+          os: linux
+
+        # PyPy
+        - python: "pypy"
+          env: FFMPEG=3.2
+          os: linux
+        - python: "pypy3"
           env: FFMPEG=3.2
           os: linux
 
