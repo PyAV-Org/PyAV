@@ -1,7 +1,7 @@
 #include "libavcodec/avcodec.h"
 
 
-#ifndef PYAV_HAVE_AV_FRAME_GET_BEST_EFFORT_TIMESTAMP
+#if !PYAV_HAVE_AV_FRAME_GET_BEST_EFFORT_TIMESTAMP
 
     int64_t av_frame_get_best_effort_timestamp(const AVFrame *frame) 
     {
@@ -12,7 +12,7 @@
 #endif
 
 
-#ifdef PYAV_HAVE_FFMPEG
+#if PYAV_HAVE_FFMPEG
 
     #define AVPixelFormat PixelFormat
     #define AV_PIX_FMT_YUV420P PIX_FMT_YUV420P
@@ -20,7 +20,7 @@
 #endif
 
 
-#ifndef PYAV_HAVE_AVCODEC_SEND_PACKET
+#if !PYAV_HAVE_AVCODEC_SEND_PACKET
 
     // Stub these out so that we don't fail to compile.
     int avcodec_send_packet(AVCodecContext *avctx, AVPacket *packet)   { return 0; }

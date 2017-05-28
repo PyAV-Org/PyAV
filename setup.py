@@ -3,12 +3,11 @@ from __future__ import print_function
 from distutils.ccompiler import new_compiler as _new_compiler, LinkError, CompileError
 from distutils.command.clean import clean, log
 from distutils.core import Command
+from distutils.dir_util import remove_tree
 from distutils.errors import DistutilsExecError
 from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
-from distutils.command.clean import clean, log
-from distutils.dir_util import remove_tree
 from subprocess import Popen, PIPE
 import errno
 import itertools
@@ -345,6 +344,7 @@ class ConfigCommand(Command):
             ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
+        
         if is_msvc(new_compiler(compiler=self.compiler)):
             # Assume we have to disable /OPT:REF for MSVC with ffmpeg
             config = {
@@ -467,7 +467,7 @@ class ReflectCommand(Command):
             if e.errno != errno.EEXIST:
                 raise
 
-        found = []
+        results = {}
 
         reflection_includes = [
             'libavcodec/avcodec.h',
@@ -495,17 +495,14 @@ class ReflectCommand(Command):
 
         ):
             print("looking for %s... " % func_name, end='')
-            if compile_check(
+            results[func_name] = compile_check(
                 name=os.path.join(tmp_dir, func_name),
                 code='%s()' % func_name,
                 libraries=config['libraries'],
                 library_dirs=config['library_dirs'],
                 compiler=self.compiler,
-            ):
-                print('found')
-                found.append(func_name)
-            else:
-                print('missing')
+            )
+            print('found' if results[func_name] else 'missing')
 
         for struct_name, member_name in (
 
@@ -516,26 +513,23 @@ class ReflectCommand(Command):
             ('AVFrame', 'mb_type'),
 
         ):
-            print("looking for %s.%s... " % (struct_name, member_name), end='')
-            if compile_check(
-                name=os.path.join(tmp_dir, '%s.%s' % (struct_name, member_name)),
+            name = '%s.%s' % (struct_name, member_name)
+            print("looking for %s... " % name, end='')
+            results[name] = compile_check(
+                name=os.path.join(tmp_dir, name),
                 code='struct %s x; x.%s;' % (struct_name, member_name),
                 includes=reflection_includes,
                 include_dirs=config['include_dirs'],
                 link=False,
                 compiler=self.compiler,
-            ):
-                print('found')
-                # Double-unscores for members.
-                found.append('%s__%s' % (struct_name, member_name))
-            else:
-                print('missing')
+            )
+            print('found' if results[name] else 'missing')
 
         canaries = {
-            'pyav_function_should_not_exist': ('function', False),
-            'PyAV__struct_should_not_exist': ('member', False),
-            'avformat_open_input': ('function', True),
-            'AVStream__index': ('member', True),
+            'pyav_function_should_not_exist': False,
+            'PyAV.struct_should_not_exist': False,
+            'avformat_open_input': True,
+            'AVStream.index': True,
         }
 
         # Create macros for the things that we found.
@@ -543,15 +537,15 @@ class ReflectCommand(Command):
         # structure members, but until we actually have one, we won't
         # worry about it.
         config_macros.extend(
-            ('PYAV_HAVE_%s' % name.upper(), '1')
-            for name in found
+            ('PYAV_HAVE_%s' % name.upper().replace('.', '__'), '1' if value else '0')
+            for name, value in sorted(results.items())
             if name not in canaries
         )
 
 
         # Make sure our canaries report back properly.
-        for name, (type_, should_exist) in canaries.items():
-            if should_exist != (name in found):
+        for name, should_exist in canaries.items():
+            if should_exist != results[name]:
                 print('\nWe %s `%s` in the libraries.' % (
                     'didn\'t find' if should_exist else 'found',
                     name

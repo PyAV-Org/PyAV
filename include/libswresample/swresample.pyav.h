@@ -1,6 +1,6 @@
 // This header serves to smooth out the differences in FFmpeg and LibAV.
 
-#ifdef PYAV_HAVE_LIBSWRESAMPLE
+#if PYAV_HAVE_LIBSWRESAMPLE
 
     #include <libswresample/swresample.h>
 
@@ -24,13 +24,13 @@
 
 
 
-#ifndef PYAV_HAVE_LIBAVRESAMPLE
+#if !PYAV_HAVE_LIBAVRESAMPLE
     int avresample_version() { return -1; }
     const char* avresample_configuration() { return ""; }
     const char* avresample_license() { return ""; }
 #endif
 
-#ifndef PYAV_HAVE_LIBSWRESAMPLE
+#if !PYAV_HAVE_LIBSWRESAMPLE
     int swresample_version() { return -1; }
     const char* swresample_configuration() { return ""; }
     const char* swresample_license() { return ""; }

@@ -1,6 +1,6 @@
 #include "libavutil/avutil.h"
 
-#ifndef PYAV_HAVE_AV_CALLOC
+#if !PYAV_HAVE_AV_CALLOC
 
 #include "libavutil/mem.h"
 
