@@ -32,6 +32,9 @@ matrix:
           env: FFMPEG=2.2.4
           os: linux
         - python: "2.7"
+          env: LIBAV=12
+          os: linux
+        - python: "2.7"
           env: LIBAV=11.9
           os: linux
         - python: "2.7"
