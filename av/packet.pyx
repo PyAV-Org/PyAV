@@ -163,3 +163,9 @@ cdef class Packet(Buffer):
     property duration:
         def __get__(self): return None if self.struct.duration == lib.AV_NOPTS_VALUE else self.struct.duration
 
+    property is_keyframe:
+        def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_KEY)
+
+    property is_corrupt:
+        def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_CORRUPT)
+    

@@ -43,6 +43,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef uint64_t CODEC_FLAG_TRUNCATED
     
     cdef int AV_PKT_FLAG_KEY
+    cdef int AV_PKT_FLAG_CORRUPT
     
     cdef int FF_COMPLIANCE_VERY_STRICT
     cdef int FF_COMPLIANCE_STRICT
