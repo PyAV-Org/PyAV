@@ -13,7 +13,9 @@ cdef class AudioFifo:
     
     cdef readonly AudioFormat format
     cdef readonly AudioLayout layout
-        
+    
+    cdef AudioFrame template_frame
+    
     cdef int64_t last_pts
     cdef int64_t pts_offset
     cdef lib.AVRational time_base

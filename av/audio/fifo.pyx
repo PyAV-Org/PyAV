@@ -31,9 +31,18 @@ cdef class AudioFifo:
     cpdef write(self, AudioFrame frame):
         """Push some samples into the queue."""
 
+        # Hold onto a copy of the attributes of the first frame to populate
+        # output frames with.
+        if frame and not self.template_frame:
+            self.template_frame = alloc_audio_frame()
+            self.template_frame._copy_internal_attributes(frame)
+
         # Take configuration from the first frame.
         if not self.ptr:
 
+            if not frame:
+                raise ValueError('Cannot flush AudioFifo before it is used.')
+            
             self.format = get_audio_format(<lib.AVSampleFormat>frame.ptr.format)
             self.layout = get_audio_layout(0, frame.ptr.channel_layout)
             self.time_base.den = frame.ptr.sample_rate
@@ -94,6 +103,7 @@ cdef class AudioFifo:
         cdef int sample_size
 
         cdef AudioFrame frame = alloc_audio_frame()
+        frame._copy_internal_attributes(self.template_frame)
         frame._init(
             self.format.sample_fmt,
             self.layout.layout,
@@ -101,15 +111,13 @@ cdef class AudioFifo:
             1, # Align?
         )
 
-        # TODO: Copy all parameters from a template frame.
-
         err_check(lib.av_audio_fifo_read(
             self.ptr,
             <void **>frame.ptr.extended_data,
             nb_samples,
         ))
 
-        frame.ptr.sample_rate = self.time_base.den
+        frame.ptr.sample_rate = self.time_base.den # TODO: Don't assume this.
         frame.ptr.channel_layout = self.layout.layout
         
         if self.last_pts != lib.AV_NOPTS_VALUE:

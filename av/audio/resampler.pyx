@@ -43,7 +43,7 @@ cdef class AudioResampler(object):
 
             self.ptr = lib.swr_alloc()
             if not self.ptr:
-                raise ValueError('could not create SwrContext')
+                raise ValueError('Could not create SwrContext.')
 
             # Configure it!
             try:
@@ -62,11 +62,11 @@ cdef class AudioResampler(object):
         elif frame:
 
             if (
-                frame.ptr.format != self.src_format.sample_fmt or
+                frame.ptr.format         != self.src_format.sample_fmt or
                 frame.ptr.channel_layout != self.src_layout.layout or
-                frame.ptr.sample_rate != self.src_rate
+                frame.ptr.sample_rate    != self.src_rate
             ):
-                raise ValueError('frame does not match resampler parameters')
+                raise ValueError('Frame does not match AudioResampler setup.')
 
 
         # The example "loop" as given in the FFmpeg documentation looks like:

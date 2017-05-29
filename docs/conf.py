@@ -222,6 +222,9 @@ autodoc_member_order = 'bysource'
 autodoc_default_flags = ['undoc-members', 'show-inheritance']
 
 
+todo_include_todos = True
+
+
 doxylink = {}
 ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', '..', 'tmp', 'tagfile.xml'))
 if os.path.exists(ffmpeg_tagfile):

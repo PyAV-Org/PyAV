@@ -23,7 +23,10 @@ cdef class AudioFrame(Frame):
     def __cinit__(self, format='s16', layout='stereo', samples=0, align=True):
         if format is _cinit_bypass_sentinel:
             return
-        raise NotImplementedError()
+
+        cdef AudioFormat cy_format = AudioFormat(format)
+        cdef AudioLayout cy_layout = AudioLayout(layout)
+        self._init(cy_format.sample_fmt, cy_layout.layout, samples, align)
 
     cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align):
 
@@ -65,6 +68,9 @@ cdef class AudioFrame(Frame):
             
             self._init_planes(AudioPlane)
 
+    def __dealloc__(self):
+        lib.av_freep(&self._buffer)
+
     cdef _recalc_linesize(self):
         lib.av_samples_get_buffer_size(
             self.ptr.linesize,
@@ -83,9 +89,6 @@ cdef class AudioFrame(Frame):
         self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1
         self._init_planes(AudioPlane)
-
-    def __dealloc__(self):
-        lib.av_freep(&self._buffer)
     
     def __repr__(self):
         return '<av.%s %d, %d samples at %dHz, %s, %s at 0x%x>' % (
@@ -109,19 +112,19 @@ cdef class AudioFrame(Frame):
             return self.ptr.sample_rate
 
     def to_nd_array(self, **kwargs):
-      """Get a numpy array of this frame.
-      Any ``**kwargs`` are passed to :meth:`AudioFrame.reformat`.
-      """
+        """Get a numpy array of this frame.
+        Any ``**kwargs`` are passed to :meth:`AudioFrame.reformat`.
+        """
 
 
-      # map avcodec type to numpy type
-      try:
-        type = {
-          's16p':'<i2'
-          }[self.format.name]
-      except:
-        raise AssertionError("Don't know how to convert data type", self.format.name)
+        # map avcodec type to numpy type
+        try:
+            dtype = {
+                's16p':'<i2'
+            }[self.format.name]
+        except:
+            raise AssertionError("Don't know how to convert data type.", self.format.name)
 
-      # convert and return data
-      import numpy as np
-      return np.vstack( map( lambda x: np.frombuffer(x, np.dtype(type)), self.planes))
+        # convert and return data
+        import numpy as np
+        return np.vstack(map(lambda x: np.frombuffer(x, np.dtype(dtype)), self.planes))

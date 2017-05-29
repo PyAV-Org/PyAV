@@ -7,7 +7,7 @@ class TestAudioFifo(TestCase):
     def test_1khz(self):
 
         container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
-        stream = next(s for s in container.streams if s.type == 'audio')
+        stream = container.streams.audio[0]
 
         fifo = av.AudioFifo()
 
@@ -36,3 +36,20 @@ class TestAudioFifo(TestCase):
 
         self.assertTrue(min_len > 10 * 512 * 2 * 2)
         self.assertTrue(input_[:min_len] == output[:min_len])
+
+    def test_pts_simple(self):
+
+        fifo = av.AudioFifo()
+
+        iframe = av.AudioFrame(samples=1024)
+        iframe.pts = 0
+        # iframe.sample_rate = 48000
+        iframe.time_base = '1/48000'
+
+        fifo.write(iframe)
+
+        oframe = fifo.read(1024)
+        self.assertTrue(oframe is not None)
+        self.assertEqual(oframe.pts, iframe.pts)
+        self.assertEqual(oframe.time_base, iframe.time_base)
+        

@@ -116,7 +116,6 @@ cdef class AudioCodecContext(CodecContext):
         def __set__(self, int value):
             self.ptr.sample_rate = value
 
-    # TODO: Deprecate.
     property rate:
         """Number samples of per second."""
         def __get__(self):
