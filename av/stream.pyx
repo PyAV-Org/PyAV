@@ -110,7 +110,37 @@ cdef class Stream(object):
         setattr(self.codec_context, name, value)
 
     def encode(self, frame=None):
-        return self.codec_context.encode(frame)
+        cdef Packet packet
+        packets = self.codec_context.encode(frame)
+        for packet in packets:
+            if packet.struct.pts != lib.AV_NOPTS_VALUE:
+                packet.struct.pts = lib.av_rescale_q(
+                    packet.struct.pts,
+                    self._codec_context.time_base,
+                    self._stream.time_base
+                )
+            if packet.struct.dts != lib.AV_NOPTS_VALUE:
+                packet.struct.dts = lib.av_rescale_q(
+                    packet.struct.dts,
+                    self._codec_context.time_base,
+                    self._stream.time_base
+                )
+            if packet.struct.duration > 0:
+                packet.struct.duration = lib.av_rescale_q(
+                    packet.struct.duration,
+                    self._codec_context.time_base,
+                    self._stream.time_base
+                )
+
+            # `coded_frame` is "the picture in the bitstream"; does this make
+            # sense for audio?
+            if self._codec_context.coded_frame:
+                if self._codec_context.coded_frame.key_frame:
+                    packet.struct.flags |= lib.AV_PKT_FLAG_KEY
+
+            packet.struct.stream_index = self._stream.index
+            packet.stream = self
+        return packets
 
     def decode(self, packet=None, count=0):
         return self.codec_context.decode(packet, count)
