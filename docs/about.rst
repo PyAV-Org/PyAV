@@ -16,14 +16,3 @@ There are many functions and C struct members which are currently unexposed.
 .. _FFmpeg: http://ffmpeg.org
 .. _Libav: http://libav.org
 
-
-Links
------
-
-Other important documents include:
-
-- `HACKING.md <https://github.com/mikeboers/PyAV/blob/master/HACKING.md>`_
-  (developer docs);
-- `CHANGELOG.md <https://github.com/mikeboers/PyAV/blob/master/CHANGELOG.md>`_;
-- `LICENSE.txt <https://github.com/mikeboers/PyAV/blob/master/LICENSE.txt>`_.
-

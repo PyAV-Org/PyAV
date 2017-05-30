@@ -51,8 +51,15 @@ Contents
     installation
     examples
     api
+
+
+.. toctree::
+    :maxdepth: 1
+
     hacking
     includes
+    changelog
+    license
 
 
 Indices and Tables
