@@ -1,7 +1,7 @@
 cimport libav as lib
 
 from av.bytesource cimport bytesource
-from av.utils cimport avrational_to_faction, err_check
+from av.utils cimport avrational_to_faction, to_avrational, err_check
 
 
 cdef class Packet(Buffer):
@@ -47,7 +47,7 @@ cdef class Packet(Buffer):
     def __repr__(self):
         return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
             self.__class__.__name__,
-            self.stream.index if self.stream else 0,
+            self._stream.index if self._stream else 0,
             self.dts,
             self.pts,
             self.struct.size,
@@ -103,44 +103,33 @@ cdef class Packet(Buffer):
 
     def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
-        return self.stream.decode(self, count)
+        return self._stream.decode(self, count)
 
     def decode_one(self):
         """Decode the first frame from this packet.
 
         Returns ``None`` if there is no frame."""
-        res = self.stream.decode(self, count=1)
+        res = self._stream.decode(self, count=1)
         return res[0] if res else None
 
-    # Looks circular, but isn't. Silly Cython.
     property stream:
         def __get__(self):
-            return self.stream
-        def __set__(self, Stream value):
-
-            # Rescale times.
-            cdef lib.AVStream *old = self.stream._stream
-            cdef lib.AVStream *new = value._stream
-            if self.struct.pts != lib.AV_NOPTS_VALUE:
-                self.struct.pts = lib.av_rescale_q_rnd(self.struct.pts, old.time_base, new.time_base, lib.AV_ROUND_NEAR_INF)
-            if self.struct.dts != lib.AV_NOPTS_VALUE:
-                self.struct.dts = lib.av_rescale_q_rnd(self.struct.dts, old.time_base, new.time_base, lib.AV_ROUND_NEAR_INF)
-            self.struct.duration = lib.av_rescale_q(self.struct.duration, old.time_base, new.time_base)
-
-            self.stream = value
-            self.struct.stream_index = value.index
+            return self._stream
+        def __set__(self, Stream stream):
+            self._stream = stream
+            #self._rebase_time(stream._stream.time_base)
+            self.struct.stream_index = stream._stream.index
 
     property time_base:
-
         def __get__(self):
             return avrational_to_faction(&self._time_base)
-
         def __set__(self, value):
-            self._time_base.num = value.numerator
-            self._time_base.den = value.denominator
+            to_avrational(value, &self._time_base)
 
     property pts:
-        def __get__(self): return None if self.struct.pts == lib.AV_NOPTS_VALUE else self.struct.pts
+        def __get__(self):
+            if self.struct.pts != lib.AV_NOPTS_VALUE:
+                return self.struct.pts
         def __set__(self, v):
             if v is None:
                 self.struct.pts = lib.AV_NOPTS_VALUE
@@ -149,7 +138,8 @@ cdef class Packet(Buffer):
     
     property dts:
         def __get__(self):
-            return None if self.struct.dts == lib.AV_NOPTS_VALUE else self.struct.dts
+            if self.struct.dts != lib.AV_NOPTS_VALUE:
+                return self.struct.dts
         def __set__(self, v):
             if v is None:
                 self.struct.dts = lib.AV_NOPTS_VALUE

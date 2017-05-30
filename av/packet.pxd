@@ -9,7 +9,7 @@ cdef class Packet(Buffer):
 
     cdef lib.AVPacket struct
     
-    cdef Stream stream
+    cdef Stream _stream
 
     # We track our own time.
     cdef lib.AVRational _time_base

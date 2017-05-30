@@ -113,16 +113,16 @@ cdef class InputContainer(Container):
                     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
                     # TODO: find better way to handle this
                     if packet.struct.stream_index < len(self.streams):
-                        packet.stream = self.streams[packet.struct.stream_index]
+                        packet._stream = self.streams[packet.struct.stream_index]
                         # Keep track of this so that remuxing is easier.
-                        packet._time_base = packet.stream._stream.time_base
+                        packet._time_base = packet._stream._stream.time_base
                         yield packet
 
             # Flush!
             for i in range(self.proxy.ptr.nb_streams):
                 if include_stream[i]:
                     packet = Packet()
-                    packet.stream = self.streams[i]
+                    packet._stream = self.streams[i]
                     yield packet
 
         finally:
