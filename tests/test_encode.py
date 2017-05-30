@@ -99,6 +99,7 @@ class TestBasicAudioEncoding(TestCase):
 
         src = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         for frame in src.decode(audio=0):
+            frame.pts = None
             for packet in stream.encode(frame):
                 output.mux(packet)
 

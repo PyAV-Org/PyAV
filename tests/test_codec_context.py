@@ -265,6 +265,9 @@ class TestCodecContext(TestCase):
         with open(path, 'w') as f:
             for frame in iter_frames(container, audio_stream):
 
+                # We need to let the encoder retime.
+                frame.pts = None
+
                 if test_bad:
 
                     bad_resampler = AudioResampler(sample_fmt, "mono", sample_rate)

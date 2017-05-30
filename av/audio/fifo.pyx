@@ -21,10 +21,6 @@ cdef class AudioFifo:
             self.format,
             id(self),
         )
-     
-    def __cinit__(self):
-        self.last_pts = lib.AV_NOPTS_VALUE
-        self.pts_offset = 0
         
     def __dealloc__(self):
         if self.ptr:
@@ -44,10 +40,12 @@ cdef class AudioFifo:
             self.template._copy_internal_attributes(frame)
             self.template._init_user_attributes()
 
-            print 'frame layout', frame.ptr.channel_layout
-            print 'frame channels', frame.ptr.channels
-            print 'template layout', self.template.ptr.channel_layout
-            print 'template channels', self.template.ptr.channels
+            # Figure out our "time_base".
+            if frame._time_base.num and frame.ptr.sample_rate:
+                self.pts_per_sample  = frame._time_base.den / float(frame._time_base.num)
+                self.pts_per_sample /= frame.ptr.sample_rate
+            else:
+                self.pts_per_sample = 0
 
             self.ptr = lib.av_audio_fifo_alloc(
                 <lib.AVSampleFormat>frame.ptr.format,
@@ -70,15 +68,20 @@ cdef class AudioFifo:
         ):
             raise ValueError('Frame does not match AudioFifo parameters.')
 
+        # Assert that the PTS are what we expect.
+        cdef uint64_t expected_pts
         if frame.ptr.pts != lib.AV_NOPTS_VALUE:
-            self.last_pts = frame.ptr.pts
-            self.pts_offset = self.samples
+            expected_pts = <uint64_t>(self.pts_per_sample * self.samples_written)
+            if frame.ptr.pts != expected_pts:
+                raise ValueError('Input frame has pts %d; we expected %d.' % (frame.ptr.pts, expected_pts))
             
         err_check(lib.av_audio_fifo_write(
             self.ptr, 
             <void **>frame.ptr.extended_data,
             frame.ptr.nb_samples,
         ))
+
+        self.samples_written += frame.ptr.nb_samples
 
 
     cpdef read(self, unsigned int samples=0, bint partial=False):
@@ -123,10 +126,11 @@ cdef class AudioFifo:
             samples,
         ))
         
-        if self.last_pts != lib.AV_NOPTS_VALUE:
-            frame.ptr.pts = self.last_pts - self.pts_offset
-            self.pts_offset -= samples
+        if self.pts_per_sample:
+            frame.ptr.pts = <uint64_t>(self.pts_per_sample * self.samples_read)
         
+        self.samples_read += samples
+
         return frame
     
     property format:
