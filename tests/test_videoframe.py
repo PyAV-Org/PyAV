@@ -114,4 +114,14 @@ class TestVideoFrameConveniences(TestCase):
         self.assertEqual(array.shape, (480, 640, 3))
 
 
+class TestVideoFrameTiming(TestCase):
+
+    def test_reformat_pts(self):
+        frame = VideoFrame(640, 480, 'rgb24')
+        frame.pts = 123
+        frame.time_base = '456/1' # Just to be different.
+        frame = frame.reformat(320, 240)
+        self.assertEqual(frame.pts, 123)
+        self.assertEqual(frame.time_base, 456)
+
 

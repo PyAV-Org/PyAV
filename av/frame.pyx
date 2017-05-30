@@ -3,7 +3,7 @@ from libc.limits cimport INT_MAX
 from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 
 from av.plane cimport Plane
-from av.utils cimport avrational_to_faction
+from av.utils cimport avrational_to_faction, to_avrational
 
 from fractions import Fraction
 
@@ -110,7 +110,5 @@ cdef class Frame(object):
         def __get__(self):
             return avrational_to_faction(&self._time_base)
         def __set__(self, value):
-            value = Fraction(value)
-            self._time_base.num = value.numerator
-            self._time_base.den = value.denominator
+            to_avrational(value, &self._time_base)
 
