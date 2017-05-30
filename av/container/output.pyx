@@ -122,9 +122,8 @@ cdef class OutputContainer(Container):
 
         used_options = set()
 
-        # Make sure all of the streams are open.
+        # Finalize and open all streams.
         cdef Stream stream
-        cdef _Dictionary options
         for stream in self.streams:
             
             ctx = stream.codec_context
@@ -138,19 +137,17 @@ cdef class OutputContainer(Container):
                     if k not in ctx.options:
                         used_options.add(k)
 
-            dict_to_avdict(&stream._stream.metadata, stream.metadata, clear=True)
+            stream._finalize_for_output()
 
         # Open the output file, if needed.
-        # TODO: is the avformat_write_header in the right place here?
         cdef char *name = "" if self.proxy.file is not None else self.name
-
         if self.proxy.ptr.pb == NULL and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
         # Copy the metadata dict.
         dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
 
-        options = self.options.copy()
+        cdef _Dictionary options = self.options.copy()
         self.proxy.err_check(lib.avformat_write_header(
             self.proxy.ptr, 
             &options.ptr

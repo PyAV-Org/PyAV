@@ -7,7 +7,7 @@ cimport libav as lib
 
 from av.codec.context cimport wrap_codec_context
 from av.packet cimport Packet
-from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
+from av.utils cimport err_check, dict_to_avdict, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
 
 
 
@@ -109,6 +109,11 @@ cdef class Stream(object):
     def __setattr__(self, name, value):
         setattr(self.codec_context, name, value)
 
+    cdef _finalize_for_output(self):
+        dict_to_avdict(&self._stream.metadata, self.metadata, clear=True)
+        if not self._stream.time_base.num:
+            self._stream.time_base = self._codec_context.time_base
+
     def encode(self, frame=None):
         packets = self.codec_context.encode(frame)
         cdef Packet packet
@@ -149,7 +154,10 @@ cdef class Stream(object):
         def __get__(self): return self._stream.index
 
     property time_base:
-        def __get__(self): return avrational_to_faction(&self._stream.time_base)
+        def __get__(self):
+            return avrational_to_faction(&self._stream.time_base)
+        def __set__(self, value):
+            to_avrational(value, &self._stream.time_base)
     
     property average_rate:
         def __get__(self):
