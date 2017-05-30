@@ -29,10 +29,13 @@ cdef class AudioFifo:
     cpdef write(self, AudioFrame frame):
         """Push some samples into the queue."""
 
-        if not self.ptr:
+        if frame is None:
+            raise TypeError('AudioFifo must be given an AudioFrame.')
 
-            if frame is None:
-                raise ValueError('Cannot flush AudioFifo before it has started.')
+        if not frame.ptr.nb_samples:
+            return
+
+        if not self.ptr:
 
             # Hold onto a copy of the attributes of the first frame to populate
             # output frames with.
@@ -57,7 +60,7 @@ cdef class AudioFifo:
                 raise RuntimeError('Could not allocate AVAudioFifo.')
         
         # Make sure nothing changed.
-        elif frame and frame.ptr.nb_samples and (
+        elif (
             frame.ptr.format         != self.template.ptr.format or
             frame.ptr.channel_layout != self.template.ptr.channel_layout or
             frame.ptr.sample_rate    != self.template.ptr.sample_rate or
@@ -73,7 +76,7 @@ cdef class AudioFifo:
         if frame.ptr.pts != lib.AV_NOPTS_VALUE:
             expected_pts = <uint64_t>(self.pts_per_sample * self.samples_written)
             if frame.ptr.pts != expected_pts:
-                raise ValueError('Input frame has pts %d; we expected %d.' % (frame.ptr.pts, expected_pts))
+                raise ValueError('Input frame pts %d != expected %d; fix or set to None.' % (frame.ptr.pts, expected_pts))
             
         err_check(lib.av_audio_fifo_write(
             self.ptr, 

@@ -13,7 +13,6 @@ cdef class AudioFifo:
 
     cdef readonly uint64_t samples_written
     cdef readonly uint64_t samples_read
-
     cdef readonly double pts_per_sample
 
     cpdef write(self, AudioFrame frame)
