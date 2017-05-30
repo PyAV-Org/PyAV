@@ -110,7 +110,12 @@ cdef class Stream(object):
         setattr(self.codec_context, name, value)
 
     def encode(self, frame=None):
-        return self.codec_context.encode(frame)
+        packets = self.codec_context.encode(frame)
+        cdef Packet packet
+        for packet in packets:
+            packet._stream = self
+            packet.struct.stream_index = self._stream.index
+        return packets
 
     def decode(self, packet=None, count=0):
         return self.codec_context.decode(packet, count)
