@@ -31,7 +31,7 @@ class AVError(EnvironmentError):
             super(AVError, self).__init__(code, message)
         self.error_log = error_log
     def __str__(self):
-        strerror = super(AVError, self).__str__(self)
+        strerror = super(AVError, self).__str__()
         if self.error_log:
             return '%s (%s: %s)' % (strerror, self.error_log[0], self.error_log[1])
         else:

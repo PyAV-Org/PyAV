@@ -65,6 +65,8 @@ cdef class CodecContext(object):
 
         self.stream_index = -1
 
+        print '_init time_base', self.time_base
+
     property is_open:
         def __get__(self):
             return lib.avcodec_is_open(self.ptr)
@@ -96,9 +98,17 @@ cdef class CodecContext(object):
         # for k, v in self.options.iteritems():
         #     options[k] = v
 
+        # Assert we have a time_base.
+        if not self.ptr.time_base.num:
+            self._set_default_time_base()
+
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
 
         self.options = dict(options)
+
+    cdef _set_default_time_base(self):
+        self.ptr.time_base.num = 1
+        self.ptr.time_base.den = lib.AV_TIME_BASE
 
     cpdef close(self, bint strict=True):
         if not lib.avcodec_is_open(self.ptr):
@@ -425,7 +435,7 @@ cdef class CodecContext(object):
             else:
                 return None
 
-    # TODO: Deprecate.
+    # TODO: Replace with framerate or sample_rate.
     property rate:
         def __get__(self):
             if self.ptr:

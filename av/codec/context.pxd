@@ -35,6 +35,8 @@ cdef class CodecContext(object):
     cpdef open(self, bint strict=?)
     cpdef close(self, bint strict=?)
     
+    cdef _set_default_time_base(self)
+
     # Wraps both versions of the transcode API, returning lists.
     cpdef encode(self, Frame frame=?, unsigned int count=?, bint prefer_send_recv=?)
     cpdef decode(self, Packet packet=?, unsigned int count=?, bint prefer_send_recv=?)

@@ -24,6 +24,10 @@ cdef class VideoCodecContext(CodecContext):
         self._build_format()
         self.encoded_frame_count = 0
 
+    cdef _set_default_time_base(self):
+        self.ptr.time_base.num = self.ptr.framerate.den or 1
+        self.ptr.time_base.den = self.ptr.framerate.num or lib.AV_TIME_BASE
+
     cdef _prepare_frames_for_encode(self, Frame input):
         
         if not input:
@@ -156,6 +160,7 @@ cdef class VideoCodecContext(CodecContext):
             self.ptr.height = value
             self._build_format()
 
+    # TODO: Replace with `format`.
     property pix_fmt:
         def __get__(self):
             return self._format.name

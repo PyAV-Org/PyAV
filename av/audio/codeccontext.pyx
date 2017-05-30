@@ -21,6 +21,10 @@ cdef class AudioCodecContext(CodecContext):
         if self.ptr.channels and not self.ptr.channel_layout:
             self.ptr.channel_layout = get_audio_layout(self.ptr.channels, 0).layout
 
+    cdef _set_default_time_base(self):
+        self.ptr.time_base.num = 1
+        self.ptr.time_base.den = self.ptr.sample_rate
+
     cdef _prepare_frames_for_encode(self, Frame input_frame):
 
         cdef AudioFrame frame = input_frame

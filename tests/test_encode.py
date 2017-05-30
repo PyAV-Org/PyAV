@@ -35,14 +35,10 @@ def write_rgb_rotate(output):
         ))
         frame.planes[0].update_from_string(image.tobytes())
 
-        print 'HERE2a'
         for packet in stream.encode(frame):
-            print 'HERE2', packet
             output.mux(packet)
 
-    print 'HERE3a'
     for packet in stream.encode(None):
-        print 'HERE3', packet
         output.mux(packet)
 
     # Done!

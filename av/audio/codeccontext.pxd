@@ -13,3 +13,4 @@ cdef class AudioCodecContext(CodecContext):
     # For encoding.
     cdef AudioResampler resampler
     cdef AudioFifo fifo
+    
