@@ -56,7 +56,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AV_CODEC_ID_MPEG2VIDEO
         AV_CODEC_ID_MPEG1VIDEO
     
-    # See: http://ffmpeg.org/doxygen/trunk/structAVCodec.html
     cdef struct AVCodec:
 
         char *name
@@ -88,7 +87,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)   
 
 
-    # See: http://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     cdef struct AVCodecContext:
         
         AVMediaType codec_type
@@ -103,8 +101,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int profile
 
         AVFrame* coded_frame
-        
+
         int bit_rate
+
         int bit_rate_tolerance
         int mb_decision
         
@@ -136,7 +135,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
         AVPixelFormat pix_fmt
         AVRational sample_aspect_ratio
-        int gop_size #the number of pictures in a group of pictures, or 0 for intra_only 
+        int gop_size # The number of pictures in a group of pictures, or 0 for intra_only.
         int max_b_frames
         int has_b_frames
 
@@ -147,7 +146,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int frame_size
         int channel_layout
         
-        # TODO: get_buffer is deprecated for get_buffer2 in newer versions of FFmpeg
+        #: .. todo:: ``get_buffer`` is deprecated for get_buffer2 in newer versions of FFmpeg.
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
         void release_buffer(AVCodecContext *ctx, AVFrame *frame)
         

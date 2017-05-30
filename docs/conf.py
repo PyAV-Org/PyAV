@@ -231,3 +231,8 @@ if os.path.exists(ffmpeg_tagfile):
     doxylink['ffmpeg'] = (ffmpeg_tagfile, 'https://ffmpeg.org/doxygen/trunk/')
 else:
     print "WARNING: Please build FFmpeg's docs with: GENERATE_TAGFILE = %s" % ffmpeg_tagfile
+
+
+def setup(app):
+    app.add_stylesheet('custom.css')
+
