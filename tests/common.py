@@ -26,6 +26,7 @@ from av.packet import Packet
 from av.stream import Stream
 from av.utils import AVError
 from av.video import VideoFrame
+from av.audio import AudioFrame
 
 
 is_py3 = sys.version_info[0] > 2

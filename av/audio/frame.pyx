@@ -110,6 +110,8 @@ cdef class AudioFrame(Frame):
         """Sample rate of the audio data. """
         def __get__(self):
             return self.ptr.sample_rate
+        def __set__(self, value):
+            self.ptr.sample_rate = value
 
     def to_nd_array(self, **kwargs):
         """Get a numpy array of this frame.

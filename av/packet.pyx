@@ -112,6 +112,10 @@ cdef class Packet(Buffer):
         res = self._stream.decode(self, count=1)
         return res[0] if res else None
 
+    property stream_index:
+        def __get__(self):
+            return self.struct.stream_index
+
     property stream:
         def __get__(self):
             return self._stream

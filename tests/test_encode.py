@@ -122,3 +122,40 @@ class TestBasicAudioEncoding(TestCase):
         self.assertEqual(stream.codec_context.format.name, 's16p')
         self.assertEqual(stream.codec_context.channels, channels)
 
+
+class TestEncodeStreamSemantics(TestCase):
+
+    def test_stream_index(self):
+
+        output = av.open(self.sandboxed('output.mov'), 'w')
+
+        vstream = output.add_stream('mpeg4', 24)
+        vstream.pix_fmt = 'yuv420p'
+        vstream.width = 320
+        vstream.height = 240
+
+        astream = output.add_stream('mp2', 48000)
+        astream.channels = 2
+        astream.format = 's16'
+
+        self.assertEqual(vstream.index, 0)
+        self.assertEqual(astream.index, 1)
+
+        vframe = VideoFrame(320, 240, 'yuv420p')
+        vpacket = vstream.encode(vframe)[0]
+
+        self.assertIs(vpacket.stream, vstream)
+        self.assertEqual(vpacket.stream_index, 0)
+
+        for i in xrange(10):
+            aframe = AudioFrame('s16', 'stereo', samples=astream.frame_size)
+            aframe.rate = 48000
+            apackets = astream.encode(aframe)
+            if apackets:
+                apacket = apackets[0]
+                break
+
+        self.assertIs(apacket.stream, astream)
+        self.assertEqual(apacket.stream_index, 1)
+
+
