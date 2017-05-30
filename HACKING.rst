@@ -39,14 +39,17 @@ Library Detection
 -----------------
 
 Macros will be defined for the libraries we link against. In particular, you
-will have either ``PYAV_HAVE_LIBSWRESAMPLE`` or ``PYAV_HAVE_LIBAVRESAMPLE``.
+will have ``PYAV_HAVE_LIBSWRESAMPLE`` and ``PYAV_HAVE_LIBAVRESAMPLE`` defined
+to either ``0`` or ``1``.
 
 
 Function Detection
 ------------------
 
 Macros will be defined for a few functions that are only in one of FFmpeg or
-LibAV. For example, there may be a ``PYAV_HAVE_AVFORMAT_CLOSE_INPUT`` macro.
+LibAV. For example, there is a ``PYAV_HAVE_AVFORMAT_CLOSE_INPUT`` macro defined
+to either ``0`` or ``1``.
+
 See the ``reflect`` command in ``setup.py`` to add more.
 
 
@@ -55,8 +58,8 @@ Struct Member Detection
 
 Macros will be defined for structure members that are not garunteed to exist
 (usually because LibAV deprecated and removed them, while FFmpeg did not).
-For example, there may be a ``PYAV_HAVE_AVFRAME__MB_TYPE`` macro if the
-``AVFrame.mb_type`` member exists.
+For example, there is a ``PYAV_HAVE_AVFRAME__MB_TYPE`` macro defined to ``1``
+if the ``AVFrame.mb_type`` member exists (and ``0`` if it does not).
 
 
 Time in Libraries

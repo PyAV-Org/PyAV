@@ -149,11 +149,11 @@ extension_extra = {
 
 # The macros which describe what functions and structure members we have
 # from the underlying libraries. This is expanded heavily by `reflect` command.
-config_macros = [
-    ("PYAV_VERSION", version),
-    ("PYAV_VERSION_STR", '"%s"' % version),
-    ("PYAV_COMMIT_STR", '"%s"' % (git_commit or 'unknown-commit'))
-]
+config_macros = {
+    "PYAV_VERSION": version,
+    "PYAV_VERSION_STR": '"%s"' % version,
+    "PYAV_COMMIT_STR": '"%s"' % (git_commit or 'unknown-commit'),
+}
 
 
 def dump_config():
@@ -165,7 +165,7 @@ def dump_config():
     for k, vs in extension_extra.items():
         print('\t%s: %s' % (k, [x.encode('utf8') for x in vs]))
     print('config_macros:')
-    for x in config_macros:
+    for x in sorted(config_macros.items()):
         print('\t%s=%s' % x)
 
 
@@ -176,7 +176,7 @@ if os.name == 'nt':
 
 
     if is_msvc():
-        config_macros.append(('inline', '__inline'))
+        config_macros['inline'] = '__inline'
     # Since we're shipping a self contained unit on windows, we need to mark
     # the package as such. On other systems, let it be universal.
     class BinaryDistribution(Distribution):
@@ -349,6 +349,10 @@ class ConfigCommand(Command):
 
     def run(self):
         
+        for name in 'libswresample', 'libavresample':
+            # We will look for these in a moment.
+            config_macros['PYAV_HAVE_' + name.upper()] = 0
+
         if is_msvc(new_compiler(compiler=self.compiler)):
             # Assume we have to disable /OPT:REF for MSVC with ffmpeg
             config = {
@@ -366,7 +370,7 @@ class ConfigCommand(Command):
                 'include_dirs': []
             }
             config['libraries'].append('swresample')
-            config_macros.append(('PYAV_HAVE_LIBSWRESAMPLE', 1))
+            config_macros['PYAV_HAVE_LIBSWRESAMPLE'] = 1
             update_extend(extension_extra, config)
             for ext in self.distribution.ext_modules:
                 for key, value in extension_extra.items():
@@ -390,7 +394,7 @@ class ConfigCommand(Command):
             config = get_library_config(name)
             if config:
                 update_extend(extension_extra, config)
-                config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+                config_macros['PYAV_HAVE_' + name.upper()] = 1
                 break
         else:
             errors.append('Could not find either libswresample or libavresample with pkg-config.')
@@ -540,12 +544,10 @@ class ReflectCommand(Command):
         # There is potential for naming collisions between functions and
         # structure members, but until we actually have one, we won't
         # worry about it.
-        config_macros.extend(
-            ('PYAV_HAVE_%s' % name.upper().replace('.', '__'), '1' if value else '0')
-            for name, value in sorted(results.items())
-            if name not in canaries
-        )
-
+        for name, value in results.items():
+            if name in canaries:
+                continue
+            config_macros['PYAV_HAVE_%s' % name.upper().replace('.', '__')] = 1 if value else 0
 
         # Make sure our canaries report back properly.
         for name, should_exist in canaries.items():
@@ -672,7 +674,7 @@ class BuildExtCommand(build_ext):
         with open(header_path, 'w') as fh:
             fh.write('#ifndef PYAV_COMPAT_H\n')
             fh.write('#define PYAV_COMPAT_H\n')
-            for k, v in config_macros:
+            for k, v in sorted(config_macros.items()):
                 fh.write('#define %s %s\n' % (k, v))
             fh.write('#endif\n')
 
