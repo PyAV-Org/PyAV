@@ -65,8 +65,6 @@ cdef class CodecContext(object):
 
         self.stream_index = -1
 
-        print '_init time_base', self.time_base
-
     property is_open:
         def __get__(self):
             return lib.avcodec_is_open(self.ptr)

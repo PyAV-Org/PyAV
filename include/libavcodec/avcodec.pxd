@@ -210,8 +210,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int height
 
         int nb_samples # Audio samples
-        #int channels # Audio channels
-        int sample_rate #Audio Sample rate 
+        int sample_rate # Audio Sample rate 
+        int channels # Number of audio channels
         int channel_layout # Audio channel_layout
         
 

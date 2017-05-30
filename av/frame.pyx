@@ -52,11 +52,18 @@ cdef class Frame(object):
     cdef int _max_plane_count(self):
         return INT_MAX
 
-    cdef _copy_internal_attributes(self, Frame source):
+    cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
         """Mimic another frame."""
         self.index = source.index
         self._time_base = source._time_base
         lib.av_frame_copy_props(self.ptr, source.ptr)
+        if data_layout:
+            # TODO: Assert we don't have any data yet.
+            self.ptr.format = source.ptr.format
+            self.ptr.width = source.ptr.width
+            self.ptr.height = source.ptr.height
+            self.ptr.channel_layout = source.ptr.channel_layout
+            self.ptr.channels = source.ptr.channels
     
     cdef _init_user_attributes(self):
         pass # Dummy to match the API of the others.

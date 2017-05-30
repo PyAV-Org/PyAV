@@ -1,48 +1,32 @@
-Encoding
-========
 
-- Stream.encode should return a list of packets. Otherwise, resampling
-  can easily result in a massive buffer in a fifo or codec
+
+- assert reasonable time_base and PTS handling
+
+  AudioFifo
+
+    What does it need?
+      A: - sample_fmt
+         - channel_layout
+
+    Where does it get them?
+      The first frame it processes.
+
+
+
+  AudioResampler
+    - what does it need?
+      - in/out sample_fmt
+      - in/out channel_layout
+      - in/out sample_rate
+
+- assert nb_channels vs channel_layout
 
 - Make everything mutable. Later, we can introduce a PseudoMutable base class
   for everything that has a .assert_mutable() method and public is_read_only
 
-
-Documentation
-=============
-
 - Document/test the entire API (in the most casual way).
-- Relink everything back to the underlying library calls, so that cross
-  referencing can be done.
-- Automatically scan the Cython source to establish when it uses
-  library functions? This may result in far too many links to be useful.
-
-
-Build
-=====
 
 - Include build discovery info into the module, retrievable by `python -m av --version`
-
-
-
-
-High-Level API
-==============
-
-√ Container.demux(video=True)
-√ Container.demux(video=0, audio=0) first video and audio
-√ Container.decode(*args_for_demux, **kwargs_for_demux) -> straight to frames
-- Stream.mux(frame) -> encode, flush, and mux
-√ Container.__del__ -> flush the streams and close
-√ Container.add_stream(template=stream)
-
-- CodecContext.encode(...) -> list of Packet
-- OutputContainer.encode(..., count=0) -> list of Packet, unless some flag
-  signaling legacy behaviour.
-
-
-Unsorted
-========
 
 - Macros: Either ${ whatever(args) } or {{ whatever(args) }}
   These return strings which are re-dented to match the level at the start of
@@ -99,10 +83,6 @@ Unsorted
     - If it were HD RGB then it would have shape (1080, 1920, 3)
 - Plane.update(input_)
     And then it tries if it is a buffer, memoryview, bytes, etc..
-
-- Stream.encode(...) -> list of packets, automatically checking buffer
-- Context.mux(...) -> take a single packet, or an iterator of them:
-        context.mux(stream.encode(frame))
 
 - TestCase.rms_diff(one, two) -> Root-mean-square diff
 - try to wrap API of testsrc filters
