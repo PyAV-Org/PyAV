@@ -154,6 +154,8 @@ cdef class Packet(Buffer):
         def __get__(self): return None if self.struct.pos == -1 else self.struct.pos
     property size:
         def __get__(self): return self.struct.size
+    property data:
+        def __get__(self): return <bytes>self.struct.data[:self.struct.size]
     property duration:
         def __get__(self): return None if self.struct.duration == lib.AV_NOPTS_VALUE else self.struct.duration
 
