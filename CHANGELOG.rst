@@ -7,6 +7,29 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
+v0.4.0.dev0
+-----------
+
+Major:
+
+- ``CodecContext`` has taken over encoding/decoding, and can work in isolation
+  of streams/containers.
+- ``Stream.encode`` returns a list of packets, instead of a single packet.
+- ``AudioFifo`` and ``AudioResampler`` will raise ``ValueError`` if input frames
+  inconsistant ``pts``.
+- ``time_base`` use has been revisited across the codebase; timing code may
+  need to be reconsidered.
+
+Minor:
+
+- Added ``Packet.is_keyframe`` and ``Packet.is_corrupt``. (#226.)
+- Many more ``time_base``, ``pts`` and other attributes are writeable.
+
+Fixes:
+
+- Build doesn't fail if you don't have git installed. (#184.)
+
+
 v0.3.3
 ------
 

@@ -11,6 +11,17 @@ from av.utils cimport err_check
 
 cdef class AudioResampler(object):
 
+    """AudioResampler(format=None, layout=None, rate=None)
+
+    :param AudioFormat format: The target format, or string that parses to one
+        (e.g. ``"s16"``).
+    :param AudioLayout layout: The target layout, or an int/string that parses
+        to one (e.g. ``"stereo"``).
+    :param int rate: The target sample rate.
+
+
+    """
+
     def __cinit__(self, format=None, layout=None, rate=None):
         if format is not None:
             self.format = format if isinstance(format, AudioFormat) else AudioFormat(format)
@@ -24,7 +35,18 @@ cdef class AudioResampler(object):
         lib.swr_free(&self.ptr)
 
     cpdef resample(self, AudioFrame frame):
-        
+        """resample(frame)
+
+        Convert the ``sample_rate``, ``channel_layout`` and/or ``format`` of
+        a :class:`~.AudioFrame`.
+
+        :param AudioFrame frame: The frame to convert.
+        :returns: A new :class:`AudioFrame` in new parameters, or the same frame
+            if there is nothing to be done.
+        :raises: ``ValueError`` if ``Frame.pts`` is set and non-simple.
+
+        """
+
         if self.is_passthrough:
             return frame
 

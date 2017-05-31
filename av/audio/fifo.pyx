@@ -6,11 +6,7 @@ from av.utils cimport err_check
 
 cdef class AudioFifo:
 
-    """A simple audio FIFO (First In First Out) buffer.
-
-
-
-    """
+    """A simple audio sample FIFO (First In First Out) buffer."""
         
     def __repr__(self):
         return '<av.%s %s samples of %dhz %s %s at 0x%x>' % (
@@ -27,7 +23,9 @@ cdef class AudioFifo:
             lib.av_audio_fifo_free(self.ptr)
 
     cpdef write(self, AudioFrame frame):
-        """Push a frame of samples into the queue.
+        """write(frame)
+
+        Push a frame of samples into the queue.
 
         :param AudioFrame frame: The frame of samples to push.
 
@@ -99,7 +97,9 @@ cdef class AudioFifo:
 
 
     cpdef read(self, unsigned int samples=0, bint partial=False):
-        """Read samples from the queue.
+        """read(samples=0, partial=False)
+
+        Read samples from the queue.
 
         :param int samples: The number of samples to pull; 0 gets all.
         :param bool partial: Allow returning less than requested.
@@ -151,13 +151,15 @@ cdef class AudioFifo:
         return frame
     
     cpdef read_many(self, unsigned int samples, bint partial=False):
-        '''Read as many frames as we can.
+        """read_many(samples, partial=False)
+
+        Read as many frames as we can.
 
         :param int samples: How large for the frames to be.
         :param bool partial: If we should return a partial frame.
         :returns: A ``list`` of :class:`AudioFrame`.
 
-        '''
+        """
 
         cdef AudioFrame frame
         frames = []
@@ -170,9 +172,11 @@ cdef class AudioFifo:
         return frames
 
     property format:
+        """The :class:`.AudioFormat` of this FIFO."""
         def __get__(self):
             return self.template.format
     property layout:
+        """The :class:`.AudioLayout` of this FIFO."""
         def __get__(self):
             return self.template.layout
     property sample_rate:
@@ -180,7 +184,7 @@ cdef class AudioFifo:
             return self.template.sample_rate
 
     property samples:
-        """Number of audio samples (per channel) """
+        """Number of audio samples (per channel) in the buffer."""
         def __get__(self):
             return lib.av_audio_fifo_size(self.ptr) if self.ptr else 0
 

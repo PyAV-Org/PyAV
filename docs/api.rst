@@ -136,7 +136,7 @@ Video Planes
 
 
 Audio
-===============
+=====
 
 Audio Streams
 -------------
@@ -146,7 +146,7 @@ Audio Streams
     .. autoclass:: AudioStream
         :members:
 
-Audio CodecContext
+Audio Context
 -------------
 
 .. automodule:: av.audio.codeccontext
@@ -185,6 +185,11 @@ Audio FIFOs
 
     .. autoclass:: AudioFifo
         :members:
+        :exclude-members: write, read, read_many
+
+        .. automethod:: write
+        .. automethod:: read
+        .. automethod:: read_many
 
 Audio Resamplers
 ----------------
@@ -193,6 +198,9 @@ Audio Resamplers
 
     .. autoclass:: AudioResampler
         :members:
+        :exclude-members: resample
+
+        .. automethod:: resample
 
 
 
