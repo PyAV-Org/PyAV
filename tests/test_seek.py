@@ -12,7 +12,7 @@ def timestamp_to_frame(timestamp, stream):
     fps = stream.rate
     time_base = stream.time_base
     start_time = stream.start_time
-    frame = (timestamp - start_time) * float(time_base) / float(fps)
+    frame = (timestamp - start_time) * float(time_base) * float(fps)
     return frame
 
 
@@ -97,7 +97,7 @@ class TestSeek(TestCase):
         
         # set target frame to middle frame
         target_frame = int(total_frame_count / 2.0)
-        target_timestamp = int((target_frame * AV_TIME_BASE) / float(video_stream.rate.denominator))
+        target_timestamp = int((target_frame * AV_TIME_BASE) / video_stream.rate)
         
         # should seek to nearest keyframe before target_timestamp
         container.seek(target_timestamp)

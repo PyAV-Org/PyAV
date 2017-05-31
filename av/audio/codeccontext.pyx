@@ -113,11 +113,11 @@ cdef class AudioCodecContext(CodecContext):
             self.ptr.sample_rate = value
 
     property rate:
-        """Number samples of per second."""
+        """Another name for :attr:`sample_rate`."""
         def __get__(self):
-            return self.ptr.sample_rate
-        def __set__(self, int value):
-            self.ptr.sample_rate = value
+            return self.sample_rate
+        def __set__(self, value):
+            self.sample_rate = value
 
     # TODO: Integrate into AudioLayout.
     property channels:

@@ -17,8 +17,12 @@ Major:
 - ``Stream.encode`` returns a list of packets, instead of a single packet.
 - ``AudioFifo`` and ``AudioResampler`` will raise ``ValueError`` if input frames
   inconsistant ``pts``.
-- ``time_base`` use has been revisited across the codebase; timing code may
-  need to be reconsidered.
+- ``time_base`` use has been revisited across the codebase, and may not be converted
+  bettween ``Stream.time_base`` and ``CodecContext.time_base`` at the same times
+  in the transociding pipeline.
+- ``CodecContext.rate`` has been removed, but proxied to ``VideoCodecContext.framerate``
+  and ``AudioCodecContext.sample_rate``. The definition is effectively inverted from
+  the old one (i.e. for 24fps it used to be ``1/24`` and is now ``24/1``).
 
 Minor:
 

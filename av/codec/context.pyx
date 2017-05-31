@@ -412,12 +412,6 @@ cdef class CodecContext(object):
     cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('Base CodecContext cannot decode packets.')
 
-    property time_base:
-        def __get__(self):
-            return avrational_to_faction(&self.ptr.time_base)
-        def __set__(self, value):
-            to_avrational(value, &self.ptr.time_base)
-
     property name:
         def __get__(self):
             return self.codec.name
@@ -430,31 +424,33 @@ cdef class CodecContext(object):
         def __get__(self):
             if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
                 return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
-            else:
-                return None
 
-    # TODO: Replace with framerate or sample_rate.
-    property rate:
+    property time_base:
         def __get__(self):
-            if self.ptr:
-                return self.ptr.ticks_per_frame * avrational_to_faction(&self.ptr.time_base)
+            return avrational_to_faction(&self.ptr.time_base)
+        def __set__(self, value):
+            to_avrational(value, &self.ptr.time_base)
+
+    property ticks_per_frame:
+        def __get__(self):
+            return self.ptr.ticks_per_frame
 
     property bit_rate:
         def __get__(self):
-            return self.ptr.bit_rate if self.ptr and self.ptr.bit_rate > 0 else None
+            return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
         def __set__(self, int value):
             self.ptr.bit_rate = value
 
     property max_bit_rate:
         def __get__(self):
-            if self.ptr and self.ptr.rc_max_rate > 0:
+            if self.ptr.rc_max_rate > 0:
                 return self.ptr.rc_max_rate
             else:
                 return None
             
     property bit_rate_tolerance:
         def __get__(self):
-            return self.ptr.bit_rate_tolerance if self.ptr else None
+            self.ptr.bit_rate_tolerance
         def __set__(self, int value):
             self.ptr.bit_rate_tolerance = value
 
