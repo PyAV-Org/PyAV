@@ -23,6 +23,7 @@ Major:
 - ``CodecContext.rate`` has been removed, but proxied to ``VideoCodecContext.framerate``
   and ``AudioCodecContext.sample_rate``. The definition is effectively inverted from
   the old one (i.e. for 24fps it used to be ``1/24`` and is now ``24/1``).
+- Fractions (e.g. ``time_base``, ``rate``) will be ``None`` if they are invalid.
 
 Minor:
 

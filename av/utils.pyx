@@ -136,11 +136,17 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
 # =================
 
 cdef object avrational_to_faction(lib.AVRational *input):
-    return Fraction(input.num, input.den) if input.den else Fraction(0, 1)
+    if input.num and input.den:
+        return Fraction(input.num, input.den)
 
 
 cdef object to_avrational(object value, lib.AVRational *input):
 
+    if value is None:
+        input.num = 0
+        input.den = 1
+        return
+    
     if isinstance(value, Fraction):
         frac = value
     else:
