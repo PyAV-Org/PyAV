@@ -30,6 +30,8 @@ cdef class AudioCodecContext(CodecContext):
         cdef AudioFrame frame = input_frame
 
         # Resample. A None frame will flush the resampler, and then the fifo (if used).
+        # Note that the resampler will simply return an input frame if there is
+        # no resampling to be done. The control flow was just a little easier this way.
         if not self.resampler:
             self.resampler = AudioResampler(
                 self.format,
@@ -41,25 +43,15 @@ cdef class AudioCodecContext(CodecContext):
         cdef bint is_flushing = input_frame is None
         cdef bint use_fifo = not (self.ptr.codec.capabilities & lib.CODEC_CAP_VARIABLE_FRAME_SIZE)
 
-        frames = []
-
         if use_fifo:
-
             if not self.fifo:
                 self.fifo = AudioFifo()
-            if frame:
+            if frame is not None:
                 self.fifo.write(frame)
-
-            # Pull partial frames if we were requested to flush (via a None frame).
-            while (self.fifo.samples >= self.ptr.frame_size) or (self.fifo.samples and is_flushing):
-                frame = self.fifo.read(self.ptr.frame_size, partial=is_flushing)
-                if frame or not frames:
-                    frames.append(frame)
-                else:
-                    break
+            frames = self.fifo.read_many(self.ptr.frame_size, partial=is_flushing)
 
         else:
-            frames.append(frame)
+            frames = [frame]
 
         return frames
 

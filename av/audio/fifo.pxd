@@ -17,4 +17,4 @@ cdef class AudioFifo:
 
     cpdef write(self, AudioFrame frame)
     cpdef read(self, unsigned int samples=*, bint partial=*)
-    
+    cpdef read_many(self, unsigned int samples, bint partial=*)

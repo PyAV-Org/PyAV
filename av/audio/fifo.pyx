@@ -27,7 +27,18 @@ cdef class AudioFifo:
             lib.av_audio_fifo_free(self.ptr)
 
     cpdef write(self, AudioFrame frame):
-        """Push some samples into the queue."""
+        """Push a frame of samples into the queue.
+
+        :param AudioFrame frame: The frame of samples to push.
+
+        The FIFO will remember the attributes from the first frame, and use those
+        to populate all output frames.
+
+        If there is a :attr:`~.Frame.pts` and :attr:`~.Frame.time_base` and
+        :attr:`~.AudioFrame.sample_rate`, then the FIFO will assert that the incoming
+        timestamps are continuous.
+
+        """
 
         if frame is None:
             raise TypeError('AudioFifo must be given an AudioFrame.')
@@ -73,10 +84,10 @@ cdef class AudioFifo:
 
         # Assert that the PTS are what we expect.
         cdef uint64_t expected_pts
-        if frame.ptr.pts != lib.AV_NOPTS_VALUE:
+        if self.pts_per_sample and frame.ptr.pts != lib.AV_NOPTS_VALUE:
             expected_pts = <uint64_t>(self.pts_per_sample * self.samples_written)
             if frame.ptr.pts != expected_pts:
-                raise ValueError('Input frame pts %d != expected %d; fix or set to None.' % (frame.ptr.pts, expected_pts))
+                raise ValueError('Frame.pts (%d) != expected (%d); fix or set to None.' % (frame.ptr.pts, expected_pts))
             
         err_check(lib.av_audio_fifo_write(
             self.ptr, 
@@ -94,8 +105,9 @@ cdef class AudioFifo:
         :param bool partial: Allow returning less than requested.
         :returns: New :class:`AudioFrame` or ``None`` (if empty).
 
-        If the incoming frames had valid timestamps, the returned frames
-        will have accurate timestamps (assuming a time_base or 1/sample_rate).
+        If the incoming frames had valid a :attr:`~.Frame.time_base`,
+        :attr:`~.AudioFrame.sample_rate` and :attr:`~.Frame.pts`, the returned frames
+        will have accurate timing.
 
         """
 
@@ -131,11 +143,32 @@ cdef class AudioFifo:
         
         if self.pts_per_sample:
             frame.ptr.pts = <uint64_t>(self.pts_per_sample * self.samples_read)
+        else:
+            frame.ptr.pts = lib.AV_NOPTS_VALUE
         
         self.samples_read += samples
 
         return frame
     
+    cpdef read_many(self, unsigned int samples, bint partial=False):
+        '''Read as many frames as we can.
+
+        :param int samples: How large for the frames to be.
+        :param bool partial: If we should return a partial frame.
+        :returns: A ``list`` of :class:`AudioFrame`.
+
+        '''
+
+        cdef AudioFrame frame
+        frames = []
+        while True:
+            frame = self.read(samples, partial=partial)
+            if frame is not None:
+                frames.append(frame)
+            else:
+                break
+        return frames
+
     property format:
         def __get__(self):
             return self.template.format

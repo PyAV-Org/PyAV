@@ -106,8 +106,14 @@ cdef class AudioFrame(Frame):
         def __get__(self):
             return self.ptr.nb_samples
     
-    property rate:
+    property sample_rate:
         """Sample rate of the audio data. """
+        def __get__(self):
+            return self.ptr.sample_rate
+        def __set__(self, value):
+            self.ptr.sample_rate = value
+
+    property rate:
         def __get__(self):
             return self.ptr.sample_rate
         def __set__(self, value):

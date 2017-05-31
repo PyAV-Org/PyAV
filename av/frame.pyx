@@ -115,7 +115,8 @@ cdef class Frame(object):
 
     property time_base:
         def __get__(self):
-            return avrational_to_faction(&self._time_base)
+            if self._time_base.num:
+                return avrational_to_faction(&self._time_base)
         def __set__(self, value):
             to_avrational(value, &self._time_base)
 
