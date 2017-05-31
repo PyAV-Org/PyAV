@@ -25,6 +25,8 @@ cdef class AudioResampler(object):
 
     # Retiming.
     cdef readonly uint64_t samples_in
-    cdef readonly double pts_per_sample
+    cdef readonly double pts_per_sample_in
+    cdef readonly uint64_t samples_out
+    cdef readonly bint simple_pts_out
 
     cpdef resample(self, AudioFrame)

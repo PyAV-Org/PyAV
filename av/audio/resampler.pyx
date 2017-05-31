@@ -54,12 +54,15 @@ cdef class AudioResampler(object):
                 self.is_passthrough = True
                 return frame
 
-            # Figure out our "time_base".
-            if frame._time_base.num:
-                self.pts_per_sample  = frame._time_base.den / float(frame._time_base.num)
-                self.pts_per_sample /= self.template.ptr.sample_rate
-            else:
-                self.pts_per_sample = 0
+            # Figure out our time bases.
+            if frame._time_base.num and frame.ptr.sample_rate:
+                self.pts_per_sample_in  = frame._time_base.den / float(frame._time_base.num)
+                self.pts_per_sample_in /= self.template.ptr.sample_rate
+
+                # We will only provide outgoing PTS if the time_base is trivial.
+                if frame._time_base.num == 1 and frame._time_base.den == frame.ptr.sample_rate:
+                    self.simple_pts_out = True
+
 
             self.ptr = lib.swr_alloc()
             if not self.ptr:
@@ -91,7 +94,7 @@ cdef class AudioResampler(object):
         # Assert that the PTS are what we expect.
         cdef uint64_t expected_pts
         if frame is not None and frame.ptr.pts != lib.AV_NOPTS_VALUE:
-            expected_pts = <uint64_t>(self.pts_per_sample * self.samples_in)
+            expected_pts = <uint64_t>(self.pts_per_sample_in * self.samples_in)
             if frame.ptr.pts != expected_pts:
                 raise ValueError('Input frame pts %d != expected %d; fix or set to None.' % (frame.ptr.pts, expected_pts))
             self.samples_in += frame.ptr.nb_samples
@@ -147,6 +150,18 @@ cdef class AudioResampler(object):
         # Empty frame.
         if output.ptr.nb_samples <= 0:
             return
+
+        # Create new PTSes in simple cases.
+        if self.simple_pts_out:
+            output._time_base.num = 1
+            output._time_base.den = self.rate
+            output.ptr.pts = self.samples_out
+        else:
+            output._time_base.num = 0
+            output._time_base.den = 1
+            output.ptr.pts = lib.AV_NOPTS_VALUE
+
+        self.samples_out += output.ptr.nb_samples
 
         # Recalculate linesize since the initial number of samples was
         # only an estimate.
