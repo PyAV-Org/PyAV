@@ -255,7 +255,7 @@ class TestCodecContext(TestCase):
         container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
         audio_stream = container.streams.audio[0]
 
-        path = self.sandboxed('encoder.%s' % codec)
+        path = self.sandboxed('encoder.%s' % codec_name)
 
         samples = 0
         packet_sizes = []
