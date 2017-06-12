@@ -22,9 +22,6 @@ cdef class DataStream(Stream):
     def seek(self, timestamp, mode='time', backward=True, any_frame=False):
         pass
 
-    property index:
-        def __get__(self): return 0
-
     # must be none to avoid infinite loop in Stream.__getattr__
     property codec:
         def __get__(self):
