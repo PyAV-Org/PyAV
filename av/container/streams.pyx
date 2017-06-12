@@ -7,6 +7,7 @@ cdef class StreamContainer(object):
         self.video = ()
         self.audio = ()
         self.subtitles = ()
+        self.data = ()
         self.other = ()
 
     cdef add_stream(self, Stream stream):
@@ -20,6 +21,8 @@ cdef class StreamContainer(object):
             self.audio = self.audio + (stream, )
         elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
             self.subtitles = self.subtitles + (stream, )
+        elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_DATA:
+            self.data = self.data + (stream, )
         else:
             self.other = self.other + (stream, )
 
@@ -56,5 +59,3 @@ cdef class StreamContainer(object):
                 selection.append(streams[i])
 
         return selection or self._streams[:]
-
-
