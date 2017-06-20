@@ -36,6 +36,9 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
     elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
         from av.subtitles.stream import SubtitleStream
         py_stream = SubtitleStream.__new__(SubtitleStream, _cinit_bypass_sentinel)
+    elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_DATA:
+        from av.data.stream import DataStream
+        py_stream = DataStream.__new__(DataStream, _cinit_bypass_sentinel)
     else:
         py_stream = Stream.__new__(Stream, _cinit_bypass_sentinel)
 
