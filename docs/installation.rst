@@ -105,7 +105,7 @@ Via Source
     $ pip install -r tests/requirements.txt
 
     # Optionally build FFmpeg.
-    $ ./scripts/build-deps.sh
+    $ ./scripts/build-deps
 
     # Build PyAV.
     $ make
