@@ -13,8 +13,3 @@ cdef class Filter(object):
 
 
 cdef Filter wrap_filter(lib.AVFilter *ptr)
-
-
-cdef class FiltersIter(object):
-
-    cdef lib.AVFilter *ptr
