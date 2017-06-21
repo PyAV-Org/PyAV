@@ -32,7 +32,7 @@ class UnknownCodecError(ValueError):
 
 
 cdef class Codec(object):
-    
+
     """A single encoding or decoding codec.
 
     This object exposes information about an availible codec, and an avenue to
@@ -68,7 +68,7 @@ cdef class Codec(object):
 
         if not self.ptr:
             raise UnknownCodecError(name)
-        
+
         self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
             raise RuntimeError('No codec descriptor for %r.' % name)
@@ -193,10 +193,10 @@ cdef class Codec(object):
 
 
 
-codecs_availible = set()
+codecs_available = set()
 cdef lib.AVCodec *ptr = lib.av_codec_next(NULL)
 while ptr:
-    codecs_availible.add(ptr.name)
+    codecs_available.add(ptr.name)
     ptr = lib.av_codec_next(ptr)
 
 
@@ -214,7 +214,7 @@ def dump_codecs():
  .....S = Lossless compression
  ------'''
 
-    for name in sorted(codecs_availible):
+    for name in sorted(codecs_available):
 
         try:
             e_codec = Codec(name, 'w')

@@ -1,5 +1,5 @@
 from .common import *
-from av.codec import Codec
+from av.codec import Codec, codecs_available
 from av.video.format import VideoFormat
 
 class TestCodecs(TestCase):
@@ -27,3 +27,6 @@ class TestCodecs(TestCase):
         self.assertEqual(c.id, 13)
         self.assertTrue(c.is_encoder)
         self.assertFalse(c.is_decoder)
+
+    def test_codecs_available(self):
+        self.assertTrue(codecs_available)
