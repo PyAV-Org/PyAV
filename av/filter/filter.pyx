@@ -63,15 +63,8 @@ cdef class Filter(object):
             return self._outputs
 
 
-cdef class FiltersIter(object):
-    def __cinit__(self):
-        self.ptr = NULL
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        self.ptr = lib.avfilter_next(self.ptr)
-        if self.ptr is NULL:
-            raise StopIteration
-        return wrap_filter(self.ptr)
+filters_available = set()
+cdef lib.AVFilter *ptr = lib.avfilter_next(NULL)
+while ptr:
+    filters_available.add(ptr.name)
+    ptr = lib.avfilter_next(ptr)
