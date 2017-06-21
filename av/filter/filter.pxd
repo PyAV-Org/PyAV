@@ -1,5 +1,7 @@
 cimport libav as lib
 
+from av.descriptor cimport Descriptor
+
 
 cdef class Filter(object):
 
@@ -7,6 +9,12 @@ cdef class Filter(object):
 
     cdef object _inputs
     cdef object _outputs
+    cdef Descriptor _descriptor
 
 
 cdef Filter wrap_filter(lib.AVFilter *ptr)
+
+
+cdef class FiltersIter(object):
+
+    cdef lib.AVFilter *ptr

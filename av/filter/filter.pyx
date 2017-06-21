@@ -1,5 +1,6 @@
 cimport libav as lib
 
+from av.descriptor cimport wrap_avclass
 from av.filter.pad cimport alloc_filter_pads
 
 
@@ -22,6 +23,16 @@ cdef class Filter(object):
         self.ptr = lib.avfilter_get_by_name(name)
         if not self.ptr:
             raise ValueError('no filter %s' % name)
+
+    property descriptor:
+        def __get__(self):
+            if self._descriptor is None:
+                self._descriptor = wrap_avclass(self.ptr.priv_class)
+            return self._descriptor
+
+    property options:
+        def __get__(self):
+            return self.descriptor.options
 
     property name:
         def __get__(self):
@@ -50,3 +61,17 @@ cdef class Filter(object):
             if self._outputs is None:
                 self._outputs = alloc_filter_pads(self, self.ptr.outputs, False)
             return self._outputs
+
+
+cdef class FiltersIter(object):
+    def __cinit__(self):
+        self.ptr = NULL
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.ptr = lib.avfilter_next(self.ptr)
+        if self.ptr is NULL:
+            raise StopIteration
+        return wrap_filter(self.ptr)

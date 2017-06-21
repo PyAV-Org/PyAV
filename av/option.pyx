@@ -3,11 +3,12 @@ cimport libav as lib
 
 cdef object _cinit_sentinel = object()
 
-cdef Option wrap_option(lib.AVOption *ptr):
+cdef Option wrap_option(tuple choices, lib.AVOption *ptr):
     if ptr == NULL:
         return None
     cdef Option obj = Option(_cinit_sentinel)
     obj.ptr = ptr
+    obj.choices = choices
     return obj
 
 
@@ -44,7 +45,26 @@ cdef class Option(object):
 
     property type:
         def __get__(self):
-            return _TYPE_NAMES[self.ptr.type]
+            return _TYPE_NAMES.get(self.ptr.type)
+
+    property default_val:
+        def __get__(self):
+            if self.ptr.type in (lib.AV_OPT_TYPE_FLAGS, lib.AV_OPT_TYPE_INT,
+                                 lib.AV_OPT_TYPE_INT64):
+                return self.ptr.default_val.i64
+            if self.ptr.type in (lib.AV_OPT_TYPE_DOUBLE, lib.AV_OPT_TYPE_FLOAT,
+                                 lib.AV_OPT_TYPE_RATIONAL):
+                return self.ptr.default_val.dbl
+            if self.ptr.type == lib.AV_OPT_TYPE_STRING:
+                return self.ptr.default_val.str if self.ptr.default_val.str != NULL else ''
+
+    property min:
+        def __get__(self):
+            return self.ptr.min
+
+    property max:
+        def __get__(self):
+            return self.ptr.max
 
     property help:
         def __get__(self):
@@ -53,3 +73,38 @@ cdef class Option(object):
     def __repr__(self):
         return '<av.%s %s at 0x%x>' % (self.__class__.__name__, self.name, id(self))
 
+
+cdef object _cinit_choice_sentinel = object()
+
+cdef OptionChoice wrap_option_choice(lib.AVOption *ptr):
+    if ptr == NULL:
+        return None
+    cdef OptionChoice obj = OptionChoice(_cinit_choice_sentinel)
+    obj.ptr = ptr
+    return obj
+
+
+cdef class OptionChoice(object):
+    """
+    Represents AV_OPT_TYPE_CONST options which are essentially
+    choices of non-const option with same unit.
+    """
+
+    def __cinit__(self, sentinel):
+        if sentinel != _cinit_choice_sentinel:
+            raise RuntimeError('Cannot construct av.OptionChoice')
+
+    property name:
+        def __get__(self):
+            return self.ptr.name
+
+    property help:
+        def __get__(self):
+            return self.ptr.help if self.ptr.help != NULL else ''
+
+    property val:
+        def __get__(self):
+            return self.ptr.default_val.i64
+
+    def __repr__(self):
+        return '<av.%s %s at 0x%x>' % (self.__class__.__name__, self.name, id(self))

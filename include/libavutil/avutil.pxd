@@ -227,15 +227,17 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_STRING
         AV_OPT_TYPE_RATIONAL
         AV_OPT_TYPE_BINARY
-        #AV_OPT_TYPE_DICT # Missing from FFmpeg
+        AV_OPT_TYPE_DICT # Missing from FFmpeg
+        AV_OPT_TYPE_UINT64 # previously missing?
         AV_OPT_TYPE_CONST
-        #AV_OPT_TYPE_IMAGE_SIZE # Missing from LibAV
-        #AV_OPT_TYPE_PIXEL_FMT # Missing from LibAV
-        #AV_OPT_TYPE_SAMPLE_FMT # Missing from LibAV
-        #AV_OPT_TYPE_VIDEO_RATE # Missing from FFmpeg
-        #AV_OPT_TYPE_DURATION # Missing from FFmpeg
-        #AV_OPT_TYPE_COLOR # Missing from FFmpeg
-        #AV_OPT_TYPE_CHANNEL_LAYOUT # Missing from FFmpeg
+        AV_OPT_TYPE_IMAGE_SIZE # Missing from LibAV
+        AV_OPT_TYPE_PIXEL_FMT # Missing from LibAV
+        AV_OPT_TYPE_SAMPLE_FMT # Missing from LibAV
+        AV_OPT_TYPE_VIDEO_RATE # Missing from FFmpeg
+        AV_OPT_TYPE_DURATION # Missing from FFmpeg
+        AV_OPT_TYPE_COLOR # Missing from FFmpeg
+        AV_OPT_TYPE_CHANNEL_LAYOUT # Missing from FFmpeg
+        AV_OPT_TYPE_BOOL # previously missing?
 
     cdef struct AVOption_default_val:
         int64_t i64
