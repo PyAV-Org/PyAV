@@ -1,13 +1,15 @@
 # General
 *~
 .DS_Store
+.nfs.*
+._*
 
 # Environment
-.nfs.*
 /.eggs
 /tmp
 /vendor
-/venv*
+/venv
+/venvs
 
 # Build products
 *.c
