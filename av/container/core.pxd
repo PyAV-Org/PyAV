@@ -13,7 +13,7 @@ cdef class ContainerProxy(object):
     cdef bint writeable
     cdef lib.AVFormatContext *ptr
 
-    cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame)
+    cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame)
     cdef flush_buffers(self)
 
     cdef str name

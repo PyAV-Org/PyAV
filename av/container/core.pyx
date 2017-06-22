@@ -121,17 +121,23 @@ cdef class ContainerProxy(object):
                 if self.iocontext:
                     lib.av_freep(&self.iocontext)
 
-    cdef seek(self, int stream_index, lib.int64_t timestamp, str mode, bint backward, bint any_frame):
+    cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame):
+
+        # We used to take floats here and assume they were in seconds. This
+        # was super confusing, so lets go in the complete opposite direction.
+        if not isinstance(offset, int):
+            raise TypeError('Container.seek only accepts integer offset.', type(offset))
+        cdef int c_offset = offset
 
         cdef int flags = 0
         cdef int ret
 
-        if mode == 'frame':
+        if whence == 'frame':
             flags |= lib.AVSEEK_FLAG_FRAME
-        elif mode == 'byte':
+        elif whence == 'byte':
             flags |= lib.AVSEEK_FLAG_BYTE
-        elif mode != 'time':
-            raise ValueError('mode must be one of "frame", "byte", or "time"')
+        elif whence != 'time':
+            raise ValueError("whence must be one of 'frame', 'byte', or 'time'.", whence)
 
         if backward:
             flags |= lib.AVSEEK_FLAG_BACKWARD
@@ -140,7 +146,7 @@ cdef class ContainerProxy(object):
             flags |= lib.AVSEEK_FLAG_ANY
 
         with nogil:
-            ret = lib.av_seek_frame(self.ptr, stream_index, timestamp, flags)
+            ret = lib.av_seek_frame(self.ptr, stream_index, c_offset, flags)
         err_check(ret)
 
         self.flush_buffers()
