@@ -127,14 +127,16 @@ cdef class Stream(object):
 
     def decode(self, packet=None, count=0):
         return self.codec_context.decode(packet, count)
-    
-    def seek(self, timestamp, mode='time', backward=True, any_frame=False):
-        """seek(timestamp, mode='time', backward=True, any_frame=False)
 
-        :seealso: meth:`Container.seek` for documentation on parameters.
+    def seek(self, offset, whence='time', backward=True, any_frame=False):
+        """seek(offset, whence='time', backward=True, any_frame=False)
+
+        .. seealso:: :meth:`.InputContainer.seek` for documentation on parameters.
+            The only difference is that ``offset`` will be interpreted in
+            :attr:`.Stream.time_base` when ``whence == 'time'``.
 
         """
-        self._container.seek(self._stream.index, timestamp, mode, backward, any_frame)
+        self._container.seek(self._stream.index, offset, whence, backward, any_frame)
 
     property id:
         def __get__(self):
