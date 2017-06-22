@@ -1,4 +1,6 @@
+autopep8
 Cython
+editorconfig
 nose
 numpy
 Pillow
