@@ -13,6 +13,7 @@ cdef Option wrap_option(tuple choices, lib.AVOption *ptr):
 
 
 cdef dict _TYPE_NAMES = {
+    # TODO: Should these be lower? Or perhaps a Python enum?
     lib.AV_OPT_TYPE_FLAGS: 'FLAGS',
     lib.AV_OPT_TYPE_INT: 'INT',
     lib.AV_OPT_TYPE_INT64: 'INT64',
@@ -38,7 +39,7 @@ cdef dict _TYPE_NAMES = {
 cdef class Option(object):
 
     def __cinit__(self, sentinel):
-        if sentinel != _cinit_sentinel:
+        if sentinel is not _cinit_sentinel:
             raise RuntimeError('Cannot construct av.Option')
 
     property name:
@@ -85,7 +86,13 @@ cdef class Option(object):
             return self.ptr.help if self.ptr.help != NULL else ''
 
     def __repr__(self):
-        return '<av.%s %s at 0x%x>' % (self.__class__.__name__, self.name, id(self))
+        return '<av.%s %s (%s at *0x%x) at 0x%x>' % (
+            self.__class__.__name__,
+            self.name,
+            self.type,
+            self.offset,
+            id(self),
+        )
 
 
 cdef OptionChoice wrap_option_choice(lib.AVOption *ptr):
@@ -103,7 +110,7 @@ cdef class OptionChoice(object):
     """
 
     def __cinit__(self, sentinel):
-        if sentinel != _cinit_sentinel:
+        if sentinel is not _cinit_sentinel:
             raise RuntimeError('Cannot construct av.OptionChoice')
 
     property name:
