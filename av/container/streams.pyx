@@ -97,7 +97,10 @@ cdef class StreamContainer(object):
     def __iter__(self):
         return iter(self._streams)
     def __getitem__(self, index):
-        return self.get(index)
+        if isinstance(index, int):
+            return self.get(index)[0]
+        else:
+            return self.get(index)
 
     def get(self, *args, **kwargs):
         """get(streams=None, video=None, audio=None, subtitles=None, data=None)
