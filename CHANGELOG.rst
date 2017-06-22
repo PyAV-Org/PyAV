@@ -24,11 +24,14 @@ Major:
   and ``AudioCodecContext.sample_rate``. The definition is effectively inverted from
   the old one (i.e. for 24fps it used to be ``1/24`` and is now ``24/1``).
 - Fractions (e.g. ``time_base``, ``rate``) will be ``None`` if they are invalid.
+- ``InputContainer.seek`` and ``Stream.seek`` will raise TypeError if given
+  a float, when previously they converted it from seconds.
 
 Minor:
 
 - Added ``Packet.is_keyframe`` and ``Packet.is_corrupt``. (#226.)
 - Many more ``time_base``, ``pts`` and other attributes are writeable.
+- ``Option`` exposes much more of the API (but not get/set). (#243).
 
 Fixes:
 

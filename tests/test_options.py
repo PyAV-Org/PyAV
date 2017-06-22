@@ -15,7 +15,6 @@ class TestOptions(TestCase):
 
         self.assertIsInstance(opt, Option)
         self.assertEqual(opt.name, 'use_absolute_path')
-        self.assertEqual(opt.type, 'BOOL')
 
-        # We have to stop short of the actual offset, since it depends upon the FFmpeg build.
-        self.assertTrue(str(opt).startswith('<av.Option use_absolute_path (BOOL at *0x'))
+        # This was not a good option to actually test.
+        self.assertIn(opt.type, ('BOOL', 'INT'))
