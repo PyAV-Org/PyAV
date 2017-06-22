@@ -4,7 +4,7 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef int   avfilter_version()
     cdef char* avfilter_configuration()
     cdef char* avfilter_license()
-    
+
     cdef void avfilter_register_all()
 
     cdef struct AVFilterPad:
@@ -22,7 +22,7 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         const char *description
 
         const int flags
-        
+
         const AVFilterPad *inputs
         const AVFilterPad *outputs
 
@@ -34,8 +34,10 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
     cdef AVFilter* avfilter_get_by_name(const char *name)
 
+    cdef const AVFilter* avfilter_next(const AVFilter *prev)
+
     cdef struct AVFilterLink # Defined later.
-    
+
     cdef struct AVFilterContext:
 
         AVClass *av_class
@@ -46,7 +48,7 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         unsigned int nb_inputs
         AVFilterPad *input_pads
         AVFilterLink **inputs
-        
+
         unsigned int nb_outputs
         AVFilterPad *output_pads
         AVFilterLink **outputs
@@ -56,12 +58,12 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef void avfilter_free(AVFilterContext*)
 
     cdef struct AVFilterLink:
-        
+
         AVFilterContext *src
         AVFilterPad *srcpad
         AVFilterContext *dst
         AVFilterPad *dstpad
-        
+
         AVMediaType Type
         int w
         int h
@@ -70,4 +72,3 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         int sample_rate
         int format
         AVRational time_base
-        

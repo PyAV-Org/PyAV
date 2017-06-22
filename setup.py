@@ -348,7 +348,7 @@ class ConfigCommand(Command):
             ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
-        
+
         for name in 'libswresample', 'libavresample':
             # We will look for these in a moment.
             config_macros['PYAV_HAVE_' + name.upper()] = 0
@@ -481,6 +481,7 @@ class ReflectCommand(Command):
             'libavcodec/avcodec.h',
             'libavformat/avformat.h',
             'libavutil/avutil.h',
+            'libavutil/opt.h',
         ]
 
         config = extension_extra.copy()
@@ -512,6 +513,25 @@ class ReflectCommand(Command):
             )
             print('found' if results[func_name] else 'missing')
 
+        # Check for some enum values.
+        for enum_name in (
+            'AV_OPT_TYPE_INT', # Canary that should exist.
+            'PYAV_ENUM_SHOULD_NOT_EXIST', # Canary that should not exist.
+
+            # What we actually care about.
+            'AV_OPT_TYPE_BOOL',
+        ):
+            print("looking for %s..." % enum_name, end='')
+            results[enum_name] = compile_check(
+                name=os.path.join(tmp_dir, enum_name),
+                code='int x = %s' % enum_name,
+                includes=reflection_includes,
+                include_dirs=config['include_dirs'],
+                link=False,
+                compiler=self.compiler,
+            )
+            print("found" if results[enum_name] else "missing")
+
         for struct_name, member_name in (
 
             ('AVStream', 'index'), # Canary that should exist
@@ -536,6 +556,8 @@ class ReflectCommand(Command):
         canaries = {
             'pyav_function_should_not_exist': False,
             'PyAV.struct_should_not_exist': False,
+            'AV_OPT_TYPE_INT': True,
+            'PYAV_ENUM_SHOULD_NOT_EXIST': False,
             'avformat_open_input': True,
             'AVStream.index': True,
         }
