@@ -24,6 +24,12 @@ def step_forward(container, stream):
 
 
 class TestSeek(TestCase):
+
+    def test_seek_float(self):
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        self.assertRaises(TypeError, container.seek, 1.0)
+        self.assertRaises(TypeError, container.streams.video[0].seek, 1.0)
+
     def test_seek_start(self):
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
 

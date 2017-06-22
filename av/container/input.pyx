@@ -15,7 +15,7 @@ cdef class InputContainer(Container):
 
         cdef int i
 
-        # Create several clones of out one set of options, since 
+        # Create several clones of out one set of options, since
         # avformat_find_stream_info expects an array of them.
         # TODO: Expose per-stream options at some point.
         cdef lib.AVDictionary **c_options = NULL
@@ -64,11 +64,14 @@ cdef class InputContainer(Container):
         def __get__(self): return lib.avio_size(self.proxy.ptr.pb)
 
     def demux(self, *args, **kwargs):
-        """demux(streams=None, video=None, audio=None, subtitles=None)
+        """demux(streams=None, video=None, audio=None, subtitles=None, data=None)
 
         Yields a series of :class:`.Packet` from the given set of :class:`.Stream`
 
-        The last packets are dummy packets that when decoded will flush the buffers.
+        .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
+            the arguments.
+
+        .. note:: The last packets are dummy packets that when decoded will flush the buffers.
 
         """
 
@@ -129,19 +132,39 @@ cdef class InputContainer(Container):
             free(include_stream)
 
     def decode(self, *args, **kwargs):
+        """demux(streams=None, video=None, audio=None, subtitles=None, data=None)
+
+        Yields a series of :class:`.Frame` from the given set of streams.
+
+        .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
+            the arguments.
+
+        """
+
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, timestamp, mode='time', backward=True, any_frame=False):
-        """Seek to the keyframe at the given timestamp.
+    def seek(self, offset, whence='time', backward=True, any_frame=False):
+        """Seek to a (key)frame nearsest to the given timestamp.
 
-        :param int timestamp: time in AV_TIME_BASE units.
-        :param str mode: one of ``"backward"``, ``"frame"``, ``"byte"``, or ``"any"``.
+        :param int offset: Location to seek to. Interpretation depends on ``whence``.
+        :param str whence: One of ``'time'``, ``'frame'``, or ``'byte'``
+        :param bool backward: If there is not a (key)frame at the given offset,
+            look backwards for it.
+        :param bool any_frame: Seek to any frame, not just a keyframe.
+
+        ``whence`` has the following meanings:
+
+        - ``'time'``: ``offset`` is in ``av.TIME_BASE``.
+        - ``'frame'``: ``offset`` is a frame index
+        - ``'byte'``: ``offset`` is the byte location in the file to seek to.
+
+        .. warning:: Not all formats support all options.
 
         """
         # We used to take floats here and assume they were in seconds. This
         # was super confusing, so lets go in the complete opposite direction.
-        if not isinstance(timestamp, int):
-            raise TypeError('Container.seek only accepts integer time.', type(timestamp))
-        self.proxy.seek(-1, timestamp, mode, backward, any_frame)
+        if not isinstance(offset, int):
+            raise TypeError('Container.seek only accepts integer offset.', type(offset))
+        self.proxy.seek(-1, offset, whence, backward, any_frame)

@@ -1,3 +1,43 @@
+"""
+
+.. autoclass:: StreamContainer
+
+Dynamic Slicing
+~~~~~~~~~~~~~~~
+
+.. automethod:: StreamContainer.get
+
+
+Typed Collections
+~~~~~~~~~~~~~~~~~
+
+These attributes are preferred for readability if you don't need the
+dynamic capabilities of :method:`.get`:
+
+.. attribute:: StreamContainer.video
+
+    A tuple of :class:`VideoStream`.
+
+.. attribute:: StreamContainer.audio
+
+    A tuple of :class:`AudioStream`.
+
+.. attribute:: StreamContainer.subtitles
+
+    A tuple of :class:`SubtitleStream`.
+
+.. attribute:: StreamContainer.data
+
+    A tuple of :class:`DataStream`.
+
+.. attribute:: StreamContainer.other
+
+    A tuple of :class:`Stream`
+
+
+"""
+
+
 cimport libav as lib
 
 
@@ -12,13 +52,28 @@ def _flatten(input_):
 
 cdef class StreamContainer(object):
 
+    """
+
+    A tuple-like container of :class:`Stream`.
+
+    ::
+
+        # There are a few ways to pulling out streams.
+        first = container.streams[0]
+        video = container.streams.video[0]
+        audio = container.streams.get(audio=(0, 1))
+
+
+    """
+
+
     def __cinit__(self):
-        self._streams = []
-        self.video = ()
-        self.audio = ()
+        self._streams  = []
+        self.video     = ()
+        self.audio     = ()
         self.subtitles = ()
-        self.data = ()
-        self.other = ()
+        self.data      = ()
+        self.other     = ()
 
     cdef add_stream(self, Stream stream):
 
@@ -42,35 +97,36 @@ cdef class StreamContainer(object):
     def __iter__(self):
         return iter(self._streams)
     def __getitem__(self, index):
-        return self._streams[index]
+        return self.get(index)
 
     def get(self, *args, **kwargs):
-        """Get a selection of streams.
+        """get(streams=None, video=None, audio=None, subtitles=None, data=None)
 
-        Keyword arguments (or dicts as positional arguments) as interpreted
-        as ``(stream_type, index_value_or_set)`` pairs.
+        Get a selection of :class:`.Stream` as a ``list``.
 
-        Positional arguments may be given as :class:`Stream` objects (which
-        are passed through), ``int`` (which is an index into the streams), or
-        ``list`` or ``tuple`` of those.
-
-        If nothing is selected, then all streams are returned.
-
-        e.g.::
+        Positional arguments may be ``int`` (which is an index into the streams),
+        or ``list`` or ``tuple`` of those::
 
             # Get the first channel.
             streams.get(0)
+
+            # Get the first two audio channels.
+            streams.get(audio=(0, 1))
+
+        Keyword arguments (or dicts as positional arguments) as interpreted
+        as ``(stream_type, index_value_or_set)`` pairs::
 
             # Get the first video channel.
             streams.get(video=0)
             # or
             streams.get({'video': 0})
 
-            # Get the first two audio channels.
-            streams.get(audio=(0, 1))
+        :class:`.Stream` objects are passed through untouched.
 
+        If nothing is selected, then all streams are returned.
 
         """
+
         selection = []
 
         for x in _flatten((args, kwargs)):
@@ -86,7 +142,10 @@ cdef class StreamContainer(object):
 
             elif isinstance(x, dict):
                 for type_, indices in x.iteritems():
-                    streams = getattr(self, type_)
+                    if type_ == 'streams': # For compatibility with the pseudo signature
+                        streams = self._streams
+                    else:
+                        streams = getattr(self, type_)
                     if not isinstance(indices, (tuple, list)):
                         indices = [indices]
                     for i in indices:

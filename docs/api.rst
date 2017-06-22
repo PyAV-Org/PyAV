@@ -25,11 +25,7 @@ Containers
     .. autoclass:: OutputContainer
         :members:
 
-.. automodule:: av.container.streams
 
-    .. autoclass:: StreamContainer
-        :members:
-        
 .. automodule:: av.format
 
     .. autoclass:: ContainerFormat
@@ -37,6 +33,8 @@ Containers
 
 Streams
 -------
+
+.. automodule:: av.container.streams
 
 .. automodule:: av.stream
 
@@ -216,7 +214,7 @@ Subtitles
 
     .. autoclass:: SubtitleSet
         :members:
-        
+
     .. autoclass:: Subtitle
         :members:
 
