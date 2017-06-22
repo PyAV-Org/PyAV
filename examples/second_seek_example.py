@@ -19,7 +19,7 @@ def get_frame_rate(stream):
     if stream.average_rate.denominator and stream.average_rate.numerator:
         return float(stream.average_rate)
     if stream.time_base.denominator and stream.time_base.numerator:
-        return 1.0/float(stream.time_base)
+        return 1.0 / float(stream.time_base)
     else:
         raise ValueError("Unable to determine FPS")
 
@@ -30,7 +30,7 @@ def get_frame_count(f, stream):
     elif stream.duration:
         return pts_to_frame(stream.duration, float(stream.time_base), get_frame_rate(stream), 0)
     elif f.duration:
-        return pts_to_frame(f.duration, 1/float(AV_TIME_BASE), get_frame_rate(stream), 0)
+        return pts_to_frame(f.duration, 1 / float(AV_TIME_BASE), get_frame_rate(stream), 0)
 
     else:
         raise ValueError("Unable to determine number for frames")
@@ -40,7 +40,7 @@ class FrameGrabber(QtCore.QObject):
     frame_ready = QtCore.pyqtSignal(object, object)
     update_frame_range = QtCore.pyqtSignal(object, object)
 
-    def __init__(self, parent =None):
+    def __init__(self, parent=None):
         super(FrameGrabber, self).__init__(parent)
         self.file = None
         self.stream = None
@@ -85,7 +85,7 @@ class FrameGrabber(QtCore.QObject):
                     frame_index += 1
 
                 if not frame.dts in self.pts_map:
-                    secs  = None
+                    secs = None
 
                     if not pts is None:
                         secs = pts * time_base
@@ -113,7 +113,7 @@ class FrameGrabber(QtCore.QObject):
         # could use the buffer interface here instead, some versions of PyQt don't support it for some reason
         # need to track down which version they added support for it
         self.frame = bytearray(rgba.planes[0])
-        bytesPerPixel  =3
+        bytesPerPixel = 3
         img = QtGui.QImage(self.frame, rgba.width, rgba.height, rgba.width * bytesPerPixel, QtGui.QImage.Format_RGB888)
 
         #img = QtGui.QImage(rgba.planes[0], rgba.width, rgba.height, QtGui.QImage.Format_RGB888)
@@ -138,7 +138,7 @@ class FrameGrabber(QtCore.QObject):
 
         #frame_cache = []
 
-        last_frame= None
+        last_frame = None
 
         for i, (frame_index, frame) in enumerate(self.next_frame()):
 
@@ -146,7 +146,7 @@ class FrameGrabber(QtCore.QObject):
             if target_sec != self.active_time:
                 return
 
-            pts =frame.dts
+            pts = frame.dts
             if self.pts_seen:
                 pts = frame.pts
 
@@ -180,7 +180,7 @@ class FrameGrabber(QtCore.QObject):
         while reseek >= 0:
 
             # convert seek_frame to pts
-            target_sec = seek_frame * 1/rate
+            target_sec = seek_frame * 1 / rate
             target_pts = int(target_sec / time_base) + self.start_time
 
             if original_target_frame_pts is None:
@@ -198,7 +198,7 @@ class FrameGrabber(QtCore.QObject):
                 if target_frame != self.active_frame:
                     return
 
-                print "   ", i, "at frame", frame_index, "at ts:", frame.pts,frame.dts,"target:", target_pts, 'orig', original_target_frame_pts
+                print "   ", i, "at frame", frame_index, "at ts:", frame.pts, frame.dts, "target:", target_pts, 'orig', original_target_frame_pts
 
                 if frame_index is None:
                     pass
@@ -227,7 +227,7 @@ class FrameGrabber(QtCore.QObject):
 
                 seek_frame -= 1
                 reseek -= 1
-                print "over seeked by %s, backtracking.. seeking: %i target: %i retry: %i" % (str(over_seek),  seek_frame, target_frame, reseek)
+                print "over seeked by %s, backtracking.. seeking: %i target: %i retry: %i" % (str(over_seek), seek_frame, target_frame, reseek)
 
             else:
                 break
@@ -251,9 +251,9 @@ class FrameGrabber(QtCore.QObject):
         if self.stream.frames:
             frame_count = self.stream.frames
         elif self.stream.duration:
-            frame_count =  pts_to_frame(self.stream.duration, float(self.stream.time_base), get_frame_rate(self.stream), 0)
+            frame_count = pts_to_frame(self.stream.duration, float(self.stream.time_base), get_frame_rate(self.stream), 0)
         elif self.file.duration:
-            frame_count = pts_to_frame(self.file.duration, 1/float(AV_TIME_BASE), get_frame_rate(self.stream), 0)
+            frame_count = pts_to_frame(self.file.duration, 1 / float(AV_TIME_BASE), get_frame_rate(self.stream), 0)
         else:
             raise ValueError("Unable to determine number for frames")
 
@@ -262,7 +262,7 @@ class FrameGrabber(QtCore.QObject):
         retry = 100
 
         while retry:
-            target_sec = seek_frame * 1/ self.rate
+            target_sec = seek_frame * 1 / self.rate
             target_pts = int(target_sec / self.time_base) + self.start_time
 
             self.stream.seek(int(target_pts))
@@ -327,14 +327,14 @@ class DisplayWidget(QtGui.QLabel):
     def __init__(self, parent=None):
         super(DisplayWidget, self).__init__(parent)
         #self.setScaledContents(True)
-        self.setMinimumSize(1920/10, 1080/10)
+        self.setMinimumSize(1920 / 10, 1080 / 10)
 
         size_policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         size_policy.setHeightForWidth(True)
 
         self.setSizePolicy(size_policy)
 
-        self.setAlignment(Qt.AlignHCenter| Qt.AlignBottom)
+        self.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
 
         self.pixmap = None
         self.setMargin(10)
@@ -359,7 +359,7 @@ class DisplayWidget(QtGui.QLabel):
             super(DisplayWidget, self).setPixmap(self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def sizeHint(self):
-        return QtCore.QSize(1920/2.5,1080/2.5)
+        return QtCore.QSize(1920 / 2.5, 1080 / 2.5)
 
 
 class VideoPlayerWidget(QtGui.QWidget):
@@ -415,10 +415,10 @@ class VideoPlayerWidget(QtGui.QWidget):
     def set_frame_range(self, maximum, rate):
         print "frame range =", maximum, rate, int(maximum * self.timeline_base)
 
-        self.timeline.setMaximum( int(maximum * self.timeline_base))
+        self.timeline.setMaximum(int(maximum * self.timeline_base))
 
         self.frame_control.setMaximum(maximum)
-        self.frame_control.setSingleStep(1/rate)
+        self.frame_control.setSingleStep(1 / rate)
         #self.timeline.setSingleStep( int(AV_TIME_BASE * 1/rate))
         self.rate = rate
 
@@ -431,7 +431,7 @@ class VideoPlayerWidget(QtGui.QWidget):
         self.frame_control.blockSignals(True)
 
         self.timeline.setValue(int(value * self.timeline_base))
-        self.frame_control.setValue( value)
+        self.frame_control.setValue(value)
 
         self.timeline.blockSignals(False)
         self.frame_control.blockSignals(False)
@@ -451,12 +451,12 @@ class VideoPlayerWidget(QtGui.QWidget):
                 print 'shift'
                 direction *= 10
 
-            direction = direction * 1/self.rate
+            direction = direction * 1 / self.rate
 
             self.frame_changed(self.frame_control.value() + direction)
 
         else:
-            super(VideoPlayerWidget,self).keyPressEvent(event)
+            super(VideoPlayerWidget, self).keyPressEvent(event)
 
     def mousePressEvent(self, event):
         # clear focus of spinbox
@@ -464,7 +464,7 @@ class VideoPlayerWidget(QtGui.QWidget):
         if focused_widget:
             focused_widget.clearFocus()
 
-        super(VideoPlayerWidget,self).mousePressEvent(event)
+        super(VideoPlayerWidget, self).mousePressEvent(event)
 
     def dragEnterEvent(self, event):
         event.accept()
@@ -484,7 +484,7 @@ class VideoPlayerWidget(QtGui.QWidget):
         self.frame_grabber_thread.quit()
         self.frame_grabber_thread.wait()
 
-        for key,value in sorted(self.frame_grabber.pts_map.items()):
+        for key, value in sorted(self.frame_grabber.pts_map.items()):
             print key, '=', value
 
         event.accept()

@@ -64,7 +64,7 @@ class TestCodecContext(TestCase):
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         video_stream = container.streams.video[0]
 
-        width  = 640
+        width = 640
         height = 480
 
         ctx = codec.create()
@@ -112,7 +112,7 @@ class TestCodecContext(TestCase):
                 self.assertEqual(frame.format.name, pix_fmt)
 
     def test_encoding_h264(self):
-        self.video_encoding('libx264', {'crf':'19'})
+        self.video_encoding('libx264', {'crf': '19'})
 
     def test_encoding_mpeg4(self):
         self.video_encoding('mpeg4')
@@ -121,15 +121,15 @@ class TestCodecContext(TestCase):
         self.video_encoding('mpeg1video')
 
     def test_encoding_dvvideo(self):
-        options = {'pix_fmt':'yuv411p',
-                   'width':720,
-                   'height':480}
+        options = {'pix_fmt': 'yuv411p',
+                   'width': 720,
+                   'height': 480}
         self.video_encoding('dvvideo', options)
 
     def test_encoding_dnxhd(self):
-        options = {'b':'90M', #bitrate
-                   'pix_fmt':'yuv422p',
-                   'width':  1920,
+        options = {'b': '90M', #bitrate
+                   'pix_fmt': 'yuv422p',
+                   'width': 1920,
                    'height': 1080,
                    'time_base': '1001/30000',
                    'max_frames': 5}
@@ -145,11 +145,11 @@ class TestCodecContext(TestCase):
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         video_stream = container.streams.video[0]
 
-        pix_fmt    = options.pop('pix_fmt', 'yuv420p')
-        width      = options.pop('width', 640)
-        height     = options.pop('height', 480)
+        pix_fmt = options.pop('pix_fmt', 'yuv420p')
+        width = options.pop('width', 640)
+        height = options.pop('height', 480)
         max_frames = options.pop('max_frames', 50)
-        time_base  = options.pop('time_base', video_stream.codec_context.time_base)
+        time_base = options.pop('time_base', video_stream.codec_context.time_base)
 
         ctx = codec.create()
         ctx.width = width

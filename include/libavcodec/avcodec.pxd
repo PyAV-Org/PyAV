@@ -359,7 +359,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef int avcodec_get_context_defaults3(
         AVCodecContext *ctx,
         AVCodec *codec
-     )
+    )
 
     cdef int64_t av_frame_get_best_effort_timestamp(AVFrame *frame)
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)

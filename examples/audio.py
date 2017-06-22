@@ -85,7 +85,7 @@ for i, packet in enumerate(container.demux(stream)):
                     '-f', frames[0].format.packed.container_name,
                     '-ar', str(args.rate or stream.rate),
                     '-ac', str(len(resampler.layout.channels if resampler else stream.layout.channels)),
-                    '-vn','-',
+                    '-vn', '-',
                 ]
                 print 'PLAY', ' '.join(cmd)
                 ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE)

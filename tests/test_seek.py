@@ -109,7 +109,7 @@ class TestSeek(TestCase):
         container.seek(target_timestamp)
 
         current_frame = None
-        frame_count =  0
+        frame_count = 0
 
         for packet in container.demux(video_stream):
             for frame in packet.decode():
@@ -140,14 +140,14 @@ class TestSeek(TestCase):
         time_base = float(video_stream.time_base)
 
         rate = float(video_stream.average_rate)
-        target_sec = target_frame * 1/rate
+        target_sec = target_frame * 1 / rate
 
         target_timestamp = int(target_sec / time_base) + video_stream.start_time
 
         video_stream.seek(target_timestamp)
 
         current_frame = None
-        frame_count =  0
+        frame_count = 0
 
         for packet in container.demux(video_stream):
             for frame in packet.decode():

@@ -122,7 +122,7 @@ for i, packet in enumerate(video.demux(streams)):
                 cmd = ['ffplay',
                     '-f', 's16le',
                     '-ar', str(packet.stream.time_base),
-                    '-vn','-',
+                    '-vn', '-',
                 ]
                 proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
             try:

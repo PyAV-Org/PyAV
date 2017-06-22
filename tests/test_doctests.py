@@ -65,7 +65,7 @@ def register_doctests(mod):
 
 for importer, mod_name, ispkg in pkgutil.walk_packages(
     path=av.__path__,
-    prefix=av.__name__+'.',
+    prefix=av.__name__ + '.',
     onerror=lambda x: None
 ):
     register_doctests(mod_name)
