@@ -1,5 +1,5 @@
 from .common import *
-from av.format import ContainerFormat, names
+from av.format import ContainerFormat, formats_available
 
 
 class TestContainerFormats(TestCase):
@@ -19,3 +19,5 @@ class TestContainerFormats(TestCase):
         self.assertEqual(fmt.name, 'mov')
         self.assertEqual(fmt.long_name, 'QuickTime / MOV')
 
+    def test_formats_available(self):
+        self.assertTrue(formats_available)
