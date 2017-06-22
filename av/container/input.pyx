@@ -66,7 +66,12 @@ cdef class InputContainer(Container):
     def demux(self, *args, **kwargs):
         """demux(streams=None, video=None, audio=None, subtitles=None, data=None)
 
-        Yields a series of :class:`.Packet` from the given set of :class:`.Stream`
+        Yields a series of :class:`.Packet` from the given set of :class:`.Stream`::
+
+            for packet in container.demux():
+                # Do something with `packet`, often:
+                for frame in packet.decode():
+                    # Do something with `frame`.
 
         .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
             the arguments.
@@ -132,9 +137,12 @@ cdef class InputContainer(Container):
             free(include_stream)
 
     def decode(self, *args, **kwargs):
-        """demux(streams=None, video=None, audio=None, subtitles=None, data=None)
+        """decode(streams=None, video=None, audio=None, subtitles=None, data=None)
 
-        Yields a series of :class:`.Frame` from the given set of streams.
+        Yields a series of :class:`.Frame` from the given set of streams::
+
+            for frame in container.decode():
+                # Do something with `frame`.
 
         .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
             the arguments.

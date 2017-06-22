@@ -1,0 +1,26 @@
+
+Reference
+=========
+
+.. warning:: This is far from complete, and is mostly an automatic dump of the API.
+
+.. toctree::
+    :maxdepth: 2
+
+    toplevel
+    container
+    stream
+    packet
+    codec
+    frame
+
+    video
+    audio
+    subtitles
+    utils
+
+
+
+
+
+

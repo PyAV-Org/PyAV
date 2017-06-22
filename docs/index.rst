@@ -50,7 +50,7 @@ Contents
     about
     installation
     examples
-    api
+    api/index
 
 
 .. toctree::
