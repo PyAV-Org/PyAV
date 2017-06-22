@@ -1,5 +1,15 @@
 cimport libav as lib
 
+
+def _flatten(input_):
+    for x in input_:
+        if isinstance(x, (tuple, list)):
+            for y in _flatten(x):
+                yield y
+        else:
+            yield x
+
+
 cdef class StreamContainer(object):
 
     def __cinit__(self):
@@ -34,28 +44,55 @@ cdef class StreamContainer(object):
     def __getitem__(self, index):
         return self._streams[index]
 
-    def get(self, streams=None, **typed):
+    def get(self, *args, **kwargs):
+        """Get a selection of streams.
 
+        Keyword arguments (or dicts as positional arguments) as interpreted
+        as ``(stream_type, index_value_or_set)`` pairs.
+
+        Positional arguments may be given as :class:`Stream` objects (which
+        are passed through), ``int`` (which is an index into the streams), or
+        ``list`` or ``tuple`` of those.
+
+        If nothing is selected, then all streams are returned.
+
+        e.g.::
+
+            # Get the first channel.
+            streams.get(0)
+
+            # Get the first video channel.
+            streams.get(video=0)
+            # or
+            streams.get({'video': 0})
+
+            # Get the first two audio channels.
+            streams.get(audio=(0, 1))
+
+
+        """
         selection = []
 
-        if isinstance(streams, Stream):
-            selection.append(streams)
-        elif isinstance(streams, (tuple, list)):
-            for x in streams:
-                if isinstance(x, Stream):
-                    selection.append(x)
-                elif isinstance(x, int):
-                    selection.append(self._streams[x])
-                else:
-                    raise TypeError('streams element must be Stream or int')
-        elif streams is not None:
-            raise TypeError('streams must be Stream or tuple')
+        for x in _flatten((args, kwargs)):
 
-        for type_, indices in typed.iteritems():
-            streams = getattr(self, type_)
-            if not isinstance(indices, (tuple, list)):
-                indices = [indices]
-            for i in indices:
-                selection.append(streams[i])
+            if x is None:
+                pass
+
+            elif isinstance(x, Stream):
+                selection.append(x)
+
+            elif isinstance(x, int):
+                selection.append(self._streams[x])
+
+            elif isinstance(x, dict):
+                for type_, indices in x.iteritems():
+                    streams = getattr(self, type_)
+                    if not isinstance(indices, (tuple, list)):
+                        indices = [indices]
+                    for i in indices:
+                        selection.append(streams[i])
+
+            else:
+                raise TypeError('Argument must be Stream or int.', type(x))
 
         return selection or self._streams[:]
