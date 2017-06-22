@@ -22,7 +22,7 @@ cdef dict _TYPE_NAMES = {
     lib.AV_OPT_TYPE_RATIONAL: 'RATIONAL',
     lib.AV_OPT_TYPE_BINARY: 'BINARY',
     lib.AV_OPT_TYPE_DICT: 'DICT',
-    #lib.AV_OPT_TYPE_UINT64: 'UINT64',
+    #lib.AV_OPT_TYPE_UINT64: 'UINT64', # Added recently, and not yet used AFAICT.
     lib.AV_OPT_TYPE_CONST: 'CONST',
     lib.AV_OPT_TYPE_IMAGE_SIZE: 'IMAGE_SIZE',
     lib.AV_OPT_TYPE_PIXEL_FMT: 'PIXEL_FMT',
@@ -57,7 +57,7 @@ cdef class Option(object):
         def __get__(self):
             return self.ptr.offset
 
-    property default_val:
+    property default:
         def __get__(self):
             if self.ptr.type in (lib.AV_OPT_TYPE_FLAGS, lib.AV_OPT_TYPE_INT,
                                  lib.AV_OPT_TYPE_INT64, lib.AV_OPT_TYPE_PIXEL_FMT,
@@ -88,12 +88,10 @@ cdef class Option(object):
         return '<av.%s %s at 0x%x>' % (self.__class__.__name__, self.name, id(self))
 
 
-cdef object _cinit_choice_sentinel = object()
-
 cdef OptionChoice wrap_option_choice(lib.AVOption *ptr):
     if ptr == NULL:
         return None
-    cdef OptionChoice obj = OptionChoice(_cinit_choice_sentinel)
+    cdef OptionChoice obj = OptionChoice(_cinit_sentinel)
     obj.ptr = ptr
     return obj
 
@@ -105,7 +103,7 @@ cdef class OptionChoice(object):
     """
 
     def __cinit__(self, sentinel):
-        if sentinel != _cinit_choice_sentinel:
+        if sentinel != _cinit_sentinel:
             raise RuntimeError('Cannot construct av.OptionChoice')
 
     property name:
@@ -116,7 +114,7 @@ cdef class OptionChoice(object):
         def __get__(self):
             return self.ptr.help if self.ptr.help != NULL else ''
 
-    property val:
+    property value:
         def __get__(self):
             return self.ptr.default_val.i64
 
