@@ -129,13 +129,12 @@ cdef class Stream(object):
         return self.codec_context.decode(packet, count)
     
     def seek(self, timestamp, mode='time', backward=True, any_frame=False):
+        """seek(timestamp, mode='time', backward=True, any_frame=False)
+
+        :seealso: meth:`Container.seek` for documentation on parameters.
+
         """
-        Seek to the keyframe at timestamp.
-        """
-        if isinstance(timestamp, float):
-            self._container.seek(-1, <long>(timestamp * lib.AV_TIME_BASE), mode, backward, any_frame)
-        else:
-            self._container.seek(self._stream.index, timestamp, mode, backward, any_frame)
+        self._container.seek(self._stream.index, timestamp, mode, backward, any_frame)
 
     property id:
         def __get__(self):

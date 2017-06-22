@@ -140,6 +140,8 @@ cdef class InputContainer(Container):
         :param str mode: one of ``"backward"``, ``"frame"``, ``"byte"``, or ``"any"``.
 
         """
-        if isinstance(timestamp, float):
-            timestamp = <long>(timestamp * lib.AV_TIME_BASE)
+        # We used to take floats here and assume they were in seconds. This
+        # was super confusing, so lets go in the complete opposite direction.
+        if not isinstance(timestamp, int):
+            raise TypeError('Container.seek only accepts integer time.', type(timestamp))
         self.proxy.seek(-1, timestamp, mode, backward, any_frame)
