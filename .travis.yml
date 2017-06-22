@@ -19,14 +19,15 @@ cache:
 
 matrix:
 
-    fast_finish: true
+    # There seems to be a bug in Travis that results in Mike getting piles of
+    # emails as the sub-jobs finish when `fast_finish` is enabled.
+    #fast_finish: true
 
-    
     allow_failures:
-        
+
         # We are still working on this.
         - os: osx
-        
+
         # Deprecation while we consider removing support for old FFmpeg.
         - python: "2.7"
           env: FFMPEG=2.2.4
@@ -102,7 +103,7 @@ matrix:
         - python: "2.7"
           env: FFMPEG=2.5
           os: linux
-        
+
         # Deprecated libraries.
         - python: "2.7"
           env: FFMPEG=2.2.4
