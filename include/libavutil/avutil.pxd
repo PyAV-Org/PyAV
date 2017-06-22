@@ -228,7 +228,7 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_RATIONAL
         AV_OPT_TYPE_BINARY
         AV_OPT_TYPE_DICT
-        #AV_OPT_TYPE_UINT64 # since FFmpeg 3.2
+        #AV_OPT_TYPE_UINT64 # since FFmpeg 3.3
         AV_OPT_TYPE_CONST
         AV_OPT_TYPE_IMAGE_SIZE
         AV_OPT_TYPE_PIXEL_FMT

@@ -49,6 +49,14 @@ cdef class Option(object):
         def __get__(self):
             return _TYPE_NAMES.get(self.ptr.type)
 
+    property offset:
+        """
+        This can be used to find aliases of an option.
+        Options in a particular descriptor with the same offset are aliases.
+        """
+        def __get__(self):
+            return self.ptr.offset
+
     property default_val:
         def __get__(self):
             if self.ptr.type in (lib.AV_OPT_TYPE_FLAGS, lib.AV_OPT_TYPE_INT,
