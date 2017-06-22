@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import os
 import sys
@@ -25,7 +26,7 @@ stream.pix_fmt = args.format
 
 for i, path in enumerate(args.inputs):
 
-    print os.path.basename(path)
+    print(os.path.basename(path))
 
     img = cv2.imread(path)
 

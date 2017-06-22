@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 Note this example only really works accurately on constant frame rate media.
 """
@@ -110,7 +111,7 @@ class FrameGrabber(QtCore.QObject):
 
         if target_frame != self.active_frame:
             return
-        print 'seeking to', target_frame
+        print('seeking to', target_frame)
 
         seek_frame = target_frame
 
@@ -143,7 +144,7 @@ class FrameGrabber(QtCore.QObject):
                 if target_frame != self.active_frame:
                     return
 
-                print "   ", i, "at frame", frame_index, "at ts:", frame.pts, frame.dts, "target:", target_pts, 'orig', original_target_frame_pts
+                print("   ", i, "at frame", frame_index, "at ts:", frame.pts, frame.dts, "target:", target_pts, 'orig', original_target_frame_pts)
 
                 if frame_index is None:
                     pass
@@ -163,16 +164,16 @@ class FrameGrabber(QtCore.QObject):
                     over_seek = frame_index - target_frame
                     if frame_index > target_frame:
 
-                        print over_seek, frame_cache
+                        print(over_seek, frame_cache)
                         if over_seek <= len(frame_cache):
-                            print "over seeked by %i, using cache" % over_seek
+                            print("over seeked by %i, using cache" % over_seek)
                             frame = frame_cache[-over_seek]
                             break
 
 
                 seek_frame -= 1
                 reseek -= 1
-                print "over seeked by %s, backtracking.. seeking: %i target: %i retry: %i" % (str(over_seek), seek_frame, target_frame, reseek)
+                print("over seeked by %s, backtracking.. seeking: %i target: %i retry: %i" % (str(over_seek), seek_frame, target_frame, reseek))
 
             else:
                 break
@@ -215,7 +216,7 @@ class FrameGrabber(QtCore.QObject):
             frame_index = None
 
             for frame_index, frame in self.next_frame():
-                print frame_index, frame
+                print(frame_index, frame)
                 continue
 
             if not frame_index is None:
@@ -225,7 +226,7 @@ class FrameGrabber(QtCore.QObject):
                 retry -= 1
 
 
-        print "frame count seeked", frame_index, "container frame count", frame_count
+        print("frame count seeked", frame_index, "container frame count", frame_count)
 
         return frame_index or frame_count
 
@@ -250,7 +251,7 @@ class FrameGrabber(QtCore.QObject):
 
         self.start_time = pts or first_frame.dts
 
-        print "First pts", pts, self.stream.start_time, first_frame
+        print("First pts", pts, self.stream.start_time, first_frame)
 
         #self.nb_frames = get_frame_count(self.file, self.stream)
         self.nb_frames = self.get_frame_count()
@@ -346,7 +347,7 @@ class VideoPlayerWidget(QtGui.QWidget):
 
     @QtCore.pyqtSlot(object)
     def set_frame_range(self, maximum):
-        print "frame range =", maximum
+        print("frame range =", maximum)
         self.timeline.setMaximum(maximum)
         self.frame_control.setMaximum(maximum)
 
@@ -372,7 +373,7 @@ class VideoPlayerWidget(QtGui.QWidget):
                 direction = -1
 
             if event.modifiers() == Qt.ShiftModifier:
-                print 'shift'
+                print('shift')
                 direction *= 10
 
             self.timeline.setValue(self.timeline.value() + direction)

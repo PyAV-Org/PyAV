@@ -1,3 +1,4 @@
+from __future__ import print_function
 # -*- coding: utf-8 -*-
 #
 # PyAV documentation build configuration file, created by
@@ -28,7 +29,7 @@ try:
     import sphinxcontrib.doxylink
     has_doxylink = True
 except ImportError:
-    print "WARNING: Please install sphinxcontrib-doxylink for links to FFmpeg's docs."
+    print("WARNING: Please install sphinxcontrib-doxylink for links to FFmpeg's docs.")
     has_doxylink = False
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
@@ -231,7 +232,7 @@ ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', '..', 'tmp', 'tagf
 if os.path.exists(ffmpeg_tagfile):
     doxylink['ffmpeg'] = (ffmpeg_tagfile, 'https://ffmpeg.org/doxygen/trunk/')
 else:
-    print "WARNING: Please build FFmpeg's docs with: GENERATE_TAGFILE = %s" % ffmpeg_tagfile
+    print("WARNING: Please build FFmpeg's docs with: GENERATE_TAGFILE = %s" % ffmpeg_tagfile)
 
 
 def setup(app):

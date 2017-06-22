@@ -1,18 +1,19 @@
+from __future__ import print_function
 from av.filter.graph import Graph
 
 g = Graph()
-print g.dump()
+print(g.dump())
 
 f = g.pull()
 
-print f
+print(f)
 
 f = f.reformat(format='rgb24')
 
-print f
+print(f)
 
 img = f.to_image()
 
-print img
+print(img)
 
 img.save('graph.png')

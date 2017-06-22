@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import logging
 import os
@@ -30,18 +31,18 @@ for packet in input_file.demux([s for s in (input_video_stream, input_audio_stre
 
 
     if args.verbose:
-        print 'in ', packet
+        print('in ', packet)
 
     for frame in packet.decode():
 
         if args.verbose:
-            print '\t%s' % frame
+            print('\t%s' % frame)
 
         if packet.stream.type == b'video':
             if frame_count % 10 == 0:
                 if frame_count:
-                    print
-                print ('%03d:' % frame_count),
+                    print()
+                print(('%03d:' % frame_count), end=' ')
             sys.stdout.write('.')
             sys.stdout.flush()
 
@@ -58,13 +59,13 @@ for packet in input_file.demux([s for s in (input_video_stream, input_audio_stre
         for p in output_packets:
             if p:
                 if args.verbose:
-                    print 'OUT', p
+                    print('OUT', p)
                 output_file.mux(p)
 
     if frame_count >= 100:
         break
 
-print '-' * 78
+print('-' * 78)
 
 # Finally we need to flush out the frames that are buffered in the encoder.
 # To do that we simply call encode with no args until we get a None returned
@@ -73,7 +74,7 @@ if output_audio_stream:
         output_packet = output_audio_stream.encode(None)
         if output_packet:
             if args.verbose:
-                print '<<<', output_packet
+                print('<<<', output_packet)
             output_file.mux(output_packet)
         else:
             break
@@ -83,7 +84,7 @@ if output_video_stream:
         output_packet = output_video_stream.encode(None)
         if output_packet:
             if args.verbose:
-                print '<<<', output_packet
+                print('<<<', output_packet)
             output_file.mux(output_packet)
         else:
             break

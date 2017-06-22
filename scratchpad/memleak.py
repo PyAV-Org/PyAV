@@ -1,3 +1,4 @@
+from __future__ import print_function
 import resource
 import subprocess
 import os
@@ -18,18 +19,18 @@ last = 0
 def tick():
     global last
     now = proc.memory_info().rss
-    print '%.2f %d' % (math.log(now, 2), now)
+    print('%.2f %d' % (math.log(now, 2), now))
     last = now
 
 
-print 'import av',
+print('import av', end=' ')
 tick()
 
 import av
 
 def make_ffv1_level1(number_of_frames):
 
-    print 'Making the initial ffv1 level 1 video (ffv1_level1.nut).'
+    print('Making the initial ffv1 level 1 video (ffv1_level1.nut).')
     ffmpeg_args = [
         'ffmpeg',
         '-loglevel', 'quiet', '-hide_banner',
@@ -50,7 +51,7 @@ def make_ffv1_level1(number_of_frames):
 
 def transcode_level1_to_level3():
 
-    print 'Now transcoding it to level 3 (ffv1_level3.nut).'
+    print('Now transcoding it to level 3 (ffv1_level3.nut).')
     ffmpeg_args = [
         'ffmpeg',
         '-loglevel', 'quiet', '-hide_banner',
@@ -65,12 +66,12 @@ def transcode_level1_to_level3():
 
 def decode_using_pyav():
 
-    print 'Decoding using PyAV.'
+    print('Decoding using PyAV.')
     fh = av.open('ffv1_level3.nut', 'r', options={'refcounted_frames': '1'})
     for s in fh.streams:
         #print s, s.thread_type, s.thread_count
         #pass
-        print 'Thread count:', s.thread_count
+        print('Thread count:', s.thread_count)
         #s.thread_count = 1
         #s.thread_type = 'frame'
 
@@ -90,7 +91,7 @@ def decode_using_pyav():
 
         for frame in frames:
             count += 1
-            print count,
+            print(count, end=' ')
             tick()
             if not count % 100:
                 gc.collect()
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     if not os.path.exists('ffv1_level3.nut'):
         transcode_level1_to_level3()
 
-    print 'START',
+    print('START', end=' ')
     tick()
 
     #av.utils._debug_enter('__main__')

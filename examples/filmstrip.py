@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import os
 import sys
@@ -28,7 +29,7 @@ def frame_iter(video):
 def go(src_path):
 
     try:
-        print src_path
+        print(src_path)
 
         basename = os.path.splitext(os.path.basename(src_path))[0]
         dir_name = os.path.join('sandbox', basename)
@@ -37,7 +38,7 @@ def go(src_path):
 
         signal_path = os.path.join(dir_name, 'done')
         if os.path.exists(signal_path):
-            print '   Already done.'
+            print('   Already done.')
             return
 
         video = av.open(src_path, format=args.format)
@@ -62,14 +63,14 @@ def go(src_path):
                 break
 
             else:
-                print '   Saved chunk', chunk_i, 'of', basename
+                print('   Saved chunk', chunk_i, 'of', basename)
                 if chunk.size[0] != (chunk_i + 1):
                     chunk = chunk.crop((0, 0, frame_i + 1, chunk.size[1]))
                 chunk.save(os.path.join(dir_name, '%s.%03d.jpg' % (basename, chunk_i)), quality=90)
 
 
     except Exception as e:
-        print 'ERROR during', src_path, 'chunk', chunk_i
+        print('ERROR during', src_path, 'chunk', chunk_i)
         traceback.print_exc()
 
 

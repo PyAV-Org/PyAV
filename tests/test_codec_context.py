@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 from fractions import Fraction
 
@@ -22,13 +23,13 @@ def iter_raw_frames(path, packet_sizes, ctx):
             read_size = f.readinto(packet)
             assert size
             assert read_size == size
-            print i + 1, size, read_size
+            print(i + 1, size, read_size)
             if not read_size:
                 break
             for frame in ctx.decode(packet):
-                print '   ', frame
+                print('   ', frame)
                 yield frame
-        print 'flushing...'
+        print('flushing...')
         while True:
             try:
                 frames = ctx.decode(None)
@@ -37,7 +38,7 @@ def iter_raw_frames(path, packet_sizes, ctx):
                     raise
                 break
             for frame in frames:
-                print '   ', frame
+                print('   ', frame)
                 yield frame
             if not frames:
                 break
