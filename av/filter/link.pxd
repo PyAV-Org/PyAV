@@ -5,7 +5,7 @@ from av.filter.pad cimport FilterContextPad
 
 
 cdef class FilterLink(object):
-    
+
     cdef readonly Graph graph
     cdef lib.AVFilterLink *ptr
 

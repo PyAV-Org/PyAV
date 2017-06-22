@@ -63,10 +63,7 @@ class TestPythonIO(TestCase):
         self.assertTrue(writes)
 
         self.assertTrue(buffer_.tell())
-        
+
         # Standard assertions.
         buffer_.seek(0)
         assert_rgb_rotate(self, av.open(buffer_))
-
-
-

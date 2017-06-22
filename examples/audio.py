@@ -98,4 +98,3 @@ for i, packet in enumerate(container.demux(stream)):
 
         if args.count and read_count >= args.count:
             exit()
-

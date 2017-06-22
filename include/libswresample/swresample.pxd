@@ -13,7 +13,7 @@ cdef extern from "libswresample/swresample.pyav.h" nogil:
 
     cdef struct SwrContext:
         pass
-    
+
     cdef SwrContext* swr_alloc_set_opts(
         SwrContext *ctx,
         int64_t out_ch_layout,
@@ -25,22 +25,21 @@ cdef extern from "libswresample/swresample.pyav.h" nogil:
         int log_offset,
         void *log_ctx #logging context, can be NULL
     )
-    
+
     cdef int swr_convert(
         SwrContext *ctx,
         uint8_t ** out_buffer,
         int out_count,
         uint8_t **in_buffer,
-        int in_count 
-    )  
-    # Gets the delay the next input sample will 
-    # experience relative to the next output sample. 
+        int in_count
+    )
+    # Gets the delay the next input sample will
+    # experience relative to the next output sample.
     cdef int64_t swr_get_delay(SwrContext *s, int64_t base)
-    
+
     cdef SwrContext* swr_alloc()
     cdef int swr_init(SwrContext* ctx)
     cdef void swr_free(SwrContext **ctx)
-    
+
     # wrapper for libavresample
     cdef void swr_close(SwrContext *ctx)
-    

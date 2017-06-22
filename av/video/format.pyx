@@ -60,7 +60,7 @@ cdef class VideoFormat(object):
 
     def __int__(self):
         return int(self.pix_fmt)
-    
+
     property name:
         """Canonical name of the pixel format."""
         def __get__(self):

@@ -34,7 +34,7 @@ cdef class CodecContext(object):
     # Public API.
     cpdef open(self, bint strict=?)
     cpdef close(self, bint strict=?)
-    
+
     cdef _set_default_time_base(self)
 
     # Wraps both versions of the transcode API, returning lists.
@@ -68,4 +68,3 @@ cdef class CodecContext(object):
 
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext*, lib.AVCodec*, ContainerProxy)
-

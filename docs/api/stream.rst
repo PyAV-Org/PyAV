@@ -8,4 +8,3 @@ Streams
 
     .. autoclass:: Stream
         :members:
-

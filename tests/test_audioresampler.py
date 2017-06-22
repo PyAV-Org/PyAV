@@ -67,7 +67,7 @@ class TestAudioResampler(TestCase):
 
         samples_out = resampler.samples_out
         self.assertTrue(samples_out > 0)
-        
+
         iframe.pts = 1024
         oframe = resampler.resample(iframe)
         self.assertEqual(oframe.pts, samples_out)
@@ -101,4 +101,3 @@ class TestAudioResampler(TestCase):
         self.assertIs(oframe.pts, None)
         self.assertIs(oframe.time_base, None)
         self.assertEqual(oframe.sample_rate, 44100)
-

@@ -16,4 +16,3 @@ class TestErrorBasics(TestCase):
             self.assertEqual(e.filename, 'does not exist')
         else:
             self.fail('no exception raised')
-

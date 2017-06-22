@@ -23,7 +23,7 @@ cdef class Graph(object):
         if self.ptr:
             # This frees the graph, filter contexts, links, etc..
             lib.avfilter_graph_free(&self.ptr)
-    
+
     cdef str _get_unique_name(self, str name):
         count = self._name_counts.get(name, 0)
         self._name_counts[name] = count + 1
@@ -31,7 +31,7 @@ cdef class Graph(object):
             return '%s_%s' % name
         else:
             return name
-    
+
     cpdef configure(self, bint auto_buffer=True, bint force=False):
         if self.configured and not force:
             return
@@ -48,7 +48,7 @@ cdef class Graph(object):
 
         # We get auto-inserted stuff here.
         self._auto_register()
-    
+
     # def parse_string(self, str filter_str):
         # err_check(lib.avfilter_graph_parse2(self.ptr, filter_str, &self.inputs, &self.outputs))
         #
@@ -70,7 +70,7 @@ cdef class Graph(object):
     #     return ret
 
     def add(self, filter, args=None, **kwargs):
-        
+
         cdef Filter cy_filter
         if isinstance(filter, basestring):
             cy_filter = Filter(filter)
@@ -78,9 +78,9 @@ cdef class Graph(object):
             cy_filter = filter
         else:
             raise TypeError("filter must be a string or Filter")
-        
+
         cdef str name = self._get_unique_name(kwargs.pop('name', None) or cy_filter.name)
-        
+
         cdef lib.AVFilterContext *ptr = lib.avfilter_graph_alloc_filter(self.ptr, cy_filter.ptr, name)
         if not ptr:
             raise RuntimeError("Could not allocate AVFilterContext")
@@ -117,7 +117,7 @@ cdef class Graph(object):
             py_ctx = wrap_filter_context(self, filter_, c_ctx)
             self._register_context(py_ctx)
         self._nb_filters_seen = self.ptr.nb_filters
-    
+
     def add_buffer(self, template=None, width=None, height=None, format=None, name=None):
 
         if template is not None:
@@ -127,20 +127,20 @@ cdef class Graph(object):
                 height = template.height
             if format is None:
                 format = template.format
-        
+
         if width is None:
             raise ValueError('missing width')
         if height is None:
             raise ValueError('missing height')
         if format is None:
             raise ValueError('missing format')
-        
+
         args = "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d" % (
             width, height, int(VideoFormat(format)),
             1, 1000,
             1, 1
         )
-        
+
         return self.add('buffer', args, name=name)
 
     def push(self, frame):
@@ -152,7 +152,7 @@ cdef class Graph(object):
 
         if len(contexts) != 1:
             raise ValueError('can only auto-push with single buffer; found %s' % len(contexts))
-        
+
         contexts[0].push(frame)
 
     def pull(self):
@@ -165,7 +165,3 @@ cdef class Graph(object):
             raise ValueError('can only auto-pull with single sink; found %s' % nsinks)
 
         return (vsinks or asinks)[0].pull()
-
-
-
-

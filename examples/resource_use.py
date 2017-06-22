@@ -27,7 +27,7 @@ def format_bytes(n):
 usage = []
 
 for round_ in xrange(args.count):
-    
+
     print 'Round %d/%d:' % (round_ + 1, args.count)
 
     if args.gc:
@@ -61,4 +61,3 @@ for i in xrange(len(usage) - 1):
     before = usage[i]
     after = usage[i + 1]
     print '%s (%s)' % (format_bytes(after.ru_maxrss), format_bytes(after.ru_maxrss - before.ru_maxrss))
-

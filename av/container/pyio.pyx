@@ -75,4 +75,3 @@ cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
 
     except Exception as e:
         return stash_exception()
-

@@ -21,7 +21,7 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
     called.
 
     """
-    
+
     # This better be the right one...
     assert container.proxy.ptr.streams[c_stream.index] == c_stream
 
@@ -47,14 +47,14 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
 
 
 cdef class Stream(object):
-    
+
     def __cinit__(self, name):
         if name is _cinit_bypass_sentinel:
             return
         raise RuntimeError('cannot manually instatiate Stream')
 
     cdef _init(self, Container container, lib.AVStream *stream):
-        
+
         self._container = container.proxy
         self._weak_container = PyWeakref_NewRef(container, None)
         self._stream = stream
@@ -62,7 +62,7 @@ cdef class Stream(object):
         self._codec_context = stream.codec
 
         self.metadata = avdict_to_dict(stream.metadata)
-        
+
         # This is an input container!
         if self._container.ptr.iformat:
 
@@ -71,19 +71,19 @@ cdef class Stream(object):
             if not self._codec:
                 # TODO: Setup a dummy CodecContext.
                 return
-            
+
             # Open the codec.
             # TODO: Replace this with the call to codec_context.open() below,
             #       once we pass options to it.
             err_check(lib.avcodec_open2(self._codec_context, self._codec, &self._codec_options))
-            
+
         # This is an output container!
         else:
             self._codec = self._codec_context.codec
 
         self.codec_context = wrap_codec_context(self._codec_context, self._codec, False)
         self.codec_context.stream_index = stream.index
-        
+
         # if self._container.ptr.iformat:
             # self.codec_context.open(strict=False)
 
@@ -162,7 +162,7 @@ cdef class Stream(object):
             return avrational_to_faction(&self._stream.time_base)
         def __set__(self, value):
             to_avrational(value, &self._stream.time_base)
-    
+
     property average_rate:
         def __get__(self):
             return avrational_to_faction(&self._stream.avg_frame_rate)
@@ -182,4 +182,3 @@ cdef class Stream(object):
     property language:
         def __get__(self):
             return self.metadata.get('language')
-

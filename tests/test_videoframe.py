@@ -123,5 +123,3 @@ class TestVideoFrameTiming(TestCase):
         frame = frame.reformat(320, 240)
         self.assertEqual(frame.pts, 123)
         self.assertEqual(frame.time_base, 456)
-
-

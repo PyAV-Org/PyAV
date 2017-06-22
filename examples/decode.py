@@ -83,12 +83,12 @@ streams = [s for s in video.streams if
 frame_count = 0
 
 for i, packet in enumerate(video.demux(streams)):
-    
+
     print '%02d %r' % (i, packet)
     print '\tduration: %s' % format_time(packet.duration, packet.stream.time_base)
     print '\tpts: %s' % format_time(packet.pts, packet.stream.time_base)
     print '\tdts: %s' % format_time(packet.dts, packet.stream.time_base)
-    
+
     for frame in packet.decode():
 
         frame_count += 1
@@ -105,7 +105,7 @@ for i, packet in enumerate(video.demux(streams)):
             print '\t\tlayout:', frame.layout.name
 
         elif packet.stream.type == 'subtitle':
-            
+
             sub = frame
 
             print '\t\tformat:', sub.format
@@ -116,7 +116,7 @@ for i, packet in enumerate(video.demux(streams)):
                 print '\t\t\t%r' % rect
                 if rect.type == 'ass':
                     print '\t\t\t\tass: %r' % rect.ass
-        
+
         if args.play and packet.stream.type == 'audio':
             if not proc:
                 cmd = ['ffplay',

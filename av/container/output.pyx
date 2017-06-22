@@ -33,7 +33,7 @@ cdef class OutputContainer(Container):
         :returns: The new :class:`~av.stream.Stream`.
 
         """
-        
+
         if (codec_name is None and template is None) or (codec_name is not None and template is not None):
             raise ValueError('needs one of codec_name or template')
 
@@ -54,7 +54,7 @@ cdef class OutputContainer(Container):
             if not template._codec_context:
                 raise ValueError("template has no codec context")
             codec = template._codec
-        
+
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(
             self.proxy.ptr.oformat,
@@ -111,12 +111,12 @@ cdef class OutputContainer(Container):
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
-        
+
         return py_stream
-    
+
     cpdef start_encoding(self):
         """Write the file header! Called automatically."""
-        
+
         if self._started:
             return
 
@@ -125,7 +125,7 @@ cdef class OutputContainer(Container):
         # Finalize and open all streams.
         cdef Stream stream
         for stream in self.streams:
-            
+
             ctx = stream.codec_context
             if not ctx.is_open:
 
@@ -149,7 +149,7 @@ cdef class OutputContainer(Container):
 
         cdef _Dictionary options = self.options.copy()
         self.proxy.err_check(lib.avformat_write_header(
-            self.proxy.ptr, 
+            self.proxy.ptr,
             &options.ptr
         ))
 
@@ -164,7 +164,7 @@ cdef class OutputContainer(Container):
             log.warning('Some options were not used: %s' % unused_options)
 
         self._started = True
-            
+
     def close(self, strict=False):
 
         # Normally, we just ignore that we've already done this.
@@ -181,12 +181,12 @@ cdef class OutputContainer(Container):
         cdef Stream stream
         for stream in self.streams:
             stream.codec_context.close()
-            
+
         if self.file is None and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.proxy.ptr.pb)
 
         self._done = True
-        
+
     def mux(self, packets):
         # We accept either a Packet, or a sequence of packets. This should
         # smooth out the transition to the new encode API which returns a
@@ -207,6 +207,3 @@ cdef class OutputContainer(Container):
         packet._rebase_time(stream.time_base)
 
         self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
-
-
-    

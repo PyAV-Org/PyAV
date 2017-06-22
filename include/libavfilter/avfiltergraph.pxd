@@ -1,6 +1,6 @@
 
 cdef extern from "libavfilter/avfiltergraph.h" nogil:
-    
+
     cdef struct AVFilterGraph:
         int nb_filters
         AVFilterContext **filters
@@ -27,7 +27,7 @@ cdef extern from "libavfilter/avfiltergraph.h" nogil:
         const AVFilter *filter,
         const char *name
     )
-    
+
     cdef int avfilter_graph_create_filter(
         AVFilterContext **filt_ctx,
         AVFilter *filt,
@@ -49,4 +49,3 @@ cdef extern from "libavfilter/avfiltergraph.h" nogil:
     cdef char* avfilter_graph_dump(AVFilterGraph *graph, const char *options)
 
     cdef void avfilter_inout_free(AVFilterInOut **inout_list)
-

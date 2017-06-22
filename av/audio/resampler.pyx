@@ -135,7 +135,7 @@ cdef class AudioResampler(object):
         #     handle_output(output, out_samples);
         #     av_freep(&output);
         # }
-        
+
         # Estimate out how many samples this will create; it will be high.
         # My investigations say that this swr_get_delay is not required, but
         # it is in the example loop, and avresample (as opposed to swresample)
@@ -190,5 +190,3 @@ cdef class AudioResampler(object):
         output._recalc_linesize()
 
         return output
-        
-

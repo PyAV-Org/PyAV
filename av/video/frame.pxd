@@ -8,7 +8,7 @@ from av.video.reformatter cimport VideoReformatter
 
 
 cdef class VideoFrame(Frame):
-    
+
     # This is the buffer that is used to back everything in the AVPicture/AVFrame.
     # We don't ever actually access it directly.
     cdef uint8_t *_buffer

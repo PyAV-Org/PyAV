@@ -239,4 +239,3 @@ def dump_codecs():
             codec.name,
             codec.long_name
         )
-

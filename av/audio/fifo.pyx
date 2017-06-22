@@ -7,7 +7,7 @@ from av.utils cimport err_check
 cdef class AudioFifo:
 
     """A simple audio sample FIFO (First In First Out) buffer."""
-        
+
     def __repr__(self):
         return '<av.%s %s samples of %dhz %s %s at 0x%x>' % (
             self.__class__.__name__,
@@ -17,7 +17,7 @@ cdef class AudioFifo:
             self.format,
             id(self),
         )
-        
+
     def __dealloc__(self):
         if self.ptr:
             lib.av_audio_fifo_free(self.ptr)
@@ -67,7 +67,7 @@ cdef class AudioFifo:
 
             if not self.ptr:
                 raise RuntimeError('Could not allocate AVAudioFifo.')
-        
+
         # Make sure nothing changed.
         elif (
             frame.ptr.format         != self.template.ptr.format or
@@ -86,9 +86,9 @@ cdef class AudioFifo:
             expected_pts = <uint64_t>(self.pts_per_sample * self.samples_written)
             if frame.ptr.pts != expected_pts:
                 raise ValueError('Frame.pts (%d) != expected (%d); fix or set to None.' % (frame.ptr.pts, expected_pts))
-            
+
         err_check(lib.av_audio_fifo_write(
-            self.ptr, 
+            self.ptr,
             <void **>frame.ptr.extended_data,
             frame.ptr.nb_samples,
         ))
@@ -140,16 +140,16 @@ cdef class AudioFifo:
             <void **>frame.ptr.extended_data,
             samples,
         ))
-        
+
         if self.pts_per_sample:
             frame.ptr.pts = <uint64_t>(self.pts_per_sample * self.samples_read)
         else:
             frame.ptr.pts = lib.AV_NOPTS_VALUE
-        
+
         self.samples_read += samples
 
         return frame
-    
+
     cpdef read_many(self, unsigned int samples, bint partial=False):
         """read_many(samples, partial=False)
 
@@ -187,4 +187,3 @@ cdef class AudioFifo:
         """Number of audio samples (per channel) in the buffer."""
         def __get__(self):
             return lib.av_audio_fifo_size(self.ptr) if self.ptr else 0
-

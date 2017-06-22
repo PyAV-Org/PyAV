@@ -80,10 +80,10 @@ class TestCodecContext(TestCase):
         frame_count = 1
         path_list = []
         for frame in iter_frames(container, video_stream):
-            
+
             new_frame = frame.reformat(width, height, pix_fmt)
             new_packets = ctx.encode(new_frame)
-            
+
             self.assertEqual(len(new_packets), 1)
             new_packet = new_packets[0]
 
@@ -319,4 +319,3 @@ class TestCodecContext(TestCase):
             result_samples += frame.samples
             self.assertEqual(frame.rate, sample_rate)
             self.assertEqual(len(frame.layout.channels), channels)
-

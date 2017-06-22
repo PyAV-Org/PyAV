@@ -19,4 +19,3 @@ for packet in video.demux(stream):
         break
 
 cv2.destroyAllWindows()
-

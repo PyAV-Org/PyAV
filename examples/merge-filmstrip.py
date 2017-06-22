@@ -18,11 +18,11 @@ for src_dir in sys.argv[1:]:
 
 	if not os.path.isdir(src_dir):
 		continue
-	
+
 	names = sorted(os.listdir(src_dir))
 	names = [x for x in names if not x.startswith('.')]
 	names = [x for x in names if x != 'done']
-	
+
 	if not names:
 		print 'No images in', src_dir
 		continue
@@ -42,5 +42,3 @@ for src_dir in sys.argv[1:]:
 
 	print 'saving'
 	merged.save(out_path, qualty=90)
-
-

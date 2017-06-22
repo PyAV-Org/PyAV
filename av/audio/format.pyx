@@ -14,7 +14,7 @@ cdef AudioFormat get_audio_format(lib.AVSampleFormat c_format):
 
 
 cdef class AudioFormat(object):
-    
+
     """Descriptor of audio formats."""
 
     def __cinit__(self, name):
@@ -30,7 +30,7 @@ cdef class AudioFormat(object):
 
         if sample_fmt < 0:
             raise ValueError('Not a sample format: %r' % name)
-        
+
         self._init(sample_fmt)
 
     cdef _init(self, lib.AVSampleFormat sample_fmt):
@@ -58,7 +58,7 @@ cdef class AudioFormat(object):
         """
         def __get__(self):
             return lib.av_get_bytes_per_sample(self.sample_fmt)
-    
+
     property bits:
         """Number of bits per sample.
 
@@ -140,8 +140,3 @@ cdef class AudioFormat(object):
                 return 'f64' + container_format_postfix
 
             raise ValueError('unknown layout')
-
-
-
-
-

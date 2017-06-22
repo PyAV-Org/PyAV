@@ -121,4 +121,3 @@ while True:
     if not optr:
         break
     formats_available.add(optr.name)
-

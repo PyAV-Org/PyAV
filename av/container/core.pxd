@@ -31,12 +31,12 @@ cdef class ContainerProxy(object):
     cdef unsigned char *buffer
     cdef long pos
     cdef bint pos_is_valid
-    
+
     cdef int err_check(self, int value) except -1
 
 
 cdef class Container(object):
-    
+
     cdef readonly str name
     cdef readonly object file
 
@@ -50,4 +50,3 @@ cdef class Container(object):
 
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
-

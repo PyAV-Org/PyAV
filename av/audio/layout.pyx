@@ -132,5 +132,3 @@ cdef class AudioChannel(object):
         """A human description of the audio channel."""
         def __get__(self):
             return channel_descriptions.get(self.name)
-
-

@@ -53,5 +53,3 @@ class TestSubtitle(TestCase):
             self.assertEqual(len(buffer(bms[0])), 4800)
         if hasattr(__builtins__, 'memoryview'):
             self.assertEqual(len(memoryview(bms[0])), 4800)
-
-

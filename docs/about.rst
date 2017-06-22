@@ -15,4 +15,3 @@ There are many functions and C struct members which are currently unexposed.
 
 .. _FFmpeg: http://ffmpeg.org
 .. _Libav: http://libav.org
-

@@ -19,7 +19,7 @@ cdef AudioFrame alloc_audio_frame():
 cdef class AudioFrame(Frame):
 
     """A frame of audio."""
-    
+
     def __cinit__(self, format='s16', layout='stereo', samples=0, align=True):
         if format is _cinit_bypass_sentinel:
             return
@@ -40,7 +40,7 @@ cdef class AudioFrame(Frame):
 
         cdef size_t buffer_size
         if self.layout.channels and nb_samples:
-            
+
             # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
 
@@ -58,14 +58,14 @@ cdef class AudioFrame(Frame):
 
             # Connect the data pointers to the buffer.
             err_check(lib.avcodec_fill_audio_frame(
-                self.ptr, 
-                len(self.layout.channels), 
+                self.ptr,
+                len(self.layout.channels),
                 <lib.AVSampleFormat>self.ptr.format,
                 self._buffer,
                 self._buffer_size,
                 self.align
             ))
-            
+
             self._init_planes(AudioPlane)
 
     def __dealloc__(self):
@@ -89,7 +89,7 @@ cdef class AudioFrame(Frame):
         self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1
         self._init_planes(AudioPlane)
-    
+
     def __repr__(self):
         return '<av.%s %d, %d samples at %dHz, %s, %s at 0x%x>' % (
             self.__class__.__name__,
@@ -100,12 +100,12 @@ cdef class AudioFrame(Frame):
             self.format.name,
             id(self),
         )
-    
+
     property samples:
         """Number of audio samples (per channel) """
         def __get__(self):
             return self.ptr.nb_samples
-    
+
     property sample_rate:
         """Sample rate of the audio data. """
         def __get__(self):

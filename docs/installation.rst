@@ -114,7 +114,7 @@ Via Source
 
 
 On **Mac OS X** you may have issues with regards to Python expecting gcc but finding clang. Try to export the following before installation::
-    
+
     export ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
 
 
@@ -123,4 +123,3 @@ On **Mac OS X** you may have issues with regards to Python expecting gcc but fin
 On **Windows** you must indicate the location of your FFmpeg, e.g.::
 
     python setup.py build --ffmpeg-dir=C:\ffmpeg
-

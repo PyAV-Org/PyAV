@@ -178,6 +178,3 @@ class TestCase(_Base):
         def assertNotIsInstance(self, instance, types, msg=None):
             if isinstance(instance, types):
                 self.fail(msg or 'is an instance of %r; %r' % (types, instance))
-
-
-

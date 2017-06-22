@@ -55,6 +55,5 @@ for src_path in args.path:
 
     dst_path = os.path.join('sandbox', os.path.basename(src_path) + '-avg.jpeg')
     print 'writing', (fi + 1), 'frames to', dst_path
-    
-    cv2.imwrite(dst_path, sum_)
 
+    cv2.imwrite(dst_path, sum_)

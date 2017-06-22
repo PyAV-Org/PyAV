@@ -7,7 +7,7 @@ from av.utils cimport avrational_to_faction
 
 
 cdef class VideoStream(Stream):
-        
+
     def __repr__(self):
         return '<av.%s #%d %s, %s %dx%d at 0x%x>' % (
             self.__class__.__name__,

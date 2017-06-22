@@ -18,7 +18,7 @@ cdef object _cinit_sentinel = object()
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_codec, ContainerProxy container):
     """Build an av.CodecContext for an existing AVCodecContext."""
-    
+
     cdef CodecContext py_ctx
 
     # TODO: This.
@@ -41,7 +41,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_c
 
 
 cdef class CodecContext(object):
-    
+
     @staticmethod
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
@@ -247,7 +247,7 @@ cdef class CodecContext(object):
     cdef _recv_packet(self):
 
         cdef Packet packet = Packet()
-            
+
         cdef int res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
@@ -361,7 +361,7 @@ cdef class CodecContext(object):
             decoded = self._decode(&packet.struct, &data_consumed)
             packet.struct.data += data_consumed
             packet.struct.size -= data_consumed
-            
+
             if decoded:
 
                 if isinstance(decoded, Frame):
@@ -406,9 +406,9 @@ cdef class CodecContext(object):
             # This is a bad assumption to make, as it seems like AVCodecContext
             # barely cares about timing information.
             frame._time_base = self.ptr.time_base
-        
+
         frame.index = self.ptr.frame_number - 1
- 
+
     cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
         raise NotImplementedError('Base CodecContext cannot decode packets.')
 
@@ -419,7 +419,7 @@ cdef class CodecContext(object):
     property type:
         def __get__(self):
             return self.codec.type
-        
+
     property profile:
         def __get__(self):
             if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
@@ -447,7 +447,7 @@ cdef class CodecContext(object):
                 return self.ptr.rc_max_rate
             else:
                 return None
-            
+
     property bit_rate_tolerance:
         def __get__(self):
             self.ptr.bit_rate_tolerance
@@ -461,6 +461,3 @@ cdef class CodecContext(object):
             return self.ptr.thread_count
         def __set__(self, int value):
             self.ptr.thread_count = value
-
-
-

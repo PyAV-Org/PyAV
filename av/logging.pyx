@@ -125,7 +125,7 @@ cdef int _queue_size
 cdef bint _print_queue_size = False
 
 # For repeat check.
-cdef _Record _last_record 
+cdef _Record _last_record
 cdef int _skip_count = 0
 
 
@@ -194,7 +194,7 @@ cdef bint _pop_record(_Record *dst):
 
     if record == NULL:
         return False
-    
+
     # This free is what makes this whole copying thing worth it, since it
     # heavily simplifies a few of the lower functions, since their records can
     # be on the stack, and the queue functions fully deal with free-ing memory.
@@ -238,7 +238,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     # Skip messages which are identical to the previous.
     cdef bint is_repeated = False
     if pythread.PyThread_acquire_lock(_skip_lock, 1): # 1 -> wait
-        
+
         if is_interesting:
 
             is_repeated = (
@@ -267,7 +267,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
             memcpy(&_last_error_record, &record, sizeof(_Record))
 
         pythread.PyThread_release_lock(_skip_lock)
-        
+
         if not is_interesting:
             return
         if is_repeated:

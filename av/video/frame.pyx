@@ -262,7 +262,7 @@ cdef class VideoFrame(Frame):
         """Get an RGB ``QImage`` of this frame.
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
-        
+
         Returns a ``(VideoFrame, QImage)`` tuple, where the ``QImage`` references
         the data in the ``VideoFrame``.
         """
@@ -300,5 +300,3 @@ cdef class VideoFrame(Frame):
         frame.planes[0].update(array)
 
         return frame
-
-

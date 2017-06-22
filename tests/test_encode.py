@@ -154,5 +154,3 @@ class TestEncodeStreamSemantics(TestCase):
 
         self.assertIs(apacket.stream, astream)
         self.assertEqual(apacket.stream_index, 1)
-
-

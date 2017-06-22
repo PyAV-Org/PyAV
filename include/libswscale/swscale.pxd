@@ -1,6 +1,6 @@
 
 cdef extern from "libswscale/swscale.h" nogil:
-    
+
     cdef int   swscale_version()
     cdef char* swscale_configuration()
     cdef char* swscale_license()
@@ -8,15 +8,15 @@ cdef extern from "libswscale/swscale.h" nogil:
     # See: http://ffmpeg.org/doxygen/trunk/structSwsContext.html
     cdef struct SwsContext:
         pass
-    
+
     # See: http://ffmpeg.org/doxygen/trunk/structSwsFilter.html
     cdef struct SwsFilter:
         pass
-    
+
     # Flags.
     cdef int SWS_BILINEAR
     cdef int SWS_BICUBIC
-    
+
     cdef int SWS_CS_ITU709
     cdef int SWS_CS_FCC
     cdef int SWS_CS_ITU601
@@ -24,7 +24,7 @@ cdef extern from "libswscale/swscale.h" nogil:
     cdef int SWS_CS_SMPTE170M
     cdef int SWS_CS_SMPTE240M
     cdef int SWS_CS_DEFAULT
-    
+
     cdef SwsContext* sws_getContext(
         int src_width,
         int src_height,
@@ -37,7 +37,7 @@ cdef extern from "libswscale/swscale.h" nogil:
         SwsFilter *dst_filter,
         double *param,
     )
-    
+
     cdef int sws_scale(
         SwsContext *ctx,
         unsigned char **src_slice,
@@ -47,9 +47,9 @@ cdef extern from "libswscale/swscale.h" nogil:
         unsigned char **dst_slice,
         int *dst_stride,
     )
-    
+
     cdef void sws_freeContext(SwsContext *ctx)
-    
+
     cdef SwsContext *sws_getCachedContext(
         SwsContext *context,
         int src_width,
@@ -63,9 +63,9 @@ cdef extern from "libswscale/swscale.h" nogil:
         SwsFilter *dst_filter,
         double *param,
     )
-    
-    cdef int* sws_getCoefficients(int colorspace)  
-    
+
+    cdef int* sws_getCoefficients(int colorspace)
+
     cdef int sws_getColorspaceDetails(
         SwsContext *context,
         int **inv_table,
@@ -74,9 +74,9 @@ cdef extern from "libswscale/swscale.h" nogil:
         int *dstRange,
         int *brightness,
         int *contrast,
-        int *saturation          
+        int *saturation
     )
-        
+
     cdef int sws_setColorspaceDetails(
         SwsContext *context,
         const int inv_table[4],
@@ -85,5 +85,5 @@ cdef extern from "libswscale/swscale.h" nogil:
         int dstRange,
         int brightness,
         int contrast,
-        int saturation     
-    )   
+        int saturation
+    )

@@ -52,4 +52,3 @@ cdef FilterLink wrap_filter_link(Graph graph, lib.AVFilterLink *ptr):
     link.graph = graph
     link.ptr = ptr
     return link
-

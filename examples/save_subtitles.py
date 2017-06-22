@@ -16,7 +16,7 @@ from av import open
 if not os.path.exists('subtitles'):
     os.makedirs('subtitles')
 
-    
+
 video = open(sys.argv[1])
 
 streams = [s for s in video.streams if s.type == b'subtitle']
@@ -28,12 +28,12 @@ print streams
 
 count = 0
 for pi, packet in enumerate(video.demux([streams[0]])):
-    
+
     print 'packet', pi
     for si, subtitle in enumerate(packet.decode()):
 
         print '\tsubtitle', si, subtitle
-        
+
         for ri, rect in enumerate(subtitle.rects):
             if rect.type == 'ass':
                 print '\t\tass: ', rect, rect.ass.rstrip('\n')
@@ -54,9 +54,8 @@ for pi, packet in enumerate(video.demux([streams[0]])):
                     else:
                         img = Image.merge('RGBA', imgs)
                     img.save('subtitles/%04d.png' % count)
-    
+
             count += 1
             if count > 10:
                 pass
                 # exit()
-    

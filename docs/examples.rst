@@ -24,7 +24,7 @@ Writing a movie from numpy
         img[:, :, 0] = 0.5 + 0.5 * np.sin(frame_i / duration * 2 * np.pi)
         img[:, :, 1] = 0.5 + 0.5 * np.sin(frame_i / duration * 2 * np.pi + 2 / 3 * np.pi)
         img[:, :, 2] = 0.5 + 0.5 * np.sin(frame_i / duration * 2 * np.pi + 4 / 3 * np.pi)
-        
+
         img = np.round(255 * img).astype(np.uint8)
         img[img < 0] = 0
         img[img > 255] = 255

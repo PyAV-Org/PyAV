@@ -18,4 +18,3 @@ class TestDictionary(TestCase):
         self.assertEqual(d.pop('key'), 'value')
         self.assertRaises(KeyError, d.pop, 'key')
         self.assertEqual(len(d), 0)
-        

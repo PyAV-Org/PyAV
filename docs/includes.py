@@ -58,7 +58,7 @@ class Visitor(TreeVisitor):
     def visit_CVarDefNode(self, node):
 
         if isinstance(node.declarators[0], Nodes.CNameDeclaratorNode):
-            
+
             # Grab the type name.
             # TODO: Do a better job.
             type_ = node.base_type
@@ -156,7 +156,7 @@ if not doxygen:
             anchor = node.find('anchor').text
 
             url = '%s/%s#%s' % (doxygen_base, anchorfile, anchor)
-            
+
             doxygen[name] = {'url': url}
 
             if node.attrib['kind'] == 'function':
@@ -358,8 +358,3 @@ for extern, events in sorted(defs_by_extern.iteritems()):
             print('.')
 
         print()
-
-
-
-
-

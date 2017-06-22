@@ -89,4 +89,3 @@ if __name__ == '__main__':
     else:
         for path in args.paths:
             go(path)
-

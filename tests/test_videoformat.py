@@ -88,4 +88,3 @@ class TestVideoFormats(TestCase):
         fmt = VideoFormat('pal8', 640, 480)
         self.assertEqual(len(fmt.components), 1)
         self.assertTrue(fmt.has_palette)
-

@@ -14,7 +14,7 @@ from av.video.reformatter cimport VideoReformatter
 
 
 cdef class VideoCodecContext(CodecContext):
-    
+
     def __cinit__(self, *args, **kwargs):
         self.last_w = 0
         self.last_h = 0
@@ -29,7 +29,7 @@ cdef class VideoCodecContext(CodecContext):
         self.ptr.time_base.den = self.ptr.framerate.num or lib.AV_TIME_BASE
 
     cdef _prepare_frames_for_encode(self, Frame input):
-        
+
         if not input:
             return [None]
 
@@ -57,13 +57,13 @@ cdef class VideoCodecContext(CodecContext):
             vframe.ptr.pts = <int64_t>self.encoded_frame_count
 
         self.encoded_frame_count += 1
-        
+
         return [vframe]
 
     cdef _encode(self, Frame frame):
         """Encodes a frame of video, returns a packet if one is ready.
 
-        The output packet does not necessarily contain data for the most recent frame, 
+        The output packet does not necessarily contain data for the most recent frame,
         as encoders can delay, split, and combine input frames internally as needed.
         If called with with no args it will flush out the encoder and return the buffered
         packets until there are none left, at which it will return None.
@@ -86,30 +86,30 @@ cdef class VideoCodecContext(CodecContext):
 
     cdef Frame _alloc_next_frame(self):
         return alloc_video_frame()
-        
+
     cdef _setup_decoded_frame(self, Frame frame):
         CodecContext._setup_decoded_frame(self, frame)
         cdef VideoFrame vframe = frame
         vframe._init_user_attributes()
 
     cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
-        
+
         # Create a frame if we don't have one ready.
         if not self.next_frame:
             self.next_frame = alloc_video_frame()
 
         # Decode video into the frame.
         cdef int completed_frame = 0
-        
+
         cdef int result
-        
+
         with nogil:
             result = lib.avcodec_decode_video2(self.ptr, self.next_frame.ptr, &completed_frame, packet)
         data_consumed[0] = err_check(result)
-        
+
         if not completed_frame:
             return
-        
+
         # Check if the frame size has changed so that we can always have a
         # SwsContext that is ready to go.
         if self.last_w != self.ptr.width or self.last_h != self.ptr.height:
@@ -136,7 +136,7 @@ cdef class VideoCodecContext(CodecContext):
             self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
         else:
             self._format = None
-    
+
     property format:
         def __get__(self):
             return self._format
@@ -173,7 +173,7 @@ cdef class VideoCodecContext(CodecContext):
             return avrational_to_faction(&self.ptr.framerate)
         def __set__(self, value):
             to_avrational(value, &self.ptr.framerate)
-    
+
     property rate:
         """Another name for :attr:`framerate`."""
         def __get__(self):
@@ -192,11 +192,11 @@ cdef class VideoCodecContext(CodecContext):
             return avrational_to_faction(&self.ptr.sample_aspect_ratio) if self.ptr else None
         def __set__(self, value):
             to_avrational(value, &self.ptr.sample_aspect_ratio)
-            
+
     property display_aspect_ratio:
         def __get__(self):
             cdef lib.AVRational dar
-            
+
             lib.av_reduce(
                 &dar.num, &dar.den,
                 self.ptr.width * self.ptr.sample_aspect_ratio.num,

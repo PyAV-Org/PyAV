@@ -64,7 +64,7 @@ cdef class Frame(object):
             self.ptr.height = source.ptr.height
             self.ptr.channel_layout = source.ptr.channel_layout
             self.ptr.channels = source.ptr.channels
-    
+
     cdef _init_user_attributes(self):
         pass # Dummy to match the API of the others.
 
@@ -119,4 +119,3 @@ cdef class Frame(object):
                 return avrational_to_faction(&self._time_base)
         def __set__(self, value):
             to_avrational(value, &self._time_base)
-

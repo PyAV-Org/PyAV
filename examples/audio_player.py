@@ -53,7 +53,7 @@ for pi, fi, frame in decode_iter():
 
     frame = resampler.resample(frame)
     print pi, fi, frame, output.state()
-    
+
     bytes_buffered = output.bufferSize() - output.bytesFree()
     us_processed = output.processedUSecs()
     us_buffered = 1000000 * bytes_buffered / (2 * 16 / 8) / 48000

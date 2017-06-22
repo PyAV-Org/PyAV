@@ -67,4 +67,3 @@ cdef class Buffer(_Buffer):
         if source.length != size:
             raise ValueError('got %d bytes; need %d bytes' % (len(input), size))
         memcpy(self._buffer_ptr(), source.ptr, size)
-

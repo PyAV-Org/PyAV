@@ -5,7 +5,7 @@ from av.utils cimport avrational_to_faction, to_avrational, err_check
 
 
 cdef class Packet(Buffer):
-    
+
     """A packet of encoded data within a :class:`~av.format.Stream`.
 
     This may, or may not include a complete object within a stream.
@@ -18,7 +18,7 @@ cdef class Packet(Buffer):
             lib.av_init_packet(&self.struct)
 
     def __init__(self, input=None):
-        
+
         cdef size_t size = 0
         cdef ByteSource source = None
 
@@ -43,7 +43,7 @@ cdef class Packet(Buffer):
     def __dealloc__(self):
         with nogil:
             lib.av_free_packet(&self.struct)
-    
+
     def __repr__(self):
         return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
             self.__class__.__name__,
@@ -53,7 +53,7 @@ cdef class Packet(Buffer):
             self.struct.size,
             id(self),
         )
-    
+
     # Buffer protocol.
     cdef size_t _buffer_size(self):
         return self.struct.size
@@ -139,7 +139,7 @@ cdef class Packet(Buffer):
                 self.struct.pts = lib.AV_NOPTS_VALUE
             else:
                 self.struct.pts = v
-    
+
     property dts:
         def __get__(self):
             if self.struct.dts != lib.AV_NOPTS_VALUE:
@@ -149,7 +149,7 @@ cdef class Packet(Buffer):
                 self.struct.dts = lib.AV_NOPTS_VALUE
             else:
                 self.struct.dts = v
-    
+
     property pos:
         def __get__(self): return None if self.struct.pos == -1 else self.struct.pos
     property size:
@@ -162,4 +162,3 @@ cdef class Packet(Buffer):
 
     property is_corrupt:
         def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_CORRUPT)
-    
