@@ -32,6 +32,8 @@ cdef class Filter(object):
 
     property options:
         def __get__(self):
+            if self.descriptor is None:
+                return
             return self.descriptor.options
 
     property name:
@@ -49,6 +51,18 @@ cdef class Filter(object):
     property dynamic_outputs:
         def __get__(self):
             return bool(self.ptr.flags & lib.AVFILTER_FLAG_DYNAMIC_OUTPUTS)
+
+    property timeline_support:
+        def __get__(self):
+            return bool(self.ptr.flags & lib.AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC)
+
+    property slice_threads:
+        def __get__(self):
+            return bool(self.ptr.flags & lib.AVFILTER_FLAG_SLICE_THREADS)
+
+    property command_support:
+        def __get__(self):
+            return self.ptr.process_command != NULL
 
     property inputs:
         def __get__(self):
