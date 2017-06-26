@@ -35,6 +35,17 @@ cdef dict _TYPE_NAMES = {
     lib.AV_OPT_TYPE_BOOL: 'BOOL',
 }
 
+cdef tuple _INT_TYPES = (
+    lib.AV_OPT_TYPE_FLAGS,
+    lib.AV_OPT_TYPE_INT,
+    lib.AV_OPT_TYPE_INT64,
+    lib.AV_OPT_TYPE_PIXEL_FMT,
+    lib.AV_OPT_TYPE_SAMPLE_FMT,
+    lib.AV_OPT_TYPE_DURATION,
+    lib.AV_OPT_TYPE_CHANNEL_LAYOUT,
+    lib.AV_OPT_TYPE_BOOL,
+)
+
 
 cdef class Option(object):
 
@@ -60,10 +71,7 @@ cdef class Option(object):
 
     property default:
         def __get__(self):
-            if self.ptr.type in (lib.AV_OPT_TYPE_FLAGS, lib.AV_OPT_TYPE_INT,
-                                 lib.AV_OPT_TYPE_INT64, lib.AV_OPT_TYPE_PIXEL_FMT,
-                                 lib.AV_OPT_TYPE_SAMPLE_FMT, lib.AV_OPT_TYPE_DURATION,
-                                 lib.AV_OPT_TYPE_CHANNEL_LAYOUT, lib.AV_OPT_TYPE_BOOL):
+            if self.ptr.type in _INT_TYPES:
                 return self.ptr.default_val.i64
             if self.ptr.type in (lib.AV_OPT_TYPE_DOUBLE, lib.AV_OPT_TYPE_FLOAT,
                                  lib.AV_OPT_TYPE_RATIONAL):
@@ -73,13 +81,18 @@ cdef class Option(object):
                                  lib.AV_OPT_TYPE_COLOR):
                 return self.ptr.default_val.str if self.ptr.default_val.str != NULL else ''
 
+    def _norm_range(self, value):
+        if self.ptr.type in _INT_TYPES:
+            return int(value)
+        return value
+
     property min:
         def __get__(self):
-            return self.ptr.min
+            return self._norm_range(self.ptr.min)
 
     property max:
         def __get__(self):
-            return self.ptr.max
+            return self._norm_range(self.ptr.max)
 
     property help:
         def __get__(self):
