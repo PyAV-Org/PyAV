@@ -64,7 +64,7 @@ _cflag_parser.add_argument('-I', dest='include_dirs', action='append')
 _cflag_parser.add_argument('-L', dest='library_dirs', action='append')
 _cflag_parser.add_argument('-l', dest='libraries', action='append')
 _cflag_parser.add_argument('-D', dest='define_macros', action='append')
-
+_cflag_parser.add_argument('-R', dest='runtime_library_dirs', action='append')
 def parse_cflags(raw_cflags):
     raw_args = shlex.split(raw_cflags.decode('utf8').strip())
     args, unknown = _cflag_parser.parse_known_args(raw_args)
@@ -437,6 +437,7 @@ class ConfigCommand(Command):
             dict((k, sorted(set(v))) for k, v in extension_extra.items())
         )
 
+        # Apply them.
         for ext in self.distribution.ext_modules:
             for key, value in extension_extra.items():
                 setattr(ext, key, value)
