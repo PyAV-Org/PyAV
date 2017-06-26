@@ -9,12 +9,14 @@ from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
+import argparse
 import errno
 import itertools
 import json
 import os
 import platform
 import re
+import shlex
 import sys
 
 try:
@@ -41,6 +43,11 @@ except ImportError:
 
 is_py3 = sys.version_info[0] >= 3
 
+if is_py3:
+    from shlex import quote as shell_quote
+else:
+    from pipes import quote as shell_quote
+
 
 # We will embed this metadata into the package so it can be recalled for debugging.
 version = '0.4.1.dev0'
@@ -51,6 +58,22 @@ except OSError:
 else:
     git_commit = git_commit.strip()
 
+
+_cflag_parser = argparse.ArgumentParser(add_help=False)
+_cflag_parser.add_argument('-I', dest='include_dirs', action='append')
+_cflag_parser.add_argument('-L', dest='library_dirs', action='append')
+_cflag_parser.add_argument('-l', dest='libraries', action='append')
+_cflag_parser.add_argument('-D', dest='define_macros', action='append')
+
+def parse_cflags(raw_cflags):
+    raw_args = shlex.split(raw_cflags.decode('utf8').strip())
+    args, unknown = _cflag_parser.parse_known_args(raw_args)
+    config = {k: v or [] for k, v in args.__dict__.items()}
+    for i, x in enumerate(config['define_macros']):
+        parts = x.split('=', 1)
+        value = x[1] or None if len(x) == 2 else None
+        config['define_macros'][i] = (parts[0], value)
+    return config, ' '.join(shell_quote(x) for x in unknown)
 
 def get_library_config(name):
     """Get distutils-compatible extension extras for the given library.
@@ -64,22 +87,16 @@ def get_library_config(name):
         print('pkg-config is required for building PyAV')
         exit(1)
 
-    raw_config, err = proc.communicate()
+    raw_cflags, err = proc.communicate()
     if proc.wait():
         return
-    config = {}
-    for chunk in raw_config.decode('utf8').strip().split():
-        if chunk.startswith('-I'):
-            config.setdefault('include_dirs', []).append(chunk[2:])
-        elif chunk.startswith('-L'):
-            config.setdefault('library_dirs', []).append(chunk[2:])
-        elif chunk.startswith('-l'):
-            config.setdefault('libraries', []).append(chunk[2:])
-        elif chunk.startswith('-D'):
-            name = chunk[2:].split('=')[0]
-            config.setdefault('define_macros', []).append((name, None))
 
-    return config
+    known, unknown = parse_cflags(raw_cflags)
+    if unknown:
+        print("pkg-config returned flags we don't understand: {}".format(unknown))
+        exit(1)
+
+    return known
 
 
 def update_extend(dst, src):
@@ -240,7 +257,7 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
     source_path = name + '.c'
     result_path = name + '.json'
 
-    if os.path.exists(result_path):
+    if not force and os.path.exists(result_path):
         try:
             return json.load(open(result_path))
         except ValueError:
@@ -348,6 +365,15 @@ class ConfigCommand(Command):
             ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
+
+        # For some reason we get the feeling that CFLAGS is not respected, so we parse
+        # it here. TODO: Leave any arguments that we can't figure out.
+        for name in 'CFLAGS', 'LDFLAGS':
+            known, unknown = parse_cflags(os.environ.pop(name, ''))
+            if unknown:
+                print("Warning: We don't understand some of {} (and will leave it in the envvar): {}".format(name, unknown))
+                os.environ[name] = unknown
+            update_extend(extension_extra, known)
 
         for name in 'libswresample', 'libavresample':
             # We will look for these in a moment.
