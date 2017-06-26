@@ -206,8 +206,8 @@ def new_compiler(*args, **kwargs):
     All other arguments passed to ``distutils.ccompiler.new_compiler``.
 
     """
+    make_silent = kwargs.pop('silent', True)
     cc = _new_compiler(*args, **kwargs)
-    make_silent = True
     # If MSVC10, initialize the compiler here and add /MANIFEST to linker flags.
     # See Python issue 4431 (https://bugs.python.org/issue4431)
     if is_msvc(cc):
@@ -221,13 +221,13 @@ def new_compiler(*args, **kwargs):
         elif get_build_version() == 14:
             make_silent = False
     # monkey-patch compiler to suppress stdout and stderr.
-    if make_silent and kwargs.pop('silent', True):
+    if make_silent:
         cc.spawn = _CCompiler_spawn_silent
     return cc
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
-                  library_dirs=None, link=True, compiler=None):
+                  library_dirs=None, link=True, compiler=None, force=False, verbose=False):
     """Check that we can compile and link the given source.
 
     Caches results; delete the ``build`` directory to reset.
@@ -246,7 +246,7 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
         except ValueError:
             pass
 
-    cc = new_compiler(compiler=compiler)
+    cc = new_compiler(compiler=compiler, silent=not verbose)
 
     with open(source_path, 'w') as fh:
         if is_msvc(cc):
@@ -427,9 +427,11 @@ class ReflectCommand(Command):
         ('library-dirs=', 'L', "directories to search for external C libraries" + sep_by),
         ('no-pkg-config', None, "do not use pkg-config to configure dependencies"),
         ('compiler=', 'c', "specify the compiler type"),
+        ('force', 'f', "don't use cached results"),
+        ('debug', 'v', "don't silence the compiler while testing"),
     ]
 
-    boolean_options = ['no-pkg-config']
+    boolean_options = ['no-pkg-config', 'force', 'debug']
 
     def initialize_options(self):
         self.compiler = None
@@ -438,6 +440,8 @@ class ReflectCommand(Command):
         self.libraries = None
         self.library_dirs = None
         self.no_pkg_config = None
+        self.force = None
+        self.debug = None
 
     def finalize_options(self):
         self.set_undefined_options('build',
@@ -503,13 +507,15 @@ class ReflectCommand(Command):
             'avcodec_send_packet',
 
         ):
-            print("looking for %s... " % func_name, end='')
+            print("looking for %s... " % func_name, end='\n' if self.debug else '')
             results[func_name] = compile_check(
                 name=os.path.join(tmp_dir, func_name),
                 code='%s()' % func_name,
                 libraries=config['libraries'],
                 library_dirs=config['library_dirs'],
                 compiler=self.compiler,
+                force=self.force,
+                verbose=self.debug,
             )
             print('found' if results[func_name] else 'missing')
 
@@ -521,7 +527,7 @@ class ReflectCommand(Command):
             # What we actually care about.
             'AV_OPT_TYPE_BOOL',
         ):
-            print("looking for %s..." % enum_name, end='')
+            print("looking for %s..." % enum_name, end='\n' if self.debug else '')
             results[enum_name] = compile_check(
                 name=os.path.join(tmp_dir, enum_name),
                 code='int x = %s' % enum_name,
@@ -529,6 +535,8 @@ class ReflectCommand(Command):
                 include_dirs=config['include_dirs'],
                 link=False,
                 compiler=self.compiler,
+                force=self.force,
+                verbose=self.debug,
             )
             print("found" if results[enum_name] else "missing")
 
@@ -542,7 +550,7 @@ class ReflectCommand(Command):
 
         ):
             name = '%s.%s' % (struct_name, member_name)
-            print("looking for %s... " % name, end='')
+            print("looking for %s... " % name, end='\n' if self.debug else '')
             results[name] = compile_check(
                 name=os.path.join(tmp_dir, name),
                 code='struct %s x; x.%s;' % (struct_name, member_name),
@@ -550,6 +558,8 @@ class ReflectCommand(Command):
                 include_dirs=config['include_dirs'],
                 link=False,
                 compiler=self.compiler,
+                force=self.force,
+                verbose=self.debug,
             )
             print('found' if results[name] else 'missing')
 
@@ -581,8 +591,10 @@ class ReflectCommand(Command):
                 print('We look for it only as a sanity check to make sure the build\n'
                       'process is working as expected. It is not, so we must abort.\n'
                       '\n'
-                      'Please open a ticket at https://github.com/mikeboers/PyAV/issues\n'
-                      'with the folowing information:\n')
+                      'You can see the compiler output for the reflection process via:\n'
+                      '    python setup.py reflect --force --debug\n'
+                      '\n'
+                      'Here is the config we gathered so far:\n')
                 dump_config()
                 exit(1)
 
