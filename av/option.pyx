@@ -108,11 +108,12 @@ cdef class Option(object):
         )
 
 
-cdef OptionChoice wrap_option_choice(lib.AVOption *ptr):
+cdef OptionChoice wrap_option_choice(lib.AVOption *ptr, bint is_default):
     if ptr == NULL:
         return None
     cdef OptionChoice obj = OptionChoice(_cinit_sentinel)
     obj.ptr = ptr
+    obj.is_default = is_default
     return obj
 
 
