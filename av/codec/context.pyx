@@ -7,6 +7,7 @@ from libc.string cimport memcpy
 cimport libav as lib
 
 from av.codec.codec cimport Codec, wrap_codec
+from av.descriptor cimport wrap_avclass
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.packet cimport Packet
@@ -64,6 +65,12 @@ cdef class CodecContext(object):
         self.ptr.refcounted_frames = 1
 
         self.stream_index = -1
+
+    property descriptor:
+        def __get__(self):
+            if self._descriptor is None:
+                self._descriptor = wrap_avclass(self.ptr.av_class)
+            return self._descriptor
 
     property is_open:
         def __get__(self):

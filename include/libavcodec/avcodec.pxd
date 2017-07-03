@@ -89,6 +89,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef struct AVCodecContext:
 
+        AVClass *av_class
+
         AVMediaType codec_type
         char codec_name[32]
         unsigned int codec_tag
