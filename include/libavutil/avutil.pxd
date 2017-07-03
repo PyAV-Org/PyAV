@@ -245,6 +245,16 @@ cdef extern from "libavutil/opt.h" nogil:
         const char *str
         AVRational q
 
+    cdef enum AVOptionFlags:
+        AV_OPT_FLAG_ENCODING_PARAM
+        AV_OPT_FLAG_DECODING_PARAM
+        AV_OPT_FLAG_AUDIO_PARAM
+        AV_OPT_FLAG_VIDEO_PARAM
+        AV_OPT_FLAG_SUBTITLE_PARAM
+        AV_OPT_FLAG_EXPORT
+        AV_OPT_FLAG_READONLY
+        AV_OPT_FLAG_FILTERING_PARAM
+
     cdef struct AVOption:
 
         const char *name

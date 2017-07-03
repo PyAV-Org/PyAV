@@ -1,5 +1,7 @@
 cimport libav as lib
 
+from av.utils cimport flag_in_bitfield
+
 
 cdef object _cinit_sentinel = object()
 
@@ -47,15 +49,48 @@ cdef tuple _INT_TYPES = (
 )
 
 
-cdef class Option(object):
+cdef class BaseOption(object):
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('Cannot construct av.Option')
+            raise RuntimeError('Cannot construct av.%s' % self.__class__.__name__)
 
     property name:
         def __get__(self):
             return self.ptr.name
+
+    property help:
+        def __get__(self):
+            return self.ptr.help if self.ptr.help != NULL else ''
+
+    # Option flags
+    property is_encoding_param:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_ENCODING_PARAM)
+    property is_decoding_param:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_DECODING_PARAM)
+    property is_audio_param:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_AUDIO_PARAM)
+    property is_video_param:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_VIDEO_PARAM)
+    property is_subtitle_param:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_SUBTITLE_PARAM)
+    property is_export:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_EXPORT)
+    property is_readonly:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_READONLY)
+    property is_filtering_param:
+        def __get__(self):
+            return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_FILTERING_PARAM)
+
+
+cdef class Option(BaseOption):
 
     property type:
         def __get__(self):
@@ -94,10 +129,6 @@ cdef class Option(object):
         def __get__(self):
             return self._norm_range(self.ptr.max)
 
-    property help:
-        def __get__(self):
-            return self.ptr.help if self.ptr.help != NULL else ''
-
     def __repr__(self):
         return '<av.%s %s (%s at *0x%x) at 0x%x>' % (
             self.__class__.__name__,
@@ -117,23 +148,11 @@ cdef OptionChoice wrap_option_choice(lib.AVOption *ptr, bint is_default):
     return obj
 
 
-cdef class OptionChoice(object):
+cdef class OptionChoice(BaseOption):
     """
     Represents AV_OPT_TYPE_CONST options which are essentially
     choices of non-const option with same unit.
     """
-
-    def __cinit__(self, sentinel):
-        if sentinel is not _cinit_sentinel:
-            raise RuntimeError('Cannot construct av.OptionChoice')
-
-    property name:
-        def __get__(self):
-            return self.ptr.name
-
-    property help:
-        def __get__(self):
-            return self.ptr.help if self.ptr.help != NULL else ''
 
     property value:
         def __get__(self):

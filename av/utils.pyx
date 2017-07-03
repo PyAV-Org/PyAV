@@ -181,3 +181,11 @@ cdef str media_type_to_string(lib.AVMediaType media_type):
         return "attachment"
     else:
         return "unknown"
+
+
+cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
+    # Not every flag exists in every version of FFMpeg and LibAV, so we
+    # define them to 0.
+    if not flag:
+        return None
+    return bool(bitfield & flag)

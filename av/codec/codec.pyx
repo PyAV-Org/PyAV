@@ -4,7 +4,7 @@ from warnings import warn
 
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
-from av.utils cimport media_type_to_string
+from av.utils cimport flag_in_bitfield, media_type_to_string
 from av.video.format cimport get_video_format
 
 cdef object _cinit_sentinel = object()
@@ -17,14 +17,6 @@ cdef Codec wrap_codec(lib.AVCodec *ptr):
     codec.is_encoder = lib.av_codec_is_encoder(ptr)
     codec._init()
     return codec
-
-
-cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
-    # Not every flag exists in every version of FFMpeg and LibAV, so we
-    # define them to 0.
-    if not flag:
-        return None
-    return bool(bitfield & flag)
 
 
 class UnknownCodecError(ValueError):
