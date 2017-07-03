@@ -184,12 +184,14 @@ cdef class Codec(object):
         def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
 
-
 codecs_available = set()
 cdef lib.AVCodec *ptr = lib.av_codec_next(NULL)
 while ptr:
     codecs_available.add(ptr.name)
     ptr = lib.av_codec_next(ptr)
+
+
+codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 
 
 def dump_codecs():

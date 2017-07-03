@@ -82,3 +82,6 @@ cdef lib.AVFilter *ptr = lib.avfilter_next(NULL)
 while ptr:
     filters_available.add(ptr.name)
     ptr = lib.avfilter_next(ptr)
+
+
+filter_descriptor = wrap_avclass(lib.avfilter_get_class())

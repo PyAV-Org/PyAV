@@ -249,6 +249,8 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
 
     cdef int avformat_free_context(AVFormatContext *ctx)
 
+    cdef AVClass* avformat_get_class()
+
     cdef void av_dump_format(
         AVFormatContext *ctx,
         int index,

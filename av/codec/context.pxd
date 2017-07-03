@@ -4,7 +4,6 @@ cimport libav as lib
 
 from av.codec.codec cimport Codec
 from av.container.core cimport ContainerProxy
-from av.descriptor cimport Descriptor
 from av.frame cimport Frame
 from av.packet cimport Packet
 
@@ -29,8 +28,6 @@ cdef class CodecContext(object):
     cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec)
 
     cdef readonly Codec codec
-
-    cdef Descriptor _descriptor
 
     cdef public dict options
 

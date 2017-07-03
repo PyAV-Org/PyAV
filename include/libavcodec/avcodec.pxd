@@ -159,6 +159,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef void avcodec_free_context(AVCodecContext **ctx)
 
     cdef int avcodec_get_context_defaults3(AVCodecContext *ctx, AVCodec *codec)
+    cdef AVClass* avcodec_get_class()
     cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
     cdef struct AVCodecDescriptor:
