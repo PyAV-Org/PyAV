@@ -14,28 +14,27 @@ cdef Option wrap_option(tuple choices, lib.AVOption *ptr):
     return obj
 
 
-cdef dict _TYPE_NAMES = {
-    # TODO: Should these be lower? Or perhaps a Python enum?
-    lib.AV_OPT_TYPE_FLAGS: 'FLAGS',
-    lib.AV_OPT_TYPE_INT: 'INT',
-    lib.AV_OPT_TYPE_INT64: 'INT64',
-    lib.AV_OPT_TYPE_DOUBLE: 'DOUBLE',
-    lib.AV_OPT_TYPE_FLOAT: 'FLOAT',
-    lib.AV_OPT_TYPE_STRING: 'STRING',
-    lib.AV_OPT_TYPE_RATIONAL: 'RATIONAL',
-    lib.AV_OPT_TYPE_BINARY: 'BINARY',
-    lib.AV_OPT_TYPE_DICT: 'DICT',
-    #lib.AV_OPT_TYPE_UINT64: 'UINT64', # Added recently, and not yet used AFAICT.
-    lib.AV_OPT_TYPE_CONST: 'CONST',
-    lib.AV_OPT_TYPE_IMAGE_SIZE: 'IMAGE_SIZE',
-    lib.AV_OPT_TYPE_PIXEL_FMT: 'PIXEL_FMT',
-    lib.AV_OPT_TYPE_SAMPLE_FMT: 'SAMPLE_FMT',
-    lib.AV_OPT_TYPE_VIDEO_RATE: 'VIDEO_RATE',
-    lib.AV_OPT_TYPE_DURATION: 'DURATION',
-    lib.AV_OPT_TYPE_COLOR: 'COLOR',
-    lib.AV_OPT_TYPE_CHANNEL_LAYOUT: 'CHANNEL_LAYOUT',
-    lib.AV_OPT_TYPE_BOOL: 'BOOL',
-}
+cpdef enum OptionTypes:
+    FLAGS = lib.AV_OPT_TYPE_FLAGS
+    INT = lib.AV_OPT_TYPE_INT
+    INT64 = lib.AV_OPT_TYPE_INT64
+    DOUBLE = lib.AV_OPT_TYPE_DOUBLE
+    FLOAT = lib.AV_OPT_TYPE_FLOAT
+    STRING = lib.AV_OPT_TYPE_STRING
+    RATIONAL = lib.AV_OPT_TYPE_RATIONAL
+    BINARY = lib.AV_OPT_TYPE_BINARY
+    DICT = lib.AV_OPT_TYPE_DICT
+    #UINT64 = lib.AV_OPT_TYPE_UINT64 # Added recently, and not yet used AFAICT.
+    CONST = lib.AV_OPT_TYPE_CONST
+    IMAGE_SIZE = lib.AV_OPT_TYPE_IMAGE_SIZE
+    PIXEL_FMT = lib.AV_OPT_TYPE_PIXEL_FMT
+    SAMPLE_FMT = lib.AV_OPT_TYPE_SAMPLE_FMT
+    VIDEO_RATE = lib.AV_OPT_TYPE_VIDEO_RATE
+    DURATION = lib.AV_OPT_TYPE_DURATION
+    COLOR = lib.AV_OPT_TYPE_COLOR
+    CHANNEL_LAYOUT = lib.AV_OPT_TYPE_CHANNEL_LAYOUT
+    BOOL = lib.AV_OPT_TYPE_BOOL
+
 
 cdef tuple _INT_TYPES = (
     lib.AV_OPT_TYPE_FLAGS,
@@ -47,6 +46,17 @@ cdef tuple _INT_TYPES = (
     lib.AV_OPT_TYPE_CHANNEL_LAYOUT,
     lib.AV_OPT_TYPE_BOOL,
 )
+
+
+cpdef enum OptionFlags:
+    ENCODING_PARAM = lib.AV_OPT_FLAG_ENCODING_PARAM
+    DECODING_PARAM = lib.AV_OPT_FLAG_DECODING_PARAM
+    AUDIO_PARAM = lib.AV_OPT_FLAG_AUDIO_PARAM
+    VIDEO_PARAM = lib.AV_OPT_FLAG_VIDEO_PARAM
+    SUBTITLE_PARAM = lib.AV_OPT_FLAG_SUBTITLE_PARAM
+    EXPORT = lib.AV_OPT_FLAG_EXPORT
+    READONLY = lib.AV_OPT_FLAG_READONLY
+    FILTERING_PARAM = lib.AV_OPT_FLAG_FILTERING_PARAM
 
 
 cdef class BaseOption(object):
@@ -62,6 +72,10 @@ cdef class BaseOption(object):
     property help:
         def __get__(self):
             return self.ptr.help if self.ptr.help != NULL else ''
+
+    property flags:
+        def __get__(self):
+            return self.ptr.flags
 
     # Option flags
     property is_encoding_param:
@@ -94,7 +108,7 @@ cdef class Option(BaseOption):
 
     property type:
         def __get__(self):
-            return _TYPE_NAMES.get(self.ptr.type)
+            return OptionTypes(self.ptr.type) if self.ptr.type in OptionTypes else None
 
     property offset:
         """

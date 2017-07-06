@@ -1,2 +1,2 @@
-from .filter import Filter, filters_available, filter_descriptor
+from .filter import Filter, FilterFlags, filter_descriptor, filters_available
 from .graph import Graph

@@ -245,7 +245,7 @@ cdef extern from "libavutil/opt.h" nogil:
         const char *str
         AVRational q
 
-    cdef enum AVOptionFlags:
+    cdef enum:
         AV_OPT_FLAG_ENCODING_PARAM
         AV_OPT_FLAG_DECODING_PARAM
         AV_OPT_FLAG_AUDIO_PARAM
@@ -296,16 +296,17 @@ cdef extern from "libavutil/log.h" nogil:
 
         AVOption *option
 
-    int AV_LOG_QUIET
-    int AV_LOG_PANIC
-    int AV_LOG_FATAL
-    int AV_LOG_ERROR
-    int AV_LOG_WARNING
-    int AV_LOG_INFO
-    int AV_LOG_VERBOSE
-    int AV_LOG_DEBUG
-    int AV_LOG_TRACE
-    int AV_LOG_MAX_OFFSET
+    cdef enum:
+        AV_LOG_QUIET
+        AV_LOG_PANIC
+        AV_LOG_FATAL
+        AV_LOG_ERROR
+        AV_LOG_WARNING
+        AV_LOG_INFO
+        AV_LOG_VERBOSE
+        AV_LOG_DEBUG
+        AV_LOG_TRACE
+        AV_LOG_MAX_OFFSET
 
     # Send a log.
     void av_log(void *ptr, int level, const char *fmt, ...)

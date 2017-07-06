@@ -27,11 +27,12 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         const AVFilterPad *outputs
         int (*process_command)(AVFilterContext *, const char *cmd, const char *arg, char *res, int res_len, int flags)
 
-    cdef int AVFILTER_FLAG_DYNAMIC_INPUTS
-    cdef int AVFILTER_FLAG_DYNAMIC_OUTPUTS
-    cdef int AVFILTER_FLAG_SLICE_THREADS
-    cdef int AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC
-    cdef int AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL
+    cdef enum:
+        AVFILTER_FLAG_DYNAMIC_INPUTS
+        AVFILTER_FLAG_DYNAMIC_OUTPUTS
+        AVFILTER_FLAG_SLICE_THREADS
+        AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC
+        AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL
 
     cdef AVFilter* avfilter_get_by_name(const char *name)
 

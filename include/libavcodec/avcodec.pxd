@@ -10,46 +10,51 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef void avcodec_register_all()
 
     cdef int64_t AV_NOPTS_VALUE
-    cdef int CODEC_FLAG_GLOBAL_HEADER
 
     # AVCodecDescriptor.props
-    cdef uint64_t AV_CODEC_PROP_INTRA_ONLY
-    cdef uint64_t AV_CODEC_PROP_LOSSY
-    cdef uint64_t AV_CODEC_PROP_LOSSLESS
-    cdef uint64_t AV_CODEC_PROP_REORDER
-    cdef uint64_t AV_CODEC_PROP_BITMAP_SUB
-    cdef uint64_t AV_CODEC_PROP_TEXT_SUB
+    cdef enum:
+        AV_CODEC_PROP_INTRA_ONLY
+        AV_CODEC_PROP_LOSSY
+        AV_CODEC_PROP_LOSSLESS
+        AV_CODEC_PROP_REORDER
+        AV_CODEC_PROP_BITMAP_SUB
+        AV_CODEC_PROP_TEXT_SUB
 
     #AVCodec.capabilities
-    cdef uint64_t CODEC_CAP_DRAW_HORIZ_BAND
-    cdef uint64_t CODEC_CAP_DR1
-    cdef uint64_t CODEC_CAP_TRUNCATED
-    cdef uint64_t CODEC_CAP_HWACCEL
-    cdef uint64_t CODEC_CAP_DELAY
-    cdef uint64_t CODEC_CAP_SMALL_LAST_FRAME
-    cdef uint64_t CODEC_CAP_HWACCEL_VDPAU
-    cdef uint64_t CODEC_CAP_SUBFRAMES
-    cdef uint64_t CODEC_CAP_EXPERIMENTAL
-    cdef uint64_t CODEC_CAP_CHANNEL_CONF
-    cdef uint64_t CODEC_CAP_NEG_LINESIZES
-    cdef uint64_t CODEC_CAP_FRAME_THREADS
-    cdef uint64_t CODEC_CAP_SLICE_THREADS
-    cdef uint64_t CODEC_CAP_PARAM_CHANGE
-    cdef uint64_t CODEC_CAP_AUTO_THREADS
-    cdef uint64_t CODEC_CAP_VARIABLE_FRAME_SIZE
-    cdef uint64_t CODEC_CAP_INTRA_ONLY
-    cdef uint64_t CODEC_CAP_LOSSLESS
+    cdef enum:
+        CODEC_CAP_DRAW_HORIZ_BAND
+        CODEC_CAP_DR1
+        CODEC_CAP_TRUNCATED
+        CODEC_CAP_HWACCEL
+        CODEC_CAP_DELAY
+        CODEC_CAP_SMALL_LAST_FRAME
+        CODEC_CAP_HWACCEL_VDPAU
+        CODEC_CAP_SUBFRAMES
+        CODEC_CAP_EXPERIMENTAL
+        CODEC_CAP_CHANNEL_CONF
+        CODEC_CAP_NEG_LINESIZES
+        CODEC_CAP_FRAME_THREADS
+        CODEC_CAP_SLICE_THREADS
+        CODEC_CAP_PARAM_CHANGE
+        CODEC_CAP_AUTO_THREADS
+        CODEC_CAP_VARIABLE_FRAME_SIZE
+        CODEC_CAP_INTRA_ONLY
+        CODEC_CAP_LOSSLESS
 
-    cdef uint64_t CODEC_FLAG_TRUNCATED
+    cdef enum:
+        CODEC_FLAG_GLOBAL_HEADER
+        CODEC_FLAG_TRUNCATED
 
-    cdef int AV_PKT_FLAG_KEY
-    cdef int AV_PKT_FLAG_CORRUPT
+    cdef enum:
+        AV_PKT_FLAG_KEY
+        AV_PKT_FLAG_CORRUPT
 
-    cdef int FF_COMPLIANCE_VERY_STRICT
-    cdef int FF_COMPLIANCE_STRICT
-    cdef int FF_COMPLIANCE_NORMAL
-    cdef int FF_COMPLIANCE_UNOFFICIAL
-    cdef int FF_COMPLIANCE_EXPERIMENTAL
+    cdef enum:
+        FF_COMPLIANCE_VERY_STRICT
+        FF_COMPLIANCE_STRICT
+        FF_COMPLIANCE_NORMAL
+        FF_COMPLIANCE_UNOFFICIAL
+        FF_COMPLIANCE_EXPERIMENTAL
 
     cdef enum AVCodecID:
         AV_CODEC_ID_NONE
