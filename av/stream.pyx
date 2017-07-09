@@ -61,7 +61,9 @@ cdef class Stream(object):
 
         self._codec_context = stream.codec
 
-        self.metadata = avdict_to_dict(stream.metadata)
+        self.metadata = avdict_to_dict(stream.metadata,
+                                       encoding=self._container.encoding,
+                                       errors=self._container.errors)
 
         # This is an input container!
         if self._container.ptr.iformat:
@@ -113,7 +115,8 @@ cdef class Stream(object):
         setattr(self.codec_context, name, value)
 
     cdef _finalize_for_output(self):
-        dict_to_avdict(&self._stream.metadata, self.metadata, clear=True)
+        dict_to_avdict(&self._stream.metadata, self.metadata, clear=True,
+                       encoding=self._container.encoding, errors=self._container.errors)
         if not self._stream.time_base.num:
             self._stream.time_base = self._codec_context.time_base
 

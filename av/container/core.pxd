@@ -17,6 +17,8 @@ cdef class ContainerProxy(object):
     cdef flush_buffers(self)
 
     cdef str name
+    cdef str encoding
+    cdef str errors
 
     # File-like source.
     cdef object file
@@ -50,3 +52,6 @@ cdef class Container(object):
 
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
+
+    cdef str encoding
+    cdef str errors

@@ -32,6 +32,8 @@ cdef class ContainerProxy(object):
 
         # Copy key attributes.
         self.name = container.name
+        self.encoding = container.encoding
+        self.errors = container.errors
         self.file = container.file
         self.writeable = container.writeable
 
@@ -169,7 +171,7 @@ cdef class ContainerProxy(object):
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, file_, format_name, options):
+    def __cinit__(self, sentinel, file_, format_name, options, encoding, errors):
 
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -189,6 +191,9 @@ cdef class Container(object):
 
         self.options = Dictionary(**(options or {}))
 
+        self.encoding = encoding
+        self.errors = errors
+
         self.proxy = ContainerProxy(_cinit_sentinel, self)
 
         if format_name is None:
@@ -199,8 +204,8 @@ cdef class Container(object):
 
 
 
-def open(file, mode=None, format=None, options=None):
-    """open(file, mode='r', format=None, options=None)
+def open(file, mode=None, format=None, options=None, encoding=None, errors='strict'):
+    """open(file, mode='r', format=None, options=None, encoding=None, errors='strict')
 
     Main entrypoint to opening files/streams.
 
@@ -208,6 +213,11 @@ def open(file, mode=None, format=None, options=None):
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and streams.
+    :param str encoding: Encoding to use when reading or writing file metadata.
+        Defaults to utf-8, except no decoding is performed by default when
+        reading on Python 2 (returning ``str`` instead of ``unicode``).
+    :param str errors: Specifies how to handle encoding errors; behaves like
+        ``str.encode`` parameter. Defaults to strict.
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -223,7 +233,7 @@ def open(file, mode=None, format=None, options=None):
         mode = 'r'
 
     if mode.startswith('r'):
-        return InputContainer(_cinit_sentinel, file, format, options)
+        return InputContainer(_cinit_sentinel, file, format, options, encoding, errors)
     if mode.startswith('w'):
-        return OutputContainer(_cinit_sentinel, file, format, options)
+        return OutputContainer(_cinit_sentinel, file, format, options, encoding, errors)
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)

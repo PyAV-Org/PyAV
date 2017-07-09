@@ -145,7 +145,8 @@ cdef class OutputContainer(Container):
             err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
         # Copy the metadata dict.
-        dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True)
+        dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True,
+                       encoding=self.encoding, errors=self.errors)
 
         cdef _Dictionary options = self.options.copy()
         self.proxy.err_check(lib.avformat_write_header(
