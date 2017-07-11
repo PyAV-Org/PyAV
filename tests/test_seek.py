@@ -30,6 +30,12 @@ class TestSeek(TestCase):
         self.assertRaises(TypeError, container.seek, 1.0)
         self.assertRaises(TypeError, container.streams.video[0].seek, 1.0)
 
+    def test_seek_int64(self):
+        # Assert that it accepts large values.
+        # Issue 251 pointed this out.
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container.seek(2**32)
+
     def test_seek_start(self):
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
 

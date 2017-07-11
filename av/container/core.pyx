@@ -127,7 +127,7 @@ cdef class ContainerProxy(object):
         # was super confusing, so lets go in the complete opposite direction.
         if not isinstance(offset, int):
             raise TypeError('Container.seek only accepts integer offset.', type(offset))
-        cdef int c_offset = offset
+        cdef int64_t c_offset = offset
 
         cdef int flags = 0
         cdef int ret
