@@ -258,7 +258,6 @@ cdef class VideoFrame(Frame):
             channels = 3
             arrshape =  (plane.height, plane.width, channels)
             arrstrides = (plane.line_size, channels, data_type.itemsize)
-            return np.frombuffer(frame.planes[0], np.uint8).reshape(frame.height, frame.width, -1)
         if frame.format.name == ('gray16le', 'gray16be'):
             data_type = np.dtype('<u2')
             channels = 1
