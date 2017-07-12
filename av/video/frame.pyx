@@ -248,15 +248,27 @@ cdef class VideoFrame(Frame):
             raise ValueError('Cannot conveniently get numpy array from multiplane frame')
 
         import numpy as np
+        from numpy.lib.stride_tricks import as_strided
 
         # We only suppose this convenience for a few types.
         # TODO: Make this more general (if we can)
+        plane = frame.planes[0]
         if frame.format.name in ('rgb24', 'bgr24'):
+            data_type = np.dtype(np.uint8)
+            channels = 3
+            arrshape =  (plane.height, plane.width, channels)
+            arrstrides = (plane.line_size, channels, data_type.itemsize)
             return np.frombuffer(frame.planes[0], np.uint8).reshape(frame.height, frame.width, -1)
         if frame.format.name == ('gray16le', 'gray16be'):
-            return np.frombuffer(frame.planes[0], np.dtype('<u2')).reshape(frame.height, frame.width)
+            data_type = np.dtype('<u2')
+            channels = 1
+            arrshape =  (plane.height, plane.width)
+            arrstrides = (plane.line_size, data_type.itemsize)
         else:
             raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
+
+        return as_strided(np.frombuffer(plane, dtype=data_type) ,
+                          strides=arrstrides , shape=arrshape)
 
     def to_qimage(self, **kwargs):
         """Get an RGB ``QImage`` of this frame.
