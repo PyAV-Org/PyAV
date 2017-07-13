@@ -128,7 +128,7 @@ cdef class ContainerProxy(object):
 
         # We used to take floats here and assume they were in seconds. This
         # was super confusing, so lets go in the complete opposite direction.
-        if not isinstance(offset, int):
+        if not isinstance(offset, (int, long)):
             raise TypeError('Container.seek only accepts integer offset.', type(offset))
         cdef int64_t c_offset = offset
 
