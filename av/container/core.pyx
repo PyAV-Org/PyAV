@@ -25,6 +25,7 @@ cdef class ContainerProxy(object):
 
     def __init__(self, sentinel, Container container):
 
+        self.is_opened = False
         cdef int res
 
         if sentinel is not _cinit_sentinel:
@@ -106,20 +107,22 @@ cdef class ContainerProxy(object):
                     &options.ptr
                 )
             self.err_check(res)
+            self.is_opened = True
 
     def __dealloc__(self):
         with nogil:
 
             # Let FFmpeg handle it if it fully opened.
-            if self.ptr and not self.writeable:
+            if self.is_opened:
                 lib.avformat_close_input(&self.ptr)
 
             # Manually free things.
             else:
-                if self.buffer:
-                    lib.av_freep(&self.buffer)
                 if self.iocontext:
+                    lib.av_freep(&self.iocontext.buffer)
                     lib.av_freep(&self.iocontext)
+                else:
+                    lib.av_freep(&self.buffer)
 
     cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame):
 

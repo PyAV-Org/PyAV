@@ -144,7 +144,7 @@ class TestEncodeStreamSemantics(TestCase):
         self.assertIs(vpacket.stream, vstream)
         self.assertEqual(vpacket.stream_index, 0)
 
-        for i in xrange(10):
+        for i in range(10):
             aframe = AudioFrame('s16', 'stereo', samples=astream.frame_size)
             aframe.rate = 48000
             apackets = astream.encode(aframe)
