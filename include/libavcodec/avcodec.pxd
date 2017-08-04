@@ -45,6 +45,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef int AV_PKT_FLAG_KEY
     cdef int AV_PKT_FLAG_CORRUPT
 
+    cdef int AV_FRAME_FLAG_CORRUPT
+
     cdef int FF_COMPLIANCE_VERY_STRICT
     cdef int FF_COMPLIANCE_STRICT
     cdef int FF_COMPLIANCE_NORMAL
@@ -214,7 +216,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int channels # Number of audio channels
         int channel_layout # Audio channel_layout
 
-
         int64_t pts
         int64_t pkt_pts # Deprecated.
         int64_t pkt_dts # Deprecated.
@@ -224,6 +225,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         uint8_t **base
         void *opaque
         AVDictionary *metadata
+        int flags
 
 
     cdef AVFrame* avcodec_alloc_frame()

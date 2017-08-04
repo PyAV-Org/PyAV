@@ -119,3 +119,6 @@ cdef class Frame(object):
                 return avrational_to_faction(&self._time_base)
         def __set__(self, value):
             to_avrational(value, &self._time_base)
+
+    property is_corrupt:
+        def __get__(self): return bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
