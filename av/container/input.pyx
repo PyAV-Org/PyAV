@@ -49,7 +49,7 @@ cdef class InputContainer(Container):
         for i in range(self.proxy.ptr.nb_streams):
             self.streams.add_stream(wrap_stream(self, self.proxy.ptr.streams[i]))
 
-        self.metadata = avdict_to_dict(self.proxy.ptr.metadata, self.encoding, self.errors)
+        self.metadata = avdict_to_dict(self.proxy.ptr.metadata, self.metadata_encoding, self.metadata_errors)
 
     property start_time:
         def __get__(self): return self.proxy.ptr.start_time

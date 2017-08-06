@@ -146,7 +146,7 @@ cdef class OutputContainer(Container):
 
         # Copy the metadata dict.
         dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True,
-                       encoding=self.encoding, errors=self.errors)
+                       encoding=self.metadata_encoding, errors=self.metadata_errors)
 
         cdef _Dictionary options = self.options.copy()
         self.proxy.err_check(lib.avformat_write_header(
