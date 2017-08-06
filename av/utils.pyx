@@ -111,8 +111,22 @@ cdef int err_check(int res=0, str filename=None) except -1:
 # === DICTIONARIES ===
 # ====================
 
+cdef bint _py3k = str is unicode
 
-cdef dict avdict_to_dict(lib.AVDictionary *input):
+cdef _decode(char *s, encoding, errors):
+    if encoding is None:
+        return s
+    else:
+        return (<bytes>s).decode(encoding, errors)
+
+cdef bytes _encode(s, encoding, errors):
+    if isinstance(s, unicode):
+        return s.encode(encoding, errors)
+    return s
+
+cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding=None, str errors='strict'):
+    if _py3k and encoding is None:
+        encoding = 'utf8'
 
     cdef lib.AVDictionaryEntry *element = NULL
     cdef dict output = {}
@@ -120,15 +134,18 @@ cdef dict avdict_to_dict(lib.AVDictionary *input):
         element = lib.av_dict_get(input, "", element, lib.AV_DICT_IGNORE_SUFFIX)
         if element == NULL:
             break
-        output[element.key] = element.value
+        output[_decode(element.key, encoding, errors)] = _decode(element.value, encoding, errors)
     return output
 
 
-cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True):
+cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True, str encoding=None, str errors='strict'):
     if clear:
         lib.av_dict_free(dst)
+    if encoding is None:
+        encoding = 'utf8'
     for key, value in src.iteritems():
-        err_check(lib.av_dict_set(dst, key, value, 0))
+        err_check(lib.av_dict_set(dst, _encode(key, encoding, errors),
+                                  _encode(value, encoding, errors), 0))
 
 
 

@@ -16,7 +16,10 @@ cdef class ContainerProxy(object):
     cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame)
     cdef flush_buffers(self)
 
+    # Copies from Container.
     cdef str name
+    cdef str metadata_encoding
+    cdef str metadata_errors
 
     # File-like source.
     cdef object file
@@ -50,3 +53,6 @@ cdef class Container(object):
 
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
+
+    cdef readonly str metadata_encoding
+    cdef readonly str metadata_errors
