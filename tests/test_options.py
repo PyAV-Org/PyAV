@@ -1,6 +1,6 @@
-from av.option import Option
-
 from common import *
+
+from av.option import Option, OptionTypes as types
 
 
 class TestOptions(TestCase):
@@ -17,4 +17,4 @@ class TestOptions(TestCase):
         self.assertEqual(opt.name, 'use_absolute_path')
 
         # This was not a good option to actually test.
-        self.assertIn(opt.type, ('BOOL', 'INT'))
+        self.assertIn(opt.type, (types.BOOL, types.INT))
