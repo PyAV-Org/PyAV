@@ -8,7 +8,7 @@ cdef class BaseOption(object):
 
 cdef class Option(BaseOption):
 
-    cdef readonly tuple choices # choices tuple
+    cdef readonly tuple choices
 
 
 cdef class OptionChoice(BaseOption):

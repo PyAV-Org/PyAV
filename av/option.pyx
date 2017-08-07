@@ -14,7 +14,7 @@ cdef Option wrap_option(tuple choices, lib.AVOption *ptr):
     return obj
 
 
-cpdef enum OptionTypes:
+cpdef enum OptionType:
     FLAGS = lib.AV_OPT_TYPE_FLAGS
     INT = lib.AV_OPT_TYPE_INT
     INT64 = lib.AV_OPT_TYPE_INT64
@@ -108,7 +108,7 @@ cdef class Option(BaseOption):
 
     property type:
         def __get__(self):
-            return OptionTypes(self.ptr.type) if self.ptr.type in OptionTypes else None
+            return OptionType(self.ptr.type) if self.ptr.type in OptionType else None
 
     property offset:
         """
