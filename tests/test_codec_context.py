@@ -2,10 +2,7 @@ from __future__ import print_function
 
 from fractions import Fraction
 
-try:
-    from common import *
-except ImportError:
-    from .common import *
+from .common import *
 
 from av.buffer import Buffer
 from av.packet import Packet
