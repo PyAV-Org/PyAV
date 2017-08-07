@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from fractions import Fraction
 
-from common import *
+from .common import *
 
 from av.buffer import Buffer
 from av.packet import Packet
@@ -263,7 +263,7 @@ class TestCodecContext(TestCase):
 
         test_bad = False
 
-        with open(path, 'w') as f:
+        with open(path, 'wb') as f:
             for frame in iter_frames(container, audio_stream):
 
                 # We need to let the encoder retime.

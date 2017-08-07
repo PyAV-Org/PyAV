@@ -1,4 +1,4 @@
-from common import *
+from .common import *
 
 from av.option import Option, OptionType
 

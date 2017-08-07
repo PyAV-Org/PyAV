@@ -60,6 +60,8 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
 
     # http://ffmpeg.org/doxygen/trunk/structAVIOContext.html
     cdef struct AVIOContext:
+        unsigned char* buffer
+        int buffer_size
         int write_flag
         int direct
         int seekable

@@ -25,6 +25,7 @@ cdef class ContainerProxy(object):
 
     def __init__(self, sentinel, Container container):
 
+        self.input_was_opened = False
         cdef int res
 
         if sentinel is not _cinit_sentinel:
@@ -108,26 +109,39 @@ cdef class ContainerProxy(object):
                     &options.ptr
                 )
             self.err_check(res)
+            self.input_was_opened = True
 
     def __dealloc__(self):
         with nogil:
 
             # Let FFmpeg handle it if it fully opened.
-            if self.ptr and not self.writeable:
+            if self.input_was_opened:
                 lib.avformat_close_input(&self.ptr)
 
-            # Manually free things.
+            # If we didn't open as input, but the IOContext was created.
+            # So either this is an output or we errored.
+            # lib.avio_alloc_context says our buffer "may be freed and replaced with
+            # a new buffer" so we should just leave it.
+            elif self.iocontext:
+                lib.av_freep(&self.iocontext.buffer)
+                lib.av_freep(&self.iocontext)
+
+            # We likely errored badly if we got here, and so are still
+            # responsible for our buffer.
             else:
-                if self.buffer:
-                    lib.av_freep(&self.buffer)
-                if self.iocontext:
-                    lib.av_freep(&self.iocontext)
+                lib.av_freep(&self.buffer)
+
+            # To be safe, lets give it another chance to free the whole structure.
+            # I (Mike) am not 100% on the deconstruction for output, and meshing
+            # these two together. This is safe to call after the avformat_close_input
+            # above, so *shrugs*.
+            lib.avformat_free_context(self.ptr)
 
     cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame):
 
         # We used to take floats here and assume they were in seconds. This
         # was super confusing, so lets go in the complete opposite direction.
-        if not isinstance(offset, int):
+        if not isinstance(offset, (int, long)):
             raise TypeError('Container.seek only accepts integer offset.', type(offset))
         cdef int64_t c_offset = offset
 
