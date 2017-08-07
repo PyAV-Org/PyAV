@@ -13,6 +13,14 @@ cdef Filter wrap_filter(lib.AVFilter *ptr):
     return filter_
 
 
+cpdef enum FilterFlags:
+    DYNAMIC_INPUTS = lib.AVFILTER_FLAG_DYNAMIC_INPUTS
+    DYNAMIC_OUTPUTS = lib.AVFILTER_FLAG_DYNAMIC_OUTPUTS
+    SLICE_THREADS = lib.AVFILTER_FLAG_SLICE_THREADS
+    SUPPORT_TIMELINE_GENERIC = lib.AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC
+    SUPPORT_TIMELINE_INTERNAL = lib.AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL
+
+
 cdef class Filter(object):
 
     def __cinit__(self, name):
@@ -32,6 +40,8 @@ cdef class Filter(object):
 
     property options:
         def __get__(self):
+            if self.descriptor is None:
+                return
             return self.descriptor.options
 
     property name:
@@ -42,6 +52,10 @@ cdef class Filter(object):
         def __get__(self):
             return self.ptr.description
 
+    property flags:
+        def __get__(self):
+            return self.ptr.flags
+
     property dynamic_inputs:
         def __get__(self):
             return bool(self.ptr.flags & lib.AVFILTER_FLAG_DYNAMIC_INPUTS)
@@ -49,6 +63,18 @@ cdef class Filter(object):
     property dynamic_outputs:
         def __get__(self):
             return bool(self.ptr.flags & lib.AVFILTER_FLAG_DYNAMIC_OUTPUTS)
+
+    property timeline_support:
+        def __get__(self):
+            return bool(self.ptr.flags & lib.AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC)
+
+    property slice_threads:
+        def __get__(self):
+            return bool(self.ptr.flags & lib.AVFILTER_FLAG_SLICE_THREADS)
+
+    property command_support:
+        def __get__(self):
+            return self.ptr.process_command != NULL
 
     property inputs:
         def __get__(self):
@@ -68,3 +94,6 @@ cdef lib.AVFilter *ptr = lib.avfilter_next(NULL)
 while ptr:
     filters_available.add(ptr.name)
     ptr = lib.avfilter_next(ptr)
+
+
+filter_descriptor = wrap_avclass(lib.avfilter_get_class())

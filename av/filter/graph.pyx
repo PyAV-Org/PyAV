@@ -28,7 +28,7 @@ cdef class Graph(object):
         count = self._name_counts.get(name, 0)
         self._name_counts[name] = count + 1
         if count:
-            return '%s_%s' % name
+            return '%s_%s' % (name, count)
         else:
             return name
 

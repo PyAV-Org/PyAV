@@ -121,3 +121,6 @@ while True:
     if not optr:
         break
     formats_available.add(optr.name)
+
+
+format_descriptor = wrap_avclass(lib.avformat_get_class())
