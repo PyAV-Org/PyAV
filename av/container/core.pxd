@@ -31,7 +31,7 @@ cdef class ContainerProxy(object):
     cdef unsigned char *buffer
     cdef long pos
     cdef bint pos_is_valid
-    cdef bint is_opened
+    cdef bint input_was_opened
 
     cdef int err_check(self, int value) except -1
 
