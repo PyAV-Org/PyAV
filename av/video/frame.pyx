@@ -256,10 +256,10 @@ cdef class VideoFrame(Frame):
         if frame.format.name in ('rgb24', 'bgr24'):
             data_type = np.dtype(np.uint8)
             channels = 3
-        elif frame.format.name == ('gray16le', 'gray16be'):
+        elif frame.format.name in ('gray16le', 'gray16be'):
             data_type = np.dtype('<u2')
             channels = 1
-        elif frame.format.name == ('rgba'):
+        elif frame.format.name in ('rgba',):
             data_type = np.dtype('u1')
             channels = 4
         else:
