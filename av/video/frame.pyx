@@ -1,3 +1,4 @@
+from libc.stdint cimport uintptr_t
 from av.bytesource cimport ByteSource, bytesource
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
@@ -242,36 +243,50 @@ cdef class VideoFrame(Frame):
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
 
         """
-
         cdef VideoFrame frame = self.reformat(**kwargs)
+        import numpy as np
+        return np.array(self, copy=False)
+
+    @property
+    def __array_interface__(self):
+        # https://docs.scipy.org/doc/numpy/reference/arrays.interface.html
+        frame = self
         if len(frame.planes) != 1:
             raise ValueError('Cannot conveniently get numpy array from multiplane frame')
 
-        import numpy as np
-        from numpy.lib.stride_tricks import as_strided
+        array_interface_dict = dict(shape=None, typestr=None,
+                                    data=None, strides=None, version=3)
 
         # We only suppose this convenience for a few types.
         # TODO: Make this more general (if we can)
         plane = frame.planes[0]
+        isreadonly = True
+        array_interface_dict['data'] = (plane.ptr, isreadonly)
         if frame.format.name in ('rgb24', 'bgr24'):
-            data_type = np.dtype(np.uint8)
+            array_interface_dict['typestr'] = '|u1'
             channels = 3
+            itemsize = 1
         elif frame.format.name in ('gray16le', 'gray16be'):
-            data_type = np.dtype('<u2')
+            array_interface_dict['typestr'] = '<u2'
             channels = 1
+            itemsize = 2
         elif frame.format.name in ('rgba',):
-            data_type = np.dtype('u1')
+            array_interface_dict['typestr'] = '|u1'
             channels = 4
+            itemsize = 1
         else:
             raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
-        arrshape =  ((plane.height, plane.width)
-                     if channels == 1
-                     else (plane.height, plane.width, channels))
-        arrstrides = ((plane.line_size, data_type.itemsize)
-                      if channels == 1
-                      else (plane.line_size, channels, data_type.itemsize))
-        return as_strided(np.frombuffer(plane, dtype=data_type) ,
-                          strides=arrstrides , shape=arrshape)
+
+        array_interface_dict['shape'] =  (
+            (plane.height, plane.width)
+            if channels == 1
+            else (plane.height, plane.width, channels))
+        array_interface_dict['strides'] = (
+            (plane.line_size, itemsize)
+            if channels == 1
+            else (plane.line_size, channels*itemsize, itemsize))
+        return array_interface_dict
+
 
     def to_qimage(self, **kwargs):
         """Get an RGB ``QImage`` of this frame.

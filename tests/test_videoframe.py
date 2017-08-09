@@ -113,27 +113,43 @@ class TestVideoFrameConveniences(TestCase):
         array = frame.to_nd_array()
         self.assertEqual(array.shape, (480, 640, 3))
 
-    def test_rgba_to_nd_array(self):
+    def util_ndarray_conversion(self, filetype, convfunc):
         import numpy
         pngfile = fate_png()
-        pngsource = os.path.join(os.path.dirname(pngfile), "%03d.png")
-        os.rename(pngfile, pngsource % 0)
-        frames = (p.decode_one() for p in
-                  av.open(pngsource).demux(video=(0,)))
-        array = [f.to_nd_array() for f in frames if f is not None][0]
-        pngdirect = numpy.asarray(Image.open(pngsource % 0))
-        self.assertTrue(numpy.all(array[..., :3] == pngdirect))
+        pngsource = os.path.join(os.path.dirname(pngfile), "%%03d.%s" % filetype)
+        Image.open(pngfile).save(pngsource % 0)
+        frames = (p.decode_one() for p in av.open(pngsource).demux(video=(0,)))
+        framearray = [convfunc(f) for f in frames if f is not None][0]
+        pil_array = numpy.asarray(Image.open(pngsource % 0))
+        return framearray, pil_array
+
+    def test_rgba_to_nd_array(self):
+        framearray, pil_array = self.util_ndarray_conversion(
+            'png', lambda f: f.to_nd_array())
+        self.assertTrue((framearray[..., :3] == pil_array).all())
 
     def test_rgb_to_nd_array(self):
+        framearray, pil_array = self.util_ndarray_conversion(
+            'ppm', lambda f: f.to_nd_array())
+        self.assertTrue((framearray == pil_array).all())
+
+    def test_basic_as_ndarray(self):
         import numpy
-        pngfile = fate_png()
-        ppmsource = os.path.join(os.path.dirname(pngfile), "%03d.ppm")
-        Image.open(pngfile).save(ppmsource % 0)
-        frames = (p.decode_one() for p in
-                  av.open(ppmsource).demux(video=(0,)))
-        array = [f.to_nd_array() for f in frames if f is not None][0]
-        ppmdirect = numpy.asarray(Image.open(ppmsource % 0))
-        self.assertTrue(numpy.all(array == ppmdirect))
+        frame = VideoFrame(640, 480, 'rgb24')
+        array = numpy.array(frame)
+        self.assertEqual(array.shape, (480, 640, 3))
+
+    def test_rgba_as_ndarray(self):
+        import numpy
+        framearray, pil_array = self.util_ndarray_conversion(
+            'png', lambda f: numpy.array(f))
+        self.assertTrue((framearray[..., :3] == pil_array).all())
+
+    def test_rgb_as_ndarray(self):
+        import numpy
+        framearray, pil_array = self.util_ndarray_conversion(
+            'ppm', lambda f: numpy.array(f))
+        self.assertTrue((framearray == pil_array).all())
 
 class TestVideoFrameTiming(TestCase):
 
