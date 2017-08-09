@@ -120,8 +120,7 @@ class TestVideoFrameConveniences(TestCase):
         os.rename(pngfile, pngsource % 0)
         frames = (p.decode_one() for p in
                   av.open(pngsource).demux(video=(0,)))
-        _ = next(frames)
-        array = next(frames).to_nd_array()
+        array = [f.to_nd_array() for f in frames if f is not None][0]
         pngdirect = numpy.asarray(Image.open(pngsource % 0))
         self.assertTrue(numpy.all(array[..., :3] == pngdirect))
 
