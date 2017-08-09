@@ -113,6 +113,28 @@ class TestVideoFrameConveniences(TestCase):
         array = frame.to_nd_array()
         self.assertEqual(array.shape, (480, 640, 3))
 
+    def test_rgba_to_nd_array(self):
+        import numpy
+        pngfile = fate_png()
+        pngsource = os.path.join(os.path.dirname(pngfile), "%03d.png")
+        os.rename(pngfile, pngsource % 0)
+        frames = (p.decode_one() for p in
+                  av.open(pngsource).demux(video=(0,)))
+        _ = next(frames)
+        array = next(frames).to_nd_array()
+        pngdirect = numpy.asarray(Image.open(pngsource % 0))
+        self.assertTrue(numpy.all(array[..., :3] == pngdirect))
+
+    def test_rgb_to_nd_array(self):
+        import numpy
+        pngfile = fate_png()
+        ppmsource = os.path.join(os.path.dirname(pngfile), "%03d.ppm")
+        Image.open(pngfile).save(ppmsource % 0)
+        frames = (p.decode_one() for p in
+                  av.open(ppmsource).demux(video=(0,)))
+        array = [f.to_nd_array() for f in frames if f is not None][0]
+        ppmdirect = numpy.asarray(Image.open(ppmsource % 0))
+        self.assertTrue(numpy.all(array == ppmdirect))
 
 class TestVideoFrameTiming(TestCase):
 

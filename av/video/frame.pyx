@@ -256,16 +256,20 @@ cdef class VideoFrame(Frame):
         if frame.format.name in ('rgb24', 'bgr24'):
             data_type = np.dtype(np.uint8)
             channels = 3
-            arrshape =  (plane.height, plane.width, channels)
-            arrstrides = (plane.line_size, channels, data_type.itemsize)
         elif frame.format.name == ('gray16le', 'gray16be'):
             data_type = np.dtype('<u2')
             channels = 1
-            arrshape =  (plane.height, plane.width)
-            arrstrides = (plane.line_size, data_type.itemsize)
+        elif frame.format.name == ('rgba'):
+            data_type = np.dtype('u1')
+            channels = 4
         else:
             raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
-
+        arrshape =  ((plane.height, plane.width)
+                     if channels == 1
+                     else (plane.height, plane.width, channels))
+        arrstrides = ((plane.line_size, data_type.itemsize)
+                      if channels == 1
+                      else (plane.line_size, channels, data_type.itemsize))
         return as_strided(np.frombuffer(plane, dtype=data_type) ,
                           strides=arrstrides , shape=arrshape)
 
