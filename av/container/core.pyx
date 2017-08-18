@@ -205,9 +205,9 @@ cdef class Container(object):
 
         self.options = Dictionary(**(options or {}))
 
-        self.proxy = ContainerProxy(_cinit_sentinel, self)
         self.metadata_encoding = metadata_encoding
         self.metadata_errors = metadata_errors
+        self.proxy = ContainerProxy(_cinit_sentinel, self)
 
         if format_name is None:
             self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
