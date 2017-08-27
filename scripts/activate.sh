@@ -9,11 +9,6 @@ fi
 export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 
 
-if [[ ! "$PYAV_PYTHON" ]]; then
-    PYAV_PYTHON="$(python -c 'import sys; print sys.prefix')"
-fi
-
-
 if [[ ! "$PYAV_LIBRARY_NAME" ]]; then
     # We allow $FFMPEG and $LIBAV on Travis to make the build matrix pretty.
     if [[ "$TRAVIS" && "$FFMPEG" ]]; then
@@ -55,12 +50,14 @@ if [[ ! "$PYAV_LIBRARY_VERSION" ]]; then
     fi
 fi
 
+
 export PYAV_LIBRARY_NAME
 export PYAV_LIBRARY_VERSION
 export PYAV_LIBRARY_SLUG=$PYAV_LIBRARY_NAME-$PYAV_LIBRARY_VERSION
 
+export PYAV_PYTHON="${PYAV_PYTHON-python}"
 export PYAV_PLATFORM_SLUG="$(uname -s).$(uname -r)"
-export PYAV_VENV_NAME="$PYAV_PLATFORM_SLUG.cpython$(python -c 'import sys; print "%d.%d" % sys.version_info[:2]')"
+export PYAV_VENV_NAME="$PYAV_PLATFORM_SLUG.cpython$("$PYAV_PYTHON" -c 'from __future__ import print_function; import sys; print("%d.%d" % sys.version_info[:2])')"
 export PYAV_VENV="$PYAV_ROOT/venvs/$PYAV_VENV_NAME"
 
 if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
