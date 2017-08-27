@@ -478,7 +478,7 @@ cdef class CodecContext(object):
             return SkipType(self.ptr.skip_frame) if self.ptr.skip_frame in SkipType else None
         def __set__(self, value):
             if isinstance(value, basestring):
-                value = getattr(SkipType, value)
+                value = SkipType[value]
             self.ptr.skip_frame = int(SkipType(value))
 
 
