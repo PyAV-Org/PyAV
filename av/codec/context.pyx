@@ -40,6 +40,17 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_c
     return py_ctx
 
 
+
+cpdef enum SkipType:
+    NONE = lib.AVDISCARD_NONE
+    DEFAULT = lib.AVDISCARD_DEFAULT
+    NONREF = lib.AVDISCARD_NONREF
+    BIDIR = lib.AVDISCARD_BIDIR
+    NONINTRA = lib.AVDISCARD_NONINTRA
+    NONKEY = lib.AVDISCARD_NONKEY
+    ALL = lib.AVDISCARD_ALL
+
+
 cdef class CodecContext(object):
 
     @staticmethod
@@ -461,3 +472,13 @@ cdef class CodecContext(object):
             return self.ptr.thread_count
         def __set__(self, int value):
             self.ptr.thread_count = value
+
+    property skip_frame:
+        def __get__(self):
+            return SkipType(self.ptr.skip_frame) if self.ptr.skip_frame in SkipType else None
+        def __set__(self, value):
+            if isinstance(value, basestring):
+                value = getattr(SkipType, value)
+            self.ptr.skip_frame = int(SkipType(value))
+
+

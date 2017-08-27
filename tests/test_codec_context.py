@@ -46,6 +46,13 @@ def iter_raw_frames(path, packet_sizes, ctx):
 
 class TestCodecContext(TestCase):
 
+    def test_skip_frame_default(self):
+        ctx = Codec('png', 'w').create()
+        self.assertEqual(ctx.skip_frame.name, 'DEFAULT')
+
+
+class TestEncoding(TestCase):
+
     def test_encoding_png(self):
         self.image_sequence_encode('png')
 
