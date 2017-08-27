@@ -33,7 +33,6 @@ Basic Demo
 .. testcode::
 
     import av
-    import os
 
     container = av.open(path_to_video)
 
@@ -59,6 +58,7 @@ Contents
     hacking
     includes
     changelog
+    contributors
     license
 
 

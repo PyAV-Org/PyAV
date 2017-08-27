@@ -29,13 +29,17 @@ Major:
 
 Minor:
 
-- Added ``Packet.is_keyframe`` and ``Packet.is_corrupt``. (#226.)
+- Added ``Packet.is_keyframe`` and ``Packet.is_corrupt`` (#226).
 - Many more ``time_base``, ``pts`` and other attributes are writeable.
-- ``Option`` exposes much more of the API (but not get/set). (#243).
+- ``Option`` exposes much more of the API (but not get/set) (#243).
+- Expose metadata encoding controls (#250).
+- Expose ``CodecContext.skip_frame`` (#259).
 
 Fixes:
 
-- Build doesn't fail if you don't have git installed. (#184.)
+- Build doesn't fail if you don't have git installed (#184).
+- Developer environment works better with Python3 (#248).
+- Fix Container deallocation resulting in segfaults (#253).
 
 
 v0.3.3
