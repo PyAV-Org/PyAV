@@ -5,17 +5,30 @@
 
 Currently we provide the basics of:
 
-- libavformat:
-    - :class:`containers <.Container>`
-    - audio/video/subtitle :class:`streams <.Stream>`
-    - :class:`packets <.Packet>`
-- libavdevice (by specifying a format to containers)
-- libavcodec:
-    - :class:`.Codec`
-    - :class:`.CodecContext`
-    - audio/video :class:`frames <.Frame>`
-    - :class:`data planes <.Plane>`
-    - :class:`subtitles <.Subtitle>`
+- ``libavformat``:
+  :class:`containers <.Container>`,
+  audio/video/subtitle :class:`streams <.Stream>`,
+  :class:`packets <.Packet>`;
+
+- ``libavdevice`` (by specifying a format to containers);
+
+- ``libavcodec``:
+  :class:`.Codec`,
+  :class:`.CodecContext`,
+  audio/video :class:`frames <.Frame>`,
+  :class:`data planes <.Plane>`,
+  :class:`subtitles <.Subtitle>`;
+
+- ``libavfilter``:
+  :class:`.Filter`,
+  :class:`.Graph`;
+
+- ``libscscale``:
+  :class:`.VideoReformatter`;
+
+- ``libavresample`` and/or ``libswresample``:
+  :class:`.AudioResampler`;
+
 - and a few more utilities.
 
 .. _FFmpeg: http://ffmpeg.org
@@ -44,12 +57,13 @@ Contents
 --------
 
 .. toctree::
+    :glob:
     :maxdepth: 2
 
     about
     installation
-    examples
-    api/index
+    examples/_index
+    api/_index
 
 
 .. toctree::

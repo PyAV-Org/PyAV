@@ -12,8 +12,13 @@ from __future__ import print_function
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import logging
 import sys
 import os
+
+
+logging.basicConfig()
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -185,6 +190,7 @@ html_static_path = ['_static']
 
 doctest_global_setup = '''
 
+import errno
 import os
 
 import av
@@ -197,7 +203,11 @@ def sandboxed(*args, **kwargs):
 
 _cwd = os.getcwd()
 here = sandboxed('__cwd__')
-os.makedirs(here)
+try:
+    os.makedirs(here)
+except OSError as e:
+    if e.errno != errno.EEXIST:
+        raise
 os.chdir(here)
 
 '''

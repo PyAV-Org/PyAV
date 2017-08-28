@@ -49,3 +49,13 @@ Video Planes
 
     .. autoclass:: VideoPlane
         :members:
+
+
+Video Reformatters
+------------------
+
+.. automodule:: av.video.reformatter
+
+    .. autoclass:: VideoReformatter
+        :members:
+

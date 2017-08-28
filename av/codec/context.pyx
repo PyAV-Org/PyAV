@@ -480,5 +480,3 @@ cdef class CodecContext(object):
             if isinstance(value, basestring):
                 value = SkipType[value]
             self.ptr.skip_frame = int(SkipType(value))
-
-
