@@ -107,10 +107,7 @@ cdef class Stream(object):
         try:
             return getattr(self.codec_context, name)
         except AttributeError:
-            try:
-                return getattr(self.codec, name)
-            except AttributeError:
-                raise AttributeError(name)
+            return
 
     def __setattr__(self, name, value):
         setattr(self.codec_context, name, value)
