@@ -64,7 +64,7 @@ cdef class FilterContextPad(FilterPad):
                 return link.input if self.is_input else link.output
 
 
-cdef tuple alloc_filter_pads(Filter filter, lib.AVFilterPad *ptr, bint is_input, FilterContext context=None):
+cdef tuple alloc_filter_pads(Filter filter, const lib.AVFilterPad *ptr, bint is_input, FilterContext context=None):
 
     if not ptr:
         return ()
