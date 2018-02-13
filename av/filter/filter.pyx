@@ -7,7 +7,7 @@ from av.filter.pad cimport alloc_filter_pads
 cdef object _cinit_sentinel = object()
 
 
-cdef Filter wrap_filter(lib.AVFilter *ptr):
+cdef Filter wrap_filter(const lib.AVFilter *ptr):
     cdef Filter filter_ = Filter(_cinit_sentinel)
     filter_.ptr = ptr
     return filter_
