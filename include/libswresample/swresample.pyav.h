@@ -25,13 +25,13 @@
 
 
 #if !PYAV_HAVE_LIBAVRESAMPLE
-    int avresample_version() { return -1; }
-    const char* avresample_configuration() { return ""; }
-    const char* avresample_license() { return ""; }
+    int avresample_version(void) { return -1; }
+    const char* avresample_configuration(void) { return ""; }
+    const char* avresample_license(void) { return ""; }
 #endif
 
 #if !PYAV_HAVE_LIBSWRESAMPLE
-    int swresample_version() { return -1; }
-    const char* swresample_configuration() { return ""; }
-    const char* swresample_license() { return ""; }
+    int swresample_version(void) { return -1; }
+    const char* swresample_configuration(void) { return ""; }
+    const char* swresample_license(void) { return ""; }
 #endif
