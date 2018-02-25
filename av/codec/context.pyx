@@ -1,6 +1,6 @@
 from cpython cimport PyWeakref_NewRef
 from libc.errno cimport EAGAIN
-from libc.stdint cimport uint8_t, int64_t, int32_t
+from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, realloc, free
 from libc.string cimport memcpy
 
@@ -332,9 +332,6 @@ cdef class CodecContext(object):
                 break
 
         return res
-
-    def info(self):
-        print('extradata_size', self.ptr.extradata_size)
 
     cdef _setup_encoded_packet(self, Packet packet):
         # The packet's timing was simply copied across from the source frame.
