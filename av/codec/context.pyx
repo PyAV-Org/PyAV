@@ -1,6 +1,6 @@
 from cpython cimport PyWeakref_NewRef
 from libc.errno cimport EAGAIN
-from libc.stdint cimport uint8_t, int64_t
+from libc.stdint cimport uint8_t, int64_t, int32_t
 from libc.stdlib cimport malloc, realloc, free
 from libc.string cimport memcpy
 
@@ -11,6 +11,7 @@ from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
+from av.bytesource cimport ByteSource, bytesource
 
 
 cdef object _cinit_sentinel = object()
@@ -75,6 +76,23 @@ cdef class CodecContext(object):
         self.ptr.refcounted_frames = 1
 
         self.stream_index = -1
+
+    property extradata:
+        def __get__(self):
+            if self.ptr.extradata_size > 0:
+                return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
+            else:
+                return None
+        def __set__(self, data):
+            buffer_size = len(data)
+            cdef ByteSource source = bytesource(data)
+            self.ptr.extradata =  <uint8_t *>malloc(buffer_size * sizeof(uint8_t))
+            self.ptr.extradata_size = buffer_size
+            memcpy(self.ptr.extradata, source.ptr, buffer_size)
+
+    property extradata_size:
+        def __get__(self):
+            return self.ptr.extradata_size
 
     property is_open:
         def __get__(self):
@@ -314,6 +332,9 @@ cdef class CodecContext(object):
                 break
 
         return res
+
+    def info(self):
+        print('extradata_size', self.ptr.extradata_size)
 
     cdef _setup_encoded_packet(self, Packet packet):
         # The packet's timing was simply copied across from the source frame.
