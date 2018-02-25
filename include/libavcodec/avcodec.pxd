@@ -145,6 +145,10 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVRational time_base
         int ticks_per_frame
 
+        int extradata_size
+        uint8_t *extradata
+        
+        int delay
 
         AVCodec *codec
 
