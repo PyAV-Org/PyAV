@@ -124,15 +124,16 @@ cdef class AudioFrame(Frame):
         Any ``**kwargs`` are passed to :meth:`AudioFrame.reformat`.
         """
 
+        import numpy as np
 
         # map avcodec type to numpy type
         try:
-            dtype = {
-                's16p':'<i2'
-            }[self.format.name]
+            dtype = np.dtype({
+                's16p':'<i2',
+                'fltp':'<f4',
+            }[self.format.name])
         except:
             raise AssertionError("Don't know how to convert data type.", self.format.name)
 
         # convert and return data
-        import numpy as np
-        return np.vstack(map(lambda x: np.frombuffer(x, np.dtype(dtype)), self.planes))
+        return np.vstack(map(lambda x: np.frombuffer(x, dtype), self.planes))
