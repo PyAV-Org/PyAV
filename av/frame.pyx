@@ -121,4 +121,4 @@ cdef class Frame(object):
             to_avrational(value, &self._time_base)
 
     property is_corrupt:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
+        def __get__(self): return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
