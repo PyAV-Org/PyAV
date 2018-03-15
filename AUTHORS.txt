@@ -22,11 +22,11 @@ All contributors (by number of commits):
 - rutsh <Eugene.Krokhalev@gmail.com>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
 - Johannes Erdfelt <johannes@erdfelt.com>
+- Karl Litterfeldt <kalle.litterfeldt@gmail.com>
 - Miles Kaufmann <mkfmnn@gmail.com>
 - Radek Senfeld <rush@logic.cz>; @radek-senfeld
 - Ian Lee <IanLee1521@gmail.com>
 - Arthur Barros <arthbarros@gmail.com>
-- Karl Litterfeldt <kalle.litterfeldt@gmail.com>
 - Manuel Goacolou <mgoacolou@cls.fr>
 - Ömer Sezgin Uğurlu <omer@ugurlu.org>
 - Orivej Desh <orivej@gmx.fr>
