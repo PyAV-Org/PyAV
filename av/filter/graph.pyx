@@ -121,34 +121,38 @@ cdef class Graph(object):
     def add_buffer(self, template=None, width=None, height=None, format=None, name=None):
 
         if template is not None:
-            if width is None:
-                width = template.width
-            if height is None:
-                height = template.height
-            if format is None:
-                format = template.format
+            if template.type == 'audio':
+                args = "time_base={}:sample_rate={}:sample_fmt={}:channel_layout={}:channels={}".format(str(template.time_base), template.rate, template.format.name, template.layout.name, template.channels)
+                return self.add('abuffer', args, name=name)
+            else:
+                if width is None:
+                    width = template.width
+                if height is None:
+                    height = template.height
+                if format is None:
+                    format = template.format
 
-        if width is None:
-            raise ValueError('missing width')
-        if height is None:
-            raise ValueError('missing height')
-        if format is None:
-            raise ValueError('missing format')
+                if width is None:
+                    raise ValueError('missing width')
+                if height is None:
+                    raise ValueError('missing height')
+                if format is None:
+                    raise ValueError('missing format')
 
-        args = "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d" % (
-            width, height, int(VideoFormat(format)),
-            1, 1000,
-            1, 1
-        )
+                args = "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d" % (
+                    width, height, int(VideoFormat(format)),
+                    1, 1000,
+                    1, 1
+                )
 
-        return self.add('buffer', args, name=name)
+                return self.add('buffer', args, name=name)
 
     def push(self, frame):
 
         if isinstance(frame, VideoFrame):
             contexts = self._context_by_type.get('buffer', [])
         else:
-            raise ValueError('can only push VideoFrame', type(frame))
+            contexts = self._context_by_type.get('abuffer', [])
 
         if len(contexts) != 1:
             raise ValueError('can only auto-push with single buffer; found %s' % len(contexts))
