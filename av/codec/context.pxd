@@ -6,6 +6,7 @@ from av.codec.codec cimport Codec
 from av.container.core cimport ContainerProxy
 from av.frame cimport Frame
 from av.packet cimport Packet
+from av.bytesource cimport ByteSource
 
 
 cdef class CodecContext(object):
@@ -24,6 +25,9 @@ cdef class CodecContext(object):
     cdef size_t parse_buffer_size
     cdef size_t parse_buffer_max_size
     cdef size_t parse_pos
+
+    # To hold a reference to passed extradata.
+    cdef ByteSource extradata_source
 
     cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec)
 
