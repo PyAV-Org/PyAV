@@ -16,14 +16,15 @@ All contributors (by number of commits):
 * Dan Allan <daniel.b.allan@gmail.com>
 * Moritz Kassner <moritzkassner@gmail.com>; @mkassner
 * Thomas A Caswell <tcaswell@gmail.com>; @tacaswell
-* Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>
+* Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>; @rawler
 * Wel C. van der <wel@Physics.LeidenUniv.nl>
 * Will Patera <willpatera@gmail.com>; @willpatera
 
 - rutsh <Eugene.Krokhalev@gmail.com>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
+- Alireza Davoudi <davoudialireza@gmail.com>; @adavoudi
 - Johannes Erdfelt <johannes@erdfelt.com>
-- Karl Litterfeldt <kalle.litterfeldt@gmail.com>
+- Karl Litterfeldt <kalle.litterfeldt@gmail.com>; @litterfeldt
 - Miles Kaufmann <mkfmnn@gmail.com>
 - Radek Senfeld <rush@logic.cz>; @radek-senfeld
 - Ian Lee <IanLee1521@gmail.com>
