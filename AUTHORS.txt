@@ -16,6 +16,7 @@ All contributors (by number of commits):
 * Dan Allan <daniel.b.allan@gmail.com>
 * Moritz Kassner <moritzkassner@gmail.com>; @mkassner
 * Thomas A Caswell <tcaswell@gmail.com>; @tacaswell
+* Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>
 * Wel C. van der <wel@Physics.LeidenUniv.nl>
 * Will Patera <willpatera@gmail.com>; @willpatera
 
