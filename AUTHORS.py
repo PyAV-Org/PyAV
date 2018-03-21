@@ -22,8 +22,11 @@ email_map = {
     # Junk.
     'mark@mark-VirtualBox.(none)': None,
 
+    # Aliases.
     'tcaswell@bnl.gov': 'tcaswell@gmail.com',
     'xxr3376@gmail.com': 'xxr@megvii.com',
+    'a.davoudi@aut.ac.ir': 'davoudialireza@gmail.com',
+
 }
 
 name_map = {
@@ -38,12 +41,15 @@ name_map = {
 github_map = {
     'billy.shambrook@gmail.com': 'billyshambrook',
     'dallan@pha.jhu.edu': 'danielballan',
+    'davoudialireza@gmail.com': 'adavoudi',
     'github@mikeboers.com': 'mikeboers',
+    'kalle.litterfeldt@gmail.com': 'litterfeldt',
     'mindmark@gmail.com': 'markreidvfx',
     'moritzkassner@gmail.com': 'mkassner',
     'rush@logic.cz': 'radek-senfeld',
     'self@brendanlong.com': 'brendanlong',
     'tcaswell@gmail.com': 'tacaswell',
+    'ulrik.mikaelsson@magine.com': 'rawler',
     'vidartf@gmail.com': 'vidartf',
     'willpatera@gmail.com': 'willpatera',
 }
