@@ -50,7 +50,7 @@ github_map = {
 
 
 email_count = {}
-for line in subprocess.check_output(['git', 'log', '--format=%aN,%aE']).splitlines():
+for line in subprocess.check_output(['git', 'log', '--format=%aN,%aE']).decode().splitlines():
     name, email = line.strip().rsplit(',', 1)
 
     email = email_map.get(email, email)
@@ -66,7 +66,7 @@ for line in subprocess.check_output(['git', 'log', '--format=%aN,%aE']).splitlin
 
 last = None
 block_i = 0
-for email, count in sorted(email_count.iteritems(), key=lambda x: (-x[1], x[0])):
+for email, count in sorted(email_count.items(), key=lambda x: (-x[1], x[0])):
 
     # This is the natural log, because of course it should be. ;)
     order = int(math.log(count))

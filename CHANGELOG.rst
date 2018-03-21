@@ -7,6 +7,14 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
+HEAD
+----
+
+Fixes:
+
+- Refined frame corruption detection. (#291 by @Litterfeldt.)
+
+
 v0.4.0
 ------
 
