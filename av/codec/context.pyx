@@ -11,6 +11,7 @@ from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
+from av.bytesource cimport ByteSource, bytesource
 
 
 cdef object _cinit_sentinel = object()
@@ -75,6 +76,21 @@ cdef class CodecContext(object):
         self.ptr.refcounted_frames = 1
 
         self.stream_index = -1
+
+    property extradata:
+        def __get__(self):
+            if self.ptr.extradata_size > 0:
+                return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
+            else:
+                return None
+        def __set__(self, data):
+            self.extradata_source = bytesource(data)
+            self.ptr.extradata = self.extradata_source.ptr
+            self.ptr.extradata_size = self.extradata_source.size
+
+    property extradata_size:
+        def __get__(self):
+            return self.ptr.extradata_size
 
     property is_open:
         def __get__(self):
