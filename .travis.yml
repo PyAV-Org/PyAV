@@ -37,6 +37,11 @@ matrix:
 
     allow_failures:
 
+        # Latest FFmpeg is too new.
+        - python: "2.7"
+          env: FFMPEG=3.4
+          os: linux
+
         # We are still working on this.
         - os: osx
 
@@ -61,26 +66,23 @@ matrix:
 
     include:
 
-        # Primary target.
+        # Primary targets.
+        - python: "3.6"
+          env: FFMPEG=3.3
+          os: linux
         - python: "2.7"
-          env: FFMPEG=3.2
+          env: FFMPEG=3.3
+          os: linux
+
+        # Latest libraries.
+        - python: "2.7"
+          env: FFMPEG=3.4
           os: linux
 
         # Mac OS X.
         - python: "2.7"
           env: FFMPEG=3.2
           os: osx
-
-        # Python 3.
-        - python: "3.6"
-          env: FFMPEG=3.2
-          os: linux
-        - python: "3.5"
-          env: FFMPEG=3.2
-          os: linux
-        - python: "3.4"
-          env: FFMPEG=3.2
-          os: linux
 
         # PyPy
         - python: "pypy"
@@ -96,22 +98,23 @@ matrix:
           os: linux
 
         # Older Pythons.
-        - python: "2.6"
+        - python: "3.5"
+          env: FFMPEG=3.2
+          os: linux
+        - python: "3.4"
           env: FFMPEG=3.2
           os: linux
         - python: "3.3"
           env: FFMPEG=3.2
           os: linux
-
-        # Newer libraries.
-        - python: "2.7"
-          env: FFMPEG=3.4
-          os: linux
-        - python: "2.7"
-          env: FFMPEG=3.3
+        - python: "2.6"
+          env: FFMPEG=3.2
           os: linux
 
         # Older libraries.
+        - python: "2.7"
+          env: FFMPEG=3.2
+          os: linux
         - python: "2.7"
           env: FFMPEG=3.0
           os: linux
