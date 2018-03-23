@@ -80,8 +80,7 @@ matrix:
           os: linux
 
         # Mac OS X.
-        - python: "2.7"
-          env: FFMPEG=3.2
+        - env: FFMPEG=3.2
           os: osx
 
         # PyPy
