@@ -12,7 +12,7 @@ cdef class FilterPad(object):
     cdef readonly bint is_input
     cdef readonly int index
 
-    cdef lib.AVFilterPad *base_ptr
+    cdef const lib.AVFilterPad *base_ptr
 
 
 cdef class FilterContextPad(FilterPad):
@@ -20,4 +20,4 @@ cdef class FilterContextPad(FilterPad):
     cdef FilterLink _link
 
 
-cdef tuple alloc_filter_pads(Filter, lib.AVFilterPad *ptr, bint is_input, FilterContext context=?)
+cdef tuple alloc_filter_pads(Filter, const lib.AVFilterPad *ptr, bint is_input, FilterContext context=?)

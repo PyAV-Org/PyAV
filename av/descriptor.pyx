@@ -5,7 +5,7 @@ from .option cimport Option, OptionChoice, wrap_option, wrap_option_choice
 
 cdef object _cinit_sentinel = object()
 
-cdef Descriptor wrap_avclass(lib.AVClass *ptr):
+cdef Descriptor wrap_avclass(const lib.AVClass *ptr):
     if ptr == NULL:
         return None
     cdef Descriptor obj = Descriptor(_cinit_sentinel)
@@ -24,7 +24,7 @@ cdef class Descriptor(object):
 
     property options:
         def __get__(self):
-            cdef lib.AVOption *ptr
+            cdef lib.AVOption *ptr = self.ptr.option
             cdef lib.AVOption *choice_ptr
             cdef Option option
             cdef OptionChoice option_choice
