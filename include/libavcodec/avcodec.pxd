@@ -246,6 +246,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         void *opaque
         AVDictionary *metadata
         int flags
+        int decode_error_flags
 
 
     cdef AVFrame* avcodec_alloc_frame()
