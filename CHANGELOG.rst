@@ -10,6 +10,10 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 HEAD
 ----
 
+Minor:
+
+- Add FLTP support to ``Frame.to_nd_array()``. (#288 by @rawler.)
+
 Fixes:
 
 - Refined frame corruption detection. (#291 by @Litterfeldt.)
