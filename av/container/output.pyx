@@ -75,7 +75,6 @@ cdef class OutputContainer(Container):
 
         # Construct the user-land stream so we have access to CodecContext.
         cdef Stream py_stream = wrap_stream(self, stream)
-        py_stream.options = {}
         self.streams.add_stream(py_stream)
 
         # Copy from the template.
@@ -129,8 +128,11 @@ cdef class OutputContainer(Container):
 
             ctx = stream.codec_context
             if not ctx.is_open:
-
-                ctx.options.update(self.options)
+                
+                # check for None
+                if ctx.options is not None:
+                    ctx.options.update(self.options)
+                
                 ctx.open()
 
                 # Track option consumption.
