@@ -75,6 +75,7 @@ cdef class OutputContainer(Container):
 
         # Construct the user-land stream so we have access to CodecContext.
         cdef Stream py_stream = wrap_stream(self, stream)
+        py_stream.options = {}
         self.streams.add_stream(py_stream)
 
         # Copy from the template.
