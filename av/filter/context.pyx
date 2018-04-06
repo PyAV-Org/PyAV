@@ -6,11 +6,13 @@ from av.dictionary import Dictionary
 from av.filter.pad cimport alloc_filter_pads
 from av.frame cimport Frame
 from av.utils cimport err_check
+from av.utils import  AVError
 from av.video.frame cimport VideoFrame, alloc_video_frame
 
 
 cdef object _cinit_sentinel = object()
 
+ctypedef int (*cmd_func) (lib.AVFilterContext *ctx,  char *cmd, char *args, char *res, int res_len, int flags)
 
 cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterContext *ptr):
     cdef FilterContext self = FilterContext(_cinit_sentinel)
@@ -105,6 +107,19 @@ cdef class FilterContext(object):
 
         self.graph.configure()
 
-        err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
-        frame._init_user_attributes()
-        return frame
+        try:
+            err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
+            frame._init_user_attributes()
+            return frame
+        except AVError as e:
+            print("get_frame error code {}".format(e.args[0]))
+            return None
+
+    def cmd(self, cmd_str, cmd_args):
+        cdef char *ccmd_str = cmd_str
+        cdef char *ccmd_args = cmd_args
+        cdef cmd_func cmdf = self.ptr.filter.process_command
+        err_check(cmdf(self.ptr, ccmd_str, ccmd_args, NULL, 0, 0))
+
+
+
