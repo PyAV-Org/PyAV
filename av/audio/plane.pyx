@@ -4,7 +4,7 @@ from av.audio.frame cimport AudioFrame
 
 
 cdef class AudioPlane(Plane):
-    
+
     def __cinit__(self, AudioFrame frame, int index):
 
         # We have to calculate this manually, since the provided linesize

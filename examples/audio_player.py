@@ -1,3 +1,4 @@
+from __future__ import print_function
 import array
 import argparse
 import sys
@@ -39,7 +40,7 @@ output.setBufferSize(2 * 2 * 48000)
 
 device = output.start()
 
-print qformat, output, device
+print(qformat, output, device)
 
 def decode_iter():
     try:
@@ -52,12 +53,12 @@ def decode_iter():
 for pi, fi, frame in decode_iter():
 
     frame = resampler.resample(frame)
-    print pi, fi, frame, output.state()
-    
+    print(pi, fi, frame, output.state())
+
     bytes_buffered = output.bufferSize() - output.bytesFree()
     us_processed = output.processedUSecs()
     us_buffered = 1000000 * bytes_buffered / (2 * 16 / 8) / 48000
-    print 'pts: %.3f, played: %.3f, buffered: %.3f' % (frame.time or 0, us_processed / 1000000.0, us_buffered / 1000000.0)
+    print('pts: %.3f, played: %.3f, buffered: %.3f' % (frame.time or 0, us_processed / 1000000.0, us_buffered / 1000000.0))
 
 
     data = frame.planes[0].to_bytes()
@@ -72,7 +73,7 @@ for pi, fi, frame in decode_iter():
 
     if False and pi % 100 == 0:
         output.reset()
-        print output.state(), output.error()
+        print(output.state(), output.error())
         device = output.start()
 
     # time.sleep(0.05)

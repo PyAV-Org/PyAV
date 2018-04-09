@@ -24,7 +24,7 @@ cdef class ContainerFormat(object):
         to None which will grab either.
 
     """
-    
+
     def __cinit__(self, name, mode=None):
 
         if name is _cinit_bypass_sentinel:
@@ -106,19 +106,21 @@ cdef class ContainerFormat(object):
             return exts
 
 
-names = set()
+formats_available = set()
 
 cdef lib.AVInputFormat *iptr = NULL
 while True:
     iptr = lib.av_iformat_next(iptr)
     if not iptr:
         break
-    names.add(iptr.name)
+    formats_available.add(iptr.name)
 
 cdef lib.AVOutputFormat *optr = NULL
 while True:
     optr = lib.av_oformat_next(optr)
     if not optr:
         break
-    names.add(optr.name)
+    formats_available.add(optr.name)
 
+
+format_descriptor = wrap_avclass(lib.avformat_get_class())

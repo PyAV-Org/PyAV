@@ -1,0 +1,8 @@
+
+Unsorted
+========
+- assert layout behaviour
+- new list returning API
+  - add feature flags on containers/whatnot to control behaviour,
+    e.g.: returning single packets from `encode(frame)`.
+- document the minimum encoding requirements for CodecContext, e.g. width, height, format, layout

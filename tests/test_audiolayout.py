@@ -15,7 +15,7 @@ class TestAudioLayout(TestCase):
     def test_channel_counts(self):
         self.assertRaises(ValueError, AudioLayout, -1)
         self.assertRaises(ValueError, AudioLayout, 9)
-        
+
     def _test_stereo(self, layout):
         self.assertEqual(layout.name, 'stereo')
         self.assertEqual(len(layout.channels), 2)

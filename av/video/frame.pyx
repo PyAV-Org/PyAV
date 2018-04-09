@@ -9,7 +9,7 @@ cdef object _cinit_bypass_sentinel
 cdef VideoFrame alloc_video_frame():
     """Get a mostly uninitialized VideoFrame.
 
-    You MUST call VideoFrame._init(...) or VideoFrame._init_properties()
+    You MUST call VideoFrame._init(...) or VideoFrame._init_user_attributes()
     before exposing to the user.
 
     """
@@ -66,12 +66,12 @@ cdef class VideoFrame(Frame):
                         height
                 )
 
-        self._init_properties()
+        self._init_user_attributes()
 
     cdef int _max_plane_count(self):
         return self.format.ptr.nb_components
 
-    cdef _init_properties(self):
+    cdef _init_user_attributes(self):
         self.format = get_video_format(<lib.AVPixelFormat>self.ptr.format, self.ptr.width, self.ptr.height)
         self._init_planes(VideoPlane)
 
@@ -124,18 +124,18 @@ cdef class VideoFrame(Frame):
         try:
             c_src_colorspace = colorspace_flags[src_colorspace]
         except KeyError:
-            raise ValueError('invalid src_colorspace %r' % src_colorspace)
+            raise ValueError("Invalid src_colorspace %r" % src_colorspace)
         try:
             c_dst_colorspace = colorspace_flags[dst_colorspace]
         except KeyError:
-            raise ValueError('invalid src_colorspace %r' % dst_colorspace)
+            raise ValueError("Invalid dst_colorspace %r" % dst_colorspace)
 
         return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace)
 
     cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
 
         if self.ptr.format < 0:
-            raise ValueError("invalid source format")
+            raise ValueError("Frame does not have format set.")
 
         cdef lib.AVPixelFormat src_format = <lib.AVPixelFormat> self.ptr.format
 
@@ -184,6 +184,7 @@ cdef class VideoFrame(Frame):
 
         # Create a new VideoFrame.
         cdef VideoFrame frame = alloc_video_frame()
+        frame._copy_internal_attributes(self)
         frame._init(dst_format, width, height)
 
         # Finally, scale the image.
@@ -198,8 +199,6 @@ cdef class VideoFrame(Frame):
                 frame.ptr.linesize,
             )
 
-        # Copy some properties.
-        frame._copy_attributes_from(self)
         return frame
 
     property width:
@@ -263,7 +262,7 @@ cdef class VideoFrame(Frame):
         """Get an RGB ``QImage`` of this frame.
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
-        
+
         Returns a ``(VideoFrame, QImage)`` tuple, where the ``QImage`` references
         the data in the ``VideoFrame``.
         """
@@ -301,5 +300,3 @@ cdef class VideoFrame(Frame):
         frame.planes[0].update(array)
 
         return frame
-
-

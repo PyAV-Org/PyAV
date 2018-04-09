@@ -33,10 +33,17 @@ fi
 cd $PYAV_LIBRARY_SLUG
 
 echo ./configure
+if [[ "$PYAV_LIBRARY_NAME" == ffmpeg ]]; then
+    CONFFLAGS=--disable-stripping
+fi
 ./configure \
     --disable-static \
     --enable-shared \
     --disable-doc \
+    --disable-optimizations \
+    --disable-mmx \
+    --enable-debug=3 \
+    $CONFFLAGS \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo

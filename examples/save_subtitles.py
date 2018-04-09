@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 
 As you can see, the subtitle API needs some work.
@@ -16,31 +17,31 @@ from av import open
 if not os.path.exists('subtitles'):
     os.makedirs('subtitles')
 
-    
+
 video = open(sys.argv[1])
 
 streams = [s for s in video.streams if s.type == b'subtitle']
 if not streams:
-    print 'no subtitles'
+    print('no subtitles')
     exit(1)
 
-print streams
+print(streams)
 
 count = 0
 for pi, packet in enumerate(video.demux([streams[0]])):
-    
-    print 'packet', pi
+
+    print('packet', pi)
     for si, subtitle in enumerate(packet.decode()):
 
-        print '\tsubtitle', si, subtitle
-        
+        print('\tsubtitle', si, subtitle)
+
         for ri, rect in enumerate(subtitle.rects):
             if rect.type == 'ass':
-                print '\t\tass: ', rect, rect.ass.rstrip('\n')
+                print('\t\tass: ', rect, rect.ass.rstrip('\n'))
             if rect.type == 'text':
-                print '\t\ttext: ', rect, rect.text.rstrip('\n')
+                print('\t\ttext: ', rect, rect.text.rstrip('\n'))
             if rect.type == 'bitmap':
-                print '\t\tbitmap: ', rect, rect.width, rect.height, rect.pict_buffers
+                print('\t\tbitmap: ', rect, rect.width, rect.height, rect.pict_buffers)
                 buffers = [b for b in rect.pict_buffers if b is not None]
                 if buffers:
                     imgs = [
@@ -54,9 +55,8 @@ for pi, packet in enumerate(video.demux([streams[0]])):
                     else:
                         img = Image.merge('RGBA', imgs)
                     img.save('subtitles/%04d.png' % count)
-    
+
             count += 1
             if count > 10:
                 pass
                 # exit()
-    

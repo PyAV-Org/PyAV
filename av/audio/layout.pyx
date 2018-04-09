@@ -15,7 +15,8 @@ cdef AudioLayout get_audio_layout(int channels, uint64_t c_layout):
 
 
 # These are the defaults given by FFmpeg; Libav is different.
-cdef uint64_t default_layouts[9]
+# TODO: What about av_get_default_channel_layout(...)?
+cdef uint64_t default_layouts[17]
 default_layouts[0] = 0
 default_layouts[1] = lib.AV_CH_LAYOUT_MONO
 default_layouts[2] = lib.AV_CH_LAYOUT_STEREO
@@ -25,6 +26,14 @@ default_layouts[5] = lib.AV_CH_LAYOUT_5POINT0_BACK
 default_layouts[6] = lib.AV_CH_LAYOUT_5POINT1_BACK
 default_layouts[7] = lib.AV_CH_LAYOUT_6POINT1
 default_layouts[8] = lib.AV_CH_LAYOUT_7POINT1
+default_layouts[9] = 0x01FF
+default_layouts[10] = 0x03FF
+default_layouts[11] = 0x07FF
+default_layouts[12] = 0x0FFF
+default_layouts[13] = 0x1FFF
+default_layouts[14] = 0x3FFF
+default_layouts[15] = 0x7FFF
+default_layouts[16] = 0xFFFF # FFmpeg has one here.
 
 
 # These are the descriptions as given by FFmpeg; Libav does not have them.
@@ -60,6 +69,7 @@ cdef dict channel_descriptions = {
 cdef class AudioLayout(object):
 
     def __init__(self, layout):
+
         if layout is _cinit_bypass_sentinel:
             return
 
@@ -70,6 +80,8 @@ cdef class AudioLayout(object):
             c_layout = default_layouts[layout]
         elif isinstance(layout, basestring):
             c_layout = lib.av_get_channel_layout(layout)
+        elif isinstance(layout, AudioLayout):
+            c_layout = layout.layout
         else:
             raise TypeError('layout must be str or int')
 
@@ -79,9 +91,8 @@ cdef class AudioLayout(object):
         self._init(c_layout)
 
     cdef _init(self, uint64_t layout):
-
         self.layout = layout
-        self.nb_channels = lib.av_get_channel_layout_nb_channels(layout)
+        self.nb_channels = lib.av_get_channel_layout_nb_channels(layout) # This just counts bits.
         self.channels = PyTuple_New(self.nb_channels)
         cdef AudioChannel c
         for i in range(self.nb_channels):
@@ -121,5 +132,3 @@ cdef class AudioChannel(object):
         """A human description of the audio channel."""
         def __get__(self):
             return channel_descriptions.get(self.name)
-
-

@@ -19,48 +19,100 @@ cache:
 
 matrix:
 
-    fast_finish: true
+    # There seems to be a bug in Travis that results in Mike getting piles of
+    # emails as the sub-jobs finish when `fast_finish` is enabled.
+    #fast_finish: true
 
-    # We are still working on this.
     allow_failures:
+
+        # We are still working on this.
         - os: osx
+
+        # Deprecation while we consider removing support for old FFmpeg.
+        - python: "2.7"
+          env: FFMPEG=2.2.4
+          os: linux
+
+        # Deprecation while we consider removing support for Libav entirely.
+        - python: "2.7"
+          env: LIBAV=12
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.9
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.6
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.4
+          os: linux
+
+        # Still setting up for PyPy.
+        - python: "pypy"
+          env: FFMPEG=3.2
+          os: linux
+        - python: "pypy3"
+          env: FFMPEG=3.2
+          os: linux
 
     include:
 
         # Primary target.
         - python: "2.7"
-          env: FFMPEG=3.0
+          env: FFMPEG=3.2
           os: linux
 
         # Mac OS X.
         - python: "2.7"
-          env: FFMPEG=3.0
+          env: FFMPEG=3.2
           os: osx
 
         # Python 3.
         - python: "3.4"
-          env: FFMPEG=3.0
+          env: FFMPEG=3.2
+          os: linux
+
+        # PyPy
+        - python: "pypy"
+          env: FFMPEG=3.2
+          os: linux
+        - python: "pypy3"
+          env: FFMPEG=3.2
           os: linux
 
         # Libav.
         - python: "2.7"
-          env: LIBAV=11.6
+          env: LIBAV=12
           os: linux
 
         # Older Pythons.
         - python: "2.6"
-          env: FFMPEG=3.0
+          env: FFMPEG=3.2
           os: linux
         - python: "3.3"
-          env: FFMPEG=3.0
+          env: FFMPEG=3.2
           os: linux
 
         # Older libraries.
         - python: "2.7"
+          env: FFMPEG=3.0
+          os: linux
+        - python: "2.7"
           env: FFMPEG=2.7
           os: linux
         - python: "2.7"
+          env: FFMPEG=2.5
+          os: linux
+
+        # Deprecated libraries.
+        - python: "2.7"
           env: FFMPEG=2.2.4
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.9
+          os: linux
+        - python: "2.7"
+          env: LIBAV=11.6
           os: linux
         - python: "2.7"
           env: LIBAV=11.4

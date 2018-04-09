@@ -1,13 +1,79 @@
+"""
+
+.. autoclass:: StreamContainer
+
+Dynamic Slicing
+~~~~~~~~~~~~~~~
+
+.. automethod:: StreamContainer.get
+
+
+Typed Collections
+~~~~~~~~~~~~~~~~~
+
+These attributes are preferred for readability if you don't need the
+dynamic capabilities of :method:`.get`:
+
+.. attribute:: StreamContainer.video
+
+    A tuple of :class:`VideoStream`.
+
+.. attribute:: StreamContainer.audio
+
+    A tuple of :class:`AudioStream`.
+
+.. attribute:: StreamContainer.subtitles
+
+    A tuple of :class:`SubtitleStream`.
+
+.. attribute:: StreamContainer.data
+
+    A tuple of :class:`DataStream`.
+
+.. attribute:: StreamContainer.other
+
+    A tuple of :class:`Stream`
+
+
+"""
+
+
 cimport libav as lib
+
+
+def _flatten(input_):
+    for x in input_:
+        if isinstance(x, (tuple, list)):
+            for y in _flatten(x):
+                yield y
+        else:
+            yield x
+
 
 cdef class StreamContainer(object):
 
+    """
+
+    A tuple-like container of :class:`Stream`.
+
+    ::
+
+        # There are a few ways to pulling out streams.
+        first = container.streams[0]
+        video = container.streams.video[0]
+        audio = container.streams.get(audio=(0, 1))
+
+
+    """
+
+
     def __cinit__(self):
-        self._streams = []
-        self.video = ()
-        self.audio = ()
+        self._streams  = []
+        self.video     = ()
+        self.audio     = ()
         self.subtitles = ()
-        self.other = ()
+        self.data      = ()
+        self.other     = ()
 
     cdef add_stream(self, Stream stream):
 
@@ -20,6 +86,8 @@ cdef class StreamContainer(object):
             self.audio = self.audio + (stream, )
         elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
             self.subtitles = self.subtitles + (stream, )
+        elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_DATA:
+            self.data = self.data + (stream, )
         else:
             self.other = self.other + (stream, )
 
@@ -29,32 +97,64 @@ cdef class StreamContainer(object):
     def __iter__(self):
         return iter(self._streams)
     def __getitem__(self, index):
-        return self._streams[index]
+        if isinstance(index, int):
+            return self.get(index)[0]
+        else:
+            return self.get(index)
 
-    def get(self, streams=None, **typed):
+    def get(self, *args, **kwargs):
+        """get(streams=None, video=None, audio=None, subtitles=None, data=None)
+
+        Get a selection of :class:`.Stream` as a ``list``.
+
+        Positional arguments may be ``int`` (which is an index into the streams),
+        or ``list`` or ``tuple`` of those::
+
+            # Get the first channel.
+            streams.get(0)
+
+            # Get the first two audio channels.
+            streams.get(audio=(0, 1))
+
+        Keyword arguments (or dicts as positional arguments) as interpreted
+        as ``(stream_type, index_value_or_set)`` pairs::
+
+            # Get the first video channel.
+            streams.get(video=0)
+            # or
+            streams.get({'video': 0})
+
+        :class:`.Stream` objects are passed through untouched.
+
+        If nothing is selected, then all streams are returned.
+
+        """
 
         selection = []
 
-        if isinstance(streams, Stream):
-            selection.append(streams)
-        elif isinstance(streams, (tuple, list)):
-            for x in streams:
-                if isinstance(x, Stream):
-                    selection.append(x)
-                elif isinstance(x, int):
-                    selection.append(self._streams[x])
-                else:
-                    raise TypeError('streams element must be Stream or int')
-        elif streams is not None:
-            raise TypeError('streams must be Stream or tuple')
+        for x in _flatten((args, kwargs)):
 
-        for type_, indices in typed.iteritems():
-            streams = getattr(self, type_)
-            if not isinstance(indices, (tuple, list)):
-                indices = [indices]
-            for i in indices:
-                selection.append(streams[i])
+            if x is None:
+                pass
+
+            elif isinstance(x, Stream):
+                selection.append(x)
+
+            elif isinstance(x, int):
+                selection.append(self._streams[x])
+
+            elif isinstance(x, dict):
+                for type_, indices in x.iteritems():
+                    if type_ == 'streams': # For compatibility with the pseudo signature
+                        streams = self._streams
+                    else:
+                        streams = getattr(self, type_)
+                    if not isinstance(indices, (tuple, list)):
+                        indices = [indices]
+                    for i in indices:
+                        selection.append(streams[i])
+
+            else:
+                raise TypeError('Argument must be Stream or int.', type(x))
 
         return selection or self._streams[:]
-
-

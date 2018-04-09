@@ -3,7 +3,7 @@ from libc.stdlib cimport malloc, free
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
-from av.stream cimport Stream, build_stream
+from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
 
 from av.utils import AVError # not cimport
@@ -13,7 +13,18 @@ cdef class InputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
 
-        cdef _Dictionary options = self.options.copy()
+        cdef int i
+
+        # Create several clones of out one set of options, since
+        # avformat_find_stream_info expects an array of them.
+        # TODO: Expose per-stream options at some point.
+        cdef lib.AVDictionary **c_options = NULL
+        if len(self.options):
+            c_options = <lib.AVDictionary**>malloc(self.proxy.ptr.nb_streams * sizeof(void*))
+            for i in range(self.proxy.ptr.nb_streams):
+                c_options[i] = NULL
+                lib.av_dict_copy(&c_options[i], self.options.ptr, 0)
+
         with nogil:
             # This peeks are the first few frames to:
             #   - set stream.disposition from codec.audio_service_type (not exposed);
@@ -24,19 +35,21 @@ cdef class InputContainer(Container):
             #   - open and closes codecs with the options provided.
             ret = lib.avformat_find_stream_info(
                 self.proxy.ptr,
-                # Our understanding is that there is little overlap bettween
-                # options for containers and streams, so we use the same dict.
-                # FIXME: This expects per-stream options.
-                &options.ptr
+                c_options
             )
         self.proxy.err_check(ret)
 
-        self.streams = StreamContainer()
-        cdef int i
-        for i in range(self.proxy.ptr.nb_streams):
-            self.streams.add_stream(build_stream(self, self.proxy.ptr.streams[i]))
+        # Cleanup all of our options.
+        if c_options:
+            for i in range(self.proxy.ptr.nb_streams):
+                lib.av_dict_free(&c_options[i])
+            free(c_options)
 
-        self.metadata = avdict_to_dict(self.proxy.ptr.metadata)
+        self.streams = StreamContainer()
+        for i in range(self.proxy.ptr.nb_streams):
+            self.streams.add_stream(wrap_stream(self, self.proxy.ptr.streams[i]))
+
+        self.metadata = avdict_to_dict(self.proxy.ptr.metadata, self.metadata_encoding, self.metadata_errors)
 
     property start_time:
         def __get__(self): return self.proxy.ptr.start_time
@@ -51,11 +64,19 @@ cdef class InputContainer(Container):
         def __get__(self): return lib.avio_size(self.proxy.ptr.pb)
 
     def demux(self, *args, **kwargs):
-        """demux(streams=None, video=None, audio=None, subtitles=None)
+        """demux(streams=None, video=None, audio=None, subtitles=None, data=None)
 
-        Yields a series of :class:`.Packet` from the given set of :class:`.Stream`
+        Yields a series of :class:`.Packet` from the given set of :class:`.Stream`::
 
-        The last packets are dummy packets that when decoded will flush the buffers.
+            for packet in container.demux():
+                # Do something with `packet`, often:
+                for frame in packet.decode():
+                    # Do something with `frame`.
+
+        .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
+            the arguments.
+
+        .. note:: The last packets are dummy packets that when decoded will flush the buffers.
 
         """
 
@@ -100,31 +121,54 @@ cdef class InputContainer(Container):
                     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
                     # TODO: find better way to handle this
                     if packet.struct.stream_index < len(self.streams):
-                        packet.stream = self.streams[packet.struct.stream_index]
+                        packet._stream = self.streams[packet.struct.stream_index]
+                        # Keep track of this so that remuxing is easier.
+                        packet._time_base = packet._stream._stream.time_base
                         yield packet
 
             # Flush!
             for i in range(self.proxy.ptr.nb_streams):
                 if include_stream[i]:
                     packet = Packet()
-                    packet.stream = self.streams[i]
+                    packet._stream = self.streams[i]
                     yield packet
 
         finally:
             free(include_stream)
 
     def decode(self, *args, **kwargs):
+        """decode(streams=None, video=None, audio=None, subtitles=None, data=None)
+
+        Yields a series of :class:`.Frame` from the given set of streams::
+
+            for frame in container.decode():
+                # Do something with `frame`.
+
+        .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
+            the arguments.
+
+        """
+
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, timestamp, mode='time', backward=True, any_frame=False):
-        """Seek to the keyframe at the given timestamp.
+    def seek(self, offset, whence='time', backward=True, any_frame=False):
+        """Seek to a (key)frame nearsest to the given timestamp.
 
-        :param int timestamp: time in AV_TIME_BASE units.
-        :param str mode: one of ``"backward"``, ``"frame"``, ``"byte"``, or ``"any"``.
+        :param int offset: Location to seek to. Interpretation depends on ``whence``.
+        :param str whence: One of ``'time'``, ``'frame'``, or ``'byte'``
+        :param bool backward: If there is not a (key)frame at the given offset,
+            look backwards for it.
+        :param bool any_frame: Seek to any frame, not just a keyframe.
+
+        ``whence`` has the following meanings:
+
+        - ``'time'``: ``offset`` is in ``av.TIME_BASE``.
+        - ``'frame'``: ``offset`` is a frame index
+        - ``'byte'``: ``offset`` is the byte location in the file to seek to.
+
+        .. warning:: Not all formats support all options.
 
         """
-        if isinstance(timestamp, float):
-            timestamp = <long>(timestamp * lib.AV_TIME_BASE)
-        self.proxy.seek(-1, timestamp, mode, backward, any_frame)
+        self.proxy.seek(-1, offset, whence, backward, any_frame)

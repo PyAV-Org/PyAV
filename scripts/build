@@ -21,4 +21,4 @@ which ffmpeg || exit 2
 ffmpeg -version || exit 3
 echo
 
-python setup.py doctor build_ext --inplace || exit 1
+"$PYAV_PYTHON" setup.py doctor build_ext --inplace || exit 1

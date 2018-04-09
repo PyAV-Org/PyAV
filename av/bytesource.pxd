@@ -4,7 +4,7 @@ from cpython.buffer cimport Py_buffer
 cdef class ByteSource(object):
 
     cdef object owner
-    
+
     cdef bint has_view
     cdef Py_buffer view
 

@@ -19,9 +19,9 @@ cdef class AudioFrame(Frame):
 
     cdef readonly AudioLayout layout
     cdef readonly AudioFormat format
-    
+
     cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align)
     cdef _recalc_linesize(self)
-    cdef _init_properties(self)
+    cdef _init_user_attributes(self)
 
 cdef AudioFrame alloc_audio_frame()

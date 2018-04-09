@@ -5,13 +5,30 @@
 
 Currently we provide the basics of:
 
-- :class:`containers <.Container>`
-- devices (by specifying a format)
-- audio/video/subtitle :class:`streams <.Stream>`
-- :class:`packets <.Packet>`
-- audio/video :class:`frames <.Frame>`
-- :class:`data planes <.Plane>`
-- :class:`subtitles <.Subtitle>`
+- ``libavformat``:
+  :class:`containers <.Container>`,
+  audio/video/subtitle :class:`streams <.Stream>`,
+  :class:`packets <.Packet>`;
+
+- ``libavdevice`` (by specifying a format to containers);
+
+- ``libavcodec``:
+  :class:`.Codec`,
+  :class:`.CodecContext`,
+  audio/video :class:`frames <.Frame>`,
+  :class:`data planes <.Plane>`,
+  :class:`subtitles <.Subtitle>`;
+
+- ``libavfilter``:
+  :class:`.Filter`,
+  :class:`.Graph`;
+
+- ``libscscale``:
+  :class:`.VideoReformatter`;
+
+- ``libavresample`` and/or ``libswresample``:
+  :class:`.AudioResampler`;
+
 - and a few more utilities.
 
 .. _FFmpeg: http://ffmpeg.org
@@ -21,27 +38,42 @@ Currently we provide the basics of:
 Basic Demo
 ----------
 
-::
+.. testsetup::
+
+    path_to_video = common.fate_png() # We don't need a full QT here.
+
+
+.. testcode::
 
     import av
 
-    container = av.open('/path/to/video.mp4')
+    container = av.open(path_to_video)
 
     for frame in container.decode(video=0):
-        frame.to_image().save('/path/to/frame-%04d.jpg' % frame.index)
+        frame.to_image().save('frame-%04d.jpg' % frame.index)
 
 
 Contents
 --------
 
 .. toctree::
+    :glob:
     :maxdepth: 2
 
     about
     installation
-    api
+    examples/_index
+    api/_index
+
+
+.. toctree::
+    :maxdepth: 1
+
     hacking
     includes
+    changelog
+    contributors
+    license
 
 
 Indices and Tables
@@ -49,4 +81,3 @@ Indices and Tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

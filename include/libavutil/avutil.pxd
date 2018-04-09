@@ -31,7 +31,8 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         AV_ROUND_DOWN
         AV_ROUND_UP
         AV_ROUND_NEAR_INF
-        AV_ROUND_PASS_MINMAX
+        # This is nice, but only in FFMpeg:
+        # AV_ROUND_PASS_MINMAX
 
     cdef int AV_ERROR_MAX_STRING_SIZE
     cdef int AVERROR_EOF
@@ -85,7 +86,14 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         int64_t a,
         int64_t b,
         int64_t c,
-        AVRounding r
+        int r # should be AVRounding, but then we can't use bitwise logic.
+    )
+
+    cdef int64_t av_rescale_q_rnd(
+        int64_t a,
+        AVRational bq,
+        AVRational cq,
+        int r # should be AVRounding, but then we can't use bitwise logic.
     )
 
     cdef int64_t av_rescale(
@@ -219,21 +227,33 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_STRING
         AV_OPT_TYPE_RATIONAL
         AV_OPT_TYPE_BINARY
-        #AV_OPT_TYPE_DICT # Missing from FFmpeg
+        AV_OPT_TYPE_DICT
+        #AV_OPT_TYPE_UINT64 # since FFmpeg 3.3
         AV_OPT_TYPE_CONST
-        #AV_OPT_TYPE_IMAGE_SIZE # Missing from LibAV
-        #AV_OPT_TYPE_PIXEL_FMT # Missing from LibAV
-        #AV_OPT_TYPE_SAMPLE_FMT # Missing from LibAV
-        #AV_OPT_TYPE_VIDEO_RATE # Missing from FFmpeg
-        #AV_OPT_TYPE_DURATION # Missing from FFmpeg
-        #AV_OPT_TYPE_COLOR # Missing from FFmpeg
-        #AV_OPT_TYPE_CHANNEL_LAYOUT # Missing from FFmpeg
+        AV_OPT_TYPE_IMAGE_SIZE
+        AV_OPT_TYPE_PIXEL_FMT
+        AV_OPT_TYPE_SAMPLE_FMT
+        AV_OPT_TYPE_VIDEO_RATE
+        AV_OPT_TYPE_DURATION
+        AV_OPT_TYPE_COLOR
+        AV_OPT_TYPE_CHANNEL_LAYOUT
+        AV_OPT_TYPE_BOOL
 
     cdef struct AVOption_default_val:
         int64_t i64
         double dbl
         const char *str
         AVRational q
+
+    cdef enum:
+        AV_OPT_FLAG_ENCODING_PARAM
+        AV_OPT_FLAG_DECODING_PARAM
+        AV_OPT_FLAG_AUDIO_PARAM
+        AV_OPT_FLAG_VIDEO_PARAM
+        AV_OPT_FLAG_SUBTITLE_PARAM
+        AV_OPT_FLAG_EXPORT
+        AV_OPT_FLAG_READONLY
+        AV_OPT_FLAG_FILTERING_PARAM
 
     cdef struct AVOption:
 
@@ -276,14 +296,17 @@ cdef extern from "libavutil/log.h" nogil:
 
         AVOption *option
 
-    int AV_LOG_QUIET
-    int AV_LOG_PANIC
-    int AV_LOG_FATAL
-    int AV_LOG_ERROR
-    int AV_LOG_WARNING
-    int AV_LOG_INFO
-    int AV_LOG_VERBOSE
-    int AV_LOG_DEBUG
+    cdef enum:
+        AV_LOG_QUIET
+        AV_LOG_PANIC
+        AV_LOG_FATAL
+        AV_LOG_ERROR
+        AV_LOG_WARNING
+        AV_LOG_INFO
+        AV_LOG_VERBOSE
+        AV_LOG_DEBUG
+        AV_LOG_TRACE
+        AV_LOG_MAX_OFFSET
 
     # Send a log.
     void av_log(void *ptr, int level, const char *fmt, ...)

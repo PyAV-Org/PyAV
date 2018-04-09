@@ -1,29 +1,57 @@
 from libc.stdint cimport uint8_t
 
-cdef class Packet(object):
+cimport libav as lib
 
+from av.bytesource cimport bytesource
+from av.utils cimport avrational_to_faction, to_avrational, err_check
+from libc.stdint cimport uint8_t
+
+cdef class Packet(Buffer):
     """A packet of encoded data within a :class:`~av.format.Stream`.
 
     This may, or may not include a complete object within a stream.
     :meth:`decode` must be called to extract encoded data.
 
     """
-    def __init__(self):
+
+    def __cinit__(self, input=None):
         with nogil:
             lib.av_init_packet(&self.struct)
-            self.struct.data = NULL
-            self.struct.size = 0
-            self.timestamp = 0.
+
+    def __init__(self, input=None):
+
+        cdef size_t size = 0
+        cdef ByteSource source = None
+
+        if input is None:
+            return
+
+        if isinstance(input, (int, long)):
+            size = input
+        else:
+            source = bytesource(input)
+            size = source.length
+
+        if size:
+            err_check(lib.av_new_packet(&self.struct, size))
+
+        if source is not None:
+            self.update_buffer(source)
+            # TODO: Hold onto the source, and copy its pointer
+            # instead of its data.
+            #self.source = source
 
     def __dealloc__(self):
-        with nogil: lib.av_free_packet(&self.struct)
+        with nogil:
+            lib.av_free_packet(&self.struct)
 
     def __repr__(self):
-        return '<av.%s of #%d, dts=%s, pts=%s at 0x%x>' % (
+        return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
             self.__class__.__name__,
-            self.stream.index,
+            self._stream.index if self._stream else 0,
             self.dts,
             self.pts,
+            self.struct.size,
             id(self),
         )
 
@@ -32,25 +60,76 @@ cdef class Packet(object):
         return self.struct.size
     cdef void*  _buffer_ptr(self):
         return self.struct.data
+    #cdef bint _buffer_writable(self):
+    #    return self.source is None
+
+    def copy(self):
+        raise NotImplementedError()
+        cdef Packet copy = Packet()
+        # copy.struct.size = self.struct.size
+        # copy.struct.data = NULL
+        return copy
+
+    cdef _rebase_time(self, lib.AVRational dst):
+
+        if not dst.num:
+            raise ValueError('Cannot rebase to zero time.')
+
+        if not self._time_base.num:
+            self._time_base = dst
+            return
+
+        if self._time_base.num == dst.num and self._time_base.den == dst.den:
+            return
+
+        # TODO: Isn't there a function to do this?
+
+        if self.struct.pts != lib.AV_NOPTS_VALUE:
+            self.struct.pts = lib.av_rescale_q(
+                self.struct.pts,
+                self._time_base, dst
+            )
+        if self.struct.dts != lib.AV_NOPTS_VALUE:
+            self.struct.dts = lib.av_rescale_q(
+                self.struct.dts,
+                self._time_base, dst
+            )
+        if self.struct.duration > 0:
+            self.struct.duration = lib.av_rescale_q(
+                self.struct.duration,
+                self._time_base, dst
+            )
+
+        self._time_base = dst
 
     def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
-        return self.stream.decode(self, count)
+        return self._stream.decode(self, count)
 
     def decode_one(self):
         """Decode the first frame from this packet.
 
         Returns ``None`` if there is no frame."""
-        res = self.stream.decode(self, count=1)
+        res = self._stream.decode(self, count=1)
         return res[0] if res else None
 
-    # Looks circular, but isn't. Silly Cython.
+    property stream_index:
+        def __get__(self):
+            return self.struct.stream_index
+
     property stream:
         def __get__(self):
-            return self.stream
-        def __set__(self, Stream value):
-            self.stream = value
-            self.struct.stream_index = value.index
+            return self._stream
+        def __set__(self, Stream stream):
+            self._stream = stream
+            #self._rebase_time(stream._stream.time_base)
+            self.struct.stream_index = stream._stream.index
+
+    property time_base:
+        def __get__(self):
+            return avrational_to_faction(&self._time_base)
+        def __set__(self, value):
+            to_avrational(value, &self._time_base)
 
     property pts:
         def __get__(self):
@@ -82,3 +161,8 @@ cdef class Packet(object):
     property duration:
         def __get__(self): return None if self.struct.duration == lib.AV_NOPTS_VALUE else self.struct.duration
 
+    property is_keyframe:
+        def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_KEY)
+
+    property is_corrupt:
+        def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_CORRUPT)

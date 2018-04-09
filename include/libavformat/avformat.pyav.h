@@ -2,11 +2,11 @@
 
 #include <libavformat/avformat.h>
 
-#ifndef PYAV_HAVE_AVFORMAT_CLOSE_INPUT
+#if !PYAV_HAVE_AVFORMAT_CLOSE_INPUT
     #define avformat_close_input(context_pp) av_close_input_file(*context_pp)
 #endif
 
-#ifndef PYAV_HAVE_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
+#if !PYAV_HAVE_AVFORMAT_ALLOC_OUTPUT_CONTEXT2
 
 #include <libavutil/avstring.h>
 #include <libavutil/opt.h>

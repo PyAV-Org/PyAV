@@ -15,11 +15,11 @@ __all__ = '''
 
 
 class ModuleProxy(object):
-    
+
     def __init__(self, name, module):
         self.name = name
         self.module = module
-    
+
     def __getattr__(self, name):
         if name.isupper():
             return getattr(self.module, self.name.upper() + '_' + name)
@@ -32,7 +32,7 @@ class ModuleProxy(object):
 
 
 class GLProxy(ModuleProxy):
-    
+
     @contextmanager
     def matrix(self):
         self.module.glPushMatrix()
@@ -40,7 +40,7 @@ class GLProxy(ModuleProxy):
             yield
         finally:
             self.module.glPopMatrix()
-    
+
     @contextmanager
     def attrib(self, *args):
         mask = 0
@@ -53,15 +53,15 @@ class GLProxy(ModuleProxy):
             yield
         finally:
             self.module.glPopAttrib()
-    
+
     def enable(self, *args, **kwargs):
         self._enable(True, args, kwargs)
         return self._apply_on_exit(self._enable, False, args, kwargs)
-    
+
     def disable(self, *args, **kwargs):
         self._enable(False, args, kwargs)
         return self._apply_on_exit(self._enable, True, args, kwargs)
-    
+
     def _enable(self, enable, args, kwargs):
         todo = []
         for arg in args:
@@ -77,20 +77,20 @@ class GLProxy(ModuleProxy):
                 self.module.glEnable(flag)
             else:
                 self.module.glDisable(flag)
-        
+
     def begin(self, arg):
         if isinstance(arg, basestring):
             arg = getattr(self.module, 'GL_%s' % arg.upper())
         self.module.glBegin(arg)
         return self._apply_on_exit(self.module.glEnd)
-    
+
     @contextmanager
     def _apply_on_exit(self, func, *args, **kwargs):
         try:
             yield
         finally:
             func(*args, **kwargs)
-        
+
 
 gl = GLProxy('gl', OpenGL.GL)
 glu = ModuleProxy('glu', OpenGL.GLU)

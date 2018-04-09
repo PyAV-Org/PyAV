@@ -1,3 +1,4 @@
+from __future__ import print_function
 import array
 import argparse
 import sys
@@ -11,10 +12,10 @@ import av
 def print_data(frame):
     for i, plane in enumerate(frame.planes or ()):
         data = plane.to_bytes()
-        print '\tPLANE %d, %d bytes' % (i, len(data))
+        print('\tPLANE %d, %d bytes' % (i, len(data)))
         data = data.encode('hex')
         for i in xrange(0, len(data), 128):
-            print '\t\t\t%s' % data[i:i + 128]
+            print('\t\t\t%s' % data[i:i + 128])
 
 
 arg_parser = argparse.ArgumentParser()
@@ -49,7 +50,7 @@ for i, packet in enumerate(container.demux(stream)):
     for frame in packet.decode():
 
         read_count += 1
-        print '>>>> %04d' % read_count, frame
+        print('>>>> %04d' % read_count, frame)
         if args.data:
             print_data(frame)
 
@@ -58,7 +59,7 @@ for i, packet in enumerate(container.demux(stream)):
         if resampler:
             for i, frame in enumerate(frames):
                 frame = resampler.resample(frame)
-                print 'RESAMPLED', frame
+                print('RESAMPLED', frame)
                 if args.data:
                     print_data(frame)
                 frames[i] = frame
@@ -74,7 +75,7 @@ for i, packet in enumerate(container.demux(stream)):
                     frame = fifo.read(args.size)
                     if frame:
                         fifo_count += 1
-                        print '|||| %04d' % fifo_count, frame
+                        print('|||| %04d' % fifo_count, frame)
                         if args.data:
                             print_data(frame)
                         frames.append(frame)
@@ -85,17 +86,16 @@ for i, packet in enumerate(container.demux(stream)):
                     '-f', frames[0].format.packed.container_name,
                     '-ar', str(args.rate or stream.rate),
                     '-ac', str(len(resampler.layout.channels if resampler else stream.layout.channels)),
-                    '-vn','-',
+                    '-vn', '-',
                 ]
-                print 'PLAY', ' '.join(cmd)
+                print('PLAY', ' '.join(cmd))
                 ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE)
             try:
                 for frame in frames:
                     ffplay.stdin.write(frame.planes[0].to_bytes())
             except IOError as e:
-                print e
+                print(e)
                 exit()
 
         if args.count and read_count >= args.count:
             exit()
-

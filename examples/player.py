@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import ctypes
 import os
@@ -17,7 +18,7 @@ HEIGHT = 540
 class PlayerGLWidget(Q.GLWidget):
 
     def initializeGL(self):
-        print 'initialize GL'
+        print('initialize GL')
         gl.clearColor(0, 0, 0, 0)
 
         gl.enable(gl.TEXTURE_2D)
@@ -28,13 +29,13 @@ class PlayerGLWidget(Q.GLWidget):
         gl.texParameter(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
         gl.texParameter(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 
-        print 'texture id', self.tex_id
+        print('texture id', self.tex_id)
 
     def setImage(self, w, h, img):
         gl.texImage2D(gl.TEXTURE_2D, 0, 3, w, h, 0, gl.RGB, gl.UNSIGNED_BYTE, img)
 
     def resizeGL(self, w, h):
-        print 'resize to', w, h
+        print('resize to', w, h)
         gl.viewport(0, 0, w, h)
         # gl.matrixMode(gl.PROJECTION)
         # gl.loadIdentity()
@@ -45,9 +46,9 @@ class PlayerGLWidget(Q.GLWidget):
         # print 'paint!'
         gl.clear(gl.COLOR_BUFFER_BIT)
         with gl.begin('polygon'):
-            gl.texCoord(0, 0); gl.vertex(-1,  1)
-            gl.texCoord(1, 0); gl.vertex( 1,  1)
-            gl.texCoord(1, 1); gl.vertex( 1, -1)
+            gl.texCoord(0, 0); gl.vertex(-1, 1)
+            gl.texCoord(1, 0); gl.vertex(1, 1)
+            gl.texCoord(1, 1); gl.vertex(1, -1)
             gl.texCoord(0, 1); gl.vertex(-1, -1)
 
 
@@ -79,7 +80,7 @@ start_time = 0
 count = 0
 
 timer = Q.Timer()
-timer.setInterval(1000/30)
+timer.setInterval(1000 / 30)
 @timer.timeout.connect
 def on_timeout(*args):
 
@@ -93,7 +94,7 @@ def on_timeout(*args):
 
     count += 1
     elapsed = time.time() - start_time
-    print frame.pts, frame.dts, '%.2ffps' % (count / elapsed)
+    print(frame.pts, frame.dts, '%.2ffps' % (count / elapsed))
 
 timer.start()
 

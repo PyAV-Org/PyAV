@@ -44,18 +44,34 @@ class Visitor(TreeVisitor):
         self.state.pop('extern_from')
 
     def visit_CStructOrUnionDefNode(self, node):
-        self.record_event(node, type='cdef struct', name=node.name)
-        #self.visitchildren(node)
+        self.record_event(node, type='struct', name=node.name)
+        self.state['struct'] = node.name
+        self.visitchildren(node)
+        self.state.pop('struct')
 
     def visit_CFuncDeclaratorNode(self, node):
         if isinstance(node.base, Nodes.CNameDeclaratorNode):
-            self.record_event(node, type='cdef function', name=node.base.name)
+            self.record_event(node, type='function', name=node.base.name)
         else:
             self.visitchildren(node)
 
     def visit_CVarDefNode(self, node):
+
         if isinstance(node.declarators[0], Nodes.CNameDeclaratorNode):
-            self.record_event(node, type='cdef variable', name=node.declarators[0].name)
+
+            # Grab the type name.
+            # TODO: Do a better job.
+            type_ = node.base_type
+            if hasattr(type_, 'name'):
+                type_name = type_.name
+            elif hasattr(type_, 'base_type'):
+                type_name = type_.base_type.name
+            else:
+                type_name = str(type_)
+
+            self.record_event(node, type='variable', name=node.declarators[0].name,
+                vartype=type_name)
+
         else:
             self.visitchildren(node)
 
@@ -76,7 +92,7 @@ class Visitor(TreeVisitor):
 
     def visit_AttributeNode(self, node):
         if getattr(node.obj, 'name', None) == 'lib':
-            self.record_event(node, type='library use', name=node.attribute)
+            self.record_event(node, type='use', name=node.attribute)
         else:
             self.visitchildren(node)
 
@@ -95,7 +111,9 @@ def extract(path, **kwargs):
 
     context = options.create_context()
 
-    tree = parse_from_strings(name, open(path).read().decode('utf8'), context, **kwargs)
+    tree = parse_from_strings(name, open(path).read().decode('utf8'), context,
+        level='module_pxd' if path.endswith('.pxd') else None,
+        **kwargs)
 
     extractor = Visitor({'file': path})
     extractor.visit(tree)
@@ -103,33 +121,42 @@ def extract(path, **kwargs):
 
 
 def iter_cython(path):
+    '''Yield all ``.pyx`` and ``.pxd`` files in the given root.'''
     for dir_path, dir_names, file_names in os.walk(path):
         for file_name in file_names:
+            if file_name.startswith('.'):
+                continue
             if os.path.splitext(file_name)[1] not in ('.pyx', '.pxd'):
                 continue
             yield os.path.join(dir_path, file_name)
 
 
 doxygen = {}
+doxygen_base = 'https://ffmpeg.org/doxygen/trunk'
 tagfile_path = 'tmp/tagfile.xml'
+
 tagfile_json = tagfile_path + '.json'
 if os.path.exists(tagfile_json):
     print('Loading pre-parsed Doxygen tagfile:', tagfile_json, file=sys.stderr)
     doxygen = json.load(open(tagfile_json))
+
+
 if not doxygen:
+
     print('Parsing Doxygen tagfile:', tagfile_path, file=sys.stderr)
     if not os.path.exists(tagfile_path):
         print('    MISSING!', file=sys.stderr)
     else:
-        root = etree.parse(tagfile_path)
-        for node in root.iter('member'):
 
-            name = node.find('name').text
+        root = etree.parse(tagfile_path)
+
+        def inspect_member(node, name_prefix=''):
+            name = name_prefix + node.find('name').text
             anchorfile = node.find('anchorfile').text
             anchor = node.find('anchor').text
 
-            url = 'https://ffmpeg.org/doxygen/trunk/%s#%s' % (anchorfile, anchor)
-            
+            url = '%s/%s#%s' % (doxygen_base, anchorfile, anchor)
+
             doxygen[name] = {'url': url}
 
             if node.attrib['kind'] == 'function':
@@ -138,7 +165,18 @@ if not doxygen:
                 sig = '%s %s%s' % (ret_type, name, arglist)
                 doxygen[name]['sig'] = sig
 
-        json.dump(doxygen, open(tagfile_json, 'w'))
+        for struct in root.iter('compound'):
+            if struct.attrib['kind'] != 'struct':
+                continue
+            name_prefix = struct.find('name').text + '.'
+            for node in struct.iter('member'):
+                inspect_member(node, name_prefix)
+
+        for node in root.iter('member'):
+            inspect_member(node)
+
+
+        json.dump(doxygen, open(tagfile_json, 'w'), sort_keys=True, indent=4)
 
 
 print('Parsing Cython source for references...', file=sys.stderr)
@@ -148,9 +186,10 @@ for path in iter_cython('av'):
         events = extract(path)
     except Exception as e:
         print("    %s in %s" % (e.__class__.__name__, path), file=sys.stderr)
+        print("        %s" % e, file=sys.stderr)
         continue
     for event in events:
-        if event['type'] == 'library use':
+        if event['type'] == 'use':
             lib_references.setdefault(event['name'], []).append(event)
 
 
@@ -193,25 +232,41 @@ for path in iter_cython('include'):
             line += 1
 
         # Figure out the Sphinx headline.
-        if event['type'] == 'cdef function':
+        if event['type'] == 'function':
+            event['_sort_key'] = 2
             sig = doxygen.get(event['name'], {}).get('sig')
             if sig:
                 sig = re.sub(r'\).+', ')', sig) # strip trailer
                 event['_headline'] = '.. c:function:: %s' % sig
             else:
                 event['_headline'] = '.. c:function:: %s()' % event['name']
-        elif event['type'] == 'cdef variable':
-            event['_headline'] = '.. c:var:: %s' % event['name']
-        elif event['type'] == 'cdef struct':
+
+        elif event['type'] == 'variable':
+            struct = event.get('struct')
+            if struct:
+                event['_headline'] = '.. c:member:: %s %s' % (event['vartype'], event['name'])
+                event['_sort_key'] = 1.1
+            else:
+                event['_headline'] = '.. c:var:: %s' % event['name']
+                event['_sort_key'] = 3
+
+        elif event['type'] == 'struct':
             event['_headline'] = '.. c:type:: struct %s' % event['name']
+            event['_sort_key'] = 1
+            event['_doxygen_url'] = '%s/struct%s.html' % (doxygen_base, event['name'])
+
         else:
             print('Unknown event type %s' % event['type'], file=sys.stderr)
 
+        name = event['name']
+        if event.get('struct'):
+            name = '%s.%s' % (event['struct'], name)
+
         # Doxygen URLs
-        event['_doxygen_url'] = doxygen.get(event['name'], {}).get('url')
+        event.setdefault('_doxygen_url', doxygen.get(name, {}).get('url'))
 
         # Find use references.
-        ref_events = lib_references.get(event['name'], [])
+        ref_events = lib_references.get(name, [])
         if ref_events:
 
             ref_pairs = []
@@ -258,17 +313,23 @@ Wrapped C Types and Functions
 
 for extern, events in sorted(defs_by_extern.iteritems()):
     did_header = False
+
     for event in events:
 
         headline = event.get('_headline')
         comments = event.get('_comments')
-        refs = event.get('_references')
+        refs = event.get('_references', [])
         url = event.get('_doxygen_url')
+        indent = '    ' if event.get('struct') else ''
 
         if not headline:
             continue
-        if not filter(None, (x.strip() for x in comments if x.strip())) and not refs:
-            continue
+        if (
+            not filter(None, (x.strip() for x in comments if x.strip())) and
+            not refs and
+            event['type'] not in ('struct', )
+        ):
+            pass
 
         if not did_header:
             print('``%s``' % extern)
@@ -276,25 +337,24 @@ for extern, events in sorted(defs_by_extern.iteritems()):
             print()
             did_header = True
 
-        print(headline)
+        if url:
+            print()
+            print(indent + '.. rst-class:: ffmpeg-quicklink')
+            print()
+            print(indent + '    `FFmpeg Docs <%s>`_' % url)
+
+        print(indent + headline)
         print()
 
         if comments:
             for line in comments:
-                print('    ' + line)
+                print(indent + '    ' + line)
             print()
-
-        if url:
-            refs.append('`FFMpeg docs <%s>`__' % url)
 
         if refs:
-            print('    Referenced by:')
-            #print()
-            for ref in refs:
-                print('        -', ref)
-            print()
+            print(indent + '    Referenced by: ', end='')
+            for i, ref in enumerate(refs):
+                print((', ' if i else '') + ref, end='')
+            print('.')
 
-
-
-
-
+        print()

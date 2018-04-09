@@ -8,8 +8,6 @@ from distutils.errors import DistutilsExecError
 from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
-from distutils.command.clean import clean, log
-from distutils.dir_util import remove_tree
 from subprocess import Popen, PIPE
 import errno
 import itertools
@@ -24,9 +22,15 @@ try:
     from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
 except ImportError:
     MSVC9Compiler = None
-    msvc_compiler_classes = (MSVCCompiler, )
-else:
-    msvc_compiler_classes = (MSVCCompiler, MSVC9Compiler)
+
+try:
+    from distutils._msvccompiler import MSVCCompiler as MSVC14Compiler
+except ImportError:
+    MSVC14Compiler = None
+
+
+msvc_compiler_classes = tuple([cls for cls in (MSVCCompiler, MSVC9Compiler,
+                                               MSVC14Compiler) if cls is not None])
 
 try:
     from Cython.Build import cythonize
@@ -39,9 +43,13 @@ is_py3 = sys.version_info[0] >= 3
 
 
 # We will embed this metadata into the package so it can be recalled for debugging.
-version = '0.3.1'
-git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
-git_commit = git_commit.strip()
+version = '0.4.1.dev0'
+try:
+    git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
+except OSError:
+    git_commit = None
+else:
+    git_commit = git_commit.strip()
 
 
 def get_library_config(name):
@@ -95,34 +103,69 @@ def is_msvc(cc=None):
     cc = _new_compiler() if cc is None else cc
     return isinstance(cc, msvc_compiler_classes)
 
+# Obtain the ffmpeg dir from the "--ffmpeg-dir=<dir>" argument
+FFMPEG_DIR = None
+for i, arg in enumerate(sys.argv):
+    if arg.startswith('--ffmpeg-dir='):
+        FFMPEG_DIR = arg.split('=')[1]
+        break
+
+if FFMPEG_DIR is not None:
+    # delete the --ffmpeg-dir arg so that distutils does not see it
+    del sys.argv[i]
+    if not os.path.isdir(FFMPEG_DIR):
+        print('The specified ffmpeg directory does not exist')
+        exit(1)
+else:
+    # Check the environment variable FFMPEG_DIR
+    FFMPEG_DIR = os.environ.get('FFMPEG_DIR')
+    if FFMPEG_DIR is not None:
+        if not os.path.isdir(FFMPEG_DIR):
+            FFMPEG_DIR = None
+
+if FFMPEG_DIR is not None:
+    ffmpeg_lib = os.path.join(FFMPEG_DIR, 'lib')
+    ffmpeg_include = os.path.join(FFMPEG_DIR, 'include')
+    if os.path.exists(ffmpeg_lib):
+        ffmpeg_lib = [ffmpeg_lib]
+    else:
+        ffmpeg_lib = [FFMPEG_DIR]
+    if os.path.exists(ffmpeg_include):
+        ffmpeg_include = [ffmpeg_include]
+    else:
+        ffmpeg_include = [FFMPEG_DIR]
+else:
+    ffmpeg_lib = []
+    ffmpeg_include = []
+
 
 # The "extras" to be supplied to every one of our modules.
 # This is expanded heavily by the `config` command.
 extension_extra = {
-    'include_dirs': ['include'], # These are PyAV's includes.
+    'include_dirs': ['include'] + ffmpeg_include,  # The first are PyAV's includes.
     'libraries'   : [],
-    'library_dirs': [],
+    'library_dirs': ffmpeg_lib,
 }
 
 # The macros which describe what functions and structure members we have
 # from the underlying libraries. This is expanded heavily by `reflect` command.
-config_macros = [
-    ("PYAV_VERSION", version),
-    ("PYAV_VERSION_STR", '"%s"' % version),
-    ("PYAV_COMMIT_STR", '"%s"' % (git_commit or 'unknown-commit'))
-]
+config_macros = {
+    "PYAV_VERSION": version,
+    "PYAV_VERSION_STR": '"%s"' % version,
+    "PYAV_COMMIT_STR": '"%s"' % (git_commit or 'unknown-commit'),
+}
 
 
 def dump_config():
     """Print out all the config information we have so far (for debugging)."""
-    print('PyAV:', version, git_commit)
+    print('PyAV:', version, git_commit or '(unknown commit)')
     print('Python:', sys.version.encode('unicode_escape' if is_py3 else 'string-escape'))
     print('platform:', platform.platform())
     print('extension_extra:')
     for k, vs in extension_extra.items():
         print('\t%s: %s' % (k, [x.encode('utf8') for x in vs]))
     print('config_macros:')
-    for x in config_macros:
+    for x in sorted(config_macros.items()):
         print('\t%s=%s' % x)
 
 
@@ -133,7 +176,7 @@ if os.name == 'nt':
 
 
     if is_msvc():
-        config_macros.append(('inline', '__inline'))
+        config_macros['inline'] = '__inline'
     # Since we're shipping a self contained unit on windows, we need to mark
     # the package as such. On other systems, let it be universal.
     class BinaryDistribution(Distribution):
@@ -164,7 +207,21 @@ def new_compiler(*args, **kwargs):
 
     """
     cc = _new_compiler(*args, **kwargs)
-    if kwargs.pop('silent', True):
+    make_silent = True
+    # If MSVC10, initialize the compiler here and add /MANIFEST to linker flags.
+    # See Python issue 4431 (https://bugs.python.org/issue4431)
+    if is_msvc(cc):
+        from distutils.msvc9compiler import get_build_version
+        if get_build_version() == 10:
+            cc.initialize()
+            for ldflags in [cc.ldflags_shared, cc.ldflags_shared_debug]:
+                unique_extend(ldflags, ['/MANIFEST'])
+        # If MSVC14, do not silence. As msvc14 requires some custom
+        # steps before the process is spawned, we can't monkey-patch this.
+        elif get_build_version() == 14:
+            make_silent = False
+    # monkey-patch compiler to suppress stdout and stderr.
+    if make_silent and kwargs.pop('silent', True):
         cc.spawn = _CCompiler_spawn_silent
     return cc
 
@@ -270,7 +327,6 @@ for dirname, dirnames, filenames in os.walk('av'):
         ))
 
 
-
 class ConfigCommand(Command):
 
     user_options = [
@@ -292,6 +348,11 @@ class ConfigCommand(Command):
             ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
+
+        for name in 'libswresample', 'libavresample':
+            # We will look for these in a moment.
+            config_macros['PYAV_HAVE_' + name.upper()] = 0
+
         if is_msvc(new_compiler(compiler=self.compiler)):
             # Assume we have to disable /OPT:REF for MSVC with ffmpeg
             config = {
@@ -303,13 +364,13 @@ class ConfigCommand(Command):
         if self.no_pkg_config:
             # Simply assume we have everything we need!
             config = {
-                'libraries':    ['avformat', 'avcodec', 'avdevice', 'avutil',
+                'libraries':    ['avformat', 'avcodec', 'avdevice', 'avutil', 'avfilter',
                                  'swscale'],
                 'library_dirs': [],
                 'include_dirs': []
             }
             config['libraries'].append('swresample')
-            config_macros.append(('PYAV_HAVE_LIBSWRESAMPLE', 1))
+            config_macros['PYAV_HAVE_LIBSWRESAMPLE'] = 1
             update_extend(extension_extra, config)
             for ext in self.distribution.ext_modules:
                 for key, value in extension_extra.items():
@@ -320,7 +381,7 @@ class ConfigCommand(Command):
         errors = []
 
         # Get the config for the libraries that we require.
-        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libswscale':
+        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libavfilter', 'libswscale':
             config = get_library_config(name)
             if config:
                 update_extend(extension_extra, config)
@@ -333,7 +394,7 @@ class ConfigCommand(Command):
             config = get_library_config(name)
             if config:
                 update_extend(extension_extra, config)
-                config_macros.append(('PYAV_HAVE_' + name.upper(), '1'))
+                config_macros['PYAV_HAVE_' + name.upper()] = 1
                 break
         else:
             errors.append('Could not find either libswresample or libavresample with pkg-config.')
@@ -414,12 +475,13 @@ class ReflectCommand(Command):
             if e.errno != errno.EEXIST:
                 raise
 
-        found = []
+        results = {}
 
         reflection_includes = [
             'libavcodec/avcodec.h',
             'libavformat/avformat.h',
             'libavutil/avutil.h',
+            'libavutil/opt.h',
         ]
 
         config = extension_extra.copy()
@@ -438,20 +500,37 @@ class ReflectCommand(Command):
             'av_frame_get_best_effort_timestamp',
             'avformat_alloc_output_context2',
             'avformat_close_input',
+            'avcodec_send_packet',
 
         ):
             print("looking for %s... " % func_name, end='')
-            if compile_check(
+            results[func_name] = compile_check(
                 name=os.path.join(tmp_dir, func_name),
                 code='%s()' % func_name,
                 libraries=config['libraries'],
                 library_dirs=config['library_dirs'],
                 compiler=self.compiler,
-            ):
-                print('found')
-                found.append(func_name)
-            else:
-                print('missing')
+            )
+            print('found' if results[func_name] else 'missing')
+
+        # Check for some enum values.
+        for enum_name in (
+            'AV_OPT_TYPE_INT', # Canary that should exist.
+            'PYAV_ENUM_SHOULD_NOT_EXIST', # Canary that should not exist.
+
+            # What we actually care about.
+            'AV_OPT_TYPE_BOOL',
+        ):
+            print("looking for %s..." % enum_name, end='')
+            results[enum_name] = compile_check(
+                name=os.path.join(tmp_dir, enum_name),
+                code='int x = %s' % enum_name,
+                includes=reflection_includes,
+                include_dirs=config['include_dirs'],
+                link=False,
+                compiler=self.compiler,
+            )
+            print("found" if results[enum_name] else "missing")
 
         for struct_name, member_name in (
 
@@ -462,42 +541,39 @@ class ReflectCommand(Command):
             ('AVFrame', 'mb_type'),
 
         ):
-            print("looking for %s.%s... " % (struct_name, member_name), end='')
-            if compile_check(
-                name=os.path.join(tmp_dir, '%s.%s' % (struct_name, member_name)),
+            name = '%s.%s' % (struct_name, member_name)
+            print("looking for %s... " % name, end='')
+            results[name] = compile_check(
+                name=os.path.join(tmp_dir, name),
                 code='struct %s x; x.%s;' % (struct_name, member_name),
                 includes=reflection_includes,
                 include_dirs=config['include_dirs'],
                 link=False,
                 compiler=self.compiler,
-            ):
-                print('found')
-                # Double-unscores for members.
-                found.append('%s__%s' % (struct_name, member_name))
-            else:
-                print('missing')
+            )
+            print('found' if results[name] else 'missing')
 
         canaries = {
-            'pyav_function_should_not_exist': ('function', False),
-            'PyAV__struct_should_not_exist': ('member', False),
-            'avformat_open_input': ('function', True),
-            'AVStream__index': ('member', True),
+            'pyav_function_should_not_exist': False,
+            'PyAV.struct_should_not_exist': False,
+            'AV_OPT_TYPE_INT': True,
+            'PYAV_ENUM_SHOULD_NOT_EXIST': False,
+            'avformat_open_input': True,
+            'AVStream.index': True,
         }
 
         # Create macros for the things that we found.
         # There is potential for naming collisions between functions and
         # structure members, but until we actually have one, we won't
         # worry about it.
-        config_macros.extend(
-            ('PYAV_HAVE_%s' % name.upper(), '1')
-            for name in found
-            if name not in canaries
-        )
-
+        for name, value in results.items():
+            if name in canaries:
+                continue
+            config_macros['PYAV_HAVE_%s' % name.upper().replace('.', '__')] = 1 if value else 0
 
         # Make sure our canaries report back properly.
-        for name, (type_, should_exist) in canaries.items():
-            if should_exist != (name in found):
+        for name, should_exist in canaries.items():
+            if should_exist != results[name]:
                 print('\nWe %s `%s` in the libraries.' % (
                     'didn\'t find' if should_exist else 'found',
                     name
@@ -592,28 +668,6 @@ class BuildExtCommand(build_ext):
     else:
         no_pkg_config = 1
 
-        user_options = build_ext.user_options + [
-            ('ffmpeg-dir=', None,
-             "directory containing lib and include folders of ffmpeg")]
-
-        def initialize_options(self):
-            build_ext.initialize_options(self)
-            self.ffmpeg_dir = None
-
-        def finalize_options(self):
-            build_ext.finalize_options(self)
-            if self.ffmpeg_dir and os.path.exists(self.ffmpeg_dir):
-                sublib = os.path.join(self.ffmpeg_dir, 'lib')
-                subinc = os.path.join(self.ffmpeg_dir, 'include')
-                if os.path.exists(sublib):
-                    unique_extend(self.library_dirs, [sublib])
-                else:
-                    unique_extend(self.library_dirs, [self.ffmpeg_dir])
-                if os.path.exists(subinc):
-                    unique_extend(self.include_dirs, [subinc])
-                else:
-                    unique_extend(self.include_dirs, [self.ffmpeg_dir])
-
     def run(self):
 
         # Propagate build options to reflect
@@ -642,7 +696,7 @@ class BuildExtCommand(build_ext):
         with open(header_path, 'w') as fh:
             fh.write('#ifndef PYAV_COMPAT_H\n')
             fh.write('#define PYAV_COMPAT_H\n')
-            for k, v in config_macros:
+            for k, v in sorted(config_macros.items()):
                 fh.write('#define %s %s\n' % (k, v))
             fh.write('#endif\n')
 
