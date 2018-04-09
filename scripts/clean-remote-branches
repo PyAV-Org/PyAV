@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+import subprocess
+
+
+def get_branches(*args):
+    cmd = ['git', 'branch', '-v', '--abbrev=40']
+    cmd.extend(args)
+    res = {}
+    for line in subprocess.check_output(cmd).decode().splitlines():
+        parts = line[2:].strip().split()
+        name = parts[0]
+        hash_ = parts[1]
+        res[name] = hash_
+    return res
+
+def rm(*args):
+    subprocess.check_call(('git', 'branch', '-D') + args)
+
+
+our_branches = get_branches()
+for name, hash_ in get_branches('-r').items():
+    if name.startswith('origin/'):
+        our_branches[name] = hash_
+
+
+for name in get_branches('-r', '--merged'):
+    if name.startswith('origin/'):
+        continue
+    print("Removing merged", name)
+    rm(name)
+
+for name, hash_ in get_branches('-r', '--no-merged').items():
+
+    remote, branch = name.split('/', 1)
+    if remote == 'origin':
+        continue
+
+    for prefix in '', 'origin/':
+        our_name = prefix + branch
+        if our_branches.get(our_name) == hash_:
+            print("Removing identical", name)
+            rm('-r', name)
+            break
+
+for name in get_branches('-r', '--no-contains', 'e105c0b4e64a0471f3f5375a86342c33cb942e23'):
+    rm('-r', name)
+
+
+
