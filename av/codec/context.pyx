@@ -497,7 +497,17 @@ cdef class CodecContext(object):
         def __get__(self):
             return self.ptr.thread_count
         def __set__(self, int value):
+            if lib.avcodec_is_open(self.ptr):
+                raise RuntimeError("Cannot change thread_count after codec is open.")
             self.ptr.thread_count = value
+
+    property thread_type:
+        def __get__(self):
+            return self.ptr.thread_type
+        def __set__(self, int value):
+            if lib.avcodec_is_open(self.ptr):
+                raise RuntimeError("Cannot change thread_type after codec is open.")
+            self.ptr.thread_type = value
 
     property skip_frame:
         def __get__(self):
