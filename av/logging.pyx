@@ -229,6 +229,8 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         # I'm not 100% on this, but this should be static, and so
         # it doesn't matter if the AVClass that returned it vanishes or not.
         record.name = cls.item_name(ptr)
+    else:
+        record.name = NULL
 
     # We have to filter it ourselves, but we will still process it in general so
     # it is availible to our error handling.

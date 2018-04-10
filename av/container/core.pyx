@@ -215,6 +215,9 @@ cdef class Container(object):
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
 
+    def dump_format(self):
+        lib.av_dump_format(self.proxy.ptr, 0, "", isinstance(self, OutputContainer))
+
 
 
 def open(file, mode=None, format=None, options=None, metadata_encoding=None, metadata_errors='strict'):
