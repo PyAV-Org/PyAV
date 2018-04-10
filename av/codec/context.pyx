@@ -222,32 +222,37 @@ cdef class CodecContext(object):
 
         cdef Packet packet
 
-        err_check(lib.avcodec_send_frame(self.ptr, frame.ptr if frame else NULL))
+        cdef int res
+        with nogil:
+            res = lib.avcodec_send_frame(self.ptr, frame.ptr if frame is not None else NULL)
+        err_check(res)
 
-        res = []
+        out = []
         while True:
             packet = self._recv_packet()
             if packet:
-                res.append(packet)
+                out.append(packet)
             else:
                 break
-        return res
+        return out
 
     cdef _send_packet_and_recv(self, Packet packet):
 
         cdef Frame frame
 
-        cdef lib.AVPacket *packet_ptr = &packet.struct if packet else NULL
-        err_check(lib.avcodec_send_packet(self.ptr, packet_ptr))
+        cdef int res
+        with nogil:
+            res = lib.avcodec_send_packet(self.ptr, &packet.struct if packet is not None else NULL)
+        err_check(res)
 
-        res = []
+        out = []
         while True:
             frame = self._recv_frame()
             if frame:
-                res.append(frame)
+                out.append(frame)
             else:
                 break
-        return res
+        return out
 
     cdef _prepare_frames_for_encode(self, Frame frame):
         return [frame]
@@ -261,7 +266,10 @@ cdef class CodecContext(object):
             self._next_frame = self._alloc_next_frame()
         cdef Frame frame = self._next_frame
 
-        cdef int res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
+        cdef int res
+        with nogil:
+            res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
+
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)
@@ -275,7 +283,9 @@ cdef class CodecContext(object):
 
         cdef Packet packet = Packet()
 
-        cdef int res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
+        cdef int res
+        with nogil:
+            res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)
