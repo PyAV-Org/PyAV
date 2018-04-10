@@ -75,6 +75,10 @@ cdef class Stream(object):
                 # TODO: Setup a dummy CodecContext.
                 return
 
+            # Set reasonable threading defaults.
+            # TODO: Are these actually reasonable?
+            self._codec_context.thread_count = 0
+            self._codec_context.thread_type = 3
 
         # This is an output container!
         else:
