@@ -9,7 +9,7 @@ def decode(input_file):
     container = av.open(input_file)
 
     stream = container.streams.video[0]
-    #stream.thread_count = 1
+    stream.thread_type = 3
 
     for _ in container.decode(stream):
         pass
@@ -17,7 +17,7 @@ def decode(input_file):
     return input_file
 
 
-pool = concurrent.futures.ThreadPoolExecutor(4)
+pool = concurrent.futures.ThreadPoolExecutor(1)
 for f in pool.map(decode, sys.argv[1:]):
     print(f)
 

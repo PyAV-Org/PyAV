@@ -75,6 +75,12 @@ cdef class CodecContext(object):
         # Signal that we want to reference count.
         self.ptr.refcounted_frames = 1
 
+        # Set reasonable threading defaults.
+        # count == 0 -> use as many threads as there are CPUs.
+        # type == 2 -> thread within a frame. This does not change the API.
+        self.ptr.thread_count = 0
+        self.ptr.thread_type = 2
+
         self.stream_index = -1
 
     property extradata:
