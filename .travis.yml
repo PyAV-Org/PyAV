@@ -5,11 +5,23 @@ sudo: false
 addons:
     apt:
         packages:
-            - libjpeg-dev
+            # See: https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
+            - autoconf
+            - automake
+            - build-essential
+            - cmake
+            - libass-dev
             - libfreetype6-dev
-            - zlib1g-dev
+            - libjpeg-dev
+            - libtheora-dev
+            - libtool
+            - libvorbis-dev
+            - mercurial
+            - pkg-config
+            - texinfo
+            - wget
             - yasm
-            - ffmpeg # We will install our own, but we need the dependencies
+            - zlib1g-dev
 
 cache:
     directories:
@@ -24,6 +36,11 @@ matrix:
     #fast_finish: true
 
     allow_failures:
+
+        # Latest FFmpeg is too new.
+        - python: "2.7"
+          env: FFMPEG=3.4
+          os: linux
 
         # We are still working on this.
         - os: osx
@@ -47,30 +64,24 @@ matrix:
           env: LIBAV=11.4
           os: linux
 
-        # Still setting up for PyPy.
-        - python: "pypy"
-          env: FFMPEG=3.2
-          os: linux
-        - python: "pypy3"
-          env: FFMPEG=3.2
-          os: linux
-
     include:
 
-        # Primary target.
+        # Primary targets.
+        - python: "3.6"
+          env: FFMPEG=3.3
+          os: linux
         - python: "2.7"
-          env: FFMPEG=3.2
+          env: FFMPEG=3.3
+          os: linux
+
+        # Latest libraries.
+        - python: "2.7"
+          env: FFMPEG=3.4
           os: linux
 
         # Mac OS X.
-        - python: "2.7"
-          env: FFMPEG=3.2
+        - env: FFMPEG=3.2
           os: osx
-
-        # Python 3.
-        - python: "3.4"
-          env: FFMPEG=3.2
-          os: linux
 
         # PyPy
         - python: "pypy"
@@ -86,14 +97,23 @@ matrix:
           os: linux
 
         # Older Pythons.
-        - python: "2.6"
+        - python: "3.5"
+          env: FFMPEG=3.2
+          os: linux
+        - python: "3.4"
           env: FFMPEG=3.2
           os: linux
         - python: "3.3"
           env: FFMPEG=3.2
           os: linux
+        - python: "2.6"
+          env: FFMPEG=3.2
+          os: linux
 
         # Older libraries.
+        - python: "2.7"
+          env: FFMPEG=3.2
+          os: linux
         - python: "2.7"
           env: FFMPEG=3.0
           os: linux
