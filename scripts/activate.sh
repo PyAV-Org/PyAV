@@ -62,7 +62,7 @@ export PYAV_VENV="$PYAV_ROOT/venvs/$PYAV_VENV_NAME"
 
 if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
     mkdir -p "$PYAV_VENV"
-    virtualenv "$PYAV_VENV"
+    virtualenv -p "$PYAV_PYTHON" "$PYAV_VENV"
     "$PYAV_VENV/bin/pip" install --upgrade pip setuptools
 fi
 
