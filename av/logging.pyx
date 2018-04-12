@@ -6,12 +6,12 @@ from libc.string cimport strncmp, strcpy, memcpy
 from cpython cimport pythread
 from cpython cimport pystate
 
-from threading import Lock
 
 cimport libav as lib
 
 import logging
 import sys
+from threading import Lock, get_ident
 
 
 # Levels.
@@ -39,13 +39,13 @@ level_map = {
 }
 
 
-cpdef adapt_level(lib_level):
+cpdef adapt_level(int lib_level):
     """Convert a library log level to a Python log level."""
     py_level = level_map.get(lib_level)
     if py_level is None:
-        for threshold, py_evel in sorted(level_map.iteritems(), reverse=True):
-            if lib_level >= threshold:
-                break
+        while py_level is None and lib_level < lib.AV_LOG_DEBUG:
+            lib_level += 1
+            py_level = level_map.get(lib_level)
         level_map[lib_level] = py_level
     return py_level
 
@@ -116,9 +116,6 @@ def set_skip_repeated(v):
     skip_repeated = bool(v)
 
 
-
-
-
 # For error reporting.
 cdef object last_error = None
 cdef int error_count = 0
@@ -137,6 +134,33 @@ cdef _get_last_error():
         return 0, None
 
 
+cdef default_captures = []
+cdef threaded_captures = {}
+
+cdef class Capture(object):
+
+    cdef readonly bint threaded
+    cdef readonly list records
+    cdef list captures
+
+    def __init__(self, threaded=True):
+        self.threaded = threaded
+        self.records = []
+        if self.threaded:
+            self.captures = threaded_captures.setdefault(get_ident(), [])
+        else:
+            self.captures = default_captures
+
+    def __enter__(self):
+        self.captures.append(self.records)
+        return self.records
+
+    def __exit__(self, type_, value, traceback):
+        self.captures.pop(-1)
+
+
+
+
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
 
     cdef bint inited = lib.Py_IsInitialized()
@@ -145,7 +169,6 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
 
     # Format the message.
     cdef char message[1024]
-    message[0] = 0
     lib.vsnprintf(message, 1023, format, args)
 
     # Get the name.
@@ -162,22 +185,31 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         )
         return
 
+
     with gil:
-        log_callback_gil(level, name, message)
+
+        try:
+            log_callback_gil(level, name, message)
+
+        except Exception as e:
+            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
+                name, level, message,
+            )
+            # For some reason lib.PyErr_PrintEx(0) won't work.
+            exc, type_, tb = sys.exc_info()
+            lib.PyErr_Display(exc, type_, tb)
 
 
-cdef log_callback_gil(int level, const char *name, const char *message):
+cdef log_callback_gil(int level, const char *c_name, const char *c_message):
 
     global error_count
     global skip_count
     global last_log
     global last_error
 
-    log = (
-        level,
-        None if name is NULL else <str>name,
-        None if not message[0] else <str>message
-    )
+    name = <str>c_name if c_name is not NULL else ''
+    message = (<bytes>c_message).decode('utf8', 'backslashreplace')
+    log = (level, name, message)
 
     # We have to filter it ourselves, but we will still process it in general so
     # it is availible to our error handling.
@@ -185,6 +217,7 @@ cdef log_callback_gil(int level, const char *name, const char *message):
     cdef bint is_interesting = level <= level_threshold
 
     # Skip messages which are identical to the previous.
+    # TODO: Be smarter about threads.
     cdef bint is_repeated = False
     with skip_lock:
 
@@ -197,10 +230,7 @@ cdef log_callback_gil(int level, const char *name, const char *message):
 
             elif skip_count:
                 # Now that we have hit the end of the repeat cycle, tally up how many.
-                # We are both abusing the _lastRecord (assuming that the next message
-                # won't also be about repeated messages), but also assuming that putting
-                # the message onto the queue will get it seen.
-                repeat_log = (last_log[0], last_log[1], "last message repeated %d times" % skip_count)
+                repeat_log = (last_log[0], last_log[1], "%s (repeated %d times)" % (last_log[2], skip_count))
                 emit_log(repeat_log)
                 skip_count = 0
 
@@ -223,21 +253,16 @@ cdef emit_log(log):
 
     lib_level, name, message = log
 
-    try:
+    captures = threaded_captures.get(get_ident()) or default_captures
+    if captures:
+        captures[-1].append(log)
+        return
 
-        py_level = adapt_level(lib_level)
+    py_level = adapt_level(lib_level)
 
-        logger_name = 'libav.' + name if name else 'libav.generic'
-        logger = logging.getLogger(logger_name)
-        logger.log(py_level, message.strip())
-
-    except Exception as e:
-        fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
-            <char*>name, <int>lib_level, <char*>message,
-        )
-        # For some reason lib.PyErr_PrintEx(0) won't work.
-        exc, type_, tb = sys.exc_info()
-        lib.PyErr_Display(exc, type_, tb)
+    logger_name = 'libav.' + name if name else 'libav.generic'
+    logger = logging.getLogger(logger_name)
+    logger.log(py_level, message.strip())
 
 
 

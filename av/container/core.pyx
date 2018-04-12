@@ -12,6 +12,7 @@ from av.format cimport build_container_format
 from av.utils cimport err_check, dict_to_avdict
 
 from av.dictionary import Dictionary # not cimport
+from av.logging import Capture as LogCapture # not cimport
 from av.utils import AVError # not cimport
 
 
@@ -215,8 +216,10 @@ cdef class Container(object):
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
 
-    def dump_format(self):
-        lib.av_dump_format(self.proxy.ptr, 0, "", isinstance(self, OutputContainer))
+    def dumps_format(self):
+        with LogCapture() as logs:
+            lib.av_dump_format(self.proxy.ptr, 0, "", isinstance(self, OutputContainer))
+        return ''.join(log[2] for log in logs)
 
 
 
