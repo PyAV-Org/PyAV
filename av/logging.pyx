@@ -1,61 +1,56 @@
 from __future__ import absolute_import
 
-from libc.stdlib cimport malloc, free
 from libc.stdio cimport printf, fprintf, stderr
-from libc.string cimport strncmp, strcpy, memcpy
-from cpython cimport pythread
-from cpython cimport pystate
-
+from libc.stdlib cimport malloc, free
 
 cimport libav as lib
 
+from threading import Lock, get_ident
 import logging
 import sys
-from threading import Lock, get_ident
 
 
-# Levels.
-QUIET = lib.AV_LOG_QUIET # -8
-PANIC = lib.AV_LOG_PANIC # 0
-FATAL = lib.AV_LOG_FATAL # 8
-ERROR = lib.AV_LOG_ERROR
+# Library levels.
+#QUIET  = lib.AV_LOG_QUIET # -8; not really a level.
+PANIC   = lib.AV_LOG_PANIC # 0
+FATAL   = lib.AV_LOG_FATAL # 8
+ERROR   = lib.AV_LOG_ERROR
 WARNING = lib.AV_LOG_WARNING
-INFO = lib.AV_LOG_INFO
+INFO    = lib.AV_LOG_INFO
 VERBOSE = lib.AV_LOG_VERBOSE
-DEBUG = lib.AV_LOG_DEBUG
-#TRACE = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
+DEBUG   = lib.AV_LOG_DEBUG
+#TRACE  = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
+
+# Mimicking stdlib.
+CRITICAL = FATAL
 
 
-# Map from AV levels to logging levels.
-level_map = {
-    # lib.AV_LOG_QUIET is not actually a level.
-    lib.AV_LOG_PANIC: 50,   # logging.CRITICAL
-    lib.AV_LOG_FATAL: 50,   # logging.CRITICAL
-    lib.AV_LOG_ERROR: 40,   # logging.ERROR
-    lib.AV_LOG_WARNING: 30, # logging.WARNING
-    lib.AV_LOG_INFO: 20,    # logging.INFO
-    lib.AV_LOG_VERBOSE: 10, # logging.DEBUG
-    lib.AV_LOG_DEBUG: 5,    # This is below any logging constant.
-}
-
-
-cpdef adapt_level(int lib_level):
+cpdef adapt_level(int level):
     """Convert a library log level to a Python log level."""
-    py_level = level_map.get(lib_level)
-    if py_level is None:
-        while py_level is None and lib_level < lib.AV_LOG_DEBUG:
-            lib_level += 1
-            py_level = level_map.get(lib_level)
-        level_map[lib_level] = py_level
-    return py_level
+
+    if level <= lib.AV_LOG_FATAL: # Includes PANIC
+        return 50 # logging.CRITICAL
+    elif level <= lib.AV_LOG_ERROR:
+        return 40 # logging.ERROR
+    elif level <= lib.AV_LOG_WARNING:
+        return 30 # logging.WARNING
+    elif level <= lib.AV_LOG_INFO:
+        return 20 # logging.INFO
+    elif level <= lib.AV_LOG_VERBOSE:
+        return 10 # logging.DEBUG
+    elif level <= lib.AV_LOG_DEBUG:
+        return 5 # Lower than any logging constant.
+    else:
+        return 1 # ... yeah.
+
 
 
 # While we start with the level quite low, Python defaults to INFO, and so
 # they will not show. The logging system can add significant overhead, so
 # be wary of dropping this lower.
-cdef int level_threshold = lib.AV_LOG_INFO
+cdef int level_threshold = lib.AV_LOG_VERBOSE
 
-# ... but lets limit ourselves to WARNING immediately.
+# ... but lets limit ourselves to WARNING (assuming nobody already did this).
 if 'libav' not in logging.Logger.manager.loggerDict:
     logging.getLogger('libav').setLevel(logging.WARNING)
 
@@ -101,6 +96,17 @@ def set_print_after_shutdown(v):
     print_after_shutdown = bool(v)
 
 
+#cdef class Log(object):
+#
+#    cdef readonly int level
+#    cdef readonly str name
+#    cdef readonly str message
+#
+#    def __cinit__(self, int level, str name, str message):
+#        self.level = level
+#        self.name = name
+#        self.message = message
+
 cdef bint skip_repeated = True
 cdef skip_lock = Lock()
 cdef object last_log = None
@@ -120,45 +126,83 @@ def set_skip_repeated(v):
 cdef object last_error = None
 cdef int error_count = 0
 
-cdef _get_last_error():
-    """Get the (level, name, message) for the last error log."""
+cpdef get_last_error():
+    """Get the last log that was at least ``ERROR``."""
     if error_count:
         with skip_lock:
-            res = error_count, (
-                last_error[0],
-                'libav.' + last_error[1] if last_error[1] else '',
-                last_error[2] or '',
-            )
-        return res
+            return error_count, last_error
     else:
         return 0, None
 
 
-cdef default_captures = []
-cdef threaded_captures = {}
+
+cdef global_captures = []
+cdef thread_captures = {}
 
 cdef class Capture(object):
 
-    cdef readonly bint threaded
-    cdef readonly list records
+    """Context manager for capturing logs.
+
+    :param bool local: Should logs from all threads be captured, or just one
+        this object is constructed in?
+
+    e.g.::
+
+        with Capture() as logs:
+            # Do something.
+        for log in logs:
+            print(log.message)
+
+    """
+
+    cdef readonly bint local
+    cdef readonly list logs
     cdef list captures
 
-    def __init__(self, threaded=True):
-        self.threaded = threaded
-        self.records = []
-        if self.threaded:
-            self.captures = threaded_captures.setdefault(get_ident(), [])
+    def __init__(self, local=True):
+
+        self.local = local
+        self.logs = []
+
+        if self.local:
+            self.captures = thread_captures.setdefault(get_ident(), [])
         else:
-            self.captures = default_captures
+            self.captures = global_captures
 
     def __enter__(self):
-        self.captures.append(self.records)
-        return self.records
+        self.captures.append(self.logs)
+        return self.logs
 
     def __exit__(self, type_, value, traceback):
         self.captures.pop(-1)
 
 
+
+
+
+cdef struct log_context:
+    lib.AVClass *class_
+    char *name
+
+cdef char *log_context_name(void *ptr) nogil:
+    cdef log_context *obj = <log_context*>ptr
+    return obj.name
+
+cdef lib.AVClass log_class
+log_class.item_name = log_context_name
+
+cpdef log(int level, str name, str message):
+    """Send a log through the library logging system.
+
+    This is mostly for testing.
+
+    """
+
+    cdef log_context *obj = <log_context*>malloc(sizeof(log_context))
+    obj.class_ = &log_class
+    obj.name = name
+    lib.av_log(<void*>obj, level, "%s", message)
+    free(obj)
 
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
@@ -230,8 +274,15 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
 
             elif skip_count:
                 # Now that we have hit the end of the repeat cycle, tally up how many.
-                repeat_log = (last_log[0], last_log[1], "%s (repeated %d times)" % (last_log[2], skip_count))
-                emit_log(repeat_log)
+                if skip_count == 1:
+                    repeat_log = last_log
+                else:
+                    repeat_log = (
+                        last_log[0],
+                        last_log[1],
+                        "%s (repeated %d more times)" % (last_log[2], skip_count)
+                    )
+                log_callback_emit(repeat_log)
                 skip_count = 0
 
             last_log = log
@@ -246,14 +297,14 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
         if is_repeated:
             return
 
-        emit_log(log)
+        log_callback_emit(log)
 
 
-cdef emit_log(log):
+cdef log_callback_emit(log):
 
     lib_level, name, message = log
 
-    captures = threaded_captures.get(get_ident()) or default_captures
+    captures = thread_captures.get(get_ident()) or global_captures
     if captures:
         captures[-1].append(log)
         return
