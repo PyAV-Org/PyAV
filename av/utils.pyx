@@ -96,7 +96,7 @@ cdef int err_check(int res=0, str filename=None) except -1:
     error_log = None
     log_count, last_log = _get_last_error()
     if log_count > _last_log_count:
-        error_log = (last_log[0].strip(), last_log[2].strip())
+        error_log = (last_log[1].strip(), last_log[2].strip())
         _last_log_count = log_count
 
     if filename:
