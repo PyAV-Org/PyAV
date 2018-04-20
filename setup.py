@@ -244,7 +244,7 @@ def new_compiler(*args, **kwargs):
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
-                  library_dirs=None, link=True, compiler=None, force=False, verbose=False):
+                  library_dirs=None, runtime_library_dirs=None, link=True, compiler=None, force=False, verbose=False):
     """Check that we can compile and link the given source.
 
     Caches results; delete the ``build`` directory to reset.
@@ -276,7 +276,8 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
     try:
         objects = cc.compile([source_path], include_dirs=include_dirs)
         if link:
-            cc.link_executable(objects, exec_path, libraries=libraries, library_dirs=library_dirs)
+            cc.link_executable(objects, exec_path, libraries=libraries,
+                library_dirs=library_dirs, runtime_library_dirs=runtime_library_dirs)
     except (CompileError, LinkError, TypeError):
         res = False
     else:
@@ -540,6 +541,7 @@ class ReflectCommand(Command):
                 code='%s()' % func_name,
                 libraries=config['libraries'],
                 library_dirs=config['library_dirs'],
+                runtime_library_dirs=config['runtime_library_dirs'],
                 compiler=self.compiler,
                 force=self.force,
                 verbose=self.debug,
