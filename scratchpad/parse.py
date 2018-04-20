@@ -1,3 +1,4 @@
+from __future__ import print_function
 from Cython.Compiler.Main import compile_single, CompilationOptions
 from Cython.Compiler.TreeFragment import parse_from_strings
 from Cython.Compiler.Visitor import TreeVisitor
@@ -45,7 +46,7 @@ class Visitor(TreeVisitor):
     def visit_CFuncDeclaratorNode(self, node):
         if isinstance(node.base, Nodes.CNameDeclaratorNode):
             self.record_event(node, function=node.base.name)
-            print EmbedSignature(ctx)._fmt_arglist(node.args)
+            print(EmbedSignature(ctx)._fmt_arglist(node.args))
         else:
             self.visitchildren(node)
 

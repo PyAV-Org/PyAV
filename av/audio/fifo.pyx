@@ -6,119 +6,184 @@ from av.utils cimport err_check
 
 cdef class AudioFifo:
 
-    """A simple Audio FIFO (First In First Out) Buffer."""
+    """A simple audio sample FIFO (First In First Out) buffer."""
 
-    def __dealloc__(self):
-        lib.av_audio_fifo_free(self.ptr)
-        
     def __repr__(self):
-        return '<av.%s nb_samples:%s %dhz %s %s at 0x%x>' % (
+        return '<av.%s %s samples of %dhz %s %s at 0x%x>' % (
             self.__class__.__name__,
             self.samples,
             self.sample_rate,
-            self.channel_layout,
-            self.sample_fmt,
+            self.layout,
+            self.format,
             id(self),
         )
-     
-    def __cinit__(self):
-        self.last_pts = lib.AV_NOPTS_VALUE
-        self.pts_offset = 0
-        self.time_base.num = 1
-        self.time_base.den = 1
-        
-    cpdef write(self, AudioFrame frame):
-        """Push some samples into the queue."""
 
-        # Take configuration from the first frame.
+    def __dealloc__(self):
+        if self.ptr:
+            lib.av_audio_fifo_free(self.ptr)
+
+    cpdef write(self, AudioFrame frame):
+        """write(frame)
+
+        Push a frame of samples into the queue.
+
+        :param AudioFrame frame: The frame of samples to push.
+
+        The FIFO will remember the attributes from the first frame, and use those
+        to populate all output frames.
+
+        If there is a :attr:`~.Frame.pts` and :attr:`~.Frame.time_base` and
+        :attr:`~.AudioFrame.sample_rate`, then the FIFO will assert that the incoming
+        timestamps are continuous.
+
+        """
+
+        if frame is None:
+            raise TypeError('AudioFifo must be given an AudioFrame.')
+
+        if not frame.ptr.nb_samples:
+            return
+
         if not self.ptr:
 
-            self.format = get_audio_format(<lib.AVSampleFormat>frame.ptr.format)
-            self.layout = get_audio_layout(0, frame.ptr.channel_layout)
-            self.time_base.den = frame.ptr.sample_rate
+            # Hold onto a copy of the attributes of the first frame to populate
+            # output frames with.
+            self.template = alloc_audio_frame()
+            self.template._copy_internal_attributes(frame)
+            self.template._init_user_attributes()
+
+            # Figure out our "time_base".
+            if frame._time_base.num and frame.ptr.sample_rate:
+                self.pts_per_sample  = frame._time_base.den / float(frame._time_base.num)
+                self.pts_per_sample /= frame.ptr.sample_rate
+            else:
+                self.pts_per_sample = 0
+
             self.ptr = lib.av_audio_fifo_alloc(
-                self.format.sample_fmt,
-                len(self.layout.channels),
+                <lib.AVSampleFormat>frame.ptr.format,
+                len(frame.layout.channels), # TODO: Can we safely use frame.ptr.nb_channels?
                 frame.ptr.nb_samples * 2, # Just a default number of samples; it will adjust.
             )
-            if not self.ptr:
-                raise ValueError('could not create fifo')
-        
-        # Make sure nothing changed.
-        else:
-            if (
-                frame.ptr.format != self.format.sample_fmt or
-                frame.ptr.channel_layout != self.layout.layout or
-                frame.ptr.sample_rate != self.time_base.den
-            ):
-                raise ValueError('frame does not match fifo parameters')
 
-        if frame.ptr.pts != lib.AV_NOPTS_VALUE:
-            self.last_pts = frame.ptr.pts
-            self.pts_offset = self.samples
-            
+            if not self.ptr:
+                raise RuntimeError('Could not allocate AVAudioFifo.')
+
+        # Make sure nothing changed.
+        elif (
+            frame.ptr.format         != self.template.ptr.format or
+            frame.ptr.channel_layout != self.template.ptr.channel_layout or
+            frame.ptr.sample_rate    != self.template.ptr.sample_rate or
+            (frame._time_base.num and self.template._time_base.num and (
+                frame._time_base.num     != self.template._time_base.num or
+                frame._time_base.den     != self.template._time_base.den
+            ))
+        ):
+            raise ValueError('Frame does not match AudioFifo parameters.')
+
+        # Assert that the PTS are what we expect.
+        cdef uint64_t expected_pts
+        if self.pts_per_sample and frame.ptr.pts != lib.AV_NOPTS_VALUE:
+            expected_pts = <uint64_t>(self.pts_per_sample * self.samples_written)
+            if frame.ptr.pts != expected_pts:
+                raise ValueError('Frame.pts (%d) != expected (%d); fix or set to None.' % (frame.ptr.pts, expected_pts))
+
         err_check(lib.av_audio_fifo_write(
-            self.ptr, 
+            self.ptr,
             <void **>frame.ptr.extended_data,
             frame.ptr.nb_samples,
         ))
 
+        self.samples_written += frame.ptr.nb_samples
 
-    cpdef read(self, unsigned int nb_samples=0, bint partial=False):
-        """Read samples from the queue.
+
+    cpdef read(self, unsigned int samples=0, bint partial=False):
+        """read(samples=0, partial=False)
+
+        Read samples from the queue.
 
         :param int samples: The number of samples to pull; 0 gets all.
         :param bool partial: Allow returning less than requested.
         :returns: New :class:`AudioFrame` or ``None`` (if empty).
 
-        If the incoming frames had valid timestamps, the returned frames
-        will have accurate timestamps (assuming a time_base or 1/sample_rate).
+        If the incoming frames had valid a :attr:`~.Frame.time_base`,
+        :attr:`~.AudioFrame.sample_rate` and :attr:`~.Frame.pts`, the returned frames
+        will have accurate timing.
 
         """
 
-        if not self.samples:
+        if not self.ptr:
             return
 
-        nb_samples = nb_samples or self.samples
-        if not nb_samples:
-            return
-        if not partial and self.samples < nb_samples:
+        cdef int buffered_samples = lib.av_audio_fifo_size(self.ptr)
+        if buffered_samples < 1:
             return
 
-        cdef int ret
-        cdef int linesize
-        cdef int sample_size
+        samples = samples or buffered_samples
+
+        if buffered_samples < samples:
+            if partial:
+                samples = buffered_samples
+            else:
+                return
 
         cdef AudioFrame frame = alloc_audio_frame()
+        frame._copy_internal_attributes(self.template)
         frame._init(
-            self.format.sample_fmt,
-            self.layout.layout,
-            nb_samples,
+            <lib.AVSampleFormat>self.template.ptr.format,
+            self.template.ptr.channel_layout,
+            samples,
             1, # Align?
         )
 
         err_check(lib.av_audio_fifo_read(
             self.ptr,
             <void **>frame.ptr.extended_data,
-            nb_samples,
+            samples,
         ))
 
-        frame.ptr.sample_rate = self.time_base.den
-        frame.ptr.channel_layout = self.layout.layout
-        
-        if self.last_pts != lib.AV_NOPTS_VALUE:
-            frame.ptr.pts = self.last_pts - self.pts_offset
-            self.pts_offset -= nb_samples
-        
-        return frame
-    
-    property samples:
-        """Number of audio samples (per channel) """
-        def __get__(self):
-            return lib.av_audio_fifo_size(self.ptr)
-    
-    property rate:
-        """Sample rate of the audio data. """
-        def __get__(self):
-            return self.time_base.den
+        if self.pts_per_sample:
+            frame.ptr.pts = <uint64_t>(self.pts_per_sample * self.samples_read)
+        else:
+            frame.ptr.pts = lib.AV_NOPTS_VALUE
 
+        self.samples_read += samples
+
+        return frame
+
+    cpdef read_many(self, unsigned int samples, bint partial=False):
+        """read_many(samples, partial=False)
+
+        Read as many frames as we can.
+
+        :param int samples: How large for the frames to be.
+        :param bool partial: If we should return a partial frame.
+        :returns: A ``list`` of :class:`AudioFrame`.
+
+        """
+
+        cdef AudioFrame frame
+        frames = []
+        while True:
+            frame = self.read(samples, partial=partial)
+            if frame is not None:
+                frames.append(frame)
+            else:
+                break
+        return frames
+
+    property format:
+        """The :class:`.AudioFormat` of this FIFO."""
+        def __get__(self):
+            return self.template.format
+    property layout:
+        """The :class:`.AudioLayout` of this FIFO."""
+        def __get__(self):
+            return self.template.layout
+    property sample_rate:
+        def __get__(self):
+            return self.template.sample_rate
+
+    property samples:
+        """Number of audio samples (per channel) in the buffer."""
+        def __get__(self):
+            return lib.av_audio_fifo_size(self.ptr) if self.ptr else 0

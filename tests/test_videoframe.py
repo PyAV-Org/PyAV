@@ -85,25 +85,25 @@ class TestVideoFrameTransforms(TestCase):
     def setUp(self):
         if not Image:
             raise SkipTest()
-        self.lenna = Image.open(fate_suite('png1/lena-rgb24.png'))
-        self.width, self.height = self.lenna.size
+        self.image = Image.open(fate_png())
+        self.width, self.height = self.image.size
 
-    def test_lena_roundtrip_low_api(self):
+    def test_roundtrip_low_api(self):
         if not Image:
             raise SkipTest()
         frame = VideoFrame(self.width, self.height, 'rgb24')
-        frame.planes[0].update_from_string(self.lenna.tobytes())
+        frame.planes[0].update_from_string(self.image.tobytes())
         img = frame.to_image()
-        img.save(self.sandboxed('lenna-roundtrip-low.jpg'))
-        self.assertImagesAlmostEqual(self.lenna, img)
+        img.save(self.sandboxed('roundtrip-low.jpg'))
+        self.assertImagesAlmostEqual(self.image, img)
 
-    def test_lena_roundtrip_high_api(self):
+    def test_roundtrip_high_api(self):
         if not Image:
             raise SkipTest()
-        frame = VideoFrame.from_image(self.lenna)
+        frame = VideoFrame.from_image(self.image)
         img = frame.to_image()
-        img.save(self.sandboxed('lenna-roundtrip-high.jpg'))
-        self.assertImagesAlmostEqual(self.lenna, img)
+        img.save(self.sandboxed('roundtrip-high.jpg'))
+        self.assertImagesAlmostEqual(self.image, img)
 
 
 class TestVideoFrameConveniences(TestCase):
@@ -114,4 +114,12 @@ class TestVideoFrameConveniences(TestCase):
         self.assertEqual(array.shape, (480, 640, 3))
 
 
+class TestVideoFrameTiming(TestCase):
 
+    def test_reformat_pts(self):
+        frame = VideoFrame(640, 480, 'rgb24')
+        frame.pts = 123
+        frame.time_base = '456/1' # Just to be different.
+        frame = frame.reformat(320, 240)
+        self.assertEqual(frame.pts, 123)
+        self.assertEqual(frame.time_base, 456)

@@ -1,17 +1,20 @@
 # General
 *~
 .DS_Store
+.nfs.*
+._*
 
 # Environment
-*.pyc
 /.eggs
 /tmp
 /vendor
-/venv*
+/venv
+/venvs
 
 # Build products
 *.c
 *.egg-info
+*.pyc
 *.so
 /*.sdf
 /*.sln
@@ -30,6 +33,7 @@
 
 # Testing.
 *.spyderproject
+.idea
 /.vagrant
 /sandbox
 /tests/assets

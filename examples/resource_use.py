@@ -1,3 +1,4 @@
+from __future__ import division, print_function
 from __future__ import division
 
 import argparse
@@ -27,8 +28,8 @@ def format_bytes(n):
 usage = []
 
 for round_ in xrange(args.count):
-    
-    print 'Round %d/%d:' % (round_ + 1, args.count)
+
+    print('Round %d/%d:' % (round_ + 1, args.count))
 
     if args.gc:
         gc.collect()
@@ -42,11 +43,11 @@ for round_ in xrange(args.count):
     for packet in fh.demux([vs]):
         for frame in packet.decode():
             if args.print_:
-                print frame
+                print(frame)
             if args.to_rgb:
-                print frame.to_rgb()
+                print(frame.to_rgb())
             if args.to_image:
-                print frame.to_image()
+                print(frame.to_image())
             fi += 1
         if fi > args.frames:
             break
@@ -60,5 +61,4 @@ usage.append(resource.getrusage(resource.RUSAGE_SELF))
 for i in xrange(len(usage) - 1):
     before = usage[i]
     after = usage[i + 1]
-    print '%s (%s)' % (format_bytes(after.ru_maxrss), format_bytes(after.ru_maxrss - before.ru_maxrss))
-
+    print('%s (%s)' % (format_bytes(after.ru_maxrss), format_bytes(after.ru_maxrss - before.ru_maxrss)))

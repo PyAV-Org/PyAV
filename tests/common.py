@@ -18,13 +18,15 @@ try:
 except ImportError:
     Image = ImageFilter = None
 
-
 import av
+from av.buffer import Buffer
+from av.codec import Codec, CodecContext
 from av.frame import Frame
 from av.packet import Packet
 from av.stream import Stream
 from av.utils import AVError
 from av.video import VideoFrame
+from av.audio import AudioFrame
 
 
 is_py3 = sys.version_info[0] > 2
@@ -45,6 +47,9 @@ def fate_suite(name):
         url = 'http://fate.ffmpeg.org/fate-suite/' + name
         check_call(['curl', '-o', path, url])
     return path
+
+def fate_png():
+    return fate_suite('png1/55c99e750a5fd6_50314226.png')
 
 
 def makedirs(path):
@@ -173,6 +178,3 @@ class TestCase(_Base):
         def assertNotIsInstance(self, instance, types, msg=None):
             if isinstance(instance, types):
                 self.fail(msg or 'is an instance of %r; %r' % (types, instance))
-
-
-

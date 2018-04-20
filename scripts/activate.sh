@@ -8,8 +8,6 @@ fi
 
 export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 
-PYAV_LIBRARY_NAME="${PYAV_LIBRARY_NAME}"
-PYAV_LIBRARY_VERSION="${PYAV_LIBRARY_VERSION}"
 
 if [[ ! "$PYAV_LIBRARY_NAME" ]]; then
     # We allow $FFMPEG and $LIBAV on Travis to make the build matrix pretty.
@@ -39,7 +37,7 @@ if [[ ! "$PYAV_LIBRARY_VERSION" ]]; then
     else
         case "$PYAV_LIBRARY_NAME" in
             ffmpeg)
-                PYAV_LIBRARY_VERSION=3.0
+                PYAV_LIBRARY_VERSION=3.2
                 ;;
             libav)
                 PYAV_LIBRARY_VERSION=11.4
@@ -52,12 +50,14 @@ if [[ ! "$PYAV_LIBRARY_VERSION" ]]; then
     fi
 fi
 
+
 export PYAV_LIBRARY_NAME
 export PYAV_LIBRARY_VERSION
 export PYAV_LIBRARY_SLUG=$PYAV_LIBRARY_NAME-$PYAV_LIBRARY_VERSION
 
+export PYAV_PYTHON="${PYAV_PYTHON-python}"
 export PYAV_PLATFORM_SLUG="$(uname -s).$(uname -r)"
-export PYAV_VENV_NAME="$PYAV_PLATFORM_SLUG.cpython$(python -c 'import sys; print "%d.%d" % sys.version_info[:2]')"
+export PYAV_VENV_NAME="$PYAV_PLATFORM_SLUG.cpython$("$PYAV_PYTHON" -c 'from __future__ import print_function; import sys; print("%d.%d" % sys.version_info[:2])')"
 export PYAV_VENV="$PYAV_ROOT/venvs/$PYAV_VENV_NAME"
 
 if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
@@ -66,7 +66,12 @@ if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
     "$PYAV_VENV/bin/pip" install --upgrade pip setuptools
 fi
 
-source "$PYAV_VENV/bin/activate"
+if [[ -e "$PYAV_VENV/bin/activate" ]]; then
+    source "$PYAV_VENV/bin/activate"
+else
+    # Not a virtualenv; lets manually "activate" it.
+    PATH="$PYAV_VENV/bin:$PATH"
+fi
 
 
 # Just a flag so that we know this was supposedly run.

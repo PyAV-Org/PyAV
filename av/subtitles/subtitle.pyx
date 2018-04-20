@@ -7,19 +7,19 @@ cdef class SubtitleProxy(object):
 
 
 cdef class SubtitleSet(object):
-    
+
     def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
         cdef int i
         self.rects = tuple(build_subtitle(self, i) for i in range(self.proxy.struct.num_rects))
-    
+
     def __repr__(self):
         return '<%s.%s at 0x%x>' % (
             self.__class__.__module__,
             self.__class__.__name__,
             id(self),
         )
-    
+
     property format:
         def __get__(self): return self.proxy.struct.format
     property start_display_time:
@@ -46,7 +46,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
     called.
 
     """
-    
+
     if index < 0 or index >= subtitle.proxy.struct.num_rects:
         raise ValueError('subtitle rect index out of range')
     cdef lib.AVSubtitleRect *ptr = subtitle.proxy.struct.rects[index]
@@ -70,7 +70,7 @@ cdef class Subtitle(object):
             raise ValueError('subtitle rect index out of range')
         self.proxy = subtitle.proxy
         self.ptr = self.proxy.struct.rects[index]
-        
+
         if self.ptr.type == lib.SUBTITLE_NONE:
             self.type = b'none'
         elif self.ptr.type == lib.SUBTITLE_BITMAP:
@@ -81,7 +81,7 @@ cdef class Subtitle(object):
             self.type = b'ass'
         else:
             raise ValueError('unknown subtitle type %r' % self.ptr.type)
-    
+
     def __repr__(self):
         return '<%s.%s at 0x%x>' % (
             self.__class__.__module__,
@@ -176,7 +176,7 @@ cdef class BitmapSubtitlePlane(object):
 
 
 cdef class TextSubtitle(Subtitle):
-    
+
     def __repr__(self):
         return '<%s.%s %r at 0x%x>' % (
             self.__class__.__module__,
@@ -190,7 +190,7 @@ cdef class TextSubtitle(Subtitle):
 
 
 cdef class AssSubtitle(Subtitle):
-    
+
     def __repr__(self):
         return '<%s.%s %r at 0x%x>' % (
             self.__class__.__module__,
@@ -201,4 +201,3 @@ cdef class AssSubtitle(Subtitle):
 
     property ass:
         def __get__(self): return self.ptr.ass
-

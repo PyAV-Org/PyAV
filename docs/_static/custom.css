@@ -1,0 +1,14 @@
+
+.ffmpeg-quicklink {
+    float: right;
+    clear: right;
+    margin: 0;
+}
+
+.ffmpeg-quicklink:before {
+    content: "[";
+}
+
+.ffmpeg-quicklink:after {
+    content: "]";
+}

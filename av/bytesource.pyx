@@ -22,7 +22,7 @@ cdef class ByteSource(object):
                 self.ptr = <unsigned char *>self.view.buf
                 self.length = self.view.len
                 return
-        
+
         raise TypeError('expected bytes, bytearray or memoryview')
 
     def __dealloc__(self):
@@ -37,4 +37,3 @@ cdef ByteSource bytesource(obj, bint allow_none=False):
         return obj
     else:
         return ByteSource(obj)
-

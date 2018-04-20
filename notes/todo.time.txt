@@ -1,0 +1,61 @@
+
+Uniform time
+============
+
+Have the default time_base be one that can work with all major time_bases, e.g.:
+  1/24
+  1/25
+  1/30
+  1/60
+  1001/30000 (29.97)
+  1001/24000 (23.98)
+  1001/60000
+
+class Time():
+
+  # Tracks the last value set.
+  cdef bint is_rational
+
+  cdef AVRational base
+  cdef uint64_t i
+  cdef double d
+
+  def __int__(self):
+    # return i or transform d
+
+  def __float__(self):
+    # return d or transform i
+  
+  def rebase(self, new_base):
+    # Replace the base, and rescale i (if important)
+
+
+Time
+====
+
+- What are the various rates and scales?
+
+  see: http://ffmpeg.org/pipermail/libav-user/2011-December/001041.html
+  see: http://stackoverflow.com/questions/12234949/ffmpeg-time-unit-explanation-and-av-seek-frame-method/16739755#16739755
+
+  - Stream.guessed_rate or AVStream.r_frame_rate:
+    FFmpeg's guess as to the frame rate. Often 24/1.
+
+  - Stream.average_rate or AVStream.avg_frame_rate:
+    Average frame rate that has been inspected in the file. This is what VLC
+    reports in the media information. Often near 24/1.
+
+    It may calculate this from 20 frames; see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02768
+
+  - Stream.time_base or AVStream.time_base:
+    Duration of one time unit for AVStream times.
+
+  - Stream.rate or CodecContext.time_base:
+      The length of a single frame as reported by the file. Sometimes 1/24,
+      sometimes really really wrong.
+
+  possibilities for discrepencies:
+    - .mov supports a fixed frame rate
+    - .mp4 does not support a fixed frame rate?
+    - see: http://ffmpeg.org/doxygen/trunk/libavformat_2utils_8c_source.html#l02647
+

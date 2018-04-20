@@ -3,6 +3,9 @@ from libc.limits cimport INT_MAX
 from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 
 from av.plane cimport Plane
+from av.utils cimport avrational_to_faction, to_avrational
+
+from fractions import Fraction
 
 
 cdef class Frame(object):
@@ -15,6 +18,8 @@ cdef class Frame(object):
 
     def __dealloc__(self):
         with nogil:
+            # This calls av_frame_unref, and then frees the pointer.
+            # Thats it.
             lib.av_frame_free(&self.ptr)
 
     def __repr__(self):
@@ -23,43 +28,6 @@ cdef class Frame(object):
             self.index,
             id(self),
         )
-
-    property dts:
-
-        def __get__(self):
-            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
-                return None
-            return self.ptr.pkt_dts
-
-    property pts:
-
-        def __get__(self):
-            if self.ptr.pts == lib.AV_NOPTS_VALUE:
-                return None
-            return self.ptr.pts
-
-        def __set__(self, value):
-            if value is None:
-                self.ptr.pts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.pts = value
-
-    property time:
-
-        def __get__(self):
-            if self.ptr.pts == lib.AV_NOPTS_VALUE:
-                return None
-            else:
-                return float(self.ptr.pts) * self.time_base.num / self.time_base.den
-
-    property time_base:
-
-        def __get__(self):
-            return self.time_base
-
-        def __set__(self, value):
-            self.time_base.num = value.numerator
-            self.time_base.den = value.denominator
 
     cdef _init_planes(self, cls=Plane):
 
@@ -84,10 +52,73 @@ cdef class Frame(object):
     cdef int _max_plane_count(self):
         return INT_MAX
 
-    cdef _copy_attributes_from(self, Frame other):
-        self.index = other.index
-        self.time_base = other.time_base
-        if self.ptr and other.ptr:
-            self.ptr.pkt_pts = other.ptr.pkt_pts
-            self.ptr.pkt_dts = other.ptr.pkt_dts
-            self.ptr.pts = other.ptr.pts
+    cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
+        """Mimic another frame."""
+        self.index = source.index
+        self._time_base = source._time_base
+        lib.av_frame_copy_props(self.ptr, source.ptr)
+        if data_layout:
+            # TODO: Assert we don't have any data yet.
+            self.ptr.format = source.ptr.format
+            self.ptr.width = source.ptr.width
+            self.ptr.height = source.ptr.height
+            self.ptr.channel_layout = source.ptr.channel_layout
+            self.ptr.channels = source.ptr.channels
+
+    cdef _init_user_attributes(self):
+        pass # Dummy to match the API of the others.
+
+    cdef _rebase_time(self, lib.AVRational dst):
+
+        if not dst.num:
+            raise ValueError('Cannot rebase to zero time.')
+
+        if not self._time_base.num:
+            self._time_base = dst
+            return
+
+        if self._time_base.num == dst.num and self._time_base.den == dst.den:
+            return
+
+        if self.ptr.pts != lib.AV_NOPTS_VALUE:
+            self.ptr.pts = lib.av_rescale_q(
+                self.ptr.pts,
+                self._time_base, dst
+            )
+
+        self._time_base = dst
+
+
+    property dts:
+        def __get__(self):
+            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
+                return None
+            return self.ptr.pkt_dts
+
+    property pts:
+        def __get__(self):
+            if self.ptr.pts == lib.AV_NOPTS_VALUE:
+                return None
+            return self.ptr.pts
+        def __set__(self, value):
+            if value is None:
+                self.ptr.pts = lib.AV_NOPTS_VALUE
+            else:
+                self.ptr.pts = value
+
+    property time:
+        def __get__(self):
+            if self.ptr.pts == lib.AV_NOPTS_VALUE:
+                return None
+            else:
+                return float(self.ptr.pts) * self._time_base.num / self._time_base.den
+
+    property time_base:
+        def __get__(self):
+            if self._time_base.num:
+                return avrational_to_faction(&self._time_base)
+        def __set__(self, value):
+            to_avrational(value, &self._time_base)
+
+    property is_corrupt:
+        def __get__(self): return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)

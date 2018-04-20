@@ -45,7 +45,7 @@ class TestAudioProbe(TestCase):
 
 
 class TestVideoProbe(TestCase):
-    
+
     def setUp(self):
         self.file = av.open(fate_suite('mpeg2/mpeg2_field_encoding.ts'))
 

@@ -36,7 +36,7 @@ def main():
                 print('%-13s %3d.%3d.%3d' % (libname, version[0], version[1], version[2]))
 
     if args.codecs:
-        from av.codec import dump_codecs
+        from av.codec.codec import dump_codecs
         dump_codecs()
 
 

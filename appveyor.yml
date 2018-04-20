@@ -12,60 +12,56 @@ environment:
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
 
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.9
+    - PYTHON: "C:\\Miniconda"
+      PYTHON_VERSION: "2.7"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "32"
       CONDA_PY: "27"
       CONDA_NPY: "19"
 
-    - PYTHON: "C:\\Python33"
-      PYTHON_VERSION: "3.3.x" # currently 3.3.5
+    - PYTHON: "C:\\Miniconda35"
+      PYTHON_VERSION: "3.5"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "32"
-      CONDA_PY: "33"
-      CONDA_NPY: "19"
+      CONDA_PY: "35"
+      CONDA_NPY: "110"
 
-    - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
+    - PYTHON: "C:\\Miniconda36"
+      PYTHON_VERSION: "3.6"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "32"
-      CONDA_PY: "34"
-      CONDA_NPY: "19"
+      CONDA_PY: "36"
+      CONDA_NPY: "112"
 
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.9
+    - PYTHON: "C:\\Miniconda-x64"
+      PYTHON_VERSION: "2.7"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "64"
       CONDA_PY: "27"
       CONDA_NPY: "19"
-      WINDOWS_SDK_VERSION: "v7.0"
 
-    - PYTHON: "C:\\Python33-x64"
-      PYTHON_VERSION: "3.3.x" # currently 3.3.5
+    - PYTHON: "C:\\Miniconda35-x64"
+      PYTHON_VERSION: "3.5"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "64"
-      CONDA_PY: "33"
-      CONDA_NPY: "19"
-      WINDOWS_SDK_VERSION: "v7.1"
+      CONDA_PY: "35"
+      CONDA_NPY: "110"
 
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
+    - PYTHON: "C:\\Miniconda36-x64"
+      PYTHON_VERSION: "3.6"
+      FFMPEG_VERSION: "3.2.4"
       PYTHON_ARCH: "64"
-      CONDA_PY: "34"
-      CONDA_NPY: "19"
-      WINDOWS_SDK_VERSION: "v7.1"
+      CONDA_PY: "36"
+      CONDA_NPY: "112"
 
-    # Python 2.7.10 is the latest version and is not pre-installed.
-    # Build this last, as install takes a bit of time
+    # older FFMPEG versions
 
-    - PYTHON: "C:\\Python27.10"
-      PYTHON_VERSION: "2.7.10"
-      CONDA_PY: "27"
-      CONDA_NPY: "19"
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python27.10-x64"
-      PYTHON_VERSION: "2.7.10"
+    - PYTHON: "C:\\Miniconda36-x64"
+      PYTHON_VERSION: "3.5"
+      FFMPEG_VERSION: "2.8.6"
       PYTHON_ARCH: "64"
-      CONDA_PY: "27"
-      CONDA_NPY: "19"
-      WINDOWS_SDK_VERSION: "v7.1"
+      CONDA_PY: "35"
+      CONDA_NPY: "110"
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
@@ -77,57 +73,39 @@ install:
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
-  # Install Python (from the official .msi of http://python.org) and pip when
-  # not already installed.
-  #- ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
+  # Prepend to the PATH of this build
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%CONDA_ROOT%\\Library\\bin;%PATH%"
 
-  # Install mini conda
-  - ps: appveyor\install_conda.ps1
+  # Install dependencies
+  - conda config --set always_yes true
+  - conda config --add channels conda-forge
+  - conda update conda
+  - conda install --yes conda-build jinja2 anaconda-client
+  - conda create -q -n test-environment python=%PYTHON_VERSION%
+    pip "setuptools>=0.24" Pillow "Cython>=0.22" "nose>=1.3"
+    "numpy>=1.9" "wheel>=0.24" ffmpeg=%FFMPEG_VERSION% msinttypes
+  - activate test-environment
 
-  # Prepend newly installed Python to the PATH of this build (this cannot be
-  # done from inside the powershell script as it would require to restart
-  # the parent CMD process).
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  # workaround for missing vcvars64.bat in py34 64bit
+  # - "cp appveyor/vcvars64.bat \"C:/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64\""
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # Upgrade to the latest version of pip to avoid it displaying warnings
-  # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
-
-  # Install the build dependencies of the project. If some dependencies contain
-  # compiled extensions and are not provided as pre-built wheel packages,
-  # pip will build them from source using the MSVC compiler matching the
-  # target Python version and architecture
-  - "%CMD_IN_ENV% pip install -r dev-requirements.txt"
-
-  # Install ffmpeg
-  - ps: Start-FileDownload ('http://ffmpeg.zeranoe.com/builds/win' + $env:PYTHON_ARCH + '/shared/ffmpeg-2.7-win' + $env:PYTHON_ARCH + '-shared.7z' ) ffmpeg-shared.7z
-  - ps: Start-FileDownload ('http://ffmpeg.zeranoe.com/builds/win' + $env:PYTHON_ARCH + '/dev/ffmpeg-2.7-win' + $env:PYTHON_ARCH + '-dev.7z' ) ffmpeg-dev.7z
-  - 7z x ffmpeg-shared.7z > NULL
-  - 7z x ffmpeg-dev.7z > NULL
-  - "SET PATH=%cd%\\ffmpeg-2.7-win%PYTHON_ARCH%-shared\\bin;%PATH%"
-
-  # Install missing C99 headers for MSVC
-  - ps: Start-FileDownload ('https://msinttypes.googlecode.com/files/msinttypes-r26.zip' ) msinttypes.zip
-  - 7z e msinttypes.zip -omsinttypes > NULL
-
 build: false  # Not a C# project, build stuff at the test step instead.
 
 before_test:
   # Need to build before tests
-  - "%CMD_IN_ENV% %PYTHON%/python setup.py build_ext --inplace --ffmpeg-dir=%cd%\\ffmpeg-2.7-win%PYTHON_ARCH%-dev --include-dirs=%cd%\\msinttypes"
+  - "%CMD_IN_ENV% python setup.py build_ext --inplace --ffmpeg-dir=%CONDA_PREFIX%\\Library"
 
 test_script:
   # Build the compiled extension and run the project tests
-  #- "%CMD_IN_ENV% python setup.py test"
   - "%CMD_IN_ENV% nosetests"
 
 after_test:
   # If tests are successful, create binary packages for the project.
-  - "%CMD_IN_ENV% %PYTHON%/python setup.py bdist_wheel"
+  - "%CMD_IN_ENV% python setup.py bdist_wheel"
   - ps: "ls dist"
 
 artifacts:

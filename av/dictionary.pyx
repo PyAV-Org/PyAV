@@ -4,7 +4,7 @@ from av.utils cimport err_check
 
 
 cdef class _Dictionary(object):
-    
+
     def __cinit__(self, *args, **kwargs):
         for arg in args:
             self.update(arg)

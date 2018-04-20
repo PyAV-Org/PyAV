@@ -6,4 +6,3 @@ from av.stream cimport Stream
 
 cdef class InputContainer(Container):
     pass
-

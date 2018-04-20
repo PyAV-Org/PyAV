@@ -45,7 +45,8 @@ def register_doctests(mod):
     try:
         suite = doctest.DocTestSuite(mod)
     except ValueError as e:
-        print(e)
+        if e.args[-1] != 'has no docstrings':
+            print('test_doctest load error:', e, file=sys.__stdout__)
         return
 
     fix_doctests(suite)
@@ -64,7 +65,7 @@ def register_doctests(mod):
 
 for importer, mod_name, ispkg in pkgutil.walk_packages(
     path=av.__path__,
-    prefix=av.__name__+'.',
+    prefix=av.__name__ + '.',
     onerror=lambda x: None
 ):
     register_doctests(mod_name)

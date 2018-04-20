@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 
 import av
@@ -8,12 +9,12 @@ arg_parser.add_argument('output')
 args = arg_parser.parse_args()
 
 of = av.open(args.output, 'w')
-print of
+print(of)
 
 for codec_name in 'aac', 'vorbis':
     try:
         os = of.add_stream(codec_name)
     except Exception as e:
-        print e
+        print(e)
     else:
-        print os
+        print(os)

@@ -1,0 +1,96 @@
+
+
+- assert reasonable time_base and PTS handling
+
+  AudioFifo
+
+    What does it need?
+      A: - sample_fmt
+         - channel_layout
+
+    Where does it get them?
+      The first frame it processes.
+
+
+
+  AudioResampler
+    - what does it need?
+      - in/out sample_fmt
+      - in/out channel_layout
+      - in/out sample_rate
+
+- assert nb_channels vs channel_layout
+
+- Make everything mutable. Later, we can introduce a PseudoMutable base class
+  for everything that has a .assert_mutable() method and public is_read_only
+
+- Document/test the entire API (in the most casual way).
+
+- Include build discovery info into the module, retrievable by `python -m av --version`
+
+- Macros: Either ${ whatever(args) } or {{ whatever(args) }}
+  These return strings which are re-dented to match the level at the start of
+  themselves.
+
+- VideoFrame.from_file(file_or_path); opens the file and decodes the first frame
+
+- InternalObject class for stopping construction:
+
+    __cinit__(self, sentinel):
+        assert sentinel
+    
+    @classmethod
+    cdef alloc(cls, ...):
+        self = cls(sentinel)
+        self._init(*args, **kwargs)
+    
+- isdeferredinstance loads the module via sys.modules, then getattr on it, and
+  finally do an isinstance.
+  
+  isdeferredinstance(x, ('PIL.Image', 'Image'))
+
+- Rename Buffer and ByteSource to represent they are opposite directions of
+  the same operation.
+
+- `atexit.register` something to clean up FFmpeg threads
+
+- Directly use the Numpy C-API
+  - see: http://docs.scipy.org/doc/numpy/reference/c-api.array.html
+  - see: https://github.com/cython/cython/wiki/tutorials-numpy#c-api-initalization
+
+- Move the logic regard initializating a VideoReformatter into the object
+  itself instead of the VideoFrame.reformat method.
+
+- Protocol for streams to pull packets from iterators. Then secondary streams
+  get easier: container.add_stream('audio_codec', source=av.open('music.aiff').iter_packets(only_primary=True))
+
+- Make av.utils.SmartPointer to wrap around a pointer? All this would do is
+  hold a reference to said pointer and make sure it isn't garbage collected.
+
+- Look at how stream alloc works; can we manually do this and register the
+  stream on a format context later?
+
+- Various AudioLayout/AudioFormat/VideoFormat attributes should be writable.
+    - is_mutable flags on various objects (including formats, layouts, contexts,
+      streams, etc.) could guard the __set__ methods of properties.
+
+- Should methods be: to_bytes, as_bytes, tobytes, asbytes??
+
+- Plane.array_format could be a format string for array.array
+- Plane.update_from_array(array.array)
+    - If it were HD RGB then it would be 1920 * 1080 * 3 long.
+- Plane.update_from_ndarray(numpy.ndarray)
+    - If it were HD RGB then it would have shape (1080, 1920, 3)
+- Plane.update(input_)
+    And then it tries if it is a buffer, memoryview, bytes, etc..
+
+- TestCase.rms_diff(one, two) -> Root-mean-square diff
+- try to wrap API of testsrc filters
+
+- Replicate av_frame_get_best_effort_timestamp
+
+    http://ffmpeg.org/pipermail/ffmpeg-devel/2011-February/104327.html
+    http://pastebin.com/Aq8eDZw3/
+    http://web.archiveorange.com/archive/v/yR2T4bybpYnYCUXmzAI5
+
+
