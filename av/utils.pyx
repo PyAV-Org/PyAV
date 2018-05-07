@@ -175,11 +175,6 @@ cdef object to_avrational(object value, lib.AVRational *input):
     input.den = frac.denominator
 
 
-cdef object av_frac_to_fraction(lib.AVFrac *input):
-    return Fraction(input.val * input.num, input.den)
-
-
-
 # === OTHER ===
 # =============
 

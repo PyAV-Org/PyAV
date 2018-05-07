@@ -16,7 +16,6 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=*, str encoding
 
 cdef object avrational_to_faction(lib.AVRational *input)
 cdef object to_avrational(object value, lib.AVRational *input)
-cdef object av_frac_to_fraction(lib.AVFrac *input)
 
 
 cdef str media_type_to_string(lib.AVMediaType)

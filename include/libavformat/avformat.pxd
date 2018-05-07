@@ -33,11 +33,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         AVMEDIA_TYPE_ATTACHMENT
         AVMEDIA_TYPE_NB
 
-    cdef struct AVFrac:
-        int64_t val
-        int64_t num
-        int64_t den
-
     cdef struct AVStream:
 
         int index
@@ -45,7 +40,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
 
         AVCodecContext *codec
 
-        AVFrac pts
         AVRational time_base
 
         int64_t start_time
