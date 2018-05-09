@@ -75,20 +75,12 @@ cdef class Stream(object):
                 # TODO: Setup a dummy CodecContext.
                 return
 
-            # Open the codec.
-            # TODO: Replace this with the call to codec_context.open() below,
-            #       once we pass options to it.
-            err_check(lib.avcodec_open2(self._codec_context, self._codec, &self._codec_options))
-
         # This is an output container!
         else:
             self._codec = self._codec_context.codec
 
         self.codec_context = wrap_codec_context(self._codec_context, self._codec, False)
         self.codec_context.stream_index = stream.index
-
-        # if self._container.ptr.iformat:
-            # self.codec_context.open(strict=False)
 
     def __dealloc__(self):
         if self._codec_options:
