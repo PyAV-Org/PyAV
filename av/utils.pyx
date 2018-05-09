@@ -7,7 +7,7 @@ import traceback
 
 cimport libav as lib
 
-from av.logging cimport _get_last_error
+from av.logging cimport get_last_error
 
 
 # === ERROR HANDLING ===
@@ -24,16 +24,16 @@ cdef int PYAV_ERROR = -0x50794156 # 'PyAV'
 
 class AVError(EnvironmentError):
     """Exception class for errors from within the underlying FFmpeg/Libav."""
-    def __init__(self, code, message, filename=None, error_log=None):
+    def __init__(self, code, message, filename=None, log=None):
         if filename:
             super(AVError, self).__init__(code, message, filename)
         else:
             super(AVError, self).__init__(code, message)
-        self.error_log = error_log
+        self.log = log
     def __str__(self):
         strerror = super(AVError, self).__str__()
-        if self.error_log:
-            return '%s (%s: %s)' % (strerror, self.error_log[0], self.error_log[1])
+        if self.log:
+            return '%s (%s: %s)' % (strerror, self.log[0], self.log[1])
         else:
             return strerror
 AVError.__module__ = 'av'
@@ -62,7 +62,7 @@ cdef int stash_exception(exc_info=None):
 
 cdef int _last_log_count = 0
 
-cdef int err_check(int res=0, str filename=None) except -1:
+cpdef int err_check(int res=0, str filename=None) except -1:
 
     global _err_count
     global _last_log_count
@@ -84,6 +84,7 @@ cdef int err_check(int res=0, str filename=None) except -1:
 
     if res == PYAV_ERROR:
         py_buffer = b'Error in PyAV callback'
+
     else:
         # This is kinda gross.
         py_buffer = b"\0" * AV_ERROR_MAX_STRING_SIZE
@@ -93,16 +94,17 @@ cdef int err_check(int res=0, str filename=None) except -1:
     cdef unicode message = py_buffer.decode('latin1')
 
     # Add details from the last log onto the end.
-    error_log = None
-    log_count, last_log = _get_last_error()
+    log_count, last_log = get_last_error()
     if log_count > _last_log_count:
-        error_log = (last_log[0].strip(), last_log[2].strip())
         _last_log_count = log_count
+        log = last_log
+    else:
+        log = None
 
     if filename:
-        raise AVError(-res, message, filename, error_log)
+        raise AVError(-res, message, filename, log)
     else:
-        raise AVError(-res, message, None,     error_log)
+        raise AVError(-res, message, None,     log)
 
     return res
 

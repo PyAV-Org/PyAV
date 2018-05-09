@@ -1,2 +1,2 @@
 
-cdef _get_last_error()
+cpdef get_last_error()

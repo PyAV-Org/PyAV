@@ -5,7 +5,7 @@ cimport libav as lib
 
 cdef int stash_exception(exc_info=*)
 
-cdef int err_check(int res=*, str filename=*) except -1
+cpdef int err_check(int res=*, str filename=*) except -1
 
 
 
