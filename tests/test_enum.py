@@ -122,6 +122,9 @@ class TestEnums(TestCase):
         bar2 = foobar ^ foo
         self.assertIs(bar2, bar)
 
+        bar3 = foobar & ~foo
+        self.assertIs(bar3, bar)
+
     def test_flag_combos_basics(self):
 
         cls = define_enum('FoobarMissingFlags', dict(FOO=1, BAR=2), flags=True)
@@ -145,7 +148,6 @@ class TestEnums(TestCase):
 
         self.assertEqual(len(cls), 2) # It didn't get bigger
         self.assertEqual(list(cls), [cls.FOO, cls.BAR])
-
 
     def test_flag_combo_lookup_create(self):
 

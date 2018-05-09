@@ -156,19 +156,26 @@ cdef class EnumFlag(EnumItem):
         self.flags = (self, )
 
     def __and__(self, other):
-        other = self.__class__[other]
-        value = self.value & other.value
+        if not isinstance(other, int):
+            other = self.__class__[other].value
+        value = self.value & other
         return (<EnumType>self.__class__)._get_combo(value)
 
     def __or__(self, other):
-        other = self.__class__[other]
-        value = self.value | other.value
+        if not isinstance(other, int):
+            other = self.__class__[other].value
+        value = self.value | other
         return (<EnumType>self.__class__)._get_combo(value)
 
     def __xor__(self, other):
-        other = self.__class__[other]
-        value = self.value ^ other.value
+        if not isinstance(other, int):
+            other = self.__class__[other].value
+        value = self.value ^ other
         return (<EnumType>self.__class__)._get_combo(value)
+
+    def __invert__(self):
+        # This can't result in a flag, but is helpful.
+        return ~self.value
 
 
 def define_enum(name, items, flags=False, allow_combo=False):
