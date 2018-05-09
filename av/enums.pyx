@@ -10,19 +10,7 @@ cdef sentinel = object()
 
 cdef class EnumType(type):
 
-    cdef readonly str name
-    cdef readonly tuple names
-    cdef readonly tuple values
-
-    cdef readonly bint is_flags
-    cdef readonly bint allow_multi_flags
-    cdef readonly bint allow_create
-
-    cdef _by_name
-    cdef _by_value
-    cdef _all
-
-    cdef _init(self, name, items, is_flags, allow_multi_flags, allow_create):
+    cdef _init(self, name, items, bint is_flags, bint allow_multi_flags, bint allow_user_create):
 
         self.name = name
 
@@ -33,8 +21,8 @@ cdef class EnumType(type):
         self._all = []
 
         self.is_flags = bool(is_flags)
-        self.allow_multi_flags = bool(allow_multi_flags)
-        self.allow_create = bool(allow_create)
+        self.allow_multi_flags = allow_multi_flags
+        self.allow_user_create = allow_user_create
 
         for name, value in items:
             self._create(name, value)
@@ -54,7 +42,42 @@ cdef class EnumType(type):
 
         return item
 
-    cdef _get_combo(self, long value):
+    def __len__(self):
+        return len(self._all)
+
+    def __iter__(self):
+        return iter(self._all)
+
+    def __getitem__(self, key):
+        if isinstance(key, basestring):
+            return self._by_name[key]
+        if isinstance(key, int):
+            try:
+                return self._by_value[key]
+            except KeyError:
+                if not self.allow_multi_flags:
+                    raise
+                try:
+                    return self._get_multi_flags(key)
+                except ValueError:
+                    raise KeyError(key)
+        if isinstance(key, self):
+            return key
+        raise TypeError("Uncomparable to {}.".format(self.name), key)
+
+    cdef _get(self, long value, bint create=False):
+
+        try:
+            return self._by_value[value]
+        except KeyError:
+            pass
+
+        if not create:
+            return
+
+        return self._create('{}_{}'.format(self.name.upper(), value), value, by_value_only=True)
+
+    cdef _get_multi_flags(self, long value):
 
         try:
             return self._by_value[value]
@@ -81,40 +104,15 @@ cdef class EnumType(type):
 
         return combo
 
-    def __len__(self):
-        return len(self._all)
-
-    def __iter__(self):
-        return iter(self._all)
-
-    def __getitem__(self, key):
-        if isinstance(key, basestring):
-            return self._by_name[key]
-        if isinstance(key, int):
-            try:
-                return self._by_value[key]
-            except KeyError:
-                if not self.allow_multi_flags:
-                    raise
-                try:
-                    return self._get_combo(key)
-                except ValueError:
-                    raise KeyError(key)
-        if isinstance(key, self):
-            return key
-        raise TypeError("Uncomparable to {}.".format(self.name), key)
-
     def get(self, key, default=None, create=False):
         try:
             return self[key]
         except KeyError:
-            if not create:
-                return default
-            if not self.allow_create:
-                raise ValueError("Cannot create {}.".format(self.name))
-            if not isinstance(key, int):
-                raise TypeError("Can only create anonymous ints.", key)
-            return self._create('{}_{}'.format(self.name.upper(), key), key, by_value_only=True)
+            if create:
+                if not self.allow_user_create:
+                    raise ValueError("Cannot create {}.".format(self.name))
+                return self._get(key, create=True)
+            return default
 
 
 def _unpickle(mod_name, cls_name, item_name):
@@ -197,26 +195,26 @@ cdef class EnumFlag(EnumItem):
         if not isinstance(other, int):
             other = self.__class__[other].value
         value = self.value & other
-        return (<EnumType>self.__class__)._get_combo(value)
+        return (<EnumType>self.__class__)._get_multi_flags(value)
 
     def __or__(self, other):
         if not isinstance(other, int):
             other = self.__class__[other].value
         value = self.value | other
-        return (<EnumType>self.__class__)._get_combo(value)
+        return (<EnumType>self.__class__)._get_multi_flags(value)
 
     def __xor__(self, other):
         if not isinstance(other, int):
             other = self.__class__[other].value
         value = self.value ^ other
-        return (<EnumType>self.__class__)._get_combo(value)
+        return (<EnumType>self.__class__)._get_multi_flags(value)
 
     def __invert__(self):
         # This can't result in a flag, but is helpful.
         return ~self.value
 
 
-def define_enum(name, items, is_flags=False, allow_multi_flags=False, allow_create=False):
+cpdef EnumType define_enum(name, items, bint is_flags=False, bint allow_multi_flags=False, bint allow_user_create=False):
 
     if isinstance(items, dict):
         items = list(items.items())
@@ -232,7 +230,7 @@ def define_enum(name, items, is_flags=False, allow_multi_flags=False, allow_crea
     cls._init(name, items,
         is_flags=is_flags,
         allow_multi_flags=allow_multi_flags,
-        allow_create=allow_create,
+        allow_user_create=allow_user_create,
     )
 
     return cls

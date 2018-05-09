@@ -42,6 +42,10 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         CODEC_CAP_LOSSLESS
 
     cdef enum:
+        FF_THREAD_FRAME
+        FF_THREAD_SLICE
+
+    cdef enum:
         AV_CODEC_FLAG_GLOBAL_HEADER
         AV_CODEC_FLAG_QSCALE
         AV_CODEC_FLAG_TRUNCATED

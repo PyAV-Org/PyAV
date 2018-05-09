@@ -113,7 +113,7 @@ class TestEnums(TestCase):
 
     def test_create_unknown(self):
 
-        cls = self.define_foobar(allow_create=True)
+        cls = self.define_foobar(allow_user_create=True)
         baz = cls.get(3, create=True)
 
         self.assertEqual(baz.name, 'FOOBAR_3')
