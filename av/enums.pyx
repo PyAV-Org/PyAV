@@ -14,12 +14,45 @@ cdef class EnumType(type):
     cdef readonly tuple names
     cdef readonly tuple values
 
-    cdef readonly bint flags
-    cdef readonly bint allow_combo
+    cdef readonly bint is_flags
+    cdef readonly bint allow_multi_flags
+    cdef readonly bint allow_create
 
     cdef _by_name
     cdef _by_value
     cdef _all
+
+    cdef _init(self, name, items, is_flags, allow_multi_flags, allow_create):
+
+        self.name = name
+
+        self.names = ()
+        self.values = ()
+        self._by_name = {}
+        self._by_value = {}
+        self._all = []
+
+        self.is_flags = bool(is_flags)
+        self.allow_multi_flags = bool(allow_multi_flags)
+        self.allow_create = bool(allow_create)
+
+        for name, value in items:
+            self._create(name, value)
+
+    cdef _create(self, name, value, by_value_only=False):
+
+        item = self(sentinel, name, value)
+
+        self._by_value[value] = item
+
+        if not by_value_only:
+            setattr(self, name, item)
+            self._all.append(item)
+            self._by_name[name] = item
+            self.names += (name, )
+            self.values += (value, )
+
+        return item
 
     cdef _get_combo(self, long value):
 
@@ -28,7 +61,7 @@ cdef class EnumType(type):
         except KeyError:
             pass
 
-        if not self.allow_combo:
+        if not self.allow_multi_flags:
             raise ValueError("Missing flag in {}.".format(self.__name__), value)
 
         flags = []
@@ -43,9 +76,8 @@ cdef class EnumType(type):
             raise ValueError("Could not build combo in {}.".format(self.__name__, value))
 
         name = '|'.join(f.name for f in flags)
-        cdef EnumFlag combo = self(sentinel, name, value)
+        cdef EnumFlag combo = self._create(name, value, by_value_only=True)
         combo.flags = tuple(flags)
-        self._by_value[value] = combo
 
         return combo
 
@@ -62,7 +94,7 @@ cdef class EnumType(type):
             try:
                 return self._by_value[key]
             except KeyError:
-                if not self.allow_combo:
+                if not self.allow_multi_flags:
                     raise
                 try:
                     return self._get_combo(key)
@@ -72,11 +104,17 @@ cdef class EnumType(type):
             return key
         raise TypeError("Uncomparable to {}.".format(self.name), key)
 
-    def get(self, key, default=None):
+    def get(self, key, default=None, create=False):
         try:
             return self[key]
         except KeyError:
-            return default
+            if not create:
+                return default
+            if not self.allow_create:
+                raise ValueError("Cannot create {}.".format(self.name))
+            if not isinstance(key, int):
+                raise TypeError("Can only create anonymous ints.", key)
+            return self._create('{}_{}'.format(self.name.upper(), key), key, by_value_only=True)
 
 
 def _unpickle(mod_name, cls_name, item_name):
@@ -178,44 +216,24 @@ cdef class EnumFlag(EnumItem):
         return ~self.value
 
 
-def define_enum(name, items, flags=False, allow_combo=False):
+def define_enum(name, items, is_flags=False, allow_multi_flags=False, allow_create=False):
 
     if isinstance(items, dict):
         items = list(items.items())
     else:
         items = list(items)
 
-    if flags:
+    if is_flags:
         base_cls = EnumFlag
     else:
         base_cls = EnumItem
 
-    cls = EnumType(name, (base_cls, ), {})
-    cls.name = name
-    cls.flags = bool(flags)
-    cls.allow_combo = bool(allow_combo)
-
-    cls._by_name = by_name = {}
-    cls._by_value = by_value = {}
-    cls._all = all_ = []
-
-    names = []
-    values = []
-
-    for name, value in items:
-
-        names.append(name)
-        values.append(value)
-
-        item = cls(sentinel, name, value)
-
-        setattr(cls, name, item)
-        all_.append(item)
-        by_name[name] = item
-        by_value[value] = item
-
-    cls.names = tuple(names)
-    cls.values = tuple(values)
+    cdef EnumType cls = EnumType(name, (base_cls, ), {})
+    cls._init(name, items,
+        is_flags=is_flags,
+        allow_multi_flags=allow_multi_flags,
+        allow_create=allow_create,
+    )
 
     return cls
 

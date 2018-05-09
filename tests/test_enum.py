@@ -40,6 +40,10 @@ class TestEnums(TestCase):
         self.assertIs(foo1, foo3)
         self.assertIs(foo1, foo4)
 
+        self.assertIn(foo1, cls)
+        self.assertIn('FOO', cls)
+        self.assertIn(1, cls)
+
         self.assertRaises(KeyError, lambda: cls['not a foo'])
         self.assertRaises(KeyError, lambda: cls[10])
         self.assertRaises(TypeError, lambda: cls[{}])
@@ -107,9 +111,18 @@ class TestEnums(TestCase):
 
         self.assertIs(foo, foo2)
 
+    def test_create_unknown(self):
+
+        cls = self.define_foobar(allow_create=True)
+        baz = cls.get(3, create=True)
+
+        self.assertEqual(baz.name, 'FOOBAR_3')
+        self.assertEqual(baz.value, 3)
+
+
     def test_flag_basics(self):
 
-        cls = define_enum('FoobarAllFlags', dict(FOO=1, BAR=2, FOOBAR=3), flags=True)
+        cls = define_enum('FoobarAllFlags', dict(FOO=1, BAR=2, FOOBAR=3), is_flags=True)
         foo = cls.FOO
         bar = cls.BAR
 
@@ -125,18 +138,21 @@ class TestEnums(TestCase):
         bar3 = foobar & ~foo
         self.assertIs(bar3, bar)
 
-    def test_flag_combos_basics(self):
+    def test_multi_flags_basics(self):
 
-        cls = define_enum('FoobarMissingFlags', dict(FOO=1, BAR=2), flags=True)
+        cls = define_enum('FoobarMissingFlags', dict(FOO=1, BAR=2), is_flags=True)
         self.assertRaises(ValueError, lambda: cls.FOO | cls.BAR)
 
-        cls = define_enum('FoobarComboFlags', dict(FOO=1, BAR=2), flags=True, allow_combo=True)
+        cls = define_enum('FoobarComboFlags', dict(FOO=1, BAR=2), is_flags=True, allow_multi_flags=True)
 
-        foobar = cls.FOO | cls.BAR
+        foo = cls.FOO
+        bar = cls.BAR
+        foobar = foo | bar
         self.assertEqual(foobar.name, 'FOO|BAR')
         self.assertEqual(foobar.value, 3)
+        self.assertEqual(foobar.flags, (foo, bar))
 
-        foobar2 = cls.FOO | cls.BAR
+        foobar2 = foo | bar
         foobar3 = cls[3]
         foobar4 = cls[foobar]
 
@@ -147,11 +163,11 @@ class TestEnums(TestCase):
         self.assertRaises(KeyError, lambda: cls['FOO|BAR'])
 
         self.assertEqual(len(cls), 2) # It didn't get bigger
-        self.assertEqual(list(cls), [cls.FOO, cls.BAR])
+        self.assertEqual(list(cls), [foo, bar])
 
-    def test_flag_combo_lookup_create(self):
+    def test_multi_flags_create_missing(self):
 
-        cls = define_enum('FoobarComboFlags', dict(FOO=1, BAR=2), flags=True, allow_combo=True)
+        cls = define_enum('FoobarComboFlags', dict(FOO=1, BAR=2), is_flags=True, allow_multi_flags=True)
 
         foobar = cls[3]
         self.assertIs(foobar, cls.FOO | cls.BAR)
