@@ -75,7 +75,10 @@ matrix:
           os: linux
 
         # Latest libraries.
-        - python: "2.7"
+        - python: "3.6"
+          env: FFMPEG=4.0
+          os: linux
+        - python: "3.6"
           env: FFMPEG=3.4
           os: linux
 
