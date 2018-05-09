@@ -11,7 +11,7 @@ class TestCodecs(TestCase):
         self.assertEqual(c.name, 'mpeg4')
         self.assertEqual(c.long_name, 'MPEG-4 part 2')
         self.assertEqual(c.type, 'video')
-        self.assertEqual(c.id, 13)
+        self.assertIn(c.id, (12, 13))
         self.assertTrue(c.is_decoder)
         self.assertFalse(c.is_encoder)
 
@@ -24,7 +24,7 @@ class TestCodecs(TestCase):
         self.assertEqual(c.name, 'mpeg4')
         self.assertEqual(c.long_name, 'MPEG-4 part 2')
         self.assertEqual(c.type, 'video')
-        self.assertEqual(c.id, 13)
+        self.assertIn(c.id, (12, 13))
         self.assertTrue(c.is_encoder)
         self.assertFalse(c.is_decoder)
 

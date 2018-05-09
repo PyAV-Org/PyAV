@@ -42,8 +42,10 @@ class TestPythonIO(TestCase):
         fh = open(path, 'wb')
         wrapped = MethodLogger(fh)
 
-        output = av.open(wrapped, 'w')
+        output = av.open(wrapped, 'w', 'mov')
         write_rgb_rotate(output)
+        output.close()
+        fh.close()
 
         # Make sure it did actually write.
         writes = wrapped._filter('write')
