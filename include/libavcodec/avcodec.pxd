@@ -21,7 +21,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AV_CODEC_PROP_TEXT_SUB
 
     #AVCodec.capabilities
-
     cdef enum:
         CODEC_CAP_DRAW_HORIZ_BAND
         CODEC_CAP_DR1
@@ -43,8 +42,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         CODEC_CAP_LOSSLESS
 
     cdef enum:
-        CODEC_FLAG_GLOBAL_HEADER
-        CODEC_FLAG_TRUNCATED
+        AV_CODEC_FLAG_GLOBAL_HEADER
+        AV_CODEC_FLAG_QSCALE
+        AV_CODEC_FLAG_TRUNCATED
 
     cdef enum:
         AV_PKT_FLAG_KEY

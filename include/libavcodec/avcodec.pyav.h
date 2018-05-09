@@ -3,7 +3,7 @@
 
 #if !PYAV_HAVE_AV_FRAME_GET_BEST_EFFORT_TIMESTAMP
 
-    int64_t av_frame_get_best_effort_timestamp(const AVFrame *frame) 
+    int64_t av_frame_get_best_effort_timestamp(const AVFrame *frame)
     {
         // TODO: do this right.
         return frame->pkt_pts;
@@ -106,3 +106,15 @@
 #ifndef CODEC_CAP_LOSSLESS
     #define CODEC_CAP_LOSSLESS 0
 #endif
+
+
+// A pile of things got renamed.
+#ifndef AV_CODEC_FLAG_GLOBAL_HEADER
+    #define AV_CODEC_FLAG_GLOBAL_HEADER CODEC_FLAG_GLOBAL_HEADER
+#endif
+#ifndef AV_CODEC_FLAG_TRUNCATED
+    #define AV_CODEC_FLAG_TRUNCATED CODEC_FLAG_TRUNCATED
+#endif
+#ifndef AV_CODEC_FLAG_QSCALE
+    #define AV_CODEC_FLAG_QSCALE CODEC_FLAG_QSCALE
+# endif
