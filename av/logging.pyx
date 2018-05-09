@@ -5,9 +5,14 @@ from libc.stdlib cimport malloc, free
 
 cimport libav as lib
 
-from threading import Lock, get_ident
+from threading import Lock
 import logging
 import sys
+
+try:
+    from threading import get_ident
+except ImportError:
+    from thread import get_ident
 
 
 # Library levels.
