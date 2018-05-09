@@ -14,9 +14,43 @@ cdef class EnumType(type):
     cdef readonly tuple names
     cdef readonly tuple values
 
+    cdef readonly bint flags
+    cdef readonly bint allow_combo
+
     cdef _by_name
     cdef _by_value
     cdef _all
+
+    cdef _get_combo(self, long value):
+
+        try:
+            return self._by_value[value]
+        except KeyError:
+            pass
+
+        if not self.allow_combo:
+            raise ValueError("Missing flag in {}.".format(self.__name__), value)
+
+        flags = []
+        cdef long to_find = value
+        for item in self:
+            if item.value & to_find:
+                flags.append(item)
+                to_find = to_find ^ item.value
+                if not to_find:
+                    break
+        if to_find:
+            raise ValueError("Could not build combo in {}.".format(self.__name__, value))
+
+        name = '|'.join(f.name for f in flags)
+        cdef EnumFlag combo = self(sentinel, name, value)
+        combo.flags = tuple(flags)
+        self._by_value[value] = combo
+
+        return combo
+
+    def __len__(self):
+        return len(self._all)
 
     def __iter__(self):
         return iter(self._all)
@@ -25,7 +59,15 @@ cdef class EnumType(type):
         if isinstance(key, basestring):
             return self._by_name[key]
         if isinstance(key, int):
-            return self._by_value[key]
+            try:
+                return self._by_value[key]
+            except KeyError:
+                if not self.allow_combo:
+                    raise
+                try:
+                    return self._get_combo(key)
+                except ValueError:
+                    raise KeyError(key)
         if isinstance(key, self):
             return key
         raise TypeError("Uncomparable to {}.".format(self.name), key)
@@ -106,17 +148,45 @@ cdef class EnumItem(object):
         return not (self == other)
 
 
+cdef class EnumFlag(EnumItem):
+
+    cdef readonly tuple flags
+
+    def __cinit__(self, sentinel, name, value):
+        self.flags = (self, )
+
+    def __and__(self, other):
+        other = self.__class__[other]
+        value = self.value & other.value
+        return (<EnumType>self.__class__)._get_combo(value)
+
+    def __or__(self, other):
+        other = self.__class__[other]
+        value = self.value | other.value
+        return (<EnumType>self.__class__)._get_combo(value)
+
+    def __xor__(self, other):
+        other = self.__class__[other]
+        value = self.value ^ other.value
+        return (<EnumType>self.__class__)._get_combo(value)
 
 
-def define_enum(name, items):
+def define_enum(name, items, flags=False, allow_combo=False):
 
     if isinstance(items, dict):
         items = list(items.items())
     else:
         items = list(items)
 
-    cls = EnumType(name, (EnumItem, ), {})
+    if flags:
+        base_cls = EnumFlag
+    else:
+        base_cls = EnumItem
+
+    cls = EnumType(name, (base_cls, ), {})
     cls.name = name
+    cls.flags = bool(flags)
+    cls.allow_combo = bool(allow_combo)
 
     cls._by_name = by_name = {}
     cls._by_value = by_value = {}
