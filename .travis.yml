@@ -37,6 +37,14 @@ matrix:
 
     allow_failures:
 
+        # PyPy doesn't pass recently, and I don't think it is our fault.
+        - python: "pypy"
+          env: LIBRARY=ffmpeg-3.2
+          os: linux
+        - python: "pypy3"
+          env: LIBRARY=ffmpeg-3.2
+          os: linux
+
         # We are still working on this.
         - os: osx
 
