@@ -37,31 +37,12 @@ matrix:
 
     allow_failures:
 
-        # Latest FFmpeg is too new.
-        - python: "2.7"
-          env: FFMPEG=3.4
-          os: linux
-
         # We are still working on this.
         - os: osx
-
-        # Deprecation while we consider removing support for old FFmpeg.
-        - python: "2.7"
-          env: FFMPEG=2.2.4
-          os: linux
 
         # Deprecation while we consider removing support for Libav entirely.
         - python: "2.7"
           env: LIBAV=12
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.9
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.6
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.4
           os: linux
 
     include:
@@ -106,12 +87,6 @@ matrix:
         - python: "3.4"
           env: FFMPEG=3.2
           os: linux
-        - python: "3.3"
-          env: FFMPEG=3.2
-          os: linux
-        - python: "2.6"
-          env: FFMPEG=3.2
-          os: linux
 
         # Older libraries.
         - python: "2.7"
@@ -125,20 +100,6 @@ matrix:
           os: linux
         - python: "2.7"
           env: FFMPEG=2.5
-          os: linux
-
-        # Deprecated libraries.
-        - python: "2.7"
-          env: FFMPEG=2.2.4
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.9
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.6
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.4
           os: linux
 
 
