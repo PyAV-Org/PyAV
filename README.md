@@ -1,7 +1,7 @@
 PyAV
 ====
 
-[![Build Status](https://secure.travis-ci.org/mikeboers/PyAV.png?branch=master)](https://travis-ci.org/mikeboers/PyAV) [![Build status](https://ci.appveyor.com/api/projects/status/94w43xhugh6wkett?svg=true)](https://ci.appveyor.com/project/mikeboers/pyav)
+[![Build Status](https://travis-ci.org/mikeboers/PyAV.svg?branch=develop)](https://travis-ci.org/mikeboers/PyAV) [![Build status](https://ci.appveyor.com/api/projects/status/94w43xhugh6wkett/branch/develop?svg=true)](https://ci.appveyor.com/project/mikeboers/pyav)
 
 PyAV is a Pythonic binding for [FFmpeg][ffmpeg] or [Libav][libav]. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
 
