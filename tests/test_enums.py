@@ -6,15 +6,15 @@ from av.enums import *
 
 
 # This must be at the top-level.
-PickleableFooBar = define_enum('PickleableFooBar', dict(FOO=1))
+PickleableFooBar = define_enum('PickleableFooBar', [('FOO', 1)])
 
 
 class TestEnums(TestCase):
 
     def define_foobar(self, **kwargs):
-        return define_enum('Foobar', dict(
-            FOO=1,
-            BAR=2,
+        return define_enum('Foobar', (
+            ('FOO', 1),
+            ('BAR', 2),
         ), **kwargs)
 
     def test_basics(self):
@@ -122,7 +122,7 @@ class TestEnums(TestCase):
 
     def test_flag_basics(self):
 
-        cls = define_enum('FoobarAllFlags', dict(FOO=1, BAR=2, FOOBAR=3), is_flags=True)
+        cls = define_enum('FoobarAllFlags', dict(FOO=1, BAR=2, FOOBAR=3).items(), is_flags=True)
         foo = cls.FOO
         bar = cls.BAR
 
@@ -140,10 +140,10 @@ class TestEnums(TestCase):
 
     def test_multi_flags_basics(self):
 
-        cls = define_enum('FoobarMissingFlags', dict(FOO=1, BAR=2), is_flags=True)
+        cls = self.define_foobar(is_flags=True)
         self.assertRaises(ValueError, lambda: cls.FOO | cls.BAR)
 
-        cls = define_enum('FoobarComboFlags', dict(FOO=1, BAR=2), is_flags=True, allow_multi_flags=True)
+        cls = self.define_foobar(is_flags=True, allow_multi_flags=True)
 
         foo = cls.FOO
         bar = cls.BAR
@@ -167,7 +167,7 @@ class TestEnums(TestCase):
 
     def test_multi_flags_create_missing(self):
 
-        cls = define_enum('FoobarComboFlags', dict(FOO=1, BAR=2), is_flags=True, allow_multi_flags=True)
+        cls = self.define_foobar(is_flags=True, allow_multi_flags=True)
 
         foobar = cls[3]
         self.assertIs(foobar, cls.FOO | cls.BAR)

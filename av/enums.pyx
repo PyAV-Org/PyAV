@@ -216,11 +216,6 @@ cdef class EnumFlag(EnumItem):
 
 cpdef EnumType define_enum(name, items, bint is_flags=False, bint allow_multi_flags=False, bint allow_user_create=False):
 
-    if isinstance(items, dict):
-        items = list(items.items())
-    else:
-        items = list(items)
-
     if is_flags:
         base_cls = EnumFlag
     else:
