@@ -6,12 +6,13 @@ from libc.string cimport memcpy
 
 cimport libav as lib
 
+from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
+from av.enums cimport EnumType, define_enum
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
-from av.bytesource cimport ByteSource, bytesource
 
 
 cdef object _cinit_sentinel = object()
@@ -41,16 +42,23 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_c
     return py_ctx
 
 
+cdef EnumType _ThreadType = define_enum('ThreadType', (
+    ('FRAME', lib.FF_THREAD_FRAME),
+    ('SLICE', lib.FF_THREAD_SLICE),
+    ('AUTO' , lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME),
+), is_flags=True)
+ThreadType = _ThreadType
 
-cpdef enum SkipType:
-    NONE = lib.AVDISCARD_NONE
-    DEFAULT = lib.AVDISCARD_DEFAULT
-    NONREF = lib.AVDISCARD_NONREF
-    BIDIR = lib.AVDISCARD_BIDIR
-    NONINTRA = lib.AVDISCARD_NONINTRA
-    NONKEY = lib.AVDISCARD_NONKEY
-    ALL = lib.AVDISCARD_ALL
-
+cdef EnumType _SkipType = define_enum('SkipType', (
+    ('NONE', lib.AVDISCARD_NONE),
+    ('DEFAULT', lib.AVDISCARD_DEFAULT),
+    ('NONREF', lib.AVDISCARD_NONREF),
+    ('BIDIR', lib.AVDISCARD_BIDIR),
+    ('NONINTRA', lib.AVDISCARD_NONINTRA),
+    ('NONKEY', lib.AVDISCARD_NONKEY),
+    ('ALL', lib.AVDISCARD_ALL),
+))
+SkipType = _SkipType
 
 cdef class CodecContext(object):
 
@@ -509,16 +517,14 @@ cdef class CodecContext(object):
 
     property thread_type:
         def __get__(self):
-            return self.ptr.thread_type
+            return _ThreadType.get(self.ptr.thread_type, create=True)
         def __set__(self, int value):
             if lib.avcodec_is_open(self.ptr):
                 raise RuntimeError("Cannot change thread_type after codec is open.")
-            self.ptr.thread_type = value
+            self.ptr.thread_type = _ThreadType[value].value
 
     property skip_frame:
         def __get__(self):
-            return SkipType(self.ptr.skip_frame) if self.ptr.skip_frame in SkipType else None
+            return _SkipType._get(self.ptr.skip_frame, create=True)
         def __set__(self, value):
-            if isinstance(value, basestring):
-                value = SkipType[value]
-            self.ptr.skip_frame = int(SkipType(value))
+            self.ptr.skip_frame = _SkipType[value].value
