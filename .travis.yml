@@ -26,8 +26,8 @@ addons:
 cache:
     directories:
         - tests/assets # Cache files from the FATE suite.
-        - venvs # Python virtualenvs and compiled FFmpeg/Libav.
-
+        - vendor/build/$LIBRARY # FFmpeg builds.
+        - venvs/$TRAVIS_OS_NAME.$TRAVIS_PYTHON_VERSION # Python packages.
 
 matrix:
 
@@ -37,108 +37,77 @@ matrix:
 
     allow_failures:
 
-        # Latest FFmpeg is too new.
-        - python: "2.7"
-          env: FFMPEG=3.4
+        # PyPy doesn't pass recently, and I don't think it is our fault.
+        - python: "pypy"
+          env: LIBRARY=ffmpeg-3.2
+          os: linux
+        - python: "pypy3"
+          env: LIBRARY=ffmpeg-3.2
           os: linux
 
         # We are still working on this.
         - os: osx
 
-        # Deprecation while we consider removing support for old FFmpeg.
-        - python: "2.7"
-          env: FFMPEG=2.2.4
-          os: linux
-
         # Deprecation while we consider removing support for Libav entirely.
         - python: "2.7"
-          env: LIBAV=12
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.9
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.6
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.4
+          env: LIBRARY=libav-12
           os: linux
 
     include:
 
         # Primary targets.
         - python: "3.6"
-          env: FFMPEG=3.3
+          env: LIBRARY=ffmpeg-3.3
           os: linux
         - python: "2.7"
-          env: FFMPEG=3.3
+          env: LIBRARY=ffmpeg-3.3
           os: linux
 
         # Latest libraries.
         - python: "3.6"
-          env: FFMPEG=4.0
+          env: LIBRARY=ffmpeg-4.0
           os: linux
         - python: "3.6"
-          env: FFMPEG=3.4
+          env: LIBRARY=ffmpeg-3.4
           os: linux
 
         # Mac OS X.
-        - env: FFMPEG=3.2
+        - env: LIBRARY=ffmpeg-3.2
           os: osx
 
         # PyPy
         - python: "pypy"
-          env: FFMPEG=3.2
+          env: LIBRARY=ffmpeg-3.2
           os: linux
         - python: "pypy3"
-          env: FFMPEG=3.2
+          env: LIBRARY=ffmpeg-3.2
           os: linux
 
         # Libav.
         - python: "2.7"
-          env: LIBAV=12
+          env: LIBRARY=libav-12
           os: linux
 
         # Older Pythons.
         - python: "3.5"
-          env: FFMPEG=3.2
+          env: LIBRARY=ffmpeg-3.2
           os: linux
         - python: "3.4"
-          env: FFMPEG=3.2
-          os: linux
-        - python: "3.3"
-          env: FFMPEG=3.2
-          os: linux
-        - python: "2.6"
-          env: FFMPEG=3.2
+          env: LIBRARY=ffmpeg-3.2
           os: linux
 
         # Older libraries.
         - python: "2.7"
-          env: FFMPEG=3.2
+          env: LIBRARY=ffmpeg-3.2
           os: linux
         - python: "2.7"
-          env: FFMPEG=3.0
+          env: LIBRARY=ffmpeg-3.0
           os: linux
         - python: "2.7"
-          env: FFMPEG=2.7
+          env: LIBRARY=ffmpeg-2.7
           os: linux
         - python: "2.7"
-          env: FFMPEG=2.5
-          os: linux
-
-        # Deprecated libraries.
-        - python: "2.7"
-          env: FFMPEG=2.2.4
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.9
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.6
-          os: linux
-        - python: "2.7"
-          env: LIBAV=11.4
+          env: LIBRARY=ffmpeg-2.5
           os: linux
 
 

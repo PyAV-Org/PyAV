@@ -15,6 +15,10 @@ except ImportError:
     from thread import get_ident
 
 
+cdef bint is_py35 = sys.version_info[:2] >= (3, 5)
+cdef str decode_error_handler = 'backslashreplace' if is_py35 else 'replace'
+
+
 # Library levels.
 #QUIET  = lib.AV_LOG_QUIET # -8; not really a level.
 PANIC   = lib.AV_LOG_PANIC # 0
@@ -257,7 +261,7 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
     global last_error
 
     name = <str>c_name if c_name is not NULL else ''
-    message = (<bytes>c_message).decode('utf8', 'backslashreplace')
+    message = (<bytes>c_message).decode('utf8', decode_error_handler)
     log = (level, name, message)
 
     # We have to filter it ourselves, but we will still process it in general so

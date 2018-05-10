@@ -8,29 +8,31 @@ fi
 cd "$PYAV_ROOT"
 
 # Always try to install the Python dependencies they are cheap.
-pip install -r tests/requirements.txt
+pip install --upgrade -r tests/requirements.txt
 
 
 # Skip the rest of the build if it already exists.
 if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
-    echo "We have a cached build of $PYAV_LIBRARY_SLUG; skipping re-build."
+    echo "We have a cached build of $PYAV_LIBRARY; skipping re-build."
     exit 0
 fi
 
 
-mkdir -p "$PYAV_LIBRARY_BUILD_ROOT"
-cd "$PYAV_LIBRARY_BUILD_ROOT"
+mkdir -p "$PYAV_LIBRARY_ROOT"
+mkdir -p "$PYAV_LIBRARY_PREFIX"
+cd "$PYAV_LIBRARY_ROOT"
 
 
 # Download and expand the source.
-if [[ ! -d $PYAV_LIBRARY_SLUG ]]; then
-    url="https://$PYAV_LIBRARY_NAME.org/releases/$PYAV_LIBRARY_SLUG.tar.gz"
+if [[ ! -d $PYAV_LIBRARY ]]; then
+    url="https://$PYAV_LIBRARY_NAME.org/releases/$PYAV_LIBRARY.tar.gz"
     echo Downloading $url
     wget --no-check-certificate "$url" || exit 1
-    tar -xzf $PYAV_LIBRARY_SLUG.tar.gz
+    tar -xzf $PYAV_LIBRARY.tar.gz
+    rm $PYAV_LIBRARY.tar.gz
     echo
 fi
-cd $PYAV_LIBRARY_SLUG
+cd $PYAV_LIBRARY
 
 echo ./configure
 if [[ "$PYAV_LIBRARY_NAME" == ffmpeg ]]; then
