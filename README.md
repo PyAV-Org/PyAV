@@ -42,5 +42,5 @@ Have fun, [Read the Docs][docs], and good luck!
 [docs]: http://mikeboers.github.io/PyAV/
 [conda-forge]: https://conda-forge.github.io/
 [conda-install]: https://conda.io/docs/install/quick.html
-[pypi]: https://pypi.python.org/pypi/av
+[pypi]: https://pypi.org/project/av
 
