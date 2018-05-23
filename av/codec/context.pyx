@@ -18,7 +18,7 @@ from av.utils cimport avdict_to_dict, avrational_to_fraction, to_avrational
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated, dict hwaccel):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -26,7 +26,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     # TODO: This.
     if c_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
         from av.video.codeccontext import VideoCodecContext
-        py_ctx = VideoCodecContext(_cinit_sentinel)
+        py_ctx = VideoCodecContext(_cinit_sentinel, hwaccel=hwaccel)
     elif c_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
         from av.audio.codeccontext import AudioCodecContext
         py_ctx = AudioCodecContext(_cinit_sentinel)
@@ -65,7 +65,7 @@ cdef class CodecContext(object):
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
+        return wrap_codec_context(c_ctx, cy_codec.ptr, True, None)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -301,9 +301,14 @@ cdef class CodecContext(object):
             return
         err_check(res)
 
+        frame = self._transfer_hwframe(frame)
+
         if not res:
             self._next_frame = None
             return frame
+
+    cdef _transfer_hwframe(self, Frame frame):
+        return frame
 
     cdef _recv_packet(self):
 

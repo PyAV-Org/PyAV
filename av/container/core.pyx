@@ -64,7 +64,7 @@ cdef class Container(object):
     def __cinit__(self, sentinel, file_, format_name, options,
                   container_options, stream_options,
                   metadata_encoding, metadata_errors,
-                  buffer_size, open_timeout, read_timeout):
+                  buffer_size, open_timeout, read_timeout, hwaccel):
 
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -90,6 +90,8 @@ cdef class Container(object):
 
         self.open_timeout = open_timeout
         self.read_timeout = read_timeout
+
+        self.hwaccel = hwaccel
 
         if format_name is not None:
             self.format = ContainerFormat(format_name)
@@ -238,7 +240,7 @@ cdef class Container(object):
 def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
          metadata_encoding=None, metadata_errors='strict',
-         buffer_size=32768, timeout=None):
+         buffer_size=32768, timeout=None, hwaccel=None):
     """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
 
     Main entrypoint to opening files/streams.
@@ -259,6 +261,8 @@ def open(file, mode=None, format=None, options=None,
     :param timeout: How many seconds to wait for data before giving up, as a float, or a
         :ref:`(open timeout, read timeout) <timeouts>` tuple.
     :type timeout: float or tuple
+    :param dict hwaccel: The desired device parameters to use for hardware acceleration
+        including device_type_name (e.x. cuda) and optional device (e.x. '/dev/dri/renderD128').
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -282,12 +286,16 @@ def open(file, mode=None, format=None, options=None,
         open_timeout = timeout
         read_timeout = timeout
 
+    if hwaccel is not None:
+        hwaccel = dict(hwaccel)
+
     if mode.startswith('r'):
         return InputContainer(
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors,
-            buffer_size, open_timeout, read_timeout
+            buffer_size, open_timeout, read_timeout,
+            hwaccel,
         )
     if mode.startswith('w'):
         if stream_options:
@@ -296,6 +304,7 @@ def open(file, mode=None, format=None, options=None,
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors,
-            buffer_size, open_timeout, read_timeout
+            buffer_size, open_timeout, read_timeout,
+            hwaccel,
         )
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)

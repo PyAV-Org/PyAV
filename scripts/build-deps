@@ -25,6 +25,32 @@ fi
 
 mkdir -p "$PYAV_LIBRARY_ROOT"
 mkdir -p "$PYAV_LIBRARY_PREFIX"
+
+# Nvidia build
+CONFFLAGS_NVIDIA=""
+if [[ -e /usr/local/cuda ]]; then
+    # Get Nvidia headers for ffmpeg
+    cd $PYAV_LIBRARY_ROOT
+    if [[ ! -e "$PYAV_LIBRARY_ROOT/nv-codec-headers" ]]; then
+        git clone https://github.com/FFmpeg/nv-codec-headers.git
+        cd nv-codec-headers
+        make -j4
+        make PREFIX="$PYAV_LIBRARY_PREFIX" install
+    fi
+
+    PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+    CONFFLAGS_NVIDIA="--enable-cuda \
+                      --enable-cuvid \
+                      --enable-nvenc \
+                      --enable-nonfree \
+                      --enable-libnpp \
+                      --extra-cflags=-I/usr/local/cuda/include \
+                      --extra-ldflags=-L/usr/local/cuda/lib64"
+else
+    echo "WARNING: Did not find cuda libraries in /usr/local/cuda..."
+    echo "         Building without hardware acceleration support"
+fi
+
 cd "$PYAV_LIBRARY_ROOT"
 
 
@@ -52,6 +78,7 @@ fi
     --enable-debug=3 \
     --enable-gpl \
     --enable-libx264 \
+    $CONFFLAGS_NVIDIA \
     $CONFFLAGS \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
