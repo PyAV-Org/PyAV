@@ -85,7 +85,7 @@ cdef class Stream(object):
         else:
             self._codec = self._codec_context.codec
 
-        self.codec_context = wrap_codec_context(self._codec_context, self._codec, False)
+        self.codec_context = wrap_codec_context(self._codec_context, self._codec, False, container.hwaccel)
         self.codec_context.stream_index = stream.index
 
     def __repr__(self):

@@ -1,4 +1,6 @@
 
+cimport libav as lib
+
 from av.codec.context cimport CodecContext
 from av.video.format cimport VideoFormat
 from av.video.frame cimport VideoFrame
@@ -19,3 +21,9 @@ cdef class VideoCodecContext(CodecContext):
 
     # For decoding.
     cdef VideoFrame next_frame
+
+    # For hardware acceleration
+    cdef dict hwaccel
+    cdef lib.AVPixelFormat hw_pix_fmt
+    cdef lib.AVBufferRef* hw_device_ctx
+    cdef bint _setup_hw_decoder(self, lib.AVCodec *codec)

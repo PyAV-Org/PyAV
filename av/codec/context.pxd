@@ -63,10 +63,12 @@ cdef class CodecContext(object):
     cdef _send_packet_and_recv(self, Packet packet)
     cdef _recv_frame(self)
 
+    cdef _transfer_hwframe(self, Frame frame)
+
     # Implemented by children for the generic send/recv API, so we have the
     # correct subclass of Frame.
     cdef Frame _next_frame
     cdef Frame _alloc_next_frame(self)
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated, dict hwaccel)
