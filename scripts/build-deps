@@ -17,13 +17,27 @@ if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
     exit 0
 fi
 
-# Get Nvidia headers for ffmpeg
-git submodule init
-git submodule update
-cd "$PYAV_ROOT/submodules/nv-codec-headers"
-make
-sudo make install
-PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+# Nvidia build
+CONFFLAGS_NVIDIA=""
+if [[ -e /usr/local/cuda ]]; then
+    # Get Nvidia headers for ffmpeg
+    git submodule init
+    git submodule update
+    cd "$PYAV_ROOT/submodules/nv-codec-headers"
+    make
+    sudo make install
+    PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+    CONFFLAGS_NVIDIA="--enable-cuda \
+                      --enable-cuvid \
+                      --enable-nvenc \
+                      --enable-nonfree \
+                      --enable-libnpp \
+                      --extra-cflags=-I/usr/local/cuda/include \
+                      --extra-ldflags=-L/usr/local/cuda/lib64"
+else
+    echo "WARNING: Did not find cuda libraries in /usr/local/cuda..."
+    echo "         Building without hardware acceleration support"
+fi
 
 mkdir -p "$PYAV_LIBRARY_ROOT"
 mkdir -p "$PYAV_LIBRARY_PREFIX"
@@ -51,13 +65,7 @@ fi
     --disable-optimizations \
     --disable-mmx \
     --enable-debug=3 \
-    --enable-cuda \
-    --enable-cuvid \
-    --enable-nvenc \
-    --enable-nonfree \
-    --enable-libnpp \
-    --extra-cflags=-I/usr/local/cuda/include \
-    --extra-ldflags=-L/usr/local/cuda/lib64 \
+    $CONFFLAGS_NVIDIA \
     $CONFFLAGS \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
