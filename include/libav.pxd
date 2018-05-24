@@ -14,6 +14,8 @@ include "libavutil/channel_layout.pxd"
 include "libavutil/dict.pxd"
 include "libavutil/frame.pxd"
 include "libavutil/samplefmt.pxd"
+include "libavutil/buffer.pxd"
+include "libavutil/hwcontext.pxd"
 
 include "libavcodec/avcodec.pxd"
 include "libavdevice/avdevice.pxd"

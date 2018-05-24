@@ -48,6 +48,7 @@ cdef class Container(object):
 
     cdef readonly ContainerFormat format
     cdef _Dictionary options
+    cdef dict hwaccel
 
     cdef ContainerProxy proxy
     cdef object __weakref__
