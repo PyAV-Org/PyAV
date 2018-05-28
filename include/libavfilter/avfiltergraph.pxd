@@ -1,5 +1,5 @@
 
-cdef extern from "libavfilter/avfiltergraph.h" nogil:
+cdef extern from "libavfilter/avfilter.h" nogil:
 
     cdef struct AVFilterGraph:
         int nb_filters

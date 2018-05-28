@@ -110,7 +110,7 @@ cdef class OutputContainer(Container):
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
-            codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
+            codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
 
         return py_stream
 
