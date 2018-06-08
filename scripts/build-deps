@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [[ ! "$_PYAV_ACTIVATED" ]]; then
     export here="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
     source "$here/activate.sh"
@@ -10,22 +12,109 @@ cd "$PYAV_ROOT"
 # Always try to install the Python dependencies they are cheap.
 pip install --upgrade -r tests/requirements.txt
 
-
 # Skip the rest of the build if it already exists.
-if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
+if [[ -e "$PYAV_LIBRARY_BIN/ffmpeg" ]]; then
     echo "We have a cached build of $PYAV_LIBRARY; skipping re-build."
     exit 0
+fi
+
+# Note: Might need to run 'sudo yum install autoconf automake bzip2 cmake freetype-devel gcc gcc-c++ git libtool make mercurial pkgconfig zlib-devel'
+
+mkdir -p "$PYAV_LIBRARY_ROOT"
+PATH="$PYAV_LIBRARY_BIN:$PATH"
+
+# NASM
+if [[ ! -e "$PYAV_LIBRARY_ROOT/nasm" ]]; then
+    cd $PYAV_LIBRARY_ROOT
+    wget http://www.nasm.us/pub/nasm/releasebuilds/2.13.02/nasm-2.13.02.tar.bz2
+    tar -xjvf nasm-2.13.02.tar.bz2
+    mv nasm-2.13.02 nasm
+    cd nasm
+    ./autogen.sh
+    ./configure --prefix="$PYAV_LIBRARY_PREFIX" --bindir="$PYAV_LIBRARY_BIN"
+    make -j16
+    make install
+fi
+
+# YASM
+if [[ ! -e "$PYAV_LIBRARY_ROOT/yasm" ]]; then
+    cd $PYAV_LIBRARY_ROOT
+    wget http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz
+    tar -xzvf yasm-1.3.0.tar.gz
+    mv yasm-1.3.0 yasm
+    cd yasm
+    ./configure --prefix="$PYAV_LIBRARY_PREFIX" --bindir="$PYAV_LIBRARY_BIN"
+    make -j16
+    make install
+fi
+
+# x264
+if [[ ! -e "$PYAV_LIBRARY_ROOT/x264" ]]; then
+    cd $PYAV_LIBRARY_ROOT
+    git clone --depth 1 http://git.videolan.org/git/x264
+    cd x264
+    # PKG_CONFIG_PATH="$PYAV_LIBRARY_PREFIX/lib/pkgconfig" ./configure --prefix="$PYAV_LIBRARY_PREFIX" --bindir="$PYAV_LIBRARY_BIN" --enable-static
+    PKG_CONFIG_PATH="$PYAV_LIBRARY_PREFIX/lib/pkgconfig" ./configure --prefix="$PYAV_LIBRARY_PREFIX" --bindir="$PYAV_LIBRARY_BIN" --enable-shared
+    make -j16
+    make install
+fi
+
+# x265
+if [[ ! -e "$PYAV_LIBRARY_ROOT/x265" ]]; then
+    cd $PYAV_LIBRARY_ROOT
+    hg clone https://bitbucket.org/multicoreware/x265
+    cd $PYAV_LIBRARY_ROOT/x265/build/linux
+    cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX="$PYAV_LIBRARY_PREFIX" -DENABLE_SHARED:bool=on ../../source
+    make -j16
+    make install
+fi
+
+# Libvpx
+if [[ ! -e "$PYAV_LIBRARY_ROOT/libvpx" ]]; then
+    cd $PYAV_LIBRARY_ROOT
+    git clone --depth 1 https://chromium.googlesource.com/webm/libvpx.git
+    cd libvpx
+    ./configure --prefix="$PYAV_LIBRARY_PREFIX" --disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm --enable-shared
+    make -j16
+    make install
+fi
+
+# Libogg - for Libtheora
+if [[ ! -e "$PYAV_LIBRARY_ROOT/libogg" ]]; then
+    cd $PYAV_LIBRARY_ROOT
+    wget http://downloads.xiph.org/releases/ogg/libogg-1.3.3.tar.gz
+    tar -xzvf libogg-1.3.3.tar.gz
+    mv libogg-1.3.3 libogg
+    cd libogg
+    ./configure --prefix="$PYAV_LIBRARY_PREFIX" --enable-shared
+    make -j16
+    make install
+fi
+
+# Libtheora
+if [[ ! -e "$PYAV_LIBRARY_ROOT/libtheora" ]]; then
+    cd $PYAV_LIBRARY_ROOT
+    wget https://ftp.osuosl.org/pub/xiph/releases/theora/libtheora-1.1.1.tar.gz
+    tar -xzvf libtheora-1.1.1.tar.gz
+    mv libtheora-1.1.1 libtheora
+    cd libtheora
+    ./configure --prefix="$PYAV_LIBRARY_PREFIX" --with-ogg="$PYAV_LIBRARY_PREFIX" --enable-shared
+    make -j16
+    make install
 fi
 
 # Nvidia build
 CONFFLAGS_NVIDIA=""
 if [[ -e /usr/local/cuda ]]; then
     # Get Nvidia headers for ffmpeg
-    git submodule init
-    git submodule update
-    cd "$PYAV_ROOT/submodules/nv-codec-headers"
-    make
-    sudo make install
+    cd $PYAV_LIBRARY_ROOT
+    if [[ ! -e "$PYAV_LIBRARY_ROOT/nv-codec-headers" ]]; then
+        git clone https://github.com/FFmpeg/nv-codec-headers.git
+        cd nv-codec-headers
+        make -j16
+        sudo make install
+    fi
+
     PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
     CONFFLAGS_NVIDIA="--enable-cuda \
                       --enable-cuvid \
@@ -39,8 +128,6 @@ else
     echo "         Building without hardware acceleration support"
 fi
 
-mkdir -p "$PYAV_LIBRARY_ROOT"
-mkdir -p "$PYAV_LIBRARY_PREFIX"
 cd "$PYAV_LIBRARY_ROOT"
 
 # Download and expand the source.
@@ -58,21 +145,33 @@ echo ./configure
 if [[ "$PYAV_LIBRARY_NAME" == ffmpeg ]]; then
     CONFFLAGS=--disable-stripping
 fi
-./configure \
+
+PKG_CONFIG_PATH="$PYAV_LIBRARY_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH" ./configure \
+    --prefix="$PYAV_LIBRARY_PREFIX" \
+    --bindir="$PYAV_LIBRARY_BIN" \
+    --extra-cflags="-I$PYAV_LIBRARY_PREFIX/include" \
+    --extra-ldflags="-L$PYAV_LIBRARY_PREFIX/lib" \
+    --extra-libs=-lpthread \
+    --extra-libs=-lm \
     --disable-static \
     --enable-shared \
     --disable-doc \
-    --disable-optimizations \
-    --disable-mmx \
     --enable-debug=3 \
+    --enable-gpl \
+    --enable-nonfree \
+    --enable-version3 \
+    --enable-libvpx \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libtheora \
+    --enable-gnutls \
     $CONFFLAGS_NVIDIA \
     $CONFFLAGS \
-    --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo
 
 echo make
-make -j4 || exit 3
+make -j16 || exit 3
 echo
 
 echo make install

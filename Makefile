@@ -84,4 +84,7 @@ clean-docs:
 	- rm tmp/tagfile.xml
 	- make -C docs clean
 
-clean-all: clean-build clean-sandbox clean-src clean-docs
+clean-vendor:
+	- rm -rf vendor
+
+clean-all: clean-build clean-sandbox clean-src clean-docs clean-vendor

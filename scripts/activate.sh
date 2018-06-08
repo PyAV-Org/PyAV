@@ -39,6 +39,10 @@ if [[ "$TRAVIS" ]]; then
     # Travis as a very self-contained environment. Lets just work in that.
     echo "We're on Travis, so not setting up another virtualenv."
 
+elif [[ "$CONDA_PREFIX" ]]; then
+
+    echo "Found Conda - skipping virtualenv setup"
+
 else
 
     export PYAV_VENV_NAME="$(uname -s).$(uname -r).$("$PYAV_PYTHON" -c '
@@ -75,6 +79,7 @@ if [[ ! "$PYAV_LIBRARY_BUILD_ROOT" && -d /vagrant ]]; then
 fi
 export PYAV_LIBRARY_ROOT="${PYAV_LIBRARY_ROOT-$PYAV_ROOT/vendor}"
 export PYAV_LIBRARY_BUILD="${PYAV_LIBRARY_BUILD-$PYAV_LIBRARY_ROOT/build}"
+export PYAV_LIBRARY_BIN="${PYAV_LIBRARY_BIN-$PYAV_LIBRARY_ROOT/bin}"
 export PYAV_LIBRARY_PREFIX="$PYAV_LIBRARY_BUILD/$PYAV_LIBRARY"
 
 export PATH="$PYAV_LIBRARY_PREFIX/bin:$PATH"
