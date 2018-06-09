@@ -48,9 +48,23 @@ cdef class Codec(object):
             return
 
         if mode == 'w':
-            self.ptr = lib.avcodec_find_encoder_by_name(name)
+            codec = lib.avcodec_find_encoder_by_name(name)
+            if not codec:
+                codec_descriptor = lib.avcodec_descriptor_get_by_name(name)
+                if codec_descriptor:
+                    codec = lib.avcodec_find_encoder(codec_descriptor.id)
+            if not codec:
+                raise ValueError("unknown encoding codec: %r" % name)
+            self.ptr = codec
         elif mode == 'r':
-            self.ptr = lib.avcodec_find_decoder_by_name(name)
+            codec = lib.avcodec_find_decoder_by_name(name)
+            if not codec:
+                codec_descriptor = lib.avcodec_descriptor_get_by_name(name)
+                if codec_descriptor:
+                    codec = lib.avcodec_find_decoder(codec_descriptor.id)
+            if not codec:
+                raise ValueError("unknown decoding codec: %r" % name)
+            self.ptr = codec
         else:
             raise ValueError('Invalid mode; must be "r" or "w".', mode)
 
