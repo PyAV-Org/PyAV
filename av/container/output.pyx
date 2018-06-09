@@ -207,4 +207,8 @@ cdef class OutputContainer(Container):
         cdef lib.AVStream *stream = self.proxy.ptr.streams[packet.struct.stream_index]
         packet._rebase_time(stream.time_base)
 
-        self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
+        # Make another reference to the packet, as av_interleaved_write_frame
+        # takes ownership of it.
+        cdef lib.AVPacket *packet_ref = lib.av_packet_clone(&packet.struct)
+
+        self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, packet_ref))
