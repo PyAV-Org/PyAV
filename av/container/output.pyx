@@ -42,7 +42,8 @@ cdef class OutputContainer(Container):
         cdef Codec codec_obj
 
         if codec_name is not None:
-            codec = Codec(codec_name, 'w').ptr
+            codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
+            codec = codec_obj.ptr
 
         else:
             if not template._codec:

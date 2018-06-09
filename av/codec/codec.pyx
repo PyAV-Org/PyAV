@@ -1,7 +1,5 @@
 from libc.stdint cimport uint64_t
 
-from warnings import warn
-
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
 from av.utils cimport flag_in_bitfield, media_type_to_string
@@ -17,7 +15,6 @@ cdef Codec wrap_codec(lib.AVCodec *ptr):
     codec.is_encoder = lib.av_codec_is_encoder(ptr)
     codec._init()
     return codec
-
 
 class UnknownCodecError(ValueError):
     pass
