@@ -48,42 +48,43 @@ cdef class Codec(object):
             return
 
         if mode == 'w':
-            codec = lib.avcodec_find_encoder_by_name(name)
-            if not codec:
-                codec_descriptor = lib.avcodec_descriptor_get_by_name(name)
-                if codec_descriptor:
-                    codec = lib.avcodec_find_encoder(codec_descriptor.id)
-            if not codec:
-                raise ValueError("unknown encoding codec: %r" % name)
-            self.ptr = codec
+            self.ptr = lib.avcodec_find_encoder_by_name(name)
+            if not self.ptr:
+                self.desc = lib.avcodec_descriptor_get_by_name(name)
+                if self.desc:
+                    self.ptr = lib.avcodec_find_encoder(self.desc.id)
+
         elif mode == 'r':
-            codec = lib.avcodec_find_decoder_by_name(name)
-            if not codec:
-                codec_descriptor = lib.avcodec_descriptor_get_by_name(name)
-                if codec_descriptor:
-                    codec = lib.avcodec_find_decoder(codec_descriptor.id)
-            if not codec:
-                raise ValueError("unknown decoding codec: %r" % name)
-            self.ptr = codec
+            self.ptr = lib.avcodec_find_decoder_by_name(name)
+            if not self.ptr:
+                self.desc = lib.avcodec_descriptor_get_by_name(name)
+                if self.desc:
+                    self.ptr = lib.avcodec_find_decoder(self.desc.id)
+
         else:
             raise ValueError('Invalid mode; must be "r" or "w".', mode)
 
         self._init(name)
+
+        # Sanity check.
+        if (mode == 'w') != self.is_encoder:
+            raise RuntimeError("Found codec does not match mode.", name, mode)
 
     cdef _init(self, name=None):
 
         if not self.ptr:
             raise UnknownCodecError(name)
 
-        self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
-            raise RuntimeError('No codec descriptor for %r.' % name)
+            self.desc = lib.avcodec_descriptor_get(self.ptr.id)
+            if not self.desc:
+                raise RuntimeError('No codec descriptor for %r.' % name)
 
         self.is_encoder = lib.av_codec_is_encoder(self.ptr)
 
         # Sanity check.
         if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
-            warn('%s is both encoder and decoder. Please notify PyAV developers.')
+            raise RuntimeError('%s is both encoder and decoder.')
 
     def create(self):
         from .context import CodecContext
