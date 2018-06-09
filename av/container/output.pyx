@@ -1,6 +1,7 @@
 from fractions import Fraction
 import logging
 
+from av.codec.codec cimport Codec
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
@@ -38,16 +39,12 @@ cdef class OutputContainer(Container):
             raise ValueError('needs one of codec_name or template')
 
         cdef lib.AVCodec *codec
-        cdef lib.AVCodecDescriptor *codec_descriptor
+        cdef Codec codec_obj
 
         if codec_name is not None:
-            codec = lib.avcodec_find_encoder_by_name(codec_name)
-            if not codec:
-                codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)
-                if codec_descriptor:
-                    codec = lib.avcodec_find_encoder(codec_descriptor.id)
-            if not codec:
-                raise ValueError("unknown encoding codec: %r" % codec_name)
+            codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
+            codec = codec_obj.ptr
+
         else:
             if not template._codec:
                 raise ValueError("template has no codec")
