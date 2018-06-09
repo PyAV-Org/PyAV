@@ -12,6 +12,8 @@ HEAD
 
 Minor:
 
+- Add `Frame.interlaced_frame` to indicate if the frame is interlaced.
+  (#327 by @MPGek.)
 - Add FLTP support to ``Frame.to_nd_array()``. (#288 by @rawler.)
 - Expose ``CodecContext.extradata`` for codecs that have extra data, e.g.
   Huffman tables. (#287 by @adavoudi.)
