@@ -18,8 +18,9 @@ Minor:
 
 Fixes:
 
-- Refined frame corruption detection. (#291 by @Litterfeldt.)
 - Packets retain their refcount after muxing. (#334.)
+- `Codec` construction is more robust to find more codecs. (#332 by @adavoudi).
+- Refined frame corruption detection. (#291 by @Litterfeldt.)
 
 
 v0.4.0
