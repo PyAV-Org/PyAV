@@ -19,6 +19,7 @@ Minor:
 Fixes:
 
 - Refined frame corruption detection. (#291 by @Litterfeldt.)
+- Packets retain their refcount after muxing. (#334.)
 
 
 v0.4.0
