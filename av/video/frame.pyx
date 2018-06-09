@@ -213,6 +213,10 @@ cdef class VideoFrame(Frame):
         """Is this frame a key frame?"""
         def __get__(self): return self.ptr.key_frame
 
+    property interlaced_frame:
+        """Is this frame an interlaced or progressive?"""
+        def __get__(self): return self.ptr.interlaced_frame
+
     def to_rgb(self, **kwargs):
         """Get an RGB version of this frame.
 
