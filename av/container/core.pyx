@@ -15,6 +15,11 @@ from av.dictionary import Dictionary # not cimport
 from av.logging import Capture as LogCapture # not cimport
 from av.utils import AVError # not cimport
 
+try:
+    from os import fsencode
+except ImportError:
+    _fsencoding = sys.getfilesystemencoding()
+    fsencode = lambda s: s.encode(_fsencoding)
 
 
 
@@ -39,8 +44,8 @@ cdef class ContainerProxy(object):
         self.name = container.name
         self.writeable = container.writeable
 
-        cdef char *name = self.name
-
+        cdef bytes name_obj = fsencode(self.name) if isinstance(self.name, unicode) else self.name
+        cdef char *name = name_obj
 
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:
@@ -198,7 +203,9 @@ cdef class Container(object):
         if isinstance(file_, basestring):
             self.name = file_
         else:
-            self.name = str(getattr(file_, 'name', None))
+            self.name = getattr(file_, 'name', '<none>')
+            if not isinstance(self.name, basestring):
+                raise TypeError("File's name attribute must be string-like.")
             self.file = file_
 
         if format_name is not None:

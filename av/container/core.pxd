@@ -16,8 +16,9 @@ cdef class ContainerProxy(object):
     cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame)
     cdef flush_buffers(self)
 
+
     # Copies from Container.
-    cdef str name
+    cdef object name
     cdef str metadata_encoding
     cdef str metadata_errors
 
@@ -41,7 +42,7 @@ cdef class ContainerProxy(object):
 
 cdef class Container(object):
 
-    cdef readonly str name
+    cdef readonly object name
     cdef readonly object file
 
     cdef readonly bint writeable

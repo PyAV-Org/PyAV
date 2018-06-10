@@ -23,6 +23,7 @@ Fixes:
 - Packets retain their refcount after muxing. (#334.)
 - `Codec` construction is more robust to find more codecs. (#332 by @adavoudi).
 - Refined frame corruption detection. (#291 by @Litterfeldt.)
+- Unicode filenames are okay. (#82.)
 
 
 v0.4.0

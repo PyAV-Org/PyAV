@@ -62,7 +62,7 @@ cdef int stash_exception(exc_info=None):
 
 cdef int _last_log_count = 0
 
-cpdef int err_check(int res=0, str filename=None) except -1:
+cpdef int err_check(int res=0, filename=None) except -1:
 
     global _err_count
     global _last_log_count
