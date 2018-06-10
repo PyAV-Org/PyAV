@@ -7,8 +7,8 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
-HEAD
-----
+v0.4.1
+------
 
 Minor:
 
