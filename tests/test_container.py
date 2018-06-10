@@ -1,6 +1,6 @@
 # coding: utf8
 
-from common import *
+from .common import *
 
 
 class TestContainers(TestCase):
