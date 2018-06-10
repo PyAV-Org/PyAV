@@ -174,14 +174,3 @@ class TestEnums(TestCase):
 
         self.assertRaises(KeyError, lambda: cls[4]) # Not FOO or BAR
         self.assertRaises(KeyError, lambda: cls[7]) # FOO and BAR and missing flag.
-
-
-
-
-
-
-
-
-
-
-

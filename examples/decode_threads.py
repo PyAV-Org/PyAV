@@ -20,6 +20,3 @@ def decode(input_file):
 pool = concurrent.futures.ThreadPoolExecutor(1)
 for f in pool.map(decode, sys.argv[1:]):
     print(f)
-
-
-

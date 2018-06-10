@@ -85,4 +85,3 @@ class TestLogging(TestCase):
             self.assertEqual(e.log, log)
         else:
             self.fail()
-

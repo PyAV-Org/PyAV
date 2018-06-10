@@ -45,7 +45,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_c
 cdef EnumType _ThreadType = define_enum('ThreadType', (
     ('FRAME', lib.FF_THREAD_FRAME),
     ('SLICE', lib.FF_THREAD_SLICE),
-    ('AUTO' , lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME),
+    ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME),
 ), is_flags=True)
 ThreadType = _ThreadType
 

@@ -229,4 +229,3 @@ cpdef EnumType define_enum(name, items, bint is_flags=False, bint allow_multi_fl
     )
 
     return cls
-

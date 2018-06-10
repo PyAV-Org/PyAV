@@ -6,4 +6,3 @@ Buffers
 
     .. autoclass:: Buffer
         :members:
-

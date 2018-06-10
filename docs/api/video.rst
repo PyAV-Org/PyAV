@@ -58,4 +58,3 @@ Video Reformatters
 
     .. autoclass:: VideoReformatter
         :members:
-
