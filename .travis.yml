@@ -103,12 +103,6 @@ matrix:
         - python: "2.7"
           env: LIBRARY=ffmpeg-3.0
           os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-2.7
-          os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-2.5
-          os: linux
 
 
 
