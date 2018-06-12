@@ -51,11 +51,6 @@ versions = {
         configuration=lib.avfilter_configuration(),
         license=lib.avfilter_license()
     ),
-    'libavresample': dict(
-        version=decode_version(lib.avresample_version()),
-        configuration=lib.avresample_configuration(),
-        license=lib.avresample_license()
-    ),
     'libswscale': dict(
         version=decode_version(lib.swscale_version()),
         configuration=lib.swscale_configuration(),
