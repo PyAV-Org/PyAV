@@ -25,7 +25,7 @@ structure members are availible, and some very small shim headers to smooth
 out the differences.
 
 We `continually test <https://travis-ci.org/mikeboers/PyAV>`_ multiple versions
-of FFmpeg/Libav, as well as Linux/OS X, and Python 2/3.
+of FFmpeg, as well as Linux/OS X, and Python 2/3.
 
 You can use the same build system as Travis for local development::
 
@@ -33,14 +33,6 @@ You can use the same build system as Travis for local development::
     ./scripts/build-deps
     make
     nosetests
-
-
-Library Detection
------------------
-
-Macros will be defined for the libraries we link against. In particular, you
-will have ``PYAV_HAVE_LIBSWRESAMPLE`` and ``PYAV_HAVE_LIBAVRESAMPLE`` defined
-to either ``0`` or ``1``.
 
 
 Function Detection
@@ -57,7 +49,7 @@ Struct Member Detection
 -----------------------
 
 Macros will be defined for structure members that are not garunteed to exist
-(usually because LibAV deprecated and removed them, while FFmpeg did not).
+(usually because Libav deprecated and removed them, while FFmpeg did not).
 For example, there is a ``PYAV_HAVE_AVFRAME__MB_TYPE`` macro defined to ``1``
 if the ``AVFrame.mb_type`` member exists (and ``0`` if it does not).
 
