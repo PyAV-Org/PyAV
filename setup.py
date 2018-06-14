@@ -18,7 +18,7 @@ import re
 import sys
 
 try:
-    # This depends on _winreg, which is not availible on not-Windows.
+    # This depends on _winreg, which is not available on not-Windows.
     from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
 except ImportError:
     MSVC9Compiler = None
@@ -582,7 +582,7 @@ class ReflectCommand(Command):
                       'process is working as expected. It is not, so we must abort.\n'
                       '\n'
                       'Please open a ticket at https://github.com/mikeboers/PyAV/issues\n'
-                      'with the folowing information:\n')
+                      'with the following information:\n')
                 dump_config()
                 exit(1)
 
