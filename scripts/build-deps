@@ -112,7 +112,7 @@ if [[ -e /usr/local/cuda ]]; then
         git clone https://github.com/FFmpeg/nv-codec-headers.git
         cd nv-codec-headers
         make -j16
-        sudo make install
+        make PREFIX="$PYAV_LIBRARY_PREFIX" install
     fi
 
     PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
