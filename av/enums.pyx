@@ -126,7 +126,7 @@ cdef class EnumItem(object):
 
     cdef readonly str name
     cdef readonly int value
-    cdef long _hash
+    cdef unsigned long _hash
 
     def __cinit__(self, sentinel_, name, value):
 
