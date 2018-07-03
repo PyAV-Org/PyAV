@@ -140,7 +140,9 @@ cdef class OutputContainer(Container):
             stream._finalize_for_output()
 
         # Open the output file, if needed.
-        cdef char *name = "" if self.proxy.file is not None else self.name
+        out_name = "" if self.proxy.file is not None else self.name
+        py_byte_string = out_name.encode('utf-8')
+        cdef char *name = py_byte_string
         if self.proxy.ptr.pb == NULL and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
             err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
