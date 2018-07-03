@@ -37,8 +37,8 @@ cdef class ContainerProxy(object):
         self.metadata_errors = container.metadata_errors
         self.name = container.name
         self.writeable = container.writeable
-
-        cdef char *name = self.name
+        py_byte_string = self.name.encode('utf-8')
+        cdef char *name = py_byte_string
 
 
         cdef lib.AVOutputFormat *ofmt
