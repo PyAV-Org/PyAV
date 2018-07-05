@@ -126,21 +126,22 @@ cdef class EnumItem(object):
 
     cdef readonly str name
     cdef readonly int value
-    cdef long _hash
+    cdef Py_hash_t _hash
 
-    def __cinit__(self, sentinel_, name, value):
+    def __cinit__(self, sentinel_, str name, int value):
 
         if sentinel_ is not sentinel:
             raise RuntimeError("Cannot instantiate {}.".format(self.__class__.__name__))
         self.name = name
         self.value = value
 
-        # Establish a hash that doesn't collide with anything that would return
-        # true from __eq__.
-        hash_ = id(self)
-        name_hash = hash(name)
-        value_hash = hash(value)
-        while hash_ == name_hash or hash_ == value_hash:
+        # We need to establish a hash that doesn't collide with anything that
+        # would return true from `__eq__`. This is because these enums (vs
+        # the stdlib ones) are weakly typed (they will compare against string
+        # names and int values), and if we have the same hash AND are equal,
+        # then they will be equivalent as keys in a dictionary, which is wierd.
+        cdef Py_hash_t hash_ = value + 1
+        if hash_ == hash(name):
             hash_ += 1
         self._hash = hash_
 
