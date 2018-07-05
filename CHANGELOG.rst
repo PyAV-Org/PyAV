@@ -7,6 +7,15 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
+HEAD
+----
+
+Major:
+
+- Dropped support for Libav in general. (#110.)
+- No longer uses libavresample.
+
+
 v0.4.1
 ------
 

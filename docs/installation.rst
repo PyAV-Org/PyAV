@@ -14,14 +14,14 @@ See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs t
 Dependencies
 ------------
 
-PyAV depends upon the following components of the underlying libraries:
+PyAV depends upon the following components of FFmpeg:
 
 - ``libavformat``
 - ``libavcodec``
 - ``libavdevice``
 - ``libavutil``
 - ``libswscale``
-- ``libswresample`` or ``libavresample``
+- ``libswresample``:
 
 and a few other tools in general:
 
@@ -50,13 +50,13 @@ On **Ubuntu 14.04 LTS** everything can come from the default sources::
     # Library components
     sudo apt-get install -y \
         libavformat-dev libavcodec-dev libavdevice-dev \
-        libavutil-dev libswscale-dev libavresample-dev libavfilter-dev
+        libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
 
 Ubuntu 12.04 LTS
 ^^^^^^^^^^^^^^^^
 
-On **Ubuntu 12.04 LTS** you will be unable to satisfy these requirements with the default package sources. We recommend compiling and installing FFmpeg or Libav from source. For FFmpeg::
+On **Ubuntu 12.04 LTS** you will be unable to satisfy these requirements with the default package sources. We recommend compiling and installing FFmpeg from source. For FFmpeg::
 
     wget http://ffmpeg.org/releases/ffmpeg-2.7.tar.bz2
     tar -xjf ffmpeg-2.7.tar.bz2

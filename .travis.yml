@@ -48,11 +48,6 @@ matrix:
         # We are still working on this.
         - os: osx
 
-        # Deprecation while we consider removing support for Libav entirely.
-        - python: "2.7"
-          env: LIBRARY=libav-12
-          os: linux
-
     include:
 
         # Primary targets.
@@ -81,11 +76,6 @@ matrix:
           os: linux
         - python: "pypy3"
           env: LIBRARY=ffmpeg-3.2
-          os: linux
-
-        # Libav.
-        - python: "2.7"
-          env: LIBRARY=libav-12
           os: linux
 
         # Older Pythons.

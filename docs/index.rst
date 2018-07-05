@@ -1,7 +1,7 @@
 **PyAV** Documentation
 ======================
 
-**PyAV** is a Pythonic binding for FFmpeg_ or Libav_. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
+**PyAV** is a Pythonic binding for FFmpeg_. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
 
 Currently we provide the basics of:
 
@@ -32,7 +32,6 @@ Currently we provide the basics of:
 - and a few more utilities.
 
 .. _FFmpeg: http://ffmpeg.org
-.. _Libav: http://libav.org
 
 
 Basic Demo

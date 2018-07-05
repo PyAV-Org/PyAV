@@ -376,10 +376,6 @@ class ConfigCommand(Command):
                 os.environ[name] = unknown
             update_extend(extension_extra, known)
 
-        for name in 'libswresample', 'libavresample':
-            # We will look for these in a moment.
-            config_macros['PYAV_HAVE_' + name.upper()] = 0
-
         if is_msvc(new_compiler(compiler=self.compiler)):
             # Assume we have to disable /OPT:REF for MSVC with ffmpeg
             config = {
@@ -392,12 +388,10 @@ class ConfigCommand(Command):
             # Simply assume we have everything we need!
             config = {
                 'libraries':    ['avformat', 'avcodec', 'avdevice', 'avutil', 'avfilter',
-                                 'swscale'],
+                                 'swscale', 'swresample'],
                 'library_dirs': [],
                 'include_dirs': []
             }
-            config['libraries'].append('swresample')
-            config_macros['PYAV_HAVE_LIBSWRESAMPLE'] = 1
             update_extend(extension_extra, config)
             for ext in self.distribution.ext_modules:
                 for key, value in extension_extra.items():
@@ -408,23 +402,13 @@ class ConfigCommand(Command):
         errors = []
 
         # Get the config for the libraries that we require.
-        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libavfilter', 'libswscale':
+        for name in 'libavformat', 'libavcodec', 'libavdevice', 'libavutil', 'libavfilter', 'libswscale', 'libswresample':
             config = get_library_config(name)
             if config:
                 update_extend(extension_extra, config)
                 # We don't need macros for these, since they all must exist.
             else:
                 errors.append('Could not find ' + name + ' with pkg-config.')
-
-        # Get the config for either swresample OR avresample.
-        for name in 'libswresample', 'libavresample':
-            config = get_library_config(name)
-            if config:
-                update_extend(extension_extra, config)
-                config_macros['PYAV_HAVE_' + name.upper()] = 1
-                break
-        else:
-            errors.append('Could not find either libswresample or libavresample with pkg-config.')
 
         # Don't continue if we have errors.
         # TODO: Warn Ubuntu 12 users that they can't satisfy requirements with the

@@ -23,7 +23,7 @@ cdef int PYAV_ERROR = -0x50794156 # 'PyAV'
 
 
 class AVError(EnvironmentError):
-    """Exception class for errors from within the underlying FFmpeg/Libav."""
+    """Exception class for errors from within FFmpeg."""
     def __init__(self, code, message, filename=None, log=None):
         if filename:
             super(AVError, self).__init__(code, message, filename)
@@ -198,8 +198,7 @@ cdef str media_type_to_string(lib.AVMediaType media_type):
 
 
 cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
-    # Not every flag exists in every version of FFMpeg and LibAV, so we
-    # define them to 0.
+    # Not every flag exists in every version of FFMpeg, so we define them to 0.
     if not flag:
         return None
     return bool(bitfield & flag)
