@@ -15,6 +15,10 @@ Major:
 - Dropped support for Libav in general. (#110.)
 - No longer uses libavresample.
 
+Fixes:
+
+- EnumItem's hash calculation no longer overflows. (#339, #341 and #342.)
+
 
 v0.4.1
 ------
