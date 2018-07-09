@@ -203,6 +203,8 @@ cdef class VideoCodecContext(CodecContext):
             ret = lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0)
             if (ret < 0):
                 raise RuntimeError("Error transferring the data to system memory")
+
+            frame_sw.pts = frame.pts
             
             return frame_sw
 
