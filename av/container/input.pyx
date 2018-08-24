@@ -7,6 +7,7 @@ from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
 from av.frame cimport Frame
 from av.video.frame cimport VideoFrame
+from av.buffered_decoder import BufferedDecoder
 
 from av.utils import AVError # not cimport
 from threading import Thread, Event, Semaphore, Lock, Event
@@ -199,6 +200,11 @@ cdef class InputContainer(Container):
 
         """
         self.proxy.seek(-1, offset, whence, backward, any_frame)
+
+    def get_buffered_decoder(self, *args, **kwargs):
+        kwargs = kwargs or {}
+        return BufferedDecoder(self, *args, **kwargs)
+
     def buffering_thread(self):
         cdef Frame frame
         cdef long seek_target = -1
