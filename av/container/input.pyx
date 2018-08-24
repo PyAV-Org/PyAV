@@ -5,13 +5,17 @@ from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
+from av.frame cimport Frame
+from av.video.frame cimport VideoFrame
 
 from av.utils import AVError # not cimport
+from threading import Thread, Event, Semaphore, Lock, Event
+cimport cython
 
 
 cdef class InputContainer(Container):
 
-    def __cinit__(self, *args, **kwargs):
+    def __cinit__(self,  *args, **kwargs):
 
         cdef int i
 
@@ -50,6 +54,11 @@ cdef class InputContainer(Container):
             self.streams.add_stream(wrap_stream(self, self.proxy.ptr.streams[i]))
 
         self.metadata = avdict_to_dict(self.proxy.ptr.metadata, self.metadata_encoding, self.metadata_errors)
+        #self.decoded_buffer =  <Frame*>malloc(buffer_size * sizeof(Frame *))# Alloc directly av frames
+
+    def __dealloc__(self):
+        pass
+        #free(self.decoded_buffer)
 
     property start_time:
         def __get__(self): return self.proxy.ptr.start_time
@@ -79,6 +88,8 @@ cdef class InputContainer(Container):
         .. note:: The last packets are dummy packets that when decoded will flush the buffers.
 
         """
+
+        print("Enter demux!")
 
         # For whatever reason, Cython does not like us directly passing kwargs
         # from one method to another. Without kwargs, it ends up passing a
@@ -152,6 +163,22 @@ cdef class InputContainer(Container):
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame
+    def decode_full(self, stream):
+        """decode(streams=None, video=None, audio=None, subtitles=None, data=None)
+
+        Yields a series of :class:`.Frame` from the given set of streams::
+
+            for frame in container.decode():
+                # Do something with `frame`.
+
+        .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
+            the arguments.
+
+        """
+
+        for packet in self.demux(stream):
+            for frame in packet.decode():
+                yield frame
 
     def seek(self, offset, whence='time', backward=True, any_frame=False):
         """Seek to a (key)frame nearsest to the given timestamp.
@@ -172,3 +199,153 @@ cdef class InputContainer(Container):
 
         """
         self.proxy.seek(-1, offset, whence, backward, any_frame)
+    def buffering_thread(self):
+        cdef Frame frame
+        cdef long seek_target = -1
+        cdef int num_frames = 0
+        print("Starting buffering thread!")
+        while True:
+            num_frames = 0
+            self.buffering_sem.acquire()
+            while self.num_frames_in_buffer() < self.dec_batch or self.external_seek >= 0:
+                if self.external_seek >= 0:
+                    print("External seek!")
+                    self.buffered_stream.seek(self.external_seek)
+                    self.next_frame = self.decode_full(self.buffered_stream)
+                    self.buffering_lock.acquire()
+                    self.buf_start = self.buf_end = 0
+                    self.buffering_lock.release()
+                    seek_target = self.external_seek
+                    self.external_seek = -1
+                    num_frames = 0
+
+
+                for frame in self.next_frame:
+                    if frame.pts >= seek_target:
+                        seek_target = -1
+                        break;
+
+                if frame is None:
+                    last_buf_frame = self.decoded_buffer[self.buf_frame_num_to_idx(-1)]
+                    if last_buf_frame is None:
+                        break;
+
+
+                self.buffering_lock.acquire()
+                self.decoded_buffer[self.buf_end] = frame
+                self.buf_end += 1
+                self.frame_event.set()
+                if self.buf_end == self.dec_buffer_size:
+                    self.buf_end = 0
+                if self.buf_end == self.buf_start:
+                    self.buf_end -= 1
+                self.buffering_lock.release()
+                num_frames += 1
+            if num_frames > 5:
+                print("Buffered {} frames!".format(num_frames))
+        print("Ending buffering thread!")
+
+
+    def get_buffered_frame(self):
+        cdef Frame  frame = None
+        while True:
+            self.buffering_lock.acquire()
+            if self.num_frames_in_buffer() == 0:
+                self.frame_event.clear()
+                self.buffering_lock.release()
+                self.buffering_sem.release() # wake the buffering thread up
+                self.frame_event.wait()
+                self.buffering_lock.acquire()
+            frame = self.decoded_buffer[self.buf_start]
+            self.decoded_buffer[self.buf_start] = None
+            self.buf_start += 1
+            if self.buf_start == self.dec_buffer_size:
+                self.buf_start = 0
+            self.buffering_lock.release()
+            self.buffering_sem.release()
+
+            yield  frame
+    def get_buffered_reader(self, stream, dec_batch=30, dec_buffer_size=50):
+        print("Get buffered reader!")
+        self.buffered_stream = stream
+        self.decoded_buffer = dec_buffer_size  * [None]
+        self.dec_batch = dec_batch
+        self.dec_buffer_size = dec_buffer_size
+        self.buf_start = 0
+        self.buf_end = 0
+        self.external_seek = -1
+        self.seek(0)
+        print("Seeked to 0!")
+        print("Stream is {}".format(stream))
+        self.next_frame = self.decode_full(stream)
+        print("Created generator")
+        f1, f2 = next(self.next_frame), next(self.next_frame)
+        self.pts_rate = f2.pts
+        print("PTS rate {}".format(self.pts_rate))
+        self.seek(0)
+        self.next_frame = self.decode_full(stream)
+        self.buffering_sem = Semaphore()
+        self.buffering_lock = Lock()
+        self.frame_event = Event()
+        self.buf_thread_inst = Thread(target=self.buffering_thread)
+        self.buf_thread_inst.start()
+        return self.get_buffered_frame()
+    def buffered_seek(self, stream, seek_pts):
+        cdef int seek_offset
+        cdef int end_idx
+        self.buffering_lock.acquire()
+
+        #end_idx = self.buf_end - 1
+        #if end_idx < 0:
+        #    end_idx = self.dec_buffer_size - 1
+
+
+        ext_seek = False
+        if self.num_frames_in_buffer() < 3:
+            ext_seek = True
+        else:
+            end_idx = self.buf_frame_num_to_idx(-1)
+            if self.decoded_buffer[end_idx] is None:
+                end_idx = self.buf_frame_num_to_idx(-2)
+            if self.decoded_buffer[self.buf_start].pts < seek_pts < self.decoded_buffer[end_idx].pts:
+                print("Seeking inside buffer!")
+                seek_offset = self.pts_to_idx(seek_pts - self.decoded_buffer[self.buf_start].pts)
+                self.buf_start += seek_offset
+                if self.buf_start >= self.dec_buffer_size:
+                    self.buf_start -= self.dec_buffer_size
+            else:
+                ext_seek = True
+        if ext_seek:
+            if self.num_frames_in_buffer() > 2:
+                print("Seek to {} last buf pts is {}".format(seek_pts, self.decoded_buffer[self.buf_frame_num_to_idx(-1)].pts))
+            self.external_seek = seek_pts
+            self.buffering_sem.release()
+        self.buffering_lock.release()
+
+
+
+
+    cdef int num_frames_in_buffer(self):
+        if self.buf_start <= self.buf_end:
+            return self.buf_end - self.buf_start
+        else:
+            return self.dec_buffer_size - self.buf_start + self.buf_end
+    cdef int pts_to_idx(self, int pts):
+        return pts // self.pts_rate
+    @cython.cdivision(True)
+    cdef int buf_frame_num_to_idx(self, int num):
+        cdef int idx
+        if num >= 0:
+            return (self.buf_start + num) % self.dec_buffer_size
+        else:
+            idx = self.buf_end + num
+            if idx < 0:
+                idx += self.dec_buffer_size
+            return idx
+
+
+
+
+
+
+
