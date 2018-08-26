@@ -90,7 +90,7 @@ cdef class InputContainer(Container):
 
         """
 
-        print("Enter demux!")
+        #print("Enter demux!")
 
         # For whatever reason, Cython does not like us directly passing kwargs
         # from one method to another. Without kwargs, it ends up passing a

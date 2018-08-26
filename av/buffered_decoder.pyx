@@ -76,20 +76,20 @@ cdef class BufferedDecoder(object):
                     #print("External seek!")
                     #self.buffered_stream.seek(self.external_seek)
                     #self.next_frame = self.decode(self.buffered_container, self.buffered_stream)
-                    seek_target = self.external_seek
-                    self.external_seek = -1
+                    #seek_target = self.external_seek
+                    #self.external_seek = -1
                     num_frames = 0
 
                 self.av_lock.acquire()
                 logged = False
                 for frame in self.next_frame:
-                    if frame.pts >= seek_target:
-                        if seek_target >= 0:
+                    if frame.pts >= self.external_seek:
+                        if self.external_seek >= 0:
                             #print("Finished seek")
-                            seek_target = -1
+                            self.external_seek = -1
                         break
                     elif not logged:
-                        print("frames to seek {}".format((seek_target-frame.pts)/self.pts_rate))
+                        print("frames to seek {}".format((self.external_seek-frame.pts)/self.pts_rate))
                         logged = True
                 self.av_lock.release()
 
@@ -127,26 +127,25 @@ cdef class BufferedDecoder(object):
         cdef Frame  frame = None
         cdef  double time_before_wait, time_wait
         while True:
-            self.buffering_lock.acquire()
-            while self.num_frames_in_buffer() == 0:
-                self.frame_event.clear()
-                self.buffering_lock.release()
-                self.buffering_sem.release() # wake the buffering thread up
-                #print("Waiting for frame...")
-
-                time_before_wait = monotonic()
-                self.frame_event.wait()
-                time_wait = monotonic() - time_before_wait
-
-                print("Frame event after {}s".format(time_wait))
-                self.buffering_lock.acquire()
-                #print("Got lock!")
-            frame = self.decoded_buffer[self.buf_start]
-            self.decoded_buffer[self.buf_start] = None
-            self.buf_start += 1
-            if self.buf_start == self.dec_buffer_size:
-                self.buf_start = 0
-            self.buffering_lock.release()
+            if self.num_frames_in_buffer() == 0:
+                self.av_lock.acquire()
+                if self.num_frames_in_buffer() == 0:
+                    for frame in self.next_frame:
+                        if frame.pts >= self.external_seek:
+                            if self.external_seek > 0:
+                                #print("Finished seek")
+                                self.external_seek = -1
+                            break
+                        elif not logged:
+                            print("main thread frames to seek {}".format((self.external_seek-frame.pts)/self.pts_rate))
+                            logged = True
+                self.av_lock.release()
+            if self.num_frames_in_buffer() > 0 :
+                frame = self.decoded_buffer[self.buf_start]
+                self.decoded_buffer[self.buf_start] = None
+                self.buf_start += 1
+                if self.buf_start == self.dec_buffer_size:
+                    self.buf_start = 0
             self.buffering_sem.release()
             yield  frame
 
@@ -177,8 +176,7 @@ cdef class BufferedDecoder(object):
                 ext_seek = True
         if ext_seek:
             if self.num_frames_in_buffer() > 2:
-                pass
-                #print("Seek to {} last buf pts is {}".format(seek_pts, self.decoded_buffer[self.buf_frame_num_to_idx(-1)].pts))
+                print("Ext seek to {} last buf pts is {}".format(seek_pts, self.decoded_buffer[self.buf_frame_num_to_idx(-1)].pts))
             self.external_seek = seek_pts
             self.buf_start = self.buf_end = 0
             self.av_lock.acquire()
