@@ -25,13 +25,9 @@ cdef class BufferedDecoder(object):
         self.buf_end = 0
         self.external_seek = -1
         self.buffered_stream.seek(0)
-        print("Seeked to 0!")
-        print("Stream is {}".format(stream))
         self.next_frame = self.decode(container, stream)
-        print("Created generator")
         f1, f2 = next(self.next_frame), next(self.next_frame)
         self.pts_rate = f2.pts
-        print("PTS rate {}".format(self.pts_rate))
         self.buffered_stream.seek(0)
         self.next_frame = self.decode(container, stream)
         self.buffering_sem = Semaphore()
@@ -73,11 +69,6 @@ cdef class BufferedDecoder(object):
 
             while frames_to_buffer > 0 or self.external_seek >= 0:
                 if self.external_seek >= 0:
-                    #print("External seek!")
-                    #self.buffered_stream.seek(self.external_seek)
-                    #self.next_frame = self.decode(self.buffered_container, self.buffered_stream)
-                    #seek_target = self.external_seek
-                    #self.external_seek = -1
                     num_frames = 0
 
                 self.av_lock.acquire()
