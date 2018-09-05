@@ -32,7 +32,7 @@ export PYAV_LIBRARY_NAME=${_lib_parts[0]}
 export PYAV_LIBRARY_VERSION=${_lib_parts[1]}
 
 
-export PYAV_PYTHON="${PYAV_PYTHON-python}"
+export PYAV_PYTHON="${PYAV_PYTHON-python3}"
 
 if [[ "$TRAVIS" ]]; then
 
