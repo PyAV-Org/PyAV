@@ -89,7 +89,7 @@ cdef class CodecContext(object):
         self.ptr.thread_count = 0
         self.ptr.thread_type = 2
 
-        self.stream_index = -1
+        self.stream_index = -1 # This is set by the container immediately.
 
     property extradata:
         def __get__(self):
@@ -290,7 +290,6 @@ cdef class CodecContext(object):
 
         if not res:
             self._next_frame = None
-            self._setup_decoded_frame(frame)
             return frame
 
     cdef _recv_packet(self):
@@ -305,7 +304,6 @@ cdef class CodecContext(object):
         err_check(res)
 
         if not res:
-            self._setup_encoded_packet(packet)
             return packet
 
     cpdef encode(self, Frame frame=None, unsigned int count=0, bint prefer_send_recv=True):
@@ -334,7 +332,7 @@ cdef class CodecContext(object):
         ):
             for frame in frames:
                 for packet in self._send_frame_and_recv(frame):
-                    self._setup_encoded_packet(packet)
+                    self._setup_encoded_packet(packet, frame)
                     res.append(packet)
             return res
 
@@ -342,23 +340,29 @@ cdef class CodecContext(object):
         for frame in frames:
             packet = self._encode(frame)
             if packet:
-                self._setup_encoded_packet(packet)
+                self._setup_encoded_packet(packet, frame)
                 res.append(packet)
 
         while is_flushing and (not count or count > len(res)):
             packet = self._encode(None)
             if packet:
-                self._setup_encoded_packet(packet)
+                self._setup_encoded_packet(packet, frame)
                 res.append(packet)
             else:
                 break
 
         return res
 
-    cdef _setup_encoded_packet(self, Packet packet):
-        # The packet's timing was simply copied across from the source frame.
-        # The muxer will take care of rebasing time if it needs to.
-        packet._time_base = self.ptr.time_base
+    cdef _setup_encoded_packet(self, Packet packet, Frame frame):
+        # FFmpeg copied the packet's pts/dts from the source frame.
+        # PyAV is passing `time_base`s around.
+        # The PyAV muxer will take care of rebasing time if it needs to.
+        # There isn't a lot we can actually take from the `frame` here as
+        # they may be offset, but time_base should be consistent.
+        if frame._time_base.num:
+            packet._time_base = frame._time_base
+        else:
+            packet._time_base = self.ptr.time_base
 
     cdef _encode(self, Frame frame):
         raise NotImplementedError('Base CodecContext cannot encode frames.')
@@ -387,7 +391,7 @@ cdef class CodecContext(object):
         ):
             res = []
             for frame in self._send_packet_and_recv(packet):
-                self._setup_decoded_frame(frame)
+                self._setup_decoded_frame(frame, packet)
                 res.append(frame)
             return res
 
@@ -416,7 +420,7 @@ cdef class CodecContext(object):
             if decoded:
 
                 if isinstance(decoded, Frame):
-                    self._setup_decoded_frame(decoded)
+                    self._setup_decoded_frame(decoded, packet)
                 decoded_objs.append(decoded)
 
                 # Sometimes we will error if we try to flush the stream
@@ -438,25 +442,19 @@ cdef class CodecContext(object):
 
         return decoded_objs
 
-    cdef _setup_decoded_frame(self, Frame frame):
+    cdef _setup_decoded_frame(self, Frame frame, Packet packet):
 
         # In FFMpeg <= 3.0, and all LibAV we know of, the frame's pts may be
-        # unset at this stage, and he PTS from a packet is the correct one while
+        # unset at this stage, and the PTS from a packet is the correct one while
         # decoding, and it is copied to pkt_pts during creation of a frame.
         # TODO: Look into deprecation of pkt_pts in FFmpeg > 3.0
         if frame.ptr.pts == lib.AV_NOPTS_VALUE:
             frame.ptr.pts = frame.ptr.pkt_pts
 
-        if self.stream_index >= 0 and self.container and self.stream_index < self.container.ptr.nb_streams:
-            # If we are decoding in the context of a stream, assume the time
-            # base came from there.
-            # TODO: Actually track that packets have a consistent time_base,
-            # and pull it from there.
-            frame._time_base = self.container.ptr.streams[self.stream_index].time_base
-        else:
-            # This is a bad assumption to make, as it seems like AVCodecContext
-            # barely cares about timing information.
-            frame._time_base = self.ptr.time_base
+        # Propigate our manual times.
+        # While decoding, frame times are in stream time_base, which PyAV
+        # is carrying around.
+        frame._time_base = packet._time_base
 
         frame.index = self.ptr.frame_number - 1
 
