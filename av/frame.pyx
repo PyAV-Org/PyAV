@@ -23,10 +23,11 @@ cdef class Frame(object):
             lib.av_frame_free(&self.ptr)
 
     def __repr__(self):
-        return 'av.%s #%d at 0x%x>' % (
+        return 'av.%s #%d pts=%s at 0x%x>' % (
             self.__class__.__name__,
             self.index,
             id(self),
+            self.pts,
         )
 
     cdef _init_planes(self, cls=Plane):
