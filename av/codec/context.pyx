@@ -73,7 +73,10 @@ cdef class CodecContext(object):
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('Cannot instantiate CodecContext')
+        
         self.options = {}
+        self.stream_index = -1 # This is set by the container immediately.
+
 
     cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
 
@@ -91,7 +94,6 @@ cdef class CodecContext(object):
         self.ptr.thread_count = 0
         self.ptr.thread_type = 2
 
-        self.stream_index = -1 # This is set by the container immediately.
 
     property extradata:
         def __get__(self):
