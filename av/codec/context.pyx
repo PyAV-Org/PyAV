@@ -43,6 +43,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_c
 
 
 cdef EnumType _ThreadType = define_enum('ThreadType', (
+    ('NONE', 0),
     ('FRAME', lib.FF_THREAD_FRAME),
     ('SLICE', lib.FF_THREAD_SLICE),
     ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME),
@@ -516,7 +517,7 @@ cdef class CodecContext(object):
     property thread_type:
         def __get__(self):
             return _ThreadType.get(self.ptr.thread_type, create=True)
-        def __set__(self, int value):
+        def __set__(self, value):
             if lib.avcodec_is_open(self.ptr):
                 raise RuntimeError("Cannot change thread_type after codec is open.")
             self.ptr.thread_type = _ThreadType[value].value

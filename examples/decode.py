@@ -28,6 +28,7 @@ arg_parser.add_argument('-v', '--video', action='store_true')
 arg_parser.add_argument('-s', '--subs', action='store_true')
 arg_parser.add_argument('-d', '--data', action='store_true')
 arg_parser.add_argument('-p', '--play', action='store_true')
+arg_parser.add_argument('-t', '--thread-type')
 arg_parser.add_argument('-o', '--option', action='append', default=[])
 arg_parser.add_argument('-c', '--count', type=int, default=5)
 args = arg_parser.parse_args()
@@ -36,18 +37,21 @@ args = arg_parser.parse_args()
 proc = None
 
 options = dict(x.split('=') for x in args.option)
-video = open(args.path, format=args.format, options=options)
+container = open(args.path, format=args.format, options=options)
 
-print('container:', video)
-print('\tformat:', video.format)
-print('\tduration:', float(video.duration) / time_base)
+print('container:', container)
+print('\tformat:', container.format)
+print('\tduration:', float(container.duration) / time_base)
 print('\tmetadata:')
-for k, v in sorted(video.metadata.items()):
+for k, v in sorted(container.metadata.items()):
     print('\t\t%s: %r' % (k, v))
 print()
 
-print(len(video.streams), 'stream(s):')
-for i, stream in enumerate(video.streams):
+print(len(container.streams), 'stream(s):')
+for i, stream in enumerate(container.streams):
+
+    if args.thread_type:
+        stream.codec_context.thread_type = args.thread_type
 
     print('\t%r' % stream)
     print('\t\ttime_base: %r' % stream.time_base)
@@ -78,7 +82,7 @@ for i, stream in enumerate(video.streams):
     print()
 
 
-streams = [s for s in video.streams if
+streams = [s for s in container.streams if
     (s.type == 'audio' and args.audio) or
     (s.type == 'video' and args.video) or
     (s.type == 'subtitle' and args.subs)
@@ -87,7 +91,7 @@ streams = [s for s in video.streams if
 
 frame_count = 0
 
-for i, packet in enumerate(video.demux(streams)):
+for i, packet in enumerate(container.demux(streams)):
 
     print('%02d %r' % (i, packet))
     print('\ttime_base: %s' % packet.time_base)
