@@ -275,6 +275,8 @@ def open(file, mode=None, format=None, options=None,
             metadata_encoding, metadata_errors
         )
     if mode.startswith('w'):
+        if stream_options:
+            raise ValueError("Provide stream options via Container.add_stream(..., options={}).")
         return OutputContainer(_cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors

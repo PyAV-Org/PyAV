@@ -23,7 +23,7 @@ cdef class OutputContainer(Container):
     def __del__(self):
         self.close()
 
-    cpdef add_stream(self, codec_name=None, object rate=None, Stream template=None):
+    def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)
 
         Create a new stream, and return it.
@@ -110,6 +110,12 @@ cdef class OutputContainer(Container):
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+        if options:
+            py_stream.options.update(options)
+
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
 
         return py_stream
 
