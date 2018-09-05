@@ -135,8 +135,6 @@ cdef class CodecContext(object):
         # TODO: Do this better.
         cdef _Dictionary options = Dictionary()
         options.update(self.options or {})
-        # for k, v in self.options.iteritems():
-        #     options[k] = v
 
         # Assert we have a time_base.
         if not self.ptr.time_base.num:

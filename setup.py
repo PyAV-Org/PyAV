@@ -56,7 +56,7 @@ try:
 except OSError:
     git_commit = None
 else:
-    git_commit = git_commit.strip()
+    git_commit = git_commit.decode().strip()
 
 
 _cflag_parser = argparse.ArgumentParser(add_help=False)

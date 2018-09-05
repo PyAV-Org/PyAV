@@ -145,7 +145,7 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True, str encod
         lib.av_dict_free(dst)
     if encoding is None:
         encoding = 'utf8'
-    for key, value in src.iteritems():
+    for key, value in src.items():
         err_check(lib.av_dict_set(dst, _encode(key, encoding, errors),
                                   _encode(value, encoding, errors), 0))
 

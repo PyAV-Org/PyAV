@@ -156,7 +156,6 @@ cdef class OutputContainer(Container):
             if k not in options:
                 used_options.add(k)
         # ... and warn if any weren't used.
-        # TODO: How to items vs iteritems for Py2 vs 3 in Cython?
         unused_options = {k: v for k, v in self.options.items() if k not in used_options}
         if unused_options:
             log.warning('Some options were not used: %s' % unused_options)
