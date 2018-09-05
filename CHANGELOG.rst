@@ -18,6 +18,7 @@ Major:
 Fixes:
 
 - EnumItem's hash calculation no longer overflows. (#339, #341 and #342.)
+- Frame.time_base was not being set in most cases during decoding. (#364.)
 
 
 v0.4.1
