@@ -96,8 +96,8 @@ cdef class AudioCodecContext(CodecContext):
 
         return frame
 
-    cdef _setup_decoded_frame(self, Frame frame):
-        CodecContext._setup_decoded_frame(self, frame)
+    cdef _setup_decoded_frame(self, Frame frame, Packet packet):
+        CodecContext._setup_decoded_frame(self, frame, packet)
         cdef AudioFrame aframe = frame
         aframe._init_user_attributes()
 

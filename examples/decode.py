@@ -42,7 +42,7 @@ print('container:', video)
 print('\tformat:', video.format)
 print('\tduration:', float(video.duration) / time_base)
 print('\tmetadata:')
-for k, v in sorted(video.metadata.iteritems()):
+for k, v in sorted(video.metadata.items()):
     print('\t\t%s: %r' % (k, v))
 print()
 
@@ -57,6 +57,10 @@ for i, stream in enumerate(video.streams):
     print('\t\tbit_rate: %r' % stream.bit_rate)
     print('\t\tbit_rate_tolerance: %r' % stream.bit_rate_tolerance)
 
+    codec_context = stream.codec_context
+    print('\t\tcodec_context:', codec_context)
+    print('\t\t\ttime_base:', codec_context.time_base)
+
     if stream.type == b'audio':
         print('\t\taudio:')
         print('\t\t\tformat:', stream.format)
@@ -68,7 +72,7 @@ for i, stream in enumerate(video.streams):
         print('\t\t\taverage_rate: %r' % stream.average_rate)
 
     print('\t\tmetadata:')
-    for k, v in sorted(stream.metadata.iteritems()):
+    for k, v in sorted(stream.metadata.items()):
         print('\t\t\t%s: %r' % (k, v))
 
     print()
@@ -86,15 +90,18 @@ frame_count = 0
 for i, packet in enumerate(video.demux(streams)):
 
     print('%02d %r' % (i, packet))
+    print('\ttime_base: %s' % packet.time_base)
     print('\tduration: %s' % format_time(packet.duration, packet.stream.time_base))
     print('\tpts: %s' % format_time(packet.pts, packet.stream.time_base))
     print('\tdts: %s' % format_time(packet.dts, packet.stream.time_base))
+    print('\tkey: %s' % packet.is_keyframe)
 
     for frame in packet.decode():
 
         frame_count += 1
 
         print('\tdecoded:', frame)
+        print('\t\ttime_base: %s' % frame.time_base)
         print('\t\tpts:', format_time(frame.pts, packet.stream.time_base))
 
         if packet.stream.type == 'video':

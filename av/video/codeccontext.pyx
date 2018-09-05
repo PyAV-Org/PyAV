@@ -87,8 +87,8 @@ cdef class VideoCodecContext(CodecContext):
     cdef Frame _alloc_next_frame(self):
         return alloc_video_frame()
 
-    cdef _setup_decoded_frame(self, Frame frame):
-        CodecContext._setup_decoded_frame(self, frame)
+    cdef _setup_decoded_frame(self, Frame frame, Packet packet):
+        CodecContext._setup_decoded_frame(self, frame, packet)
         cdef VideoFrame vframe = frame
         vframe._init_user_attributes()
 

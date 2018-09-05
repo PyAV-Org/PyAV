@@ -47,8 +47,8 @@ cdef class CodecContext(object):
 
     # Used by both transcode APIs to setup user-land objects.
     cdef _prepare_frames_for_encode(self, Frame frame)
-    cdef _setup_encoded_packet(self, Packet)
-    cdef _setup_decoded_frame(self, Frame)
+    cdef _setup_encoded_packet(self, Packet, Frame)
+    cdef _setup_decoded_frame(self, Frame, Packet)
 
     # Implemented by children for the encode/decode API.
     cdef _encode(self, Frame frame)
