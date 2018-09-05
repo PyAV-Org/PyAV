@@ -20,7 +20,7 @@ import shlex
 import sys
 
 try:
-    # This depends on _winreg, which is not availible on not-Windows.
+    # This depends on _winreg, which is not available on not-Windows.
     from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
 except ImportError:
     MSVC9Compiler = None
