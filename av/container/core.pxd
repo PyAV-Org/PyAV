@@ -16,7 +16,6 @@ cdef class ContainerProxy(object):
     cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame)
     cdef flush_buffers(self)
 
-
     # Copies from Container.
     cdef object name
     cdef str metadata_encoding
@@ -27,7 +26,6 @@ cdef class ContainerProxy(object):
     cdef object fread
     cdef object fwrite
     cdef object fseek
-    cdef object ftell
 
     # Custom IO for above.
     cdef lib.AVIOContext *iocontext

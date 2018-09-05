@@ -70,14 +70,20 @@ cdef class ContainerProxy(object):
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.max_analyze_duration = 10000000
+
         # Setup Python IO.
         if self.file is not None:
 
-            # TODO: Make sure we actually have these.
             self.fread = getattr(self.file, 'read', None)
             self.fwrite = getattr(self.file, 'write', None)
             self.fseek = getattr(self.file, 'seek', None)
-            self.ftell = getattr(self.file, 'tell', None)
+
+            if self.writeable:
+                if self.fwrite is None:
+                    raise ValueError("File object has no write method.")
+            else:
+                if self.fread is None:
+                    raise ValueError("File object has no read method.")
 
             self.pos = 0
             self.pos_is_valid = True
@@ -92,15 +98,13 @@ cdef class ContainerProxy(object):
                 <void*>self, # User data.
                 pyio_read,
                 pyio_write,
-                pyio_seek
+                pyio_seek 
             )
-            # Various tutorials say that we should set AVFormatContext.direct
-            # to AVIO_FLAG_DIRECT here, but that doesn't seem to do anything in
-            # FFMpeg and was deprecated.
-            self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
+
+            if self.fseek is not None:
+                self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
             self.iocontext.max_packet_size = self.bufsize
             self.ptr.pb = self.iocontext
-            #self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt
         cdef _Dictionary options
