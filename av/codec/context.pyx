@@ -73,6 +73,7 @@ cdef class CodecContext(object):
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('Cannot instantiate CodecContext')
+        self.options = {}
 
     cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
 
