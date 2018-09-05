@@ -7,6 +7,7 @@ from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
 
 from av.utils import AVError # not cimport
+from av.dictionary import Dictionary
 
 
 cdef class InputContainer(Container):
@@ -15,15 +16,21 @@ cdef class InputContainer(Container):
 
         cdef int i
 
-        # Create several clones of out one set of options, since
-        # avformat_find_stream_info expects an array of them.
-        # TODO: Expose per-stream options at some point.
+        # If we have either the global `options`, or a `stream_options`, prepare
+        # a mashup of those options for each stream.
         cdef lib.AVDictionary **c_options = NULL
-        if len(self.options):
+        cdef _Dictionary base_dict, stream_dict
+        if self.options or self.stream_options:
+            base_dict = Dictionary(self.options)
             c_options = <lib.AVDictionary**>malloc(self.proxy.ptr.nb_streams * sizeof(void*))
             for i in range(self.proxy.ptr.nb_streams):
                 c_options[i] = NULL
-                lib.av_dict_copy(&c_options[i], self.options.ptr, 0)
+                if i < len(self.stream_options) and self.stream_options:
+                    stream_dict = base_dict.copy()
+                    stream_dict.update(self.stream_options[i])
+                    lib.av_dict_copy(&c_options[i], stream_dict.ptr, 0)
+                else:
+                    lib.av_dict_copy(&c_options[i], base_dict.ptr, 0)
 
         with nogil:
             # This peeks are the first few frames to:

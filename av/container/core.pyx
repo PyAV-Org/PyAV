@@ -110,7 +110,8 @@ cdef class ContainerProxy(object):
         cdef _Dictionary options
         if not self.writeable:
             ifmt = container.format.iptr if container.format else NULL
-            options = container.options.copy()
+            
+            options = Dictionary(container.options, container.container_options)
             with nogil:
                 res = lib.avformat_open_input(
                     &self.ptr,
@@ -195,7 +196,7 @@ cdef class ContainerProxy(object):
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, file_, format_name, options, metadata_encoding, metadata_errors):
+    def __cinit__(self, sentinel, file_, format_name, options, container_options, stream_options, metadata_encoding, metadata_errors):
 
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -215,7 +216,9 @@ cdef class Container(object):
         if format_name is not None:
             self.format = ContainerFormat(format_name)
 
-        self.options = Dictionary(**(options or {}))
+        self.options = dict(options or ())
+        self.container_options = dict(container_options or ())
+        self.stream_options = [dict(x) for x in stream_options or ()]
 
         self.metadata_encoding = metadata_encoding
         self.metadata_errors = metadata_errors
@@ -234,7 +237,9 @@ cdef class Container(object):
 
 
 
-def open(file, mode=None, format=None, options=None, metadata_encoding=None, metadata_errors='strict'):
+def open(file, mode=None, format=None, options=None,
+    container_options=None, stream_options=None,
+    metadata_encoding=None, metadata_errors='strict'):
     """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
 
     Main entrypoint to opening files/streams.
@@ -242,7 +247,9 @@ def open(file, mode=None, format=None, options=None, metadata_encoding=None, met
     :param str file: The file to open.
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
     :param str format: Specific format to use. Defaults to autodect.
-    :param dict options: Options to pass to the container and streams.
+    :param dict options: Options to pass to the container and all streams.
+    :param dict container_options: Options to pass to the container.
+    :param list stream_options: Options to pass to each stream.
     :param str metadata_encoding: Encoding to use when reading or writing file metadata.
         Defaults to utf-8, except no decoding is performed by default when
         reading on Python 2 (returning ``str`` instead of ``unicode``).
@@ -263,7 +270,13 @@ def open(file, mode=None, format=None, options=None, metadata_encoding=None, met
         mode = 'r'
 
     if mode.startswith('r'):
-        return InputContainer(_cinit_sentinel, file, format, options, metadata_encoding, metadata_errors)
+        return InputContainer(_cinit_sentinel, file, format, options,
+            container_options, stream_options,
+            metadata_encoding, metadata_errors
+        )
     if mode.startswith('w'):
-        return OutputContainer(_cinit_sentinel, file, format, options, metadata_encoding, metadata_errors)
+        return OutputContainer(_cinit_sentinel, file, format, options,
+            container_options, stream_options,
+            metadata_encoding, metadata_errors
+        )
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)

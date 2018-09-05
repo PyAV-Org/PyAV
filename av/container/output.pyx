@@ -8,6 +8,8 @@ from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, dict_to_avdict
 
+from av.dictionary import Dictionary
+
 
 log = logging.getLogger(__name__)
 
@@ -117,8 +119,10 @@ cdef class OutputContainer(Container):
         if self._started:
             return
 
+        # TODO: This does NOT handle options coming from 3 sources.
+        # This is only a rough approximation of what would be cool to do.
         used_options = set()
-
+        
         # Finalize and open all streams.
         cdef Stream stream
         for stream in self.streams:
@@ -126,7 +130,8 @@ cdef class OutputContainer(Container):
             ctx = stream.codec_context
             if not ctx.is_open:
 
-                ctx.options.update(self.options)
+                for k, v in self.options.items():
+                    ctx.options.setdefault(k, v)
                 ctx.open()
 
                 # Track option consumption.
@@ -145,14 +150,15 @@ cdef class OutputContainer(Container):
         dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True,
                        encoding=self.metadata_encoding, errors=self.metadata_errors)
 
-        cdef _Dictionary options = self.options.copy()
+        cdef _Dictionary all_options = Dictionary(self.options, self.container_options)
+        cdef _Dictionary options = all_options.copy()
         self.proxy.err_check(lib.avformat_write_header(
             self.proxy.ptr,
             &options.ptr
         ))
 
         # Track option usage...
-        for k in self.options:
+        for k in all_options:
             if k not in options:
                 used_options.add(k)
         # ... and warn if any weren't used.

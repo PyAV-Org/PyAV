@@ -46,7 +46,10 @@ cdef class Container(object):
     cdef readonly bint writeable
 
     cdef readonly ContainerFormat format
-    cdef _Dictionary options
+
+    cdef readonly dict options
+    cdef readonly dict container_options
+    cdef readonly list stream_options
 
     cdef ContainerProxy proxy
     cdef object __weakref__
