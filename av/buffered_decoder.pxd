@@ -2,25 +2,44 @@ cimport libav as lib
 
 from av.container.core cimport Container
 from av.stream cimport Stream
-from av.video.frame cimport VideoFrame
+from av.video.frame cimport VideoFrame, alloc_video_frame
 from threading import Thread, Event, Lock, Semaphore
 
+cdef class CircularBuffer:
+    cdef:
+        lib.AVFrame** buffer
+        int buf_start
+        int buf_end
+        int buffer_size
+        int count(self) nogil
+        int capacity(self) nogil
+        bint add(self, lib.AVFrame *) nogil
+        void add_buffer(self, CircularBuffer )
+        void forward(self, int )
+        void reset(self) nogil
+        bint empty(self) nogil
+        bint full(self) nogil
+        lib.AVFrame *get_next_free_slot(self) nogil
+        lib.AVFrame *at(self, int)
+        lib.AVFrame *get(self) nogil
+        object frame_event
+
+
+
 cdef class BufferedDecoder(object):
-    cdef int num_frames_in_buffer(self)
     cdef int pts_to_idx(self, int pts)
-    cdef int buf_frame_num_to_idx(self, int num)
-    cdef list decoded_buffer
-    cdef int buf_start
-    cdef int buf_end
+    cpdef buffering_thread(self)
+    cdef CircularBuffer active_buffer
+    cdef CircularBuffer standby_buffer
+    cdef CircularBuffer backlog_buffer
     cdef int dec_batch
-    cdef int dec_buffer_size
     cdef int pts_rate
     cdef long external_seek
+    cdef bint eos
     cdef object next_frame
     cdef object buffering_sem
     cdef object buffering_lock
     cdef object av_lock
-    cdef object frame_event
     cdef object buf_thread_inst
     cdef Stream buffered_stream
     cdef Container buffered_container

@@ -15,6 +15,19 @@ cdef VideoFrame alloc_video_frame():
     """
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
 
+cdef VideoFrame wrap_video_frame(lib.AVFrame *av_frame):
+    """Get a mostly uninitialized VideoFrame.
+
+    You MUST call VideoFrame._init(...) or VideoFrame._init_user_attributes()
+    before exposing to the user.
+
+    """
+    cdef VideoFrame frame =  VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel, alloc=False)
+
+    frame.ptr = av_frame
+
+    return frame
+
 
 cdef class VideoFrame(Frame):
 
@@ -24,7 +37,8 @@ cdef class VideoFrame(Frame):
 
     """
 
-    def __cinit__(self, width=0, height=0, format='yuv420p'):
+    def __cinit__(self, width=0, height=0, format='yuv420p', *args, **kwargs):
+        #print("VideoFrame cinit, alloc = {}".format(alloc))
 
         if width is _cinit_bypass_sentinel:
             return

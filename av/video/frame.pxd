@@ -24,3 +24,4 @@ cdef class VideoFrame(Frame):
 
 
 cdef VideoFrame alloc_video_frame()
+cdef VideoFrame wrap_video_frame(lib.AVFrame *av_frame)
