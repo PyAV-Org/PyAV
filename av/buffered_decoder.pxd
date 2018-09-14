@@ -23,18 +23,19 @@ cdef class CircularBuffer:
         lib.AVFrame *at(self, int)
         lib.AVFrame *get(self) nogil
         object frame_event
+        long long last_pts
 
 
 
 cdef class BufferedDecoder(object):
-    cdef int pts_to_idx(self, int pts)
+    cdef long long pts_to_idx(self, long long pts)
     cpdef buffering_thread(self)
     cdef CircularBuffer active_buffer
     cdef CircularBuffer standby_buffer
     cdef CircularBuffer backlog_buffer
     cdef int dec_batch
     cdef int pts_rate
-    cdef long external_seek
+    cdef long long external_seek
     cdef bint eos
     cdef object next_frame
     cdef object buffering_sem
@@ -43,3 +44,5 @@ cdef class BufferedDecoder(object):
     cdef object buf_thread_inst
     cdef Stream buffered_stream
     cdef Container buffered_container
+    cdef double time_event
+    cdef long long last_buffered_pts

@@ -8,6 +8,7 @@ from av.utils cimport err_check, avdict_to_dict
 from av.frame cimport Frame
 from av.video.frame cimport VideoFrame, alloc_video_frame, wrap_video_frame
 from libc.errno cimport EAGAIN
+from libc.stdio cimport printf
 
 from av.utils import AVError # not cimport
 from threading import Thread, Event, Semaphore, Lock, Event
@@ -15,6 +16,7 @@ from time import monotonic, sleep
 cimport cython
 
 import cysignals
+#from cysignals.signals cimport sig_on, sig_off
 
 cdef class CircularBuffer:
     def __cinit__(self,  buff_size):
@@ -23,6 +25,7 @@ cdef class CircularBuffer:
         self.buffer_size = buffer_size
         self.buf_start = self.buf_end = 0
         self.frame_event = Event()
+        self.last_pts = -1
 
     def __dealloc__(self):
         free(self.buffer)
@@ -84,6 +87,7 @@ cdef class CircularBuffer:
         void reset(self):
             self.buf_end = self.buf_start
             self.frame_event.clear()
+            self.last_pts = -1
 
 
 
@@ -139,8 +143,8 @@ cdef class BufferedDecoder(object):
                 yield frame
     cpdef buffering_thread(self):
         cdef Frame frame
-        cdef long seek_target = -1
-        cdef long last_seek_target = -1
+        cdef long long seek_target = -1
+        cdef long long last_seek_target = -1
         cdef int num_frames = 0
         cdef double buf_begin_time = 0.
         cdef double buffering_time = 0.
@@ -150,10 +154,10 @@ cdef class BufferedDecoder(object):
         cdef lib.AVPacket *packet_ptr
         cdef lib.AVFrame *avframe_ptr
         cdef CircularBuffer active_buffer
-        cdef long current_seek_pts = -2
         cdef lib.AVFrame *last_frame
         cdef bint log = False
         cdef lib.AVFrame *unused_frame
+        cdef int seek_frames = 0
         print("Starting buffering thread!")
         packet = Packet()
         while True:
@@ -174,8 +178,9 @@ cdef class BufferedDecoder(object):
                         last_seek_target = seek_target
                         with gil:
                             if log:
-                                print("Thread Seeking to {}".format(seek_target))
+                                printf("Thread Seeking to %ld",seek_target)
                             self.buffered_stream.seek(seek_target)
+                            seek_frames = 0
                             #if seek_target > 0:
                             #    log = True
                             #ret = lib.av_seek_frame(self.buffered_container.proxy.ptr, self.buffered_stream._stream.index, seek_target, lib.AVSEEK_FLAG_BACKWARD)
@@ -188,15 +193,12 @@ cdef class BufferedDecoder(object):
                         avframe_ptr = lib.av_frame_alloc()
                     while not self.eos:
                         if log:
-                            with gil:
-                                print("Calling av_read_frame")
+                            printf("Calling av_read_frame\n")
                         ret = lib.av_read_frame(self.buffered_container.proxy.ptr, &packet.struct)
                         if ret < 0:
                             packet_ptr = NULL
                             if log:
-                                with gil:
-                                    #self.eos = True
-                                    print("av_read_frame returned {}".format(ret))
+                                printf("av_read_frame returned %d\n",ret)
                         else:
                             packet_ptr = &packet.struct #if not self.eos else NULL
                             if packet_ptr.stream_index != self.buffered_stream._stream.index:
@@ -207,27 +209,22 @@ cdef class BufferedDecoder(object):
 
                         ret = lib.avcodec_send_packet(self.buffered_stream.codec_context.ptr, packet_ptr)
                         if ret < 0 and log:
-                            with gil:
-                                print("avcodec_send_packet returned {}".format(ret))
-                                print("lib.AVERROR_EOF is {}".format(lib.AVERROR_EOF))
-                                #break
+                            printf("avcodec_send_packet returned %d\n",ret)
 
-                            #with gil:
-                            #    print("Alloced frame {0:x}".format(<unsigned long> avframe_ptr))
-                            if log:
-                                with gil:
-                                    print("avframe_ptr = {0:x}".format(<unsigned long> avframe_ptr))
                         ret = lib.avcodec_receive_frame(self.buffered_stream.codec_context.ptr, avframe_ptr)
                         if ret < 0 and log:
-                            with gil:
-                                print("avcodec_receive_frame returned {}".format(ret))
+                            printf("avcodec_receive_frame returned %d\n",ret)
 
                         if not ret and avframe_ptr.pts >= seek_target:
                             last_frame = avframe_ptr
+                            if seek_frames > 0:
+                                printf("Seeked %d frames!\n", seek_frames)
+                                seek_frames = 0
                             break
+                        elif not ret:
+                            seek_frames += 1
                         if ret is lib.AVERROR_EOF:
-                            with gil:
-                                print("End of stream!")
+                            printf("End of stream!\n")
                             self.eos = True
                             break
                         #with gil:
@@ -242,8 +239,7 @@ cdef class BufferedDecoder(object):
                             break
                     if last_frame is not NULL or self.eos is True:
                         if log:
-                            with gil:
-                                print("Adding to buffer frame {0:x}".format(<unsigned long> avframe_ptr))
+                            printf("Adding to buffer frame %p", avframe_ptr)
 
                         unused_frame = active_buffer.get_next_free_slot()
                         if unused_frame is not NULL:
@@ -252,8 +248,11 @@ cdef class BufferedDecoder(object):
                             self.backlog_buffer.add(unused_frame)
 
                         active_buffer.add(last_frame)
+                        if last_frame is not NULL:
+                            active_buffer.last_pts = last_frame.pts
                         if active_buffer.count() == 1:
                              with gil:
+                                 self.time_event = monotonic()
                                  active_buffer.frame_event.set()
                                  sleep(0)
                         if self.eos:
@@ -277,6 +276,7 @@ cdef class BufferedDecoder(object):
                 #print("Waiting for frame...")
                 self.active_buffer.frame_event.wait()
                 self.active_buffer.frame_event.clear()
+                print("Time for thread switch {}s".format(monotonic() - self.time_event))
                 #print("Got frame ={0:x}".format(<unsigned long>av_frame))
 
             av_frame = self.active_buffer.get()
@@ -293,7 +293,7 @@ cdef class BufferedDecoder(object):
                 yield  None
 
     def seek(self, seek_pts):
-        cdef int seek_offset
+        cdef long long seek_offset
         cdef int end_idx
         cdef CircularBuffer tmp_buf
         cdef lib.AVFrame *start_frm
@@ -309,10 +309,7 @@ cdef class BufferedDecoder(object):
             ext_seek = True
         else:
             start_frm = self.active_buffer.at(0)
-            end_frm = self.active_buffer.at(-1)
-            if end_frm is NULL:
-                end_frm = self.active_buffer.at(-2)
-            if start_frm.pts < seek_pts < end_frm.pts:
+            if start_frm.pts < seek_pts < self.active_buffer.last_pts:
                 #print("Seeking inside buffer!")
                 seek_offset = self.pts_to_idx(seek_pts - start_frm.pts)
                 self.active_buffer.forward(seek_offset)
@@ -320,7 +317,7 @@ cdef class BufferedDecoder(object):
                 ext_seek = True
         if ext_seek:
             if self.active_buffer.count() > 2:
-                print("Ext seek to {} last buf pts is {}".format(seek_pts, self.active_buffer.at(-1).pts))
+                print("Ext seek to {} last buf pts is {}".format(seek_pts, self.active_buffer.last_pts))
             self.standby_buffer.reset()
 
             self.av_lock.acquire()
@@ -336,5 +333,5 @@ cdef class BufferedDecoder(object):
             self.buffering_sem.release()
 
 
-    cdef int pts_to_idx(self, int pts):
+    cdef long long pts_to_idx(self, long long pts):
         return pts // self.pts_rate
