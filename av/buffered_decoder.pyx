@@ -1,4 +1,4 @@
-from libc.stdlib cimport malloc, free, calloc
+﻿from libc.stdlib cimport malloc, free, calloc
 
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
@@ -14,9 +14,9 @@ from av.utils import AVError # not cimport
 from threading import Thread, Event, Semaphore, Lock, Event
 from time import monotonic, sleep
 cimport cython
+IF UNAME_SYSNAME != "Windows":
+    import cysignals
 
-import cysignals
-#from cysignals.signals cimport sig_on, sig_off
 
 cdef class CircularBuffer:
     def __cinit__(self,  buff_size):
