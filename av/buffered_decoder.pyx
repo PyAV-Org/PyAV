@@ -121,9 +121,14 @@ cdef class BufferedDecoder(object):
         self.buffering_lock = Lock()
         self.av_lock = Lock()
         self.eos = False
+        self.thread_exit = False
         self.buf_thread_inst = Thread(target=self.buffering_thread)
         self.buf_thread_inst.start()
         print("Started thread!")
+    def __dealloc__(self):
+        self.thread_exit = True
+        self.buffering_sem.release()
+        self.buf_thread_inst.join()
 
     def decode(self, container, stream):
         """decode(streams=None, video=None, audio=None, subtitles=None, data=None)
@@ -163,6 +168,8 @@ cdef class BufferedDecoder(object):
         while True:
             num_frames = 0
             self.buffering_sem.acquire()
+            if self.thread_exit:
+                return
 
             buf_begin_time = monotonic()
             self.av_lock.acquire()

@@ -30,19 +30,21 @@ cdef class CircularBuffer:
 cdef class BufferedDecoder(object):
     cdef long long pts_to_idx(self, long long pts)
     cpdef buffering_thread(self)
-    cdef CircularBuffer active_buffer
-    cdef CircularBuffer standby_buffer
-    cdef CircularBuffer backlog_buffer
-    cdef int dec_batch
-    cdef int pts_rate
-    cdef long long external_seek
-    cdef bint eos
-    cdef object next_frame
-    cdef object buffering_sem
-    cdef object buffering_lock
-    cdef object av_lock
-    cdef object buf_thread_inst
-    cdef Stream buffered_stream
-    cdef Container buffered_container
-    cdef double time_event
-    cdef long long last_buffered_pts
+    cdef:
+        CircularBuffer active_buffer
+        CircularBuffer standby_buffer
+        CircularBuffer backlog_buffer
+        int dec_batch
+        int pts_rate
+        long long external_seek
+        bint eos
+        object next_frame
+        object buffering_sem
+        object buffering_lock
+        object av_lock
+        object buf_thread_inst
+        Stream buffered_stream
+        Container buffered_container
+        double time_event
+        long long last_buffered_pts
+        bint thread_exit
