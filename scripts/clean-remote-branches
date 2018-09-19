@@ -30,7 +30,7 @@ for name in get_branches('-r', '--merged'):
     if name.startswith('origin/'):
         continue
     print("Removing merged", name)
-    rm(name)
+    rm('-r', name)
 
 for name, hash_ in get_branches('-r', '--no-merged').items():
 
