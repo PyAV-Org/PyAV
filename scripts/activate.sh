@@ -39,6 +39,9 @@ if [[ "$TRAVIS" ]]; then
     # Travis as a very self-contained environment. Lets just work in that.
     echo "We're on Travis, so not setting up another virtualenv."
 
+    if [[ "$TRAVIS_PYTHON_VERSION" = "2.7" || "$TRAVIS_PYTHON_VERSION" = "pypy" ]]; then
+        PYAV_PYTHON=python
+    fi
 else
 
     export PYAV_VENV_NAME="$(uname -s).$(uname -r).$("$PYAV_PYTHON" -c '

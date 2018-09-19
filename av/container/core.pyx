@@ -77,6 +77,7 @@ cdef class ContainerProxy(object):
             self.fread = getattr(self.file, 'read', None)
             self.fwrite = getattr(self.file, 'write', None)
             self.fseek = getattr(self.file, 'seek', None)
+            self.ftell = getattr(self.file, 'tell', None)
 
             if self.writeable:
                 if self.fwrite is None:
@@ -98,10 +99,10 @@ cdef class ContainerProxy(object):
                 <void*>self, # User data.
                 pyio_read,
                 pyio_write,
-                pyio_seek 
+                pyio_seek
             )
 
-            if self.fseek is not None:
+            if self.fseek is not None and self.ftell is not None:
                 self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
             self.iocontext.max_packet_size = self.bufsize
             self.ptr.pb = self.iocontext
