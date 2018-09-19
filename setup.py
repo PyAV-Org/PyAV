@@ -35,10 +35,17 @@ msvc_compiler_classes = tuple([cls for cls in (MSVCCompiler, MSVC9Compiler,
                                                MSVC14Compiler) if cls is not None])
 
 try:
+    from Cython import __version__ as cython_version
     from Cython.Build import cythonize
 except ImportError:
     # We don't need Cython all the time; just for building from original source.
     cythonize = None
+    cython_version = None
+else:
+    # We depend upon some features in Cython 0.27; reject older ones.
+    if tuple(map(int, cython_version.split('.'))) < (0, 27):
+        print("Cython {} is too old for PyAV; ignoring it.".format(cython_version))
+        cythonize = None
 
 
 is_py3 = sys.version_info[0] >= 3
