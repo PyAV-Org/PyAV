@@ -54,15 +54,6 @@ environment:
       CONDA_PY: "36"
       CONDA_NPY: "112"
 
-    # older FFMPEG versions
-
-    - PYTHON: "C:\\Miniconda36-x64"
-      PYTHON_VERSION: "3.5"
-      FFMPEG_VERSION: "2.8.6"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "35"
-      CONDA_NPY: "110"
-
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 
