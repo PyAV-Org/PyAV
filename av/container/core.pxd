@@ -26,6 +26,7 @@ cdef class ContainerProxy(object):
     cdef object fread
     cdef object fwrite
     cdef object fseek
+    cdef object ftell
 
     # Custom IO for above.
     cdef lib.AVIOContext *iocontext
