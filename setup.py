@@ -19,41 +19,34 @@ import re
 import shlex
 import sys
 
+# We don't need six...
+PY3 = sys.version_info[0] >= 3
+
+if PY3:
+    from shlex import quote as shell_quote
+else:
+    from pipes import quote as shell_quote
+
 try:
     # This depends on _winreg, which is not availible on not-Windows.
     from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
 except ImportError:
     MSVC9Compiler = None
-
 try:
     from distutils._msvccompiler import MSVCCompiler as MSVC14Compiler
 except ImportError:
     MSVC14Compiler = None
 
-
-msvc_compiler_classes = tuple([cls for cls in (MSVCCompiler, MSVC9Compiler,
-                                               MSVC14Compiler) if cls is not None])
-
 try:
     from Cython import __version__ as cython_version
     from Cython.Build import cythonize
 except ImportError:
-    # We don't need Cython all the time; just for building from original source.
     cythonize = None
-    cython_version = None
 else:
     # We depend upon some features in Cython 0.27; reject older ones.
     if tuple(map(int, cython_version.split('.'))) < (0, 27):
         print("Cython {} is too old for PyAV; ignoring it.".format(cython_version))
         cythonize = None
-
-
-is_py3 = sys.version_info[0] >= 3
-
-if is_py3:
-    from shlex import quote as shell_quote
-else:
-    from pipes import quote as shell_quote
 
 
 # We will embed this metadata into the package so it can be recalled for debugging.
@@ -123,10 +116,6 @@ def unique_extend(a, *args):
     a[:] = list(set().union(a, *args))
 
 
-def is_msvc(cc=None):
-    cc = _new_compiler() if cc is None else cc
-    return isinstance(cc, msvc_compiler_classes)
-
 # Obtain the ffmpeg dir from the "--ffmpeg-dir=<dir>" argument
 FFMPEG_DIR = None
 for i, arg in enumerate(sys.argv):
@@ -183,7 +172,7 @@ config_macros = {
 def dump_config():
     """Print out all the config information we have so far (for debugging)."""
     print('PyAV:', version, git_commit or '(unknown commit)')
-    print('Python:', sys.version.encode('unicode_escape' if is_py3 else 'string-escape'))
+    print('Python:', sys.version.encode('unicode_escape' if PY3 else 'string-escape'))
     print('platform:', platform.platform())
     print('extension_extra:')
     for k, vs in extension_extra.items():
@@ -193,11 +182,7 @@ def dump_config():
         print('\t%s=%s' % x)
 
 
-
-
-
 if os.name == 'nt':
-
 
     if is_msvc():
         config_macros['inline'] = '__inline'
@@ -248,6 +233,13 @@ def new_compiler(*args, **kwargs):
     if make_silent:
         cc.spawn = _CCompiler_spawn_silent
     return cc
+
+
+msvc_compiler_classes = tuple(filter(None, (MSVCCompiler, MSVC9Compiler, MSVC14Compiler)))
+
+def is_msvc(cc=None):
+    cc = _new_compiler() if cc is None else cc
+    return isinstance(cc, msvc_compiler_classes)
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
