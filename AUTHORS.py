@@ -23,9 +23,10 @@ email_map = {
     'mark@mark-VirtualBox.(none)': None,
 
     # Aliases.
+    'a.davoudi@aut.ac.ir': 'davoudialireza@gmail.com',
     'tcaswell@bnl.gov': 'tcaswell@gmail.com',
     'xxr3376@gmail.com': 'xxr@megvii.com',
-    'a.davoudi@aut.ac.ir': 'davoudialireza@gmail.com',
+    'dallan@pha.jhu.edu': 'daniel.b.allan@gmail.com',
 
 }
 
@@ -36,13 +37,15 @@ name_map = {
     'mindmark@gmail.com': 'Mark Reid',
     'moritzkassner@gmail.com': 'Moritz Kassner',
     'vidartf@gmail.com': 'Vidar Tonaas Fauske',
+    'xxr@megvii.com': 'Xinran Xu',
 }
 
 github_map = {
     'billy.shambrook@gmail.com': 'billyshambrook',
-    'dallan@pha.jhu.edu': 'danielballan',
+    'daniel.b.allan@gmail.com': 'danielballan',
     'davoudialireza@gmail.com': 'adavoudi',
     'github@mikeboers.com': 'mikeboers',
+    'jeremy.laine@m4x.org': 'jlaine',
     'kalle.litterfeldt@gmail.com': 'litterfeldt',
     'mindmark@gmail.com': 'markreidvfx',
     'moritzkassner@gmail.com': 'mkassner',
@@ -52,6 +55,7 @@ github_map = {
     'ulrik.mikaelsson@magine.com': 'rawler',
     'vidartf@gmail.com': 'vidartf',
     'willpatera@gmail.com': 'willpatera',
+    'xxr@megvii.com': 'xxr3376',
 }
 
 
@@ -92,6 +96,6 @@ for email, count in sorted(email_count.items(), key=lambda x: (-x[1], x[0])):
     # The '-' vs '*' is so that Sphinx treats them as different lists, and
     # introduces a gap bettween them.
     if github:
-        print('%s %s <%s>; @%s' % ('-*'[block_i % 2], name, email, github))
+        print('%s %s <%s>; `@%s <https://github.com/%s>`_' % ('-*'[block_i % 2], name, email, github, github))
     else:
         print('%s %s <%s>'      % ('-*'[block_i % 2], name, email,       ))

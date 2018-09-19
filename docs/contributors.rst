@@ -1,3 +1,3 @@
 
 
-.. include:: ../AUTHORS.txt
+.. include:: ../AUTHORS.rst
