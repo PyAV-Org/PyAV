@@ -7,6 +7,13 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
+v0.5.1
+------
+
+- Set ``PYAV_DEBUG_BUILD=1`` to force a verbose reflection (mainly for being
+  installed via ``pip``, which is why this is worth a release).
+
+
 v0.5.0
 ------
 
