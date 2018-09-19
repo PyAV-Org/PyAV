@@ -14,7 +14,7 @@ See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs t
 Dependencies
 ------------
 
-PyAV depends upon the following components of FFmpeg:
+PyAV depends upon several libraries from FFmpeg (version ``3.0`` or higher):
 
 - ``libavformat``
 - ``libavcodec``
