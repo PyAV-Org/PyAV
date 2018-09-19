@@ -111,7 +111,7 @@ def extract(path, **kwargs):
 
     context = options.create_context()
 
-    tree = parse_from_strings(name, open(path).read().decode('utf8'), context,
+    tree = parse_from_strings(name, open(path).read(), context,
         level='module_pxd' if path.endswith('.pxd') else None,
         **kwargs)
 
@@ -311,7 +311,7 @@ Wrapped C Types and Functions
 
 ''')
 
-for extern, events in sorted(defs_by_extern.iteritems()):
+for extern, events in sorted(defs_by_extern.items()):
     did_header = False
 
     for event in events:

@@ -9,7 +9,8 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 .DEFAULT: html
 
 includes.rst: includes.py $(shell find ../include ../av -name '*.pyx' -or -name '*.pxd')
-	python includes.py > $@
+	python includes.py > $@.tmp
+	mv $@.tmp $@
 
 clean:
 	- rm -rf $(BUILDDIR)/*
@@ -25,4 +26,5 @@ open:
 	open _build/html/index.html
 
 upload:
-	./upload
+	rsync -avxP --delete _build/html/ docs.mikeboers.com:/srv/mikeboers.com/docs/httpdocs/pyav/develop/
+
