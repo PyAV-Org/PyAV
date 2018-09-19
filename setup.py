@@ -9,6 +9,7 @@ from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
+from textwrap import dedent
 import argparse
 import errno
 import itertools
@@ -19,34 +20,34 @@ import re
 import shlex
 import sys
 
+# We don't need six...
+PY3 = sys.version_info[0] >= 3
+
+if PY3:
+    from shlex import quote as shell_quote
+else:
+    from pipes import quote as shell_quote
+
 try:
     # This depends on _winreg, which is not availible on not-Windows.
     from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
 except ImportError:
     MSVC9Compiler = None
-
 try:
     from distutils._msvccompiler import MSVCCompiler as MSVC14Compiler
 except ImportError:
     MSVC14Compiler = None
 
-
-msvc_compiler_classes = tuple([cls for cls in (MSVCCompiler, MSVC9Compiler,
-                                               MSVC14Compiler) if cls is not None])
-
 try:
+    from Cython import __version__ as cython_version
     from Cython.Build import cythonize
 except ImportError:
-    # We don't need Cython all the time; just for building from original source.
     cythonize = None
-
-
-is_py3 = sys.version_info[0] >= 3
-
-if is_py3:
-    from shlex import quote as shell_quote
 else:
-    from pipes import quote as shell_quote
+    # We depend upon some features in Cython 0.27; reject older ones.
+    if tuple(map(int, cython_version.split('.'))) < (0, 27):
+        print("Cython {} is too old for PyAV; ignoring it.".format(cython_version))
+        cythonize = None
 
 
 # We will embed this metadata into the package so it can be recalled for debugging.
@@ -116,10 +117,6 @@ def unique_extend(a, *args):
     a[:] = list(set().union(a, *args))
 
 
-def is_msvc(cc=None):
-    cc = _new_compiler() if cc is None else cc
-    return isinstance(cc, msvc_compiler_classes)
-
 # Obtain the ffmpeg dir from the "--ffmpeg-dir=<dir>" argument
 FFMPEG_DIR = None
 for i, arg in enumerate(sys.argv):
@@ -176,7 +173,7 @@ config_macros = {
 def dump_config():
     """Print out all the config information we have so far (for debugging)."""
     print('PyAV:', version, git_commit or '(unknown commit)')
-    print('Python:', sys.version.encode('unicode_escape' if is_py3 else 'string-escape'))
+    print('Python:', sys.version.encode('unicode_escape' if PY3 else 'string-escape'))
     print('platform:', platform.platform())
     print('extension_extra:')
     for k, vs in extension_extra.items():
@@ -185,12 +182,20 @@ def dump_config():
     for x in sorted(config_macros.items()):
         print('\t%s=%s' % x)
 
+def print_diagnostic_message():
+    print(dedent('''
+        You can see the compiler output for the reflection process via:
+            python setup.py reflect --force --debug
 
+        or if you're installing from pip, via:
+            PYAV_DEBUG_BUILD=1 pip install av
 
+        Here is the config we gathered so far:
+    '''))
+    dump_config()
 
 
 if os.name == 'nt':
-
 
     if is_msvc():
         config_macros['inline'] = '__inline'
@@ -241,6 +246,13 @@ def new_compiler(*args, **kwargs):
     if make_silent:
         cc.spawn = _CCompiler_spawn_silent
     return cc
+
+
+msvc_compiler_classes = tuple(filter(None, (MSVCCompiler, MSVC9Compiler, MSVC14Compiler)))
+
+def is_msvc(cc=None):
+    cc = _new_compiler() if cc is None else cc
+    return isinstance(cc, msvc_compiler_classes)
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
@@ -456,6 +468,11 @@ class ReflectCommand(Command):
         self.debug = None
 
     def finalize_options(self):
+
+        # You can use PYAV_DEBUG_BUILD to debug `pip install av`.
+        self.force = True if os.environ.get('PYAV_DEBUG_BUILD') else self.force
+        self.debug = True if os.environ.get('PYAV_DEBUG_BUILD') else self.debug
+
         self.set_undefined_options('build',
             ('build_temp', 'build_temp'),
             ('compiler', 'compiler'),
@@ -601,16 +618,16 @@ class ReflectCommand(Command):
                     'didn\'t find' if should_exist else 'found',
                     name
                 ))
-                print('We look for it only as a sanity check to make sure the build\n'
-                      'process is working as expected. It is not, so we must abort.\n'
-                      '\n'
-                      'You can see the compiler output for the reflection process via:\n'
-                      '    python setup.py reflect --force --debug\n'
-                      '\n'
-                      'Here is the config we gathered so far:\n')
-                dump_config()
-                exit(1)
+                print(dedent('''
+                    We look for it only as a sanity check to make sure the build
+                    process is working as expected. It is not, so we must abort.
 
+                    Most of the time this is caused by the compiler attempting
+                    to link against a static FFmpeg, instead of the dynamic one
+                    that PyAV needs.
+                '''))
+                print_diagnostic_message()
+                exit(1)
 
 
 class DoctorCommand(Command):
@@ -735,7 +752,13 @@ class BuildExtCommand(build_ext):
 
         self.run_command('cythonize')
 
-        return build_ext.run(self)
+        try:
+            build_ext.run(self)
+
+        except Exception as e:
+            print_diagnostic_message()
+            print()
+            raise
 
 
 setup(
