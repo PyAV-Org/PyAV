@@ -9,6 +9,7 @@ from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
 from subprocess import Popen, PIPE
+from textwrap import dedent
 import argparse
 import errno
 import itertools
@@ -180,6 +181,18 @@ def dump_config():
     print('config_macros:')
     for x in sorted(config_macros.items()):
         print('\t%s=%s' % x)
+
+def print_diagnostic_message():
+    print(dedent('''
+        You can see the compiler output for the reflection process via:
+            python setup.py reflect --force --debug
+
+        or if you're installing from pip, via:
+            PYAV_DEBUG_BUILD=1 pip install av
+
+        Here is the config we gathered so far:
+    '''))
+    dump_config()
 
 
 if os.name == 'nt':
@@ -455,6 +468,11 @@ class ReflectCommand(Command):
         self.debug = None
 
     def finalize_options(self):
+
+        # You can use PYAV_DEBUG_BUILD to debug `pip install av`.
+        self.force = True if os.environ.get('PYAV_DEBUG_BUILD') else self.force
+        self.debug = True if os.environ.get('PYAV_DEBUG_BUILD') else self.debug
+
         self.set_undefined_options('build',
             ('build_temp', 'build_temp'),
             ('compiler', 'compiler'),
@@ -600,16 +618,16 @@ class ReflectCommand(Command):
                     'didn\'t find' if should_exist else 'found',
                     name
                 ))
-                print('We look for it only as a sanity check to make sure the build\n'
-                      'process is working as expected. It is not, so we must abort.\n'
-                      '\n'
-                      'You can see the compiler output for the reflection process via:\n'
-                      '    python setup.py reflect --force --debug\n'
-                      '\n'
-                      'Here is the config we gathered so far:\n')
-                dump_config()
-                exit(1)
+                print(dedent('''
+                    We look for it only as a sanity check to make sure the build
+                    process is working as expected. It is not, so we must abort.
 
+                    Most of the time this is caused by the compiler attempting
+                    to link against a static FFmpeg, instead of the dynamic one
+                    that PyAV needs.
+                '''))
+                print_diagnostic_message()
+                exit(1)
 
 
 class DoctorCommand(Command):
@@ -734,7 +752,13 @@ class BuildExtCommand(build_ext):
 
         self.run_command('cythonize')
 
-        return build_ext.run(self)
+        try:
+            build_ext.run(self)
+
+        except Exception as e:
+            print_diagnostic_message()
+            print()
+            raise
 
 
 setup(
