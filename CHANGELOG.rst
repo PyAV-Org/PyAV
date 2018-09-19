@@ -7,19 +7,25 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
-HEAD
-----
+v0.5.0
+------
 
 Major:
 
 - Dropped support for Libav in general. (#110.)
 - No longer uses libavresample.
 
+Minor:
+
+- ``av.open`` has ``container_options`` and ``stream_options``.
+- ``Frame`` includes ``pts`` in ``repr``.
+
 Fixes:
 
 - EnumItem's hash calculation no longer overflows. (#339, #341 and #342.)
 - Frame.time_base was not being set in most cases during decoding. (#364.)
 - CodecContext.options no longer needs to be manually initialized.
+- CodexContext.thread_type accepts its enums.
 
 
 v0.4.1

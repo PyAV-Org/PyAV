@@ -50,7 +50,7 @@ else:
 
 
 # We will embed this metadata into the package so it can be recalled for debugging.
-version = '0.4.1'
+version = '0.5.0'
 try:
     git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 except OSError:
