@@ -7,14 +7,14 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
-HEAD
-----
+v0.5.2
+------
 
 Build:
 
+- Fixed Windows build, which broke in v0.5.1.
 - Compiler checks are not cached by default. This behaviour is retained if you
   ``source scripts/activate.sh`` to develop PyAV. (#256.)
-- Fixed Windows build, which broke in v0.5.1.
 - Changed to ``PYAV_SETUP_REFLECT_DEBUG=1`` from ``PYAV_DEBUG_BUILD=1``.
 
 
