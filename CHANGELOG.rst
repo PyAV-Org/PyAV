@@ -14,6 +14,7 @@ Build:
 
 - Compiler checks are not cached by default. This behaviour is retained if you
   ``source scripts/activate.sh`` to develop PyAV. (#256.)
+- Fixed Windows build, which broke in v0.5.1.
 
 
 v0.5.1

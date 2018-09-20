@@ -195,23 +195,6 @@ def print_diagnostic_message():
     dump_config()
 
 
-if os.name == 'nt':
-
-    if is_msvc():
-        config_macros['inline'] = '__inline'
-    # Since we're shipping a self contained unit on windows, we need to mark
-    # the package as such. On other systems, let it be universal.
-    class BinaryDistribution(Distribution):
-        def is_pure(self):
-            return False
-    distclass = BinaryDistribution
-
-else:
-
-    distclass = Distribution
-
-
-
 # Monkey-patch for CCompiler to be silent.
 def _CCompiler_spawn_silent(cmd, dry_run=None):
     """Spawn a process, and eat the stdio."""
@@ -248,11 +231,29 @@ def new_compiler(*args, **kwargs):
     return cc
 
 
-msvc_compiler_classes = tuple(filter(None, (MSVCCompiler, MSVC9Compiler, MSVC14Compiler)))
-
+_msvc_classes = tuple(filter(None, (MSVCCompiler, MSVC9Compiler, MSVC14Compiler)))
 def is_msvc(cc=None):
     cc = _new_compiler() if cc is None else cc
-    return isinstance(cc, msvc_compiler_classes)
+    return isinstance(cc, _msvc_classes)
+
+
+if os.name == 'nt':
+
+    if is_msvc():
+        config_macros['inline'] = '__inline'
+
+    # Since we're shipping a self contained unit on Windows, we need to mark
+    # the package as such. On other systems, let it be universal.
+    class BinaryDistribution(Distribution):
+        def is_pure(self):
+            return False
+
+    distclass = BinaryDistribution
+
+else:
+
+    # Nothing to see here.
+    distclass = Distribution
 
 
 def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
