@@ -86,11 +86,17 @@ def get_library_config(name):
         proc = Popen(['pkg-config', '--cflags', '--libs', name], stdout=PIPE, stderr=PIPE)
     except OSError:
         print('pkg-config is required for building PyAV')
+        print("Please `apt-get install pkg-config`.")
         exit(1)
 
     raw_cflags, err = proc.communicate()
     if proc.wait():
         return
+
+    if not raw_cflags:
+        print("pkg-config returned null when looking for {}".format(name))
+        print("    Please ensure you have pkg-config installed correctly.")
+        exit(1)
 
     known, unknown = parse_cflags(raw_cflags.decode('utf8'))
     if unknown:
