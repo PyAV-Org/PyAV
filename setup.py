@@ -188,7 +188,7 @@ def print_diagnostic_message():
             python setup.py reflect --force --debug
 
         or if you're installing from pip, via:
-            PYAV_DEBUG_BUILD=1 pip install av
+            PYAV_SETUP_REFLECT_DEBUG=1 pip install av
 
         Here is the config we gathered so far:
     '''))
@@ -476,10 +476,12 @@ class ReflectCommand(Command):
 
         # There are 3 overrides.
 
-        if os.environ.get('PYAV_CACHE_COMPILE_CHECKS'):
+        if os.environ.get('PYAV_SETUP_REFLECT_CACHE'):
             self.cache = True
 
-        if os.environ.get('PYAV_DEBUG_BUILD'):
+        # PYAV_DEBUG_BUILD was only on PyPi for 0.5.1 for a day.
+        # Remove it in the near future.
+        if os.environ.get('PYAV_SETUP_REFLECT_DEBUG') or os.environ.get('PYAV_DEBUG_BUILD'):
             self.cache = False
             self.debug = True
 
