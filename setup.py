@@ -51,7 +51,7 @@ else:
 
 
 # We will embed this metadata into the package so it can be recalled for debugging.
-version = '0.5.2'
+version = open('VERSION.txt').read().strip()
 try:
     git_commit, _ = Popen(['git', 'describe', '--tags'], stdout=PIPE, stderr=PIPE).communicate()
 except OSError:

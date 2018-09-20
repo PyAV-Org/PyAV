@@ -74,12 +74,7 @@ copyright = u'2017, Mike Boers'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-# This is pretty fragile, but that is totally okay.
-setup_src = open('../setup.py').read()
-m = re.search(r'^version = \'([^\']+)\'', setup_src, flags=re.MULTILINE)
-if not m:
-    raise ValueError("Could not find version in setup.py.")
-release = m.group(1)
+release = open('../VERSION.txt').read().strip()
 
 # The short X.Y version.
 version = release.split('-')[0]
