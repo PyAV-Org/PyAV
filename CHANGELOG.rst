@@ -7,8 +7,19 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
 
+HEAD
+----
+
+Build:
+
+- Compiler checks are not cached by default. This behaviour is retained if you
+  ``source scripts/activate.sh`` to develop PyAV. (#256.)
+
+
 v0.5.1
 ------
+
+Build:
 
 - Set ``PYAV_DEBUG_BUILD=1`` to force a verbose reflection (mainly for being
   installed via ``pip``, which is why this is worth a release).

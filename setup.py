@@ -451,11 +451,13 @@ class ReflectCommand(Command):
         ('library-dirs=', 'L', "directories to search for external C libraries" + sep_by),
         ('no-pkg-config', None, "do not use pkg-config to configure dependencies"),
         ('compiler=', 'c', "specify the compiler type"),
+
+        ('cache', None, "use cached results"),
         ('force', 'f', "don't use cached results"),
-        ('debug', 'v', "don't silence the compiler while testing"),
+        ('debug', None, "don't silence the compiler while testing"),
     ]
 
-    boolean_options = ['no-pkg-config', 'force', 'debug']
+    boolean_options = ['no-pkg-config', 'cache', 'force', 'debug']
 
     def initialize_options(self):
         self.compiler = None
@@ -464,14 +466,24 @@ class ReflectCommand(Command):
         self.libraries = None
         self.library_dirs = None
         self.no_pkg_config = None
-        self.force = None
+
+        self.cache = None
         self.debug = None
+        self.force = None
 
     def finalize_options(self):
 
-        # You can use PYAV_DEBUG_BUILD to debug `pip install av`.
-        self.force = True if os.environ.get('PYAV_DEBUG_BUILD') else self.force
-        self.debug = True if os.environ.get('PYAV_DEBUG_BUILD') else self.debug
+        # There are 3 overrides.
+
+        if os.environ.get('PYAV_CACHE_COMPILE_CHECKS'):
+            self.cache = True
+
+        if os.environ.get('PYAV_DEBUG_BUILD'):
+            self.cache = False
+            self.debug = True
+
+        if self.force:
+            self.cache = False
 
         self.set_undefined_options('build',
             ('build_temp', 'build_temp'),
@@ -507,6 +519,9 @@ class ReflectCommand(Command):
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
+
+        if self.cache:
+            print("using cached compiler checks")
 
         results = {}
 
