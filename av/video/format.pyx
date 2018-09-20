@@ -128,7 +128,7 @@ cdef class VideoFormatComponent(object):
     property bits:
         """Number of bits in the component."""
         def __get__(self):
-            return self.ptr.depth_minus1 + 1
+            return self.ptr.depth
 
     property is_alpha:
         """Is this component an alpha channel?"""

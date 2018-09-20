@@ -104,17 +104,16 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         int search_flags
     )
 
-cdef extern from "libavutil/pixdesc.h" nogil:
 
+cdef extern from "libavutil/pixdesc.h" nogil:
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVComponentDescriptor.html
     cdef struct AVComponentDescriptor:
-        # These are bitfields, but this should generate the right C anyways.
         unsigned int plane
-        unsigned int step_minus1
-        unsigned int offset_plus1
+        unsigned int step
+        unsigned int offset
         unsigned int shift
-        unsigned int depth_minus1
+        unsigned int depth
 
     cdef enum AVPixFmtFlags:
         AV_PIX_FMT_FLAG_BE
