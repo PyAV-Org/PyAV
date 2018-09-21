@@ -18,7 +18,7 @@ from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avra
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, lib.AVCodec *c_codec, ContainerProxy container):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, ContainerProxy container):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -78,7 +78,7 @@ cdef class CodecContext(object):
         self.stream_index = -1 # This is set by the container immediately.
 
 
-    cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
 
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:

@@ -19,7 +19,7 @@ cdef class VideoCodecContext(CodecContext):
         self.last_w = 0
         self.last_h = 0
 
-    cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec) # TODO: Can this be `super`?
         self._build_format()
         self.encoded_frame_count = 0

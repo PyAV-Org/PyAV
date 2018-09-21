@@ -40,7 +40,7 @@ cdef class OutputContainer(Container):
         if (codec_name is None and template is None) or (codec_name is not None and template is not None):
             raise ValueError('needs one of codec_name or template')
 
-        cdef lib.AVCodec *codec
+        cdef const lib.AVCodec *codec
         cdef Codec codec_obj
 
         if codec_name is not None:

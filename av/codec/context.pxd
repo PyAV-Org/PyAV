@@ -29,7 +29,7 @@ cdef class CodecContext(object):
     # To hold a reference to passed extradata.
     cdef ByteSource extradata_source
 
-    cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec)
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec)
 
     cdef readonly Codec codec
 
@@ -71,4 +71,4 @@ cdef class CodecContext(object):
     cdef Frame _alloc_next_frame(self)
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*, lib.AVCodec*, ContainerProxy)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, ContainerProxy)
