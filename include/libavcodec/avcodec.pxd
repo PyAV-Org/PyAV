@@ -221,17 +221,10 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef int AV_NUM_DATA_POINTERS
 
-    # See: http://ffmpeg.org/doxygen/trunk/structAVPicture.html
-    cdef struct AVPicture:
-        uint8_t **data
-        int *linesize
-
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
-    # This is a strict superset of AVPicture.
     cdef struct AVFrame:
-
-        uint8_t **data
-        int *linesize
+        uint8_t *data[4];
+        int linesize[4];
         uint8_t **extended_data
 
         int format # Should be AVPixelFormat or AVSampleFormat
@@ -261,27 +254,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
 
     cdef AVFrame* avcodec_alloc_frame()
-
-    cdef int avpicture_alloc(
-        AVPicture *picture,
-        AVPixelFormat pix_fmt,
-        int width,
-        int height
-    )
-
-    cdef int avpicture_get_size(
-        AVPixelFormat format,
-        int width,
-        int height,
-    )
-
-    cdef int avpicture_fill(
-        AVPicture *picture,
-        uint8_t *buffer,
-        AVPixelFormat format,
-        int width,
-        int height
-    )
 
     cdef struct AVPacket:
 
@@ -341,7 +313,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef void av_init_packet(AVPacket*)
     cdef int av_new_packet(AVPacket*, int)
-    cdef void av_free_packet(AVPacket*)
     cdef void av_packet_unref(AVPacket *pkt)
     cdef int av_copy_packet(AVPacket *dst, AVPacket *src)
     cdef AVPacket* av_packet_clone(AVPacket *src)
@@ -359,7 +330,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int w
         int h
         int nb_colors
-        AVPicture pict
+        uint8_t *data[4];
+        int linesize[4];
         AVSubtitleType type
         char *text
         char *ass

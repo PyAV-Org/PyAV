@@ -96,7 +96,7 @@ cdef class BitmapSubtitle(Subtitle):
         self.planes = tuple(
             BitmapSubtitlePlane(self, i)
             for i in range(4)
-            if self.ptr.pict.linesize[i]
+            if self.ptr.linesize[i]
         )
 
     def __repr__(self):
@@ -137,15 +137,15 @@ cdef class BitmapSubtitlePlane(object):
 
         if index >= 4:
             raise ValueError('BitmapSubtitles have only 4 planes')
-        if not subtitle.ptr.pict.linesize[index]:
+        if not subtitle.ptr.linesize[index]:
             raise ValueError('plane does not exist')
 
         self.subtitle = subtitle
         self.index = index
         self.buffer_size = subtitle.ptr.w * subtitle.ptr.h
-        self._buffer = <void*>subtitle.ptr.pict.data[index]
+        self._buffer = <void*>subtitle.ptr.data[index]
 
-    # PyBuffer_FromMemory(self.ptr.pict.data[i], self.width * self.height)
+    # PyBuffer_FromMemory(self.ptr.data[i], self.width * self.height)
 
     # Legacy buffer support. For `buffer` and PIL.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs

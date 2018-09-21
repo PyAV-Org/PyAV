@@ -191,9 +191,9 @@ cdef class Capture(object):
 
 cdef struct log_context:
     lib.AVClass *class_
-    char *name
+    const char *name
 
-cdef char *log_context_name(void *ptr) nogil:
+cdef const char *log_context_name(void *ptr) nogil:
     cdef log_context *obj = <log_context*>ptr
     return obj.name
 
@@ -225,7 +225,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     lib.vsnprintf(message, 1023, format, args)
 
     # Get the name.
-    cdef char *name = NULL
+    cdef const char *name = NULL
     cdef lib.AVClass *cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
     if cls and cls.item_name:
         # I'm not 100% on this, but this should be static, and so
