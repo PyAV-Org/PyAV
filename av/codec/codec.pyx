@@ -1,20 +1,18 @@
-from libc.stdint cimport uint64_t
-
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
-from av.utils cimport flag_in_bitfield, media_type_to_string
+from av.utils cimport avrational_to_faction, flag_in_bitfield, media_type_to_string
 from av.video.format cimport get_video_format
 
 cdef object _cinit_sentinel = object()
 
 
-
-cdef Codec wrap_codec(lib.AVCodec *ptr):
+cdef Codec wrap_codec(const lib.AVCodec *ptr):
     cdef Codec codec = Codec(_cinit_sentinel)
     codec.ptr = ptr
     codec.is_encoder = lib.av_codec_is_encoder(ptr)
     codec._init()
     return codec
+
 
 class UnknownCodecError(ValueError):
     pass
@@ -103,37 +101,73 @@ cdef class Codec(object):
     property id:
         def __get__(self): return self.ptr.id
 
-    property frame_rates:
-        def __get__(self): return <int>self.ptr.supported_framerates
-    property audio_rates:
-        def __get__(self): return <int>self.ptr.supported_samplerates
+    @property
+    def frame_rates(self):
+        """
+        A list of supported frame rates, or None.
 
-    property video_formats:
-        def __get__(self):
+        :type: list of fractions.Fraction
+        """
+        if not self.ptr.supported_framerates:
+            return
 
-            if not self.ptr.pix_fmts:
-                return
+        ret = []
+        cdef int i = 0
+        while self.ptr.supported_framerates[i].denum:
+            ret.append(avrational_to_faction(&self.ptr.supported_framerates[i]))
+            i += 1
+        return ret
 
-            ret = []
-            cdef lib.AVPixelFormat *ptr = self.ptr.pix_fmts
-            while ptr[0] != -1:
-                ret.append(get_video_format(ptr[0], 0, 0))
-                ptr += 1
-            return ret
+    @property
+    def audio_rates(self):
+        """
+        A list of supported audio sample rates, or None.
 
-    property audio_formats:
-       def __get__(self):
+        :type: list of int
+        """
+        if not self.ptr.supported_samplerates:
+            return
 
-           if not self.ptr.sample_fmts:
-               return
+        ret = []
+        cdef int i = 0
+        while self.ptr.supported_samplerates[i]:
+            ret.append(self.ptr.supported_samplerates[i])
+            i += 1
+        return ret
 
-           ret = []
-           cdef lib.AVSampleFormat *ptr = self.ptr.sample_fmts
-           while ptr[0] != -1:
-               ret.append(get_audio_format(ptr[0]))
-               ptr += 1
-           return ret
+    @property
+    def video_formats(self):
+        """
+        A list of supported video formats, or None.
 
+        :type: list of VideoFormat
+        """
+        if not self.ptr.pix_fmts:
+            return
+
+        ret = []
+        cdef int i = 0
+        while self.ptr.pix_fmts[i] != -1:
+            ret.append(get_video_format(self.ptr.pix_fmts[i], 0, 0))
+            i += 1
+        return ret
+
+    @property
+    def audio_formats(self):
+        """
+        A list of supported audio formats, or None.
+
+        :type: list of AudioFormat
+        """
+        if not self.ptr.sample_fmts:
+           return
+
+        ret = []
+        cdef int i = 0
+        while self.ptr.sample_fmts[i] != -1:
+           ret.append(get_audio_format(self.ptr.sample_fmts[i]))
+           i += 1
+        return ret
 
     # Capabilities.
     property draw_horiz_band:
