@@ -49,7 +49,7 @@ cdef class VideoFrame(Frame):
                 lib.av_freep(&self._buffer)
 
                 # Get a new one.
-                buffer_size = lib.avpicture_get_size(format, width, height)
+                buffer_size = lib.av_image_get_buffer_size(format, width, height, 1)
                 with gil: err_check(buffer_size)
 
                 self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
@@ -57,13 +57,15 @@ cdef class VideoFrame(Frame):
                 if not self._buffer:
                     with gil: raise MemoryError("cannot allocate VideoFrame buffer")
 
-                # Attach the AVPicture to our buffer.
-                lib.avpicture_fill(
-                        <lib.AVPicture *>self.ptr,
+                # Attach the AVFrame to our buffer.
+                lib.av_image_fill_arrays(
+                        self.ptr.data,
+                        self.ptr.linesize,
                         self._buffer,
                         format,
                         width,
-                        height
+                        height,
+                        1
                 )
 
         self._init_user_attributes()
