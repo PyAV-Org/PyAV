@@ -42,7 +42,7 @@ cdef class Packet(Buffer):
 
     def __dealloc__(self):
         with nogil:
-            lib.av_free_packet(&self.struct)
+            lib.av_packet_unref(&self.struct)
 
     def __repr__(self):
         return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (

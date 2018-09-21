@@ -313,7 +313,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef void av_init_packet(AVPacket*)
     cdef int av_new_packet(AVPacket*, int)
-    cdef void av_free_packet(AVPacket*)
     cdef void av_packet_unref(AVPacket *pkt)
     cdef int av_copy_packet(AVPacket *dst, AVPacket *src)
     cdef AVPacket* av_packet_clone(AVPacket *src)
