@@ -154,7 +154,7 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True, str encod
 # === FRACTIONS ===
 # =================
 
-cdef object avrational_to_faction(lib.AVRational *input):
+cdef object avrational_to_fraction(const lib.AVRational *input):
     if input.num and input.den:
         return Fraction(input.num, input.den)
 

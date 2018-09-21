@@ -1,6 +1,6 @@
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
-from av.utils cimport avrational_to_faction, flag_in_bitfield, media_type_to_string
+from av.utils cimport avrational_to_fraction, flag_in_bitfield, media_type_to_string
 from av.video.format cimport get_video_format
 
 cdef object _cinit_sentinel = object()
@@ -114,7 +114,7 @@ cdef class Codec(object):
         ret = []
         cdef int i = 0
         while self.ptr.supported_framerates[i].denum:
-            ret.append(avrational_to_faction(&self.ptr.supported_framerates[i]))
+            ret.append(avrational_to_fraction(&self.ptr.supported_framerates[i]))
             i += 1
         return ret
 

@@ -1,7 +1,7 @@
 cimport libav as lib
 
 from av.bytesource cimport bytesource
-from av.utils cimport avrational_to_faction, to_avrational, err_check
+from av.utils cimport avrational_to_fraction, to_avrational, err_check
 
 
 cdef class Packet(Buffer):
@@ -126,7 +126,7 @@ cdef class Packet(Buffer):
 
     property time_base:
         def __get__(self):
-            return avrational_to_faction(&self._time_base)
+            return avrational_to_fraction(&self._time_base)
         def __set__(self, value):
             to_avrational(value, &self._time_base)
 

@@ -12,7 +12,7 @@ from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.enums cimport EnumType, define_enum
 from av.packet cimport Packet
-from av.utils cimport err_check, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
+from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational, media_type_to_string
 
 
 cdef object _cinit_sentinel = object()
@@ -478,7 +478,7 @@ cdef class CodecContext(object):
 
     property time_base:
         def __get__(self):
-            return avrational_to_faction(&self.ptr.time_base)
+            return avrational_to_fraction(&self.ptr.time_base)
         def __set__(self, value):
             to_avrational(value, &self.ptr.time_base)
 
