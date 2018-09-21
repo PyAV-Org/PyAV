@@ -173,7 +173,9 @@ cdef class VideoFrame(Frame):
                 NULL
             )
 
-        cdef int *inv_tbl, *tbl, *rgbTbl
+        cdef int *inv_tbl
+        cdef int *tbl
+        cdef int *rgbTbl
         cdef int srcRange, dstRange, brightness, contrast, saturation
         cdef int ret
         with nogil:
