@@ -13,8 +13,7 @@ cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding=*, str errors=*)
 cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=*, str encoding=*, str errors=*)
 
 
-
-cdef object avrational_to_faction(lib.AVRational *input)
+cdef object avrational_to_fraction(const lib.AVRational *input)
 cdef object to_avrational(object value, lib.AVRational *input)
 
 

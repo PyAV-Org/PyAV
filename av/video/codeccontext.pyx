@@ -5,7 +5,7 @@ cimport libav as lib
 from av.codec.context cimport CodecContext
 from av.frame cimport Frame
 from av.packet cimport Packet
-from av.utils cimport avrational_to_faction, to_avrational
+from av.utils cimport avrational_to_fraction, to_avrational
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.frame cimport VideoFrame, alloc_video_frame
@@ -170,7 +170,7 @@ cdef class VideoCodecContext(CodecContext):
 
     property framerate:
         def __get__(self):
-            return avrational_to_faction(&self.ptr.framerate)
+            return avrational_to_fraction(&self.ptr.framerate)
         def __set__(self, value):
             to_avrational(value, &self.ptr.framerate)
 
@@ -189,7 +189,7 @@ cdef class VideoCodecContext(CodecContext):
 
     property sample_aspect_ratio:
         def __get__(self):
-            return avrational_to_faction(&self.ptr.sample_aspect_ratio) if self.ptr else None
+            return avrational_to_fraction(&self.ptr.sample_aspect_ratio) if self.ptr else None
         def __set__(self, value):
             to_avrational(value, &self.ptr.sample_aspect_ratio)
 
@@ -202,7 +202,7 @@ cdef class VideoCodecContext(CodecContext):
                 self.ptr.width * self.ptr.sample_aspect_ratio.num,
                 self.ptr.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
 
-            return avrational_to_faction(&dar)
+            return avrational_to_fraction(&dar)
 
     property has_b_frames:
         def __get__(self):

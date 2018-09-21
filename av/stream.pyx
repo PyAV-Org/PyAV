@@ -7,7 +7,7 @@ cimport libav as lib
 
 from av.codec.context cimport wrap_codec_context
 from av.packet cimport Packet
-from av.utils cimport err_check, dict_to_avdict, avdict_to_dict, avrational_to_faction, to_avrational, media_type_to_string
+from av.utils cimport err_check, dict_to_avdict, avdict_to_dict, avrational_to_fraction, to_avrational, media_type_to_string
 
 
 
@@ -158,13 +158,13 @@ cdef class Stream(object):
 
     property time_base:
         def __get__(self):
-            return avrational_to_faction(&self._stream.time_base)
+            return avrational_to_fraction(&self._stream.time_base)
         def __set__(self, value):
             to_avrational(value, &self._stream.time_base)
 
     property average_rate:
         def __get__(self):
-            return avrational_to_faction(&self._stream.avg_frame_rate)
+            return avrational_to_fraction(&self._stream.avg_frame_rate)
 
     property start_time:
         def __get__(self): return self._stream.start_time
