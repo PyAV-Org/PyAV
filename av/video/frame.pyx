@@ -1,3 +1,5 @@
+from libc.stdint cimport uint8_t
+
 from av.bytesource cimport ByteSource, bytesource
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
@@ -196,7 +198,7 @@ cdef class VideoFrame(Frame):
         with nogil:
             lib.sws_scale(
                 self.reformatter.ptr,
-                self.ptr.data,
+                <const uint8_t**>self.ptr.data,
                 self.ptr.linesize,
                 0, # slice Y
                 self.ptr.height,
