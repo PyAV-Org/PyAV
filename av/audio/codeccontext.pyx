@@ -11,7 +11,7 @@ from av.utils cimport err_check
 cdef class AudioCodecContext(CodecContext):
 
 
-    cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)
 
         # Sometimes there isn't a layout set, but there are a number of

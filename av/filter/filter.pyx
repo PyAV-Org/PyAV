@@ -90,7 +90,7 @@ cdef class Filter(object):
 
 
 filters_available = set()
-cdef lib.AVFilter *ptr = lib.avfilter_next(NULL)
+cdef const lib.AVFilter *ptr = lib.avfilter_next(NULL)
 while ptr:
     filters_available.add(ptr.name)
     ptr = lib.avfilter_next(ptr)

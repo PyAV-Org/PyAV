@@ -170,7 +170,7 @@ cdef class VideoFormatComponent(object):
 
 
 names = set()
-cdef lib.AVPixFmtDescriptor *desc = NULL
+cdef const lib.AVPixFmtDescriptor *desc = NULL
 while True:
     desc = lib.av_pix_fmt_desc_next(desc)
     if not desc:
