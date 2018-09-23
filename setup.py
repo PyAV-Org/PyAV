@@ -291,7 +291,6 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
         if link:
             cc.link_executable(objects, exec_path,
                                libraries=libraries,
-                               include_dirs=include_dirs,
                                library_dirs=library_dirs,
                                runtime_library_dirs=runtime_library_dirs)
     except (CompileError, LinkError, TypeError):
@@ -543,6 +542,17 @@ class ReflectCommand(Command):
         config['libraries'] += self.libraries
         config['library_dirs'] += self.library_dirs
 
+        compile_options = dict(
+            includes=reflection_includes,
+            libraries=config['libraries'],
+            library_dirs=config['library_dirs'],
+            include_dirs=config['include_dirs'],
+            runtime_library_dirs=config['runtime_library_dirs'],
+            compiler=self.compiler,
+            force=self.force,
+            verbose=self.debug,
+        )
+
         # Check for some specific functions.
         for func_name in (
 
@@ -560,13 +570,8 @@ class ReflectCommand(Command):
             print("looking for %s... " % func_name, end='\n' if self.debug else '')
             results[func_name] = compile_check(
                 name=os.path.join(tmp_dir, func_name),
-                code='%s()' % func_name,
-                libraries=config['libraries'],
-                library_dirs=config['library_dirs'],
-                runtime_library_dirs=config['runtime_library_dirs'],
-                compiler=self.compiler,
-                force=self.force,
-                verbose=self.debug,
+                code='typedef void void_f(void); void_f *foo = *%s;' % func_name,
+                **compile_options
             )
             print('found' if results[func_name] else 'missing')
 
@@ -582,12 +587,8 @@ class ReflectCommand(Command):
             results[enum_name] = compile_check(
                 name=os.path.join(tmp_dir, enum_name),
                 code='int x = %s' % enum_name,
-                includes=reflection_includes,
-                include_dirs=config['include_dirs'],
                 link=False,
-                compiler=self.compiler,
-                force=self.force,
-                verbose=self.debug,
+                **compile_options
             )
             print("found" if results[enum_name] else "missing")
 
@@ -605,12 +606,8 @@ class ReflectCommand(Command):
             results[name] = compile_check(
                 name=os.path.join(tmp_dir, name),
                 code='struct %s x; x.%s;' % (struct_name, member_name),
-                includes=reflection_includes,
-                include_dirs=config['include_dirs'],
                 link=False,
-                compiler=self.compiler,
-                force=self.force,
-                verbose=self.debug,
+                **compile_options
             )
             print('found' if results[name] else 'missing')
 
