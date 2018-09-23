@@ -169,9 +169,10 @@ cdef class Graph(object):
         if channels is None:
             raise ValueError('missing channels')
 
-        args = "sample_rate=%d:sample_fmt=%s:channel_layout=%s:time_base=%d/%d" % (
+        args = "sample_rate=%d:sample_fmt=%s:channel_layout=%s:channels=%d:time_base=%d/%d" % (
             sample_rate, AudioFormat(format).name,
             layout,
+            channels,
             1, 1000,
         )
 
