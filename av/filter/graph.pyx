@@ -1,10 +1,14 @@
-from libc.string cimport memcpy
+from fractions import Fraction
 
+from av.audio.format cimport AudioFormat
+from av.audio.frame cimport AudioFrame
+from av.audio.layout cimport AudioLayout
 from av.error cimport err_check
 from av.filter.context cimport FilterContext, wrap_filter_context
 from av.filter.filter cimport Filter, wrap_filter
 from av.video.format cimport VideoFormat
-from av.video.frame cimport VideoFrame, alloc_video_frame
+from av.video.frame cimport VideoFrame
+
 
 cdef class Graph(object):
 
@@ -143,12 +147,53 @@ cdef class Graph(object):
 
         return self.add('buffer', args, name=name)
 
+    def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None, time_base=None):
+        """
+        Convenience method for adding `abuffer <https://ffmpeg.org/ffmpeg-filters.html#abuffer>`_.
+        """
+
+        if template is not None:
+            if sample_rate is None:
+                sample_rate = template.sample_rate
+            if format is None:
+                format = template.format
+            if layout is None:
+                layout = template.layout.name
+            if channels is None:
+                channels = template.channels
+            if time_base is None:
+                time_base = Fraction(template.time_base.numerator, template.time_base.denominator)
+
+        if sample_rate is None:
+            raise ValueError('missing sample_rate')
+        if format is None:
+            raise ValueError('missing format')
+        if layout is None and channels is None:
+            raise ValueError('missing layout or channels')
+        if time_base is None:
+            time_base = Fraction(1, sample_rate)
+
+        args = "sample_rate=%d:sample_fmt=%s:time_base=%d/%d" % (sample_rate,
+                                                                 AudioFormat(format).name,
+                                                                 time_base.numerator,
+                                                                 time_base.denominator)
+        if layout:
+            # Use AudioLayout constructor to handle AudioLayout, numerical and string layout descriptors
+            # see av/audio/layout.pyx
+            args += ":channel_layout=" + AudioLayout(layout).name
+        if channels:
+            args += ":channels=" + str(channels)
+
+        return self.add('abuffer', args, name=name)
+
     def push(self, frame):
 
         if isinstance(frame, VideoFrame):
             contexts = self._context_by_type.get('buffer', [])
+        elif isinstance(frame, AudioFrame):
+            contexts = self._context_by_type.get('abuffer', [])
         else:
-            raise ValueError('can only push VideoFrame', type(frame))
+            raise ValueError('can only push VideoFrame or AudioFrame', type(frame))
 
         if len(contexts) != 1:
             raise ValueError('can only auto-push with single buffer; found %s' % len(contexts))
