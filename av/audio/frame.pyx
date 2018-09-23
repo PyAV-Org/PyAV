@@ -131,8 +131,16 @@ cdef class AudioFrame(Frame):
         # map avcodec type to numpy type
         try:
             dtype = np.dtype({
+                'u8'  : 'u1',
+                'u8p' : 'u1',
+                's16' :'<i2',
                 's16p':'<i2',
+                's32' :'<i4',
+                's32p':'<i4',
+                'flt' :'<f4',
                 'fltp':'<f4',
+                'dbl' :'<f8',
+                'dblp':'<f8'
             }[self.format.name])
         except:
             raise AssertionError("Don't know how to convert data type.", self.format.name)
