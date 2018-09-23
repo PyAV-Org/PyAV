@@ -5,6 +5,8 @@ from av.filter.filter cimport Filter, wrap_filter
 from av.utils cimport err_check
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.format cimport VideoFormat
+from av.audio.frame cimport AudioFrame, alloc_audio_frame
+from av.audio.format cimport AudioFormat
 
 cdef class Graph(object):
 
@@ -143,10 +145,45 @@ cdef class Graph(object):
 
         return self.add('buffer', args, name=name)
 
+    def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None):
+        """
+        Convenient method for adding `abuffer <https://ffmpeg.org/ffmpeg-filters.html#abuffer>`_.
+        """
+
+        if template is not None:
+            if sample_rate is None:
+                sample_rate = template.sample_rate
+            if format is None:
+                format = template.format
+            if layout is None:
+                layout = template.layout.name
+            if channels is None:
+                channels = template.channels
+
+        if sample_rate is None:
+            raise ValueError('missing sample_rate')
+        if format is None:
+            raise ValueError('missing format')
+        if layout is None:
+            raise ValueError('missing layout')
+        if channels is None:
+            raise ValueError('missing channels')
+
+        args = "sample_rate=%d:sample_fmt=%s:channel_layout=%s:time_base=%d/%d" % (
+            sample_rate, AudioFormat(format).name,
+            layout,
+            1, 1000,
+        )
+
+        return self.add('abuffer', args, name=name)
+
+
     def push(self, frame):
 
         if isinstance(frame, VideoFrame):
             contexts = self._context_by_type.get('buffer', [])
+        if isinstance(frame, AudioFrame):
+            contexts = self._context_by_type.get('abuffer', [])
         else:
             raise ValueError('can only push VideoFrame', type(frame))
 
