@@ -69,38 +69,6 @@ cdef class Packet(Buffer):
         # copy.struct.data = NULL
         return copy
 
-    cdef _rebase_time(self, lib.AVRational dst):
-
-        if not dst.num:
-            raise ValueError('Cannot rebase to zero time.')
-
-        if not self._time_base.num:
-            self._time_base = dst
-            return
-
-        if self._time_base.num == dst.num and self._time_base.den == dst.den:
-            return
-
-        # TODO: Isn't there a function to do this?
-
-        if self.struct.pts != lib.AV_NOPTS_VALUE:
-            self.struct.pts = lib.av_rescale_q(
-                self.struct.pts,
-                self._time_base, dst
-            )
-        if self.struct.dts != lib.AV_NOPTS_VALUE:
-            self.struct.dts = lib.av_rescale_q(
-                self.struct.dts,
-                self._time_base, dst
-            )
-        if self.struct.duration > 0:
-            self.struct.duration = lib.av_rescale_q(
-                self.struct.duration,
-                self._time_base, dst
-            )
-
-        self._time_base = dst
-
     def decode(self, count=0):
         """Decode the data in this packet into a list of Frames."""
         return self._stream.decode(self, count)
@@ -121,14 +89,7 @@ cdef class Packet(Buffer):
             return self._stream
         def __set__(self, Stream stream):
             self._stream = stream
-            #self._rebase_time(stream._stream.time_base)
             self.struct.stream_index = stream._stream.index
-
-    property time_base:
-        def __get__(self):
-            return avrational_to_fraction(&self._time_base)
-        def __set__(self, value):
-            to_avrational(value, &self._time_base)
 
     property pts:
         def __get__(self):

@@ -334,7 +334,6 @@ cdef class CodecContext(object):
         ):
             for frame in frames:
                 for packet in self._send_frame_and_recv(frame):
-                    self._setup_encoded_packet(packet, frame)
                     res.append(packet)
             return res
 
@@ -342,29 +341,16 @@ cdef class CodecContext(object):
         for frame in frames:
             packet = self._encode(frame)
             if packet:
-                self._setup_encoded_packet(packet, frame)
                 res.append(packet)
 
         while is_flushing and (not count or count > len(res)):
             packet = self._encode(None)
             if packet:
-                self._setup_encoded_packet(packet, frame)
                 res.append(packet)
             else:
                 break
 
         return res
-
-    cdef _setup_encoded_packet(self, Packet packet, Frame frame):
-        # FFmpeg copied the packet's pts/dts from the source frame.
-        # PyAV is passing `time_base`s around.
-        # The PyAV muxer will take care of rebasing time if it needs to.
-        # There isn't a lot we can actually take from the `frame` here as
-        # they may be offset, but time_base should be consistent.
-        if frame._time_base.num:
-            packet._time_base = frame._time_base
-        else:
-            packet._time_base = self.ptr.time_base
 
     cdef _encode(self, Frame frame):
         raise NotImplementedError('Base CodecContext cannot encode frames.')
@@ -452,11 +438,6 @@ cdef class CodecContext(object):
         # TODO: Look into deprecation of pkt_pts in FFmpeg > 3.0
         if frame.ptr.pts == lib.AV_NOPTS_VALUE:
             frame.ptr.pts = frame.ptr.pkt_pts
-
-        # Propigate our manual times.
-        # While decoding, frame times are in stream time_base, which PyAV
-        # is carrying around.
-        frame._time_base = packet._time_base
 
         frame.index = self.ptr.frame_number - 1
 

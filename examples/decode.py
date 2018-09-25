@@ -94,7 +94,7 @@ frame_count = 0
 for i, packet in enumerate(container.demux(streams)):
 
     print('%02d %r' % (i, packet))
-    print('\ttime_base: %s' % packet.time_base)
+    print('\ttime_base: %s' % packet.stream.time_base)
     print('\tduration: %s' % format_time(packet.duration, packet.stream.time_base))
     print('\tpts: %s' % format_time(packet.pts, packet.stream.time_base))
     print('\tdts: %s' % format_time(packet.dts, packet.stream.time_base))

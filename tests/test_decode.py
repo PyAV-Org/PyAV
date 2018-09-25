@@ -46,6 +46,5 @@ class TestDecode(TestCase):
 
         for packet in container.demux(stream):
             for frame in packet.decode():
-                self.assertEqual(packet.time_base, frame.time_base)
                 self.assertEqual(stream.time_base, frame.time_base)
                 return
