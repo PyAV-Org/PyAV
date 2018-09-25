@@ -72,10 +72,6 @@ cdef class OutputContainer(Container):
         lib.avcodec_get_context_defaults3(stream.codec, codec)
         stream.codec.codec = codec # Still have to manually set this though...
 
-        # Construct the user-land stream so we have access to CodecContext.
-        cdef Stream py_stream = wrap_stream(self, stream)
-        self.streams.add_stream(py_stream)
-
         # Copy from the template.
         if template is not None:
             lib.avcodec_copy_context(codec_context, template._codec_context)
@@ -110,6 +106,10 @@ cdef class OutputContainer(Container):
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+        # Construct the user-land stream
+        cdef Stream py_stream = wrap_stream(self, stream)
+        self.streams.add_stream(py_stream)
 
         if options:
             py_stream.options.update(options)
