@@ -123,3 +123,22 @@ class TestVideoFrameTiming(TestCase):
         frame = frame.reformat(320, 240)
         self.assertEqual(frame.pts, 123)
         self.assertEqual(frame.time_base, 456)
+
+
+class TestVideoFrameReformat(TestCase):
+
+    def test_reformat_identity(self):
+        frame1 = VideoFrame(640, 480, 'rgb24')
+        frame2 = frame1.reformat(640, 480, 'rgb24')
+        self.assertIs(frame1, frame2)
+
+    def test_reformat_colourspace(self):
+
+        # This is allowed.
+        frame = VideoFrame(640, 480, 'rgb24')
+        frame2 = frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
+
+        # I thought this was not allowed, but it seems to be.
+        frame = VideoFrame(640, 480, 'yuv420p')
+        frame2 = frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
+

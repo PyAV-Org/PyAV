@@ -175,28 +175,48 @@ cdef class VideoFrame(Frame):
                 NULL
             )
 
+        # We want to change the colorspace transforms. We do that by grabbing
+        # all of the current settings, changing a couple, and setting them all.
+        # We need a lot of state here.
         cdef const int *inv_tbl
         cdef const int *tbl
-        cdef int srcRange, dstRange, brightness, contrast, saturation
+        cdef int src_range, dst_range, brightness, contrast, saturation
         cdef int ret
-        with nogil:
-            # Casts for const-ness, because Cython isn't expressive enough.
-            ret = lib.sws_getColorspaceDetails(
-                self.reformatter.ptr,
-                <int**>&inv_tbl,
-                &srcRange,
-                <int**>&tbl,
-                &dstRange,
-                &brightness,
-                &contrast,
-                &saturation
-            )
-            if not ret < 0:
+        if src_colorspace != dst_colorspace:
+
+            with nogil:
+
+                # Casts for const-ness, because Cython isn't expressive enough.
+                ret = lib.sws_getColorspaceDetails(
+                    self.reformatter.ptr,
+                    <int**>&inv_tbl,
+                    &src_range,
+                    <int**>&tbl,
+                    &dst_range,
+                    &brightness,
+                    &contrast,
+                    &saturation
+                )
+
+            # I don't think this one can actually come up.
+            if ret < 0:
+                raise ValueError("Can't get colorspace of current format.")
+
+            with nogil:
+
+                # Grab the coefficients for the requested transforms.
+                # The inv_table brings us to linear, and `tbl` to the new space.
                 if src_colorspace != lib.SWS_CS_DEFAULT:
                     inv_tbl = lib.sws_getCoefficients(src_colorspace)
                 if dst_colorspace != lib.SWS_CS_DEFAULT:
                     tbl = lib.sws_getCoefficients(dst_colorspace)
-                lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
+
+                # Apply!
+                ret = lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, src_range, tbl, dst_range, brightness, contrast, saturation)
+
+            # This one can come up, but I'm not really sure in what scenarios.
+            if ret < 0:
+                raise ValueError("Can't set colorspace of current format.")
 
         # Create a new VideoFrame.
         cdef VideoFrame frame = alloc_video_frame()
