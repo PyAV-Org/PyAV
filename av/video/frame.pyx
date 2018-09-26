@@ -1,3 +1,5 @@
+from libc.stdint cimport uint8_t
+
 from av.bytesource cimport ByteSource, bytesource
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
@@ -173,13 +175,22 @@ cdef class VideoFrame(Frame):
                 NULL
             )
 
-        cdef int *inv_tbl
-        cdef int *tbl
-        cdef int *rgbTbl
+        cdef const int *inv_tbl
+        cdef const int *tbl
         cdef int srcRange, dstRange, brightness, contrast, saturation
         cdef int ret
         with nogil:
-            ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
+            # Casts for const-ness, because Cython isn't expressive enough.
+            ret = lib.sws_getColorspaceDetails(
+                self.reformatter.ptr,
+                <int**>&inv_tbl,
+                &srcRange,
+                <int**>&tbl,
+                &dstRange,
+                &brightness,
+                &contrast,
+                &saturation
+            )
             if not ret < 0:
                 if src_colorspace != lib.SWS_CS_DEFAULT:
                     inv_tbl = lib.sws_getCoefficients(src_colorspace)
@@ -196,7 +207,8 @@ cdef class VideoFrame(Frame):
         with nogil:
             lib.sws_scale(
                 self.reformatter.ptr,
-                self.ptr.data,
+                # Cast for const-ness, because Cython isn't expressive enough.
+                <const uint8_t**>self.ptr.data,
                 self.ptr.linesize,
                 0, # slice Y
                 self.ptr.height,

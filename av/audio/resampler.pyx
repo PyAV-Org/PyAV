@@ -1,4 +1,4 @@
-from libc.stdint cimport uint64_t
+from libc.stdint cimport uint64_t, uint8_t
 
 cimport libav as lib
 
@@ -165,7 +165,8 @@ cdef class AudioResampler(object):
             self.ptr,
             output.ptr.extended_data,
             output_nb_samples,
-            frame.ptr.extended_data if frame else NULL,
+            # Cast for const-ness, because Cython isn't expressive enough.
+            <const uint8_t**>(frame.ptr.extended_data if frame else NULL),
             frame.ptr.nb_samples if frame else 0
         ))
 
