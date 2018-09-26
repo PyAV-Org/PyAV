@@ -165,6 +165,7 @@ cdef class AudioResampler(object):
             self.ptr,
             output.ptr.extended_data,
             output_nb_samples,
+            # Cast for const-ness, because Cython isn't expressive enough.
             <const uint8_t**>(frame.ptr.extended_data if frame else NULL),
             frame.ptr.nb_samples if frame else 0
         ))

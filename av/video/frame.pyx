@@ -180,9 +180,17 @@ cdef class VideoFrame(Frame):
         cdef int srcRange, dstRange, brightness, contrast, saturation
         cdef int ret
         with nogil:
+            # Casts for const-ness, because Cython isn't expressive enough.
             ret = lib.sws_getColorspaceDetails(
-                self.reformatter.ptr, <int**>&inv_tbl, &srcRange, <int**>&tbl, &dstRange,
-                &brightness, &contrast, &saturation)
+                self.reformatter.ptr,
+                <int**>&inv_tbl,
+                &srcRange,
+                <int**>&tbl,
+                &dstRange,
+                &brightness,
+                &contrast,
+                &saturation
+            )
             if not ret < 0:
                 if src_colorspace != lib.SWS_CS_DEFAULT:
                     inv_tbl = lib.sws_getCoefficients(src_colorspace)
@@ -199,6 +207,7 @@ cdef class VideoFrame(Frame):
         with nogil:
             lib.sws_scale(
                 self.reformatter.ptr,
+                # Cast for const-ness, because Cython isn't expressive enough.
                 <const uint8_t**>self.ptr.data,
                 self.ptr.linesize,
                 0, # slice Y
