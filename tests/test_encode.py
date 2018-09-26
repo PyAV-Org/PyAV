@@ -122,8 +122,32 @@ class TestBasicAudioEncoding(TestCase):
 
 class TestEncodeStreamSemantics(TestCase):
 
-    def test_stream_index(self):
+    def test_audio_default_options(self):
+        output = av.open(self.sandboxed('output.mov'), 'w')
 
+        stream = output.add_stream('mp2')
+        self.assertEqual(stream.bit_rate, 128000)
+        self.assertEqual(stream.format.name, 's16')
+        self.assertEqual(stream.rate, 48000)
+        self.assertEqual(stream.ticks_per_frame, 1)
+        self.assertEqual(stream.time_base, None)
+
+    def test_video_default_options(self):
+        output = av.open(self.sandboxed('output.mov'), 'w')
+
+        stream = output.add_stream('mpeg4')
+        self.assertEqual(stream.bit_rate, 1024000)
+        self.assertEqual(stream.format.height, 480)
+        self.assertEqual(stream.format.name, 'yuv420p')
+        self.assertEqual(stream.format.width, 640)
+        self.assertEqual(stream.height, 480)
+        self.assertEqual(stream.pix_fmt, 'yuv420p')
+        self.assertEqual(stream.rate, Fraction(24, 1))
+        self.assertEqual(stream.ticks_per_frame, 1)
+        self.assertEqual(stream.time_base, None)
+        self.assertEqual(stream.width, 640)
+
+    def test_stream_index(self):
         output = av.open(self.sandboxed('output.mov'), 'w')
 
         vstream = output.add_stream('mpeg4', 24)
