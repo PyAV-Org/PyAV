@@ -132,10 +132,7 @@ cdef class VideoCodecContext(CodecContext):
 
 
     cdef _build_format(self):
-        if self.ptr:
-            self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
-        else:
-            self._format = None
+        self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
 
     property format:
         def __get__(self):
@@ -148,14 +145,14 @@ cdef class VideoCodecContext(CodecContext):
 
     property width:
         def __get__(self):
-            return self.ptr.width if self.ptr else None
+            return self.ptr.width
         def __set__(self, unsigned int value):
             self.ptr.width = value
             self._build_format()
 
     property height:
         def __get__(self):
-            return self.ptr.height if self.ptr else None
+            return self.ptr.height
         def __set__(self, unsigned int value):
             self.ptr.height = value
             self._build_format()
@@ -183,13 +180,13 @@ cdef class VideoCodecContext(CodecContext):
 
     property gop_size:
         def __get__(self):
-            return self.ptr.gop_size if self.ptr else None
+            return self.ptr.gop_size
         def __set__(self, int value):
             self.ptr.gop_size = value
 
     property sample_aspect_ratio:
         def __get__(self):
-            return avrational_to_fraction(&self.ptr.sample_aspect_ratio) if self.ptr else None
+            return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
         def __set__(self, value):
             to_avrational(value, &self.ptr.sample_aspect_ratio)
 
@@ -206,14 +203,12 @@ cdef class VideoCodecContext(CodecContext):
 
     property has_b_frames:
         def __get__(self):
-            if self.ptr.has_b_frames:
-                return True
-            return False
+            return bool(self.ptr.has_b_frames)
 
     property coded_width:
         def __get__(self):
-            return self.ptr.coded_width if self.ptr else None
+            return self.ptr.coded_width
 
     property coded_height:
         def __get__(self):
-            return self.ptr.coded_height if self.ptr else None
+            return self.ptr.coded_height
