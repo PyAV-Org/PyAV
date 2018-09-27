@@ -356,15 +356,14 @@ cdef class CodecContext(object):
         return res
 
     cdef _setup_encoded_packet(self, Packet packet, Frame frame):
-        # FFmpeg copied the packet's pts/dts from the source frame.
-        # PyAV is passing `time_base`s around.
-        # The PyAV muxer will take care of rebasing time if it needs to.
-        # There isn't a lot we can actually take from the `frame` here as
-        # they may be offset, but time_base should be consistent.
-        if frame._time_base.num:
-            packet._time_base = frame._time_base
-        else:
-            packet._time_base = self.ptr.time_base
+        # We coerced the frame's time_base into the CodecContext's during encoding,
+        # and FFmpeg copied the frame's pts/dts to the packet, so keep track of
+        # this time_base in case the frame needs to be muxed to a container with
+        # a different time_base.
+        #
+        # NOTE: if the CodecContext's time_base is altered during encoding, all bets
+        # are off!
+        packet._time_base = self.ptr.time_base
 
     cdef _encode(self, Frame frame):
         raise NotImplementedError('Base CodecContext cannot encode frames.')
