@@ -16,6 +16,7 @@ addons:
             - libtheora-dev
             - libtool
             - libvorbis-dev
+            - libx264-dev
             - mercurial
             - pkg-config
             - texinfo
