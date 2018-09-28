@@ -74,6 +74,31 @@ class TestBasicVideoEncoding(TestCase):
         write_rgb_rotate(output)
         assert_rgb_rotate(self, av.open(path))
 
+    def test_encoding_with_pts(self):
+
+        path = self.sandboxed('video_with_pts.mov')
+        output = av.open(path, 'w')
+
+        stream = output.add_stream('libx264', 24)
+        stream.width = WIDTH
+        stream.height = HEIGHT
+        stream.pix_fmt = "yuv420p"
+
+        for i in range(DURATION):
+            frame = VideoFrame(WIDTH, HEIGHT, 'rgb24')
+            frame.pts = i * 2000
+            frame.time_base = Fraction(1, 48000)
+
+            for packet in stream.encode(frame):
+                self.assertEqual(packet.time_base, Fraction(1, 24))
+                output.mux(packet)
+
+        for packet in stream.encode(None):
+            self.assertEqual(packet.time_base, Fraction(1, 24))
+            output.mux(packet)
+
+        output.close()
+
 
 class TestBasicAudioEncoding(TestCase):
 
