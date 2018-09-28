@@ -45,9 +45,6 @@ matrix:
           env: LIBRARY=ffmpeg-3.2
           os: linux
 
-        # We are still working on this.
-        - os: osx
-
     include:
 
         # Primary targets.
@@ -67,7 +64,14 @@ matrix:
           os: linux
 
         # Mac OS X.
-        - env: LIBRARY=ffmpeg-3.2
+        - language: generic
+          env: LIBRARY=ffmpeg-4.0
+          os: osx
+        - language: generic
+          env: LIBRARY=ffmpeg-3.4
+          os: osx
+        - language: generic
+          env: LIBRARY=ffmpeg-3.2
           os: osx
 
         # PyPy
