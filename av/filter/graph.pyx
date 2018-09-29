@@ -1,12 +1,12 @@
 from libc.string cimport memcpy
 
+from av.audio.frame cimport AudioFrame, alloc_audio_frame
+from av.audio.format cimport AudioFormat
 from av.filter.context cimport FilterContext, wrap_filter_context
 from av.filter.filter cimport Filter, wrap_filter
 from av.utils cimport err_check
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.format cimport VideoFormat
-from av.audio.frame cimport AudioFrame, alloc_audio_frame
-from av.audio.format cimport AudioFormat
 
 cdef class Graph(object):
 
