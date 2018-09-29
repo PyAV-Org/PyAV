@@ -36,65 +36,104 @@ matrix:
     # emails as the sub-jobs finish when `fast_finish` is enabled.
     #fast_finish: true
 
-    allow_failures:
-
-        # PyPy doesn't pass recently, and I don't think it is our fault.
-        - python: "pypy"
-          env: LIBRARY=ffmpeg-3.2
-          os: linux
-        - python: "pypy3"
-          env: LIBRARY=ffmpeg-3.2
-          os: linux
-
-        # We are still working on this.
-        - os: osx
-
     include:
 
-        # Primary targets.
-        - python: "3.6"
-          env: LIBRARY=ffmpeg-3.3
-          os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-3.3
-          os: linux
+        # Our primary targets are:
+        # - Python 3.6 and 2.7;
+        # - FFmpeg 4.0, 3.4, 3.3, and 3.2 (i.e. major versions > 3.0 on the
+        #   FFmpeg download page).
 
-        # Latest libraries.
+        # Python 3.6.
         - python: "3.6"
           env: LIBRARY=ffmpeg-4.0
           os: linux
         - python: "3.6"
           env: LIBRARY=ffmpeg-3.4
           os: linux
+        - python: "3.6"
+          env: LIBRARY=ffmpeg-3.3
+          os: linux
+        - python: "3.6"
+          env: LIBRARY=ffmpeg-3.2
+          os: linux
 
-        # Mac OS X.
-        - env: LIBRARY=ffmpeg-3.2
+        # Python 2.7.
+        - python: "2.7"
+          env: LIBRARY=ffmpeg-4.0
+          os: linux
+        - python: "2.7"
+          env: LIBRARY=ffmpeg-3.4
+          os: linux
+        - python: "2.7"
+          env: LIBRARY=ffmpeg-3.3
+          os: linux
+        - python: "2.7"
+          env: LIBRARY=ffmpeg-3.2
+          os: linux
+
+        # Mac OS X (python3.6)
+        - language: generic
+          env: LIBRARY=ffmpeg-4.0
+          os: osx
+        - language: generic
+          env: LIBRARY=ffmpeg-3.4
+          os: osx
+        - language: generic
+          env: LIBRARY=ffmpeg-3.3
+          os: osx
+        - language: generic
+          env: LIBRARY=ffmpeg-3.2
           os: osx
 
         # PyPy
+        # These are known to be broken.
         - python: "pypy"
-          env: LIBRARY=ffmpeg-3.2
+          env: LIBRARY=ffmpeg-4.0
           os: linux
         - python: "pypy3"
-          env: LIBRARY=ffmpeg-3.2
+          env: LIBRARY=ffmpeg-4.0
           os: linux
 
-        # Older Pythons.
+        # Newer Python 3.
+        - python: "3.7"
+          # Must force Ubuntu 16.04 LTS.
+          # By default Travis is running 14.04.
+          dist: xenial
+          sudo: true
+          env: LIBRARY=ffmpeg-4.0
+          os: linux
+
+        # Older Python 3.
         - python: "3.5"
-          env: LIBRARY=ffmpeg-3.2
+          env: LIBRARY=ffmpeg-4.0
           os: linux
         - python: "3.4"
-          env: LIBRARY=ffmpeg-3.2
+          env: LIBRARY=ffmpeg-4.0
           os: linux
 
-        # Older libraries.
+        # Older FFmpeg.
+        # These are set to be deprecated in the next major release.
+        - python: "3.6"
+          env: LIBRARY=ffmpeg-3.1
+          os: linux
+        - python: "3.6"
+          env: LIBRARY=ffmpeg-3.0
+          os: linux
         - python: "2.7"
-          env: LIBRARY=ffmpeg-3.2
+          env: LIBRARY=ffmpeg-3.1
           os: linux
         - python: "2.7"
           env: LIBRARY=ffmpeg-3.0
           os: linux
 
+    allow_failures:
+
+        - python: "pypy"
+          env: LIBRARY=ffmpeg-4.0
+          os: linux
+        - python: "pypy3"
+          env: LIBRARY=ffmpeg-4.0
+          os: linux
 
 
 before_install:
