@@ -289,9 +289,7 @@ def compile_check(code, name, includes=None, include_dirs=None, libraries=None,
     try:
         objects = cc.compile([source_path], include_dirs=include_dirs)
         if link:
-            cc.link_executable(objects, exec_path,
-                               libraries=libraries,
-                               library_dirs=library_dirs,
+            cc.link_executable(objects, exec_path, libraries=libraries, library_dirs=library_dirs,
                                runtime_library_dirs=runtime_library_dirs)
     except (CompileError, LinkError, TypeError):
         res = False
