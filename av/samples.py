@@ -12,10 +12,16 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def default_data_dir():
+def iter_data_dirs(check_writable=False):
+
+    try:
+        yield os.environ['PYAV_DATA_DIR']
+    except KeyError:
+        pass
 
     if os.name == 'nt':
-        return os.path.join(sys.prefix, 'pyav', 'samples')
+        yield os.path.join(sys.prefix, 'pyav', 'samples')
+        return
 
     bases = [
         '/usr/local/share',
@@ -23,43 +29,53 @@ def default_data_dir():
         '/usr/share',
         '/usr/lib',
     ]
-    bases = []
-    if hasattr(sys.real_prefix):
+
+    # Prefer the local virtualenv.
+    if hasattr(sys, 'real_prefix'):
         bases.insert(0, sys.prefix)
+
     for base in bases:
         dir_ = os.path.join(base, 'pyav', 'samples')
-        if os.path.exists(dir_):
-            if os.access(dir_, os.W_OK):
-                return dir_
-        else:
-            if os.access(base, os.W_OK):
-                return dir_
+        if check_writable:
+            if os.path.exists(dir_):
+                if not os.access(dir_, os.W_OK):
+                    continue
+            else:
+                if not os.access(base, os.W_OK):
+                    continue
+        yield dir_
 
-    return os.path.join(os.path.expanduser('~'), '.pyav', 'samples')
-
-
-def get_data_dir():
-
-    try:
-        return os.environ['PYAV_DATA_DIR']
-    except KeyError:
-        return default_data_dir()
+    yield os.path.join(os.path.expanduser('~'), '.pyav', 'samples')
 
 
 def fate_suite(name):
     """Download and return a path to a sample from the FFmpeg test suite.
+    
+    The samples are stored under `pyav/samples/fate-suite` in the path indicated
+    by :envvar:`PYAV_DATA_DIR`, or the first that is writeable of:
+
+    - the current virtualenv
+    - ``/usr/local/share``
+    - ``/usr/local/lib``
+    - ``/usr/share``
+    - ``/usr/lib``
+    - the user's home
 
     See the `FFmpeg Automated Test Environment <https://www.ffmpeg.org/fate.html>`_
 
     """
-    
+
     clean_name = os.path.normpath(name)
     if clean_name != name:
         raise ValueError("{} is not normalized.".format(name))
 
-    path = os.path.join(get_data_dir(), 'fate-suite', name)
-    if os.path.exists(path):
-        return path
+    for dir_ in iter_data_dirs():
+        path = os.path.join(dir_, 'fate-suite', name)
+        if os.path.exists(path):
+            return path
+
+    dir_ = next(iter_data_dirs(True))
+    path = os.path.join(dir_, 'fate-suite', name)
 
     url = 'http://fate.ffmpeg.org/fate-suite/' + name
 
