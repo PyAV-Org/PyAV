@@ -27,6 +27,7 @@ from av.stream import Stream
 from av.utils import AVError
 from av.video import VideoFrame
 from av.audio import AudioFrame
+from av.samples import fate_suite
 
 
 is_py3 = sys.version_info[0] > 2
@@ -36,20 +37,7 @@ if not is_py3:
     from itertools import izip as zip
 
 
-def fate_suite(name):
-    fate_dir = os.path.abspath(os.path.join(
-        __file__, '..',
-        'assets', 'fate-suite',
-    ))
-    path = os.path.join(fate_dir, name)
-    if not os.path.exists(path):
-        makedirs(os.path.dirname(path))
-        url = 'http://fate.ffmpeg.org/fate-suite/' + name
-        check_call(['curl', '-o', path, url])
-    return path
 
-def fate_png():
-    return fate_suite('png1/55c99e750a5fd6_50314226.png')
 
 
 def makedirs(path):
@@ -81,6 +69,13 @@ def _sandbox(timed=False):
 def asset(*args):
     adir = os.path.dirname(__file__)
     return os.path.abspath(os.path.join(adir, 'assets', *args))
+
+
+# Store all of the sample data here.
+os.environ['PYAV_DATA_DIR'] = asset()
+
+def fate_png():
+    return fate_suite('png1/55c99e750a5fd6_50314226.png')
 
 
 def sandboxed(*args, **kwargs):
