@@ -20,6 +20,24 @@ def rm(*args):
     subprocess.check_call(('git', 'branch', '-D') + args)
 
 
+# Clean up everything that was merged
+for line in subprocess.check_output(['git', 'branch', '--merged']).decode().splitlines():
+    name = line.strip().split()[-1]
+    if not name:
+        continue
+    if name in ('develop', 'master'):
+        continue
+    rm(name)
+
+for line in subprocess.check_output(['git', 'branch', '-r', '--merged']).decode().splitlines():
+    name = line.strip().split()[-1]
+    if not name:
+        continue
+    if name.split('/', 1)[-1] in ('develop', 'master'):
+        continue
+    rm('-r', name)
+
+
 our_branches = get_branches()
 for name, hash_ in get_branches('-r').items():
     if name.startswith('origin/'):
