@@ -29,9 +29,12 @@ cdef class EnumType(type):
 
     cdef _create(self, name, value, by_value_only=False):
 
-        item = self(sentinel, name, value)
-
-        self._by_value[value] = item
+        # We only have one instance per value.
+        try:
+            item = self._by_value[value]
+        except KeyError:
+            item = self(sentinel, name, value)
+            self._by_value[value] = item
 
         if not by_value_only:
             setattr(self, name, item)
