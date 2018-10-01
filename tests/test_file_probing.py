@@ -36,6 +36,7 @@ class TestAudioProbe(TestCase):
         self.assertEqual(stream.long_name, 'AAC LATM (Advanced Audio Coding LATM syntax)')
         self.assertEqual(stream.bit_rate, None)
         self.assertEqual(stream.max_bit_rate, None)
+        self.assertEqual(stream.min_bit_rate, None)
         self.assertEqual(stream.channels, 2)
         self.assertEqual(stream.layout.name, 'stereo')
         self.assertEqual(stream.rate, 48000)
@@ -72,13 +73,9 @@ class TestVideoProbe(TestCase):
         self.assertEqual(stream.long_name, 'MPEG-2 video')
         self.assertEqual(stream.profile, 'Simple')
 
-        # Libav is able to return a bit-rate for this file, but ffmpeg doesn't,
-        # so have to rely on rc_max_rate.
-        try:
-            self.assertEqual(stream.bit_rate, None)
-            self.assertEqual(stream.max_bit_rate, 3364800)
-        except AssertionError:
-            self.assertEqual(stream.bit_rate, 3364800)
+        self.assertEqual(stream.bit_rate, 3364800)
+        self.assertEqual(stream.max_bit_rate, None)
+        self.assertEqual(stream.min_bit_rate, None)
 
         self.assertEqual(stream.sample_aspect_ratio, Fraction(16, 15))
         self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))

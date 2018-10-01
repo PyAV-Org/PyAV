@@ -50,6 +50,30 @@ class TestCodecContext(TestCase):
         ctx = Codec('png', 'w').create()
         self.assertEqual(ctx.skip_frame.name, 'DEFAULT')
 
+    def test_bit_rate(self):
+        ctx = Codec('mpeg4', 'w').create()
+        self.assertEqual(ctx.bit_rate, 200000)
+
+        # positive bit rate
+        ctx.bit_rate = 1000
+        self.assertEqual(ctx.bit_rate, 1000)
+
+        # None bit rate
+        ctx.bit_rate = None
+        self.assertEqual(ctx.bit_rate, None)
+
+        # zero bit rate
+        with self.assertRaises(ValueError) as cm:
+            ctx.bit_rate = 0
+        self.assertEqual(str(cm.exception), 'A positive integer or None is expected')
+        self.assertEqual(ctx.bit_rate, None)
+
+        # negative bit rate
+        with self.assertRaises(ValueError) as cm:
+            ctx.bit_rate = -1
+        self.assertEqual(str(cm.exception), 'A positive integer or None is expected')
+        self.assertEqual(ctx.bit_rate, None)
+
 
 class TestEncoding(TestCase):
 

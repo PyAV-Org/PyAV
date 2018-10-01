@@ -18,6 +18,20 @@ from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avra
 cdef object _cinit_sentinel = object()
 
 
+cdef int_to_positive_or_none(int value):
+    if value > 0:
+        return value
+
+
+cdef int_from_positive_or_none(value):
+    if value is None:
+        return 0
+    elif type(value) == int and value > 0:
+        return value
+    else:
+        raise ValueError('A positive integer or None is expected')
+
+
 cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, ContainerProxy container):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
@@ -487,18 +501,44 @@ cdef class CodecContext(object):
         def __get__(self):
             return self.ptr.ticks_per_frame
 
-    property bit_rate:
-        def __get__(self):
-            return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
-        def __set__(self, int value):
-            self.ptr.bit_rate = value
+    @property
+    def bit_rate(self):
+        """
+        Average bitrate, in bits per second.
 
-    property max_bit_rate:
-        def __get__(self):
-            if self.ptr.rc_max_rate > 0:
-                return self.ptr.rc_max_rate
-            else:
-                return None
+        Either a positive integer or None if unset.
+        """
+        return int_to_positive_or_none(self.ptr.bit_rate)
+
+    @bit_rate.setter
+    def bit_rate(self, value):
+        self.ptr.bit_rate = int_from_positive_or_none(value)
+
+    @property
+    def max_bit_rate(self):
+        """
+        Maximum bitrate, in bits per second.
+
+        Either a positive integer or None if unset.
+        """
+        return int_to_positive_or_none(self.ptr.rc_max_rate)
+
+    @max_bit_rate.setter
+    def max_bit_rate(self, value):
+        self.ptr.rc_max_rate = int_from_positive_or_none(value)
+
+    @property
+    def min_bit_rate(self):
+        """
+        Minimum bitrate, in bits per second.
+
+        Either a positive integer or None if unset.
+        """
+        return int_to_positive_or_none(self.ptr.rc_min_rate)
+
+    @min_bit_rate.setter
+    def min_bit_rate(self, value):
+        self.ptr.rc_min_rate = int_from_positive_or_none(value)
 
     property bit_rate_tolerance:
         def __get__(self):
