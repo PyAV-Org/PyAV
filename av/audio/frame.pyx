@@ -1,6 +1,7 @@
 from av.audio.format cimport get_audio_format
 from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
+from av.deprecation import renamed_attr
 from av.utils cimport err_check
 
 
@@ -120,7 +121,7 @@ cdef class AudioFrame(Frame):
         def __set__(self, value):
             self.ptr.sample_rate = value
 
-    def to_nd_array(self, **kwargs):
+    def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
         Any ``**kwargs`` are passed to :meth:`AudioFrame.reformat`.
         """
@@ -138,3 +139,5 @@ cdef class AudioFrame(Frame):
 
         # convert and return data
         return np.vstack(map(lambda x: np.frombuffer(x, dtype), self.planes))
+
+    to_nd_array = renamed_attr('to_ndarray')

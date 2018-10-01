@@ -1,4 +1,9 @@
-from .common import *
+import warnings
+
+from av import VideoFrame
+from av.deprecation import AttributeRenamedWarning
+
+from .common import fate_png, is_py3, Image, SkipTest, TestCase
 
 
 class TestVideoFrameConstructors(TestCase):
@@ -108,10 +113,23 @@ class TestVideoFrameTransforms(TestCase):
 
 class TestVideoFrameConveniences(TestCase):
 
+    def test_basic_to_ndarray(self):
+        frame = VideoFrame(640, 480, 'rgb24')
+        array = frame.to_ndarray()
+        self.assertEqual(array.shape, (480, 640, 3))
+
     def test_basic_to_nd_array(self):
         frame = VideoFrame(640, 480, 'rgb24')
-        array = frame.to_nd_array()
+        with warnings.catch_warnings(record=True) as recorded:
+            array = frame.to_nd_array()
         self.assertEqual(array.shape, (480, 640, 3))
+
+        # check deprecation warning
+        self.assertEqual(len(recorded), 1)
+        self.assertEqual(recorded[0].category, AttributeRenamedWarning)
+        self.assertEqual(
+            str(recorded[0].message),
+            'VideoFrame.to_nd_array is deprecated; please use VideoFrame.to_ndarray.')
 
 
 class TestVideoFrameTiming(TestCase):
@@ -141,4 +159,3 @@ class TestVideoFrameReformat(TestCase):
         # I thought this was not allowed, but it seems to be.
         frame = VideoFrame(640, 480, 'yuv420p')
         frame2 = frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
-
