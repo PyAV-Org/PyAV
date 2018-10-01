@@ -1,6 +1,7 @@
 from libc.stdint cimport uint8_t
 
 from av.bytesource cimport ByteSource, bytesource
+from av.enums cimport EnumType, define_enum
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.plane cimport VideoPlane
@@ -16,6 +17,35 @@ cdef VideoFrame alloc_video_frame():
 
     """
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
+
+
+cdef EnumType _PictureType = define_enum('PictureType', (
+
+    ('UNKNOWN', lib.AV_PICTURE_TYPE_NONE),
+    ('NONE', lib.AV_PICTURE_TYPE_NONE),
+
+    ('INTRA', lib.AV_PICTURE_TYPE_I),
+    ('I', lib.AV_PICTURE_TYPE_I),
+
+    ('PREDICTED', lib.AV_PICTURE_TYPE_P),
+    ('P', lib.AV_PICTURE_TYPE_P),
+
+    ('BIDIRECTIONAL', lib.AV_PICTURE_TYPE_B),
+    ('B', lib.AV_PICTURE_TYPE_B),
+
+    ('SGMC_VOP', lib.AV_PICTURE_TYPE_S), # I'm guessing at a good name here.
+    ('S', lib.AV_PICTURE_TYPE_S),
+
+    ('SWITCHING_INTRA', lib.AV_PICTURE_TYPE_SI),
+    ('SI', lib.AV_PICTURE_TYPE_SI),
+
+    ('SWITCHING_PREDICTED', lib.AV_PICTURE_TYPE_SP),
+    ('SP', lib.AV_PICTURE_TYPE_SP),
+
+    ('BI', lib.AV_PICTURE_TYPE_BI), # I don't have a name here.
+
+))
+PictureType = _PictureType
 
 
 cdef class VideoFrame(Frame):
@@ -253,6 +283,14 @@ cdef class VideoFrame(Frame):
     property interlaced_frame:
         """Is this frame an interlaced or progressive?"""
         def __get__(self): return self.ptr.interlaced_frame
+
+    @property
+    def pict_type(self):
+        return _PictureType.get(self.ptr.pict_type, create=True)
+
+    @pict_type.setter
+    def pict_type(self, value):
+        self.ptr.pict_type = _PictureType[value].value
 
     def to_rgb(self, **kwargs):
         """Get an RGB version of this frame.

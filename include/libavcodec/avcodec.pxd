@@ -229,6 +229,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
         int format # Should be AVPixelFormat or AVSampleFormat
         int key_frame # 0 or 1.
+        AVPictureType pict_type
 
         int interlaced_frame # 0 or 1.
 
