@@ -129,7 +129,15 @@ class TestEnums(TestCase):
         ))
 
         self.assertIs(cls.F, cls.FOO)
+
         self.assertEqual(cls.F.name, 'FOO')
+        self.assertNotEqual(cls.F.name, 'F') # This is actually the string.
+
+        self.assertEqual(cls.F, 'FOO')
+        self.assertEqual(cls.F, 'F')
+        self.assertNotEqual(cls.F, 'BAR')
+        self.assertNotEqual(cls.F, 'B')
+        self.assertRaises(ValueError, lambda: cls.F == 'x')
 
     def test_flag_basics(self):
 

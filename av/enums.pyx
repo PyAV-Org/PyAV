@@ -166,11 +166,16 @@ cdef class EnumItem(object):
     def __eq__(self, other):
 
         if isinstance(other, basestring):
-            if self.name == other:
+
+            if self.name == other: # The quick method.
                 return True
-            if other in (<EnumType>self.__class__)._by_name:
-                return False
-            raise ValueError("Name not in {}.".format(self.__class__.__name__), other)
+
+            try:
+                other_inst = (<EnumType>self.__class__)._by_name[other]
+            except KeyError:
+                raise ValueError("Name not in {}.".format(self.__class__.__name__), other)
+            else:
+                return self is other_inst
 
         if isinstance(other, int):
             if self.value == other:
