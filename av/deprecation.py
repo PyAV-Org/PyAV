@@ -11,29 +11,11 @@ class renamed_attr(object):
     Getting and setting values will be redirected to the provided name,
     and warnings will be issues every time.
 
-    E.g.::
-
-        >>> class Example(object):
-        ... 
-        ...     new_value = 'something'
-        ...     old_value = renamed_attr('new_value')
-        ...     
-        ...     def new_func(self, a, b):
-        ...         return a + b
-        ...         
-        ...     old_func = renamed_attr('new_func')
-        >>> e = Example()
-        >>> e.old_value = 'else'
-        # AttributeRenamedWarning: Example.old_value renamed to new_value
-        >>> e.old_func(1, 2)
-        # AttributeRenamedWarning: Example.old_func renamed to new_func
-        3
-    
     """
 
     def __init__(self, new_name):
         self.new_name = new_name
-        self._old_name = None # We haven't discovered it yet.
+        self._old_name = None
 
     def old_name(self, cls):
         if self._old_name is None:
