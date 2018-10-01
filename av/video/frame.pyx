@@ -19,33 +19,16 @@ cdef VideoFrame alloc_video_frame():
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
 
 
-cdef EnumType _PictureType = define_enum('PictureType', (
-
-    ('UNKNOWN', lib.AV_PICTURE_TYPE_NONE),
+cdef EnumType PictureType = define_enum('PictureType', (
     ('NONE', lib.AV_PICTURE_TYPE_NONE),
-
-    ('INTRA', lib.AV_PICTURE_TYPE_I),
     ('I', lib.AV_PICTURE_TYPE_I),
-
-    ('PREDICTED', lib.AV_PICTURE_TYPE_P),
     ('P', lib.AV_PICTURE_TYPE_P),
-
-    ('BIDIRECTIONAL', lib.AV_PICTURE_TYPE_B),
     ('B', lib.AV_PICTURE_TYPE_B),
-
-    ('SGMC_VOP', lib.AV_PICTURE_TYPE_S), # I'm guessing at a good name here.
     ('S', lib.AV_PICTURE_TYPE_S),
-
-    ('SWITCHING_INTRA', lib.AV_PICTURE_TYPE_SI),
     ('SI', lib.AV_PICTURE_TYPE_SI),
-
-    ('SWITCHING_PREDICTED', lib.AV_PICTURE_TYPE_SP),
     ('SP', lib.AV_PICTURE_TYPE_SP),
-
-    ('BI', lib.AV_PICTURE_TYPE_BI), # I don't have a name here.
-
+    ('BI', lib.AV_PICTURE_TYPE_BI),
 ))
-PictureType = _PictureType
 
 
 cdef class VideoFrame(Frame):
@@ -286,11 +269,11 @@ cdef class VideoFrame(Frame):
 
     @property
     def pict_type(self):
-        return _PictureType.get(self.ptr.pict_type, create=True)
+        return PictureType.get(self.ptr.pict_type, create=True)
 
     @pict_type.setter
     def pict_type(self, value):
-        self.ptr.pict_type = _PictureType[value].value
+        self.ptr.pict_type = PictureType[value].value
 
     def to_rgb(self, **kwargs):
         """Get an RGB version of this frame.
