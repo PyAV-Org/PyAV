@@ -1,6 +1,7 @@
 from libc.stdint cimport uint8_t
 
 from av.bytesource cimport ByteSource, bytesource
+from av.deprecation import renamed_attr
 from av.enums cimport EnumType, define_enum
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
@@ -298,7 +299,7 @@ cdef class VideoFrame(Frame):
         from PIL import Image
         return Image.frombuffer("RGB", (self.width, self.height), self.reformat(format="rgb24", **kwargs).planes[0], "raw", "RGB", 0, 1)
 
-    def to_nd_array(self, **kwargs):
+    def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
@@ -319,6 +320,8 @@ cdef class VideoFrame(Frame):
             return np.frombuffer(frame.planes[0], np.dtype('<u2')).reshape(frame.height, frame.width)
         else:
             raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
+
+    to_nd_array = renamed_attr('to_ndarray')
 
     def to_qimage(self, **kwargs):
         """Get an RGB ``QImage`` of this frame.

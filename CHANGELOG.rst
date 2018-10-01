@@ -6,6 +6,11 @@ we are using v0.x.y as our heavy development period, and will increment ``x``
 to signal a major change (i.e. backwards incompatibilities) and increment
 ``y`` as a minor change (i.e. backwards compatible features).
 
+v0.5.3
+------
+
+- Deprecate ``AudioFrame.to_nd_array()`` and ``VideoFrame.to_nd_array()`` in
+  favour of ``.to_ndarray()``.
 
 v0.5.2
 ------
