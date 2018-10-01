@@ -27,7 +27,7 @@ from av.stream import Stream
 from av.utils import AVError
 from av.video import VideoFrame
 from av.audio import AudioFrame
-from av.samples import fate_suite
+from av.testdata import fate_suite
 
 
 is_py3 = sys.version_info[0] > 2
@@ -72,7 +72,7 @@ def asset(*args):
 
 
 # Store all of the sample data here.
-os.environ['PYAV_DATA_DIR'] = asset()
+os.environ['PYAV_TESTDATA_DIR'] = asset()
 
 def fate_png():
     return fate_suite('png1/55c99e750a5fd6_50314226.png')

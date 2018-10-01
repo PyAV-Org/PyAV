@@ -203,9 +203,11 @@ doctest_global_setup = '''
 import errno
 import os
 
+from av.testdata import fate_suite
 import av
+
 from tests import common
-from tests.common import fate_suite, sandboxed as _sandboxed
+from tests.common import sandboxed as _sandboxed
 
 def sandboxed(*args, **kwargs):
     kwargs['timed'] = True

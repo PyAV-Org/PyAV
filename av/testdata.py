@@ -15,12 +15,12 @@ log = logging.getLogger(__name__)
 def iter_data_dirs(check_writable=False):
 
     try:
-        yield os.environ['PYAV_DATA_DIR']
+        yield os.environ['PYAV_TESTDATA_DIR']
     except KeyError:
         pass
 
     if os.name == 'nt':
-        yield os.path.join(sys.prefix, 'pyav', 'samples')
+        yield os.path.join(sys.prefix, 'pyav', 'testdata')
         return
 
     bases = [
@@ -35,7 +35,7 @@ def iter_data_dirs(check_writable=False):
         bases.insert(0, sys.prefix)
 
     for base in bases:
-        dir_ = os.path.join(base, 'pyav', 'samples')
+        dir_ = os.path.join(base, 'pyav', 'testdata')
         if check_writable:
             if os.path.exists(dir_):
                 if not os.access(dir_, os.W_OK):
@@ -45,14 +45,14 @@ def iter_data_dirs(check_writable=False):
                     continue
         yield dir_
 
-    yield os.path.join(os.path.expanduser('~'), '.pyav', 'samples')
+    yield os.path.join(os.path.expanduser('~'), '.pyav', 'testdata')
 
 
 def fate_suite(name):
     """Download and return a path to a sample from the FFmpeg test suite.
     
     The samples are stored under `pyav/samples/fate-suite` in the path indicated
-    by :envvar:`PYAV_DATA_DIR`, or the first that is writeable of:
+    by :envvar:`PYAV_TESTDATA_DIR`, or the first that is writeable of:
 
     - the current virtualenv
     - ``/usr/local/share``
