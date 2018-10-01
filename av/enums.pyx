@@ -29,9 +29,12 @@ cdef class EnumType(type):
 
     cdef _create(self, name, value, by_value_only=False):
 
-        item = self(sentinel, name, value)
-
-        self._by_value[value] = item
+        # We only have one instance per value.
+        try:
+            item = self._by_value[value]
+        except KeyError:
+            item = self(sentinel, name, value)
+            self._by_value[value] = item
 
         if not by_value_only:
             setattr(self, name, item)
@@ -163,11 +166,16 @@ cdef class EnumItem(object):
     def __eq__(self, other):
 
         if isinstance(other, basestring):
-            if self.name == other:
+
+            if self.name == other: # The quick method.
                 return True
-            if other in (<EnumType>self.__class__)._by_name:
-                return False
-            raise ValueError("Name not in {}.".format(self.__class__.__name__), other)
+
+            try:
+                other_inst = (<EnumType>self.__class__)._by_name[other]
+            except KeyError:
+                raise ValueError("Name not in {}.".format(self.__class__.__name__), other)
+            else:
+                return self is other_inst
 
         if isinstance(other, int):
             if self.value == other:

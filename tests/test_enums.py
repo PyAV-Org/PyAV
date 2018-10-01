@@ -119,6 +119,25 @@ class TestEnums(TestCase):
         self.assertEqual(baz.name, 'FOOBAR_3')
         self.assertEqual(baz.value, 3)
 
+    def test_multiple_names(self):
+
+        cls = define_enum('FFooBBar', (
+            ('FOO', 1),
+            ('F', 1),
+            ('BAR', 2),
+            ('B', 2),
+        ))
+
+        self.assertIs(cls.F, cls.FOO)
+
+        self.assertEqual(cls.F.name, 'FOO')
+        self.assertNotEqual(cls.F.name, 'F') # This is actually the string.
+
+        self.assertEqual(cls.F, 'FOO')
+        self.assertEqual(cls.F, 'F')
+        self.assertNotEqual(cls.F, 'BAR')
+        self.assertNotEqual(cls.F, 'B')
+        self.assertRaises(ValueError, lambda: cls.F == 'x')
 
     def test_flag_basics(self):
 
