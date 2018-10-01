@@ -5,10 +5,11 @@ from subprocess import check_call
 from unittest import TestCase as _Base
 import datetime
 import errno
+import functools
 import os
 import sys
-import functools
 import types
+import warnings
 
 from nose.plugins.skip import SkipTest
 
@@ -93,6 +94,13 @@ def sandboxed(*args, **kwargs):
     if do_makedirs:
         makedirs(os.path.dirname(path))
     return path
+
+
+# Route all warnings to stdout so that doctest will work with them.
+def showwarning(message, category, filename, lineno, file=None, line=None):
+    msg = warnings.formatwarning(message, category, filename, lineno, line)
+    print(msg.rstrip())
+warnings.showwarning = showwarning
 
 
 class MethodLogger(object):
