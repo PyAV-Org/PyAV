@@ -104,6 +104,7 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         int search_flags
     )
 
+    cdef const char* av_get_media_type_string(AVMediaType media_type)
 
 cdef extern from "libavutil/pixdesc.h" nogil:
 

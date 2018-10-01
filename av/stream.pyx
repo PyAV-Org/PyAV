@@ -7,7 +7,7 @@ cimport libav as lib
 
 from av.codec.context cimport wrap_codec_context
 from av.packet cimport Packet
-from av.utils cimport err_check, dict_to_avdict, avdict_to_dict, avrational_to_fraction, to_avrational, media_type_to_string
+from av.utils cimport err_check, dict_to_avdict, avdict_to_dict, avrational_to_fraction, to_avrational
 
 
 

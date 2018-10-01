@@ -1,6 +1,6 @@
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
-from av.utils cimport avrational_to_fraction, flag_in_bitfield, media_type_to_string
+from av.utils cimport avrational_to_fraction, flag_in_bitfield
 from av.video.format cimport get_video_format
 
 cdef object _cinit_sentinel = object()
@@ -96,8 +96,18 @@ cdef class Codec(object):
         def __get__(self): return self.ptr.name or ''
     property long_name:
         def __get__(self): return self.ptr.long_name or ''
-    property type:
-        def __get__(self): return media_type_to_string(self.ptr.type)
+
+    @property
+    def type(self):
+        """
+        The media type of this codec.
+
+        Examples: `'audio'`, `'video'`, `'subtitle'`.
+
+        :type: str
+        """
+        return lib.av_get_media_type_string(self.ptr.type)
+
     property id:
         def __get__(self): return self.ptr.id
 

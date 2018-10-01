@@ -12,7 +12,7 @@ from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.enums cimport EnumType, define_enum
 from av.packet cimport Packet
-from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational, media_type_to_string
+from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational
 
 
 cdef object _cinit_sentinel = object()
