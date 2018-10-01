@@ -254,6 +254,14 @@ cdef class VideoFrame(Frame):
         """Is this frame an interlaced or progressive?"""
         def __get__(self): return self.ptr.interlaced_frame
 
+    @property
+    def pict_type(self):
+        return self.ptr.pict_type
+
+    @pict_type.setter
+    def pict_type(self, value):
+        self.ptr.pict_type = value
+
     def to_rgb(self, **kwargs):
         """Get an RGB version of this frame.
 
