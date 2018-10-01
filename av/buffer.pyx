@@ -3,6 +3,7 @@ from libc.string cimport memcpy
 from cpython cimport PyBuffer_FillInfo, PyBUF_WRITABLE
 
 from av.bytesource cimport ByteSource, bytesource
+from av.deprecation import renamed_attr
 
 
 cdef class _Buffer(object):
@@ -58,7 +59,7 @@ cdef class Buffer(_Buffer):
     def to_bytes(self):
         return <bytes>(<char*>self._buffer_ptr())[:self._buffer_size()]
 
-    def update_buffer(self, input):
+    def update(self, input):
         """Replace the data in this object with the given buffer."""
         if not self._buffer_writable():
             raise ValueError('buffer is not writable')
@@ -67,3 +68,5 @@ cdef class Buffer(_Buffer):
         if source.length != size:
             raise ValueError('got %d bytes; need %d bytes' % (len(input), size))
         memcpy(self._buffer_ptr(), source.ptr, size)
+
+    update_buffer = renamed_attr('update')

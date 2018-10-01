@@ -11,6 +11,8 @@ v0.5.3
 
 - Deprecate ``AudioFrame.to_nd_array()`` and ``VideoFrame.to_nd_array()`` in
   favour of ``.to_ndarray()``.
+- Deprecate ``Packet.update_buffer()`` in favour of ``Packet.update()``.
+- Deprecate ``Plane.update_buffer()`` in favour of ``Plane.update()``.
 
 v0.5.2
 ------

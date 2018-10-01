@@ -35,7 +35,7 @@ cdef class Packet(Buffer):
             err_check(lib.av_new_packet(&self.struct, size))
 
         if source is not None:
-            self.update_buffer(source)
+            self.update(source)
             # TODO: Hold onto the source, and copy its pointer
             # instead of its data.
             #self.source = source

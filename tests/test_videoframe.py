@@ -63,7 +63,7 @@ class TestVideoFrameBuffers(TestCase):
         except NameError:
             raise SkipTest()
         frame = VideoFrame(640, 480, 'rgb24')
-        frame.planes[0].update_from_string('01234' + ('x' * (640 * 480 * 3 - 5)))
+        frame.planes[0].update(b'01234' + (b'x' * (640 * 480 * 3 - 5)))
         buf = buffer(frame.planes[0])
         self.assertEqual(buf[1], b'1')
         self.assertEqual(buf[:7], b'01234xx')
@@ -74,7 +74,7 @@ class TestVideoFrameBuffers(TestCase):
         except NameError:
             raise SkipTest()
         frame = VideoFrame(640, 480, 'rgb24')
-        frame.planes[0].update_from_string('01234' + ('x' * (640 * 480 * 3 - 5)))
+        frame.planes[0].update(b'01234' + (b'x' * (640 * 480 * 3 - 5)))
         mem = memoryview(frame.planes[0])
         self.assertEqual(mem.ndim, 1)
         self.assertEqual(mem.shape, (640 * 480 * 3, ))
@@ -97,7 +97,7 @@ class TestVideoFrameTransforms(TestCase):
         if not Image:
             raise SkipTest()
         frame = VideoFrame(self.width, self.height, 'rgb24')
-        frame.planes[0].update_from_string(self.image.tobytes())
+        frame.planes[0].update(self.image.tobytes())
         img = frame.to_image()
         img.save(self.sandboxed('roundtrip-low.jpg'))
         self.assertImagesAlmostEqual(self.image, img)
