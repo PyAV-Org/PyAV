@@ -15,9 +15,7 @@ cdef class Plane(Buffer):
         def __get__(self):
             return self.frame.ptr.linesize[self.index]
 
-    property ptr:
-        def __get__(self):
-            return <long>self.frame.ptr.extended_data[self.index]
+    ptr = renamed_attr('buffer_ptr')
 
     cdef size_t _buffer_size(self):
         return self.frame.ptr.linesize[self.index]
