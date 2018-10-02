@@ -14,6 +14,12 @@ cdef class Frame(object):
     cdef readonly int index
 
     cdef readonly tuple planes
+    """
+    A tuple of :class:`~av.audio.plane.AudioPlane` or :class:`~av.video.plane.VideoPlane` objects.
+
+    :type: tuple
+    """
+
     cdef _init_planes(self, cls=?)
     cdef int _max_plane_count(self)
 

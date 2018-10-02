@@ -125,12 +125,24 @@ cdef class Packet(Buffer):
             self.struct.stream_index = stream._stream.index
 
     property time_base:
+        """
+        The unit of time (in fractional seconds) in which timestamps are expressed.
+
+        :type: fractions.Fraction
+        """
         def __get__(self):
             return avrational_to_fraction(&self._time_base)
         def __set__(self, value):
             to_avrational(value, &self._time_base)
 
     property pts:
+        """
+        The presentation timestamp in :attr:`time_base` units for this packet.
+
+        This is the time at which the packet should be shown to the user.
+
+        :type: int
+        """
         def __get__(self):
             if self.struct.pts != lib.AV_NOPTS_VALUE:
                 return self.struct.pts
@@ -141,6 +153,11 @@ cdef class Packet(Buffer):
                 self.struct.pts = v
 
     property dts:
+        """
+        The decoding timestamp in :attr:`time_base` units for this packet.
+
+        :type: int
+        """
         def __get__(self):
             if self.struct.dts != lib.AV_NOPTS_VALUE:
                 return self.struct.dts

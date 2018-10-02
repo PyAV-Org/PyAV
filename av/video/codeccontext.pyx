@@ -166,6 +166,11 @@ cdef class VideoCodecContext(CodecContext):
             self._build_format()
 
     property framerate:
+        """
+        The frame rate, in frames per second.
+
+        :type: fractions.Fraction
+        """
         def __get__(self):
             return avrational_to_fraction(&self.ptr.framerate)
         def __set__(self, value):

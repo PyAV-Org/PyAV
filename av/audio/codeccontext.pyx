@@ -102,11 +102,19 @@ cdef class AudioCodecContext(CodecContext):
         aframe._init_user_attributes()
 
     property frame_size:
-        """Number of samples per channel in an audio frame."""
+        """
+        Number of samples per channel in an audio frame.
+
+        :type: int
+        """
         def __get__(self): return self.ptr.frame_size
 
     property sample_rate:
-        """Number samples of per second."""
+        """
+        Sample rate of the audio data, in samples per second.
+
+        :type: int
+        """
         def __get__(self):
             return self.ptr.sample_rate
         def __set__(self, int value):
@@ -131,6 +139,11 @@ cdef class AudioCodecContext(CodecContext):
             return self.ptr.channel_layout
 
     property layout:
+        """
+        The audio channel layout.
+
+        :type: ~av.audio.layout.AudioLayout
+        """
         def __get__(self):
             return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
         def __set__(self, value):
@@ -139,6 +152,11 @@ cdef class AudioCodecContext(CodecContext):
             self.ptr.channels = layout.nb_channels
 
     property format:
+        """
+        The audio sample format.
+
+        :type: ~av.audio.format.AudioFormat
+        """
         def __get__(self):
             return get_audio_format(self.ptr.sample_fmt)
         def __set__(self, value):

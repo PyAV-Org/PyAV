@@ -104,18 +104,27 @@ cdef class AudioFrame(Frame):
         )
 
     property samples:
-        """Number of audio samples (per channel) """
+        """
+        Number of audio samples (per channel).
+
+        :type: int
+        """
         def __get__(self):
             return self.ptr.nb_samples
 
     property sample_rate:
-        """Sample rate of the audio data. """
+        """
+        Sample rate of the audio data, in samples per second.
+
+        :type: int
+        """
         def __get__(self):
             return self.ptr.sample_rate
         def __set__(self, value):
             self.ptr.sample_rate = value
 
     property rate:
+        """Another name for :attr:`sample_rate`."""
         def __get__(self):
             return self.ptr.sample_rate
         def __set__(self, value):

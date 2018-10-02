@@ -18,7 +18,18 @@ cdef class AudioFrame(Frame):
     cdef int nb_planes
 
     cdef readonly AudioLayout layout
+    """
+    The audio channel layout.
+
+    :type: ~av.audio.layout.AudioLayout
+    """
+
     cdef readonly AudioFormat format
+    """
+    The audio sample format.
+
+    :type: ~av.audio.format.AudioFormat
+    """
 
     cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align)
     cdef _recalc_linesize(self)
