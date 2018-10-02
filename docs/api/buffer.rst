@@ -5,4 +5,10 @@ Buffers
 .. automodule:: av.buffer
 
     .. autoclass:: Buffer
-        :members:
+
+    .. autoattribute:: Buffer.buffer_ptr
+    .. autoattribute:: Buffer.buffer_size
+
+    .. automethod:: Buffer.update
+
+    .. automethod:: Buffer.to_bytes

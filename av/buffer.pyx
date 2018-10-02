@@ -48,19 +48,41 @@ cdef class _Buffer(object):
 
 cdef class Buffer(_Buffer):
 
-    property buffer_size:
-        def __get__(self):
-            return self._buffer_size()
+    """A base class for PyAV objects which support the buffer protocol, such
+    as :class:`.Packet` and :class:`.Plane`.
 
-    property buffer_ptr:
-        def __get__(self):
-            return <size_t>self._buffer_ptr()
+    """
+
+    @property
+    def buffer_size(self):
+        """The size of the buffer in bytes."""
+        return self._buffer_size()
+
+    @property
+    def buffer_ptr(self):
+        """The memory address of the buffer."""
+        return <size_t>self._buffer_ptr()
 
     def to_bytes(self):
+        """Return the contents of this buffer as ``bytes``.
+    
+        This copies the entire contents; consider using something that uses
+        the `buffer protocol <https://docs.python.org/3/c-api/buffer.html>`_
+        as that will be more efficient.
+
+        This is largely for Python2, as Python 3 can do the same via
+        ``bytes(the_buffer)``.
+        
+        """
         return <bytes>(<char*>self._buffer_ptr())[:self._buffer_size()]
 
     def update(self, input):
-        """Replace the data in this object with the given buffer."""
+        """Replace the data in this object with the given buffer.
+
+        Accepts anything that supports the `buffer protocol <https://docs.python.org/3/c-api/buffer.html>`_,
+        e.g. bytes, Numpy arrays, other :class:`Buffer` objects, etc..
+
+        """
         if not self._buffer_writable():
             raise ValueError('buffer is not writable')
         cdef ByteSource source = bytesource(input)
