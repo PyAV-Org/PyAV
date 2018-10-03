@@ -21,14 +21,14 @@ cdef class AudioFrame(Frame):
     """
     The audio channel layout.
 
-    :type: ~av.audio.layout.AudioLayout
+    :type: AudioLayout
     """
 
     cdef readonly AudioFormat format
     """
     The audio sample format.
 
-    :type: ~av.audio.format.AudioFormat
+    :type: AudioFormat
     """
 
     cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align)
