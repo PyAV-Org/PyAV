@@ -548,7 +548,6 @@ class ReflectCommand(Command):
 
             # This we actually care about:
             'av_calloc',
-            'av_frame_get_best_effort_timestamp',
             'avformat_alloc_output_context2',
             'avformat_close_input',
             'avcodec_send_packet',

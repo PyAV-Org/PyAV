@@ -445,14 +445,7 @@ cdef class CodecContext(object):
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
 
-        # In FFMpeg <= 3.0, and all LibAV we know of, the frame's pts may be
-        # unset at this stage, and the PTS from a packet is the correct one while
-        # decoding, and it is copied to pkt_pts during creation of a frame.
-        # TODO: Look into deprecation of pkt_pts in FFmpeg > 3.0
-        if frame.ptr.pts == lib.AV_NOPTS_VALUE:
-            frame.ptr.pts = frame.ptr.pkt_pts
-
-        # Propigate our manual times.
+        # Propagate our manual times.
         # While decoding, frame times are in stream time_base, which PyAV
         # is carrying around.
         # TODO: Somehow get this from the stream so we can not pass the

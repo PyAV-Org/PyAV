@@ -242,8 +242,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int channel_layout # Audio channel_layout
 
         int64_t pts
-        int64_t pkt_pts # Deprecated.
-        int64_t pkt_dts # Deprecated.
+        int64_t pkt_dts
 
         int pkt_size
 
@@ -369,7 +368,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVCodec *codec
     )
 
-    cdef int64_t av_frame_get_best_effort_timestamp(AVFrame *frame)
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
 
      # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
