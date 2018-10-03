@@ -9,10 +9,46 @@ to signal a major change (i.e. backwards incompatibilities) and increment
 v0.5.3
 ------
 
+Minor:
+
+- Expose :attr:`.VideoFrame.pict_type` as :class:`.PictureType` enum.
+  (:pr:`402`)
+- Expose :attr:`.Codec.video_rates` and :attr:`.Codec.audio_rates`.
+  (:pr:`381`)
+
+Patch:
+
+- Fix :attr:`.Packet.time_base` handling during flush.
+  (:pr:`398`)
+- :meth:`.VideoFrame.reformat` can throw exceptions when requested colorspace
+  transforms aren't possible.
+- Wrapping the stream object used to overwrite the ``pix_fmt`` attribute.
+  (:pr:`390`)
+
+Runtime:
+
+- Deprecate ``VideoFrame.ptr`` in favour of :attr:`VideoFrame.buffer_ptr`.
+- Deprecate ``Plane.update_buffer()`` and ``Packet.update_buffer`` in favour of
+  :meth:`.Plane.update`.
+  (:pr:`407`)
+- Deprecate ``Plane.update_from_string()`` in favour of :meth:`.Plane.update`.
+  (:pr:`407`)
 - Deprecate ``AudioFrame.to_nd_array()`` and ``VideoFrame.to_nd_array()`` in
-  favour of ``.to_ndarray()``.
-- Deprecate ``Packet.update_buffer()`` in favour of ``Packet.update()``.
-- Deprecate ``Plane.update_buffer()`` in favour of ``Plane.update()``.
+  favour of :meth:`.AudioFrame.to_ndarray` and :meth:`.VideoFrame.to_ndarray`.
+  (:pr:`404`)
+
+Build:
+
+- CI covers more cases, including macOS.
+  (:pr:`373` and :pr:`399`)
+- Fix many compilation warnings.
+  (:issue:`379`, :pr:`380`, :pr:`387`, and :pr:`388`)
+
+Docs:
+
+- Docstrings for many commonly used attributes.
+  (:pr:`372` and :pr:`409`)
+
 
 v0.5.2
 ------
