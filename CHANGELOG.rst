@@ -7,7 +7,9 @@ We are operating with `semantic versioning <http://semver.org>`_.
 v6.0.0.dev0
 -----------
 
-Nothing yet!
+Major:
+
+- Dropped support for FFmpeg < 3.2.
 
 
 v0.x.y

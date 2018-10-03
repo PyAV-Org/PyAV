@@ -111,21 +111,6 @@ matrix:
           env: LIBRARY=ffmpeg-4.0
           os: linux
 
-        # Older FFmpeg.
-        # These are set to be deprecated in the next major release.
-        - python: "3.6"
-          env: LIBRARY=ffmpeg-3.1
-          os: linux
-        - python: "3.6"
-          env: LIBRARY=ffmpeg-3.0
-          os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-3.1
-          os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-3.0
-          os: linux
-
     allow_failures:
 
         - python: "pypy"
