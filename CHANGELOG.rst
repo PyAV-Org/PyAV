@@ -21,7 +21,8 @@ Build:
 
 - Fixed Windows build, which broke in v0.5.1.
 - Compiler checks are not cached by default. This behaviour is retained if you
-  ``source scripts/activate.sh`` to develop PyAV. (#256.)
+  ``source scripts/activate.sh`` to develop PyAV.
+  (:issue:`256`)
 - Changed to ``PYAV_SETUP_REFLECT_DEBUG=1`` from ``PYAV_DEBUG_BUILD=1``.
 
 
@@ -39,7 +40,8 @@ v0.5.0
 
 Major:
 
-- Dropped support for Libav in general. (#110.)
+- Dropped support for Libav in general.
+  (:issue:`110`)
 - No longer uses libavresample.
 
 Minor:
@@ -49,8 +51,10 @@ Minor:
 
 Fixes:
 
-- EnumItem's hash calculation no longer overflows. (#339, #341 and #342.)
-- Frame.time_base was not being set in most cases during decoding. (#364.)
+- EnumItem's hash calculation no longer overflows.
+  (:issue:`339`, :issue:`341` and :issue:`342`.)
+- Frame.time_base was not being set in most cases during decoding.
+  (:issue:`364`)
 - CodecContext.options no longer needs to be manually initialized.
 - CodexContext.thread_type accepts its enums.
 
@@ -61,17 +65,23 @@ v0.4.1
 Minor:
 
 - Add `Frame.interlaced_frame` to indicate if the frame is interlaced.
-  (#327 by @MPGek.)
-- Add FLTP support to ``Frame.to_nd_array()``. (#288 by @rawler.)
+  (:issue:`327` by :gh-user:`MPGek`)
+- Add FLTP support to ``Frame.to_nd_array()``.
+  (:issue:`288` by :gh-user:`rawler`)
 - Expose ``CodecContext.extradata`` for codecs that have extra data, e.g.
-  Huffman tables. (#287 by @adavoudi.)
+  Huffman tables.
+  (:issue:`287` by :gh-user:`adavoudi`)
 
 Fixes:
 
-- Packets retain their refcount after muxing. (#334.)
-- `Codec` construction is more robust to find more codecs. (#332 by @adavoudi).
-- Refined frame corruption detection. (#291 by @Litterfeldt.)
-- Unicode filenames are okay. (#82.)
+- Packets retain their refcount after muxing.
+  (:issue:`334`)
+- `Codec` construction is more robust to find more codecs.
+  (:issue:`332` by :gh-user:`adavoudi`)
+- Refined frame corruption detection.
+  (:issue:`291` by :gh-user:`Litterfeldt`)
+- Unicode filenames are okay.
+  (:issue:`82`)
 
 
 v0.4.0
@@ -96,17 +106,24 @@ Major:
 
 Minor:
 
-- Added ``Packet.is_keyframe`` and ``Packet.is_corrupt`` (#226).
+- Added ``Packet.is_keyframe`` and ``Packet.is_corrupt``.
+  (:issue:`226`)
 - Many more ``time_base``, ``pts`` and other attributes are writeable.
-- ``Option`` exposes much more of the API (but not get/set) (#243).
-- Expose metadata encoding controls (#250).
-- Expose ``CodecContext.skip_frame`` (#259).
+- ``Option`` exposes much more of the API (but not get/set).
+  (:issue:`243`)
+- Expose metadata encoding controls.
+  (:issue:`250`)
+- Expose ``CodecContext.skip_frame``.
+  (:issue:`259`)
 
 Fixes:
 
-- Build doesn't fail if you don't have git installed (#184).
-- Developer environment works better with Python3 (#248).
-- Fix Container deallocation resulting in segfaults (#253).
+- Build doesn't fail if you don't have git installed.
+  (:issue:`184`)
+- Developer environment works better with Python3.
+  (:issue:`248`)
+- Fix Container deallocation resulting in segfaults.
+  (:issue:`253`)
 
 
 v0.3.3
@@ -115,9 +132,10 @@ v0.3.3
 Fixes:
 
 - Fix segfault due to buffer overflow in handling of stream options.
-  (#163 and #169.)
+  (:issue:`163` and :issue:`169`)
 - Fix segfault due to seek not properly checking if codecs were open before
-  using avcodec_flush_buffers. (#201.)
+  using avcodec_flush_buffers.
+  (:issue:`201`)
 
 
 v0.3.2
@@ -132,7 +150,8 @@ Minor:
 
 Fixes:
 
-- Further improvements to the logging system, continued from #128.
+- Further improvements to the logging system.
+  (:issue:`128`)
 
 
 v0.3.1
@@ -146,7 +165,8 @@ Minor:
 Fixes:
 
 - Fix memory leak in logging system when under heavy logging loads while
-  threading (#128 with help from @mkassner and @ksze)
+  threading.
+  (:issue:`128` with help from :gh-user:`mkassner` and :gh-user:`ksze`)
 
 
 v0.3.0
@@ -157,8 +177,9 @@ Major:
 - Python IO can write
 - Improve build system to use Python's C compiler for function detection;
   build system is much more robust
-- MSVC support (#115 by @vidartf)
-- Continuous integration on Windows via AppVeyor (by @vidartf)
+- MSVC support.
+  (:issue:`115` by :gh-user:`vidartf`)
+- Continuous integration on Windows via AppVeyor. (by :gh-user:`vidartf`)
 
 Minor:
 
@@ -169,19 +190,23 @@ Minor:
 
 Fixes:
 
-- Fix bug when using Python IO on files larger than 2GB (#109 by @xxr3376)
+- Fix bug when using Python IO on files larger than 2GB.
+  (:issue:`109` by :gh-user:`xxr3376`)
 - Fix usage of changed Pillow API
 
 Known Issues:
 
-- VideoFrame is suspected to leak memory in narrow cases on Linux (#128)
+- VideoFrame is suspected to leak memory in narrow cases on Linux.
+  (:issue:`128`)
 
 
 v0.2.4
 ------
 
-- fix library search path for current Libav/Ubuntu 14.04 (#97)
-- explicitly include all sources to combat 0.2.3 release problem (#100)
+- fix library search path for current Libav/Ubuntu 14.04.
+  (:issue:`97`)
+- explicitly include all sources to combat 0.2.3 release problem.
+  (:issue:`100`)
 
 
 v0.2.3
@@ -194,7 +219,8 @@ Major:
 
 - Python IO.
 - Agressively releases GIL
-- Add experimental Windows build (#84)
+- Add experimental Windows build.
+  (:issue:`84`)
 
 Minor:
 
@@ -202,9 +228,12 @@ Minor:
 
 Fixes:
 
-- Fix segfault in audio handling (#86 and #93)
-- Fix use of PIL/Pillow API (#85)
-- Fix bad assumptions about plane counts (#76)
+- Fix segfault in audio handling.
+  (:issue:`86` and :issue:`93`)
+- Fix use of PIL/Pillow API.
+  (:issue:`85`)
+- Fix bad assumptions about plane counts.
+  (:issue:`76`)
 
 
 v0.2.2

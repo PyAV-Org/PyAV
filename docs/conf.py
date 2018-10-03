@@ -226,6 +226,9 @@ doctest_test_doctest_blocks = ''
 
 extlinks = {
     'ffstruct': ('http://ffmpeg.org/doxygen/trunk/struct%s.html', 'struct '),
+    'issue': ('https://github.com/mikeboers/PyAV/issues/%s', '#'),
+    'pr': ('https://github.com/mikeboers/PyAV/pull/%s', '#'),
+    'gh-user': ('https://github.com/%s', '@'),
 }
 
 intersphinx_mapping = {
