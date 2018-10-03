@@ -131,8 +131,8 @@ cdef class AudioFrame(Frame):
             self.ptr.sample_rate = value
 
     def to_ndarray(self, **kwargs):
-        """Get a numpy array of this frame.
-        Any ``**kwargs`` are passed to :meth:`AudioFrame.reformat`.
+        """
+        Get a numpy array of this frame.
         """
 
         import numpy as np
