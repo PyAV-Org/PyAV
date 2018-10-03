@@ -16,9 +16,17 @@ import logging
 import sys
 import os
 import re
+import sys
+
+import sphinx
 
 
 logging.basicConfig()
+
+
+if sphinx.version_info < (1, 8):
+    print("Sphinx {} is too old; we require >= 1.8.".format(sphinx.__version__), file=sys.stderr)
+    exit(1)
 
 
 # If extensions (or modules to document with autodoc) are in another directory,

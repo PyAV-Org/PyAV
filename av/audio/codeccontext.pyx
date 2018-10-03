@@ -142,7 +142,7 @@ cdef class AudioCodecContext(CodecContext):
         """
         The audio channel layout.
 
-        :type: ~av.audio.layout.AudioLayout
+        :type: AudioLayout
         """
         def __get__(self):
             return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
@@ -155,7 +155,7 @@ cdef class AudioCodecContext(CodecContext):
         """
         The audio sample format.
 
-        :type: ~av.audio.format.AudioFormat
+        :type: AudioFormat
         """
         def __get__(self):
             return get_audio_format(self.ptr.sample_fmt)
