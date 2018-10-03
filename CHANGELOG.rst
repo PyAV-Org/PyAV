@@ -1,10 +1,30 @@
 Changelog
 =========
 
-We are operating with semantic versioning <http://semver.org/>. However,
-we are using v0.x.y as our heavy development period, and will increment ``x``
-to signal a major change (i.e. backwards incompatibilities) and increment
-``y`` as a minor change (i.e. backwards compatible features).
+We are operating with `semantic versioning <http://semver.org>`_.
+
+
+v6.0.0.dev0
+-----------
+
+Nothing yet!
+
+
+v0.x.y
+------
+
+.. note::
+
+    Below here we used ``v0.x.y``.
+
+    We incremented ``x`` to signal a major change (i.e. backwards
+    incompatibilities) and incremented ``y`` as a minor change (i.e. backwards
+    compatible features).
+
+    Once we wanted more subtlety and felt we had matured enough, we jumped
+    past the implications of ``v1.0.0`` straight to ``v6.0.0``
+    (as if we had not been stuck in ``v0.x.y`` all along).
+
 
 v0.5.3
 ------
