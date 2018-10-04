@@ -101,15 +101,15 @@ cdef class Packet(Buffer):
 
         self._time_base = dst
 
-    def decode(self, count=0):
+    def decode(self):
         """Decode the data in this packet into a list of Frames."""
-        return self._stream.decode(self, count)
+        return self._stream.decode(self)
 
     def decode_one(self):
         """Decode the first frame from this packet.
 
         Returns ``None`` if there is no frame."""
-        res = self._stream.decode(self, count=1)
+        res = self._stream.decode(self)
         return res[0] if res else None
 
     property stream_index:

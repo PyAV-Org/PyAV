@@ -14,10 +14,7 @@ class TestSubtitle(TestCase):
         fh = av.open(path)
         subs = []
         for packet in fh.demux():
-            try:
-                subs.extend(packet.decode())
-            except ValueError:
-                raise SkipTest
+            subs.extend(packet.decode())
 
         self.assertEqual(len(subs), 3)
         self.assertIsInstance(subs[0][0], AssSubtitle)
@@ -33,10 +30,7 @@ class TestSubtitle(TestCase):
         fh = av.open(path)
         subs = []
         for packet in fh.demux():
-            try:
-                subs.extend(packet.decode())
-            except ValueError:
-                raise SkipTest
+            subs.extend(packet.decode())
 
         self.assertEqual(len(subs), 43)
 

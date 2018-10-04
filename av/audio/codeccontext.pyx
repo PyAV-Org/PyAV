@@ -58,23 +58,6 @@ cdef class AudioCodecContext(CodecContext):
     cdef Frame _alloc_next_frame(self):
         return alloc_audio_frame()
 
-    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
-
-        if not self.next_frame:
-            self.next_frame = alloc_audio_frame()
-
-        cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.ptr, self.next_frame.ptr, &completed_frame, packet))
-        if not completed_frame:
-            return
-
-        cdef AudioFrame frame = self.next_frame
-        self.next_frame = None
-
-        frame._init_user_attributes()
-
-        return frame
-
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
         CodecContext._setup_decoded_frame(self, frame, packet)
         cdef AudioFrame aframe = frame

@@ -272,20 +272,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         void (*destruct)(AVPacket*)
 
 
-    cdef int avcodec_decode_video2(
-        AVCodecContext *ctx,
-        AVFrame *frame,
-        int *got_frame,
-        AVPacket *packet,
-    )
-
-    cdef int avcodec_decode_audio4(
-        AVCodecContext *ctx,
-        AVFrame *frame,
-        int *got_frame,
-        AVPacket *packet,
-    )
-
     cdef int avcodec_fill_audio_frame(
         AVFrame *frame,
         int nb_channels,
