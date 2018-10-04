@@ -89,11 +89,5 @@ cdef class Filter(object):
             return self._outputs
 
 
-filters_available = set()
-cdef const lib.AVFilter *ptr = lib.avfilter_next(NULL)
-while ptr:
-    filters_available.add(ptr.name)
-    ptr = lib.avfilter_next(ptr)
-
-
+filters_available = lib.pyav_get_available_filters()
 filter_descriptor = wrap_avclass(lib.avfilter_get_class())
