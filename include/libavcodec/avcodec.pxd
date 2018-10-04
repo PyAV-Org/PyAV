@@ -121,7 +121,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int flags
         int thread_count
         int thread_type
-        int refcounted_frames
 
         int profile
         AVDiscard skip_frame

@@ -85,9 +85,6 @@ cdef class CodecContext(object):
             raise RuntimeError('Wrapping CodecContext with mismatched codec.')
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
 
-        # Signal that we want to reference count.
-        self.ptr.refcounted_frames = 1
-
         # Set reasonable threading defaults.
         # count == 0 -> use as many threads as there are CPUs.
         # type == 2 -> thread within a frame. This does not change the API.

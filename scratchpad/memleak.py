@@ -67,7 +67,7 @@ def transcode_level1_to_level3():
 def decode_using_pyav():
 
     print('Decoding using PyAV.')
-    fh = av.open('ffv1_level3.nut', 'r', options={'refcounted_frames': '1'})
+    fh = av.open('ffv1_level3.nut', 'r')
     for s in fh.streams:
         #print s, s.thread_type, s.thread_count
         #pass
