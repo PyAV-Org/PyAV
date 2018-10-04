@@ -548,8 +548,6 @@ class ReflectCommand(Command):
 
             # This we actually care about:
             'av_calloc',
-            'avformat_alloc_output_context2',
-            'avformat_close_input',
             'avcodec_send_packet',
 
         ):

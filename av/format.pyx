@@ -40,10 +40,7 @@ cdef class ContainerFormat(object):
             self.iptr = lib.av_find_input_format(name)
 
         if mode is None or mode == 'w':
-            while True:
-                self.optr = lib.av_oformat_next(self.optr)
-                if not self.optr or self.optr.name == name:
-                    break
+            self.optr = lib.pyav_find_output_format(name)
 
         if not self.iptr and not self.optr:
             raise ValueError('no container format %r' % name)
@@ -106,21 +103,5 @@ cdef class ContainerFormat(object):
             return exts
 
 
-formats_available = set()
-
-cdef lib.AVInputFormat *iptr = NULL
-while True:
-    iptr = lib.av_iformat_next(iptr)
-    if not iptr:
-        break
-    formats_available.add(iptr.name)
-
-cdef lib.AVOutputFormat *optr = NULL
-while True:
-    optr = lib.av_oformat_next(optr)
-    if not optr:
-        break
-    formats_available.add(optr.name)
-
-
+formats_available = lib.pyav_get_available_formats()
 format_descriptor = wrap_avclass(lib.avformat_get_class())

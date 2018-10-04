@@ -133,8 +133,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     )
 
     cdef AVInputFormat* av_find_input_format(const char *name)
-    cdef AVInputFormat* av_iformat_next(AVInputFormat*)
-    cdef AVOutputFormat* av_oformat_next(AVOutputFormat*)
 
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
@@ -274,3 +272,7 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         int64_t max_ts,
         int flags
     )
+
+    # custom
+    cdef AVOutputFormat* pyav_find_output_format(const char *name)
+    cdef set pyav_get_available_formats()
