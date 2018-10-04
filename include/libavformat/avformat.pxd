@@ -18,12 +18,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
 
     cdef int AVIO_FLAG_WRITE
 
-    #: Initialize all formats.
-    cdef void av_register_all()
-
-    #: Initialize network use in formats.
-    cdef void avformat_network_init()
-
     cdef enum AVMediaType:
         AVMEDIA_TYPE_UNKNOWN
         AVMEDIA_TYPE_VIDEO

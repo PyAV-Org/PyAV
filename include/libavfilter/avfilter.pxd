@@ -5,8 +5,6 @@ cdef extern from "libavfilter/avfilter.pyav.h" nogil:
     cdef char* avfilter_configuration()
     cdef char* avfilter_license()
 
-    cdef void avfilter_register_all()
-
     cdef struct AVFilterPad:
         # This struct is opaque.
         pass

@@ -1,17 +1,10 @@
 cimport libav as lib
 
-# Setup base library. While the docs and experience may lead us to believe we
-# don't need to call all of these (e.g. avcodec_register_all is usually
-# unnessesary), some users have found contexts in which they are required.
-lib.av_register_all()
-lib.avformat_network_init()
-lib.avdevice_register_all()
-lib.avcodec_register_all()
-lib.avfilter_register_all()
+# Initialise libraries.
+lib.pyav_register_all()
 
 # Exports.
 time_base = lib.AV_TIME_BASE
-
 
 pyav_version = lib.PYAV_VERSION_STR
 pyav_commit = lib.PYAV_COMMIT_STR
