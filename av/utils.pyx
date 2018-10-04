@@ -113,13 +113,8 @@ cpdef int err_check(int res=0, filename=None) except -1:
 # === DICTIONARIES ===
 # ====================
 
-cdef bint _py3k = str is unicode
-
 cdef _decode(char *s, encoding, errors):
-    if encoding is None:
-        return s
-    else:
-        return (<bytes>s).decode(encoding, errors)
+    return (<bytes>s).decode(encoding, errors)
 
 cdef bytes _encode(s, encoding, errors):
     if isinstance(s, unicode):
@@ -127,7 +122,7 @@ cdef bytes _encode(s, encoding, errors):
     return s
 
 cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding=None, str errors='strict'):
-    if _py3k and encoding is None:
+    if encoding is None:
         encoding = 'utf8'
 
     cdef lib.AVDictionaryEntry *element = NULL
