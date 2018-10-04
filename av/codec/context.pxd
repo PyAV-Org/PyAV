@@ -42,7 +42,7 @@ cdef class CodecContext(object):
     cdef _set_default_time_base(self)
 
     # Wraps both versions of the transcode API, returning lists.
-    cpdef encode(self, Frame frame=?, unsigned int count=?, bint prefer_send_recv=?)
+    cpdef encode(self, Frame frame=?)
     cpdef decode(self, Packet packet=?, unsigned int count=?, bint prefer_send_recv=?)
 
     # Used by both transcode APIs to setup user-land objects.
@@ -53,7 +53,6 @@ cdef class CodecContext(object):
     cdef _setup_decoded_frame(self, Frame, Packet)
 
     # Implemented by children for the encode/decode API.
-    cdef _encode(self, Frame frame)
     cdef _decode(self, lib.AVPacket *packet, int *data_consumed)
 
     # Implemented by base for the generic send/recv API.

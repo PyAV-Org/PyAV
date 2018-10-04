@@ -60,30 +60,6 @@ cdef class VideoCodecContext(CodecContext):
 
         return [vframe]
 
-    cdef _encode(self, Frame frame):
-        """Encodes a frame of video, returns a packet if one is ready.
-
-        The output packet does not necessarily contain data for the most recent frame,
-        as encoders can delay, split, and combine input frames internally as needed.
-        If called with with no args it will flush out the encoder and return the buffered
-        packets until there are none left, at which it will return None.
-
-        """
-
-        cdef VideoFrame vframe = frame
-
-
-        cdef Packet packet = Packet()
-        cdef int got_packet
-
-        if vframe is not None:
-            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, vframe.ptr, &got_packet))
-        else:
-            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, NULL, &got_packet))
-
-        if got_packet:
-            return packet
-
     cdef Frame _alloc_next_frame(self):
         return alloc_video_frame()
 

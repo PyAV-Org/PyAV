@@ -308,12 +308,14 @@ cdef class CodecContext(object):
         if not res:
             return packet
 
-    cpdef encode(self, Frame frame=None, unsigned int count=0, bint prefer_send_recv=True):
+    cpdef encode(self, Frame frame=None):
         """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
+
+        if self.ptr.codec_type not in [lib.AVMEDIA_TYPE_VIDEO, lib.AVMEDIA_TYPE_AUDIO]:
+            raise NotImplementedError('Encoding is only supported for audio and video.')
 
         self.open(strict=False)
 
-        cdef bint is_flushing = frame is None
         frames = self._prepare_frames_for_encode(frame)
 
         # Assert the frames are in our time base.
@@ -323,36 +325,10 @@ cdef class CodecContext(object):
                 frame._rebase_time(self.ptr.time_base)
 
         res = []
-
-        if (
-            prefer_send_recv and
-            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
-            (
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
-            )
-        ):
-            for frame in frames:
-                for packet in self._send_frame_and_recv(frame):
-                    self._setup_encoded_packet(packet)
-                    res.append(packet)
-            return res
-
-
         for frame in frames:
-            packet = self._encode(frame)
-            if packet:
+            for packet in self._send_frame_and_recv(frame):
                 self._setup_encoded_packet(packet)
                 res.append(packet)
-
-        while is_flushing and (not count or count > len(res)):
-            packet = self._encode(None)
-            if packet:
-                self._setup_encoded_packet(packet)
-                res.append(packet)
-            else:
-                break
-
         return res
 
     cdef _setup_encoded_packet(self, Packet packet):
@@ -364,9 +340,6 @@ cdef class CodecContext(object):
         # NOTE: if the CodecContext's time_base is altered during encoding, all bets
         # are off!
         packet._time_base = self.ptr.time_base
-
-    cdef _encode(self, Frame frame):
-        raise NotImplementedError('Base CodecContext cannot encode frames.')
 
     cpdef decode(self, Packet packet=None, unsigned int count=0, bint prefer_send_recv=True):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
