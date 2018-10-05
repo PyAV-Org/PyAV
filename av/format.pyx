@@ -3,6 +3,10 @@ cimport libav as lib
 from av.descriptor cimport wrap_avclass
 
 
+cdef extern from "format-shims.c" nogil:
+    cdef lib.AVOutputFormat* pyav_find_output_format(const char *name)
+
+
 cdef object _cinit_bypass_sentinel = object()
 
 cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutputFormat* optr):
@@ -40,7 +44,7 @@ cdef class ContainerFormat(object):
             self.iptr = lib.av_find_input_format(name)
 
         if mode is None or mode == 'w':
-            self.optr = lib.pyav_find_output_format(name)
+            self.optr = pyav_find_output_format(name)
 
         if not self.iptr and not self.optr:
             raise ValueError('no container format %r' % name)

@@ -268,5 +268,5 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     )
 
     # custom
-    cdef AVOutputFormat* pyav_find_output_format(const char *name)
+    
     cdef set pyav_get_available_formats()
