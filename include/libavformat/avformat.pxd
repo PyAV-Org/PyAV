@@ -1,7 +1,7 @@
 from libc.stdint cimport int64_t, uint64_t
 
 
-cdef extern from "libavformat/avformat.pyav.h" nogil:
+cdef extern from "libavformat/avformat.h" nogil:
 
     cdef int   avformat_version()
     cdef char* avformat_configuration()
