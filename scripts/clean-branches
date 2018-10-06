@@ -22,12 +22,15 @@ def rm(*args):
 
 # Clean up everything that was merged
 for line in subprocess.check_output(['git', 'branch', '--merged']).decode().splitlines():
-    name = line.strip().split()[-1]
-    if not name:
+    line = line.strip()
+    if not line:
         continue
-    if name in ('develop', 'master'):
+    parts = line.split()
+    if parts[0] == '*':
         continue
-    rm(name)
+    if parts[-1] in ('develop', 'master'):
+        continue
+    rm(parts[-1])
 
 for line in subprocess.check_output(['git', 'branch', '-r', '--merged']).decode().splitlines():
     name = line.strip().split()[-1]
