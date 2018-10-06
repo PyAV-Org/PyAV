@@ -60,30 +60,6 @@ cdef class VideoCodecContext(CodecContext):
 
         return [vframe]
 
-    cdef _encode(self, Frame frame):
-        """Encodes a frame of video, returns a packet if one is ready.
-
-        The output packet does not necessarily contain data for the most recent frame,
-        as encoders can delay, split, and combine input frames internally as needed.
-        If called with with no args it will flush out the encoder and return the buffered
-        packets until there are none left, at which it will return None.
-
-        """
-
-        cdef VideoFrame vframe = frame
-
-
-        cdef Packet packet = Packet()
-        cdef int got_packet
-
-        if vframe is not None:
-            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, vframe.ptr, &got_packet))
-        else:
-            ret = err_check(lib.avcodec_encode_video2(self.ptr, &packet.struct, NULL, &got_packet))
-
-        if got_packet:
-            return packet
-
     cdef Frame _alloc_next_frame(self):
         return alloc_video_frame()
 
@@ -91,45 +67,6 @@ cdef class VideoCodecContext(CodecContext):
         CodecContext._setup_decoded_frame(self, frame, packet)
         cdef VideoFrame vframe = frame
         vframe._init_user_attributes()
-
-    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
-
-        # Create a frame if we don't have one ready.
-        if not self.next_frame:
-            self.next_frame = alloc_video_frame()
-
-        # Decode video into the frame.
-        cdef int completed_frame = 0
-
-        cdef int result
-
-        with nogil:
-            result = lib.avcodec_decode_video2(self.ptr, self.next_frame.ptr, &completed_frame, packet)
-        data_consumed[0] = err_check(result)
-
-        if not completed_frame:
-            return
-
-        # Check if the frame size has changed so that we can always have a
-        # SwsContext that is ready to go.
-        if self.last_w != self.ptr.width or self.last_h != self.ptr.height:
-            self.last_w = self.ptr.width
-            self.last_h = self.ptr.height
-            # TODO codec-ctx: Stream would calculate self.buffer_size here.
-            self.reformatter = VideoReformatter()
-
-        # We are ready to send this one off into the world!
-        cdef VideoFrame frame = self.next_frame
-        self.next_frame = None
-
-        # Share our SwsContext with the frames. Most of the time they will end
-        # up using the same settings as each other, so it makes sense to cache
-        # it like this.
-        # TODO codec-ctx: Stream did this.
-        #frame.reformatter = self.reformatter
-
-        return frame
-
 
     cdef _build_format(self):
         self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)

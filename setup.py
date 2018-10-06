@@ -546,9 +546,6 @@ class ReflectCommand(Command):
             'avformat_open_input', # Canary that should exist.
             'pyav_function_should_not_exist', # Canary that should not exist.
 
-            # This we actually care about:
-            'avcodec_send_packet',
-
         ):
             print("looking for %s... " % func_name, end='\n' if self.debug else '')
             results[func_name] = compile_check(

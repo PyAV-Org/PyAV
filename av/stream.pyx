@@ -124,8 +124,8 @@ cdef class Stream(object):
             packet.struct.stream_index = self._stream.index
         return packets
 
-    def decode(self, packet=None, count=0):
-        return self.codec_context.decode(packet, count)
+    def decode(self, packet=None):
+        return self.codec_context.decode(packet)
 
     def seek(self, offset, whence='time', backward=True, any_frame=False):
         """seek(offset, whence='time', backward=True, any_frame=False)

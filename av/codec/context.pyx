@@ -85,9 +85,6 @@ cdef class CodecContext(object):
             raise RuntimeError('Wrapping CodecContext with mismatched codec.')
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
 
-        # Signal that we want to reference count.
-        self.ptr.refcounted_frames = 1
-
         # Set reasonable threading defaults.
         # count == 0 -> use as many threads as there are CPUs.
         # type == 2 -> thread within a frame. This does not change the API.
@@ -308,12 +305,14 @@ cdef class CodecContext(object):
         if not res:
             return packet
 
-    cpdef encode(self, Frame frame=None, unsigned int count=0, bint prefer_send_recv=True):
+    cpdef encode(self, Frame frame=None):
         """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
+
+        if self.ptr.codec_type not in [lib.AVMEDIA_TYPE_VIDEO, lib.AVMEDIA_TYPE_AUDIO]:
+            raise NotImplementedError('Encoding is only supported for audio and video.')
 
         self.open(strict=False)
 
-        cdef bint is_flushing = frame is None
         frames = self._prepare_frames_for_encode(frame)
 
         # Assert the frames are in our time base.
@@ -323,36 +322,10 @@ cdef class CodecContext(object):
                 frame._rebase_time(self.ptr.time_base)
 
         res = []
-
-        if (
-            prefer_send_recv and
-            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
-            (
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
-            )
-        ):
-            for frame in frames:
-                for packet in self._send_frame_and_recv(frame):
-                    self._setup_encoded_packet(packet)
-                    res.append(packet)
-            return res
-
-
         for frame in frames:
-            packet = self._encode(frame)
-            if packet:
+            for packet in self._send_frame_and_recv(frame):
                 self._setup_encoded_packet(packet)
                 res.append(packet)
-
-        while is_flushing and (not count or count > len(res)):
-            packet = self._encode(None)
-            if packet:
-                self._setup_encoded_packet(packet)
-                res.append(packet)
-            else:
-                break
-
         return res
 
     cdef _setup_encoded_packet(self, Packet packet):
@@ -365,10 +338,7 @@ cdef class CodecContext(object):
         # are off!
         packet._time_base = self.ptr.time_base
 
-    cdef _encode(self, Frame frame):
-        raise NotImplementedError('Base CodecContext cannot encode frames.')
-
-    cpdef decode(self, Packet packet=None, unsigned int count=0, bint prefer_send_recv=True):
+    cpdef decode(self, Packet packet=None):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
 
         If the packet is None, the buffers will be flushed. This is useful if
@@ -382,66 +352,12 @@ cdef class CodecContext(object):
 
         self.open(strict=False)
 
-        if (
-            prefer_send_recv and
-            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
-            (
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
-            )
-        ):
-            res = []
-            for frame in self._send_packet_and_recv(packet):
+        res = []
+        for frame in self._send_packet_and_recv(packet):
+            if isinstance(frame, Frame):
                 self._setup_decoded_frame(frame, packet)
-                res.append(frame)
-            return res
-
-        if packet is None:
-            packet = Packet() # Makes our control flow easier.
-
-        cdef int data_consumed = 0
-        cdef list decoded_objs = []
-
-        cdef uint8_t *original_data = packet.struct.data
-        cdef int      original_size = packet.struct.size
-
-        cdef bint is_flushing = not (packet.struct.data and packet.struct.size)
-
-        # Keep decoding while there is data in this packet.
-        while is_flushing or packet.struct.size > 0:
-
-            if is_flushing:
-                packet.struct.data = NULL
-                packet.struct.size = 0
-
-            decoded = self._decode(&packet.struct, &data_consumed)
-            packet.struct.data += data_consumed
-            packet.struct.size -= data_consumed
-
-            if decoded:
-
-                if isinstance(decoded, Frame):
-                    self._setup_decoded_frame(decoded, packet)
-                decoded_objs.append(decoded)
-
-                # Sometimes we will error if we try to flush the stream
-                # (e.g. MJPEG webcam streams), and so we must be able to
-                # bail after the first, even though buffers may build up.
-                if count and len(decoded_objs) >= count:
-                    break
-
-            # Sometimes there are no frames, and no data is consumed, and this
-            # is ok. However, no more frames are going to be pulled out of here.
-            # (It is possible for data to not be consumed as long as there are
-            # frames, e.g. during flushing.)
-            elif not data_consumed:
-                break
-
-        # Restore the packet.
-        packet.struct.data = original_data
-        packet.struct.size = original_size
-
-        return decoded_objs
+            res.append(frame)
+        return res
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
 
@@ -453,9 +369,6 @@ cdef class CodecContext(object):
         frame._time_base = packet._time_base
 
         frame.index = self.ptr.frame_number - 1
-
-    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
-        raise NotImplementedError('Base CodecContext cannot decode packets.')
 
     property name:
         def __get__(self):

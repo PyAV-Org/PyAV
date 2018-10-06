@@ -9,17 +9,6 @@
 #endif
 
 
-#if !PYAV_HAVE_AVCODEC_SEND_PACKET
-
-    // Stub these out so that we don't fail to compile.
-    int avcodec_send_packet(AVCodecContext *avctx, AVPacket *packet)   { return 0; }
-    int avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame)   { return 0; }
-    int avcodec_send_frame(AVCodecContext *avctx, AVFrame *frame)      { return 0; }
-    int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt) { return 0; }
-
-#endif
-
-
 // Some of these properties don't exist in both FFMpeg and LibAV, so we
 // signal to our code that they are missing via 0.
 #ifndef CODEC_CAP_DRAW_HORIZ_BAND

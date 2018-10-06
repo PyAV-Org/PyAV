@@ -55,46 +55,8 @@ cdef class AudioCodecContext(CodecContext):
 
         return frames
 
-    cdef _encode(self, Frame frame):
-        """Encodes a frame of audio, returns a packet if one is ready.
-        The output packet does not necessarily contain data for the most recent frame,
-        as encoders can delay, split, and combine input frames internally as needed.
-        If called with with no args it will flush out the encoder and return the buffered
-        packets until there are none left, at which it will return None.
-        """
-
-        cdef Packet packet = Packet()
-        cdef int got_packet = 0
-
-        err_check(lib.avcodec_encode_audio2(
-            self.ptr,
-            &packet.struct,
-            frame.ptr if frame is not None else NULL,
-            &got_packet,
-        ))
-
-        if got_packet:
-            return packet
-
     cdef Frame _alloc_next_frame(self):
         return alloc_audio_frame()
-
-    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
-
-        if not self.next_frame:
-            self.next_frame = alloc_audio_frame()
-
-        cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.ptr, self.next_frame.ptr, &completed_frame, packet))
-        if not completed_frame:
-            return
-
-        cdef AudioFrame frame = self.next_frame
-        self.next_frame = None
-
-        frame._init_user_attributes()
-
-        return frame
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
         CodecContext._setup_decoded_frame(self, frame, packet)

@@ -42,8 +42,8 @@ cdef class CodecContext(object):
     cdef _set_default_time_base(self)
 
     # Wraps both versions of the transcode API, returning lists.
-    cpdef encode(self, Frame frame=?, unsigned int count=?, bint prefer_send_recv=?)
-    cpdef decode(self, Packet packet=?, unsigned int count=?, bint prefer_send_recv=?)
+    cpdef encode(self, Frame frame=?)
+    cpdef decode(self, Packet packet=?)
 
     # Used by both transcode APIs to setup user-land objects.
     # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing
@@ -51,10 +51,6 @@ cdef class CodecContext(object):
     cdef _prepare_frames_for_encode(self, Frame frame)
     cdef _setup_encoded_packet(self, Packet)
     cdef _setup_decoded_frame(self, Frame, Packet)
-
-    # Implemented by children for the encode/decode API.
-    cdef _encode(self, Frame frame)
-    cdef _decode(self, lib.AVPacket *packet, int *data_consumed)
 
     # Implemented by base for the generic send/recv API.
     # Note that the user cannot send without recieving. This is because
