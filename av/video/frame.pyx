@@ -32,6 +32,21 @@ cdef EnumType PictureType = define_enum('PictureType', (
 ))
 
 
+cdef useful_array(VideoPlane plane, bytes_per_pixel=1):
+    """
+    Return the useful part of the VideoPlane as a single dimensional array.
+
+    We are simply discarding any padding which was added for alignment.
+    """
+    import numpy as np
+    cdef int total_line_size = abs(plane.line_size)
+    cdef int useful_line_size = plane.width * bytes_per_pixel
+    arr = np.frombuffer(plane, np.uint8)
+    if total_line_size != useful_line_size:
+        arr = arr.reshape(total_line_size, -1)[0:useful_line_size, :].reshape(-1)
+    return arr
+
+
 cdef class VideoFrame(Frame):
 
     """A frame of video.
@@ -40,7 +55,7 @@ cdef class VideoFrame(Frame):
 
     """
 
-    def __cinit__(self, width=0, height=0, format='yuv420p'):
+    def __cinit__(self, width=0, height=0, format='yuv420p', align=1):
 
         if width is _cinit_bypass_sentinel:
             return
@@ -49,9 +64,9 @@ cdef class VideoFrame(Frame):
         if c_format < 0:
             raise ValueError('invalid format %r' % format)
 
-        self._init(c_format, width, height)
+        self._init(c_format, width, height, align)
 
-    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height):
+    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height, unsigned int align):
         cdef int buffer_size
         with nogil:
             self.ptr.width = width
@@ -65,7 +80,7 @@ cdef class VideoFrame(Frame):
                 lib.av_freep(&self._buffer)
 
                 # Get a new one.
-                buffer_size = lib.av_image_get_buffer_size(format, width, height, 1)
+                buffer_size = lib.av_image_get_buffer_size(format, width, height, align)
                 with gil: err_check(buffer_size)
 
                 self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
@@ -81,7 +96,7 @@ cdef class VideoFrame(Frame):
                         format,
                         width,
                         height,
-                        1
+                        align
                 )
 
         self._init_user_attributes()
@@ -235,7 +250,7 @@ cdef class VideoFrame(Frame):
         # Create a new VideoFrame.
         cdef VideoFrame frame = alloc_video_frame()
         frame._copy_internal_attributes(self)
-        frame._init(dst_format, width, height)
+        frame._init(dst_format, width, height, 1)
 
         # Finally, scale the image.
         with nogil:
@@ -300,26 +315,35 @@ cdef class VideoFrame(Frame):
         return Image.frombuffer("RGB", (self.width, self.height), self.reformat(format="rgb24", **kwargs).planes[0], "raw", "RGB", 0, 1)
 
     def to_ndarray(self, **kwargs):
-        """Get a numpy array of this frame.
+        """
+        Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
-
         """
-
         cdef VideoFrame frame = self.reformat(**kwargs)
-        if len(frame.planes) != 1:
-            raise ValueError('Cannot conveniently get numpy array from multiplane frame')
 
         import numpy as np
 
-        # We only suppose this convenience for a few types.
-        # TODO: Make this more general (if we can)
-        if frame.format.name in ('rgb24', 'bgr24'):
-            return np.frombuffer(frame.planes[0], np.uint8).reshape(frame.height, frame.width, -1)
-        if frame.format.name == ('gray16le', 'gray16be'):
-            return np.frombuffer(frame.planes[0], np.dtype('<u2')).reshape(frame.height, frame.width)
+        if frame.format.name == 'yuv420p':
+            assert frame.width % 2 == 0
+            assert frame.height % 2 == 0
+            return np.hstack((
+                useful_array(frame.planes[0]),
+                useful_array(frame.planes[1]),
+                useful_array(frame.planes[2])
+            )).reshape(-1, frame.width)
+        elif frame.format.name == 'yuyv422':
+            assert frame.width % 2 == 0
+            assert frame.height % 2 == 0
+            return useful_array(frame.planes[0], 2).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('rgb24', 'bgr24'):
+            return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
+            return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('gray', 'gray8'):
+            return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         else:
-            raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
+            raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % frame.format.name)
 
     to_nd_array = renamed_attr('to_ndarray')
 
@@ -355,13 +379,42 @@ cdef class VideoFrame(Frame):
 
     @staticmethod
     def from_ndarray(array, format='rgb24'):
-
-        # TODO: We could stand to be more accepting.
-        assert array.ndim == 3
-        assert array.shape[2] == 3
-        assert array.dtype == 'uint8'
+        """
+        Construct a frame from a numpy array.
+        """
+        if format == 'yuv420p':
+            assert array.dtype == 'uint8'
+            assert array.ndim == 2
+            assert array.shape[0] % 3 == 0
+            assert array.shape[1] % 2 == 0
+            frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
+            u_start = frame.width * frame.height
+            v_start = 5 * u_start // 4
+            flat = array.reshape(-1)
+            frame.planes[0].update(flat[0:u_start])
+            frame.planes[1].update(flat[u_start:v_start])
+            frame.planes[2].update(flat[v_start:])
+            return frame
+        elif format == 'yuyv422':
+            assert array.dtype == 'uint8'
+            assert array.ndim == 3
+            assert array.shape[0] % 2 == 0
+            assert array.shape[1] % 2 == 0
+            assert array.shape[2] == 2
+        elif format in ('rgb24', 'bgr24'):
+            assert array.dtype == 'uint8'
+            assert array.ndim == 3
+            assert array.shape[2] == 3
+        elif format in ('argb', 'rgba', 'abgr', 'bgra'):
+            assert array.dtype == 'uint8'
+            assert array.ndim == 3
+            assert array.shape[2] == 4
+        elif format in ('gray', 'gray8'):
+            assert array.dtype == 'uint8'
+            assert array.ndim == 2
+        else:
+            raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
         frame = VideoFrame(array.shape[1], array.shape[0], format)
         frame.planes[0].update(array)
-
         return frame
