@@ -1,5 +1,5 @@
 
-cdef extern from "libavfilter/avfilter.pyav.h" nogil:
+cdef extern from "libavfilter/avfilter.h" nogil:
 
     cdef int   avfilter_version()
     cdef char* avfilter_configuration()
