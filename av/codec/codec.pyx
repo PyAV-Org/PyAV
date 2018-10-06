@@ -3,6 +3,11 @@ from av.descriptor cimport wrap_avclass
 from av.utils cimport avrational_to_fraction, flag_in_bitfield
 from av.video.format cimport get_video_format
 
+
+cdef extern from "codec-shims.c" nogil:
+    cdef const lib.AVCodec* pyav_codec_iterate(void **handle)
+
+
 cdef object _cinit_sentinel = object()
 
 
@@ -240,7 +245,22 @@ cdef class Codec(object):
         def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
 
-codecs_available = lib.pyav_get_available_codecs()
+
+cdef get_codec_names():
+    names = set()
+    cdef const lib.AVCodec *ptr
+    cdef const void *opaque = NULL
+    while True:
+        ptr = pyav_codec_iterate(&opaque);
+        if ptr:
+            names.add(ptr.name)
+        else:
+            break
+    return names
+
+codecs_available = get_codec_names()
+
+
 codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 
 

@@ -78,21 +78,3 @@
 #endif
 
 
-PyObject* pyav_get_available_codecs(void)
-{
-    const AVCodec *ptr = NULL;
-    PyObject* codecs = PySet_New(NULL);
-
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(58, 10, 100)
-    void *opaque = NULL;
-    while ((ptr = av_codec_iterate(&opaque))) {
-        PySet_Add(codecs, PyUnicode_FromString(ptr->name));
-    }
-#else
-    while ((ptr = av_codec_next(ptr))) {
-        PySet_Add(codecs, PyUnicode_FromString(ptr->name));
-    }
-#endif
-
-    return codecs;
-}
