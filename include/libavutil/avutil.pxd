@@ -7,7 +7,7 @@ cdef extern from "libavutil/mathematics.h" nogil:
 cdef extern from "libavutil/rational.h" nogil:
     cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
 
-cdef extern from "libavutil/avutil.pyav.h" nogil:
+cdef extern from "libavutil/avutil.h" nogil:
 
     cdef int   avutil_version()
     cdef char* avutil_configuration()
@@ -56,7 +56,6 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
     cdef void* av_malloc(size_t size)
     cdef void *av_calloc(size_t nmemb, size_t size)
 
-    cdef void av_free(void* ptr)
     cdef void av_freep(void *ptr)
 
     cdef int av_get_bytes_per_sample(AVSampleFormat sample_fmt)

@@ -8,7 +8,6 @@ cdef extern from "pyav/config.h" nogil:
 
     int PYAV_HAVE_AVCODEC_SEND_PACKET
 
-
 include "libavutil/avutil.pxd"
 include "libavutil/channel_layout.pxd"
 include "libavutil/dict.pxd"

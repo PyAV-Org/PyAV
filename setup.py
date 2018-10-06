@@ -547,9 +547,6 @@ class ReflectCommand(Command):
             'pyav_function_should_not_exist', # Canary that should not exist.
 
             # This we actually care about:
-            'av_calloc',
-            'avformat_alloc_output_context2',
-            'avformat_close_input',
             'avcodec_send_packet',
 
         ):
@@ -566,57 +563,10 @@ class ReflectCommand(Command):
             )
             print('found' if results[func_name] else 'missing')
 
-        # Check for some enum values.
-        for enum_name in (
-            'AV_OPT_TYPE_INT', # Canary that should exist.
-            'PYAV_ENUM_SHOULD_NOT_EXIST', # Canary that should not exist.
-
-            # What we actually care about.
-            'AV_OPT_TYPE_BOOL',
-        ):
-            print("looking for %s..." % enum_name, end='\n' if self.debug else '')
-            results[enum_name] = compile_check(
-                name=os.path.join(tmp_dir, enum_name),
-                code='int x = %s' % enum_name,
-                includes=reflection_includes,
-                include_dirs=config['include_dirs'],
-                link=False,
-                compiler=self.compiler,
-                force=self.force,
-                verbose=self.debug,
-            )
-            print("found" if results[enum_name] else "missing")
-
-        for struct_name, member_name in (
-
-            ('AVStream', 'index'), # Canary that should exist
-            ('PyAV', 'struct_should_not_exist'), # Canary that should not exist.
-
-            # Things we actually care about:
-            ('AVFrame', 'mb_type'),
-
-        ):
-            name = '%s.%s' % (struct_name, member_name)
-            print("looking for %s... " % name, end='\n' if self.debug else '')
-            results[name] = compile_check(
-                name=os.path.join(tmp_dir, name),
-                code='struct %s x; x.%s;' % (struct_name, member_name),
-                includes=reflection_includes,
-                include_dirs=config['include_dirs'],
-                link=False,
-                compiler=self.compiler,
-                force=self.force,
-                verbose=self.debug,
-            )
-            print('found' if results[name] else 'missing')
 
         canaries = {
             'pyav_function_should_not_exist': False,
-            'PyAV.struct_should_not_exist': False,
-            'AV_OPT_TYPE_INT': True,
-            'PYAV_ENUM_SHOULD_NOT_EXIST': False,
             'avformat_open_input': True,
-            'AVStream.index': True,
         }
 
         # Create macros for the things that we found.
