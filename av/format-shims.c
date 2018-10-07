@@ -26,30 +26,30 @@ AVOutputFormat* pyav_find_output_format(const char *name) {
 }
 
 
-const AVOutputFormat* pyav_muxer_iterate(const void **handle) {
+const AVOutputFormat* pyav_muxer_iterate(void **opaque) {
 
 #if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(58, 9, 100)
-    return av_muxer_iterate(handle);
+    return av_muxer_iterate(opaque);
 
 #else
     const AVOutputFormat *ptr;
-    ptr = av_oformat_next(*handle);
-    *handle = ptr;
+    ptr = av_oformat_next((const AVOutputFormat*)*opaque);
+    *opaque = (void*)ptr;
     return ptr;
 
 #endif
 }
 
 
-const AVInputFormat* pyav_demuxer_iterate(const void **handle) {
+const AVInputFormat* pyav_demuxer_iterate(void **opaque) {
 
 #if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(58, 9, 100)
-    return av_demuxer_iterate(handle);
+    return av_demuxer_iterate(opaque);
 
 #else
     const AVInputFormat *ptr;
-    ptr = av_iformat_next(*handle);
-    *handle = ptr;
+    ptr = av_iformat_next((const AVInputFormat*)*opaque);
+    *opaque = (void*)ptr;
     return ptr;
 
 #endif

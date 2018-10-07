@@ -5,7 +5,7 @@ from av.video.format cimport get_video_format
 
 
 cdef extern from "codec-shims.c" nogil:
-    cdef const lib.AVCodec* pyav_codec_iterate(void **handle)
+    cdef const lib.AVCodec* pyav_codec_iterate(void **opaque)
 
 
 cdef object _cinit_sentinel = object()
@@ -249,7 +249,7 @@ cdef class Codec(object):
 cdef get_codec_names():
     names = set()
     cdef const lib.AVCodec *ptr
-    cdef const void *opaque = NULL
+    cdef void *opaque = NULL
     while True:
         ptr = pyav_codec_iterate(&opaque);
         if ptr:

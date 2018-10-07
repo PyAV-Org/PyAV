@@ -5,8 +5,8 @@ from av.descriptor cimport wrap_avclass
 
 cdef extern from "format-shims.c" nogil:
     cdef const lib.AVOutputFormat* pyav_find_output_format(const char *name)
-    cdef const lib.AVOutputFormat* pyav_muxer_iterate(void **handle)
-    cdef const lib.AVInputFormat* pyav_demuxer_iterate(void **handle)
+    cdef const lib.AVOutputFormat* pyav_muxer_iterate(void **opaque)
+    cdef const lib.AVInputFormat* pyav_demuxer_iterate(void **opaque)
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -112,7 +112,7 @@ cdef class ContainerFormat(object):
 cdef get_output_format_names():
     names = set()
     cdef const lib.AVOutputFormat *ptr
-    cdef const void *opaque = NULL
+    cdef void *opaque = NULL
     while True:
         ptr = pyav_muxer_iterate(&opaque);
         if ptr:
@@ -124,7 +124,7 @@ cdef get_output_format_names():
 cdef get_input_format_names():
     names = set()
     cdef const lib.AVInputFormat *ptr
-    cdef const void *opaque = NULL
+    cdef void *opaque = NULL
     while True:
         ptr = pyav_demuxer_iterate(&opaque);
         if ptr:
