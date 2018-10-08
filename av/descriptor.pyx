@@ -24,8 +24,8 @@ cdef class Descriptor(object):
 
     property options:
         def __get__(self):
-            cdef lib.AVOption *ptr = self.ptr.option
-            cdef lib.AVOption *choice_ptr
+            cdef const lib.AVOption *ptr = self.ptr.option
+            cdef const lib.AVOption *choice_ptr
             cdef Option option
             cdef OptionChoice option_choice
             cdef bint choice_is_default
