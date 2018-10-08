@@ -106,8 +106,6 @@ cpdef int err_check(int res=0, filename=None) except -1:
     else:
         raise AVError(-res, message, None,     log)
 
-    return res
-
 
 
 # === DICTIONARIES ===
