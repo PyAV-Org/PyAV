@@ -59,15 +59,6 @@ cdef class Packet(Buffer):
         return self.struct.size
     cdef void*  _buffer_ptr(self):
         return self.struct.data
-    #cdef bint _buffer_writable(self):
-    #    return self.source is None
-
-    def copy(self):
-        raise NotImplementedError()
-        cdef Packet copy = Packet()
-        # copy.struct.size = self.struct.size
-        # copy.struct.data = NULL
-        return copy
 
     cdef _rebase_time(self, lib.AVRational dst):
 
