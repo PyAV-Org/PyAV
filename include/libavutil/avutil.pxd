@@ -316,7 +316,7 @@ cdef extern from "libavutil/log.h" nogil:
         AVClassCategory category
         int parent_log_context_offset
 
-        AVOption *option
+        const AVOption *option
 
     cdef enum:
         AV_LOG_QUIET
