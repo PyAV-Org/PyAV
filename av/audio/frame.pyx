@@ -21,7 +21,7 @@ cdef class AudioFrame(Frame):
 
     """A frame of audio."""
 
-    def __cinit__(self, format='s16', layout='stereo', samples=0, align=True):
+    def __cinit__(self, format='s16', layout='stereo', samples=0, align=1):
         if format is _cinit_bypass_sentinel:
             return
 
@@ -29,9 +29,8 @@ cdef class AudioFrame(Frame):
         cdef AudioLayout cy_layout = AudioLayout(layout)
         self._init(cy_format.sample_fmt, cy_layout.layout, samples, align)
 
-    cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align):
+    cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, unsigned int align):
 
-        self.align = align
         self.ptr.nb_samples = nb_samples
         self.ptr.format = <int>format
         self.ptr.channel_layout = layout
@@ -64,7 +63,7 @@ cdef class AudioFrame(Frame):
                 <lib.AVSampleFormat>self.ptr.format,
                 self._buffer,
                 self._buffer_size,
-                self.align
+                align
             ))
 
             self._init_planes(AudioPlane)
@@ -72,23 +71,9 @@ cdef class AudioFrame(Frame):
     def __dealloc__(self):
         lib.av_freep(&self._buffer)
 
-    cdef _recalc_linesize(self):
-        lib.av_samples_get_buffer_size(
-            self.ptr.linesize,
-            len(self.layout.channels),
-            self.ptr.nb_samples,
-            <lib.AVSampleFormat>self.ptr.format,
-            self.align
-        )
-        # We need to reset the buffer_size on the AudioPlane/s. This is
-        # an easy, if inefficient way.
-        self._init_planes(AudioPlane)
-
     cdef _init_user_attributes(self):
         self.layout = get_audio_layout(0, self.ptr.channel_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
-        self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
-        self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1
         self._init_planes(AudioPlane)
 
     def __repr__(self):

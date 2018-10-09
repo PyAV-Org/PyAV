@@ -186,8 +186,4 @@ cdef class AudioResampler(object):
 
         self.samples_out += output.ptr.nb_samples
 
-        # Recalculate linesize since the initial number of samples was
-        # only an estimate.
-        output._recalc_linesize()
-
         return output
