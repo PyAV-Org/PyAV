@@ -15,18 +15,53 @@ class TestAudioFrameConstructors(TestCase):
         self.assertEqual(len(frame.planes), 0)
         self.assertEqual(frame.samples, 0)
 
+    def test_manual_flt_mono_constructor(self):
+        frame = AudioFrame(format='flt', layout='mono', samples=160)
+        self.assertEqual(frame.format.name, 'flt')
+        self.assertEqual(frame.layout.name, 'mono')
+        self.assertEqual(len(frame.planes), 1)
+        self.assertEqual(frame.planes[0].buffer_size, 640)
+        self.assertEqual(frame.samples, 160)
+
+    def test_manual_flt_stereo_constructor(self):
+        frame = AudioFrame(format='flt', layout='stereo', samples=160)
+        self.assertEqual(frame.format.name, 'flt')
+        self.assertEqual(frame.layout.name, 'stereo')
+        self.assertEqual(len(frame.planes), 1)
+        self.assertEqual(frame.planes[0].buffer_size, 1280)
+        self.assertEqual(frame.samples, 160)
+
+    def test_manual_fltp_stereo_constructor(self):
+        frame = AudioFrame(format='fltp', layout='stereo', samples=160)
+        self.assertEqual(frame.format.name, 'fltp')
+        self.assertEqual(frame.layout.name, 'stereo')
+        self.assertEqual(len(frame.planes), 2)
+        self.assertEqual(frame.planes[0].buffer_size, 640)
+        self.assertEqual(frame.planes[1].buffer_size, 640)
+        self.assertEqual(frame.samples, 160)
+
     def test_manual_s16_mono_constructor(self):
         frame = AudioFrame(format='s16', layout='mono', samples=160)
         self.assertEqual(frame.format.name, 's16')
         self.assertEqual(frame.layout.name, 'mono')
         self.assertEqual(len(frame.planes), 1)
+        self.assertEqual(frame.planes[0].buffer_size, 320)
         self.assertEqual(frame.samples, 160)
+
+    def test_manual_s16_mono_constructor_align_8(self):
+        frame = AudioFrame(format='s16', layout='mono', samples=159, align=8)
+        self.assertEqual(frame.format.name, 's16')
+        self.assertEqual(frame.layout.name, 'mono')
+        self.assertEqual(len(frame.planes), 1)
+        self.assertEqual(frame.planes[0].buffer_size, 320)
+        self.assertEqual(frame.samples, 159)
 
     def test_manual_s16_stereo_constructor(self):
         frame = AudioFrame(format='s16', layout='stereo', samples=160)
         self.assertEqual(frame.format.name, 's16')
         self.assertEqual(frame.layout.name, 'stereo')
         self.assertEqual(len(frame.planes), 1)
+        self.assertEqual(frame.planes[0].buffer_size, 640)
         self.assertEqual(frame.samples, 160)
 
     def test_manual_s16p_stereo_constructor(self):
@@ -34,6 +69,8 @@ class TestAudioFrameConstructors(TestCase):
         self.assertEqual(frame.format.name, 's16p')
         self.assertEqual(frame.layout.name, 'stereo')
         self.assertEqual(len(frame.planes), 2)
+        self.assertEqual(frame.planes[0].buffer_size, 320)
+        self.assertEqual(frame.planes[1].buffer_size, 320)
         self.assertEqual(frame.samples, 160)
 
 

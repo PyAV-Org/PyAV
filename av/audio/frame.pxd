@@ -13,10 +13,6 @@ cdef class AudioFrame(Frame):
     cdef uint8_t *_buffer
     cdef size_t _buffer_size
 
-    cdef bint align
-    cdef int nb_channels
-    cdef int nb_planes
-
     cdef readonly AudioLayout layout
     """
     The audio channel layout.
@@ -31,8 +27,7 @@ cdef class AudioFrame(Frame):
     :type: AudioFormat
     """
 
-    cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, bint align)
-    cdef _recalc_linesize(self)
+    cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, unsigned int align)
     cdef _init_user_attributes(self)
 
 cdef AudioFrame alloc_audio_frame()
