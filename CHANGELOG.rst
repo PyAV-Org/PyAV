@@ -15,6 +15,8 @@ Minor:
 
 - Add support for more image formats in :meth:`.VideoFrame.to_ndarray` and
   :meth:`VideoFrame.from_ndarray` (:issue:`415`).
+- Add support for all known sample formats in :meth:`AudioFrame.to_ndarray`
+  and add :meth:`AudioFrame.to_ndarray` (:issue:`422`).
 - Make all video frames created by PyAV use 8-byte alignment.
 - Fix manipulations on video frames whose width does not match the line stride
   (:issue:`423`).

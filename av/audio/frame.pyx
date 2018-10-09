@@ -7,6 +7,21 @@ from av.utils cimport err_check
 
 cdef object _cinit_bypass_sentinel
 
+
+format_dtypes = {
+    'dbl': '<f8',
+    'dblp': '<f8',
+    'flt': '<f4',
+    'fltp': '<f4',
+    's16': '<i2',
+    's16p': '<i2',
+    's32': '<i4',
+    's32p': '<i4',
+    'u8': 'u1',
+    'u8p': 'u1',
+}
+
+
 cdef AudioFrame alloc_audio_frame():
     """Get a mostly uninitialized AudioFrame.
 
@@ -88,6 +103,34 @@ cdef class AudioFrame(Frame):
             id(self),
         )
 
+    @staticmethod
+    def from_ndarray(array, format='s16', layout='stereo'):
+        """
+        Construct a frame from a numpy array.
+        """
+        import numpy as np
+
+        # map avcodec type to numpy type
+        try:
+            dtype = np.dtype(format_dtypes[format])
+        except KeyError:
+            raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
+
+        nb_channels = len(AudioLayout(layout).channels)
+        assert array.dtype == dtype
+        assert array.ndim == 2
+        if AudioFormat(format).is_planar:
+            assert array.shape[0] == nb_channels
+            samples = array.shape[1]
+        else:
+            assert array.shape[0] == 1
+            samples = array.shape[1] // nb_channels
+
+        frame = AudioFrame(format=format, layout=layout, samples=samples)
+        for i, plane in enumerate(frame.planes):
+            plane.update(array[i, :])
+        return frame
+
     property samples:
         """
         Number of audio samples (per channel).
@@ -119,19 +162,20 @@ cdef class AudioFrame(Frame):
         """
         Get a numpy array of this frame.
         """
-
         import numpy as np
 
         # map avcodec type to numpy type
         try:
-            dtype = np.dtype({
-                's16p':'<i2',
-                'fltp':'<f4',
-            }[self.format.name])
-        except:
-            raise AssertionError("Don't know how to convert data type.", self.format.name)
+            dtype = np.dtype(format_dtypes[self.format.name])
+        except KeyError:
+            raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % self.format.name)
+
+        if self.format.is_planar:
+            count = self.samples
+        else:
+            count = self.samples * len(self.layout.channels)
 
         # convert and return data
-        return np.vstack(map(lambda x: np.frombuffer(x, dtype), self.planes))
+        return np.vstack(map(lambda x: np.frombuffer(x, dtype=dtype, count=count), self.planes))
 
     to_nd_array = renamed_attr('to_ndarray')
