@@ -274,20 +274,12 @@ cdef extern from "libavutil/opt.h" nogil:
 
 cdef extern from "libavutil/imgutils.h" nogil:
 
-    cdef int av_image_fill_arrays(
-        uint8_t *dst_data[4],
-        int dst_linesize[4],
-        const uint8_t *src,
-        AVPixelFormat pix_fmt,
+    cdef int av_image_alloc(
+        uint8_t *pointers[4],
+        int linesizes[4],
         int width,
         int height,
-        int align
-    )
-
-    cdef int av_image_get_buffer_size(
         AVPixelFormat pix_fmt,
-        int width,
-        int height,
         int align
     )
 

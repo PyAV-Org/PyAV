@@ -246,3 +246,20 @@ class TestVideoFrameReformat(TestCase):
         # I thought this was not allowed, but it seems to be.
         frame = VideoFrame(640, 480, 'yuv420p')
         frame2 = frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
+
+    def test_reformat_pixel_format_align(self):
+        height = 480
+        for width in range(2, 258, 2):
+            frame_yuv = VideoFrame(width, height, 'yuv420p')
+            for plane in frame_yuv.planes:
+                plane.update(b'\xff' * plane.buffer_size)
+
+            expected_rgb = numpy.zeros(shape=(height, width, 3), dtype=numpy.uint8)
+            expected_rgb[:,:,0] = 255
+            expected_rgb[:,:,1] = 124
+            expected_rgb[:,:,2] = 255
+
+            frame_rgb = frame_yuv.reformat(format='rgb24')
+            array_rgb = frame_rgb.to_ndarray()
+            self.assertEqual(array_rgb.shape, (height, width, 3))
+            self.assertTrue((array_rgb == expected_rgb).all())

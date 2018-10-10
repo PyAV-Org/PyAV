@@ -73,31 +73,20 @@ cdef class VideoFrame(Frame):
             self.ptr.height = height
             self.ptr.format = format
 
-
             if width and height:
-
                 # Cleanup the old buffer.
                 lib.av_freep(&self._buffer)
 
                 # Get a new one.
-                buffer_size = lib.av_image_get_buffer_size(format, width, height, align)
-                with gil: err_check(buffer_size)
-
-                self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
-
-                if not self._buffer:
-                    with gil: raise MemoryError("cannot allocate VideoFrame buffer")
-
-                # Attach the AVFrame to our buffer.
-                lib.av_image_fill_arrays(
-                        self.ptr.data,
-                        self.ptr.linesize,
-                        self._buffer,
-                        format,
-                        width,
-                        height,
-                        align
-                )
+                ret = lib.av_image_alloc(
+                    self.ptr.data,
+                    self.ptr.linesize,
+                    width,
+                    height,
+                    format,
+                    align)
+                with gil: err_check(ret)
+                self._buffer = self.ptr.data[0]
 
         self._init_user_attributes()
 
@@ -250,7 +239,7 @@ cdef class VideoFrame(Frame):
         # Create a new VideoFrame.
         cdef VideoFrame frame = alloc_video_frame()
         frame._copy_internal_attributes(self)
-        frame._init(dst_format, width, height, 1)
+        frame._init(dst_format, width, height, 8)
 
         # Finally, scale the image.
         with nogil:
@@ -382,6 +371,8 @@ cdef class VideoFrame(Frame):
         """
         Construct a frame from a numpy array.
         """
+        cdef int align = 1
+
         if format == 'yuv420p':
             assert array.dtype == 'uint8'
             assert array.ndim == 2
@@ -412,9 +403,10 @@ cdef class VideoFrame(Frame):
         elif format in ('gray', 'gray8'):
             assert array.dtype == 'uint8'
             assert array.ndim == 2
+            align = 4
         else:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
-        frame = VideoFrame(array.shape[1], array.shape[0], format)
+        frame = VideoFrame(array.shape[1], array.shape[0], format, align=align)
         frame.planes[0].update(array)
         return frame
