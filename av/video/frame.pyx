@@ -1,6 +1,5 @@
 from libc.stdint cimport uint8_t
 
-from av.bytesource cimport ByteSource, bytesource
 from av.deprecation import renamed_attr
 from av.enums cimport EnumType, define_enum
 from av.utils cimport err_check
@@ -55,7 +54,7 @@ cdef class VideoFrame(Frame):
 
     """
 
-    def __cinit__(self, width=0, height=0, format='yuv420p', align=1):
+    def __cinit__(self, width=0, height=0, format='yuv420p'):
 
         if width is _cinit_bypass_sentinel:
             return
@@ -64,27 +63,29 @@ cdef class VideoFrame(Frame):
         if c_format < 0:
             raise ValueError('invalid format %r' % format)
 
-        self._init(c_format, width, height, align)
+        self._init(c_format, width, height)
 
-    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height, unsigned int align):
-        cdef int buffer_size
+    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height):
         with nogil:
             self.ptr.width = width
             self.ptr.height = height
             self.ptr.format = format
 
+            # Allocate the buffer for the video frame.
+            #
+            # We enforce 8-byte aligned buffers, otherwise `sws_scale` causes
+            # out-of-bounds reads and writes for images whose width is not a
+            # multiple of 8.
+            #
+            # TODO: ensure 8 bytes is sufficient, even for resizing operations.
             if width and height:
-                # Cleanup the old buffer.
-                lib.av_freep(&self._buffer)
-
-                # Get a new one.
                 ret = lib.av_image_alloc(
                     self.ptr.data,
                     self.ptr.linesize,
                     width,
                     height,
                     format,
-                    align)
+                    8)
                 with gil: err_check(ret)
                 self._buffer = self.ptr.data[0]
 
@@ -98,6 +99,8 @@ cdef class VideoFrame(Frame):
         self._init_planes(VideoPlane)
 
     def __dealloc__(self):
+        # The `self._buffer` member is only set if *we* allocated the buffer in `_init`,
+        # as opposed to a buffer allocated by a decoder.
         lib.av_freep(&self._buffer)
 
     def __repr__(self):
@@ -239,7 +242,7 @@ cdef class VideoFrame(Frame):
         # Create a new VideoFrame.
         cdef VideoFrame frame = alloc_video_frame()
         frame._copy_internal_attributes(self)
-        frame._init(dst_format, width, height, 8)
+        frame._init(dst_format, width, height)
 
         # Finally, scale the image.
         with nogil:
@@ -301,7 +304,23 @@ cdef class VideoFrame(Frame):
 
         """
         from PIL import Image
-        return Image.frombuffer("RGB", (self.width, self.height), self.reformat(format="rgb24", **kwargs).planes[0], "raw", "RGB", 0, 1)
+        cdef VideoPlane plane = self.reformat(format="rgb24", **kwargs).planes[0]
+
+        cdef const uint8_t[:] i_buf = plane
+        cdef size_t i_pos = 0
+        cdef size_t i_stride = plane.line_size
+
+        cdef size_t o_pos = 0
+        cdef size_t o_stride = plane.width * 3
+        cdef size_t o_size = plane.height * o_stride
+        cdef bytearray o_buf = bytearray(o_size)
+
+        while o_pos < o_size:
+            o_buf[o_pos:o_pos + o_stride] = i_buf[i_pos:i_pos + o_stride]
+            i_pos += i_stride
+            o_pos += o_stride
+
+        return Image.frombytes("RGB", (self.width, self.height), bytes(o_buf), "raw", "RGB", 0, 1)
 
     def to_ndarray(self, **kwargs):
         """
@@ -354,15 +373,28 @@ cdef class VideoFrame(Frame):
 
     @staticmethod
     def from_image(img):
+        """
+        Construct a frame from a `PIL.Image`.
+        """
         if img.mode != 'RGB':
             img = img.convert('RGB')
-        frame = VideoFrame(img.size[0], img.size[1], 'rgb24')
 
-        # TODO: Use the buffer protocol.
-        try:
-            frame.planes[0].update(img.tobytes())
-        except AttributeError:
-            frame.plates[0].update(img.tostring())
+        cdef VideoFrame frame = VideoFrame(img.size[0], img.size[1], 'rgb24')
+
+        cdef bytes imgbytes = img.tobytes()
+        cdef const uint8_t[:] i_buf = imgbytes
+        cdef size_t i_pos = 0
+        cdef size_t i_stride = img.size[0] * 3
+        cdef size_t i_size = img.size[1] * i_stride
+
+        cdef uint8_t[:] o_buf = frame.planes[0]
+        cdef size_t o_pos = 0
+        cdef size_t o_stride = frame.planes[0].line_size
+
+        while i_pos < i_size:
+            o_buf[o_pos:o_pos + i_stride] = i_buf[i_pos:i_pos + i_stride]
+            i_pos += i_stride
+            o_pos += o_stride
 
         return frame
 
@@ -371,8 +403,6 @@ cdef class VideoFrame(Frame):
         """
         Construct a frame from a numpy array.
         """
-        cdef int align = 1
-
         if format == 'yuv420p':
             assert array.dtype == 'uint8'
             assert array.ndim == 2
@@ -403,10 +433,9 @@ cdef class VideoFrame(Frame):
         elif format in ('gray', 'gray8'):
             assert array.dtype == 'uint8'
             assert array.ndim == 2
-            align = 4
         else:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
-        frame = VideoFrame(array.shape[1], array.shape[0], format, align=align)
+        frame = VideoFrame(array.shape[1], array.shape[0], format)
         frame.planes[0].update(array)
         return frame
