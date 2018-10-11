@@ -40,7 +40,7 @@ cdef useful_array(VideoPlane plane, bytes_per_pixel=1):
     import numpy as np
     cdef int total_line_size = abs(plane.line_size)
     cdef int useful_line_size = plane.width * bytes_per_pixel
-    arr = np.frombuffer(plane, np.uint8)
+    arr = np.asarray(plane)
     if total_line_size != useful_line_size:
         arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
     return arr
