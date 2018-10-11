@@ -50,7 +50,7 @@ class TestVideoFramePlanes(TestCase):
     def test_yuv420p_planes_align(self):
         # If we request 8-byte alignment for a width which is not a multiple of 8,
         # the line sizes are larger than the plane width.
-        frame = VideoFrame(318, 238, 'yuv420p', align=8)
+        frame = VideoFrame(318, 238, 'yuv420p')
         self.assertEqual(len(frame.planes), 3)
         self.assertEqual(frame.planes[0].width, 318)
         self.assertEqual(frame.planes[0].height, 238)
@@ -101,33 +101,52 @@ class TestVideoFrameBuffers(TestCase):
         self.assertEqual(mem[:7], b'0.234xx')
 
 
-class TestVideoFrameTransforms(TestCase):
+class TestVideoFrameImage(TestCase):
 
     def setUp(self):
         if not Image:
             raise SkipTest()
-        self.image = Image.open(fate_png())
-        self.width, self.height = self.image.size
 
-    def test_roundtrip_low_api(self):
-        if not Image:
-            raise SkipTest()
-        frame = VideoFrame(self.width, self.height, 'rgb24')
-        frame.planes[0].update(self.image.tobytes())
-        img = frame.to_image()
-        img.save(self.sandboxed('roundtrip-low.jpg'))
-        self.assertImagesAlmostEqual(self.image, img)
-
-    def test_roundtrip_high_api(self):
-        if not Image:
-            raise SkipTest()
-        frame = VideoFrame.from_image(self.image)
+    def test_roundtrip(self):
+        image = Image.open(fate_png())
+        frame = VideoFrame.from_image(image)
         img = frame.to_image()
         img.save(self.sandboxed('roundtrip-high.jpg'))
-        self.assertImagesAlmostEqual(self.image, img)
+        self.assertImagesAlmostEqual(image, img)
+
+    def test_to_image_rgb24(self):
+        sizes = [
+            (318, 238),
+            (320, 240),
+            (500, 500),
+        ]
+        for width, height in sizes:
+            frame = VideoFrame(width, height, format='rgb24')
+
+            # fill video frame data
+            for plane in frame.planes:
+                ba = bytearray(plane.buffer_size)
+                pos = 0
+                for row in range(height):
+                    for i in range(plane.line_size):
+                        ba[pos] = i % 256
+                        pos += 1
+                plane.update(ba)
+
+            # construct expected image data
+            expected = bytearray(height * width * 3)
+            pos = 0
+            for row in range(height):
+                for i in range(width * 3):
+                    expected[pos] = i % 256
+                    pos += 1
+
+            img = frame.to_image()
+            self.assertEqual(img.size, (width, height))
+            self.assertEqual(img.tobytes(), expected)
 
 
-class TestVideoFrameConveniences(TestCase):
+class TestVideoFrameNdarray(TestCase):
 
     def test_basic_to_ndarray(self):
         frame = VideoFrame(640, 480, 'rgb24')
@@ -156,9 +175,9 @@ class TestVideoFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, 'gray')
             self.assertTrue((frame.to_ndarray() == array).all())
 
-    def test_ndarray_gray_align_8(self):
+    def test_ndarray_gray_align(self):
         for format in ['gray', 'gray8']:
-            frame = VideoFrame(318, 238, format=format, align=8)
+            frame = VideoFrame(318, 238, format=format)
             array = frame.to_ndarray()
             self.assertEqual(array.shape, (238, 318))
 
@@ -171,9 +190,9 @@ class TestVideoFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertTrue((frame.to_ndarray() == array).all())
 
-    def test_ndarray_rgb_align_8(self):
+    def test_ndarray_rgb_align(self):
         for format in ['rgb24', 'bgr24']:
-            frame = VideoFrame(318, 238, format=format, align=8)
+            frame = VideoFrame(318, 238, format=format)
             array = frame.to_ndarray()
             self.assertEqual(array.shape, (238, 318, 3))
 
@@ -186,9 +205,9 @@ class TestVideoFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertTrue((frame.to_ndarray() == array).all())
 
-    def test_ndarray_rgba_align_8(self):
+    def test_ndarray_rgba_align(self):
         for format in ['argb', 'rgba', 'abgr', 'bgra']:
-            frame = VideoFrame(318, 238, format=format, align=8)
+            frame = VideoFrame(318, 238, format=format)
             array = frame.to_ndarray()
             self.assertEqual(array.shape, (238, 318, 4))
 
@@ -200,8 +219,8 @@ class TestVideoFrameConveniences(TestCase):
         self.assertEqual(frame.format.name, 'yuv420p')
         self.assertTrue((frame.to_ndarray() == array).all())
 
-    def test_ndarray_yuv420p_align_8(self):
-        frame = VideoFrame(318, 238, format='yuv420p', align=8)
+    def test_ndarray_yuv420p_align(self):
+        frame = VideoFrame(318, 238, format='yuv420p')
         array = frame.to_ndarray()
         self.assertEqual(array.shape, (357, 318))
 
@@ -213,8 +232,8 @@ class TestVideoFrameConveniences(TestCase):
         self.assertEqual(frame.format.name, 'yuyv422')
         self.assertTrue((frame.to_ndarray() == array).all())
 
-    def test_ndarray_yuyv422_align_8(self):
-        frame = VideoFrame(318, 238, format='yuyv422', align=8)
+    def test_ndarray_yuyv422_align(self):
+        frame = VideoFrame(318, 238, format='yuyv422')
         array = frame.to_ndarray()
         self.assertEqual(array.shape, (238, 318, 2))
 
