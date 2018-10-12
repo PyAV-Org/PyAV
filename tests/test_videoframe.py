@@ -73,17 +73,6 @@ class TestVideoFramePlanes(TestCase):
 
 class TestVideoFrameBuffers(TestCase):
 
-    def test_buffer(self):
-        try:
-            buffer
-        except NameError:
-            raise SkipTest()
-        frame = VideoFrame(640, 480, 'rgb24')
-        frame.planes[0].update(b'01234' + (b'x' * (640 * 480 * 3 - 5)))
-        buf = buffer(frame.planes[0])
-        self.assertEqual(buf[1], b'1')
-        self.assertEqual(buf[:7], b'01234xx')
-
     def test_memoryview_read(self):
         try:
             memoryview
