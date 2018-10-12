@@ -66,7 +66,6 @@ cdef class CodecContext(object):
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        err_check(lib.avcodec_get_context_defaults3(c_ctx, cy_codec.ptr))
         return wrap_codec_context(c_ctx, cy_codec.ptr, True)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):

@@ -68,9 +68,7 @@ cdef class OutputContainer(Container):
         # to finish initializing it.
         lib.avformat_new_stream(self.proxy.ptr, codec)
         cdef lib.AVStream *stream = self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1]
-        cdef lib.AVCodecContext *codec_context = stream.codec # For readibility.
-        lib.avcodec_get_context_defaults3(stream.codec, codec)
-        stream.codec.codec = codec # Still have to manually set this though...
+        cdef lib.AVCodecContext *codec_context = stream.codec # For readability.
 
         # Copy from the template.
         if template is not None:

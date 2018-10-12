@@ -182,7 +182,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
 
-    cdef int avcodec_get_context_defaults3(AVCodecContext *ctx, AVCodec *codec)
     cdef AVClass* avcodec_get_class()
     cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
@@ -330,11 +329,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef void avsubtitle_free(AVSubtitle*)
 
     cdef void avcodec_get_frame_defaults(AVFrame* frame)
-
-    cdef int avcodec_get_context_defaults3(
-        AVCodecContext *ctx,
-        AVCodec *codec
-    )
 
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
 
