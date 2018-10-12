@@ -9,8 +9,12 @@ v6.0.0.dev0
 
 Major:
 
-- Dropped support for FFmpeg < 3.2.
+- Drop support for FFmpeg < 3.2.
 
+Minor:
+
+- Remove :meth:`.VideoFrame.to_qimage` method, it is too tied to PyQt4
+  (:issue:`424`).
 
 v0.x.y
 ------

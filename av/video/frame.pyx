@@ -355,22 +355,6 @@ cdef class VideoFrame(Frame):
 
     to_nd_array = renamed_attr('to_ndarray')
 
-    def to_qimage(self, **kwargs):
-        """Get an RGB ``QImage`` of this frame.
-
-        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
-
-        Returns a ``(VideoFrame, QImage)`` tuple, where the ``QImage`` references
-        the data in the ``VideoFrame``.
-        """
-        from PyQt4.QtGui import QImage
-        from sip import voidptr
-
-        cdef VideoFrame rgb = self.reformat(format='rgb24', **kwargs)
-        ptr = voidptr(<long><void*>rgb.ptr.extended_data[0])
-
-        return rgb, QImage(ptr, rgb.ptr.width, rgb.ptr.height, QImage.Format_RGB888)
-
     @staticmethod
     def from_image(img):
         """
