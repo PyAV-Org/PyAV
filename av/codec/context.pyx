@@ -1,4 +1,3 @@
-from cpython cimport PyWeakref_NewRef
 from libc.errno cimport EAGAIN
 from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, realloc, free
@@ -18,7 +17,7 @@ from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avra
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, ContainerProxy container):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -36,7 +35,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
-    py_ctx.container = container
+    py_ctx.allocated = allocated
     py_ctx._init(c_ctx, c_codec)
 
     return py_ctx
@@ -68,7 +67,7 @@ cdef class CodecContext(object):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
         err_check(lib.avcodec_get_context_defaults3(c_ctx, cy_codec.ptr))
-        return wrap_codec_context(c_ctx, cy_codec.ptr, None)
+        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -156,7 +155,7 @@ cdef class CodecContext(object):
         err_check(lib.avcodec_close(self.ptr))
 
     def __dealloc__(self):
-        if self.ptr and self.container is None:
+        if self.ptr and self.allocated:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)
         if self.parser:

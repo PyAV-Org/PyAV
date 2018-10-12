@@ -3,7 +3,6 @@ from libc.stdint cimport int64_t
 cimport libav as lib
 
 from av.codec.codec cimport Codec
-from av.container.core cimport ContainerProxy
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.bytesource cimport ByteSource
@@ -13,7 +12,8 @@ cdef class CodecContext(object):
 
     cdef lib.AVCodecContext *ptr
 
-    cdef ContainerProxy container
+    # Whether the AVCodecContext should be de-allocated upon destruction.
+    cdef bint allocated
 
     # Used as a signal that this is within a stream, and also for us to access
     # that stream. This is set "manually" by the stream after constructing
@@ -69,4 +69,4 @@ cdef class CodecContext(object):
     cdef Frame _alloc_next_frame(self)
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, ContainerProxy)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated)
