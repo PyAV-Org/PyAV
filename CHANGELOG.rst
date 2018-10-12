@@ -11,6 +11,10 @@ Major:
 
 - Dropped support for FFmpeg < 3.2.
 
+Minor:
+
+- Remove :meth:`.Stream.seek` method, as it actually makes the whole container seek.
+  Please use :meth:`.InputContainer.seek` instead.
 
 v0.x.y
 ------
