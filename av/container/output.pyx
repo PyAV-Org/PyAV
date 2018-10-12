@@ -20,7 +20,7 @@ cdef class OutputContainer(Container):
         self.streams = StreamContainer()
         self.metadata = {}
 
-    def __del__(self):
+    def __dealloc__(self):
         self.close()
 
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):

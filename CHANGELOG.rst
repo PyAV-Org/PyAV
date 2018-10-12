@@ -20,6 +20,8 @@ Minor:
   (:issue:`423`).
 - Remove :meth:`.VideoFrame.to_qimage` method, it is too tied to PyQt4
   (:issue:`424`).
+- Ensure :meth:`OutputContainer.close` is called at destruction (:issue:`427`).
+- Fix a memory leak in :class:`.OutputContainer` initialisation (:issue:`427`).
 
 Build:
 
