@@ -13,8 +13,18 @@ Major:
 
 Minor:
 
+- Add support for more image formats in :meth:`.VideoFrame.to_ndarray` and
+  :meth:`VideoFrame.from_ndarray` (:issue:`415`).
+- Make all video frames created by PyAV use 8-byte alignment.
+- Fix manipulations on video frames whose width does not match the line stride
+  (:issue:`423`).
 - Remove :meth:`.VideoFrame.to_qimage` method, it is too tied to PyQt4
   (:issue:`424`).
+
+Build:
+
+- Remove the "reflection" mechanism, and rely on FFmpeg version we build
+  against to decide which methods to call (:issue:`416`).
 
 v0.x.y
 ------
