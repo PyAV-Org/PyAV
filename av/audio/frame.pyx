@@ -172,10 +172,15 @@ cdef class AudioFrame(Frame):
 
         if self.format.is_planar:
             count = self.samples
-        else:
-            count = self.samples * len(self.layout.channels)
+            return np.vstack([
+                np.frombuffer(x, dtype=dtype, count=count)
+                for x in self.planes
+            ])
 
-        # convert and return data
-        return np.vstack(map(lambda x: np.frombuffer(x, dtype=dtype, count=count), self.planes))
+        else:
+            channels = len(self.layout.channels)
+            count = self.samples * channels
+            return np.frombuffer(self.planes[0], dtype=dtype, count=count).reshape(self.samples, channels)
+
 
     to_nd_array = renamed_attr('to_ndarray')
