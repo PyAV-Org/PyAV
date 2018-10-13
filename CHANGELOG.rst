@@ -3,34 +3,52 @@ Changelog
 
 We are operating with `semantic versioning <http://semver.org>`_.
 
+..
+    Please try to update this file in the commits that make the changes.
 
-v6.0.0.dev0
------------
+    To make merging/rebasing easier, we don't manually break lines in here
+    when they are too long, so any particular change is just one line.
+
+    To make tracking easier, please add either ``closes #123`` or ``fixes #123``
+    to the first line of the commit message. There are more syntaxes at:
+    <https://blog.github.com/2013-01-22-closing-issues-via-commit-messages/>.
+
+    Note that they these tags will not actually close the issue/PR until they
+    are merged into the "default" branch, currently "develop").
+
+
+v6.0.0
+------
 
 Major:
 
 - Drop support for FFmpeg < 3.2.
+- Remove ``VideoFrame.to_qimage`` method, as it is too tied to PyQt4. (:issue:`424`)
 
 Minor:
 
-- Add support for more image formats in :meth:`.VideoFrame.to_ndarray` and
-  :meth:`VideoFrame.from_ndarray` (:issue:`415`).
-- Add support for all known sample formats in :meth:`AudioFrame.to_ndarray`
-  and add :meth:`AudioFrame.to_ndarray` (:issue:`422`).
-- Make all video frames created by PyAV use 8-byte alignment.
-- Fix manipulations on video frames whose width does not match the line stride
-  (:issue:`423`).
-- Remove :meth:`.VideoFrame.to_qimage` method, it is too tied to PyQt4
-  (:issue:`424`).
-- Ensure :meth:`OutputContainer.close` is called at destruction (:issue:`427`).
-- Fix a memory leak in :class:`.OutputContainer` initialisation (:issue:`427`).
-- Fix a memory leak in :meth:`.OutputContainer.mux_one` (:issue:`431`).
-- Fix a memory leak when using Python I/O (:issue:`317`).
+- Add support for all known sample formats in :meth:`.AudioFrame.to_ndarray` and add :meth:`.AudioFrame.to_ndarray`. (:issue:`422`)
+- Add support for more image formats in :meth:`.VideoFrame.to_ndarray` and :meth:`.VideoFrame.from_ndarray`. (:issue:`415`)
+
+Micro:
+
+- Fix a memory leak in :meth:`.OutputContainer.mux_one`. (:issue:`431`)
+- Ensure :meth:`.OutputContainer.close` is called at destruction. (:issue:`427`)
+- Fix a memory leak in :class:`.OutputContainer` initialisation. (:issue:`427`)
+- Make all video frames created by PyAV use 8-byte alignment. (:issue:`425`)
+- Behave properly in :meth:`.VideoFrame.to_image` and :meth:`.VideoFrame.from_image` when ``width != line_width``. (:issue:`425`)
+- Fix manipulations on video frames whose width does not match the line stride. (:issue:`423`)
+- Fix several :attr:`.Plane.line_size` misunderstandings. (:issue:`421`)
+- Consistently decode dictionary contents. (:issue:`414`)
+- Always use send/recv en/decoding mechanism. This removes the ``count`` parameter, which was not used in the send/recv pipeline. (:issue:`413`)
+- Remove various deprecated iterators. (:issue:`412`)
+- Fix a memory leak when using Python I/O. (:issue:`317`)
 
 Build:
 
-- Remove the "reflection" mechanism, and rely on FFmpeg version we build
-  against to decide which methods to call (:issue:`416`).
+- Remove the "reflection" mechanism, and rely on FFmpeg version we build against to decide which methods to call. (:issue:`416`)
+- Fix many more ``const`` warnings.
+
 
 v0.x.y
 ------
@@ -127,7 +145,7 @@ Minor:
 - ``av.open`` has ``container_options`` and ``stream_options``.
 - ``Frame`` includes ``pts`` in ``repr``.
 
-Fixes:
+Patch:
 
 - EnumItem's hash calculation no longer overflows.
   (:issue:`339`, :issue:`341` and :issue:`342`.)
@@ -150,7 +168,7 @@ Minor:
   Huffman tables.
   (:issue:`287` by :gh-user:`adavoudi`)
 
-Fixes:
+Patch:
 
 - Packets retain their refcount after muxing.
   (:issue:`334`)
@@ -194,7 +212,7 @@ Minor:
 - Expose ``CodecContext.skip_frame``.
   (:issue:`259`)
 
-Fixes:
+Patch:
 
 - Build doesn't fail if you don't have git installed.
   (:issue:`184`)
@@ -207,7 +225,7 @@ Fixes:
 v0.3.3
 ------
 
-Fixes:
+Patch:
 
 - Fix segfault due to buffer overflow in handling of stream options.
   (:issue:`163` and :issue:`169`)
@@ -226,7 +244,7 @@ Minor:
 - Add ``AudioFrame.to_nd_array`` to match same on ``VideoFrame``.
 - Update Windows build process.
 
-Fixes:
+Patch:
 
 - Further improvements to the logging system.
   (:issue:`128`)
@@ -240,7 +258,7 @@ Minor:
 - ``av.logging.set_log_after_shutdown`` renamed to ``set_print_after_shutdown``
 - Repeating log messages will be skipped, much like ffmpeg's does by default
 
-Fixes:
+Patch:
 
 - Fix memory leak in logging system when under heavy logging loads while
   threading.
@@ -266,7 +284,7 @@ Minor:
 - ``StreamContainer`` for easier selection of streams
 - Add buffer protocol support to Packet
 
-Fixes:
+Patch:
 
 - Fix bug when using Python IO on files larger than 2GB.
   (:issue:`109` by :gh-user:`xxr3376`)
@@ -304,7 +322,7 @@ Minor:
 
 - Several new Stream/Packet/Frame attributes
 
-Fixes:
+Patch:
 
 - Fix segfault in audio handling.
   (:issue:`86` and :issue:`93`)
