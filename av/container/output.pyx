@@ -215,6 +215,8 @@ cdef class OutputContainer(Container):
 
         # Make another reference to the packet, as av_interleaved_write_frame
         # takes ownership of it.
-        cdef lib.AVPacket *packet_ref = lib.av_packet_clone(&packet.struct)
+        cdef lib.AVPacket packet_ref
+        lib.av_init_packet(&packet_ref)
+        self.proxy.err_check(lib.av_packet_ref(&packet_ref, &packet.struct))
 
-        self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, packet_ref))
+        self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet_ref))
