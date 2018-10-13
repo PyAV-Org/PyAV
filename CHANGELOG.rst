@@ -25,6 +25,7 @@ Minor:
 - Ensure :meth:`OutputContainer.close` is called at destruction (:issue:`427`).
 - Fix a memory leak in :class:`.OutputContainer` initialisation (:issue:`427`).
 - Fix a memory leak in :meth:`.OutputContainer.mux_one` (:issue:`431`).
+- Fix a memory leak when using Python I/O (:issue:`317`).
 
 Build:
 
