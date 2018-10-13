@@ -280,10 +280,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef void av_init_packet(AVPacket*)
     cdef int av_new_packet(AVPacket*, int)
+    cdef int av_packet_ref(AVPacket *dst, const AVPacket *src)
     cdef void av_packet_unref(AVPacket *pkt)
-    cdef int av_copy_packet(AVPacket *dst, AVPacket *src)
-    cdef AVPacket* av_packet_clone(AVPacket *src)
-    cdef int av_dup_packet(AVPacket *pkt)
 
     cdef enum AVSubtitleType:
         SUBTITLE_NONE
