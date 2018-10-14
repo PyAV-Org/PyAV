@@ -3,6 +3,8 @@ cimport libav as lib
 from av.bytesource cimport bytesource
 from av.utils cimport avrational_to_fraction, to_avrational, err_check
 
+from av import deprecation
+
 
 cdef class Packet(Buffer):
 
@@ -99,6 +101,7 @@ cdef class Packet(Buffer):
         """
         return self._stream.decode(self)
 
+    @deprecation.method
     def decode_one(self):
         """
         Send the packet's data to the decoder and return the first decoded frame.
