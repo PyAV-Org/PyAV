@@ -219,4 +219,7 @@ cdef class OutputContainer(Container):
         lib.av_init_packet(&packet_ref)
         self.proxy.err_check(lib.av_packet_ref(&packet_ref, &packet.struct))
 
-        self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet_ref))
+        cdef int ret
+        with nogil:
+            ret = lib.av_interleaved_write_frame(self.proxy.ptr, &packet_ref)
+        self.proxy.err_check(ret)

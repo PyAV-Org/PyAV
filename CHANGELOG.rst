@@ -43,6 +43,7 @@ Micro:
 - Always use send/recv en/decoding mechanism. This removes the ``count`` parameter, which was not used in the send/recv pipeline. (:issue:`413`)
 - Remove various deprecated iterators. (:issue:`412`)
 - Fix a memory leak when using Python I/O. (:issue:`317`)
+- Make :meth:`.OutputContainer.mux_one` call `av_interleaved_write_frame` with the GIL released.
 
 Build:
 
