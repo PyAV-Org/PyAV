@@ -93,13 +93,21 @@ cdef class Packet(Buffer):
         self._time_base = dst
 
     def decode(self):
-        """Decode the data in this packet into a list of Frames."""
+        """
+        Send the packet's data to the decoder and return a list of
+        :class:`.AudioFrame`, :class:`.VideoFrame` or :class:`.SubtitleSet`.
+        """
         return self._stream.decode(self)
 
     def decode_one(self):
-        """Decode the first frame from this packet.
+        """
+        Send the packet's data to the decoder and return the first decoded frame.
 
-        Returns ``None`` if there is no frame."""
+        Returns ``None`` if there is no frame.
+
+        .. warning:: This method is deprecated, as it silently discards any
+                     other frames which were decoded.
+        """
         res = self._stream.decode(self)
         return res[0] if res else None
 
@@ -108,11 +116,13 @@ cdef class Packet(Buffer):
             return self.struct.stream_index
 
     property stream:
+        """
+        The :class:`Stream` this packet was demuxed from.
+        """
         def __get__(self):
             return self._stream
         def __set__(self, Stream stream):
             self._stream = stream
-            #self._rebase_time(stream._stream.time_base)
             self.struct.stream_index = stream._stream.index
 
     property time_base:
@@ -159,11 +169,37 @@ cdef class Packet(Buffer):
                 self.struct.dts = v
 
     property pos:
-        def __get__(self): return None if self.struct.pos == -1 else self.struct.pos
+        """
+        The byte position of this packet within the :class:`.Stream`.
+
+        Returns `None` if it is not known.
+
+        :type: int
+        """
+        def __get__(self):
+            if self.struct.pos != -1:
+                return self.struct.pos
+
     property size:
-        def __get__(self): return self.struct.size
+        """
+        The size in bytes of this packet's data.
+
+        :type: int
+        """
+        def __get__(self):
+            return self.struct.size
+
     property duration:
-        def __get__(self): return None if self.struct.duration == lib.AV_NOPTS_VALUE else self.struct.duration
+        """
+        The duration in :attr:`time_base` units for this packet.
+
+        Returns `None` if it is not known.
+
+        :type: int
+        """
+        def __get__(self):
+            if self.struct.duration != lib.AV_NOPTS_VALUE:
+                return self.struct.duration
 
     property is_keyframe:
         def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_KEY)
