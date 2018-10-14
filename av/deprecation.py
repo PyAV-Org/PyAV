@@ -1,7 +1,14 @@
+import functools
 import warnings
 
 
-class AttributeRenamedWarning(DeprecationWarning):
+class AVDeprecationWarning(DeprecationWarning):
+    pass
+
+class AttributeRenamedWarning(AVDeprecationWarning):
+    pass
+
+class MethodDeprecationWarning(AVDeprecationWarning):
     pass   
 
 
@@ -9,7 +16,7 @@ class AttributeRenamedWarning(DeprecationWarning):
 # really want these to be seen, but also to use the "correct" base classes.
 # So we're putting a filter in place to show our warnings. The users can
 # turn them back off if they want.
-warnings.filterwarnings('default', '', AttributeRenamedWarning)
+warnings.filterwarnings('default', '', AVDeprecationWarning)
 
 
 class renamed_attr(object):
@@ -46,3 +53,15 @@ class renamed_attr(object):
         ), AttributeRenamedWarning, stacklevel=2)
         setattr(instance, self.new_name, value)
 
+
+class method(object):
+
+    def __init__(self, func):
+        functools.update_wrapper(self, func, ('__name__', '__doc__'))
+        self.func = func
+
+    def __get__(self, instance, cls):
+        warning = MethodDeprecationWarning('{}.{} is deprecated.'.format(
+            cls.__name__, self.func.__name__))
+        warnings.warn(warning, stacklevel=2)
+        return self.func.__get__(instance, cls)

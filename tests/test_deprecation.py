@@ -1,23 +1,40 @@
 import warnings
 
-from av.deprecation import renamed_attr
+from av import deprecation
 
 from .common import *
 
 
 class TestDeprecations(TestCase):
 
+    def test_method(self):
+
+        class Example(object):
+
+            def __init__(self, x=100):
+                self.x = x
+
+            @deprecation.method
+            def foo(self, a, b):
+                return self.x + a + b
+
+        obj = Example()
+
+        with warnings.catch_warnings(record=True) as captured:
+            self.assertEqual(obj.foo(20, b=3), 123)
+            self.assertIn('Example.foo is deprecated', captured[0].message.args[0])
+
     def test_renamed_attr(self):
 
         class Example(object):
 
             new_value = 'foo'
-            old_value = renamed_attr('new_value')
+            old_value = deprecation.renamed_attr('new_value')
             
             def new_func(self, a, b):
                 return a + b
                 
-            old_func = renamed_attr('new_func')
+            old_func = deprecation.renamed_attr('new_func')
 
         obj = Example()
 
