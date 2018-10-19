@@ -104,11 +104,11 @@ cdef class BufferedDecoder(object):
         #cdef int buf_size = <int> dec_buffer_size
         self.buffered_container = container
         self.buffered_stream = stream
-        print("Starting buffer create")
+        #print("Starting buffer create")
         self.active_buffer = CircularBuffer(dec_buffer_size)
         self.standby_buffer = CircularBuffer(dec_buffer_size)
         self.backlog_buffer = CircularBuffer(2*dec_buffer_size)
-        print("Created buffers")
+        #print("Created buffers")
         self.dec_batch = dec_batch
         self.external_seek = -1
         self.buffered_stream.seek(0)
@@ -124,7 +124,7 @@ cdef class BufferedDecoder(object):
         self.thread_exit = False
         self.buf_thread_inst = Thread(target=self.buffering_thread)
         self.buf_thread_inst.start()
-        print("Started thread!")
+        #print("Started thread!")
 
     def stop_buffer_thread(self):
         self.thread_exit = True
@@ -231,7 +231,7 @@ cdef class BufferedDecoder(object):
                         if not ret and avframe_ptr.pts >= seek_target:
                             last_frame = avframe_ptr
                             if seek_frames > 0:
-                                printf("Seeked %d frames!\n", seek_frames)
+                                #printf("Seeked %d frames!\n", seek_frames)
                                 seek_frames = 0
                             break
                         elif not ret:
@@ -289,7 +289,7 @@ cdef class BufferedDecoder(object):
                 #print("Waiting for frame...")
                 self.active_buffer.frame_event.wait()
                 self.active_buffer.frame_event.clear()
-                print("Time for thread switch {}s".format(monotonic() - self.time_event))
+                #print("Time for thread switch {}s".format(monotonic() - self.time_event))
                 #print("Got frame ={0:x}".format(<unsigned long>av_frame))
 
             av_frame = self.active_buffer.get()
@@ -329,8 +329,8 @@ cdef class BufferedDecoder(object):
             else:
                 ext_seek = True
         if ext_seek:
-            if self.active_buffer.count() > 2:
-                print("Ext seek to {} last buf pts is {}".format(seek_pts, self.active_buffer.last_pts))
+            #if self.active_buffer.count() > 2:
+            #    print("Ext seek to {} last buf pts is {}".format(seek_pts, self.active_buffer.last_pts))
             self.standby_buffer.reset()
 
             self.av_lock.acquire()
@@ -341,7 +341,7 @@ cdef class BufferedDecoder(object):
             self.external_seek = seek_pts
             self.av_lock.release()
 
-            print("Switched buffers")
+            #print("Switched buffers")
 
             self.buffering_sem.release()
 
