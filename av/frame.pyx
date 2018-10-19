@@ -13,8 +13,11 @@ cdef class Frame(object):
     """Frame Base Class"""
 
     def __cinit__(self, *args, **kwargs):
-        with nogil:
-            self.ptr = lib.av_frame_alloc()
+        if 'alloc' in kwargs and kwargs['alloc'] is False:
+            self.ptr = NULL
+        else:
+            with nogil:
+                self.ptr = lib.av_frame_alloc()
 
     def __dealloc__(self):
         with nogil:

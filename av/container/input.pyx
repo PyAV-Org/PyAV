@@ -5,6 +5,7 @@ from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
+from av.buffered_decoder import BufferedDecoder
 
 from av.utils import AVError # not cimport
 
@@ -172,3 +173,13 @@ cdef class InputContainer(Container):
 
         """
         self.proxy.seek(-1, offset, whence, backward, any_frame)
+
+    def get_buffered_decoder(self, *args, **kwargs):
+        """Get a buffered decoder for that container
+
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        kwargs = kwargs or {}
+        return BufferedDecoder(self, *args, **kwargs)
