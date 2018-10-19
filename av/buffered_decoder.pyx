@@ -125,10 +125,16 @@ cdef class BufferedDecoder(object):
         self.buf_thread_inst = Thread(target=self.buffering_thread)
         self.buf_thread_inst.start()
         print("Started thread!")
-    def __dealloc__(self):
+
+    def stop_buffer_thread(self):
         self.thread_exit = True
         self.buffering_sem.release()
         self.buf_thread_inst.join()
+        self.buf_thread_inst = None
+
+    def __dealloc__(self):
+        if self.buf_thread_inst:
+            self.stop_buffer_thread()
 
     def decode(self, container, stream):
         """decode(streams=None, video=None, audio=None, subtitles=None, data=None)
