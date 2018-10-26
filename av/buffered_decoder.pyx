@@ -122,6 +122,7 @@ cdef class BufferedDecoder(object):
         self.av_lock = Lock()
         self.eos = False
         self.thread_exit = False
+        self.seek_in_progress = False
         self.buf_thread_inst = Thread(target=self.buffering_thread)
         self.buf_thread_inst.start()
         #print("Started thread!")
@@ -193,6 +194,7 @@ cdef class BufferedDecoder(object):
                             if log:
                                 printf("Thread Seeking to %ld",seek_target)
                             self.buffered_stream.seek(seek_target)
+                            self.seek_in_progress = True
                             seek_frames = 0
                             #if seek_target > 0:
                             #    log = True
@@ -234,10 +236,22 @@ cdef class BufferedDecoder(object):
                                 #printf("Seeked %d frames!\n", seek_frames)
                                 seek_frames = 0
                             break
+                        elif self.seek_in_progress:
+                            with gil:
+                                self.av_lock.acquire()
+                                self.seek_in_progress = False
+                                if self.external_seek != seek_target:
+                                    seek_target = self.external_seek
+                                else:
+                                    seek_target = last_seek_target = self.external_seek = -1
+                                self.av_lock.release()
+
+
+
                         elif not ret:
                             seek_frames += 1
                         if ret is lib.AVERROR_EOF:
-                            printf("End of stream!\n")
+                            #printf("End of stream! last_frame is %p\n", last_frame)
                             self.eos = True
                             break
                         #with gil:
