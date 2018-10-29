@@ -48,3 +48,4 @@ cdef class BufferedDecoder(object):
         double time_event
         long long last_buffered_pts
         bint thread_exit
+        bint seek_in_progress
