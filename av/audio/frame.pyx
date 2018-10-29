@@ -89,9 +89,7 @@ cdef class AudioFrame(Frame):
     cdef _init_user_attributes(self):
         self.layout = get_audio_layout(0, self.ptr.channel_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
-        self.nb_channels = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
-        self.ptr.channels  = self.nb_channels
-        self.nb_planes = self.nb_channels if lib.av_sample_fmt_is_planar(<lib.AVSampleFormat>self.ptr.format) else 1
+        self.ptr.channels  = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
         self._init_planes(AudioPlane)
 
     def __repr__(self):
@@ -169,18 +167,7 @@ cdef class AudioFrame(Frame):
 
         # map avcodec type to numpy type
         try:
-            dtype = np.dtype({
-                'u8'  : 'u1',
-                'u8p' : 'u1',
-                's16' :'<i2',
-                's16p':'<i2',
-                's32' :'<i4',
-                's32p':'<i4',
-                'flt' :'<f4',
-                'fltp':'<f4',
-                'dbl' :'<f8',
-                'dblp':'<f8'
-            }[self.format.name])
+            dtype = np.dtype(format_dtypes[self.format.name])
         except KeyError:
             raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % self.format.name)
 
