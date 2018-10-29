@@ -8,6 +8,11 @@ cdef class AudioLayout(object):
     cdef int nb_channels
 
     cdef readonly tuple channels
+    """
+    A tuple of :class:`AudioChannel` objects.
+
+    :type: tuple
+    """
 
     cdef _init(self, uint64_t layout)
 

@@ -106,20 +106,13 @@ cpdef int err_check(int res=0, filename=None) except -1:
     else:
         raise AVError(-res, message, None,     log)
 
-    return res
-
 
 
 # === DICTIONARIES ===
 # ====================
 
-cdef bint _py3k = str is unicode
-
 cdef _decode(char *s, encoding, errors):
-    if encoding is None:
-        return s
-    else:
-        return (<bytes>s).decode(encoding, errors)
+    return (<bytes>s).decode(encoding, errors)
 
 cdef bytes _encode(s, encoding, errors):
     if isinstance(s, unicode):
@@ -127,7 +120,7 @@ cdef bytes _encode(s, encoding, errors):
     return s
 
 cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding=None, str errors='strict'):
-    if _py3k and encoding is None:
+    if encoding is None:
         encoding = 'utf8'
 
     cdef lib.AVDictionaryEntry *element = NULL
@@ -177,25 +170,6 @@ cdef object to_avrational(object value, lib.AVRational *input):
 
 # === OTHER ===
 # =============
-
-cdef str media_type_to_string(lib.AVMediaType media_type):
-
-    # There is a convenient lib.av_get_media_type_string(x), but it
-    # doesn't exist in libav.
-
-    if media_type == lib.AVMEDIA_TYPE_VIDEO:
-        return "video"
-    elif media_type == lib.AVMEDIA_TYPE_AUDIO:
-        return "audio"
-    elif media_type == lib.AVMEDIA_TYPE_DATA:
-        return "data"
-    elif media_type == lib.AVMEDIA_TYPE_SUBTITLE:
-        return "subtitle"
-    elif media_type == lib.AVMEDIA_TYPE_ATTACHMENT:
-        return "attachment"
-    else:
-        return "unknown"
-
 
 cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     # Not every flag exists in every version of FFMpeg, so we define them to 0.

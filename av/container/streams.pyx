@@ -12,7 +12,7 @@ Typed Collections
 ~~~~~~~~~~~~~~~~~
 
 These attributes are preferred for readability if you don't need the
-dynamic capabilities of :method:`.get`:
+dynamic capabilities of :meth:`.get`:
 
 .. attribute:: StreamContainer.video
 

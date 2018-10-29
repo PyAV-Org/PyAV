@@ -126,15 +126,13 @@ cdef class ContainerProxy(object):
     def __dealloc__(self):
         with nogil:
 
-            # Let FFmpeg handle it if it fully opened.
+            # Let FFmpeg close input if it was fully opened.
             if self.input_was_opened:
                 lib.avformat_close_input(&self.ptr)
 
-            # If we didn't open as input, but the IOContext was created.
-            # So either this is an output or we errored.
-            # lib.avio_alloc_context says our buffer "may be freed and replaced with
-            # a new buffer" so we should just leave it.
-            elif self.iocontext:
+            # FFmpeg will not release custom input, so it's up to us to free it.
+            # Do not touch our original buffer as it may have been freed and replaced.
+            if self.iocontext:
                 lib.av_freep(&self.iocontext.buffer)
                 lib.av_freep(&self.iocontext)
 
@@ -143,10 +141,7 @@ cdef class ContainerProxy(object):
             else:
                 lib.av_freep(&self.buffer)
 
-            # To be safe, lets give it another chance to free the whole structure.
-            # I (Mike) am not 100% on the deconstruction for output, and meshing
-            # these two together. This is safe to call after the avformat_close_input
-            # above, so *shrugs*.
+            # Finish releasing the whole structure.
             lib.avformat_free_context(self.ptr)
 
     cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame):

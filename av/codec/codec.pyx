@@ -1,7 +1,12 @@
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
-from av.utils cimport avrational_to_fraction, flag_in_bitfield, media_type_to_string
+from av.utils cimport avrational_to_fraction, flag_in_bitfield
 from av.video.format cimport get_video_format
+
+
+cdef extern from "codec-shims.c" nogil:
+    cdef const lib.AVCodec* pyav_codec_iterate(void **opaque)
+
 
 cdef object _cinit_sentinel = object()
 
@@ -96,8 +101,18 @@ cdef class Codec(object):
         def __get__(self): return self.ptr.name or ''
     property long_name:
         def __get__(self): return self.ptr.long_name or ''
-    property type:
-        def __get__(self): return media_type_to_string(self.ptr.type)
+
+    @property
+    def type(self):
+        """
+        The media type of this codec.
+
+        Examples: `'audio'`, `'video'`, `'subtitle'`.
+
+        :type: str
+        """
+        return lib.av_get_media_type_string(self.ptr.type)
+
     property id:
         def __get__(self): return self.ptr.id
 
@@ -230,11 +245,20 @@ cdef class Codec(object):
         def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
 
-codecs_available = set()
-cdef lib.AVCodec *ptr = lib.av_codec_next(NULL)
-while ptr:
-    codecs_available.add(ptr.name)
-    ptr = lib.av_codec_next(ptr)
+
+cdef get_codec_names():
+    names = set()
+    cdef const lib.AVCodec *ptr
+    cdef void *opaque = NULL
+    while True:
+        ptr = pyav_codec_iterate(&opaque);
+        if ptr:
+            names.add(ptr.name)
+        else:
+            break
+    return names
+
+codecs_available = get_codec_names()
 
 
 codec_descriptor = wrap_avclass(lib.avcodec_get_class())

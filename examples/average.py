@@ -48,9 +48,9 @@ for src_path in args.path:
     for fi, frame in enumerate(frame_iter(video)):
 
         if sum_ is None:
-            sum_ = frame.to_nd_array().astype(float)
+            sum_ = frame.to_ndarray().astype(float)
         else:
-            sum_ += frame.to_nd_array().astype(float)
+            sum_ += frame.to_ndarray().astype(float)
 
     sum_ /= (fi + 1)
 

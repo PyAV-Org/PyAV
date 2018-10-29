@@ -21,7 +21,7 @@ stream.width = width
 stream.height = height
 stream.pix_fmt = "yuv420p"
 
-for frame_i in xrange(duration):
+for frame_i in range(duration):
 
     frame = VideoFrame(width, height, 'rgb24')
     image = Image.new('RGB', (width, height), (
@@ -29,7 +29,7 @@ for frame_i in xrange(duration):
         int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi + 2 / 3 * math.pi))),
         int(255 * (0.5 + 0.5 * math.sin(frame_i / duration * 2 * math.pi + 4 / 3 * math.pi))),
     ))
-    frame.planes[0].update_from_string(image.tostring())
+    frame.planes[0].update(image.tobytes())
 
     packet = stream.encode(frame)
     if packet:

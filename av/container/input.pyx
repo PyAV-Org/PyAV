@@ -140,6 +140,7 @@ cdef class InputContainer(Container):
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]
+                    packet._time_base = packet._stream._stream.time_base
                     yield packet
 
         finally:

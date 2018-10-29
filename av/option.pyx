@@ -6,7 +6,7 @@ from av.enums cimport EnumType, define_enum
 
 cdef object _cinit_sentinel = object()
 
-cdef Option wrap_option(tuple choices, lib.AVOption *ptr):
+cdef Option wrap_option(tuple choices, const lib.AVOption *ptr):
     if ptr == NULL:
         return None
     cdef Option obj = Option(_cinit_sentinel)
@@ -155,7 +155,7 @@ cdef class Option(BaseOption):
         )
 
 
-cdef OptionChoice wrap_option_choice(lib.AVOption *ptr, bint is_default):
+cdef OptionChoice wrap_option_choice(const lib.AVOption *ptr, bint is_default):
     if ptr == NULL:
         return None
     cdef OptionChoice obj = OptionChoice(_cinit_sentinel)

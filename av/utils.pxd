@@ -17,5 +17,4 @@ cdef object avrational_to_fraction(const lib.AVRational *input)
 cdef object to_avrational(object value, lib.AVRational *input)
 
 
-cdef str media_type_to_string(lib.AVMediaType)
 cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag)

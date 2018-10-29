@@ -32,7 +32,12 @@ export PYAV_LIBRARY_NAME=${_lib_parts[0]}
 export PYAV_LIBRARY_VERSION=${_lib_parts[1]}
 
 
-export PYAV_PYTHON="${PYAV_PYTHON-python3}"
+if [[ ! "$PYAV_PYTHON" ]]; then
+    PYAV_PYTHON="${PYAV_PYTHON-python3}"
+    echo 'No $PYAV_PYTHON set; defaulting to python3.'
+fi
+export PYAV_PYTHON
+export PYAV_PIP="${PYAV_PIP-$PYAV_PYTHON -m pip}"
 
 if [[ "$TRAVIS" ]]; then
 
@@ -41,6 +46,7 @@ if [[ "$TRAVIS" ]]; then
 
     if [[ "$TRAVIS_PYTHON_VERSION" = "2.7" || "$TRAVIS_PYTHON_VERSION" = "pypy" ]]; then
         PYAV_PYTHON=python
+        PYAV_PIP=pip
     fi
 else
 
@@ -79,9 +85,6 @@ fi
 export PYAV_LIBRARY_ROOT="${PYAV_LIBRARY_ROOT-$PYAV_ROOT/vendor}"
 export PYAV_LIBRARY_BUILD="${PYAV_LIBRARY_BUILD-$PYAV_LIBRARY_ROOT/build}"
 export PYAV_LIBRARY_PREFIX="$PYAV_LIBRARY_BUILD/$PYAV_LIBRARY"
-
-# Signal to setup.py
-export PYAV_SETUP_REFLECT_CACHE=1
 
 export PATH="$PYAV_LIBRARY_PREFIX/bin:$PATH"
 export PYTHONPATH="$PYAV_ROOT:$PYTHONPATH"

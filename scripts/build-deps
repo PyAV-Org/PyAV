@@ -8,7 +8,7 @@ fi
 cd "$PYAV_ROOT"
 
 # Always try to install the Python dependencies they are cheap.
-pip install --upgrade -r tests/requirements.txt
+$PYAV_PIP install --upgrade -r tests/requirements.txt
 
 
 # Skip the rest of the build if it already exists.
@@ -45,6 +45,8 @@ fi
     --disable-optimizations \
     --disable-mmx \
     --enable-debug=3 \
+    --enable-gpl \
+    --enable-libx264 \
     $CONFFLAGS \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2

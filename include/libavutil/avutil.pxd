@@ -7,11 +7,21 @@ cdef extern from "libavutil/mathematics.h" nogil:
 cdef extern from "libavutil/rational.h" nogil:
     cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
 
-cdef extern from "libavutil/avutil.pyav.h" nogil:
+cdef extern from "libavutil/avutil.h" nogil:
 
     cdef int   avutil_version()
     cdef char* avutil_configuration()
     cdef char* avutil_license()
+
+    cdef enum AVPictureType:
+        AV_PICTURE_TYPE_NONE
+        AV_PICTURE_TYPE_I
+        AV_PICTURE_TYPE_P
+        AV_PICTURE_TYPE_B
+        AV_PICTURE_TYPE_S
+        AV_PICTURE_TYPE_SI
+        AV_PICTURE_TYPE_SP
+        AV_PICTURE_TYPE_BI
 
     cdef enum AVPixelFormat:
         AV_PIX_FMT_NONE
@@ -46,7 +56,6 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
     cdef void* av_malloc(size_t size)
     cdef void *av_calloc(size_t nmemb, size_t size)
 
-    cdef void av_free(void* ptr)
     cdef void av_freep(void *ptr)
 
     cdef int av_get_bytes_per_sample(AVSampleFormat sample_fmt)
@@ -104,6 +113,7 @@ cdef extern from "libavutil/avutil.pyav.h" nogil:
         int search_flags
     )
 
+    cdef const char* av_get_media_type_string(AVMediaType media_type)
 
 cdef extern from "libavutil/pixdesc.h" nogil:
 
@@ -264,20 +274,12 @@ cdef extern from "libavutil/opt.h" nogil:
 
 cdef extern from "libavutil/imgutils.h" nogil:
 
-    cdef int av_image_fill_arrays(
-        uint8_t *dst_data[4],
-        int dst_linesize[4],
-        const uint8_t *src,
-        AVPixelFormat pix_fmt,
+    cdef int av_image_alloc(
+        uint8_t *pointers[4],
+        int linesizes[4],
         int width,
         int height,
-        int align
-    )
-
-    cdef int av_image_get_buffer_size(
         AVPixelFormat pix_fmt,
-        int width,
-        int height,
         int align
     )
 
@@ -306,7 +308,7 @@ cdef extern from "libavutil/log.h" nogil:
         AVClassCategory category
         int parent_log_context_offset
 
-        AVOption *option
+        const AVOption *option
 
     cdef enum:
         AV_LOG_QUIET

@@ -1,57 +1,40 @@
 Hacking on PyAV
 ===============
 
-The Real Goal
--------------
+The Goal
+--------
 
-The goal here is to not only wrap FFmpeg in Python and provide nearly complete
-access to the library, but to make it easier to use without the need to
-understand the full library.
+The goal of PyAV is to not only wrap FFmpeg in Python and provide complete access to the library for power users, but to make FFmpeg approachable without the need to understand all of the underlying mechanics.
 
-For example:
+As much as reasonable, PyAV mirrors FFmpeg's structure and naming. Ideally, searching for documentation for `CodecContext.bit_rate` leads to `AVCodecContext.bit_rate` as well.
 
-- we don't need to mimick the underlying project structure as much as we do;
-- we shouldn't be exposing audio attributes on a video codec, and vise-versa;
-- the concept of packets could be abtracted away to yielding frames from streams;
-- time should be a real number, instead of a rational;
-- ...
+We do allow ourselves to make some small naming changes to make everything feel more consistent. e.g. All of the audio classes are prefixed with `Audio`, while some of the underlying FFmpeg structs are prefixed with `Sample` (`AudioFormat` vs `AVSampleFormat`).
 
 
-FFmpeg vs Libav
----------------
+Version Compatibility
+---------------------
 
-We test compile and link tiny executables to determine what functions and
-structure members are availible, and some very small shim headers to smooth
-out the differences.
+We currently support FFmpeg 3.2 through 4.0, on Python 2.7 and 3.3 through 3.7, on Linux, macOS, and Windows. We `continually test <https://travis-ci.org/mikeboers/PyAV>`_  these configurations.
 
-We `continually test <https://travis-ci.org/mikeboers/PyAV>`_ multiple versions
-of FFmpeg, as well as Linux/OS X, and Python 2/3.
+Differences are handled at compile time, in C, by checking against `LIBAV*_VERSION_INT` macros. We have not been able to perform this sort of checking in Cython as we have not been able to have it fully remove the code-paths, and so there are missing functions in newer FFmpeg's, and deprecated ones that emit compiler warnings in older FFmpeg's.
+
+Unfortunately, this means that PyAV is built for the existing FFmpeg, and must be rebuilt when FFmpeg is updated.
+
+We used to do this detection in small `*.pyav.h` headers in the `include` directory (and there are still some there as of writing), but the preferred method is to create `*-shims.c` files that are `cimport`-ed by the one module that uses them.
 
 You can use the same build system as Travis for local development::
 
-    source scripts/activate.sh ffmpeg 2.7
+    # Prep the environment.
+    source scripts/activate.sh
+
+    # Build FFmpeg (4.0 by default).
     ./scripts/build-deps
+
+    # Build PyAV.
     make
+
+    # Run the tests.
     nosetests
-
-
-Function Detection
-------------------
-
-Macros will be defined for a few functions that are only in one of FFmpeg or
-LibAV. For example, there is a ``PYAV_HAVE_AVFORMAT_CLOSE_INPUT`` macro defined
-to either ``0`` or ``1``.
-
-See the ``reflect`` command in ``setup.py`` to add more.
-
-
-Struct Member Detection
------------------------
-
-Macros will be defined for structure members that are not garunteed to exist
-(usually because Libav deprecated and removed them, while FFmpeg did not).
-For example, there is a ``PYAV_HAVE_AVFRAME__MB_TYPE`` macro defined to ``1``
-if the ``AVFrame.mb_type`` member exists (and ``0`` if it does not).
 
 
 Time in Libraries
@@ -61,7 +44,7 @@ Time in Libraries
 
     Time in the underlying libraries is not 100% clear. This is the picture that we are operating under, however.
 
-Time is generally expressed as integer multiples of defined units of time. The definition of a unit of time is called a ``time_base``.
+Time is expressed as integer multiples of defined units of time. The definition of a unit of time is called a ``time_base``.
 
 Both ``AVStream`` and ``AVCodecContext`` have a ``time_base`` member. However, they are used for different purposes, and (this author finds) it is too easy to abstract the concept too far.
 
@@ -73,16 +56,13 @@ For fixed-fps content your frames' ``pts`` would be the frame or sample index (f
 
 For decoding, everything is in ``AVStream.time_base`` because we don't have to rebase it into codec time base (as it generally seems to be the case that ``AVCodecContext`` doesn't really care about your timing; I wish there was a way to assert this without reading every codec).
 
-When there is no time_base (such as on ``AVFormatContext``), there is an
-implicit time_base of ``1/AV_TIME_BASE``.
+When there is no time_base (such as on ``AVFormatContext``), there is an implicit time_base of ``1/AV_TIME_BASE``.
 
 
 Code Formatting and Linting
 ---------------------------
 
-There is a ``scripts/autolint -a`` which will automatically perform a number of
-code linting operations. Pull requests are expected to adhere to what the
-linter does.
+There is a ``scripts/autolint -a`` which will automatically perform a number of code linting operations. Pull requests are expected to adhere to what the linter does.
 
 
 Debugging

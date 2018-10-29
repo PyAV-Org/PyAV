@@ -5,8 +5,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef char* avfilter_configuration()
     cdef char* avfilter_license()
 
-    cdef void avfilter_register_all()
-
     cdef struct AVFilterPad:
         # This struct is opaque.
         pass
@@ -35,8 +33,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL
 
     cdef AVFilter* avfilter_get_by_name(const char *name)
-
-    cdef const AVFilter* avfilter_next(const AVFilter *prev)
 
     cdef struct AVFilterLink # Defined later.
 
@@ -75,3 +71,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         int sample_rate
         int format
         AVRational time_base
+
+    # custom
+    cdef set pyav_get_available_filters()

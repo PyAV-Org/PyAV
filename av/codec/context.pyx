@@ -1,4 +1,3 @@
-from cpython cimport PyWeakref_NewRef
 from libc.errno cimport EAGAIN
 from libc.stdint cimport uint8_t, int64_t
 from libc.stdlib cimport malloc, realloc, free
@@ -12,13 +11,13 @@ from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.enums cimport EnumType, define_enum
 from av.packet cimport Packet
-from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational, media_type_to_string
+from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational
 
 
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, ContainerProxy container):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -36,7 +35,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
-    py_ctx.container = container
+    py_ctx.allocated = allocated
     py_ctx._init(c_ctx, c_codec)
 
     return py_ctx
@@ -67,8 +66,7 @@ cdef class CodecContext(object):
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        err_check(lib.avcodec_get_context_defaults3(c_ctx, cy_codec.ptr))
-        return wrap_codec_context(c_ctx, cy_codec.ptr, None)
+        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -84,9 +82,6 @@ cdef class CodecContext(object):
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError('Wrapping CodecContext with mismatched codec.')
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
-
-        # Signal that we want to reference count.
-        self.ptr.refcounted_frames = 1
 
         # Set reasonable threading defaults.
         # count == 0 -> use as many threads as there are CPUs.
@@ -159,7 +154,7 @@ cdef class CodecContext(object):
         err_check(lib.avcodec_close(self.ptr))
 
     def __dealloc__(self):
-        if self.ptr and self.container is None:
+        if self.ptr and self.allocated:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)
         if self.parser:
@@ -308,12 +303,14 @@ cdef class CodecContext(object):
         if not res:
             return packet
 
-    cpdef encode(self, Frame frame=None, unsigned int count=0, bint prefer_send_recv=True):
+    cpdef encode(self, Frame frame=None):
         """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
+
+        if self.ptr.codec_type not in [lib.AVMEDIA_TYPE_VIDEO, lib.AVMEDIA_TYPE_AUDIO]:
+            raise NotImplementedError('Encoding is only supported for audio and video.')
 
         self.open(strict=False)
 
-        cdef bint is_flushing = frame is None
         frames = self._prepare_frames_for_encode(frame)
 
         # Assert the frames are in our time base.
@@ -323,53 +320,23 @@ cdef class CodecContext(object):
                 frame._rebase_time(self.ptr.time_base)
 
         res = []
-
-        if (
-            prefer_send_recv and
-            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
-            (
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
-            )
-        ):
-            for frame in frames:
-                for packet in self._send_frame_and_recv(frame):
-                    self._setup_encoded_packet(packet, frame)
-                    res.append(packet)
-            return res
-
-
         for frame in frames:
-            packet = self._encode(frame)
-            if packet:
-                self._setup_encoded_packet(packet, frame)
+            for packet in self._send_frame_and_recv(frame):
+                self._setup_encoded_packet(packet)
                 res.append(packet)
-
-        while is_flushing and (not count or count > len(res)):
-            packet = self._encode(None)
-            if packet:
-                self._setup_encoded_packet(packet, frame)
-                res.append(packet)
-            else:
-                break
-
         return res
 
-    cdef _setup_encoded_packet(self, Packet packet, Frame frame):
-        # FFmpeg copied the packet's pts/dts from the source frame.
-        # PyAV is passing `time_base`s around.
-        # The PyAV muxer will take care of rebasing time if it needs to.
-        # There isn't a lot we can actually take from the `frame` here as
-        # they may be offset, but time_base should be consistent.
-        if frame._time_base.num:
-            packet._time_base = frame._time_base
-        else:
-            packet._time_base = self.ptr.time_base
+    cdef _setup_encoded_packet(self, Packet packet):
+        # We coerced the frame's time_base into the CodecContext's during encoding,
+        # and FFmpeg copied the frame's pts/dts to the packet, so keep track of
+        # this time_base in case the frame needs to be muxed to a container with
+        # a different time_base.
+        #
+        # NOTE: if the CodecContext's time_base is altered during encoding, all bets
+        # are off!
+        packet._time_base = self.ptr.time_base
 
-    cdef _encode(self, Frame frame):
-        raise NotImplementedError('Base CodecContext cannot encode frames.')
-
-    cpdef decode(self, Packet packet=None, unsigned int count=0, bint prefer_send_recv=True):
+    cpdef decode(self, Packet packet=None):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
 
         If the packet is None, the buffers will be flushed. This is useful if
@@ -383,85 +350,23 @@ cdef class CodecContext(object):
 
         self.open(strict=False)
 
-        if (
-            prefer_send_recv and
-            lib.PYAV_HAVE_AVCODEC_SEND_PACKET and
-            (
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_VIDEO or
-                self.ptr.codec_type == lib.AVMEDIA_TYPE_AUDIO
-            )
-        ):
-            res = []
-            for frame in self._send_packet_and_recv(packet):
+        res = []
+        for frame in self._send_packet_and_recv(packet):
+            if isinstance(frame, Frame):
                 self._setup_decoded_frame(frame, packet)
-                res.append(frame)
-            return res
-
-        if packet is None:
-            packet = Packet() # Makes our control flow easier.
-
-        cdef int data_consumed = 0
-        cdef list decoded_objs = []
-
-        cdef uint8_t *original_data = packet.struct.data
-        cdef int      original_size = packet.struct.size
-
-        cdef bint is_flushing = not (packet.struct.data and packet.struct.size)
-
-        # Keep decoding while there is data in this packet.
-        while is_flushing or packet.struct.size > 0:
-
-            if is_flushing:
-                packet.struct.data = NULL
-                packet.struct.size = 0
-
-            decoded = self._decode(&packet.struct, &data_consumed)
-            packet.struct.data += data_consumed
-            packet.struct.size -= data_consumed
-
-            if decoded:
-
-                if isinstance(decoded, Frame):
-                    self._setup_decoded_frame(decoded, packet)
-                decoded_objs.append(decoded)
-
-                # Sometimes we will error if we try to flush the stream
-                # (e.g. MJPEG webcam streams), and so we must be able to
-                # bail after the first, even though buffers may build up.
-                if count and len(decoded_objs) >= count:
-                    break
-
-            # Sometimes there are no frames, and no data is consumed, and this
-            # is ok. However, no more frames are going to be pulled out of here.
-            # (It is possible for data to not be consumed as long as there are
-            # frames, e.g. during flushing.)
-            elif not data_consumed:
-                break
-
-        # Restore the packet.
-        packet.struct.data = original_data
-        packet.struct.size = original_size
-
-        return decoded_objs
+            res.append(frame)
+        return res
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
 
-        # In FFMpeg <= 3.0, and all LibAV we know of, the frame's pts may be
-        # unset at this stage, and the PTS from a packet is the correct one while
-        # decoding, and it is copied to pkt_pts during creation of a frame.
-        # TODO: Look into deprecation of pkt_pts in FFmpeg > 3.0
-        if frame.ptr.pts == lib.AV_NOPTS_VALUE:
-            frame.ptr.pts = frame.ptr.pkt_pts
-
-        # Propigate our manual times.
+        # Propagate our manual times.
         # While decoding, frame times are in stream time_base, which PyAV
         # is carrying around.
+        # TODO: Somehow get this from the stream so we can not pass the
+        # packet here (because flushing packets are bogus).
         frame._time_base = packet._time_base
 
         frame.index = self.ptr.frame_number - 1
-
-    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
-        raise NotImplementedError('Base CodecContext cannot decode packets.')
 
     property name:
         def __get__(self):

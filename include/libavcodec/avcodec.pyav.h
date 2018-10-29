@@ -1,17 +1,6 @@
 #include "libavcodec/avcodec.h"
 
 
-#if !PYAV_HAVE_AV_FRAME_GET_BEST_EFFORT_TIMESTAMP
-
-    int64_t av_frame_get_best_effort_timestamp(const AVFrame *frame)
-    {
-        // TODO: do this right.
-        return frame->pkt_pts;
-    }
-
-#endif
-
-
 #if PYAV_HAVE_FFMPEG
 
     #define AVPixelFormat PixelFormat
@@ -20,38 +9,8 @@
 #endif
 
 
-#if !PYAV_HAVE_AVCODEC_SEND_PACKET
-
-    // Stub these out so that we don't fail to compile.
-    int avcodec_send_packet(AVCodecContext *avctx, AVPacket *packet)   { return 0; }
-    int avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame)   { return 0; }
-    int avcodec_send_frame(AVCodecContext *avctx, AVFrame *frame)      { return 0; }
-    int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt) { return 0; }
-
-#endif
-
-
 // Some of these properties don't exist in both FFMpeg and LibAV, so we
 // signal to our code that they are missing via 0.
-#ifndef AV_CODEC_PROP_INTRA_ONLY
-    #define AV_CODEC_PROP_INTRA_ONLY 0
-#endif
-#ifndef AV_CODEC_PROP_LOSSY
-    #define AV_CODEC_PROP_LOSSY 0
-#endif
-#ifndef AV_CODEC_PROP_LOSSLESS
-    #define AV_CODEC_PROP_LOSSLESS 0
-#endif
-#ifndef AV_CODEC_PROP_REORDER
-    #define AV_CODEC_PROP_REORDER 0
-#endif
-#ifndef AV_CODEC_PROP_BITMAP_SUB
-    #define AV_CODEC_PROP_BITMAP_SUB 0
-#endif
-#ifndef AV_CODEC_PROP_TEXT_SUB
-    #define AV_CODEC_PROP_TEXT_SUB 0
-#endif
-
 #ifndef CODEC_CAP_DRAW_HORIZ_BAND
     #define CODEC_CAP_DRAW_HORIZ_BAND 0
 #endif
@@ -108,13 +67,3 @@
 #endif
 
 
-// A pile of things got renamed.
-#ifndef AV_CODEC_FLAG_GLOBAL_HEADER
-    #define AV_CODEC_FLAG_GLOBAL_HEADER CODEC_FLAG_GLOBAL_HEADER
-#endif
-#ifndef AV_CODEC_FLAG_TRUNCATED
-    #define AV_CODEC_FLAG_TRUNCATED CODEC_FLAG_TRUNCATED
-#endif
-#ifndef AV_CODEC_FLAG_QSCALE
-    #define AV_CODEC_FLAG_QSCALE CODEC_FLAG_QSCALE
-# endif

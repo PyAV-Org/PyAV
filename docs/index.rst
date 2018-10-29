@@ -23,10 +23,10 @@ Currently we provide the basics of:
   :class:`.Filter`,
   :class:`.Graph`;
 
-- ``libscscale``:
+- ``libswscale``:
   :class:`.VideoReformatter`;
 
-- ``libavresample`` and/or ``libswresample``:
+- ``libswresample``:
   :class:`.AudioResampler`;
 
 - and a few more utilities.

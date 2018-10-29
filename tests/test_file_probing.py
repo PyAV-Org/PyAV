@@ -66,28 +66,34 @@ class TestVideoProbe(TestCase):
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
+
+        # actual stream properties
+        self.assertEqual(stream.average_rate, Fraction(25, 1))
+        self.assertEqual(stream.duration, 145800)
+        self.assertEqual(stream.frames, 0)
+        self.assertEqual(stream.id, 4131)
         self.assertEqual(stream.index, 0)
-        self.assertEqual(stream.type, 'video')
-        self.assertEqual(stream.name, 'mpeg2video')
-        self.assertEqual(stream.long_name, 'MPEG-2 video')
+        self.assertEqual(stream.language, None)
+        self.assertEqual(stream.metadata, {})
         self.assertEqual(stream.profile, 'Simple')
+        self.assertEqual(stream.start_time, 2065806749)
+        self.assertEqual(stream.time_base, Fraction(1, 90000))
 
-        # Libav is able to return a bit-rate for this file, but ffmpeg doesn't,
-        # so have to rely on rc_max_rate.
-        try:
-            self.assertEqual(stream.bit_rate, None)
-            self.assertEqual(stream.max_bit_rate, 3364800)
-        except AssertionError:
-            self.assertEqual(stream.bit_rate, 3364800)
+        # codec properties
+        self.assertEqual(stream.long_name, 'MPEG-2 video')
+        self.assertEqual(stream.name, 'mpeg2video')
+        self.assertEqual(stream.type, 'video')
 
-        self.assertEqual(stream.sample_aspect_ratio, Fraction(16, 15))
+        # codec context properties
+        self.assertEqual(stream.bit_rate, 3364800)
         self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
-        self.assertEqual(stream.gop_size, 12)
         self.assertEqual(stream.format.name, 'yuv420p')
         self.assertFalse(stream.has_b_frames)
-        self.assertEqual(stream.average_rate, Fraction(25, 1))
-        self.assertEqual(stream.width, 720)
+        self.assertEqual(stream.gop_size, 12)
         self.assertEqual(stream.height, 576)
+        self.assertEqual(stream.max_bit_rate, None)
+        self.assertEqual(stream.sample_aspect_ratio, Fraction(16, 15))
+        self.assertEqual(stream.width, 720)
 
         # For some reason, these behave differently on OS X (@mikeboers) and
         # Ubuntu (Travis). We think it is FFmpeg, but haven't been able to

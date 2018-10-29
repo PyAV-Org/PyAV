@@ -6,3 +6,4 @@ Buffers
 
     .. autoclass:: Buffer
         :members:
+        :exclude-members: update_buffer

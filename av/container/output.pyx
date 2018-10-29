@@ -20,7 +20,7 @@ cdef class OutputContainer(Container):
         self.streams = StreamContainer()
         self.metadata = {}
 
-    def __del__(self):
+    def __dealloc__(self):
         self.close()
 
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
@@ -68,13 +68,7 @@ cdef class OutputContainer(Container):
         # to finish initializing it.
         lib.avformat_new_stream(self.proxy.ptr, codec)
         cdef lib.AVStream *stream = self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1]
-        cdef lib.AVCodecContext *codec_context = stream.codec # For readibility.
-        lib.avcodec_get_context_defaults3(stream.codec, codec)
-        stream.codec.codec = codec # Still have to manually set this though...
-
-        # Construct the user-land stream so we have access to CodecContext.
-        cdef Stream py_stream = wrap_stream(self, stream)
-        self.streams.add_stream(py_stream)
+        cdef lib.AVCodecContext *codec_context = stream.codec # For readability.
 
         # Copy from the template.
         if template is not None:
@@ -110,6 +104,10 @@ cdef class OutputContainer(Container):
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+        # Construct the user-land stream
+        cdef Stream py_stream = wrap_stream(self, stream)
+        self.streams.add_stream(py_stream)
 
         if options:
             py_stream.options.update(options)
@@ -217,6 +215,11 @@ cdef class OutputContainer(Container):
 
         # Make another reference to the packet, as av_interleaved_write_frame
         # takes ownership of it.
-        cdef lib.AVPacket *packet_ref = lib.av_packet_clone(&packet.struct)
+        cdef lib.AVPacket packet_ref
+        lib.av_init_packet(&packet_ref)
+        self.proxy.err_check(lib.av_packet_ref(&packet_ref, &packet.struct))
 
-        self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, packet_ref))
+        cdef int ret
+        with nogil:
+            ret = lib.av_interleaved_write_frame(self.proxy.ptr, &packet_ref)
+        self.proxy.err_check(ret)
