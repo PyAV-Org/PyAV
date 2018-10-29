@@ -1,5 +1,8 @@
+from fractions import Fraction
+
 from libc.string cimport memcpy
 
+from av.audio.layout cimport AudioLayout
 from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.audio.format cimport AudioFormat
 from av.filter.context cimport FilterContext, wrap_filter_context
@@ -145,7 +148,7 @@ cdef class Graph(object):
 
         return self.add('buffer', args, name=name)
 
-    def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None):
+    def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None, time_base=None):
         """
         Convenient method for adding `abuffer <https://ffmpeg.org/ffmpeg-filters.html#abuffer>`_.
         """
@@ -159,22 +162,26 @@ cdef class Graph(object):
                 layout = template.layout.name
             if channels is None:
                 channels = template.channels
+            if time_base is None:
+                time_base = Fraction(template.time_base.numerator, template.time_base.denominator)
 
         if sample_rate is None:
             raise ValueError('missing sample_rate')
         if format is None:
             raise ValueError('missing format')
-        if layout is None:
-            raise ValueError('missing layout')
-        if channels is None:
-            raise ValueError('missing channels')
+        if layout is None and channels is None:
+            raise ValueError('missing layout or channels')
+        if time_base is None:
+            time_base = Fraction(1, sample_rate)
 
-        args = "sample_rate=%d:sample_fmt=%s:channel_layout=%s:channels=%d:time_base=%d/%d" % (
-            sample_rate, AudioFormat(format).name,
-            layout,
-            channels,
-            1, 1000,
-        )
+        args = "sample_rate=%d:sample_fmt=%s:time_base=%d/%d" % (sample_rate,
+                                                                 AudioFormat(format).name,
+                                                                 time_base.numerator,
+                                                                 time_base.denominator)
+        if layout:
+            args += ":channel_layout=" + AudioLayout(layout).name
+        if channels:
+            args += ":channels=" + str(channels)
 
         return self.add('abuffer', args, name=name)
 
