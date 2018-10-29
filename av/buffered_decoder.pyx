@@ -227,7 +227,7 @@ cdef class BufferedDecoder(object):
                             printf("avcodec_send_packet returned %d\n",ret)
 
                         ret = lib.avcodec_receive_frame(self.buffered_stream.codec_context.ptr, avframe_ptr)
-                        if ret < 0: #and log:
+                        if ret < 0 and log:
                             printf("avcodec_receive_frame returned %d\n",ret)
 
                         if not ret:
@@ -237,12 +237,10 @@ cdef class BufferedDecoder(object):
                                     #printf("Seeked %d frames!\n", seek_frames)
                                     seek_frames = 0
                                 if self.seek_in_progress:
-                                    with gil:
-                                        self.av_lock.acquire()
+                                    with gil, self.av_lock:
                                         self.seek_in_progress = False
                                         if self.external_seek == seek_target:
                                             seek_target = last_seek_target = self.external_seek = -1
-                                        self.av_lock.release()
                                 break
                             else:
                                 seek_frames += 1
