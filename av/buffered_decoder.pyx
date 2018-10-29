@@ -227,32 +227,30 @@ cdef class BufferedDecoder(object):
                             printf("avcodec_send_packet returned %d\n",ret)
 
                         ret = lib.avcodec_receive_frame(self.buffered_stream.codec_context.ptr, avframe_ptr)
-                        if ret < 0 and log:
+                        if ret < 0: #and log:
                             printf("avcodec_receive_frame returned %d\n",ret)
 
-                        if not ret and avframe_ptr.pts >= seek_target:
-                            last_frame = avframe_ptr
-                            if seek_frames > 0:
-                                #printf("Seeked %d frames!\n", seek_frames)
-                                seek_frames = 0
-                            break
-                        elif self.seek_in_progress:
-                            with gil:
-                                self.av_lock.acquire()
-                                self.seek_in_progress = False
-                                if self.external_seek != seek_target:
-                                    seek_target = self.external_seek
-                                else:
-                                    seek_target = last_seek_target = self.external_seek = -1
-                                self.av_lock.release()
+                        if not ret:
+                            if avframe_ptr.pts >= seek_target:
+                                last_frame = avframe_ptr
+                                if seek_frames > 0:
+                                    #printf("Seeked %d frames!\n", seek_frames)
+                                    seek_frames = 0
+                                break
+                            elif self.seek_in_progress:
+                                with gil:
+                                    self.av_lock.acquire()
+                                    self.seek_in_progress = False
+                                    if self.external_seek == seek_target:
+                                        seek_target = last_seek_target = self.external_seek = -1
+                                    self.av_lock.release()
+                            else:
+                                seek_frames += 1
 
-
-
-                        elif not ret:
-                            seek_frames += 1
                         if ret is lib.AVERROR_EOF:
-                            #printf("End of stream! last_frame is %p\n", last_frame)
+                            printf("End of stream! last_frame is %p\n", last_frame)
                             self.eos = True
+                            self.backlog_buffer.add(avframe_ptr)
                             break
                         #with gil:
                         #    print("receive_frame ret = {}".format(ret))
