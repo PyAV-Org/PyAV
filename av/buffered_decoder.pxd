@@ -49,3 +49,4 @@ cdef class BufferedDecoder(object):
         long long last_buffered_pts
         bint thread_exit
         bint seek_in_progress
+        cdef CircularBuffer thread_active_buffer
