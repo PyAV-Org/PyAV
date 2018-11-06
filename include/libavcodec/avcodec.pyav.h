@@ -1,13 +1,8 @@
 #include "libavcodec/avcodec.h"
 
-
-#if PYAV_HAVE_FFMPEG
-
-    #define AVPixelFormat PixelFormat
-    #define AV_PIX_FMT_YUV420P PIX_FMT_YUV420P
-
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(57, 64, 100)
+    #error FFmpeg 3.2 or higher is required
 #endif
-
 
 // Some of these properties don't exist in both FFMpeg and LibAV, so we
 // signal to our code that they are missing via 0.
