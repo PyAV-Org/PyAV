@@ -22,6 +22,8 @@ except ImportError:
     fsencode = lambda s: s.encode(_fsencoding)
 
 
+ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
+
 
 cdef object _cinit_sentinel = object()
 
@@ -46,6 +48,7 @@ cdef class ContainerProxy(object):
 
         cdef bytes name_obj = fsencode(self.name) if isinstance(self.name, unicode) else self.name
         cdef char *name = name_obj
+        cdef seek_func_t seek_func = NULL
 
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:
@@ -86,6 +89,9 @@ cdef class ContainerProxy(object):
                 if self.fread is None:
                     raise ValueError("File object has no read method.")
 
+            if self.fseek is not None and self.ftell is not None:
+                seek_func = pyio_seek
+
             self.pos = 0
             self.pos_is_valid = True
 
@@ -99,10 +105,10 @@ cdef class ContainerProxy(object):
                 <void*>self, # User data.
                 pyio_read,
                 pyio_write,
-                pyio_seek
+                seek_func
             )
 
-            if self.fseek is not None and self.ftell is not None:
+            if seek_func:
                 self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
             self.iocontext.max_packet_size = self.bufsize
             self.ptr.pb = self.iocontext
