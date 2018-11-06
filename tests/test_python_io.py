@@ -11,6 +11,14 @@ from .test_encode import write_rgb_rotate, assert_rgb_rotate
 from av.video.stream import VideoStream
 
 
+class NonSeekableBuffer:
+    def __init__(self, data):
+        self.data = data
+
+    def read(self, n):
+        data = self.data[0:n]
+        self.data = self.data[n:]
+        return data
 
 
 class TestPythonIO(TestCase):
@@ -31,6 +39,25 @@ class TestPythonIO(TestCase):
             # Make sure it did actually call "read".
             reads = wrapped._filter('read')
             self.assertTrue(reads)
+
+    def test_reading_no_seek(self):
+        with open(fate_suite('mpeg2/mpeg2_field_encoding.ts'), 'rb') as fh:
+            data = fh.read()
+
+        buf = NonSeekableBuffer(data)
+        wrapped = MethodLogger(buf)
+
+        container = av.open(wrapped)
+
+        self.assertEqual(container.format.name, 'mpegts')
+        self.assertEqual(container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
+        self.assertEqual(len(container.streams), 1)
+        #self.assertEqual(container.size, 800000)
+        self.assertEqual(container.metadata, {})
+
+        # Make sure it did actually call "read".
+        reads = wrapped._filter('read')
+        self.assertTrue(reads)
 
     def test_basic_errors(self):
         self.assertRaises(Exception, av.open, None)
