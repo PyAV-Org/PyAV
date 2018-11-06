@@ -39,10 +39,10 @@ On **Mac OS X**, Homebrew_ saves the day::
 .. _homebrew: http://brew.sh/
 
 
-Ubuntu >= 14.04 LTS
+Ubuntu >= 18.04 LTS
 ^^^^^^^^^^^^^^^^^^^
 
-On **Ubuntu 14.04 LTS** everything can come from the default sources::
+On **Ubuntu 18.04 LTS** everything can come from the default sources::
 
     # General dependencies
     sudo apt-get install -y python-dev pkg-config
@@ -53,14 +53,14 @@ On **Ubuntu 14.04 LTS** everything can come from the default sources::
         libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
 
-Ubuntu 12.04 LTS
-^^^^^^^^^^^^^^^^
+Ubuntu < 18.04 LTS
+^^^^^^^^^^^^^^^^^^
 
-On **Ubuntu 12.04 LTS** you will be unable to satisfy these requirements with the default package sources. We recommend compiling and installing FFmpeg from source. For FFmpeg::
+On older Ubuntu releases you will be unable to satisfy these requirements with the default package sources. We recommend compiling and installing FFmpeg from source. For FFmpeg::
 
-    wget http://ffmpeg.org/releases/ffmpeg-2.7.tar.bz2
-    tar -xjf ffmpeg-2.7.tar.bz2
-    cd ffmpeg-2.7
+    wget http://ffmpeg.org/releases/ffmpeg-3.2.tar.bz2
+    tar -xjf ffmpeg-3.2.tar.bz2
+    cd ffmpeg-3.2
 
     ./configure --disable-static --enable-shared --disable-doc
     make
