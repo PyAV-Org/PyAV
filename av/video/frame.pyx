@@ -302,6 +302,8 @@ cdef class VideoFrame(Frame):
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
 
+        .. note:: PIL or Pillow must be installed.
+
         """
         from PIL import Image
         cdef VideoPlane plane = self.reformat(format="rgb24", **kwargs).planes[0]
@@ -323,10 +325,12 @@ cdef class VideoFrame(Frame):
         return Image.frombytes("RGB", (self.width, self.height), bytes(o_buf), "raw", "RGB", 0, 1)
 
     def to_ndarray(self, **kwargs):
-        """
-        Get a numpy array of this frame.
+        """Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+
+        .. note:: Numpy must be installed.
+
         """
         cdef VideoFrame frame = self.reformat(**kwargs)
 
