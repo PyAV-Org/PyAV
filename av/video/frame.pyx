@@ -334,7 +334,7 @@ cdef class VideoFrame(Frame):
         """
         return self.reformat(format="rgb24", **kwargs)
 
-    def save(self, path, codec=None, format=None):
+    def save(self, path, codec=None, format=None, options=None):
 
         if not codec:
             ext = os.path.splitext(path)[1].lower()
@@ -360,7 +360,8 @@ cdef class VideoFrame(Frame):
         ctx.width = self.width
         ctx.height = self.height
         ctx.pix_fmt = format.name
-        ctx.time_base = 1
+        if options:
+            ctx.options.update(options)
         ctx.open()
 
         packets = ctx.encode(to_encode)
