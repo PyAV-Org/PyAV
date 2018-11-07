@@ -492,7 +492,7 @@ setup(
 
     name='av',
     version=version,
-    description='Pythonic bindings for FFmpeg/Libav.',
+    description="Pythonic bindings for FFmpeg's libraries.",
 
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
