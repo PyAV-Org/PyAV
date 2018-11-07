@@ -58,18 +58,38 @@ Basic Demo
         frame.to_image().save('frame-%04d.jpg' % frame.index)
 
 
-Contents
+Overview
+--------
+
+.. toctree::
+    :maxdepth: 2
+
+    about
+    installation
+
+
+Cookbook
 --------
 
 .. toctree::
     :glob:
     :maxdepth: 2
 
-    about
-    installation
-    examples/_index
-    api/_index
+    cookbook/*
 
+
+Reference
+---------
+
+.. toctree::
+    :glob:
+    :maxdepth: 2
+
+    api/*
+
+
+Development
+-----------
 
 .. toctree::
     :maxdepth: 1
