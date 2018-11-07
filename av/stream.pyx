@@ -76,6 +76,7 @@ cdef class Stream(object):
             self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
             if not self._codec:
                 # TODO: Setup a dummy CodecContext.
+                self.codec_context = None
                 return
 
         # This is an output container!
@@ -99,6 +100,10 @@ cdef class Stream(object):
         )
 
     def __getattr__(self, name):
+        # avoid an infinite loop for unsupported codecs
+        if self.codec_context is None:
+            return
+
         try:
             return getattr(self.codec_context, name)
         except AttributeError:
@@ -246,3 +251,14 @@ cdef class Stream(object):
         """
         def __get__(self):
             return self.metadata.get('language')
+
+    @property
+    def type(self):
+        """
+        The type of the stream.
+
+        Examples: `'audio'`, `'video'`, `'subtitle'`.
+
+        :type: str
+        """
+        return lib.av_get_media_type_string(self._codec_context.codec_type)
