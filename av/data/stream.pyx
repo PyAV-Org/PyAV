@@ -18,9 +18,6 @@ cdef class DataStream(Stream):
     def decode(self, packet=None, count=0):
         pass
 
-    def seek(self, timestamp, mode='time', backward=True, any_frame=False):
-        pass
-
     property name:
         def __get__(self):
             cdef const lib.AVCodecDescriptor *desc = lib.avcodec_descriptor_get(self._codec_context.codec_id)
