@@ -421,6 +421,7 @@ cdef class CodecContext(object):
             self.ptr.thread_count = value
 
     property thread_type:
+        """One of :class:`.ThreadType`."""
         def __get__(self):
             return _ThreadType.get(self.ptr.thread_type, create=True)
         def __set__(self, value):
@@ -429,6 +430,7 @@ cdef class CodecContext(object):
             self.ptr.thread_type = _ThreadType[value].value
 
     property skip_frame:
+        """One of :class:`.SkipType`."""
         def __get__(self):
             return _SkipType._get(self.ptr.skip_frame, create=True)
         def __set__(self, value):
