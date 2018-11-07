@@ -1,10 +1,14 @@
 from libc.stdint cimport uint8_t
 
+from av.codec.codec cimport Codec
+from av.codec.context cimport CodecContext
 from av.deprecation import renamed_attr
 from av.enums cimport define_enum
 from av.error cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.plane cimport VideoPlane
+
+import os
 
 
 cdef object _cinit_bypass_sentinel
@@ -329,6 +333,43 @@ cdef class VideoFrame(Frame):
 
         """
         return self.reformat(format="rgb24", **kwargs)
+
+    def save(self, path, codec=None, format=None):
+
+        if not codec:
+            ext = os.path.splitext(path)[1].lower()
+            if not ext:
+                raise ValueError("Please provide a codec or a path with an extension.")
+            codec_name = {
+                '.jpg': 'mjpeg',
+                '.jpeg': 'mjpeg',
+                '.tif': 'tiff',
+            }.get(ext, ext[1:])
+            codec = Codec(codec_name, 'w')
+        
+        elif not isinstance(codec, Codec):
+            codec = Codec(codec, 'w')
+
+        format = VideoFormat(format or self.format)
+        if format not in codec.video_formats:
+            format = codec.video_formats[0]
+
+        to_encode = self.reformat(format=format)
+
+        ctx = codec.create()
+        ctx.width = self.width
+        ctx.height = self.height
+        ctx.pix_fmt = format.name
+        ctx.time_base = 1
+        ctx.open()
+
+        packets = ctx.encode(to_encode)
+
+        if len(packets) != 1:
+            raise ValueError("Frame encoded to {} packets; expected 1.".format(len(packets)))
+
+        with open(path, 'wb') as fh:
+            fh.write(packets[0])
 
     def to_image(self, **kwargs):
         """Get an RGB ``PIL.Image`` of this frame.

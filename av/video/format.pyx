@@ -53,6 +53,14 @@ cdef class VideoFormat(object):
     def __int__(self):
         return int(self.pix_fmt)
 
+    def __eq__(self, other):
+        if isinstance(other, VideoFormat):
+            return self.pix_fmt == int(other)
+        elif isinstance(other, basestring):
+            return self.name == other
+        else:
+            raise TypeError("Cannot compare VideoFormat to {}.".format(type(other)))
+
     property name:
         """Canonical name of the pixel format."""
         def __get__(self):

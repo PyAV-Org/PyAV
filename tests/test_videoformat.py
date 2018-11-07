@@ -88,3 +88,20 @@ class TestVideoFormats(TestCase):
         fmt = VideoFormat('pal8', 640, 480)
         self.assertEqual(len(fmt.components), 1)
         self.assertTrue(fmt.has_palette)
+
+    def test_equality(self):
+
+        a = VideoFormat('yuv420p')
+        b = VideoFormat('yuv420p')
+        c = VideoFormat('rgb24')
+
+        self.assertIsNot(a, b)
+        self.assertEqual(a, b)
+        self.assertNotEqual(a, c)
+        
+        self.assertEqual(a, 'yuv420p')
+        self.assertEqual(a, 'yuv420p')
+        self.assertNotEqual(a, 'rgb24')
+
+        self.assertIn(a, [b, c])
+        self.assertNotIn(a, [c])

@@ -86,6 +86,9 @@ cdef class Codec(object):
         if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
             raise RuntimeError('%s is both encoder and decoder.')
 
+    def __repr__(self):
+        return '<av.Codec {!r} mode={!r} at 0x{:x}>'.format(self.name, 'w' if self.is_encoder else 'r', id(self))
+
     def create(self):
         from .context import CodecContext
         return CodecContext.create(self)
