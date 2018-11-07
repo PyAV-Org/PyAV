@@ -50,11 +50,12 @@ def iter_data_dirs(check_writable=False):
     yield os.path.join(os.path.expanduser('~'), '.pyav', 'testdata')
 
 
-def fate_suite(name):
-    """Download and return a path to a sample from the FFmpeg test suite.
+def cached_download(url, name):
+
+    """Download the data at a URL, and cache it under the given name.
     
-    The samples are stored under `pyav/samples/fate-suite` in the path indicated
-    by :envvar:`PYAV_TESTDATA_DIR`, or the first that is writeable of:
+    The file is stored under `pyav/test` with the given name in the directory
+    :envvar:`PYAV_TESTDATA_DIR`, or the first that is writeable of:
 
     - the current virtualenv
     - ``/usr/local/share``
@@ -63,8 +64,6 @@ def fate_suite(name):
     - ``/usr/lib``
     - the user's home
 
-    See the `FFmpeg Automated Test Environment <https://www.ffmpeg.org/fate.html>`_
-
     """
 
     clean_name = os.path.normpath(name)
@@ -72,14 +71,12 @@ def fate_suite(name):
         raise ValueError("{} is not normalized.".format(name))
 
     for dir_ in iter_data_dirs():
-        path = os.path.join(dir_, 'fate-suite', name)
+        path = os.path.join(dir_, name)
         if os.path.exists(path):
             return path
 
     dir_ = next(iter_data_dirs(True))
-    path = os.path.join(dir_, 'fate-suite', name)
-
-    url = 'http://fate.ffmpeg.org/fate-suite/' + name
+    path = os.path.join(dir_, name)
 
     log.info("Downloading {} to {}".format(url, path))
 
@@ -106,3 +103,26 @@ def fate_suite(name):
     os.rename(tmp_path, path)
 
     return path
+
+
+def fate_suite(name):
+    """Download and return a path to a sample from the FFmpeg test suite.
+    
+    Data is handled by :func:`cached_download`.
+
+    See the `FFmpeg Automated Test Environment <https://www.ffmpeg.org/fate.html>`_
+
+    """
+
+    return cached_download('http://fate.ffmpeg.org/fate-suite/' + name, os.path.join('fate-suite', name))
+
+
+def curated(name):
+    """Download and return a path to a sample that is curated by the PyAV developers.
+
+    Data is handled by :func:`cached_download`.
+
+    """
+    return cached_download('https://docs.mikeboers.com/pyav/samples/' + name, os.path.join('pyav-curated', name))
+
+
