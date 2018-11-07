@@ -159,16 +159,19 @@ cdef class AudioFrame(Frame):
             self.ptr.sample_rate = value
 
     def to_ndarray(self, **kwargs):
+        """Get a numpy array of this frame.
+
+        .. note:: Numpy must be installed.
+
         """
-        Get a numpy array of this frame.
-        """
+        
         import numpy as np
 
         # map avcodec type to numpy type
         try:
             dtype = np.dtype(format_dtypes[self.format.name])
         except KeyError:
-            raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % self.format.name)
+            raise ValueError("Conversion from {!r} format to numpy array is not supported.".format(self.format.name))
 
         if self.format.is_planar:
             count = self.samples
