@@ -20,6 +20,10 @@ We are operating with `semantic versioning <http://semver.org>`_.
 HEAD
 ----
 
+Runtime:
+
+- Deprecate :meth:`.Stream.seek` in favour of :meth:`.InputContainer.seek`.
+
 
 v6.0.0
 ------

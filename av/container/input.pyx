@@ -163,7 +163,7 @@ cdef class InputContainer(Container):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, offset, whence='time', backward=True, any_frame=False):
+    def seek(self, offset, whence='time', backward=True, any_frame=False, stream=None):
         """Seek to a (key)frame nearsest to the given timestamp.
 
         :param int offset: Location to seek to. Interpretation depends on ``whence``.
@@ -171,14 +171,15 @@ cdef class InputContainer(Container):
         :param bool backward: If there is not a (key)frame at the given offset,
             look backwards for it.
         :param bool any_frame: Seek to any frame, not just a keyframe.
+        :param Stream stream: The stream who's ``time_base`` the ``offset`` is in.
 
         ``whence`` has the following meanings:
 
-        - ``'time'``: ``offset`` is in ``av.TIME_BASE``.
+        - ``'time'``: ``offset`` is in ``stream.time_base`` if ``stream`` else ``av.time_base``.
         - ``'frame'``: ``offset`` is a frame index
         - ``'byte'``: ``offset`` is the byte location in the file to seek to.
 
-        .. warning:: Not all formats support all options.
+        .. warning:: Not all formats support all options, and may fail silently.
 
         """
-        self.proxy.seek(-1, offset, whence, backward, any_frame)
+        self.proxy.seek(stream.index if stream else -1, offset, whence, backward, any_frame)
