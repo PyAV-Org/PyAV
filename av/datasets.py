@@ -113,8 +113,8 @@ def fate(name):
     See the `FFmpeg Automated Test Environment <https://www.ffmpeg.org/fate.html>`_
 
     """
-
-    return cached_download('http://fate.ffmpeg.org/fate-suite/' + name, os.path.join('fate-suite', name))
+    return cached_download('http://fate.ffmpeg.org/fate-suite/' + name,
+                           os.path.join('fate-suite', name.replace('/', os.path.sep)))
 
 
 def curated(name):
@@ -123,6 +123,5 @@ def curated(name):
     Data is handled by :func:`cached_download`.
 
     """
-    return cached_download('https://docs.mikeboers.com/pyav/samples/' + name, os.path.join('pyav-curated', name))
-
-
+    return cached_download('https://docs.mikeboers.com/pyav/samples/' + name,
+                           os.path.join('pyav-curated', name.replace('/', os.path.sep)))
