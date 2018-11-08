@@ -1,14 +1,14 @@
 from __future__ import division
 
-import math
+import av
+
+from .common import MethodLogger, TestCase, fate_suite
+from .test_encode import assert_rgb_rotate, write_rgb_rotate
+
 try:
     from cStringIO import StringIO
 except ImportError:
     from io import BytesIO as StringIO
-
-from .common import *
-from .test_encode import write_rgb_rotate, assert_rgb_rotate
-from av.video.stream import VideoStream
 
 
 class NonSeekableBuffer:
@@ -52,7 +52,6 @@ class TestPythonIO(TestCase):
         self.assertEqual(container.format.name, 'mpegts')
         self.assertEqual(container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
         self.assertEqual(len(container.streams), 1)
-        #self.assertEqual(container.size, 800000)
         self.assertEqual(container.metadata, {})
 
         # Make sure it did actually call "read".

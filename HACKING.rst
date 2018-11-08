@@ -34,7 +34,7 @@ You can use the same build system as Travis for local development::
     make
 
     # Run the tests.
-    nosetests
+    make test
 
 
 Time in Libraries

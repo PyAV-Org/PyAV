@@ -1,5 +1,6 @@
-from __future__ import print_function
-from .common import *
+import av
+
+from .common import TestCase, fate_suite
 
 
 class TestDecode(TestCase):
@@ -28,7 +29,6 @@ class TestDecode(TestCase):
 
         sample_count = 0
 
-        print(audio_stream.frames)
         for packet in container.demux(audio_stream):
             for frame in packet.decode():
                 sample_count += frame.samples

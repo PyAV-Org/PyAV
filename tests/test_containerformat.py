@@ -1,5 +1,6 @@
-from .common import *
-from av.format import ContainerFormat, formats_available
+from av import ContainerFormat, formats_available
+
+from .common import TestCase
 
 
 class TestContainerFormats(TestCase):

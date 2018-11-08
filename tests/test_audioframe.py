@@ -1,6 +1,7 @@
 import warnings
 
 import numpy
+
 from av import AudioFrame
 from av.deprecation import AttributeRenamedWarning
 

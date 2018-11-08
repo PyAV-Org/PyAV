@@ -1,11 +1,11 @@
 from __future__ import division
 
-import math
+import unittest
 
-from .common import *
-
-from av.packet import Packet
+import av
 from av import time_base as AV_TIME_BASE
+
+from .common import TestCase, fate_suite
 
 
 def timestamp_to_frame(timestamp, stream):
@@ -68,7 +68,6 @@ class TestSeek(TestCase):
         seek_packet_count = 0
         for packet in container.demux():
             seek_packet_count += 1
-
 
         self.assertTrue(seek_packet_count < total_packet_count)
 

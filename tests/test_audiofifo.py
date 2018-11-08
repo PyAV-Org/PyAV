@@ -1,5 +1,6 @@
-from __future__ import print_function
-from .common import *
+import av
+
+from .common import TestCase, fate_suite
 
 
 class TestAudioFifo(TestCase):
@@ -57,7 +58,7 @@ class TestAudioFifo(TestCase):
         self.assertEqual(oframe.pts, 512)
         self.assertEqual(oframe.time_base, iframe.time_base)
 
-        iframe.pts = 9999 # Wrong!
+        iframe.pts = 9999  # Wrong!
         self.assertRaises(ValueError, fifo.write, iframe)
 
     def test_pts_complex(self):

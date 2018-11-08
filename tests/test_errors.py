@@ -1,4 +1,7 @@
-from .common import *
+import av
+from av import AVError
+
+from .common import TestCase, is_windows
 
 
 class TestErrorBasics(TestCase):

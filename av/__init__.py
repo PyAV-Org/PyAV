@@ -21,6 +21,7 @@ from av.codec.codec import Codec, codecs_available
 from av.codec.context import CodecContext
 from av.container import open
 from av.format import ContainerFormat, formats_available
+from av.packet import Packet
 from av.utils import AVError
 from av.video.format import VideoFormat
 from av.video.frame import VideoFrame

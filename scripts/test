@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [[ ! "$_PYAV_ACTIVATED" ]]; then
     export here="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
     source "$here/activate.sh"
@@ -7,4 +9,6 @@ fi
 
 cd "$PYAV_ROOT"
 
-$PYAV_PYTHON -m nose -v || exit 1
+$PYAV_PYTHON -m flake8 examples tests
+$PYAV_PYTHON -m isort -df -rc examples tests
+$PYAV_PYTHON setup.py test
