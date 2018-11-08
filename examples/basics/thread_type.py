@@ -3,7 +3,6 @@ import time
 import av
 import av.datasets
 
-
 print("Decoding with default (slice) threading...")
 
 container = av.open(av.datasets.curated('pexels/time-lapse-video-of-night-sky-857195.mp4'))
@@ -35,4 +34,3 @@ auto_time = time.time() - start_time
 
 print("Decoded with default threading in {:.2f}s.".format(default_time))
 print("Decoded with auto threading in {:.2f}s.".format(auto_time))
-

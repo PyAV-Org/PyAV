@@ -1,16 +1,14 @@
 from __future__ import division
 
-from fractions import Fraction
-from subprocess import check_call
-from unittest import TestCase as _Base
 import datetime
 import errno
+import functools
 import os
 import sys
-import functools
 import types
+from unittest import TestCase as _Base
 
-from nose.plugins.skip import SkipTest
+from av.datasets import fate as fate_suite
 
 try:
     import PIL.Image as Image
@@ -18,26 +16,12 @@ try:
 except ImportError:
     Image = ImageFilter = None
 
-import av
-from av.audio import AudioFrame
-from av.buffer import Buffer
-from av.codec import Codec, CodecContext
-from av.datasets import fate as fate_suite
-from av.frame import Frame
-from av.packet import Packet
-from av.stream import Stream
-from av.utils import AVError
-from av.video import VideoFrame
-
 
 is_py3 = sys.version_info[0] > 2
 is_windows = os.name == 'nt'
 
 if not is_py3:
     from itertools import izip as zip
-
-
-
 
 
 def makedirs(path):
@@ -73,6 +57,7 @@ def asset(*args):
 
 # Store all of the sample data here.
 os.environ['PYAV_TESTDATA_DIR'] = asset()
+
 
 def fate_png():
     return fate_suite('png1/55c99e750a5fd6_50314226.png')
@@ -110,7 +95,6 @@ class MethodLogger(object):
 
     def _filter(self, type_):
         return [log for log in self._log if log[0] == type_]
-
 
 
 class TestCase(_Base):

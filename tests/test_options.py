@@ -1,13 +1,14 @@
-from .common import *
-
+from av import ContainerFormat
 from av.option import Option, OptionType
+
+from .common import TestCase
 
 
 class TestOptions(TestCase):
 
     def test_mov_options(self):
 
-        mov = av.ContainerFormat('mov')
+        mov = ContainerFormat('mov')
         options = mov.descriptor.options
         by_name = {opt.name: opt for opt in options}
 

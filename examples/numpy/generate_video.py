@@ -1,10 +1,9 @@
 
 from __future__ import division
 
-import av
-
 import numpy as np
 
+import av
 
 duration = 4
 fps = 24

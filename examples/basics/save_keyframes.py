@@ -1,7 +1,6 @@
 import av
 import av.datasets
 
-
 container = av.open(av.datasets.curated('pexels/time-lapse-video-of-night-sky-857195.mp4'))
 
 
@@ -18,4 +17,3 @@ for frame in container.decode(stream):
         'night-sky.{:04d}.jpg'.format(frame.pts),
         quality=80,
     )
-

@@ -1,7 +1,9 @@
-from .common import *
+from unittest import SkipTest
 
-from av.video.frame import VideoFrame
-from av.filter import Graph, Filter
+from av import VideoFrame
+from av.filter import Filter, Graph
+
+from .common import Image, TestCase, fate_suite
 
 
 class TestFilters(TestCase):
@@ -63,8 +65,6 @@ class TestFilters(TestCase):
         src = graph.add('testsrc')
         src.link_to(graph.add('buffersink'))
         graph.configure()
-
-        print(src.outputs)
 
         frame = src.pull()
 

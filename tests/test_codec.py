@@ -1,9 +1,7 @@
 import unittest
 
-from av.audio.format import AudioFormat
-from av.codec import Codec, codecs_available
+from av import AudioFormat, Codec, VideoFormat, codecs_available
 from av.codec.codec import UnknownCodecError
-from av.video.format import VideoFormat
 
 from .common import TestCase
 

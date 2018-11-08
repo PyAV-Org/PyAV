@@ -1,9 +1,10 @@
 from __future__ import division
 
 from fractions import Fraction
-import sys
 
-from .common import fate_suite, av, TestCase
+import av
+
+from .common import TestCase, fate_suite
 
 try:
     long
