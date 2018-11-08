@@ -346,12 +346,15 @@ cdef class VideoFrame(Frame):
                 '.tif': 'tiff',
             }.get(ext, ext[1:])
             codec = Codec(codec_name, 'w')
-        
+
         elif not isinstance(codec, Codec):
             codec = Codec(codec, 'w')
 
+        given_format = format is not None
         format = VideoFormat(format or self.format)
-        if format not in codec.video_formats:
+        if not any(format.name == f.name for f in codec.video_formats):
+            if given_format:
+                raise ValueError("Format {!r} is not in codec.video_formats.".format(format))
             format = codec.video_formats[0]
 
         to_encode = self.reformat(format=format)

@@ -14,7 +14,8 @@ for frame in container.decode(stream):
     print(frame)
 
     # We use `frame.pts` as `frame.index` won't make must sense with the `skip_frame`.
-    frame.to_image().save(
+    frame.save(
         'night-sky.{:04d}.jpg'.format(frame.pts),
-        quality=80,
+        # format='yuv420p'
+        # quality=80,
     )
