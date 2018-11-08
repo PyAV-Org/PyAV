@@ -20,9 +20,26 @@ We are operating with `semantic versioning <http://semver.org>`_.
 HEAD
 ----
 
-Runtime:
+Minor:
 
-- Deprecate :meth:`.Stream.seek` in favour of :meth:`.InputContainer.seek`.
+- ``av.datasets`` for sample data that is pulled from either FFmpeg's FATE suite, or our documentation server.
+- :meth:`.InputContainer.seek` gets a ``stream`` argument to specify the ``time_base`` the requested ``offset`` is in.
+
+Micro:
+
+- Avoid infinite look in ``Stream.__getattr__``. (:issue:`450`)
+- Correctly handle Python I/O with no ``seek`` method.
+- Remove ``Datastream.seek`` override (:issue:`299`)
+
+Build:
+
+- Assert building against compatible FFmpeg. (:issue:`401`)
+- Lock down Cython lanaguage level to avoid build warnings. (:issue:`443`)
+
+Other:
+
+- Incremental improvements to docs and tests.
+- Examples directory will now always be runnable as-is, and embeded in the docs (in a copy-pastable form).
 
 
 v6.0.0
