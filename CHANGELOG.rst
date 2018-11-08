@@ -17,6 +17,10 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
+HEAD
+----
+
+
 v6.1.0
 ------
 
