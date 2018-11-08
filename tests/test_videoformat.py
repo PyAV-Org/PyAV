@@ -98,10 +98,6 @@ class TestVideoFormats(TestCase):
         self.assertIsNot(a, b)
         self.assertEqual(a, b)
         self.assertNotEqual(a, c)
-        
-        self.assertEqual(a, 'yuv420p')
-        self.assertEqual(a, 'yuv420p')
-        self.assertNotEqual(a, 'rgb24')
 
         self.assertIn(a, [b, c])
         self.assertNotIn(a, [c])

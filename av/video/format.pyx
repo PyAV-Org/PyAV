@@ -55,9 +55,11 @@ cdef class VideoFormat(object):
 
     def __eq__(self, other):
         if isinstance(other, VideoFormat):
-            return self.pix_fmt == int(other)
-        elif isinstance(other, basestring):
-            return self.name == other
+            return (
+                self.pix_fmt == int(other) and
+                self.width == other.width and
+                self.height == other.height
+            )
         else:
             raise TypeError("Cannot compare VideoFormat to {}.".format(type(other)))
 
