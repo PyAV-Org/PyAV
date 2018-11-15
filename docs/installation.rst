@@ -123,3 +123,18 @@ On **Mac OS X** you may have issues with regards to Python expecting gcc but fin
 On **Windows** you must indicate the location of your FFmpeg, e.g.::
 
     python setup.py build --ffmpeg-dir=C:\ffmpeg
+    
+    Example Steps:
+    
+        0. pip install Cython
+        1. Download FFmpeg dev packages for windows(for exzample:https://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-20181114-1096614-win64-dev.zip)
+        2. Unpack them somewhere (for example C:\ffmpeg_tmp)
+           copy files in "C:\ffmpeg_tmp\include" and "C:\ffmpeg_tmp\lib" to a dir(for example C:\ffmpeg)
+        3. Download FFmpeg shared packages for windows(for exzample:https://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20181114-1096614-win64-shared.zip)
+        4. Unpack them somewhere (for example C:\ffmpeg_tmp)
+           copy dll files in "C:\ffmpeg_tmp\bin"  to the same dir(for example C:\ffmpeg)
+        5. add to PATH environment variable a path to C:\ffmpeg 
+        6. Download PyAV-develop(https://github.com/mikeboers/PyAV/archive/develop.zip) and Unpack, goto the Unpack dir
+        7. python setup.py build --ffmpeg-dir=c:\ffmpeg
+        8. python setup.py install
+    
