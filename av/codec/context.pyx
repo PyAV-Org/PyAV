@@ -99,7 +99,7 @@ cdef class CodecContext(object):
         def __set__(self, data):
             self.extradata_source = bytesource(data)
             self.ptr.extradata = self.extradata_source.ptr
-            self.ptr.extradata_size = self.extradata_source.size
+            self.ptr.extradata_size = self.extradata_source.length
 
     property extradata_size:
         def __get__(self):
