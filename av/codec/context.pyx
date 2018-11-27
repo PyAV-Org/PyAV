@@ -97,13 +97,11 @@ cdef class CodecContext(object):
             else:
                 return None
         def __set__(self, data):
-            self.extradata_source = bytesource(data)
-            free(self.ptr.extradata)
-            buffer_size = self.extradata_source.length 
+            buffer_size = len(data)
+            cdef ByteSource source = bytesource(data)
             self.ptr.extradata =  <uint8_t *>malloc(buffer_size * sizeof(uint8_t))
             self.ptr.extradata_size = buffer_size
-            memcpy(self.ptr.extradata, self.extradata_source, buffer_size)
-            free(self.extradata_source)
+            memcpy(self.ptr.extradata, source.ptr, buffer_size)
 
     property extradata_size:
         def __get__(self):
