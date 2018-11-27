@@ -157,6 +157,12 @@ cdef class Stream(object):
         """
         self._container.seek(self._stream.index, offset, whence, backward, any_frame)
 
+    property c_context:
+        def __get__(self):
+            return self.codec_context
+        def __set__(self, c):
+            self.codec_context = c
+        
     property id:
         """
         The format-specific ID of this stream.
