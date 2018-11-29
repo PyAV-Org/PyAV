@@ -17,6 +17,7 @@ from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
 from av.audio.layout import AudioLayout
 from av.audio.resampler import AudioResampler
+from av.bitstream import BitStreamFilter, BitStreamFilterContext, bitstream_filters_availible
 from av.codec.codec import Codec, codecs_available
 from av.codec.context import CodecContext
 from av.container import open
