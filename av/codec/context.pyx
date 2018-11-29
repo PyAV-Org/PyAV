@@ -157,8 +157,6 @@ cdef class CodecContext(object):
             lib.avcodec_free_context(&self.ptr)
         if self.parser:
             lib.av_parser_close(self.parser)
-        if self.parse_buffer:
-            free(self.parse_buffer)
 
     def __repr__(self):
         return '<av.%s %s/%s at 0x%x>' % (
@@ -168,68 +166,74 @@ cdef class CodecContext(object):
             id(self),
         )
 
-    def parse(self, bytes input_):
+    def parse(self, raw_input=None):
+        """Split up a byte shttps://github.com/mikeboers/PyAV/pull/472tream into list of :class:`.Packet`.
+
+        This is only effectively splitting up a byte stream, and does no
+        actual interpretation of the data.
+
+        It will return all packets that are fully contained within the given
+        input, and will buffer partial packets until they are complete.
+
+        :param ByteSource raw_input: A chunk of a byte-stream to process.
+            Anything that can be turned into a :class:`.ByteSource` is fine.
+            ``None`` is used to flush the parser's buffers.
+
+        :return: ``list`` of :class:`.Packet` newly availible.
+
+        """
 
         if not self.parser:
             self.parser = lib.av_parser_init(self.codec.ptr.id)
             if not self.parser:
                 raise ValueError('No parser for %s' % self.codec.name)
 
-            self.parse_buffer = NULL
-            self.parse_buffer_size = self.parse_buffer_max_size = 0
+        cdef ByteSource source = bytesource(raw_input, allow_none=True)
 
-        cdef size_t new_buffer_size
-        cdef unsigned char *c_input
-        if input_ is not None:
+        cdef unsigned char *in_data = source.ptr if source is not None else NULL
+        cdef int in_size = source.length if source is not None else 0
 
-            # Make sure we have enough buffer.
-            new_buffer_size = self.parse_buffer_size + len(input_)
-            if new_buffer_size > self.parse_buffer_max_size:
-                self.parse_buffer = <unsigned char*>realloc(<void*>self.parse_buffer, new_buffer_size)
-                self.parse_buffer_max_size = new_buffer_size
-
-            # Copy to the end of the buffer.
-            c_input = input_  # for casting
-            memcpy(self.parse_buffer + self.parse_buffer_size, c_input, len(input_))
-            self.parse_buffer_size = new_buffer_size
-
-        cdef size_t base = 0
-        cdef size_t used = 0
+        cdef unsigned char *out_data
+        cdef int out_size
+        cdef int consumed
         cdef Packet packet = None
-        cdef unsigned char *parsed_data
-        cdef int parsed_size
 
         packets = []
 
-        while base < self.parse_buffer_size:
+        while in_size:
 
             with nogil:
-                used = lib.av_parser_parse2(
+                consumed = lib.av_parser_parse2(
                     self.parser,
                     self.ptr,
-                    &parsed_data, &parsed_size,
-                    self.parse_buffer + base, self.parse_buffer_size - base,
+                    &out_data, &out_size,
+                    in_data, in_size,
                     lib.AV_NOPTS_VALUE, lib.AV_NOPTS_VALUE,
                     0
                 )
-            err_check(used)
+            err_check(consumed)
 
-            if parsed_size:
-                packet = Packet(parsed_size)
-                memcpy(packet.struct.data, parsed_data, parsed_size)
+            if out_size:
+
+                # We copy the data immediately, as we have yet to figure out
+                # the expected lifetime of the buffer we get back. All of the
+                # examples decode it immediately.
+                #
+                # We've also tried:
+                #   packet = Packet()
+                #   packet.data = out_data
+                #   packet.size = out_size
+                #   packet.source = source
+                #
+                # ... but this results in corruption.
+
+                packet = Packet(out_size)
+                memcpy(packet.struct.data, out_data, out_size)
+
                 packets.append(packet)
 
-            self.parse_pos += used
-            base += used
-
-            if not (used or parsed_size):
-                break
-
-        if base:
-            # Shuffle the buffer.
-            self.parse_buffer_size -= base
-            if self.parse_buffer_size:
-                memcpy(self.parse_buffer, self.parse_buffer + base, self.parse_buffer_size)
+            in_data += consumed
+            in_size -= consumed
 
         return packets
 
