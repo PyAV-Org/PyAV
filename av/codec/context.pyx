@@ -168,15 +168,15 @@ cdef class CodecContext(object):
             id(self),
         )
 
-    def parse(self, bytes input_, allow_stream=False):
+    def parse(self, bytes input_):
 
         if not self.parser:
             self.parser = lib.av_parser_init(self.codec.ptr.id)
-        if not self.parser:
-            if allow_stream:
-                return [Packet(input_)]
-            else:
-                raise ValueError('no parser for %s' % self.codec.name)
+            if not self.parser:
+                raise ValueError('No parser for %s' % self.codec.name)
+
+            self.parse_buffer = NULL
+            self.parse_buffer_size = self.parse_buffer_max_size = 0
 
         cdef size_t new_buffer_size
         cdef unsigned char *c_input
@@ -194,36 +194,42 @@ cdef class CodecContext(object):
             self.parse_buffer_size = new_buffer_size
 
         cdef size_t base = 0
-        cdef size_t used = 0  # To signal to the while.
+        cdef size_t used = 0
         cdef Packet packet = None
+        cdef unsigned char *parsed_data
+        cdef int parsed_size
+
         packets = []
 
         while base < self.parse_buffer_size:
-            packet = Packet()
+
             with nogil:
                 used = lib.av_parser_parse2(
                     self.parser,
                     self.ptr,
-                    &packet.struct.data, &packet.struct.size,
+                    &parsed_data, &parsed_size,
                     self.parse_buffer + base, self.parse_buffer_size - base,
-                    0, 0,
-                    self.parse_pos
+                    lib.AV_NOPTS_VALUE, lib.AV_NOPTS_VALUE,
+                    0
                 )
             err_check(used)
 
-            if packet.struct.size:
+            if parsed_size:
+                packet = Packet(parsed_size)
+                memcpy(packet.struct.data, parsed_data, parsed_size)
                 packets.append(packet)
-            if used:
-                self.parse_pos += used
-                base += used
 
-            if not (used or packet.struct.size):
+            self.parse_pos += used
+            base += used
+
+            if not (used or parsed_size):
                 break
 
         if base:
             # Shuffle the buffer.
-            memcpy(self.parse_buffer, self.parse_buffer + base, base)
             self.parse_buffer_size -= base
+            if self.parse_buffer_size:
+                memcpy(self.parse_buffer, self.parse_buffer + base, self.parse_buffer_size)
 
         return packets
 
