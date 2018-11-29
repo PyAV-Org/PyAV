@@ -20,6 +20,14 @@ Remuxing is copying audio/video data from one container to the other without tra
 .. literalinclude:: ../../examples/basics/remux.py
 
 
+Parsing
+-------
+
+Sometimes we have a raw stream of data, and we need to split it into packets before working with it. We can use :meth:`.CodecContext.parse` to do this.
+
+.. literalinclude:: ../../examples/basics/parse.py
+
+
 Threading
 ---------
 
