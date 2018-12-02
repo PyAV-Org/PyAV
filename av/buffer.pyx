@@ -88,7 +88,7 @@ cdef class Buffer(_Buffer):
         cdef ByteSource source = bytesource(input)
         cdef size_t size = self._buffer_size()
         if source.length != size:
-            raise ValueError('got %d bytes; need %d bytes' % (len(input), size))
+            raise ValueError('got %d bytes; need %d bytes' % (source.length, size))
         memcpy(self._buffer_ptr(), source.ptr, size)
 
     update_buffer = renamed_attr('update')
