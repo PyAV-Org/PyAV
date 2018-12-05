@@ -183,6 +183,10 @@ cdef class Stream(object):
             else:
                 return None
 
+    property level:
+        def __get__(self):
+            return self._codec_context.level
+
     property index:
         """
         The index of this stream in its :class:`.Container`.

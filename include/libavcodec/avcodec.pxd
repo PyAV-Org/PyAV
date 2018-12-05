@@ -120,6 +120,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int thread_type
 
         int profile
+        int level
         AVDiscard skip_frame
 
         AVFrame* coded_frame

@@ -204,6 +204,9 @@ cdef class Packet(Buffer):
             if self.struct.duration != lib.AV_NOPTS_VALUE:
                 return self.struct.duration
 
+    property flags:
+        def __get__(self): return self.struct.flags
+
     property is_keyframe:
         def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_KEY)
 
