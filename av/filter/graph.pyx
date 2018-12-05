@@ -177,7 +177,7 @@ cdef class Graph(object):
                                                                  time_base.numerator,
                                                                  time_base.denominator)
         if layout:
-            # Use AudioLayout constructor to handle both numerical and string layout descriptors
+            # Use AudioLayout constructor to handle AudioLayout, numerical and string layout descriptors
             # see av/audio/layout.pyx
             args += ":channel_layout=" + AudioLayout(layout).name
         if channels:
