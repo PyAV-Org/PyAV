@@ -8,7 +8,7 @@ from av.utils cimport err_check
 
 cdef class SubtitleCodecContext(CodecContext):
 
-    cdef _send_packet_and_recv(self, Packet packet):
+    cdef _send_packet_and_recv(self, Packet packet, bint reuse = False):
         cdef SubtitleProxy proxy = SubtitleProxy()
 
         cdef int got_frame = 0

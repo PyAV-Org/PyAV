@@ -43,7 +43,7 @@ cdef class CodecContext(object):
 
     # Wraps both versions of the transcode API, returning lists.
     cpdef encode(self, Frame frame=?)
-    cpdef decode(self, Packet packet=?)
+    cpdef decode(self, Packet packet=?, bint reuse = ?)
 
     # Used by both transcode APIs to setup user-land objects.
     # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing
@@ -60,13 +60,13 @@ cdef class CodecContext(object):
     # the buffer as often as possible.
     cdef _send_frame_and_recv(self, Frame frame)
     cdef _recv_packet(self)
-    cdef _send_packet_and_recv(self, Packet packet)
+    cdef _send_packet_and_recv(self, Packet packet, bint reuse = ?)
     cdef _recv_frame(self)
 
     # Implemented by children for the generic send/recv API, so we have the
     # correct subclass of Frame.
     cdef Frame _next_frame
     cdef Frame _alloc_next_frame(self)
-
+    cdef Frame _save_frame
 
 cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated)

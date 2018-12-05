@@ -55,6 +55,43 @@ cdef class AudioCodecContext(CodecContext):
 
         return frames
 
+    cdef _send_packet_and_recv(self, Packet packet, bint reuse = False):
+
+        cdef Frame frame
+
+        cdef AudioFrame aframe
+
+        cdef int res
+        with nogil:
+            res = lib.avcodec_send_packet(self.ptr, &packet.struct if packet is not None else NULL)
+        err_check(res)
+
+        out = []
+        saved_samples = 0
+        while True:
+            frame = self._recv_frame()
+            if frame:
+                if len(out) != 0 and reuse:
+                    return self._send_packet_and_recv(packet, reuse=False)
+
+                self._setup_decoded_frame(frame, packet)
+                if reuse:
+                    self._next_frame = frame
+                    if self._save_frame is None:
+                        self._save_frame = self._alloc_next_frame()
+                    aframe = self._save_frame
+                    aframe._copy_internal_attributes(frame, data_layout = True)
+                    saved_samples = frame.ptr.nb_samples
+                out.append(frame)
+            else:
+                if reuse and len(out) == 1:
+                    # reset frame data to original
+                    aframe = self._next_frame
+                    aframe._copy_internal_attributes(self._save_frame, data_layout = True)
+                    aframe.ptr.nb_samples = saved_samples
+                break
+        return out
+
     cdef Frame _alloc_next_frame(self):
         return alloc_audio_frame()
 

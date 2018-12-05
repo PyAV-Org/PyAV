@@ -12,7 +12,6 @@ from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 
 
-
 cdef class VideoCodecContext(CodecContext):
 
     def __cinit__(self, *args, **kwargs):
@@ -62,6 +61,43 @@ cdef class VideoCodecContext(CodecContext):
 
     cdef Frame _alloc_next_frame(self):
         return alloc_video_frame()
+
+    cdef _send_packet_and_recv(self, Packet packet, bint reuse = False):
+
+        cdef Frame frame
+
+        cdef VideoFrame vframe
+
+        cdef int res
+        with nogil:
+            res = lib.avcodec_send_packet(self.ptr, &packet.struct if packet is not None else NULL)
+        err_check(res)
+
+        out = []
+        while True:
+            frame = self._recv_frame()
+            if frame:
+                if len(out) != 0 and reuse:
+                    return self._send_packet_and_recv(packet, reuse=False)
+
+                self._setup_decoded_frame(frame, packet)
+                if reuse:
+                    self._next_frame = frame
+
+                    if self._save_frame is None:
+                        self._save_frame = self._alloc_next_frame()
+                    vframe = self._save_frame
+                    vframe._copy_internal_attributes(frame, data_layout = True)
+                else:
+                    self._setup_decoded_frame(frame, packet)
+                out.append(frame)
+            else:
+                if reuse and len(out) == 1:
+                    # reset frame data to original
+                    vframe = self._next_frame
+                    vframe._copy_internal_attributes(self._save_frame, data_layout = True)
+                break
+        return out
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
         CodecContext._setup_decoded_frame(self, frame, packet)

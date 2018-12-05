@@ -96,7 +96,8 @@ cdef class VideoFrame(Frame):
 
     cdef _init_user_attributes(self):
         self.format = get_video_format(<lib.AVPixelFormat>self.ptr.format, self.ptr.width, self.ptr.height)
-        self._init_planes(VideoPlane)
+        if self.planes is None:
+            self._init_planes(VideoPlane)
 
     def __dealloc__(self):
         # The `self._buffer` member is only set if *we* allocated the buffer in `_init`,

@@ -39,6 +39,7 @@ cdef class Frame(object):
         # ourselves to the maximum plane count (as determined only by VideoFrames
         # so far), in case the library implementation does not set the last
         # plane to NULL.
+
         cdef int max_plane_count = self._max_plane_count()
         cdef int plane_count = 0
         while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:

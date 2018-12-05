@@ -89,7 +89,8 @@ cdef class AudioFrame(Frame):
     cdef _init_user_attributes(self):
         self.layout = get_audio_layout(0, self.ptr.channel_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
-        self._init_planes(AudioPlane)
+        if self.planes is None:
+            self._init_planes(AudioPlane)
 
     def __repr__(self):
         return '<av.%s %d, pts=%s, %d samples at %dHz, %s, %s at 0x%x>' % (

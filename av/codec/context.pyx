@@ -74,6 +74,7 @@ cdef class CodecContext(object):
         
         self.options = {}
         self.stream_index = -1 # This is set by the container immediately.
+        self._save_frame = None
 
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
@@ -247,7 +248,7 @@ cdef class CodecContext(object):
                 break
         return out
 
-    cdef _send_packet_and_recv(self, Packet packet):
+    cdef _send_packet_and_recv(self, Packet packet, bint reuse = False):
 
         cdef Frame frame
 
@@ -260,6 +261,7 @@ cdef class CodecContext(object):
         while True:
             frame = self._recv_frame()
             if frame:
+                self._setup_decoded_frame(frame, packet)
                 out.append(frame)
             else:
                 break
@@ -336,7 +338,7 @@ cdef class CodecContext(object):
         # are off!
         packet._time_base = self.ptr.time_base
 
-    cpdef decode(self, Packet packet=None):
+    cpdef decode(self, Packet packet=None, bint reuse = False):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
 
         If the packet is None, the buffers will be flushed. This is useful if
@@ -351,7 +353,7 @@ cdef class CodecContext(object):
         self.open(strict=False)
 
         res = []
-        for frame in self._send_packet_and_recv(packet):
+        for frame in self._send_packet_and_recv(packet, reuse=reuse):
             if isinstance(frame, Frame):
                 self._setup_decoded_frame(frame, packet)
             res.append(frame)
