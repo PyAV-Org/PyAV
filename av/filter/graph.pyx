@@ -148,7 +148,7 @@ cdef class Graph(object):
 
     def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None, time_base=None):
         """
-        Convenient method for adding `abuffer <https://ffmpeg.org/ffmpeg-filters.html#abuffer>`_.
+        Convenience method for adding `abuffer <https://ffmpeg.org/ffmpeg-filters.html#abuffer>`_.
         """
 
         if template is not None:
@@ -177,6 +177,8 @@ cdef class Graph(object):
                                                                  time_base.numerator,
                                                                  time_base.denominator)
         if layout:
+            # Use AudioLayout constructor to handle both numerical and string layout descriptors
+            # see av/audio/layout.pyx
             args += ":channel_layout=" + AudioLayout(layout).name
         if channels:
             args += ":channels=" + str(channels)
