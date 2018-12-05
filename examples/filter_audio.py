@@ -2,6 +2,8 @@
 Simple audio filtering example ported from C code:
    https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/filter_audio.c
 """
+from __future__ import division
+from __future__ import print_function
 
 import hashlib
 import sys
@@ -12,6 +14,7 @@ import numpy as np
 
 import av
 import av.filter
+
 
 FRAME_SIZE = 1024
 
@@ -29,10 +32,12 @@ VOLUME_VAL = 0.90
 def init_filter_graph():
     graph = av.filter.Graph()
 
-    output_format = f'sample_fmts={OUTPUT_FORMAT}' \
-                    f':sample_rates={OUTPUT_SAMPLE_RATE}' \
-                    f':channel_layouts={OUTPUT_CHANNEL_LAYOUT}'
-    print(f'Output format: {output_format}')
+    output_format = 'sample_fmts={}:sample_rates={}:channel_layouts={}'.format(
+        OUTPUT_FORMAT,
+        OUTPUT_SAMPLE_RATE,
+        OUTPUT_CHANNEL_LAYOUT
+    )
+    print('Output format: {}'.format(output_format))
 
     # initialize filters
     filter_chain = [
@@ -50,7 +55,7 @@ def init_filter_graph():
     # link up the filters into a chain
     print('Filter graph:')
     for c, n in zip(filter_chain, filter_chain[1:]):
-        print(f'\t{c} -> {n}')
+        print('\t{} -> {}'.format(c, n))
         c.link_to(n)
 
     # initialize the filter graph
@@ -84,7 +89,7 @@ def process_output(frame):
     data = frame.to_ndarray()
     for i in range(data.shape[0]):
         m = hashlib.md5(data[i, :].tobytes())
-        print(f'Plane: {i:0d} checksum: {m.hexdigest()}')
+        print('Plane: {:0d} checksum: {}'.format(i, m.hexdigest()))
 
 
 def main(duration):
