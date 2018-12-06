@@ -265,6 +265,25 @@ cdef class CodecContext(object):
                 break
         return out
 
+    def _send_packet_and_recv_reuse(self, Packet packet):
+
+        cdef Frame frame
+
+        cdef int res
+        with nogil:
+            res = lib.avcodec_send_packet(self.ptr, &packet.struct if packet is not None else NULL)
+        err_check(res)
+
+        while True:
+            frame = self._recv_frame()
+            if frame:
+                self._setup_decoded_frame(frame, packet)
+                yield frame
+                self._next_frame = frame
+            else:
+                break
+        return
+
     cdef _prepare_frames_for_encode(self, Frame frame):
         return [frame]
 
@@ -356,6 +375,24 @@ cdef class CodecContext(object):
                 self._setup_decoded_frame(frame, packet)
             res.append(frame)
         return res
+
+    def xdecode(self, packet=None):
+        """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
+
+        If the packet is None, the buffers will be flushed. This is useful if
+        you do not want the library to automatically re-order frames for you
+        (if they are encoded with a codec that has B-frames).
+
+        """
+
+        if not self.codec.ptr:
+            raise ValueError('cannot decode unknown codec')
+
+        self.open(strict=False)
+
+        for frame in self._send_packet_and_recv_reuse(packet):
+            yield frame
+        return
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
 
