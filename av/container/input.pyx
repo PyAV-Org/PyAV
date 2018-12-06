@@ -163,6 +163,23 @@ cdef class InputContainer(Container):
             for frame in packet.decode():
                 yield frame
 
+    def xdecode(self, *args, **kwargs):
+        """xdecode(streams=None, video=None, audio=None, subtitles=None, data=None)
+
+        Yields a series of :class:`.Frame` from the given set of streams::
+
+            for frame in container.decode():
+                # Do something with `frame`.
+
+        .. seealso:: :meth:`.StreamContainer.get` for the interpretation of
+            the arguments.
+
+        """
+        id(kwargs) # Avoid Cython bug; see demux().
+        for packet in self.demux(*args, **kwargs):
+            for frame in packet.xdecode():
+                yield frame
+
     def seek(self, offset, whence='time', backward=True, any_frame=False, stream=None):
         """Seek to a (key)frame nearsest to the given timestamp.
 
