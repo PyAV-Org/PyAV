@@ -101,6 +101,13 @@ cdef class Packet(Buffer):
         """
         return self._stream.decode(self)
 
+    def xdecode(self):
+        """
+        Send the packet's data to the decoder and return a list of
+        :class:`.AudioFrame`, :class:`.VideoFrame` or :class:`.SubtitleSet`.
+        """
+        return self._stream.xdecode(self)
+
     @deprecation.method
     def decode_one(self):
         """
