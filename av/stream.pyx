@@ -144,6 +144,13 @@ cdef class Stream(object):
         """
         return self.codec_context.decode(packet)
 
+    def xdecode(self, packet=None):
+        """
+        Decode a :class:`.Packet` and return a list of :class:`.AudioFrame`
+        or :class:`.VideoFrame`.
+        """
+        return self.codec_context.xdecode(packet)
+
     @deprecation.method
     def seek(self, offset, whence='time', backward=True, any_frame=False):
         """
