@@ -181,7 +181,7 @@ cdef class ContainerProxy(object):
         self.flush_buffers()
 
     cdef flush_buffers(self):
-        cdef int i
+        cdef unsigned int i
         cdef lib.AVStream *stream
 
         with nogil:

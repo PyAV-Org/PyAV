@@ -14,7 +14,7 @@ cdef class InputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
 
-        cdef int i
+        cdef unsigned int i
 
         # If we have either the global `options`, or a `stream_options`, prepare
         # a mashup of those options for each stream.
@@ -100,7 +100,7 @@ cdef class InputContainer(Container):
         if include_stream == NULL:
             raise MemoryError()
 
-        cdef int i
+        cdef unsigned int i
         cdef Packet packet
         cdef int ret
 
