@@ -22,7 +22,7 @@ cdef class ContainerProxy(object):
     cdef flush_buffers(self)
 
     # Copies from Container.
-    cdef str name
+    cdef object name
     cdef str metadata_encoding
     cdef str metadata_errors
 
@@ -47,13 +47,16 @@ cdef class ContainerProxy(object):
 
 cdef class Container(object):
 
-    cdef readonly str name
+    cdef readonly object name
     cdef readonly object file
 
     cdef readonly bint writeable
 
     cdef readonly ContainerFormat format
-    cdef _Dictionary options
+
+    cdef readonly dict options
+    cdef readonly dict container_options
+    cdef readonly list stream_options
 
     cdef ContainerProxy proxy
     cdef object __weakref__

@@ -1,0 +1,12 @@
+
+{%- extends "basic/layout.html" %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="/versioning.css">
+    <script type="text/javascript" src="/versioning.js"></script>
+{% endblock %}
+
+{% block relbaritems %}
+    <li class="version-dropdown" data-release="{{ release }}"></li>
+{% endblock %}
+

@@ -3,14 +3,17 @@ from libc.limits cimport INT_MAX
 from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
 
 from av.plane cimport Plane
-from av.utils cimport avrational_to_faction, to_avrational
+from av.utils cimport avrational_to_fraction, to_avrational
 
 from fractions import Fraction
 
 
 cdef class Frame(object):
+    """
+    Base class for audio and video frames.
 
-    """Frame Base Class"""
+    See also :class:`~av.audio.frame.AudioFrame` and :class:`~av.video.frame.VideoFrame`.
+    """
 
     def __cinit__(self, *args, **kwargs):
         with nogil:
@@ -23,10 +26,11 @@ cdef class Frame(object):
             lib.av_frame_free(&self.ptr)
 
     def __repr__(self):
-        return 'av.%s #%d at 0x%x>' % (
+        return 'av.%s #%d pts=%s at 0x%x>' % (
             self.__class__.__name__,
             self.index,
             id(self),
+            self.pts,
         )
 
     cdef _init_planes(self, cls=Plane):
@@ -88,14 +92,25 @@ cdef class Frame(object):
 
         self._time_base = dst
 
-
     property dts:
+        """
+        The decoding timestamp in :attr:`time_base` units for this frame.
+
+        :type: int
+        """
         def __get__(self):
             if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
                 return None
             return self.ptr.pkt_dts
 
     property pts:
+        """
+        The presentation timestamp in :attr:`time_base` units for this frame.
+
+        This is the time at which the frame should be shown to the user.
+
+        :type: int
+        """
         def __get__(self):
             if self.ptr.pts == lib.AV_NOPTS_VALUE:
                 return None
@@ -107,6 +122,13 @@ cdef class Frame(object):
                 self.ptr.pts = value
 
     property time:
+        """
+        The presentation time in seconds for this frame.
+
+        This is the time at which the frame should be shown to the user.
+
+        :type: float
+        """
         def __get__(self):
             if self.ptr.pts == lib.AV_NOPTS_VALUE:
                 return None
@@ -114,11 +136,21 @@ cdef class Frame(object):
                 return float(self.ptr.pts) * self._time_base.num / self._time_base.den
 
     property time_base:
+        """
+        The unit of time (in fractional seconds) in which timestamps are expressed.
+
+        :type: fractions.Fraction
+        """
         def __get__(self):
             if self._time_base.num:
-                return avrational_to_faction(&self._time_base)
+                return avrational_to_fraction(&self._time_base)
         def __set__(self, value):
             to_avrational(value, &self._time_base)
 
     property is_corrupt:
+        """
+        Is this frame corrupt?
+
+        :type: bool
+        """
         def __get__(self): return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)

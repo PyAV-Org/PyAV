@@ -12,7 +12,7 @@ Typed Collections
 ~~~~~~~~~~~~~~~~~
 
 These attributes are preferred for readability if you don't need the
-dynamic capabilities of :method:`.get`:
+dynamic capabilities of :meth:`.get`:
 
 .. attribute:: StreamContainer.video
 
@@ -144,7 +144,7 @@ cdef class StreamContainer(object):
                 selection.append(self._streams[x])
 
             elif isinstance(x, dict):
-                for type_, indices in x.iteritems():
+                for type_, indices in x.items():
                     if type_ == 'streams': # For compatibility with the pseudo signature
                         streams = self._streams
                     else:

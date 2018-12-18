@@ -35,7 +35,7 @@ Video Frames
 
     .. autoclass:: VideoFrame
         :members:
-        :exclude-members: width, height, format
+        :exclude-members: width, height, format, to_nd_array
 
         .. autoattribute:: width
         .. autoattribute:: height
@@ -58,4 +58,3 @@ Video Reformatters
 
     .. autoclass:: VideoReformatter
         :members:
-

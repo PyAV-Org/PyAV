@@ -1,17 +1,17 @@
-from libc.stdint cimport uint64_t
-
-from warnings import warn
-
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
-from av.utils cimport flag_in_bitfield, media_type_to_string
+from av.utils cimport avrational_to_fraction, flag_in_bitfield
 from av.video.format cimport get_video_format
+
+
+cdef extern from "codec-shims.c" nogil:
+    cdef const lib.AVCodec* pyav_codec_iterate(void **opaque)
+
 
 cdef object _cinit_sentinel = object()
 
 
-
-cdef Codec wrap_codec(lib.AVCodec *ptr):
+cdef Codec wrap_codec(const lib.AVCodec *ptr):
     cdef Codec codec = Codec(_cinit_sentinel)
     codec.ptr = ptr
     codec.is_encoder = lib.av_codec_is_encoder(ptr)
@@ -49,27 +49,42 @@ cdef class Codec(object):
 
         if mode == 'w':
             self.ptr = lib.avcodec_find_encoder_by_name(name)
+            if not self.ptr:
+                self.desc = lib.avcodec_descriptor_get_by_name(name)
+                if self.desc:
+                    self.ptr = lib.avcodec_find_encoder(self.desc.id)
+
         elif mode == 'r':
             self.ptr = lib.avcodec_find_decoder_by_name(name)
+            if not self.ptr:
+                self.desc = lib.avcodec_descriptor_get_by_name(name)
+                if self.desc:
+                    self.ptr = lib.avcodec_find_decoder(self.desc.id)
+
         else:
             raise ValueError('Invalid mode; must be "r" or "w".', mode)
 
         self._init(name)
+
+        # Sanity check.
+        if (mode == 'w') != self.is_encoder:
+            raise RuntimeError("Found codec does not match mode.", name, mode)
 
     cdef _init(self, name=None):
 
         if not self.ptr:
             raise UnknownCodecError(name)
 
-        self.desc = lib.avcodec_descriptor_get(self.ptr.id)
         if not self.desc:
-            raise RuntimeError('No codec descriptor for %r.' % name)
+            self.desc = lib.avcodec_descriptor_get(self.ptr.id)
+            if not self.desc:
+                raise RuntimeError('No codec descriptor for %r.' % name)
 
         self.is_encoder = lib.av_codec_is_encoder(self.ptr)
 
         # Sanity check.
         if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
-            warn('%s is both encoder and decoder. Please notify PyAV developers.')
+            raise RuntimeError('%s is both encoder and decoder.')
 
     def create(self):
         from .context import CodecContext
@@ -86,42 +101,88 @@ cdef class Codec(object):
         def __get__(self): return self.ptr.name or ''
     property long_name:
         def __get__(self): return self.ptr.long_name or ''
-    property type:
-        def __get__(self): return media_type_to_string(self.ptr.type)
+
+    @property
+    def type(self):
+        """
+        The media type of this codec.
+
+        Examples: `'audio'`, `'video'`, `'subtitle'`.
+
+        :type: str
+        """
+        return lib.av_get_media_type_string(self.ptr.type)
+
     property id:
         def __get__(self): return self.ptr.id
 
-    property frame_rates:
-        def __get__(self): return <int>self.ptr.supported_framerates
-    property audio_rates:
-        def __get__(self): return <int>self.ptr.supported_samplerates
+    @property
+    def frame_rates(self):
+        """
+        A list of supported frame rates, or None.
 
-    property video_formats:
-        def __get__(self):
+        :type: list of fractions.Fraction
+        """
+        if not self.ptr.supported_framerates:
+            return
 
-            if not self.ptr.pix_fmts:
-                return
+        ret = []
+        cdef int i = 0
+        while self.ptr.supported_framerates[i].denum:
+            ret.append(avrational_to_fraction(&self.ptr.supported_framerates[i]))
+            i += 1
+        return ret
 
-            ret = []
-            cdef lib.AVPixelFormat *ptr = self.ptr.pix_fmts
-            while ptr[0] != -1:
-                ret.append(get_video_format(ptr[0], 0, 0))
-                ptr += 1
-            return ret
+    @property
+    def audio_rates(self):
+        """
+        A list of supported audio sample rates, or None.
 
-    property audio_formats:
-       def __get__(self):
+        :type: list of int
+        """
+        if not self.ptr.supported_samplerates:
+            return
 
-           if not self.ptr.sample_fmts:
-               return
+        ret = []
+        cdef int i = 0
+        while self.ptr.supported_samplerates[i]:
+            ret.append(self.ptr.supported_samplerates[i])
+            i += 1
+        return ret
 
-           ret = []
-           cdef lib.AVSampleFormat *ptr = self.ptr.sample_fmts
-           while ptr[0] != -1:
-               ret.append(get_audio_format(ptr[0]))
-               ptr += 1
-           return ret
+    @property
+    def video_formats(self):
+        """
+        A list of supported video formats, or None.
 
+        :type: list of VideoFormat
+        """
+        if not self.ptr.pix_fmts:
+            return
+
+        ret = []
+        cdef int i = 0
+        while self.ptr.pix_fmts[i] != -1:
+            ret.append(get_video_format(self.ptr.pix_fmts[i], 0, 0))
+            i += 1
+        return ret
+
+    @property
+    def audio_formats(self):
+        """
+        A list of supported audio formats, or None.
+
+        :type: list of AudioFormat
+        """
+        if not self.ptr.sample_fmts:
+           return
+
+        ret = []
+        cdef int i = 0
+        while self.ptr.sample_fmts[i] != -1:
+           ret.append(get_audio_format(self.ptr.sample_fmts[i]))
+           i += 1
+        return ret
 
     # Capabilities.
     property draw_horiz_band:
@@ -184,11 +245,20 @@ cdef class Codec(object):
         def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
 
-codecs_available = set()
-cdef lib.AVCodec *ptr = lib.av_codec_next(NULL)
-while ptr:
-    codecs_available.add(ptr.name)
-    ptr = lib.av_codec_next(ptr)
+
+cdef get_codec_names():
+    names = set()
+    cdef const lib.AVCodec *ptr
+    cdef void *opaque = NULL
+    while True:
+        ptr = pyav_codec_iterate(&opaque);
+        if ptr:
+            names.add(ptr.name)
+        else:
+            break
+    return names
+
+codecs_available = get_codec_names()
 
 
 codec_descriptor = wrap_avclass(lib.avcodec_get_class())

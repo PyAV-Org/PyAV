@@ -8,69 +8,69 @@ fi
 
 export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 
+if [[ "$TRAVIS" ]]; then
+    PYAV_LIBRARY=$LIBRARY
+fi
 
-if [[ ! "$PYAV_LIBRARY_NAME" ]]; then
-    # We allow $FFMPEG and $LIBAV on Travis to make the build matrix pretty.
-    if [[ "$TRAVIS" && "$FFMPEG" ]]; then
-        PYAV_LIBRARY_NAME=ffmpeg
-        PYAV_LIBRARY_VERSION="$FFMPEG"
-    elif [[ "$TRAVIS" && "$LIBAV" ]]; then
-        PYAV_LIBRARY_NAME=libav
-        PYAV_LIBRARY_VERSION="$LIBAV"
+if [[ ! "$PYAV_LIBRARY" ]]; then
 
     # Pull from command line argument.
-    elif [[ "$1" ]]; then
-        PYAV_LIBRARY_NAME="$1"
+    if [[ "$1" ]]; then
+        PYAV_LIBRARY="$1"
     else
-        PYAV_LIBRARY_NAME=ffmpeg
-        echo "No \$PYAV_LIBRARY_NAME set; defaulting to $PYAV_LIBRARY_NAME"
+        PYAV_LIBRARY=ffmpeg-4.0
+        echo "No \$PYAV_LIBRARY set; defaulting to $PYAV_LIBRARY"
     fi
 fi
+export PYAV_LIBRARY
+_lib_parts=(${PYAV_LIBRARY//-/ })
+if [[ ${#_lib_parts[@]} != 2 ]]; then
+    echo "Malformed \$PYAV_LIBRARY: \"$PYAV_LIBRARY\""
+    exit 1
+fi
+export PYAV_LIBRARY_NAME=${_lib_parts[0]}
+export PYAV_LIBRARY_VERSION=${_lib_parts[1]}
 
-if [[ ! "$PYAV_LIBRARY_VERSION" ]]; then
 
-    # Pull from command line argument.
-    if [[ "$2" ]]; then
-        PYAV_LIBRARY_VERSION="$2"
+if [[ ! "$PYAV_PYTHON" ]]; then
+    PYAV_PYTHON="${PYAV_PYTHON-python3}"
+    echo 'No $PYAV_PYTHON set; defaulting to python3.'
+fi
+export PYAV_PYTHON
+export PYAV_PIP="${PYAV_PIP-$PYAV_PYTHON -m pip}"
 
-    # Defaults.
-    else
-        case "$PYAV_LIBRARY_NAME" in
-            ffmpeg)
-                PYAV_LIBRARY_VERSION=3.2
-                ;;
-            libav)
-                PYAV_LIBRARY_VERSION=11.4
-                ;;
-            *)
-                echo "Unknown \$PYAV_LIBRARY_NAME \"$PYAV_LIBRARY_NAME\"; exiting"
-                exit 1
-        esac
-        echo "No \$PYAV_LIBRARY_VERSION set; defaulting to $PYAV_LIBRARY_VERSION"
+if [[ "$TRAVIS" ]]; then
+
+    # Travis as a very self-contained environment. Lets just work in that.
+    echo "We're on Travis, so not setting up another virtualenv."
+
+    if [[ "$TRAVIS_PYTHON_VERSION" = "2.7" || "$TRAVIS_PYTHON_VERSION" = "pypy" ]]; then
+        PYAV_PYTHON=python
+        PYAV_PIP=pip
     fi
-fi
-
-
-export PYAV_LIBRARY_NAME
-export PYAV_LIBRARY_VERSION
-export PYAV_LIBRARY_SLUG=$PYAV_LIBRARY_NAME-$PYAV_LIBRARY_VERSION
-
-export PYAV_PYTHON="${PYAV_PYTHON-python}"
-export PYAV_PLATFORM_SLUG="$(uname -s).$(uname -r)"
-export PYAV_VENV_NAME="$PYAV_PLATFORM_SLUG.cpython$("$PYAV_PYTHON" -c 'from __future__ import print_function; import sys; print("%d.%d" % sys.version_info[:2])')"
-export PYAV_VENV="$PYAV_ROOT/venvs/$PYAV_VENV_NAME"
-
-if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
-    mkdir -p "$PYAV_VENV"
-    virtualenv -p "$PYAV_PYTHON" "$PYAV_VENV"
-    "$PYAV_VENV/bin/pip" install --upgrade pip setuptools
-fi
-
-if [[ -e "$PYAV_VENV/bin/activate" ]]; then
-    source "$PYAV_VENV/bin/activate"
 else
-    # Not a virtualenv; lets manually "activate" it.
-    PATH="$PYAV_VENV/bin:$PATH"
+
+    export PYAV_VENV_NAME="$(uname -s).$(uname -r).$("$PYAV_PYTHON" -c '
+from __future__ import print_function
+import sys
+import platform
+print("{}{}.{}".format(platform.python_implementation().lower(), *sys.version_info[:2]))
+    ')"
+    export PYAV_VENV="$PYAV_ROOT/venvs/$PYAV_VENV_NAME"
+
+    if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
+        mkdir -p "$PYAV_VENV"
+        virtualenv -p "$PYAV_PYTHON" "$PYAV_VENV"
+        "$PYAV_VENV/bin/pip" install --upgrade pip setuptools
+    fi
+
+    if [[ -e "$PYAV_VENV/bin/activate" ]]; then
+        source "$PYAV_VENV/bin/activate"
+    else
+        # Not a virtualenv (perhaps a debug Python); lets manually "activate" it.
+        PATH="$PYAV_VENV/bin:$PATH"
+    fi
+
 fi
 
 
@@ -80,10 +80,11 @@ export _PYAV_ACTIVATED=1
 if [[ ! "$PYAV_LIBRARY_BUILD_ROOT" && -d /vagrant ]]; then
     # On Vagrant, building the library in the shared directory causes some
     # problems, so we move it to the user's home.
-    PYAV_LIBRARY_BUILD_ROOT="/home/vagrant/vendor"
+    PYAV_LIBRARY_ROOT="/home/vagrant/vendor"
 fi
-export PYAV_LIBRARY_BUILD_ROOT="${PYAV_LIBRARY_BUILD_ROOT-$PYAV_ROOT/vendor}"
-export PYAV_LIBRARY_PREFIX="$PYAV_VENV/vendor/$PYAV_LIBRARY_SLUG"
+export PYAV_LIBRARY_ROOT="${PYAV_LIBRARY_ROOT-$PYAV_ROOT/vendor}"
+export PYAV_LIBRARY_BUILD="${PYAV_LIBRARY_BUILD-$PYAV_LIBRARY_ROOT/build}"
+export PYAV_LIBRARY_PREFIX="$PYAV_LIBRARY_BUILD/$PYAV_LIBRARY"
 
 export PATH="$PYAV_LIBRARY_PREFIX/bin:$PATH"
 export PYTHONPATH="$PYAV_ROOT:$PYTHONPATH"

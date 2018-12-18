@@ -1,10 +1,6 @@
 from libc.stdint cimport int64_t, uint8_t
 
-cdef extern from "libswresample/swresample.pyav.h" nogil:
-
-    cdef int   avresample_version()
-    cdef char* avresample_configuration()
-    cdef char* avresample_license()
+cdef extern from "libswresample/swresample.h" nogil:
 
     cdef int   swresample_version()
     cdef char* swresample_configuration()
@@ -40,6 +36,4 @@ cdef extern from "libswresample/swresample.pyav.h" nogil:
     cdef SwrContext* swr_alloc()
     cdef int swr_init(SwrContext* ctx)
     cdef void swr_free(SwrContext **ctx)
-
-    # wrapper for libavresample
     cdef void swr_close(SwrContext *ctx)

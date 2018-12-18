@@ -1,16 +1,11 @@
-from __future__ import print_function
-
-from unittest import TestCase
 import doctest
-import os
-import re
-import sys
 import pkgutil
+import re
+from unittest import TestCase
 
 import av
 
 from .common import is_py3
-
 
 try:
     basestring
@@ -44,9 +39,7 @@ def register_doctests(mod):
         mod = __import__(mod, fromlist=[''])
     try:
         suite = doctest.DocTestSuite(mod)
-    except ValueError as e:
-        if e.args[-1] != 'has no docstrings':
-            print('test_doctest load error:', e, file=sys.__stdout__)
+    except ValueError:
         return
 
     fix_doctests(suite)
@@ -55,7 +48,8 @@ def register_doctests(mod):
     cls = type(cls_name, (TestCase, ), {})
 
     for test in suite._tests:
-        func = lambda self: test.runTest()
+        def func(self):
+            return test.runTest()
         name = str('test_' + re.sub('[^a-zA-Z0-9]+', '_', test.id()).strip('_'))
         func.__name__ = name
         setattr(cls, name, func)

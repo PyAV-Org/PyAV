@@ -18,7 +18,7 @@ cdef class FilterLink(object):
             if self._input:
                 return self._input
             cdef lib.AVFilterContext *cctx = self.ptr.src
-            cdef int i
+            cdef unsigned int i
             for i in range(cctx.nb_outputs):
                 if self.ptr == cctx.outputs[i]:
                     break
@@ -33,7 +33,7 @@ cdef class FilterLink(object):
             if self._output:
                 return self._output
             cdef lib.AVFilterContext *cctx = self.ptr.dst
-            cdef int i
+            cdef unsigned int i
             for i in range(cctx.nb_inputs):
                 if self.ptr == cctx.inputs[i]:
                     break

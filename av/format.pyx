@@ -3,6 +3,12 @@ cimport libav as lib
 from av.descriptor cimport wrap_avclass
 
 
+cdef extern from "format-shims.c" nogil:
+    cdef const lib.AVOutputFormat* pyav_find_output_format(const char *name)
+    cdef const lib.AVOutputFormat* pyav_muxer_iterate(void **opaque)
+    cdef const lib.AVInputFormat* pyav_demuxer_iterate(void **opaque)
+
+
 cdef object _cinit_bypass_sentinel = object()
 
 cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutputFormat* optr):
@@ -40,10 +46,7 @@ cdef class ContainerFormat(object):
             self.iptr = lib.av_find_input_format(name)
 
         if mode is None or mode == 'w':
-            while True:
-                self.optr = lib.av_oformat_next(self.optr)
-                if not self.optr or self.optr.name == name:
-                    break
+            self.optr = pyav_find_output_format(name)
 
         if not self.iptr and not self.optr:
             raise ValueError('no container format %r' % name)
@@ -106,21 +109,32 @@ cdef class ContainerFormat(object):
             return exts
 
 
-formats_available = set()
+cdef get_output_format_names():
+    names = set()
+    cdef const lib.AVOutputFormat *ptr
+    cdef void *opaque = NULL
+    while True:
+        ptr = pyav_muxer_iterate(&opaque);
+        if ptr:
+            names.add(ptr.name)
+        else:
+            break
+    return names
 
-cdef lib.AVInputFormat *iptr = NULL
-while True:
-    iptr = lib.av_iformat_next(iptr)
-    if not iptr:
-        break
-    formats_available.add(iptr.name)
+cdef get_input_format_names():
+    names = set()
+    cdef const lib.AVInputFormat *ptr
+    cdef void *opaque = NULL
+    while True:
+        ptr = pyav_demuxer_iterate(&opaque);
+        if ptr:
+            names.add(ptr.name)
+        else:
+            break
+    return names
 
-cdef lib.AVOutputFormat *optr = NULL
-while True:
-    optr = lib.av_oformat_next(optr)
-    if not optr:
-        break
-    formats_available.add(optr.name)
+formats_available = get_output_format_names()
+formats_available.update(get_input_format_names())
 
 
 format_descriptor = wrap_avclass(lib.avformat_get_class())

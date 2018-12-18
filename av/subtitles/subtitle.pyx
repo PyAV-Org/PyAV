@@ -47,7 +47,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 
     """
 
-    if index < 0 or index >= subtitle.proxy.struct.num_rects:
+    if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
         raise ValueError('subtitle rect index out of range')
     cdef lib.AVSubtitleRect *ptr = subtitle.proxy.struct.rects[index]
 
@@ -66,7 +66,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 cdef class Subtitle(object):
 
     def __cinit__(self, SubtitleSet subtitle, int index):
-        if index < 0 or index >= subtitle.proxy.struct.num_rects:
+        if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
             raise ValueError('subtitle rect index out of range')
         self.proxy = subtitle.proxy
         self.ptr = self.proxy.struct.rects[index]
@@ -96,7 +96,7 @@ cdef class BitmapSubtitle(Subtitle):
         self.planes = tuple(
             BitmapSubtitlePlane(self, i)
             for i in range(4)
-            if self.ptr.pict.linesize[i]
+            if self.ptr.linesize[i]
         )
 
     def __repr__(self):
@@ -137,15 +137,15 @@ cdef class BitmapSubtitlePlane(object):
 
         if index >= 4:
             raise ValueError('BitmapSubtitles have only 4 planes')
-        if not subtitle.ptr.pict.linesize[index]:
+        if not subtitle.ptr.linesize[index]:
             raise ValueError('plane does not exist')
 
         self.subtitle = subtitle
         self.index = index
         self.buffer_size = subtitle.ptr.w * subtitle.ptr.h
-        self._buffer = <void*>subtitle.ptr.pict.data[index]
+        self._buffer = <void*>subtitle.ptr.data[index]
 
-    # PyBuffer_FromMemory(self.ptr.pict.data[i], self.width * self.height)
+    # PyBuffer_FromMemory(self.ptr.data[i], self.width * self.height)
 
     # Legacy buffer support. For `buffer` and PIL.
     # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs

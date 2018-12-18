@@ -1,16 +1,14 @@
 from __future__ import division
 
-from fractions import Fraction
-from subprocess import check_call
-from unittest import TestCase as _Base
 import datetime
 import errno
+import functools
 import os
 import sys
-import functools
 import types
+from unittest import TestCase as _Base
 
-from nose.plugins.skip import SkipTest
+from av.datasets import fate as fate_suite
 
 try:
     import PIL.Image as Image
@@ -18,38 +16,12 @@ try:
 except ImportError:
     Image = ImageFilter = None
 
-import av
-from av.buffer import Buffer
-from av.codec import Codec, CodecContext
-from av.frame import Frame
-from av.packet import Packet
-from av.stream import Stream
-from av.utils import AVError
-from av.video import VideoFrame
-from av.audio import AudioFrame
-
 
 is_py3 = sys.version_info[0] > 2
 is_windows = os.name == 'nt'
 
 if not is_py3:
     from itertools import izip as zip
-
-
-def fate_suite(name):
-    fate_dir = os.path.abspath(os.path.join(
-        __file__, '..',
-        'assets', 'fate-suite',
-    ))
-    path = os.path.join(fate_dir, name)
-    if not os.path.exists(path):
-        makedirs(os.path.dirname(path))
-        url = 'http://fate.ffmpeg.org/fate-suite/' + name
-        check_call(['curl', '-o', path, url])
-    return path
-
-def fate_png():
-    return fate_suite('png1/55c99e750a5fd6_50314226.png')
 
 
 def makedirs(path):
@@ -81,6 +53,14 @@ def _sandbox(timed=False):
 def asset(*args):
     adir = os.path.dirname(__file__)
     return os.path.abspath(os.path.join(adir, 'assets', *args))
+
+
+# Store all of the sample data here.
+os.environ['PYAV_TESTDATA_DIR'] = asset()
+
+
+def fate_png():
+    return fate_suite('png1/55c99e750a5fd6_50314226.png')
 
 
 def sandboxed(*args, **kwargs):
@@ -115,7 +95,6 @@ class MethodLogger(object):
 
     def _filter(self, type_):
         return [log for log in self._log if log[0] == type_]
-
 
 
 class TestCase(_Base):

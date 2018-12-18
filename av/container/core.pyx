@@ -15,9 +15,17 @@ from av.utils cimport gettimeofday
 from av.container.core cimport cb_info
 
 from av.dictionary import Dictionary # not cimport
+from av.logging import Capture as LogCapture # not cimport
 from av.utils import AVError # not cimport
 
+try:
+    from os import fsencode
+except ImportError:
+    _fsencoding = sys.getfilesystemencoding()
+    fsencode = lambda s: s.encode(_fsencoding)
 
+
+ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 
 
 cdef object _cinit_sentinel = object()
@@ -52,8 +60,9 @@ cdef class ContainerProxy(object):
         self.name = container.name
         self.writeable = container.writeable
 
-        cdef char *name = self.name
-
+        cdef bytes name_obj = fsencode(self.name) if isinstance(self.name, unicode) else self.name
+        cdef char *name = name_obj
+        cdef seek_func_t seek_func = NULL
 
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:
@@ -80,14 +89,24 @@ cdef class ContainerProxy(object):
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.max_analyze_duration = 10000000
+
         # Setup Python IO.
         if self.file is not None:
 
-            # TODO: Make sure we actually have these.
             self.fread = getattr(self.file, 'read', None)
             self.fwrite = getattr(self.file, 'write', None)
             self.fseek = getattr(self.file, 'seek', None)
             self.ftell = getattr(self.file, 'tell', None)
+
+            if self.writeable:
+                if self.fwrite is None:
+                    raise ValueError("File object has no write method.")
+            else:
+                if self.fread is None:
+                    raise ValueError("File object has no read method.")
+
+            if self.fseek is not None and self.ftell is not None:
+                seek_func = pyio_seek
 
             self.pos = 0
             self.pos_is_valid = True
@@ -102,23 +121,24 @@ cdef class ContainerProxy(object):
                 <void*>self, # User data.
                 pyio_read,
                 pyio_write,
-                pyio_seek
+                seek_func
             )
-            # Various tutorials say that we should set AVFormatContext.direct
-            # to AVIO_FLAG_DIRECT here, but that doesn't seem to do anything in
-            # FFMpeg and was deprecated.
-            self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
+
+            if seek_func:
+                self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
             self.iocontext.max_packet_size = self.bufsize
             self.ptr.pb = self.iocontext
-            #self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt
         cdef _Dictionary options
         if not self.writeable:
             ifmt = container.format.iptr if container.format else NULL
-            options = container.options.copy()
+            
+            options = Dictionary(container.options, container.container_options)
+            
             self.__set_callback_timeout__(container.open_timeout)
             self.__reset_start_time__()
+            
             with nogil:
                 res = lib.avformat_open_input(
                     &self.ptr,
@@ -132,15 +152,13 @@ cdef class ContainerProxy(object):
     def __dealloc__(self):
         with nogil:
 
-            # Let FFmpeg handle it if it fully opened.
+            # Let FFmpeg close input if it was fully opened.
             if self.input_was_opened:
                 lib.avformat_close_input(&self.ptr)
 
-            # If we didn't open as input, but the IOContext was created.
-            # So either this is an output or we errored.
-            # lib.avio_alloc_context says our buffer "may be freed and replaced with
-            # a new buffer" so we should just leave it.
-            elif self.iocontext:
+            # FFmpeg will not release custom input, so it's up to us to free it.
+            # Do not touch our original buffer as it may have been freed and replaced.
+            if self.iocontext:
                 lib.av_freep(&self.iocontext.buffer)
                 lib.av_freep(&self.iocontext)
 
@@ -149,10 +167,7 @@ cdef class ContainerProxy(object):
             else:
                 lib.av_freep(&self.buffer)
 
-            # To be safe, lets give it another chance to free the whole structure.
-            # I (Mike) am not 100% on the deconstruction for output, and meshing
-            # these two together. This is safe to call after the avformat_close_input
-            # above, so *shrugs*.
+            # Finish releasing the whole structure.
             lib.avformat_free_context(self.ptr)
 
     def __set_callback_timeout__(self, timeout):
@@ -192,7 +207,7 @@ cdef class ContainerProxy(object):
         self.flush_buffers()
 
     cdef flush_buffers(self):
-        cdef int i
+        cdef unsigned int i
         cdef lib.AVStream *stream
 
         with nogil:
@@ -209,7 +224,7 @@ cdef class ContainerProxy(object):
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, file_, format_name, options, metadata_encoding, metadata_errors):
+    def __cinit__(self, sentinel, file_, format_name, options, container_options, stream_options, metadata_encoding, metadata_errors):
 
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -226,13 +241,17 @@ cdef class Container(object):
         if isinstance(file_, basestring):
             self.name = file_
         else:
-            self.name = str(getattr(file_, 'name', None))
+            self.name = getattr(file_, 'name', '<none>')
+            if not isinstance(self.name, basestring):
+                raise TypeError("File's name attribute must be string-like.")
             self.file = file_
 
         if format_name is not None:
             self.format = ContainerFormat(format_name)
 
-        self.options = Dictionary(**(options or {}))
+        self.options = dict(options or ())
+        self.container_options = dict(container_options or ())
+        self.stream_options = [dict(x) for x in stream_options or ()]
 
         self.metadata_encoding = metadata_encoding
         self.metadata_errors = metadata_errors
@@ -244,9 +263,16 @@ cdef class Container(object):
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
 
+    def dumps_format(self):
+        with LogCapture() as logs:
+            lib.av_dump_format(self.proxy.ptr, 0, "", isinstance(self, OutputContainer))
+        return ''.join(log[2] for log in logs)
 
 
-def open(file, mode=None, format=None, options=None, metadata_encoding=None, metadata_errors='strict'):
+
+def open(file, mode=None, format=None, options=None,
+    container_options=None, stream_options=None,
+    metadata_encoding=None, metadata_errors='strict'):
     """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
 
     Main entrypoint to opening files/streams.
@@ -254,7 +280,9 @@ def open(file, mode=None, format=None, options=None, metadata_encoding=None, met
     :param str file: The file to open.
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
     :param str format: Specific format to use. Defaults to autodect.
-    :param dict options: Options to pass to the container and streams.
+    :param dict options: Options to pass to the container and all streams.
+    :param dict container_options: Options to pass to the container.
+    :param list stream_options: Options to pass to each stream.
     :param str metadata_encoding: Encoding to use when reading or writing file metadata.
         Defaults to utf-8, except no decoding is performed by default when
         reading on Python 2 (returning ``str`` instead of ``unicode``).
@@ -276,7 +304,15 @@ def open(file, mode=None, format=None, options=None, metadata_encoding=None, met
         mode = 'r'
 
     if mode.startswith('r'):
-        return InputContainer(_cinit_sentinel, file, format, options, metadata_encoding, metadata_errors)
+        return InputContainer(_cinit_sentinel, file, format, options,
+            container_options, stream_options,
+            metadata_encoding, metadata_errors
+        )
     if mode.startswith('w'):
-        return OutputContainer(_cinit_sentinel, file, format, options, metadata_encoding, metadata_errors)
+        if stream_options:
+            raise ValueError("Provide stream options via Container.add_stream(..., options={}).")
+        return OutputContainer(_cinit_sentinel, file, format, options,
+            container_options, stream_options,
+            metadata_encoding, metadata_errors
+        )
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)

@@ -1,7 +1,7 @@
 from libc.stdint cimport int64_t, uint64_t
 
 
-cdef extern from "libavformat/avformat.pyav.h" nogil:
+cdef extern from "libavformat/avformat.h" nogil:
 
     cdef int   avformat_version()
     cdef char* avformat_configuration()
@@ -18,12 +18,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
 
     cdef int AVIO_FLAG_WRITE
 
-    #: Initialize all formats.
-    cdef void av_register_all()
-
-    #: Initialize network use in formats.
-    cdef void avformat_network_init()
-
     cdef enum AVMediaType:
         AVMEDIA_TYPE_UNKNOWN
         AVMEDIA_TYPE_VIDEO
@@ -33,11 +27,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         AVMEDIA_TYPE_ATTACHMENT
         AVMEDIA_TYPE_NB
 
-    cdef struct AVFrac:
-        int64_t val
-        int64_t num
-        int64_t den
-
     cdef struct AVStream:
 
         int index
@@ -45,7 +34,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
 
         AVCodecContext *codec
 
-        AVFrac pts
         AVRational time_base
 
         int64_t start_time
@@ -139,8 +127,6 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
     )
 
     cdef AVInputFormat* av_find_input_format(const char *name)
-    cdef AVInputFormat* av_iformat_next(AVInputFormat*)
-    cdef AVOutputFormat* av_oformat_next(AVOutputFormat*)
 
     # http://ffmpeg.org/doxygen/trunk/structAVIOInterruptCB.html
     cdef struct AVIOInterruptCB:
@@ -287,3 +273,7 @@ cdef extern from "libavformat/avformat.pyav.h" nogil:
         int64_t max_ts,
         int flags
     )
+
+    # custom
+    
+    cdef set pyav_get_available_formats()

@@ -17,6 +17,7 @@ Audio Context
 
     .. autoclass:: AudioCodecContext
         :members:
+        :exclude-members: channel_layout, channels
 
 Audio Formats
 -------------
@@ -34,6 +35,9 @@ Audio Layouts
     .. autoclass:: AudioLayout
         :members:
 
+    .. autoclass:: AudioChannel
+        :members:
+
 Audio Frames
 ------------
 
@@ -41,6 +45,7 @@ Audio Frames
 
     .. autoclass:: AudioFrame
         :members:
+        :exclude-members: to_nd_array
 
 Audio FIFOs
 -----------

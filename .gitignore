@@ -13,7 +13,6 @@
 /venvs
 
 # Build products
-*.c
 *.egg-info
 *.pyc
 *.so

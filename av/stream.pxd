@@ -19,7 +19,7 @@ cdef class Stream(object):
 
     # CodecContext attributes.
     cdef lib.AVCodecContext *_codec_context
-    cdef lib.AVCodec *_codec
+    cdef const lib.AVCodec *_codec
     cdef lib.AVDictionary *_codec_options
 
     cdef readonly CodecContext codec_context

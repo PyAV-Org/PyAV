@@ -1,4 +1,33 @@
 
+- Improve options.
+
+  - Per-stream options (which require not opening the codecs right away).
+
+  - Current input behaviour:
+    - av.open(..., options={}, container_options={}, stream_options=[{}, ...])
+    - Those options are provided to each stream via avformat_find_stream_info,
+      which is called immediately. However, it isn't garunteed to open all
+      codecs, so options may not have been provided at this time.
+
+  - Ideal input behaviour:
+    - You can defer the avformat_find_stream_info, and get basic stream info
+      before setting options.
+    - stream.codec_context.options then gets during avformat_find_stream_info
+      or open or whatever.
+
+- AVFormatContext::interrupt_callback
+
+- Container.decode_one(**demux_kwargs) -> Frame
+  There would be a Container._buffered_decoded_frames or something that would
+  contain extras, just in case.
+
+  - Stream.decode_one() would do the same.
+
+- Data stream support.
+
+- Stream.encode(packet) should also mux frames.
+  For b/c, it should return packets with a _muxed_by_encode flag set, which then
+  has them get ignored once; the flag is reset when muxed.
 
 - assert reasonable time_base and PTS handling
 
@@ -27,10 +56,6 @@
 - Document/test the entire API (in the most casual way).
 
 - Include build discovery info into the module, retrievable by `python -m av --version`
-
-- Macros: Either ${ whatever(args) } or {{ whatever(args) }}
-  These return strings which are re-dented to match the level at the start of
-  themselves.
 
 - VideoFrame.from_file(file_or_path); opens the file and decodes the first frame
 

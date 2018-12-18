@@ -7,23 +7,30 @@ from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
 
 from av.utils import AVError # not cimport
+from av.dictionary import Dictionary
 
 
 cdef class InputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
 
-        cdef int i
+        cdef unsigned int i
 
-        # Create several clones of out one set of options, since
-        # avformat_find_stream_info expects an array of them.
-        # TODO: Expose per-stream options at some point.
+        # If we have either the global `options`, or a `stream_options`, prepare
+        # a mashup of those options for each stream.
         cdef lib.AVDictionary **c_options = NULL
-        if len(self.options):
+        cdef _Dictionary base_dict, stream_dict
+        if self.options or self.stream_options:
+            base_dict = Dictionary(self.options)
             c_options = <lib.AVDictionary**>malloc(self.proxy.ptr.nb_streams * sizeof(void*))
             for i in range(self.proxy.ptr.nb_streams):
                 c_options[i] = NULL
-                lib.av_dict_copy(&c_options[i], self.options.ptr, 0)
+                if i < len(self.stream_options) and self.stream_options:
+                    stream_dict = base_dict.copy()
+                    stream_dict.update(self.stream_options[i])
+                    lib.av_dict_copy(&c_options[i], stream_dict.ptr, 0)
+                else:
+                    lib.av_dict_copy(&c_options[i], base_dict.ptr, 0)
 
         with nogil:
             # This peeks are the first few frames to:
@@ -83,15 +90,17 @@ cdef class InputContainer(Container):
         # For whatever reason, Cython does not like us directly passing kwargs
         # from one method to another. Without kwargs, it ends up passing a
         # NULL reference, which segfaults. So we force it to do something with it.
-        # This is likely a bug in Cython.
-        kwargs = kwargs or {}
+        # This is likely a bug in Cython; see https://github.com/cython/cython/issues/2166
+        # (and others).
+        id(kwargs)
+
         streams = self.streams.get(*args, **kwargs)
 
         cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
         if include_stream == NULL:
             raise MemoryError()
 
-        cdef int i
+        cdef unsigned int i
         cdef Packet packet
         cdef int ret
 
@@ -134,6 +143,7 @@ cdef class InputContainer(Container):
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]
+                    packet._time_base = packet._stream._stream.time_base
                     yield packet
 
         finally:
@@ -151,12 +161,12 @@ cdef class InputContainer(Container):
             the arguments.
 
         """
-
+        id(kwargs) # Avoid Cython bug; see demux().
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, offset, whence='time', backward=True, any_frame=False):
+    def seek(self, offset, whence='time', backward=True, any_frame=False, stream=None):
         """Seek to a (key)frame nearsest to the given timestamp.
 
         :param int offset: Location to seek to. Interpretation depends on ``whence``.
@@ -164,14 +174,15 @@ cdef class InputContainer(Container):
         :param bool backward: If there is not a (key)frame at the given offset,
             look backwards for it.
         :param bool any_frame: Seek to any frame, not just a keyframe.
+        :param Stream stream: The stream who's ``time_base`` the ``offset`` is in.
 
         ``whence`` has the following meanings:
 
-        - ``'time'``: ``offset`` is in ``av.TIME_BASE``.
+        - ``'time'``: ``offset`` is in ``stream.time_base`` if ``stream`` else ``av.time_base``.
         - ``'frame'``: ``offset`` is a frame index
         - ``'byte'``: ``offset`` is the byte location in the file to seek to.
 
-        .. warning:: Not all formats support all options.
+        .. warning:: Not all formats support all options, and may fail silently.
 
         """
-        self.proxy.seek(-1, offset, whence, backward, any_frame)
+        self.proxy.seek(stream.index if stream else -1, offset, whence, backward, any_frame)

@@ -1,9 +1,15 @@
 **PyAV** Documentation
 ======================
 
-**PyAV** is a Pythonic binding for FFmpeg_ or Libav_. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
+**PyAV** is a Pythonic binding for FFmpeg_. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
 
-Currently we provide the basics of:
+PyAV is for direct and precise access to your media via containers, streams, packets, codecs, and frames. It exposes a few transformations of that data, and helps you get your data to/from other packages (e.g. Numpy and Pillow). 
+
+This power does come with some responsibility as working with media is horrendously complicated and PyAV can't abstract it away or make all the best decisions for you. If the `ffmpeg` command does the job without you bending over backwards, PyAV is likely going to be more of a hindrance than a help.
+
+But where you can't work without it, PyAV is a critical tool.
+
+Currently we provide:
 
 - ``libavformat``:
   :class:`containers <.Container>`,
@@ -23,16 +29,15 @@ Currently we provide the basics of:
   :class:`.Filter`,
   :class:`.Graph`;
 
-- ``libscscale``:
+- ``libswscale``:
   :class:`.VideoReformatter`;
 
-- ``libavresample`` and/or ``libswresample``:
+- ``libswresample``:
   :class:`.AudioResampler`;
 
 - and a few more utilities.
 
 .. _FFmpeg: http://ffmpeg.org
-.. _Libav: http://libav.org
 
 
 Basic Demo
@@ -53,18 +58,38 @@ Basic Demo
         frame.to_image().save('frame-%04d.jpg' % frame.index)
 
 
-Contents
+Overview
+--------
+
+.. toctree::
+    :maxdepth: 2
+
+    about
+    installation
+
+
+Cookbook
 --------
 
 .. toctree::
     :glob:
     :maxdepth: 2
 
-    about
-    installation
-    examples/_index
-    api/_index
+    cookbook/*
 
+
+Reference
+---------
+
+.. toctree::
+    :glob:
+    :maxdepth: 2
+
+    api/*
+
+
+Development
+-----------
 
 .. toctree::
     :maxdepth: 1

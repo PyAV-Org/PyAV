@@ -81,9 +81,9 @@ cdef class AudioFifo:
             raise ValueError('Frame does not match AudioFifo parameters.')
 
         # Assert that the PTS are what we expect.
-        cdef uint64_t expected_pts
+        cdef int64_t expected_pts
         if self.pts_per_sample and frame.ptr.pts != lib.AV_NOPTS_VALUE:
-            expected_pts = <uint64_t>(self.pts_per_sample * self.samples_written)
+            expected_pts = <int64_t>(self.pts_per_sample * self.samples_written)
             if frame.ptr.pts != expected_pts:
                 raise ValueError('Frame.pts (%d) != expected (%d); fix or set to None.' % (frame.ptr.pts, expected_pts))
 
@@ -96,7 +96,7 @@ cdef class AudioFifo:
         self.samples_written += frame.ptr.nb_samples
 
 
-    cpdef read(self, unsigned int samples=0, bint partial=False):
+    cpdef read(self, int samples=0, bint partial=False):
         """read(samples=0, partial=False)
 
         Read samples from the queue.
@@ -150,7 +150,7 @@ cdef class AudioFifo:
 
         return frame
 
-    cpdef read_many(self, unsigned int samples, bint partial=False):
+    cpdef read_many(self, int samples, bint partial=False):
         """read_many(samples, partial=False)
 
         Read as many frames as we can.

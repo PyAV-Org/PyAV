@@ -1,4 +1,4 @@
-from libc.stdint cimport uint64_t
+from libc.stdint cimport int64_t, uint8_t
 
 cimport libav as lib
 
@@ -114,9 +114,9 @@ cdef class AudioResampler(object):
                 raise ValueError('Frame does not match AudioResampler setup.')
 
         # Assert that the PTS are what we expect.
-        cdef uint64_t expected_pts
+        cdef int64_t expected_pts
         if frame is not None and frame.ptr.pts != lib.AV_NOPTS_VALUE:
-            expected_pts = <uint64_t>(self.pts_per_sample_in * self.samples_in)
+            expected_pts = <int64_t>(self.pts_per_sample_in * self.samples_in)
             if frame.ptr.pts != expected_pts:
                 raise ValueError('Input frame pts %d != expected %d; fix or set to None.' % (frame.ptr.pts, expected_pts))
             self.samples_in += frame.ptr.nb_samples
@@ -165,7 +165,8 @@ cdef class AudioResampler(object):
             self.ptr,
             output.ptr.extended_data,
             output_nb_samples,
-            frame.ptr.extended_data if frame else NULL,
+            # Cast for const-ness, because Cython isn't expressive enough.
+            <const uint8_t**>(frame.ptr.extended_data if frame else NULL),
             frame.ptr.nb_samples if frame else 0
         ))
 
@@ -184,9 +185,5 @@ cdef class AudioResampler(object):
             output.ptr.pts = lib.AV_NOPTS_VALUE
 
         self.samples_out += output.ptr.nb_samples
-
-        # Recalculate linesize since the initial number of samples was
-        # only an estimate.
-        output._recalc_linesize()
 
         return output

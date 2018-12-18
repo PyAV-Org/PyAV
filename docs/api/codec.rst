@@ -9,5 +9,11 @@ Codecs
 
 .. automodule:: av.codec.context
 
+    .. autoclass:: ThreadType
+        :members:
+
+    .. autoclass:: SkipType
+        :members:
+
     .. autoclass:: CodecContext
         :members:

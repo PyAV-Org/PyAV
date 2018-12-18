@@ -1,4 +1,7 @@
-from av.bytesource cimport ByteSource, bytesource
+from libc.stdint cimport uint8_t
+
+from av.deprecation import renamed_attr
+from av.enums cimport EnumType, define_enum
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.plane cimport VideoPlane
@@ -14,6 +17,50 @@ cdef VideoFrame alloc_video_frame():
 
     """
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
+
+
+cdef EnumType PictureType = define_enum('PictureType', (
+    ('NONE', lib.AV_PICTURE_TYPE_NONE),
+    ('I', lib.AV_PICTURE_TYPE_I),
+    ('P', lib.AV_PICTURE_TYPE_P),
+    ('B', lib.AV_PICTURE_TYPE_B),
+    ('S', lib.AV_PICTURE_TYPE_S),
+    ('SI', lib.AV_PICTURE_TYPE_SI),
+    ('SP', lib.AV_PICTURE_TYPE_SP),
+    ('BI', lib.AV_PICTURE_TYPE_BI),
+))
+
+
+cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
+    cdef bytes imgbytes = array.tobytes()
+    cdef const uint8_t[:] i_buf = imgbytes
+    cdef size_t i_pos = 0
+    cdef size_t i_stride = plane.width * bytes_per_pixel
+    cdef size_t i_size = plane.height * i_stride
+
+    cdef uint8_t[:] o_buf = plane
+    cdef size_t o_pos = 0
+    cdef size_t o_stride = abs(plane.line_size)
+
+    while i_pos < i_size:
+        o_buf[o_pos:o_pos + i_stride] = i_buf[i_pos:i_pos + i_stride]
+        i_pos += i_stride
+        o_pos += o_stride
+
+
+cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1):
+    """
+    Return the useful part of the VideoPlane as a single dimensional array.
+
+    We are simply discarding any padding which was added for alignment.
+    """
+    import numpy as np
+    cdef size_t total_line_size = abs(plane.line_size)
+    cdef size_t useful_line_size = plane.width * bytes_per_pixel
+    arr = np.frombuffer(plane, np.uint8)
+    if total_line_size != useful_line_size:
+        arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
+    return arr
 
 
 cdef class VideoFrame(Frame):
@@ -36,35 +83,28 @@ cdef class VideoFrame(Frame):
         self._init(c_format, width, height)
 
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height):
-        cdef int buffer_size
         with nogil:
             self.ptr.width = width
             self.ptr.height = height
             self.ptr.format = format
 
-
+            # Allocate the buffer for the video frame.
+            #
+            # We enforce 8-byte aligned buffers, otherwise `sws_scale` causes
+            # out-of-bounds reads and writes for images whose width is not a
+            # multiple of 8.
+            #
+            # TODO: ensure 8 bytes is sufficient, even for resizing operations.
             if width and height:
-
-                # Cleanup the old buffer.
-                lib.av_freep(&self._buffer)
-
-                # Get a new one.
-                buffer_size = lib.avpicture_get_size(format, width, height)
-                with gil: err_check(buffer_size)
-
-                self._buffer = <uint8_t *>lib.av_malloc(buffer_size)
-
-                if not self._buffer:
-                    with gil: raise MemoryError("cannot allocate VideoFrame buffer")
-
-                # Attach the AVPicture to our buffer.
-                lib.avpicture_fill(
-                        <lib.AVPicture *>self.ptr,
-                        self._buffer,
-                        format,
-                        width,
-                        height
-                )
+                ret = lib.av_image_alloc(
+                    self.ptr.data,
+                    self.ptr.linesize,
+                    width,
+                    height,
+                    format,
+                    8)
+                with gil: err_check(ret)
+                self._buffer = self.ptr.data[0]
 
         self._init_user_attributes()
 
@@ -76,12 +116,15 @@ cdef class VideoFrame(Frame):
         self._init_planes(VideoPlane)
 
     def __dealloc__(self):
+        # The `self._buffer` member is only set if *we* allocated the buffer in `_init`,
+        # as opposed to a buffer allocated by a decoder.
         lib.av_freep(&self._buffer)
 
     def __repr__(self):
-        return '<av.%s #%d, %s %dx%d at 0x%x>' % (
+        return '<av.%s #%d, pts=%s %s %dx%d at 0x%x>' % (
             self.__class__.__name__,
             self.index,
+            self.pts,
             self.format.name,
             self.width,
             self.height,
@@ -132,7 +175,7 @@ cdef class VideoFrame(Frame):
 
         return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace)
 
-    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
+    cdef _reformat(self, int width, int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
 
         if self.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
@@ -170,17 +213,48 @@ cdef class VideoFrame(Frame):
                 NULL
             )
 
-        cdef int *inv_tbl, *tbl, *rgbTbl
-        cdef int srcRange, dstRange, brightness, contrast, saturation
+        # We want to change the colorspace transforms. We do that by grabbing
+        # all of the current settings, changing a couple, and setting them all.
+        # We need a lot of state here.
+        cdef const int *inv_tbl
+        cdef const int *tbl
+        cdef int src_range, dst_range, brightness, contrast, saturation
         cdef int ret
-        with nogil:
-            ret = lib.sws_getColorspaceDetails(self.reformatter.ptr, &inv_tbl, &srcRange, &tbl, &dstRange, &brightness, &contrast, &saturation)
-            if not ret < 0:
+        if src_colorspace != dst_colorspace:
+
+            with nogil:
+
+                # Casts for const-ness, because Cython isn't expressive enough.
+                ret = lib.sws_getColorspaceDetails(
+                    self.reformatter.ptr,
+                    <int**>&inv_tbl,
+                    &src_range,
+                    <int**>&tbl,
+                    &dst_range,
+                    &brightness,
+                    &contrast,
+                    &saturation
+                )
+
+            # I don't think this one can actually come up.
+            if ret < 0:
+                raise ValueError("Can't get colorspace of current format.")
+
+            with nogil:
+
+                # Grab the coefficients for the requested transforms.
+                # The inv_table brings us to linear, and `tbl` to the new space.
                 if src_colorspace != lib.SWS_CS_DEFAULT:
                     inv_tbl = lib.sws_getCoefficients(src_colorspace)
                 if dst_colorspace != lib.SWS_CS_DEFAULT:
                     tbl = lib.sws_getCoefficients(dst_colorspace)
-                lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, srcRange, tbl, dstRange, brightness, contrast, saturation)
+
+                # Apply!
+                ret = lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, src_range, tbl, dst_range, brightness, contrast, saturation)
+
+            # This one can come up, but I'm not really sure in what scenarios.
+            if ret < 0:
+                raise ValueError("Can't set colorspace of current format.")
 
         # Create a new VideoFrame.
         cdef VideoFrame frame = alloc_video_frame()
@@ -191,7 +265,8 @@ cdef class VideoFrame(Frame):
         with nogil:
             lib.sws_scale(
                 self.reformatter.ptr,
-                self.ptr.data,
+                # Cast for const-ness, because Cython isn't expressive enough.
+                <const uint8_t**>self.ptr.data,
                 self.ptr.linesize,
                 0, # slice Y
                 self.ptr.height,
@@ -213,6 +288,18 @@ cdef class VideoFrame(Frame):
         """Is this frame a key frame?"""
         def __get__(self): return self.ptr.key_frame
 
+    property interlaced_frame:
+        """Is this frame an interlaced or progressive?"""
+        def __get__(self): return self.ptr.interlaced_frame
+
+    @property
+    def pict_type(self):
+        return PictureType.get(self.ptr.pict_type, create=True)
+
+    @pict_type.setter
+    def pict_type(self, value):
+        self.ptr.pict_type = PictureType[value].value
+
     def to_rgb(self, **kwargs):
         """Get an RGB version of this frame.
 
@@ -232,71 +319,115 @@ cdef class VideoFrame(Frame):
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
 
+        .. note:: PIL or Pillow must be installed.
+
         """
         from PIL import Image
-        return Image.frombuffer("RGB", (self.width, self.height), self.reformat(format="rgb24", **kwargs).planes[0], "raw", "RGB", 0, 1)
+        cdef VideoPlane plane = self.reformat(format="rgb24", **kwargs).planes[0]
 
-    def to_nd_array(self, **kwargs):
+        cdef const uint8_t[:] i_buf = plane
+        cdef size_t i_pos = 0
+        cdef size_t i_stride = plane.line_size
+
+        cdef size_t o_pos = 0
+        cdef size_t o_stride = plane.width * 3
+        cdef size_t o_size = plane.height * o_stride
+        cdef bytearray o_buf = bytearray(o_size)
+
+        while o_pos < o_size:
+            o_buf[o_pos:o_pos + o_stride] = i_buf[i_pos:i_pos + o_stride]
+            i_pos += i_stride
+            o_pos += o_stride
+
+        return Image.frombytes("RGB", (self.width, self.height), bytes(o_buf), "raw", "RGB", 0, 1)
+
+    def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
 
-        """
+        .. note:: Numpy must be installed.
 
+        """
         cdef VideoFrame frame = self.reformat(**kwargs)
-        if len(frame.planes) != 1:
-            raise ValueError('Cannot conveniently get numpy array from multiplane frame')
 
         import numpy as np
 
-        # We only suppose this convenience for a few types.
-        # TODO: Make this more general (if we can)
-        if frame.format.name in ('rgb24', 'bgr24'):
-            return np.frombuffer(frame.planes[0], np.uint8).reshape(frame.height, frame.width, -1)
-        if frame.format.name == ('gray16le', 'gray16be'):
-            return np.frombuffer(frame.planes[0], np.dtype('<u2')).reshape(frame.height, frame.width)
+        if frame.format.name == 'yuv420p':
+            assert frame.width % 2 == 0
+            assert frame.height % 2 == 0
+            return np.hstack((
+                useful_array(frame.planes[0]),
+                useful_array(frame.planes[1]),
+                useful_array(frame.planes[2])
+            )).reshape(-1, frame.width)
+        elif frame.format.name == 'yuyv422':
+            assert frame.width % 2 == 0
+            assert frame.height % 2 == 0
+            return useful_array(frame.planes[0], 2).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('rgb24', 'bgr24'):
+            return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
+            return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('gray', 'gray8'):
+            return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         else:
-            raise ValueError("Cannot conveniently get numpy array from %s format" % frame.format.name)
+            raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % frame.format.name)
 
-    def to_qimage(self, **kwargs):
-        """Get an RGB ``QImage`` of this frame.
-
-        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
-
-        Returns a ``(VideoFrame, QImage)`` tuple, where the ``QImage`` references
-        the data in the ``VideoFrame``.
-        """
-        from PyQt4.QtGui import QImage
-        from sip import voidptr
-
-        cdef VideoFrame rgb = self.reformat(format='rgb24', **kwargs)
-        ptr = voidptr(<long><void*>rgb.ptr.extended_data[0])
-
-        return rgb, QImage(ptr, rgb.ptr.width, rgb.ptr.height, QImage.Format_RGB888)
+    to_nd_array = renamed_attr('to_ndarray')
 
     @staticmethod
     def from_image(img):
+        """
+        Construct a frame from a `PIL.Image`.
+        """
         if img.mode != 'RGB':
             img = img.convert('RGB')
-        frame = VideoFrame(img.size[0], img.size[1], 'rgb24')
 
-        # TODO: Use the buffer protocol.
-        try:
-            frame.planes[0].update(img.tobytes())
-        except AttributeError:
-            frame.plates[0].update(img.tostring())
+        cdef VideoFrame frame = VideoFrame(img.size[0], img.size[1], 'rgb24')
+        copy_array_to_plane(img, frame.planes[0], 3)
 
         return frame
 
     @staticmethod
     def from_ndarray(array, format='rgb24'):
-
-        # TODO: We could stand to be more accepting.
-        assert array.ndim == 3
-        assert array.shape[2] == 3
-        assert array.dtype == 'uint8'
+        """
+        Construct a frame from a numpy array.
+        """
+        if format == 'yuv420p':
+            assert array.dtype == 'uint8'
+            assert array.ndim == 2
+            assert array.shape[0] % 3 == 0
+            assert array.shape[1] % 2 == 0
+            frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
+            u_start = frame.width * frame.height
+            v_start = 5 * u_start // 4
+            flat = array.reshape(-1)
+            copy_array_to_plane(flat[0:u_start], frame.planes[0], 1)
+            copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 1)
+            copy_array_to_plane(flat[v_start:], frame.planes[2], 1)
+            return frame
+        elif format == 'yuyv422':
+            assert array.dtype == 'uint8'
+            assert array.ndim == 3
+            assert array.shape[0] % 2 == 0
+            assert array.shape[1] % 2 == 0
+            assert array.shape[2] == 2
+        elif format in ('rgb24', 'bgr24'):
+            assert array.dtype == 'uint8'
+            assert array.ndim == 3
+            assert array.shape[2] == 3
+        elif format in ('argb', 'rgba', 'abgr', 'bgra'):
+            assert array.dtype == 'uint8'
+            assert array.ndim == 3
+            assert array.shape[2] == 4
+        elif format in ('gray', 'gray8'):
+            assert array.dtype == 'uint8'
+            assert array.ndim == 2
+        else:
+            raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
         frame = VideoFrame(array.shape[1], array.shape[0], format)
-        frame.planes[0].update(array)
+        copy_array_to_plane(array, frame.planes[0], 1 if array.ndim == 2 else array.shape[2])
 
         return frame

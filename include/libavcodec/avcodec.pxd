@@ -7,8 +7,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef char* avcodec_configuration()
     cdef char* avcodec_license()
 
-    cdef void avcodec_register_all()
-
     cdef int64_t AV_NOPTS_VALUE
 
     # AVCodecDescriptor.props
@@ -21,7 +19,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AV_CODEC_PROP_TEXT_SUB
 
     #AVCodec.capabilities
-
     cdef enum:
         CODEC_CAP_DRAW_HORIZ_BAND
         CODEC_CAP_DR1
@@ -43,8 +40,13 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         CODEC_CAP_LOSSLESS
 
     cdef enum:
-        CODEC_FLAG_GLOBAL_HEADER
-        CODEC_FLAG_TRUNCATED
+        FF_THREAD_FRAME
+        FF_THREAD_SLICE
+
+    cdef enum:
+        AV_CODEC_FLAG_GLOBAL_HEADER
+        AV_CODEC_FLAG_QSCALE
+        AV_CODEC_FLAG_TRUNCATED
 
     cdef enum:
         AV_PKT_FLAG_KEY
@@ -91,7 +93,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVClass *priv_class
 
 
-    cdef AVCodec* av_codec_next(AVCodec*)
     cdef int av_codec_is_encoder(AVCodec*)
     cdef int av_codec_is_decoder(AVCodec*)
 
@@ -116,7 +117,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
         int flags
         int thread_count
-        int refcounted_frames
+        int thread_type
 
         int profile
         AVDiscard skip_frame
@@ -147,7 +148,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
         int extradata_size
         uint8_t *extradata
-        
+
         int delay
 
         AVCodec *codec
@@ -181,7 +182,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
 
-    cdef int avcodec_get_context_defaults3(AVCodecContext *ctx, AVCodec *codec)
     cdef AVClass* avcodec_get_class()
     cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
@@ -216,21 +216,17 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef int AV_NUM_DATA_POINTERS
 
-    # See: http://ffmpeg.org/doxygen/trunk/structAVPicture.html
-    cdef struct AVPicture:
-        uint8_t **data
-        int *linesize
-
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
-    # This is a strict superset of AVPicture.
     cdef struct AVFrame:
-
-        uint8_t **data
-        int *linesize
+        uint8_t *data[4];
+        int linesize[4];
         uint8_t **extended_data
 
         int format # Should be AVPixelFormat or AVSampleFormat
         int key_frame # 0 or 1.
+        AVPictureType pict_type
+
+        int interlaced_frame # 0 or 1.
 
         int width
         int height
@@ -241,8 +237,7 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int channel_layout # Audio channel_layout
 
         int64_t pts
-        int64_t pkt_pts # Deprecated.
-        int64_t pkt_dts # Deprecated.
+        int64_t pkt_dts
 
         int pkt_size
 
@@ -254,27 +249,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
 
     cdef AVFrame* avcodec_alloc_frame()
-
-    cdef int avpicture_alloc(
-        AVPicture *picture,
-        AVPixelFormat pix_fmt,
-        int width,
-        int height
-    )
-
-    cdef int avpicture_get_size(
-        AVPixelFormat format,
-        int width,
-        int height,
-    )
-
-    cdef int avpicture_fill(
-        AVPicture *picture,
-        uint8_t *buffer,
-        AVPixelFormat format,
-        int width,
-        int height
-    )
 
     cdef struct AVPacket:
 
@@ -293,34 +267,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         void (*destruct)(AVPacket*)
 
 
-    cdef int avcodec_decode_video2(
-        AVCodecContext *ctx,
-        AVFrame *frame,
-        int *got_frame,
-        AVPacket *packet,
-    )
-
-    cdef int avcodec_decode_audio4(
-        AVCodecContext *ctx,
-        AVFrame *frame,
-        int *got_frame,
-        AVPacket *packet,
-    )
-
-    cdef int avcodec_encode_audio2(
-        AVCodecContext *ctx,
-        AVPacket *avpkt,
-        AVFrame *frame,
-        int *got_packet_ptr
-    )
-
-    cdef int avcodec_encode_video2(
-        AVCodecContext *ctx,
-        AVPacket *avpkt,
-        AVFrame *frame,
-        int *got_packet_ptr
-    )
-
     cdef int avcodec_fill_audio_frame(
         AVFrame *frame,
         int nb_channels,
@@ -334,10 +280,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef void av_init_packet(AVPacket*)
     cdef int av_new_packet(AVPacket*, int)
-    cdef void av_free_packet(AVPacket*)
+    cdef int av_packet_ref(AVPacket *dst, const AVPacket *src)
     cdef void av_packet_unref(AVPacket *pkt)
-    cdef int av_copy_packet(AVPacket *dst, AVPacket *src)
-    cdef int av_dup_packet(AVPacket *pkt)
 
     cdef enum AVSubtitleType:
         SUBTITLE_NONE
@@ -351,7 +295,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int w
         int h
         int nb_colors
-        AVPicture pict
+        uint8_t *data[4];
+        int linesize[4];
         AVSubtitleType type
         char *text
         char *ass
@@ -383,12 +328,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef void avcodec_get_frame_defaults(AVFrame* frame)
 
-    cdef int avcodec_get_context_defaults3(
-        AVCodecContext *ctx,
-        AVCodec *codec
-    )
-
-    cdef int64_t av_frame_get_best_effort_timestamp(AVFrame *frame)
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
 
      # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
@@ -428,3 +367,6 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         int keyframe
     )
     cdef void av_parser_close(AVCodecParserContext *s)
+
+    # custom
+    cdef set pyav_get_available_codecs()

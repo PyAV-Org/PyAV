@@ -11,7 +11,7 @@ from av.utils cimport err_check
 cdef class AudioCodecContext(CodecContext):
 
 
-    cdef _init(self, lib.AVCodecContext *ptr, lib.AVCodec *codec):
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)
 
         # Sometimes there isn't a layout set, but there are a number of
@@ -55,58 +55,28 @@ cdef class AudioCodecContext(CodecContext):
 
         return frames
 
-    cdef _encode(self, Frame frame):
-        """Encodes a frame of audio, returns a packet if one is ready.
-        The output packet does not necessarily contain data for the most recent frame,
-        as encoders can delay, split, and combine input frames internally as needed.
-        If called with with no args it will flush out the encoder and return the buffered
-        packets until there are none left, at which it will return None.
-        """
-
-        cdef Packet packet = Packet()
-        cdef int got_packet = 0
-
-        err_check(lib.avcodec_encode_audio2(
-            self.ptr,
-            &packet.struct,
-            frame.ptr if frame is not None else NULL,
-            &got_packet,
-        ))
-
-        if got_packet:
-            return packet
-
     cdef Frame _alloc_next_frame(self):
         return alloc_audio_frame()
 
-    cdef _decode(self, lib.AVPacket *packet, int *data_consumed):
-
-        if not self.next_frame:
-            self.next_frame = alloc_audio_frame()
-
-        cdef int completed_frame = 0
-        data_consumed[0] = err_check(lib.avcodec_decode_audio4(self.ptr, self.next_frame.ptr, &completed_frame, packet))
-        if not completed_frame:
-            return
-
-        cdef AudioFrame frame = self.next_frame
-        self.next_frame = None
-
-        frame._init_user_attributes()
-
-        return frame
-
-    cdef _setup_decoded_frame(self, Frame frame):
-        CodecContext._setup_decoded_frame(self, frame)
+    cdef _setup_decoded_frame(self, Frame frame, Packet packet):
+        CodecContext._setup_decoded_frame(self, frame, packet)
         cdef AudioFrame aframe = frame
         aframe._init_user_attributes()
 
     property frame_size:
-        """Number of samples per channel in an audio frame."""
+        """
+        Number of samples per channel in an audio frame.
+
+        :type: int
+        """
         def __get__(self): return self.ptr.frame_size
 
     property sample_rate:
-        """Number samples of per second."""
+        """
+        Sample rate of the audio data, in samples per second.
+
+        :type: int
+        """
         def __get__(self):
             return self.ptr.sample_rate
         def __set__(self, int value):
@@ -131,6 +101,11 @@ cdef class AudioCodecContext(CodecContext):
             return self.ptr.channel_layout
 
     property layout:
+        """
+        The audio channel layout.
+
+        :type: AudioLayout
+        """
         def __get__(self):
             return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
         def __set__(self, value):
@@ -139,6 +114,11 @@ cdef class AudioCodecContext(CodecContext):
             self.ptr.channels = layout.nb_channels
 
     property format:
+        """
+        The audio sample format.
+
+        :type: AudioFormat
+        """
         def __get__(self):
             return get_audio_format(self.ptr.sample_fmt)
         def __set__(self, value):

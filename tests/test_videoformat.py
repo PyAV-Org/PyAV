@@ -1,6 +1,6 @@
-from .common import *
+from av import VideoFormat
 
-from av.video.format import VideoFormat
+from .common import TestCase
 
 
 class TestVideoFormats(TestCase):

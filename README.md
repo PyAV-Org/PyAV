@@ -1,9 +1,17 @@
 PyAV
 ====
 
-[![Build Status](https://secure.travis-ci.org/mikeboers/PyAV.png?branch=master)](https://travis-ci.org/mikeboers/PyAV) [![Build status](https://ci.appveyor.com/api/projects/status/94w43xhugh6wkett?svg=true)](https://ci.appveyor.com/project/mikeboers/pyav)
+[![Travis Build Status][travis-badge]][travis] [![AppVeyor Build Status][appveyor-badge]][appveyor] \
+[![Gitter Chat][gitter-badge]][gitter] [![Documentation][docs-badge]][docs] \
+[![GitHub][github-badge]][github] [![Python Package Index][pypi-badge]][pypi] [![Conda Forge][conda-badge]][conda]
 
-PyAV is a Pythonic binding for [FFmpeg][ffmpeg] or [Libav][libav]. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
+PyAV is a Pythonic binding for the [FFmpeg][ffmpeg] libraries. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
+
+PyAV is for direct and precise access to your media via containers, streams, packets, codecs, and frames. It exposes a few transformations of that data, and helps you get your data to/from other packages (e.g. Numpy and Pillow). 
+
+This power does come with some responsibility as working with media is horrendously complicated and PyAV can't abstract it away or make all the best decisions for you. If the `ffmpeg` command does the job without you bending over backwards, PyAV is likely going to be more of a hindrance than a help.
+
+But where you can't work without it, PyAV is a critical tool.
 
 
 Installation
@@ -34,13 +42,27 @@ make
 
 ---
 
-Have fun, [Read the Docs][docs], and good luck!
+Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 
+
+
+[appveyor-badge]: https://img.shields.io/appveyor/ci/mikeboers/PyAV/develop.svg?logo=appveyor&label=appveyor
+[appveyor]: https://ci.appveyor.com/project/mikeboers/pyav
+[conda-badge]: https://img.shields.io/conda/vn/conda-forge/av.svg?colorB=CCB39A
+[conda]: https://anaconda.org/conda-forge/av
+[docs-badge]: https://img.shields.io/badge/docs-on%20mikeboers.com-blue.svg
+[docs]: http://docs.mikeboers.com/pyav/develop/
+[gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
+[gitter]: https://gitter.im/mikeboers/PyAV
+[pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
+[pypi]: https://pypi.org/project/av
+[travis-badge]: https://img.shields.io/travis/mikeboers/PyAV/develop.svg?logo=travis&label=travis
+[travis]: https://travis-ci.org/mikeboers/PyAV
+
+[github-badge]: https://img.shields.io/badge/dynamic/xml.svg?label=github&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmikeboers%2FPyAV%2Fdevelop%2FVERSION.txt&query=.&colorB=CCB39A&prefix=v
+[github]: https://github.com/mikeboers/PyAV
 
 [ffmpeg]: http://ffmpeg.org/
-[libav]: http://libav.org/
-[docs]: http://mikeboers.github.io/PyAV/
 [conda-forge]: https://conda-forge.github.io/
 [conda-install]: https://conda.io/docs/install/quick.html
-[pypi]: https://pypi.python.org/pypi/av
 

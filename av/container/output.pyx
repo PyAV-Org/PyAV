@@ -1,11 +1,14 @@
 from fractions import Fraction
 import logging
 
+from av.codec.codec cimport Codec
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, dict_to_avdict
+
+from av.dictionary import Dictionary
 
 
 log = logging.getLogger(__name__)
@@ -17,10 +20,10 @@ cdef class OutputContainer(Container):
         self.streams = StreamContainer()
         self.metadata = {}
 
-    def __del__(self):
+    def __dealloc__(self):
         self.close()
 
-    cpdef add_stream(self, codec_name=None, object rate=None, Stream template=None):
+    def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)
 
         Create a new stream, and return it.
@@ -37,17 +40,13 @@ cdef class OutputContainer(Container):
         if (codec_name is None and template is None) or (codec_name is not None and template is not None):
             raise ValueError('needs one of codec_name or template')
 
-        cdef lib.AVCodec *codec
-        cdef lib.AVCodecDescriptor *codec_descriptor
+        cdef const lib.AVCodec *codec
+        cdef Codec codec_obj
 
         if codec_name is not None:
-            codec = lib.avcodec_find_encoder_by_name(codec_name)
-            if not codec:
-                codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name)
-                if codec_descriptor:
-                    codec = lib.avcodec_find_encoder(codec_descriptor.id)
-            if not codec:
-                raise ValueError("unknown encoding codec: %r" % codec_name)
+            codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
+            codec = codec_obj.ptr
+
         else:
             if not template._codec:
                 raise ValueError("template has no codec")
@@ -69,13 +68,7 @@ cdef class OutputContainer(Container):
         # to finish initializing it.
         lib.avformat_new_stream(self.proxy.ptr, codec)
         cdef lib.AVStream *stream = self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1]
-        cdef lib.AVCodecContext *codec_context = stream.codec # For readibility.
-        lib.avcodec_get_context_defaults3(stream.codec, codec)
-        stream.codec.codec = codec # Still have to manually set this though...
-
-        # Construct the user-land stream so we have access to CodecContext.
-        cdef Stream py_stream = wrap_stream(self, stream)
-        self.streams.add_stream(py_stream)
+        cdef lib.AVCodecContext *codec_context = stream.codec # For readability.
 
         # Copy from the template.
         if template is not None:
@@ -110,7 +103,17 @@ cdef class OutputContainer(Container):
 
         # Some formats want stream headers to be separate
         if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
-            codec_context.flags |= lib.CODEC_FLAG_GLOBAL_HEADER
+            codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+        # Construct the user-land stream
+        cdef Stream py_stream = wrap_stream(self, stream)
+        self.streams.add_stream(py_stream)
+
+        if options:
+            py_stream.options.update(options)
+
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
 
         return py_stream
 
@@ -120,8 +123,10 @@ cdef class OutputContainer(Container):
         if self._started:
             return
 
+        # TODO: This does NOT handle options coming from 3 sources.
+        # This is only a rough approximation of what would be cool to do.
         used_options = set()
-
+        
         # Finalize and open all streams.
         cdef Stream stream
         for stream in self.streams:
@@ -129,7 +134,8 @@ cdef class OutputContainer(Container):
             ctx = stream.codec_context
             if not ctx.is_open:
 
-                ctx.options.update(self.options)
+                for k, v in self.options.items():
+                    ctx.options.setdefault(k, v)
                 ctx.open()
 
                 # Track option consumption.
@@ -148,18 +154,18 @@ cdef class OutputContainer(Container):
         dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True,
                        encoding=self.metadata_encoding, errors=self.metadata_errors)
 
-        cdef _Dictionary options = self.options.copy()
+        cdef _Dictionary all_options = Dictionary(self.options, self.container_options)
+        cdef _Dictionary options = all_options.copy()
         self.proxy.err_check(lib.avformat_write_header(
             self.proxy.ptr,
             &options.ptr
         ))
 
         # Track option usage...
-        for k in self.options:
+        for k in all_options:
             if k not in options:
                 used_options.add(k)
         # ... and warn if any weren't used.
-        # TODO: How to items vs iteritems for Py2 vs 3 in Cython?
         unused_options = {k: v for k, v in self.options.items() if k not in used_options}
         if unused_options:
             log.warning('Some options were not used: %s' % unused_options)
@@ -202,9 +208,18 @@ cdef class OutputContainer(Container):
         self.start_encoding()
 
         # Assert the packet is in stream time.
-        if packet.struct.stream_index < 0 or packet.struct.stream_index >= self.proxy.ptr.nb_streams:
+        if packet.struct.stream_index < 0 or <unsigned int>packet.struct.stream_index >= self.proxy.ptr.nb_streams:
             raise ValueError('Bad Packet stream_index.')
         cdef lib.AVStream *stream = self.proxy.ptr.streams[packet.struct.stream_index]
         packet._rebase_time(stream.time_base)
 
-        self.proxy.err_check(lib.av_interleaved_write_frame(self.proxy.ptr, &packet.struct))
+        # Make another reference to the packet, as av_interleaved_write_frame
+        # takes ownership of it.
+        cdef lib.AVPacket packet_ref
+        lib.av_init_packet(&packet_ref)
+        self.proxy.err_check(lib.av_packet_ref(&packet_ref, &packet.struct))
+
+        cdef int ret
+        with nogil:
+            ret = lib.av_interleaved_write_frame(self.proxy.ptr, &packet_ref)
+        self.proxy.err_check(ret)
