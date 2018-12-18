@@ -31,15 +31,32 @@ cdef EnumType PictureType = define_enum('PictureType', (
 ))
 
 
-cdef useful_array(VideoPlane plane, bytes_per_pixel=1):
+cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
+    cdef bytes imgbytes = array.tobytes()
+    cdef const uint8_t[:] i_buf = imgbytes
+    cdef size_t i_pos = 0
+    cdef size_t i_stride = plane.width * bytes_per_pixel
+    cdef size_t i_size = plane.height * i_stride
+
+    cdef uint8_t[:] o_buf = plane
+    cdef size_t o_pos = 0
+    cdef size_t o_stride = abs(plane.line_size)
+
+    while i_pos < i_size:
+        o_buf[o_pos:o_pos + i_stride] = i_buf[i_pos:i_pos + i_stride]
+        i_pos += i_stride
+        o_pos += o_stride
+
+
+cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1):
     """
     Return the useful part of the VideoPlane as a single dimensional array.
 
     We are simply discarding any padding which was added for alignment.
     """
     import numpy as np
-    cdef int total_line_size = abs(plane.line_size)
-    cdef int useful_line_size = plane.width * bytes_per_pixel
+    cdef size_t total_line_size = abs(plane.line_size)
+    cdef size_t useful_line_size = plane.width * bytes_per_pixel
     arr = np.frombuffer(plane, np.uint8)
     if total_line_size != useful_line_size:
         arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
@@ -368,21 +385,7 @@ cdef class VideoFrame(Frame):
             img = img.convert('RGB')
 
         cdef VideoFrame frame = VideoFrame(img.size[0], img.size[1], 'rgb24')
-
-        cdef bytes imgbytes = img.tobytes()
-        cdef const uint8_t[:] i_buf = imgbytes
-        cdef size_t i_pos = 0
-        cdef size_t i_stride = img.size[0] * 3
-        cdef size_t i_size = img.size[1] * i_stride
-
-        cdef uint8_t[:] o_buf = frame.planes[0]
-        cdef size_t o_pos = 0
-        cdef size_t o_stride = frame.planes[0].line_size
-
-        while i_pos < i_size:
-            o_buf[o_pos:o_pos + i_stride] = i_buf[i_pos:i_pos + i_stride]
-            i_pos += i_stride
-            o_pos += o_stride
+        copy_array_to_plane(img, frame.planes[0], 3)
 
         return frame
 
@@ -400,9 +403,9 @@ cdef class VideoFrame(Frame):
             u_start = frame.width * frame.height
             v_start = 5 * u_start // 4
             flat = array.reshape(-1)
-            frame.planes[0].update(flat[0:u_start])
-            frame.planes[1].update(flat[u_start:v_start])
-            frame.planes[2].update(flat[v_start:])
+            copy_array_to_plane(flat[0:u_start], frame.planes[0], 1)
+            copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 1)
+            copy_array_to_plane(flat[v_start:], frame.planes[2], 1)
             return frame
         elif format == 'yuyv422':
             assert array.dtype == 'uint8'
@@ -425,5 +428,6 @@ cdef class VideoFrame(Frame):
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
         frame = VideoFrame(array.shape[1], array.shape[0], format)
-        frame.planes[0].update(array)
+        copy_array_to_plane(array, frame.planes[0], 1 if array.ndim == 2 else array.shape[2])
+
         return frame
