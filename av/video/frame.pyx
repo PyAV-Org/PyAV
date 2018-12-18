@@ -158,7 +158,7 @@ cdef class VideoFrame(Frame):
 
         return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace)
 
-    cdef _reformat(self, unsigned int width, unsigned int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
+    cdef _reformat(self, int width, int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
 
         if self.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
