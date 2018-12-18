@@ -208,7 +208,7 @@ cdef class OutputContainer(Container):
         self.start_encoding()
 
         # Assert the packet is in stream time.
-        if packet.struct.stream_index < 0 or packet.struct.stream_index >= self.proxy.ptr.nb_streams:
+        if packet.struct.stream_index < 0 or <unsigned int>packet.struct.stream_index >= self.proxy.ptr.nb_streams:
             raise ValueError('Bad Packet stream_index.')
         cdef lib.AVStream *stream = self.proxy.ptr.streams[packet.struct.stream_index]
         packet._rebase_time(stream.time_base)

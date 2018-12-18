@@ -96,7 +96,7 @@ cdef class AudioFifo:
         self.samples_written += frame.ptr.nb_samples
 
 
-    cpdef read(self, unsigned int samples=0, bint partial=False):
+    cpdef read(self, int samples=0, bint partial=False):
         """read(samples=0, partial=False)
 
         Read samples from the queue.
@@ -150,7 +150,7 @@ cdef class AudioFifo:
 
         return frame
 
-    cpdef read_many(self, unsigned int samples, bint partial=False):
+    cpdef read_many(self, int samples, bint partial=False):
         """read_many(samples, partial=False)
 
         Read as many frames as we can.
