@@ -11,7 +11,7 @@ from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
 from av.format cimport build_container_format
 from av.utils cimport err_check, dict_to_avdict
-from av.utils cimport gettimeofday
+from posix.time cimport gettimeofday
 from av.container.core cimport cb_info
 from posix.time cimport timeval
 
