@@ -23,6 +23,22 @@ addons:
             - wget
             - yasm
             - zlib1g-dev
+    homebrew:
+        packages:
+            - automake
+            - libass
+            - libjpeg
+            - libpng
+            - libtool
+            - libvorbis
+            - libvpx
+            - nasm
+            - opus
+            - shtool
+            - texi2html
+            - theora
+            - wget
+            - x264
 
 cache:
     directories:
@@ -122,7 +138,6 @@ matrix:
 
 
 before_install:
-    - scripts/travis-setup
     - scripts/build-deps
 
 install:
