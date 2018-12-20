@@ -13,6 +13,7 @@ from av.format cimport build_container_format
 from av.utils cimport err_check, dict_to_avdict
 from av.utils cimport gettimeofday
 from av.container.core cimport cb_info
+from posix.time cimport timeval
 
 from av.dictionary import Dictionary # not cimport
 from av.logging import Capture as LogCapture # not cimport

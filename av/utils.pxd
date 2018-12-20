@@ -1,5 +1,6 @@
 from libc.stdint cimport int64_t, uint8_t, uint64_t
 from posix.types cimport suseconds_t, time_t
+from posix.time cimport timeval
 
 cimport libav as lib
 
@@ -25,7 +26,4 @@ cdef extern from "time.h" nogil:
     cdef struct timezone:
         int tz_minuteswest
         int dsttime
-    cdef struct timeval:
-        time_t      tv_sec
-        suseconds_t tv_usec
     int gettimeofday(timeval *tp, timezone *tzp)

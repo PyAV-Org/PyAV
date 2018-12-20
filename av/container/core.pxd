@@ -4,7 +4,7 @@ from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
 from av.stream cimport Stream
-from av.utils cimport timeval
+from posix.time cimport timeval
 
 ctypedef struct cb_info:
     int timeout
