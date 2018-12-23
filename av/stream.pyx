@@ -211,6 +211,15 @@ cdef class Stream(object):
         def __get__(self):
             return avrational_to_fraction(&self._stream.avg_frame_rate)
 
+    property r_rate:
+        """
+        The Real base framerate of this stream.
+
+        :type: fractions.Fraction
+        """
+        def __get__(self):
+            return avrational_to_fraction(&self._stream.r_frame_rate)
+        
     property start_time:
         """
         The presentation timestamp in :attr:`time_base` units of the first

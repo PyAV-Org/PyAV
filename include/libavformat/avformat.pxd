@@ -44,6 +44,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVDictionary *metadata
 
         AVRational avg_frame_rate
+        AVRational r_frame_rate
         AVRational sample_aspect_ratio
 
     # http://ffmpeg.org/doxygen/trunk/structAVIOContext.html
