@@ -58,6 +58,23 @@ Ubuntu < 18.04 LTS
 
 On older Ubuntu releases you will be unable to satisfy these requirements with the default package sources. We recommend compiling and installing FFmpeg from source. For FFmpeg::
 
+    sudo apt install \
+        autoconf \
+        automake \
+        build-essential \
+        cmake \
+        libass-dev \
+        libfreetype6-dev \
+        libjpeg-dev \
+        libtheora-dev \
+        libtool \
+        libvorbis-dev \
+        libx264-dev \
+        pkg-config \
+        wget \
+        yasm \
+        zlib1g-dev
+
     wget http://ffmpeg.org/releases/ffmpeg-3.2.tar.bz2
     tar -xjf ffmpeg-3.2.tar.bz2
     cd ffmpeg-3.2
