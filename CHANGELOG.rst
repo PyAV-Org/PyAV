@@ -20,6 +20,18 @@ We are operating with `semantic versioning <http://semver.org>`_.
 HEAD
 ----
 
+v6.1.1
+------
+
+Micro:
+
+- Fix alignment in :meth:`.VideoFrame.from_ndarray`. (:issue:`478`)
+- Fix error message in :meth:`.Buffer.update`.
+
+Build:
+
+- Fix more compiler warnings.
+
 
 v6.1.0
 ------
