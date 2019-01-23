@@ -179,6 +179,6 @@ cdef class AudioFrame(Frame):
             count = self.samples * len(self.layout.channels)
 
         # convert and return data
-        return np.vstack(map(lambda x: np.frombuffer(x, dtype=dtype, count=count), self.planes))
+        return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
 
     to_nd_array = renamed_attr('to_ndarray')

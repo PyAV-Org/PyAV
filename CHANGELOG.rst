@@ -20,6 +20,14 @@ We are operating with `semantic versioning <http://semver.org>`_.
 HEAD
 ----
 
+v6.1.2
+------
+
+Micro:
+
+- Fix a numpy deprecation warning in :meth:`.AudioFrame.to_ndarray`.
+
+
 v6.1.1
 ------
 
