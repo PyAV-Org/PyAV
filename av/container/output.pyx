@@ -191,6 +191,10 @@ cdef class OutputContainer(Container):
 
         self._done = True
 
+    def flush(self):
+        lib.av_write_frame(self.ptr, NULL)
+        lib.avio_flush(self.ptr.pb)
+
     def mux(self, packets):
         # We accept either a Packet, or a sequence of packets. This should
         # smooth out the transition to the new encode API which returns a

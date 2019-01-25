@@ -198,6 +198,10 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
     )
 
+    cdef void avio_flush(
+        AVIOContext *,
+    )
+
     cdef int64_t avio_size(
         AVIOContext *s
     )
