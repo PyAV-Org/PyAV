@@ -50,7 +50,6 @@ cdef class FilterContext(object):
                 self._outputs = alloc_filter_pads(self.filter, self.ptr.output_pads, False, self)
             return self._outputs
 
-
     def init(self, args=None, **kwargs):
 
         if self.inited:

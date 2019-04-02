@@ -18,4 +18,4 @@ cdef class Packet(Buffer):
     # Hold onto the original reference.
     cdef ByteSource source
     cdef size_t _buffer_size(self)
-    cdef void*  _buffer_ptr(self)
+    cdef void* _buffer_ptr(self)

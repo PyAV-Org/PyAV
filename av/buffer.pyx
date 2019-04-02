@@ -65,14 +65,14 @@ cdef class Buffer(_Buffer):
 
     def to_bytes(self):
         """Return the contents of this buffer as ``bytes``.
-    
+
         This copies the entire contents; consider using something that uses
         the `buffer protocol <https://docs.python.org/3/c-api/buffer.html>`_
         as that will be more efficient.
 
         This is largely for Python2, as Python 3 can do the same via
         ``bytes(the_buffer)``.
-        
+
         """
         return <bytes>(<char*>self._buffer_ptr())[:self._buffer_size()]
 

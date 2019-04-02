@@ -66,14 +66,13 @@ cdef class StreamContainer(object):
 
     """
 
-
     def __cinit__(self):
-        self._streams  = []
-        self.video     = ()
-        self.audio     = ()
+        self._streams = []
+        self.video = ()
+        self.audio = ()
         self.subtitles = ()
-        self.data      = ()
-        self.other     = ()
+        self.data = ()
+        self.other = ()
 
     cdef add_stream(self, Stream stream):
 
@@ -94,8 +93,10 @@ cdef class StreamContainer(object):
     # Basic tuple interface.
     def __len__(self):
         return len(self._streams)
+
     def __iter__(self):
         return iter(self._streams)
+
     def __getitem__(self, index):
         if isinstance(index, int):
             return self.get(index)[0]
@@ -145,7 +146,7 @@ cdef class StreamContainer(object):
 
             elif isinstance(x, dict):
                 for type_, indices in x.items():
-                    if type_ == 'streams': # For compatibility with the pseudo signature
+                    if type_ == 'streams':  # For compatibility with the pseudo signature
                         streams = self._streams
                     else:
                         streams = getattr(self, type_)

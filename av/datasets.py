@@ -53,7 +53,7 @@ def iter_data_dirs(check_writable=False):
 def cached_download(url, name):
 
     """Download the data at a URL, and cache it under the given name.
-    
+
     The file is stored under `pyav/test` with the given name in the directory
     :envvar:`PYAV_TESTDATA_DIR`, or the first that is writeable of:
 
@@ -107,7 +107,7 @@ def cached_download(url, name):
 
 def fate(name):
     """Download and return a path to a sample from the FFmpeg test suite.
-    
+
     Data is handled by :func:`cached_download`.
 
     See the `FFmpeg Automated Test Environment <https://www.ffmpeg.org/fate.html>`_

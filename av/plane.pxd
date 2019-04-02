@@ -8,4 +8,4 @@ cdef class Plane(Buffer):
     cdef int index
 
     cdef size_t _buffer_size(self)
-    cdef void*  _buffer_ptr(self)
+    cdef void* _buffer_ptr(self)

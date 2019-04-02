@@ -112,7 +112,6 @@ cdef class VideoFormat(object):
         return -((-luma_height) >> self.ptr.log2_chroma_h) if luma_height else 0
 
 
-
 cdef class VideoFormatComponent(object):
 
     def __cinit__(self, VideoFormat format, size_t index):

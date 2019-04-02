@@ -20,15 +20,15 @@ cdef str decode_error_handler = 'backslashreplace' if is_py35 else 'replace'
 
 
 # Library levels.
-#QUIET  = lib.AV_LOG_QUIET # -8; not really a level.
-PANIC   = lib.AV_LOG_PANIC # 0
-FATAL   = lib.AV_LOG_FATAL # 8
-ERROR   = lib.AV_LOG_ERROR
+# QUIET  = lib.AV_LOG_QUIET # -8; not really a level.
+PANIC = lib.AV_LOG_PANIC  # 0
+FATAL = lib.AV_LOG_FATAL  # 8
+ERROR = lib.AV_LOG_ERROR
 WARNING = lib.AV_LOG_WARNING
-INFO    = lib.AV_LOG_INFO
+INFO = lib.AV_LOG_INFO
 VERBOSE = lib.AV_LOG_VERBOSE
-DEBUG   = lib.AV_LOG_DEBUG
-#TRACE  = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
+DEBUG = lib.AV_LOG_DEBUG
+# TRACE  = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
 
 # Mimicking stdlib.
 CRITICAL = FATAL
@@ -37,21 +37,20 @@ CRITICAL = FATAL
 cpdef adapt_level(int level):
     """Convert a library log level to a Python log level."""
 
-    if level <= lib.AV_LOG_FATAL: # Includes PANIC
-        return 50 # logging.CRITICAL
+    if level <= lib.AV_LOG_FATAL:  # Includes PANIC
+        return 50  # logging.CRITICAL
     elif level <= lib.AV_LOG_ERROR:
-        return 40 # logging.ERROR
+        return 40  # logging.ERROR
     elif level <= lib.AV_LOG_WARNING:
-        return 30 # logging.WARNING
+        return 30  # logging.WARNING
     elif level <= lib.AV_LOG_INFO:
-        return 20 # logging.INFO
+        return 20  # logging.INFO
     elif level <= lib.AV_LOG_VERBOSE:
-        return 10 # logging.DEBUG
+        return 10  # logging.DEBUG
     elif level <= lib.AV_LOG_DEBUG:
-        return 5 # Lower than any logging constant.
+        return 5  # Lower than any logging constant.
     else:
-        return 1 # ... yeah.
-
+        return 1  # ... yeah.
 
 
 # While we start with the level quite low, Python defaults to INFO, and so
@@ -67,6 +66,7 @@ if 'libav' not in logging.Logger.manager.loggerDict:
 def get_level():
     """Return current logging threshold. See :func:`set_level`."""
     return level_threshold
+
 
 def set_level(int level):
     """set_level(level)
@@ -95,9 +95,11 @@ def set_level(int level):
 
 cdef bint print_after_shutdown = False
 
+
 def get_print_after_shutdown():
     """Will logging continue to ``stderr`` after Python shutdown?"""
     return print_after_shutdown
+
 
 def set_print_after_shutdown(v):
     """Set if logging should continue to ``stderr`` after Python shutdown."""
@@ -105,25 +107,16 @@ def set_print_after_shutdown(v):
     print_after_shutdown = bool(v)
 
 
-#cdef class Log(object):
-#
-#    cdef readonly int level
-#    cdef readonly str name
-#    cdef readonly str message
-#
-#    def __cinit__(self, int level, str name, str message):
-#        self.level = level
-#        self.name = name
-#        self.message = message
-
 cdef bint skip_repeated = True
 cdef skip_lock = Lock()
 cdef object last_log = None
 cdef int skip_count = 0
 
+
 def get_skip_repeated():
     """Will identical logs be emitted?"""
     return skip_repeated
+
 
 def set_skip_repeated(v):
     """Set if identical logs will be emitted"""
@@ -142,7 +135,6 @@ cpdef get_last_error():
             return error_count, last_error
     else:
         return 0, None
-
 
 
 cdef global_captures = []
@@ -184,9 +176,6 @@ cdef class Capture(object):
 
     def __exit__(self, type_, value, traceback):
         self.captures.pop(-1)
-
-
-
 
 
 cdef struct log_context:
@@ -234,10 +223,8 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
 
     if not inited:
         fprintf(stderr, "av.logging (after shutdown): %s[%d]: %s\n",
-            name, level, message,
-        )
+                name, level, message)
         return
-
 
     with gil:
 
@@ -246,8 +233,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
 
         except Exception as e:
             fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
-                name, level, message,
-            )
+                    name, level, message)
             # For some reason lib.PyErr_PrintEx(0) won't work.
             exc, type_, tb = sys.exc_info()
             lib.PyErr_Display(exc, type_, tb)
@@ -323,7 +309,6 @@ cdef log_callback_emit(log):
     logger_name = 'libav.' + name if name else 'libav.generic'
     logger = logging.getLogger(logger_name)
     logger.log(py_level, message.strip())
-
 
 
 # Start the magic!

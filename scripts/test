@@ -9,6 +9,6 @@ fi
 
 cd "$PYAV_ROOT"
 
-$PYAV_PYTHON -m flake8 examples tests
+$PYAV_PYTHON -m flake8 av examples tests
 $PYAV_PYTHON -m isort -df -rc examples tests
 $PYAV_PYTHON setup.py test
