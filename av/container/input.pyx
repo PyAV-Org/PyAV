@@ -6,7 +6,7 @@ from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
 from av.utils cimport err_check, avdict_to_dict
 
-from av.utils import AVError # not cimport
+from av.utils import AVError  # not cimport
 from av.dictionary import Dictionary
 
 
@@ -158,7 +158,7 @@ cdef class InputContainer(Container):
             the arguments.
 
         """
-        id(kwargs) # Avoid Cython bug; see demux().
+        id(kwargs)  # Avoid Cython bug; see demux().
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame

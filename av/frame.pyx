@@ -70,7 +70,7 @@ cdef class Frame(object):
             self.ptr.channels = source.ptr.channels
 
     cdef _init_user_attributes(self):
-        pass # Dummy to match the API of the others.
+        pass  # Dummy to match the API of the others.
 
     cdef _rebase_time(self, lib.AVRational dst):
 
@@ -115,6 +115,7 @@ cdef class Frame(object):
             if self.ptr.pts == lib.AV_NOPTS_VALUE:
                 return None
             return self.ptr.pts
+
         def __set__(self, value):
             if value is None:
                 self.ptr.pts = lib.AV_NOPTS_VALUE
@@ -144,6 +145,7 @@ cdef class Frame(object):
         def __get__(self):
             if self._time_base.num:
                 return avrational_to_fraction(&self._time_base)
+
         def __set__(self, value):
             to_avrational(value, &self._time_base)
 

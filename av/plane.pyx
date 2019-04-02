@@ -17,7 +17,7 @@ cdef class Plane(Buffer):
 
     ptr = renamed_attr('buffer_ptr')
 
-    cdef void*  _buffer_ptr(self):
+    cdef void* _buffer_ptr(self):
         return self.frame.ptr.extended_data[self.index]
 
     update_from_string = renamed_attr('update')

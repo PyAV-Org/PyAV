@@ -103,7 +103,8 @@ cdef class VideoFrame(Frame):
                     height,
                     format,
                     8)
-                with gil: err_check(ret)
+                with gil:
+                    err_check(ret)
                 self._buffer = self.ptr.data[0]
 
         self._init_user_attributes()
@@ -268,7 +269,7 @@ cdef class VideoFrame(Frame):
                 # Cast for const-ness, because Cython isn't expressive enough.
                 <const uint8_t**>self.ptr.data,
                 self.ptr.linesize,
-                0, # slice Y
+                0,  # slice Y
                 self.ptr.height,
                 frame.ptr.data,
                 frame.ptr.linesize,

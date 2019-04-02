@@ -3,7 +3,6 @@ cimport libav as lib
 from av.filter.graph cimport Graph
 
 
-
 cdef _cinit_sentinel = object()
 
 

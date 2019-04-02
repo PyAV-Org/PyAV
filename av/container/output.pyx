@@ -68,7 +68,7 @@ cdef class OutputContainer(Container):
         # to finish initializing it.
         lib.avformat_new_stream(self.proxy.ptr, codec)
         cdef lib.AVStream *stream = self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1]
-        cdef lib.AVCodecContext *codec_context = stream.codec # For readability.
+        cdef lib.AVCodecContext *codec_context = stream.codec  # For readability.
 
         # Copy from the template.
         if template is not None:
@@ -126,7 +126,7 @@ cdef class OutputContainer(Container):
         # TODO: This does NOT handle options coming from 3 sources.
         # This is only a rough approximation of what would be cool to do.
         used_options = set()
-        
+
         # Finalize and open all streams.
         cdef Stream stream
         for stream in self.streams:

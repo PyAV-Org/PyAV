@@ -65,7 +65,8 @@ cdef class Stream(object):
 
         self._codec_context = stream.codec
 
-        self.metadata = avdict_to_dict(stream.metadata,
+        self.metadata = avdict_to_dict(
+            stream.metadata,
             encoding=self._container.metadata_encoding,
             errors=self._container.metadata_errors,
         )
@@ -117,7 +118,8 @@ cdef class Stream(object):
         setattr(self.codec_context, name, value)
 
     cdef _finalize_for_output(self):
-        dict_to_avdict(&self._stream.metadata, self.metadata,
+        dict_to_avdict(
+            &self._stream.metadata, self.metadata,
             clear=True,
             encoding=self._container.metadata_encoding,
             errors=self._container.metadata_errors,
@@ -150,7 +152,7 @@ cdef class Stream(object):
         .. seealso:: :meth:`.InputContainer.seek` for documentation on parameters.
             The only difference is that ``offset`` will be interpreted in
             :attr:`.Stream.time_base` when ``whence == 'time'``.
-        
+
         .. deprecated:: 6.1.0
             Use :meth:`.InputContainer.seek` with ``stream`` argument instead.
 
@@ -165,6 +167,7 @@ cdef class Stream(object):
         """
         def __get__(self):
             return self._stream.id
+
         def __set__(self, v):
             if v is None:
                 self._stream.id = 0
@@ -199,6 +202,7 @@ cdef class Stream(object):
         """
         def __get__(self):
             return avrational_to_fraction(&self._stream.time_base)
+
         def __set__(self, value):
             to_avrational(value, &self._stream.time_base)
 

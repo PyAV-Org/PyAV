@@ -25,7 +25,7 @@ cdef EnumType _OptionType = define_enum('OptionType', (
     ('RATIONAL', lib.AV_OPT_TYPE_RATIONAL),
     ('BINARY', lib.AV_OPT_TYPE_BINARY),
     ('DICT', lib.AV_OPT_TYPE_DICT),
-    #('UINT64', lib.AV_OPT_TYPE_UINT64), # Added recently, and not yet used AFAICT.
+    # ('UINT64', lib.AV_OPT_TYPE_UINT64), # Added recently, and not yet used AFAICT.
     ('CONST', lib.AV_OPT_TYPE_CONST),
     ('IMAGE_SIZE', lib.AV_OPT_TYPE_IMAGE_SIZE),
     ('PIXEL_FMT', lib.AV_OPT_TYPE_PIXEL_FMT),

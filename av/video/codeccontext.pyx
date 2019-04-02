@@ -12,7 +12,6 @@ from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 
 
-
 cdef class VideoCodecContext(CodecContext):
 
     def __cinit__(self, *args, **kwargs):
@@ -20,7 +19,7 @@ cdef class VideoCodecContext(CodecContext):
         self.last_h = 0
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
-        CodecContext._init(self, ptr, codec) # TODO: Can this be `super`?
+        CodecContext._init(self, ptr, codec)  # TODO: Can this be `super`?
         self._build_format()
         self.encoded_frame_count = 0
 
@@ -39,7 +38,8 @@ cdef class VideoCodecContext(CodecContext):
             self.reformatter = VideoReformatter()
 
         # Reformat if it doesn't match.
-        if (vframe.format.pix_fmt != self._format.pix_fmt or
+        if (
+            vframe.format.pix_fmt != self._format.pix_fmt or
             vframe.width != self.ptr.width or
             vframe.height != self.ptr.height
         ):
@@ -74,15 +74,17 @@ cdef class VideoCodecContext(CodecContext):
     property format:
         def __get__(self):
             return self._format
+
         def __set__(self, VideoFormat format):
             self.ptr.pix_fmt = format.pix_fmt
             self.ptr.width = format.width
             self.ptr.height = format.height
-            self._build_format() # Kinda wasteful.
+            self._build_format()  # Kinda wasteful.
 
     property width:
         def __get__(self):
             return self.ptr.width
+
         def __set__(self, unsigned int value):
             self.ptr.width = value
             self._build_format()
@@ -90,6 +92,7 @@ cdef class VideoCodecContext(CodecContext):
     property height:
         def __get__(self):
             return self.ptr.height
+
         def __set__(self, unsigned int value):
             self.ptr.height = value
             self._build_format()
@@ -98,6 +101,7 @@ cdef class VideoCodecContext(CodecContext):
     property pix_fmt:
         def __get__(self):
             return self._format.name
+
         def __set__(self, value):
             self.ptr.pix_fmt = lib.av_get_pix_fmt(value)
             self._build_format()
@@ -110,6 +114,7 @@ cdef class VideoCodecContext(CodecContext):
         """
         def __get__(self):
             return avrational_to_fraction(&self.ptr.framerate)
+
         def __set__(self, value):
             to_avrational(value, &self.ptr.framerate)
 
@@ -117,18 +122,21 @@ cdef class VideoCodecContext(CodecContext):
         """Another name for :attr:`framerate`."""
         def __get__(self):
             return self.framerate
+
         def __set__(self, value):
             self.framerate = value
 
     property gop_size:
         def __get__(self):
             return self.ptr.gop_size
+
         def __set__(self, int value):
             self.ptr.gop_size = value
 
     property sample_aspect_ratio:
         def __get__(self):
             return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
+
         def __set__(self, value):
             to_avrational(value, &self.ptr.sample_aspect_ratio)
 

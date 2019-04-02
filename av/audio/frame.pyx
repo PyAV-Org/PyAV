@@ -148,6 +148,7 @@ cdef class AudioFrame(Frame):
         """
         def __get__(self):
             return self.ptr.sample_rate
+
         def __set__(self, value):
             self.ptr.sample_rate = value
 
@@ -155,6 +156,7 @@ cdef class AudioFrame(Frame):
         """Another name for :attr:`sample_rate`."""
         def __get__(self):
             return self.ptr.sample_rate
+
         def __set__(self, value):
             self.ptr.sample_rate = value
 
@@ -164,7 +166,6 @@ cdef class AudioFrame(Frame):
         .. note:: Numpy must be installed.
 
         """
-        
         import numpy as np
 
         # map avcodec type to numpy type

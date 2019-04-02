@@ -167,12 +167,10 @@ cdef class BitmapSubtitlePlane(object):
         data[0] = self._buffer
         return <Py_ssize_t>self.buffer_size
 
-
     # New-style buffer support.
 
     def __getbuffer__(self, Py_buffer *view, int flags):
         PyBuffer_FillInfo(view, self, self._buffer, self.buffer_size, 0, flags)
-
 
 
 cdef class TextSubtitle(Subtitle):

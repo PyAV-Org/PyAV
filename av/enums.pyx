@@ -122,6 +122,8 @@ def _unpickle(mod_name, cls_name, item_name):
     mod = __import__(mod_name, fromlist=['.'])
     cls = getattr(mod, cls_name)
     return cls[item_name]
+
+
 copyreg.constructor(_unpickle)
 
 
@@ -167,7 +169,7 @@ cdef class EnumItem(object):
 
         if isinstance(other, basestring):
 
-            if self.name == other: # The quick method.
+            if self.name == other:  # The quick method.
                 return True
 
             try:
@@ -231,7 +233,8 @@ cpdef EnumType define_enum(name, items, bint is_flags=False, bint allow_multi_fl
         base_cls = EnumItem
 
     cdef EnumType cls = EnumType(name, (base_cls, ), {})
-    cls._init(name, items,
+    cls._init(
+        name, items,
         is_flags=is_flags,
         allow_multi_flags=allow_multi_flags,
         allow_user_create=allow_user_create,

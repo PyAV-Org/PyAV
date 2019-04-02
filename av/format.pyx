@@ -114,7 +114,7 @@ cdef get_output_format_names():
     cdef const lib.AVOutputFormat *ptr
     cdef void *opaque = NULL
     while True:
-        ptr = pyav_muxer_iterate(&opaque);
+        ptr = pyav_muxer_iterate(&opaque)
         if ptr:
             names.add(ptr.name)
         else:
@@ -126,7 +126,7 @@ cdef get_input_format_names():
     cdef const lib.AVInputFormat *ptr
     cdef void *opaque = NULL
     while True:
-        ptr = pyav_demuxer_iterate(&opaque);
+        ptr = pyav_demuxer_iterate(&opaque)
         if ptr:
             names.add(ptr.name)
         else:
