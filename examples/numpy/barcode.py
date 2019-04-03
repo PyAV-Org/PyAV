@@ -4,6 +4,7 @@ from PIL import Image
 import av
 import av.datasets
 
+
 container = av.open(av.datasets.curated('pexels/time-lapse-video-of-sunset-by-the-sea-854400.mp4'))
 container.streams.video[0].thread_type = 'AUTO'  # Go faster!
 

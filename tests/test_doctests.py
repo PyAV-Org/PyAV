@@ -7,6 +7,7 @@ import av
 
 from .common import is_py3
 
+
 try:
     basestring
 except NameError:

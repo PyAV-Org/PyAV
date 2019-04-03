@@ -6,6 +6,7 @@ import av
 
 from .common import TestCase, fate_suite
 
+
 try:
     long
 except NameError:

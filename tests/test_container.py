@@ -8,6 +8,7 @@ import av
 
 from .common import TestCase
 
+
 # On Windows, Python 3.0 - 3.5 have issues handling unicode filenames.
 # Starting with Python 3.6 the situation is saner thanks to PEP 529:
 #

@@ -5,6 +5,7 @@ import numpy as np
 
 import av
 
+
 duration = 4
 fps = 24
 total_frames = duration * fps

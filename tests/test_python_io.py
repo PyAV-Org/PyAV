@@ -5,6 +5,7 @@ import av
 from .common import MethodLogger, TestCase, fate_suite
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
+
 try:
     from cStringIO import StringIO
 except ImportError:
