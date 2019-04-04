@@ -13,7 +13,8 @@ cdef class EnumType(type):
     cdef _by_value
     cdef _all
 
-    cdef _init(self, name, items,
+    cdef _init(
+        self, name, items,
         bint is_flags,
         bint allow_multi_flags,
         bint allow_user_create,
@@ -23,7 +24,8 @@ cdef class EnumType(type):
     cdef _get(self, long value, bint create=*)
 
 
-cpdef EnumType define_enum(name, items,
+cpdef EnumType define_enum(
+    name, items,
     bint is_flags=*,
     bint allow_multi_flags=*,
     bint allow_user_create=*,

@@ -4,6 +4,7 @@ from av import AudioFormat
 
 from .common import TestCase
 
+
 postfix = 'le' if sys.byteorder == 'little' else 'be'
 
 

@@ -40,7 +40,7 @@ cdef class Packet(Buffer):
             self.update(source)
             # TODO: Hold onto the source, and copy its pointer
             # instead of its data.
-            #self.source = source
+            # self.source = source
 
     def __dealloc__(self):
         with nogil:
@@ -59,7 +59,7 @@ cdef class Packet(Buffer):
     # Buffer protocol.
     cdef size_t _buffer_size(self):
         return self.struct.size
-    cdef void*  _buffer_ptr(self):
+    cdef void* _buffer_ptr(self):
         return self.struct.data
 
     cdef _rebase_time(self, lib.AVRational dst):
@@ -124,6 +124,7 @@ cdef class Packet(Buffer):
         """
         def __get__(self):
             return self._stream
+
         def __set__(self, Stream stream):
             self._stream = stream
             self.struct.stream_index = stream._stream.index
@@ -136,6 +137,7 @@ cdef class Packet(Buffer):
         """
         def __get__(self):
             return avrational_to_fraction(&self._time_base)
+
         def __set__(self, value):
             to_avrational(value, &self._time_base)
 
@@ -150,6 +152,7 @@ cdef class Packet(Buffer):
         def __get__(self):
             if self.struct.pts != lib.AV_NOPTS_VALUE:
                 return self.struct.pts
+
         def __set__(self, v):
             if v is None:
                 self.struct.pts = lib.AV_NOPTS_VALUE
@@ -165,6 +168,7 @@ cdef class Packet(Buffer):
         def __get__(self):
             if self.struct.dts != lib.AV_NOPTS_VALUE:
                 return self.struct.dts
+
         def __set__(self, v):
             if v is None:
                 self.struct.dts = lib.AV_NOPTS_VALUE

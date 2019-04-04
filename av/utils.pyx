@@ -19,7 +19,7 @@ from av.logging cimport get_last_error
 cdef int AV_ERROR_MAX_STRING_SIZE = 64
 
 # Our custom error.
-cdef int PYAV_ERROR = -0x50794156 # 'PyAV'
+cdef int PYAV_ERROR = -0x50794156  # 'PyAV'
 
 
 class AVError(EnvironmentError):
@@ -30,12 +30,15 @@ class AVError(EnvironmentError):
         else:
             super(AVError, self).__init__(code, message)
         self.log = log
+
     def __str__(self):
         strerror = super(AVError, self).__str__()
         if self.log:
             return '%s (%s: %s)' % (strerror, self.log[0], self.log[1])
         else:
             return strerror
+
+
 AVError.__module__ = 'av'
 
 
@@ -81,7 +84,6 @@ cpdef int err_check(int res=0, filename=None) except -1:
     cdef bytes py_buffer
     cdef char *c_buffer
 
-
     if res == PYAV_ERROR:
         py_buffer = b'Error in PyAV callback'
 
@@ -104,8 +106,7 @@ cpdef int err_check(int res=0, filename=None) except -1:
     if filename:
         raise AVError(-res, message, filename, log)
     else:
-        raise AVError(-res, message, None,     log)
-
+        raise AVError(-res, message, None, log)
 
 
 # === DICTIONARIES ===
@@ -141,7 +142,6 @@ cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True, str encod
     for key, value in src.items():
         err_check(lib.av_dict_set(dst, _encode(key, encoding, errors),
                                   _encode(value, encoding, errors), 0))
-
 
 
 # === FRACTIONS ===

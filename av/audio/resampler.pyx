@@ -7,6 +7,7 @@ from av.audio.format cimport get_audio_format
 from av.audio.frame cimport alloc_audio_frame
 from av.audio.layout cimport get_audio_layout
 from av.utils cimport err_check
+from av.utils import AVError
 
 
 cdef class AudioResampler(object):
@@ -65,26 +66,25 @@ cdef class AudioResampler(object):
             # Set some default descriptors.
             self.format = self.format or self.template.format
             self.layout = self.layout or self.template.layout
-            self.rate   = self.rate   or self.template.ptr.sample_rate
+            self.rate = self.rate or self.template.ptr.sample_rate
 
             # Check if there is actually work to do.
             if (
                 self.template.format.sample_fmt == self.format.sample_fmt and
-                self.template.layout.layout     == self.layout.layout and
-                self.template.ptr.sample_rate   == self.rate
+                self.template.layout.layout == self.layout.layout and
+                self.template.ptr.sample_rate == self.rate
             ):
                 self.is_passthrough = True
                 return frame
 
             # Figure out our time bases.
             if frame._time_base.num and frame.ptr.sample_rate:
-                self.pts_per_sample_in  = frame._time_base.den / float(frame._time_base.num)
+                self.pts_per_sample_in = frame._time_base.den / float(frame._time_base.num)
                 self.pts_per_sample_in /= self.template.ptr.sample_rate
 
                 # We will only provide outgoing PTS if the time_base is trivial.
                 if frame._time_base.num == 1 and frame._time_base.den == frame.ptr.sample_rate:
                     self.simple_pts_out = True
-
 
             self.ptr = lib.swr_alloc()
             if not self.ptr:
@@ -99,7 +99,7 @@ cdef class AudioResampler(object):
                 err_check(lib.av_opt_set_int(self.ptr, 'in_sample_rate',     self.template.ptr.sample_rate, 0))
                 err_check(lib.av_opt_set_int(self.ptr, 'out_sample_rate',    self.rate, 0))
                 err_check(lib.swr_init(self.ptr))
-            except:
+            except AVError:
                 self.ptr = NULL
                 raise
 
@@ -107,9 +107,9 @@ cdef class AudioResampler(object):
 
             # Assert the settings are the same on consecutive frames.
             if (
-                frame.ptr.format         != self.template.format.sample_fmt or
+                frame.ptr.format != self.template.format.sample_fmt or
                 frame.ptr.channel_layout != self.template.layout.layout or
-                frame.ptr.sample_rate    != self.template.ptr.sample_rate
+                frame.ptr.sample_rate != self.template.ptr.sample_rate
             ):
                 raise ValueError('Frame does not match AudioResampler setup.')
 
@@ -158,7 +158,7 @@ cdef class AudioResampler(object):
             self.format.sample_fmt,
             self.layout.layout,
             output_nb_samples,
-            1, # Align?
+            1,  # Align?
         )
 
         output.ptr.nb_samples = err_check(lib.swr_convert(

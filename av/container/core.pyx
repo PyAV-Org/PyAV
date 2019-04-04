@@ -11,22 +11,23 @@ from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
 from av.format cimport build_container_format
 from av.utils cimport err_check, dict_to_avdict
 
-from av.dictionary import Dictionary # not cimport
-from av.logging import Capture as LogCapture # not cimport
-from av.utils import AVError # not cimport
+from av.dictionary import Dictionary  # not cimport
+from av.logging import Capture as LogCapture  # not cimport
+from av.utils import AVError  # not cimport
 
 try:
     from os import fsencode
 except ImportError:
     _fsencoding = sys.getfilesystemencoding()
-    fsencode = lambda s: s.encode(_fsencoding)
+
+    def fsencode(s):
+        return s.encode(_fsencoding)
 
 
 ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 
 
 cdef object _cinit_sentinel = object()
-
 
 
 cdef class ContainerProxy(object):
@@ -101,8 +102,8 @@ cdef class ContainerProxy(object):
 
             self.iocontext = lib.avio_alloc_context(
                 self.buffer, self.bufsize,
-                self.writeable, # Writeable.
-                <void*>self, # User data.
+                self.writeable,  # Writeable.
+                <void*>self,  # User data.
                 pyio_read,
                 pyio_write,
                 seek_func
@@ -117,7 +118,7 @@ cdef class ContainerProxy(object):
         cdef _Dictionary options
         if not self.writeable:
             ifmt = container.format.iptr if container.format else NULL
-            
+
             options = Dictionary(container.options, container.container_options)
             with nogil:
                 res = lib.avformat_open_input(
@@ -190,10 +191,8 @@ cdef class ContainerProxy(object):
                 if stream.codec and stream.codec.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
                     lib.avcodec_flush_buffers(stream.codec)
 
-
     cdef int err_check(self, int value) except -1:
         return err_check(value, filename=self.name)
-
 
 
 cdef class Container(object):
@@ -238,10 +237,9 @@ cdef class Container(object):
         return ''.join(log[2] for log in logs)
 
 
-
 def open(file, mode=None, format=None, options=None,
-    container_options=None, stream_options=None,
-    metadata_encoding=None, metadata_errors='strict'):
+         container_options=None, stream_options=None,
+         metadata_encoding=None, metadata_errors='strict'):
     """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
 
     Main entrypoint to opening files/streams.
@@ -272,14 +270,16 @@ def open(file, mode=None, format=None, options=None,
         mode = 'r'
 
     if mode.startswith('r'):
-        return InputContainer(_cinit_sentinel, file, format, options,
+        return InputContainer(
+            _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors
         )
     if mode.startswith('w'):
         if stream_options:
             raise ValueError("Provide stream options via Container.add_stream(..., options={}).")
-        return OutputContainer(_cinit_sentinel, file, format, options,
+        return OutputContainer(
+            _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors
         )

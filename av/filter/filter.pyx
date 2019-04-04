@@ -97,7 +97,7 @@ cdef get_filter_names():
     cdef const lib.AVFilter *ptr
     cdef void *opaque = NULL
     while True:
-        ptr = pyav_filter_iterate(&opaque);
+        ptr = pyav_filter_iterate(&opaque)
         if ptr:
             names.add(ptr.name)
         else:

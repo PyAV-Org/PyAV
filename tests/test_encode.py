@@ -11,6 +11,7 @@ from av.video.stream import VideoStream
 
 from .common import Image, TestCase, fate_suite
 
+
 WIDTH = 320
 HEIGHT = 240
 DURATION = 48

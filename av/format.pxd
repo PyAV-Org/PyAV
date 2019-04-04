@@ -5,7 +5,7 @@ cdef class ContainerFormat(object):
 
     cdef readonly str name
 
-    cdef lib.AVInputFormat  *iptr
+    cdef lib.AVInputFormat *iptr
     cdef lib.AVOutputFormat *optr
 
 

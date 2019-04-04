@@ -59,6 +59,12 @@ matrix:
         # - FFmpeg 4.0, 3.4, 3.3, and 3.2 (i.e. major versions > 3.0 on the
         #   FFmpeg download page).
 
+        # Source linting.
+        - python: "3.6"
+          env: TESTSUITE=flake8
+        - python: "3.6"
+          env: TESTSUITE=isort
+
         # Python 3.6.
         - python: "3.6"
           env: LIBRARY=ffmpeg-4.0

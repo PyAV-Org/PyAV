@@ -10,6 +10,7 @@ from unittest import TestCase as _Base
 
 from av.datasets import fate as fate_suite
 
+
 try:
     import PIL.Image as Image
     import PIL.ImageFilter as ImageFilter

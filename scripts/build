@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ "$TRAVIS" && "$TESTSUITE" ]]; then
+    echo "We don't need to build PyAV for non-primary testing."
+    exit 0
+fi
+
+
 if [[ ! "$_PYAV_ACTIVATED" ]]; then
     export here="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
     source "$here/activate.sh"
