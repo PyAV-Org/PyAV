@@ -1,3 +1,4 @@
+from libc.stdint cimport int64_t
 from libc.stdlib cimport malloc, free
 
 from av.container.streams cimport StreamContainer
@@ -22,8 +23,8 @@ cdef class InputContainer(Container):
         cdef _Dictionary base_dict, stream_dict
         if self.options or self.stream_options:
             base_dict = Dictionary(self.options)
-            c_options = <lib.AVDictionary**>malloc(self.proxy.ptr.nb_streams * sizeof(void*))
-            for i in range(self.proxy.ptr.nb_streams):
+            c_options = <lib.AVDictionary**>malloc(self.ptr.nb_streams * sizeof(void*))
+            for i in range(self.ptr.nb_streams):
                 c_options[i] = NULL
                 if i < len(self.stream_options) and self.stream_options:
                     stream_dict = base_dict.copy()
@@ -41,34 +42,34 @@ cdef class InputContainer(Container):
             #   - set stream.r_frame_rate to average value;
             #   - open and closes codecs with the options provided.
             ret = lib.avformat_find_stream_info(
-                self.proxy.ptr,
+                self.ptr,
                 c_options
             )
-        self.proxy.err_check(ret)
+        self.err_check(ret)
 
         # Cleanup all of our options.
         if c_options:
-            for i in range(self.proxy.ptr.nb_streams):
+            for i in range(self.ptr.nb_streams):
                 lib.av_dict_free(&c_options[i])
             free(c_options)
 
         self.streams = StreamContainer()
-        for i in range(self.proxy.ptr.nb_streams):
-            self.streams.add_stream(wrap_stream(self, self.proxy.ptr.streams[i]))
+        for i in range(self.ptr.nb_streams):
+            self.streams.add_stream(wrap_stream(self, self.ptr.streams[i]))
 
-        self.metadata = avdict_to_dict(self.proxy.ptr.metadata, self.metadata_encoding, self.metadata_errors)
+        self.metadata = avdict_to_dict(self.ptr.metadata, self.metadata_encoding, self.metadata_errors)
 
     property start_time:
-        def __get__(self): return self.proxy.ptr.start_time
+        def __get__(self): return self.ptr.start_time
 
     property duration:
-        def __get__(self): return self.proxy.ptr.duration
+        def __get__(self): return self.ptr.duration
 
     property bit_rate:
-        def __get__(self): return self.proxy.ptr.bit_rate
+        def __get__(self): return self.ptr.bit_rate
 
     property size:
-        def __get__(self): return lib.avio_size(self.proxy.ptr.pb)
+        def __get__(self): return lib.avio_size(self.ptr.pb)
 
     def demux(self, *args, **kwargs):
         """demux(streams=None, video=None, audio=None, subtitles=None, data=None)
@@ -96,7 +97,7 @@ cdef class InputContainer(Container):
 
         streams = self.streams.get(*args, **kwargs)
 
-        cdef bint *include_stream = <bint*>malloc(self.proxy.ptr.nb_streams * sizeof(bint))
+        cdef bint *include_stream = <bint*>malloc(self.ptr.nb_streams * sizeof(bint))
         if include_stream == NULL:
             raise MemoryError()
 
@@ -106,11 +107,11 @@ cdef class InputContainer(Container):
 
         try:
 
-            for i in range(self.proxy.ptr.nb_streams):
+            for i in range(self.ptr.nb_streams):
                 include_stream[i] = False
             for stream in streams:
                 i = stream.index
-                if i >= self.proxy.ptr.nb_streams:
+                if i >= self.ptr.nb_streams:
                     raise ValueError('stream index %d out of range' % i)
                 include_stream[i] = True
 
@@ -119,8 +120,8 @@ cdef class InputContainer(Container):
                 packet = Packet()
                 try:
                     with nogil:
-                        ret = lib.av_read_frame(self.proxy.ptr, &packet.struct)
-                    self.proxy.err_check(ret)
+                        ret = lib.av_read_frame(self.ptr, &packet.struct)
+                    self.err_check(ret)
                 except AVError:
                     break
 
@@ -136,7 +137,7 @@ cdef class InputContainer(Container):
                         yield packet
 
             # Flush!
-            for i in range(self.proxy.ptr.nb_streams):
+            for i in range(self.ptr.nb_streams):
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]
@@ -163,7 +164,7 @@ cdef class InputContainer(Container):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, offset, whence='time', backward=True, any_frame=False, stream=None):
+    def seek(self, offset, str whence='time', bint backward=True, bint any_frame=False, Stream stream=None):
         """Seek to a (key)frame nearsest to the given timestamp.
 
         :param int offset: Location to seek to. Interpretation depends on ``whence``.
@@ -182,4 +183,42 @@ cdef class InputContainer(Container):
         .. warning:: Not all formats support all options, and may fail silently.
 
         """
-        self.proxy.seek(stream.index if stream else -1, offset, whence, backward, any_frame)
+
+        # We used to take floats here and assume they were in seconds. This
+        # was super confusing, so lets go in the complete opposite direction.
+        if not isinstance(offset, (int, long)):
+            raise TypeError('Container.seek only accepts integer offset.', type(offset))
+        cdef int64_t c_offset = offset
+
+        cdef int flags = 0
+        cdef int ret
+
+        if whence == 'frame':
+            flags |= lib.AVSEEK_FLAG_FRAME
+        elif whence == 'byte':
+            flags |= lib.AVSEEK_FLAG_BYTE
+        elif whence != 'time':
+            raise ValueError("whence must be one of 'frame', 'byte', or 'time'.", whence)
+
+        if backward:
+            flags |= lib.AVSEEK_FLAG_BACKWARD
+
+        if any_frame:
+            flags |= lib.AVSEEK_FLAG_ANY
+
+        cdef int stream_index = stream.index if stream else -1
+        with nogil:
+            ret = lib.av_seek_frame(self.ptr, stream_index, c_offset, flags)
+        err_check(ret)
+
+        self.flush_buffers()
+
+    cdef flush_buffers(self):
+        cdef unsigned int i
+        cdef lib.AVStream *stream
+
+        with nogil:
+            for i in range(self.ptr.nb_streams):
+                stream = self.ptr.streams[i]
+                if stream.codec and stream.codec.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
+                    lib.avcodec_flush_buffers(stream.codec)
