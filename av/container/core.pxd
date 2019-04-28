@@ -24,7 +24,6 @@ cdef class Container(object):
 
     # Custom IO for above.
     cdef lib.AVIOContext *iocontext
-    cdef long bufsize
     cdef unsigned char *buffer
     cdef long pos
     cdef bint pos_is_valid

@@ -32,7 +32,10 @@ cdef object _cinit_sentinel = object()
 
 cdef class Container(object):
 
-    def __cinit__(self, sentinel, file_, format_name, options, container_options, stream_options, metadata_encoding, metadata_errors):
+    def __cinit__(self, sentinel, file_, format_name, options,
+                  container_options, stream_options,
+                  metadata_encoding, metadata_errors,
+                  buffer_size):
 
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -112,11 +115,10 @@ cdef class Container(object):
             self.pos_is_valid = True
 
             # This is effectively the maximum size of reads.
-            self.bufsize = 32 * 1024
-            self.buffer = <unsigned char*>lib.av_malloc(self.bufsize)
+            self.buffer = <unsigned char*>lib.av_malloc(buffer_size)
 
             self.iocontext = lib.avio_alloc_context(
-                self.buffer, self.bufsize,
+                self.buffer, buffer_size,
                 self.writeable,  # Writeable.
                 <void*>self,  # User data.
                 pyio_read,
@@ -126,7 +128,7 @@ cdef class Container(object):
 
             if seek_func:
                 self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
-            self.iocontext.max_packet_size = self.bufsize
+            self.iocontext.max_packet_size = buffer_size
             self.ptr.pb = self.iocontext
 
         cdef lib.AVInputFormat *ifmt
@@ -181,7 +183,8 @@ cdef class Container(object):
 
 def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
-         metadata_encoding=None, metadata_errors='strict'):
+         metadata_encoding=None, metadata_errors='strict',
+         buffer_size=32768):
     """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
 
     Main entrypoint to opening files/streams.
@@ -197,6 +200,8 @@ def open(file, mode=None, format=None, options=None,
         reading on Python 2 (returning ``str`` instead of ``unicode``).
     :param str metadata_errors: Specifies how to handle encoding errors; behaves like
         ``str.encode`` parameter. Defaults to strict.
+    :param int buffer_size: Size of buffer for Python input/output operations in bytes.
+        Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -215,7 +220,8 @@ def open(file, mode=None, format=None, options=None,
         return InputContainer(
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
-            metadata_encoding, metadata_errors
+            metadata_encoding, metadata_errors,
+            buffer_size
         )
     if mode.startswith('w'):
         if stream_options:
@@ -223,6 +229,7 @@ def open(file, mode=None, format=None, options=None,
         return OutputContainer(
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
-            metadata_encoding, metadata_errors
+            metadata_encoding, metadata_errors,
+            buffer_size
         )
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
