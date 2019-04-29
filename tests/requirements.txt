@@ -3,6 +3,5 @@ Cython
 editorconfig
 flake8
 isort
-nose
 numpy
 Pillow

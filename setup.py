@@ -512,7 +512,7 @@ setup(
         'cythonize': CythonizeCommand,
     },
 
-    test_suite='nose.collector',
+    test_suite='tests',
 
     entry_points={
         'console_scripts': [
