@@ -150,13 +150,9 @@ cdef class Container(object):
             self.format = build_container_format(self.ptr.iformat, self.ptr.oformat)
 
     def __dealloc__(self):
+        self.close()
 
         with nogil:
-
-            # Let FFmpeg close input if it was fully opened.
-            if self.input_was_opened:
-                lib.avformat_close_input(&self.ptr)
-
             # FFmpeg will not release custom input, so it's up to us to free it.
             # Do not touch our original buffer as it may have been freed and replaced.
             if self.iocontext:

@@ -71,6 +71,13 @@ cdef class InputContainer(Container):
     property size:
         def __get__(self): return lib.avio_size(self.ptr.pb)
 
+    def close(self):
+        # Let FFmpeg close input if it was fully opened.
+        if self.input_was_opened:
+            with nogil:
+                lib.avformat_close_input(&self.ptr)
+            self.input_was_opened = False
+
     def demux(self, *args, **kwargs):
         """demux(streams=None, video=None, audio=None, subtitles=None, data=None)
 

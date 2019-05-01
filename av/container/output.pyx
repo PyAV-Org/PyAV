@@ -20,9 +20,6 @@ cdef class OutputContainer(Container):
         self.streams = StreamContainer()
         self.metadata = {}
 
-    def __dealloc__(self):
-        self.close()
-
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)
 
