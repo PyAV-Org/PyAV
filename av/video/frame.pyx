@@ -90,11 +90,8 @@ cdef class VideoFrame(Frame):
 
             # Allocate the buffer for the video frame.
             #
-            # We enforce 8-byte aligned buffers, otherwise `sws_scale` causes
-            # out-of-bounds reads and writes for images whose width is not a
-            # multiple of 8.
-            #
-            # TODO: ensure 8 bytes is sufficient, even for resizing operations.
+            # We enforce aligned buffers, otherwise `sws_scale` can perform
+            # poorly or even cause out-of-bounds reads and writes.
             if width and height:
                 ret = lib.av_image_alloc(
                     self.ptr.data,
@@ -102,7 +99,7 @@ cdef class VideoFrame(Frame):
                     width,
                     height,
                     format,
-                    8)
+                    16)
                 with gil:
                     err_check(ret)
                 self._buffer = self.ptr.data[0]
