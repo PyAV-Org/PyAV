@@ -169,6 +169,12 @@ cdef class Container(object):
             # Finish releasing the whole structure.
             lib.avformat_free_context(self.ptr)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
 

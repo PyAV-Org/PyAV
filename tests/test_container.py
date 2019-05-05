@@ -6,7 +6,7 @@ import unittest
 
 import av
 
-from .common import TestCase
+from .common import TestCase, fate_suite
 
 
 # On Windows, Python 3.0 - 3.5 have issues handling unicode filenames.
@@ -21,6 +21,11 @@ broken_unicode = (
 
 
 class TestContainers(TestCase):
+
+    def test_context_manager(self):
+        with av.open(fate_suite('h264/interlaced_crop.mp4')) as container:
+            self.assertEqual(container.format.long_name, 'QuickTime / MOV')
+            self.assertEqual(len(container.streams), 1)
 
     @unittest.skipIf(broken_unicode, 'Unicode filename handling is broken')
     def test_unicode_filename(self):
