@@ -48,7 +48,8 @@ cdef class AudioCodecContext(CodecContext):
             if frame is not None:
                 self.fifo.write(frame)
             frames = self.fifo.read_many(self.ptr.frame_size, partial=is_flushing)
-
+            if is_flushing:
+                frames.append(None)
         else:
             frames = [frame]
 
