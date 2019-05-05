@@ -1,8 +1,3 @@
-from libc.limits cimport INT_MAX
-
-from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
-
-from av.plane cimport Plane
 from av.utils cimport avrational_to_fraction, to_avrational
 
 from fractions import Fraction
@@ -32,29 +27,6 @@ cdef class Frame(object):
             id(self),
             self.pts,
         )
-
-    cdef _init_planes(self, cls=Plane):
-
-        # We need to detect which planes actually exist, but also contrain
-        # ourselves to the maximum plane count (as determined only by VideoFrames
-        # so far), in case the library implementation does not set the last
-        # plane to NULL.
-        cdef int max_plane_count = self._max_plane_count()
-        cdef int plane_count = 0
-        while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:
-            plane_count += 1
-
-        self.planes = PyTuple_New(plane_count)
-        for i in range(plane_count):
-            # We are constructing this tuple manually, but since Cython does
-            # not understand reference stealing we must manually Py_INCREF
-            # so that when Cython Py_DECREFs it doesn't release our object.
-            plane = cls(self, i)
-            Py_INCREF(plane)
-            PyTuple_SET_ITEM(self.planes, i, plane)
-
-    cdef int _max_plane_count(self):
-        return INT_MAX
 
     cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
         """Mimic another frame."""

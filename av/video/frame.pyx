@@ -106,12 +106,8 @@ cdef class VideoFrame(Frame):
 
         self._init_user_attributes()
 
-    cdef int _max_plane_count(self):
-        return self.format.ptr.nb_components
-
     cdef _init_user_attributes(self):
         self.format = get_video_format(<lib.AVPixelFormat>self.ptr.format, self.ptr.width, self.ptr.height)
-        self._init_planes(VideoPlane)
 
     def __dealloc__(self):
         # The `self._buffer` member is only set if *we* allocated the buffer in `_init`,
@@ -273,6 +269,24 @@ cdef class VideoFrame(Frame):
             )
 
         return frame
+
+    @property
+    def planes(self):
+        """
+        A tuple of :class:`~av.video.plane.VideoPlane` objects.
+
+        :type: tuple
+        """
+        # We need to detect which planes actually exist, but also contrain
+        # ourselves to the maximum plane count (as determined only by VideoFrames
+        # so far), in case the library implementation does not set the last
+        # plane to NULL.
+        cdef int max_plane_count = self.format.ptr.nb_components
+        cdef int plane_count = 0
+        while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:
+            plane_count += 1
+
+        return tuple([VideoPlane(self, i) for i in range(plane_count)])
 
     property width:
         """Width of the image, in pixels."""
