@@ -195,7 +195,7 @@ def open(file, mode=None, format=None, options=None,
 
     Main entrypoint to opening files/streams.
 
-    :param str file: The file to open.
+    :param str file: The file to open, which can be either a string or a file-like object.
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and all streams.
