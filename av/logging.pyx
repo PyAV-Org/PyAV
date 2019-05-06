@@ -232,7 +232,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
             log_callback_gil(level, name, message)
 
         except Exception as e:
-            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s",
+            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s\n",
                     name, level, message)
             # For some reason lib.PyErr_PrintEx(0) won't work.
             exc, type_, tb = sys.exc_info()
@@ -258,6 +258,9 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
     # Skip messages which are identical to the previous.
     # TODO: Be smarter about threads.
     cdef bint is_repeated = False
+
+    cdef object repeat_log = None
+
     with skip_lock:
 
         if is_interesting:
@@ -277,7 +280,6 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
                         last_log[1],
                         "%s (repeated %d more times)" % (last_log[2], skip_count)
                     )
-                log_callback_emit(repeat_log)
                 skip_count = 0
 
             last_log = log
@@ -287,11 +289,10 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
             error_count += 1
             last_error = log
 
-        if not is_interesting:
-            return
-        if is_repeated:
-            return
+    if repeat_log is not None:
+        log_callback_emit(repeat_log)
 
+    if is_interesting and not is_repeated:
         log_callback_emit(log)
 
 
