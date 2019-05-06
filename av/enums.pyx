@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 try:
     import copyreg
@@ -8,26 +9,23 @@ except ImportError:
 cdef sentinel = object()
 
 
-cdef class EnumType(type):
+class EnumType(type):
+    def __new__(cls, name, bases, attrs):
+        enum_class = type.__new__(cls, name, bases, {})
 
-    cdef _init(self, name, items, bint is_flags, bint allow_multi_flags, bint allow_user_create):
+        enum_class._by_name = {}
+        enum_class._by_value = {}
+        enum_class._all = []
 
-        self.name = name
+        enum_class._allow_multi_flags = False
+        enum_class._allow_user_create = False
 
-        self.names = ()
-        self.values = ()
-        self._by_name = {}
-        self._by_value = {}
-        self._all = []
+        for name, value in attrs.items():
+            enum_class._create(name, value)
 
-        self.is_flags = bool(is_flags)
-        self.allow_multi_flags = allow_multi_flags
-        self.allow_user_create = allow_user_create
+        return enum_class
 
-        for name, value in items:
-            self._create(name, value)
-
-    cdef _create(self, name, value, by_value_only=False):
+    def _create(self, name, value, by_value_only=False):
 
         # We only have one instance per value.
         try:
@@ -40,8 +38,6 @@ cdef class EnumType(type):
             setattr(self, name, item)
             self._all.append(item)
             self._by_name[name] = item
-            self.names += (name, )
-            self.values += (value, )
 
         return item
 
@@ -58,7 +54,7 @@ cdef class EnumType(type):
             try:
                 return self._by_value[key]
             except KeyError:
-                if not self.allow_multi_flags:
+                if not self._allow_multi_flags:
                     raise
                 try:
                     return self._get_multi_flags(key)
@@ -66,9 +62,9 @@ cdef class EnumType(type):
                     raise KeyError(key)
         if isinstance(key, self):
             return key
-        raise TypeError("Uncomparable to {}.".format(self.name), key)
+        raise TypeError("Uncomparable to {}.".format(self.__name__), key)
 
-    cdef _get(self, long value, bint create=False):
+    def _get(self, long value, bint create=False):
 
         try:
             return self._by_value[value]
@@ -78,16 +74,16 @@ cdef class EnumType(type):
         if not create:
             return
 
-        return self._create('{}_{}'.format(self.name.upper(), value), value, by_value_only=True)
+        return self._create('{}_{}'.format(self.__name__.upper(), value), value, by_value_only=True)
 
-    cdef _get_multi_flags(self, long value):
+    def _get_multi_flags(self, long value):
 
         try:
             return self._by_value[value]
         except KeyError:
             pass
 
-        if not self.allow_multi_flags:
+        if not self._allow_multi_flags:
             raise ValueError("Missing flag in {}.".format(self.__name__), value)
 
         flags = []
@@ -99,7 +95,7 @@ cdef class EnumType(type):
                 if not to_find:
                     break
         if to_find:
-            raise ValueError("Could not build combo in {}.".format(self.__name__, value))
+            raise ValueError("Could not build combo in {}.".format(self.__name__), value)
 
         name = '|'.join(f.name for f in flags)
         cdef EnumFlag combo = self._create(name, value, by_value_only=True)
@@ -112,8 +108,8 @@ cdef class EnumType(type):
             return self[key]
         except KeyError:
             if create:
-                if not self.allow_user_create:
-                    raise ValueError("Cannot create {}.".format(self.name))
+                if not self._allow_user_create:
+                    raise ValueError("Cannot create {}.".format(self.__name__))
                 return self._get(key, create=True)
             return default
 
@@ -173,7 +169,7 @@ cdef class EnumItem(object):
                 return True
 
             try:
-                other_inst = (<EnumType>self.__class__)._by_name[other]
+                other_inst = self.__class__._by_name[other]
             except KeyError:
                 raise ValueError("Name not in {}.".format(self.__class__.__name__), other)
             else:
@@ -182,7 +178,7 @@ cdef class EnumItem(object):
         if isinstance(other, int):
             if self.value == other:
                 return True
-            if other in (<EnumType>self.__class__)._by_value:
+            if other in self.__class__._by_value:
                 return False
             raise ValueError("Value not in {}.".format(self.__class__.__name__), other)
 
@@ -206,38 +202,33 @@ cdef class EnumFlag(EnumItem):
         if not isinstance(other, int):
             other = self.__class__[other].value
         value = self.value & other
-        return (<EnumType>self.__class__)._get_multi_flags(value)
+        return self.__class__._get_multi_flags(value)
 
     def __or__(self, other):
         if not isinstance(other, int):
             other = self.__class__[other].value
         value = self.value | other
-        return (<EnumType>self.__class__)._get_multi_flags(value)
+        return self.__class__._get_multi_flags(value)
 
     def __xor__(self, other):
         if not isinstance(other, int):
             other = self.__class__[other].value
         value = self.value ^ other
-        return (<EnumType>self.__class__)._get_multi_flags(value)
+        return self.__class__._get_multi_flags(value)
 
     def __invert__(self):
         # This can't result in a flag, but is helpful.
         return ~self.value
 
 
-cpdef EnumType define_enum(name, items, bint is_flags=False, bint allow_multi_flags=False, bint allow_user_create=False):
+cpdef define_enum(name, items, bint is_flags=False, bint allow_multi_flags=False, bint allow_user_create=False):
 
     if is_flags:
         base_cls = EnumFlag
     else:
         base_cls = EnumItem
 
-    cdef EnumType cls = EnumType(name, (base_cls, ), {})
-    cls._init(
-        name, items,
-        is_flags=is_flags,
-        allow_multi_flags=allow_multi_flags,
-        allow_user_create=allow_user_create,
-    )
-
+    cls = EnumType(name, (base_cls, ), OrderedDict(items))
+    cls._allow_multi_flags = allow_multi_flags
+    cls._allow_user_create = allow_user_create
     return cls

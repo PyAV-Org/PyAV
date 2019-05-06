@@ -29,6 +29,8 @@ class TestEnums(TestCase):
         self.assertEqual(foo.name, 'FOO')
         self.assertEqual(foo.value, 1)
 
+        self.assertNotIsInstance(foo, PickleableFooBar)
+
     def test_access(self):
 
         cls = self.define_foobar()

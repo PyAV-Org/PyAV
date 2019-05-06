@@ -1,7 +1,7 @@
 from libc.stdint cimport uint8_t
 
 from av.deprecation import renamed_attr
-from av.enums cimport EnumType, define_enum
+from av.enums cimport define_enum
 from av.utils cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.plane cimport VideoPlane
@@ -19,7 +19,7 @@ cdef VideoFrame alloc_video_frame():
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
 
 
-cdef EnumType PictureType = define_enum('PictureType', (
+PictureType = define_enum('PictureType', (
     ('NONE', lib.AV_PICTURE_TYPE_NONE),
     ('I', lib.AV_PICTURE_TYPE_I),
     ('P', lib.AV_PICTURE_TYPE_P),

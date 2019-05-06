@@ -1,7 +1,7 @@
 cimport libav as lib
 
 from av.utils cimport flag_in_bitfield
-from av.enums cimport EnumType, define_enum
+from av.enums cimport define_enum
 
 
 cdef object _cinit_sentinel = object()
@@ -15,7 +15,7 @@ cdef Option wrap_option(tuple choices, const lib.AVOption *ptr):
     return obj
 
 
-cdef EnumType _OptionType = define_enum('OptionType', (
+OptionType = define_enum('OptionType', (
     ('FLAGS', lib.AV_OPT_TYPE_FLAGS),
     ('INT', lib.AV_OPT_TYPE_INT),
     ('INT64', lib.AV_OPT_TYPE_INT64),
@@ -36,7 +36,6 @@ cdef EnumType _OptionType = define_enum('OptionType', (
     ('CHANNEL_LAYOUT', lib.AV_OPT_TYPE_CHANNEL_LAYOUT),
     ('BOOL', lib.AV_OPT_TYPE_BOOL),
 ))
-OptionType = _OptionType
 
 cdef tuple _INT_TYPES = (
     lib.AV_OPT_TYPE_FLAGS,
@@ -49,7 +48,7 @@ cdef tuple _INT_TYPES = (
     lib.AV_OPT_TYPE_BOOL,
 )
 
-cdef EnumType _OptionFlags = define_enum('OptionFlags', (
+OptionFlags = define_enum('OptionFlags', (
     ('ENCODING_PARAM', lib.AV_OPT_FLAG_ENCODING_PARAM),
     ('DECODING_PARAM', lib.AV_OPT_FLAG_DECODING_PARAM),
     ('AUDIO_PARAM', lib.AV_OPT_FLAG_AUDIO_PARAM),
@@ -59,7 +58,6 @@ cdef EnumType _OptionFlags = define_enum('OptionFlags', (
     ('READONLY', lib.AV_OPT_FLAG_READONLY),
     ('FILTERING_PARAM', lib.AV_OPT_FLAG_FILTERING_PARAM),
 ), is_flags=True)
-OptionFlags = _OptionFlags
 
 cdef class BaseOption(object):
 
@@ -110,7 +108,7 @@ cdef class Option(BaseOption):
 
     property type:
         def __get__(self):
-            return _OptionType._get(self.ptr.type, create=True)
+            return OptionType._get(self.ptr.type, create=True)
 
     property offset:
         """
