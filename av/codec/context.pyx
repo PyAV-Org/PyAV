@@ -9,7 +9,7 @@ from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
-from av.enums cimport EnumType, define_enum
+from av.enums cimport define_enum
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational
 
@@ -41,15 +41,14 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     return py_ctx
 
 
-cdef EnumType _ThreadType = define_enum('ThreadType', (
+ThreadType = define_enum('ThreadType', (
     ('NONE', 0),
     ('FRAME', lib.FF_THREAD_FRAME),
     ('SLICE', lib.FF_THREAD_SLICE),
     ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME),
 ), is_flags=True)
-ThreadType = _ThreadType
 
-cdef EnumType _SkipType = define_enum('SkipType', (
+SkipType = define_enum('SkipType', (
     ('NONE', lib.AVDISCARD_NONE),
     ('DEFAULT', lib.AVDISCARD_DEFAULT),
     ('NONREF', lib.AVDISCARD_NONREF),
@@ -58,7 +57,6 @@ cdef EnumType _SkipType = define_enum('SkipType', (
     ('NONKEY', lib.AVDISCARD_NONKEY),
     ('ALL', lib.AVDISCARD_ALL),
 ))
-SkipType = _SkipType
 
 cdef class CodecContext(object):
 
@@ -426,17 +424,17 @@ cdef class CodecContext(object):
     property thread_type:
         """One of :class:`.ThreadType`."""
         def __get__(self):
-            return _ThreadType.get(self.ptr.thread_type, create=True)
+            return ThreadType.get(self.ptr.thread_type, create=True)
 
         def __set__(self, value):
             if lib.avcodec_is_open(self.ptr):
                 raise RuntimeError("Cannot change thread_type after codec is open.")
-            self.ptr.thread_type = _ThreadType[value].value
+            self.ptr.thread_type = ThreadType[value].value
 
     property skip_frame:
         """One of :class:`.SkipType`."""
         def __get__(self):
-            return _SkipType._get(self.ptr.skip_frame, create=True)
+            return SkipType._get(self.ptr.skip_frame, create=True)
 
         def __set__(self, value):
-            self.ptr.skip_frame = _SkipType[value].value
+            self.ptr.skip_frame = SkipType[value].value
