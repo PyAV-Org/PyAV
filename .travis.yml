@@ -117,11 +117,12 @@ matrix:
           os: osx
 
         # PyPy
-        # These are known to be broken.
         - python: "pypy"
+          dist: xenial
           env: LIBRARY=ffmpeg-4.0
           os: linux
         - python: "pypy3"
+          dist: xenial
           env: LIBRARY=ffmpeg-4.0
           os: linux
 
@@ -144,13 +145,10 @@ matrix:
 
     allow_failures:
 
-        - python: "pypy"
-          env: LIBRARY=ffmpeg-4.0
-          os: linux
         - python: "pypy3"
+          dist: xenial
           env: LIBRARY=ffmpeg-4.0
           os: linux
-
 
 before_install:
     - scripts/build-deps
