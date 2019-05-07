@@ -17,8 +17,25 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
-HEAD
-----
+v6.2.0
+------
+
+Major:
+
+- Allow :meth:`av.open` to be used as a context manager.
+- Fix compatibility with PyPy, the full test suite now passes. (:issue:`130`)
+
+Minor:
+
+- Add :meth:`.InputContainer.close` method. (:issue:`317`, :issue:`456`)
+- Ensure audio output gets flushes when using a FIFO. (:issue:`511`)
+- Make Python I/O buffer size configurable. (:issue:`512`)
+- Make :class:`.AudioFrame` and :class:`VideoFrame` more garbage-collector friendly by breaking a reference cycle. (:issue:`517`)
+
+Build:
+
+- Do not install the `scratchpad` package.
+
 
 v6.1.2
 ------
