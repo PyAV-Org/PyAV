@@ -43,3 +43,11 @@ if [[ "$TESTSUITE" == all || "$TESTSUITE" == main ]]; then
     $PYAV_PYTHON setup.py test
 fi
 
+if [[ "$TESTSUITE" == sdist ]]; then
+    $PYAV_PYTHON setup.py build_ext
+    $PYAV_PYTHON setup.py sdist
+    if [[ "$TRAVIS_TAG" ]]; then
+        $PYAV_PIP install twine
+        $PYAV_PYTHON -m twine upload --skip-existing dist/*
+    fi
+fi

@@ -65,6 +65,10 @@ matrix:
         - python: "3.6"
           env: TESTSUITE=isort
 
+        # Source distribution.
+        - python: "3.6"
+          env: TESTSUITE=sdist
+
         # Python 3.6.
         - python: "3.6"
           env: LIBRARY=ffmpeg-4.1
