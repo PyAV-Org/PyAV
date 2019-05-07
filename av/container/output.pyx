@@ -14,11 +14,29 @@ from av.dictionary import Dictionary
 log = logging.getLogger(__name__)
 
 
+cdef close_output(OutputContainer self):
+    cdef Stream stream
+
+    if self._started and not self._done:
+        self.err_check(lib.av_write_trailer(self.ptr))
+
+        for stream in self.streams:
+            stream.codec_context.close()
+
+        if self.file is None and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
+            lib.avio_closep(&self.ptr.pb)
+
+        self._done = True
+
+
 cdef class OutputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
         self.streams = StreamContainer()
         self.metadata = {}
+
+    def __dealloc__(self):
+        close_output(self)
 
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)
@@ -169,27 +187,8 @@ cdef class OutputContainer(Container):
 
         self._started = True
 
-    def close(self, strict=False):
-
-        # Normally, we just ignore that we've already done this.
-        if self._done:
-            if strict:
-                raise ValueError("Already closed.")
-            return
-        if not self._started:
-            if strict:
-                raise ValueError("Encoding hasn't started.")
-            return
-
-        self.err_check(lib.av_write_trailer(self.ptr))
-        cdef Stream stream
-        for stream in self.streams:
-            stream.codec_context.close()
-
-        if self.file is None and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            lib.avio_closep(&self.ptr.pb)
-
-        self._done = True
+    def close(self):
+        close_output(self)
 
     def mux(self, packets):
         # We accept either a Packet, or a sequence of packets. This should
