@@ -10,20 +10,22 @@ cdef sentinel = object()
 
 
 class EnumType(type):
-    def __new__(cls, name, bases, attrs):
-        enum_class = type.__new__(cls, name, bases, {})
 
-        enum_class._by_name = {}
-        enum_class._by_value = {}
-        enum_class._all = []
+    def __new__(mcl, name, bases, attrs, *args):
+        # Just adapting the method signature.
+        return super().__new__(mcl, name, bases, attrs)
 
-        enum_class._allow_multi_flags = False
-        enum_class._allow_user_create = False
+    def __init__(self, name, bases, attrs, items, allow_multi_flags, allow_user_create):
 
-        for name, value in attrs.items():
-            enum_class._create(name, value)
+        self._by_name = {}
+        self._by_value = {}
+        self._all = []
 
-        return enum_class
+        self._allow_multi_flags = allow_multi_flags
+        self._allow_user_create = allow_user_create
+
+        for name, value in items.items():
+            self._create(name, value)
 
     def _create(self, name, value, by_value_only=False):
 
@@ -228,7 +230,7 @@ cpdef define_enum(name, items, bint is_flags=False, bint allow_multi_flags=False
     else:
         base_cls = EnumItem
 
-    cls = EnumType(name, (base_cls, ), OrderedDict(items))
-    cls._allow_multi_flags = allow_multi_flags
-    cls._allow_user_create = allow_user_create
+    cls = EnumType(name, (base_cls, ), {}, OrderedDict(items),
+                   allow_multi_flags, allow_user_create)
+
     return cls
