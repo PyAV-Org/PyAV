@@ -32,6 +32,7 @@ All contributors (by number of commits):
 - Ian Lee <IanLee1521@gmail.com>
 - Arthur Barros <arthbarros@gmail.com>
 - Gemfield <gemfield@civilnet.cn>
+- mephi42 <mephi42@gmail.com>
 - Manuel Goacolou <mgoacolou@cls.fr>
 - Ömer Sezgin Uğurlu <omer@ugurlu.org>
 - Orivej Desh <orivej@gmx.fr>
