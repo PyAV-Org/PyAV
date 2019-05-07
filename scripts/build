@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ "$TRAVIS" && "$TESTSUITE" ]]; then
-    echo "We don't need to build PyAV for non-primary testing."
+if [[ "$TRAVIS" && ("$TESTSUITE" == "isort" || "$TESTSUITE" == "flake8") ]]; then
+    echo "We don't need to build PyAV for source linting."
     exit 0
 fi
 
