@@ -63,10 +63,14 @@ _cflag_parser.add_argument('-L', dest='library_dirs', action='append')
 _cflag_parser.add_argument('-l', dest='libraries', action='append')
 _cflag_parser.add_argument('-D', dest='define_macros', action='append')
 _cflag_parser.add_argument('-R', dest='runtime_library_dirs', action='append')
+_cflag_parser.add_argument('-pthread', dest='pthread', action='store_true')
 def parse_cflags(raw_cflags):
     raw_args = shlex.split(raw_cflags.strip())
     args, unknown = _cflag_parser.parse_known_args(raw_args)
     config = {k: v or [] for k, v in args.__dict__.items()}
+    if config.pop('pthread'):
+        config['extra_compile_args'] = ['-pthread']
+        config['extra_link_args'] = ['-pthread']
     for i, x in enumerate(config['define_macros']):
         parts = x.split('=', 1)
         value = x[1] or None if len(x) == 2 else None
