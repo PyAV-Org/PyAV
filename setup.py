@@ -98,6 +98,20 @@ def get_library_config(name):
         print("pkg-config returned flags we don't understand: {}".format(unknown))
         exit(1)
 
+    if not os.environ.get('NO_DETECT_STATIC'):
+        if known['library_dirs']:
+            target = '{}/{}.so'.format(known['library_dirs'][0].rstrip('/'), name)
+            if not os.path.isfile(target):
+                print("static library '{}' is detected".format(name))
+                print("This is probably due to a custom built FFMPEG "\
+                    "was configured without --enable-shared.")
+                print("You may either rebuild you custom FFMPEG with shared "
+                    "enabled, or set env var PKG_CONFIG_PATH to prioritize "
+                    "operating system provided library.")
+                print("If you believe this detection is wrong, you may set "
+                    "env var NO_DETECT_STATIC=1 to bypass it.")
+                exit(1)
+
     return known
 
 
