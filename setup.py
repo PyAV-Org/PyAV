@@ -100,8 +100,9 @@ def get_library_config(name):
 
     if not os.environ.get('NO_DETECT_STATIC'):
         if known['library_dirs']:
-            target = '{}/{}.so'.format(known['library_dirs'][0].rstrip('/'), name)
-            if not os.path.isfile(target):
+            target = known['library_dirs'][0].rstrip('/') + '/' + name
+            if not os.path.isfile(target + '.so') and \
+                    not os.path.isfile(target + '.dylib'):
                 print("static library '{}' is detected".format(name))
                 print("This is probably due to a custom built FFMPEG "\
                     "was configured without --enable-shared.")
