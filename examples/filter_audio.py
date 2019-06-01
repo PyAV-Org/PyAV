@@ -2,19 +2,17 @@
 Simple audio filtering example ported from C code:
    https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/filter_audio.c
 """
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
 
 import hashlib
 import sys
 from fractions import Fraction
 
-import av.audio.frame as af
 import numpy as np
 
 import av
+import av.audio.frame as af
 import av.filter
-
 
 FRAME_SIZE = 1024
 
