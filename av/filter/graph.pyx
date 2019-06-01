@@ -185,7 +185,6 @@ cdef class Graph(object):
 
         return self.add('abuffer', args, name=name)
 
-
     def push(self, frame):
 
         if isinstance(frame, VideoFrame):
