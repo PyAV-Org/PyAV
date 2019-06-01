@@ -422,6 +422,7 @@ class CythonizeCommand(Command):
                         c_string_type='str',
                         c_string_encoding='ascii',
                         embedsignature=True,
+                        language_level=2,
                     ),
                     build_dir='src',
                     include_path=ext.include_dirs,
@@ -492,14 +493,14 @@ setup(
 
     name='av',
     version=version,
-    description='Pythonic bindings for FFmpeg/Libav.',
+    description="Pythonic bindings for FFmpeg's libraries.",
 
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
 
     url="https://github.com/mikeboers/PyAV",
 
-    packages=find_packages(exclude=['build*', 'tests*', 'examples*']),
+    packages=find_packages(exclude=['build*', 'examples*', 'scratchpad*', 'tests*']),
 
     zip_safe=False,
     ext_modules=ext_modules,
@@ -511,7 +512,7 @@ setup(
         'cythonize': CythonizeCommand,
     },
 
-    test_suite='nose.collector',
+    test_suite='tests',
 
     entry_points={
         'console_scripts': [

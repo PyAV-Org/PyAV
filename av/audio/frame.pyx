@@ -49,6 +49,7 @@ cdef class AudioFrame(Frame):
         self.ptr.nb_samples = nb_samples
         self.ptr.format = <int>format
         self.ptr.channel_layout = layout
+        self.ptr.channels = lib.av_get_channel_layout_nb_channels(layout)
 
         # HACK: It really sucks to do this twice.
         self._init_user_attributes()
@@ -81,16 +82,12 @@ cdef class AudioFrame(Frame):
                 align
             ))
 
-            self._init_planes(AudioPlane)
-
     def __dealloc__(self):
         lib.av_freep(&self._buffer)
 
     cdef _init_user_attributes(self):
         self.layout = get_audio_layout(0, self.ptr.channel_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
-        self.ptr.channels  = lib.av_get_channel_layout_nb_channels(self.ptr.channel_layout)
-        self._init_planes(AudioPlane)
 
     def __repr__(self):
         return '<av.%s %d, pts=%s, %d samples at %dHz, %s, %s at 0x%x>' % (
@@ -132,6 +129,19 @@ cdef class AudioFrame(Frame):
             plane.update(array[i, :])
         return frame
 
+    @property
+    def planes(self):
+        """
+        A tuple of :class:`~av.audio.plane.AudioPlane`.
+
+        :type: tuple
+        """
+        cdef int plane_count = 0
+        while self.ptr.extended_data[plane_count]:
+            plane_count += 1
+
+        return tuple([AudioPlane(self, i) for i in range(plane_count)])
+
     property samples:
         """
         Number of audio samples (per channel).
@@ -149,6 +159,7 @@ cdef class AudioFrame(Frame):
         """
         def __get__(self):
             return self.ptr.sample_rate
+
         def __set__(self, value):
             self.ptr.sample_rate = value
 
@@ -156,12 +167,15 @@ cdef class AudioFrame(Frame):
         """Another name for :attr:`sample_rate`."""
         def __get__(self):
             return self.ptr.sample_rate
+
         def __set__(self, value):
             self.ptr.sample_rate = value
 
     def to_ndarray(self, **kwargs):
-        """
-        Get a numpy array of this frame.
+        """Get a numpy array of this frame.
+
+        .. note:: Numpy must be installed.
+
         """
         import numpy as np
 
@@ -169,7 +183,7 @@ cdef class AudioFrame(Frame):
         try:
             dtype = np.dtype(format_dtypes[self.format.name])
         except KeyError:
-            raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % self.format.name)
+            raise ValueError("Conversion from {!r} format to numpy array is not supported.".format(self.format.name))
 
         if self.format.is_planar:
             count = self.samples
@@ -177,6 +191,6 @@ cdef class AudioFrame(Frame):
             count = self.samples * len(self.layout.channels)
 
         # convert and return data
-        return np.vstack(map(lambda x: np.frombuffer(x, dtype=dtype, count=count), self.planes))
+        return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
 
     to_nd_array = renamed_attr('to_ndarray')

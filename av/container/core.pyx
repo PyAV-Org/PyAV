@@ -11,46 +11,68 @@ from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
 from av.format cimport build_container_format
 from av.utils cimport err_check, dict_to_avdict
 
-from av.dictionary import Dictionary # not cimport
-from av.logging import Capture as LogCapture # not cimport
-from av.utils import AVError # not cimport
+from av.dictionary import Dictionary  # not cimport
+from av.logging import Capture as LogCapture  # not cimport
+from av.utils import AVError  # not cimport
 
 try:
     from os import fsencode
 except ImportError:
     _fsencoding = sys.getfilesystemencoding()
-    fsencode = lambda s: s.encode(_fsencoding)
 
+    def fsencode(s):
+        return s.encode(_fsencoding)
+
+
+ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 
 
 cdef object _cinit_sentinel = object()
 
 
+cdef class Container(object):
 
-cdef class ContainerProxy(object):
+    def __cinit__(self, sentinel, file_, format_name, options,
+                  container_options, stream_options,
+                  metadata_encoding, metadata_errors,
+                  buffer_size):
 
-    def __init__(self, sentinel, Container container):
+        if sentinel is not _cinit_sentinel:
+            raise RuntimeError('cannot construct base Container')
+
+        self.writeable = isinstance(self, OutputContainer)
+        if not self.writeable and not isinstance(self, InputContainer):
+            raise RuntimeError('Container cannot be directly extended.')
+
+        if isinstance(file_, basestring):
+            self.name = file_
+        else:
+            self.name = getattr(file_, 'name', '<none>')
+            if not isinstance(self.name, basestring):
+                raise TypeError("File's name attribute must be string-like.")
+            self.file = file_
+
+        self.options = dict(options or ())
+        self.container_options = dict(container_options or ())
+        self.stream_options = [dict(x) for x in stream_options or ()]
+
+        self.metadata_encoding = metadata_encoding
+        self.metadata_errors = metadata_errors
+
+        if format_name is not None:
+            self.format = ContainerFormat(format_name)
 
         self.input_was_opened = False
         cdef int res
 
-        if sentinel is not _cinit_sentinel:
-            raise RuntimeError('cannot construct ContainerProxy')
-
-        # Copy key attributes.
-        self.file = container.file
-        self.metadata_encoding = container.metadata_encoding
-        self.metadata_errors = container.metadata_errors
-        self.name = container.name
-        self.writeable = container.writeable
-
         cdef bytes name_obj = fsencode(self.name) if isinstance(self.name, unicode) else self.name
         cdef char *name = name_obj
+        cdef seek_func_t seek_func = NULL
 
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:
 
-            ofmt = container.format.optr if container.format else lib.av_guess_format(NULL, name, NULL)
+            ofmt = self.format.optr if self.format else lib.av_guess_format(NULL, name, NULL)
             if ofmt == NULL:
                 raise ValueError("Could not determine output format")
 
@@ -86,50 +108,51 @@ cdef class ContainerProxy(object):
                 if self.fread is None:
                     raise ValueError("File object has no read method.")
 
+            if self.fseek is not None and self.ftell is not None:
+                seek_func = pyio_seek
+
             self.pos = 0
             self.pos_is_valid = True
 
             # This is effectively the maximum size of reads.
-            self.bufsize = 32 * 1024
-            self.buffer = <unsigned char*>lib.av_malloc(self.bufsize)
+            self.buffer = <unsigned char*>lib.av_malloc(buffer_size)
 
             self.iocontext = lib.avio_alloc_context(
-                self.buffer, self.bufsize,
-                self.writeable, # Writeable.
-                <void*>self, # User data.
+                self.buffer, buffer_size,
+                self.writeable,  # Writeable.
+                <void*>self,  # User data.
                 pyio_read,
                 pyio_write,
-                pyio_seek
+                seek_func
             )
 
-            if self.fseek is not None and self.ftell is not None:
+            if seek_func:
                 self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
-            self.iocontext.max_packet_size = self.bufsize
+            self.iocontext.max_packet_size = buffer_size
             self.ptr.pb = self.iocontext
 
         cdef lib.AVInputFormat *ifmt
-        cdef _Dictionary options
+        cdef _Dictionary c_options
         if not self.writeable:
-            ifmt = container.format.iptr if container.format else NULL
-            
-            options = Dictionary(container.options, container.container_options)
+
+            ifmt = self.format.iptr if self.format else NULL
+
+            c_options = Dictionary(self.options, self.container_options)
             with nogil:
                 res = lib.avformat_open_input(
                     &self.ptr,
                     name,
                     ifmt,
-                    &options.ptr
+                    &c_options.ptr
                 )
             self.err_check(res)
             self.input_was_opened = True
 
+        if format_name is None:
+            self.format = build_container_format(self.ptr.iformat, self.ptr.oformat)
+
     def __dealloc__(self):
         with nogil:
-
-            # Let FFmpeg close input if it was fully opened.
-            if self.input_was_opened:
-                lib.avformat_close_input(&self.ptr)
-
             # FFmpeg will not release custom input, so it's up to us to free it.
             # Do not touch our original buffer as it may have been freed and replaced.
             if self.iocontext:
@@ -144,103 +167,33 @@ cdef class ContainerProxy(object):
             # Finish releasing the whole structure.
             lib.avformat_free_context(self.ptr)
 
-    cdef seek(self, int stream_index, offset, str whence, bint backward, bint any_frame):
+    def __enter__(self):
+        return self
 
-        # We used to take floats here and assume they were in seconds. This
-        # was super confusing, so lets go in the complete opposite direction.
-        if not isinstance(offset, (int, long)):
-            raise TypeError('Container.seek only accepts integer offset.', type(offset))
-        cdef int64_t c_offset = offset
-
-        cdef int flags = 0
-        cdef int ret
-
-        if whence == 'frame':
-            flags |= lib.AVSEEK_FLAG_FRAME
-        elif whence == 'byte':
-            flags |= lib.AVSEEK_FLAG_BYTE
-        elif whence != 'time':
-            raise ValueError("whence must be one of 'frame', 'byte', or 'time'.", whence)
-
-        if backward:
-            flags |= lib.AVSEEK_FLAG_BACKWARD
-
-        if any_frame:
-            flags |= lib.AVSEEK_FLAG_ANY
-
-        with nogil:
-            ret = lib.av_seek_frame(self.ptr, stream_index, c_offset, flags)
-        err_check(ret)
-
-        self.flush_buffers()
-
-    cdef flush_buffers(self):
-        cdef int i
-        cdef lib.AVStream *stream
-
-        with nogil:
-            for i in range(self.ptr.nb_streams):
-                stream = self.ptr.streams[i]
-                if stream.codec and stream.codec.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
-                    lib.avcodec_flush_buffers(stream.codec)
-
-
-    cdef int err_check(self, int value) except -1:
-        return err_check(value, filename=self.name)
-
-
-
-cdef class Container(object):
-
-    def __cinit__(self, sentinel, file_, format_name, options, container_options, stream_options, metadata_encoding, metadata_errors):
-
-        if sentinel is not _cinit_sentinel:
-            raise RuntimeError('cannot construct base Container')
-
-        self.writeable = isinstance(self, OutputContainer)
-        if not self.writeable and not isinstance(self, InputContainer):
-            raise RuntimeError('Container cannot be extended except')
-
-        if isinstance(file_, basestring):
-            self.name = file_
-        else:
-            self.name = getattr(file_, 'name', '<none>')
-            if not isinstance(self.name, basestring):
-                raise TypeError("File's name attribute must be string-like.")
-            self.file = file_
-
-        if format_name is not None:
-            self.format = ContainerFormat(format_name)
-
-        self.options = dict(options or ())
-        self.container_options = dict(container_options or ())
-        self.stream_options = [dict(x) for x in stream_options or ()]
-
-        self.metadata_encoding = metadata_encoding
-        self.metadata_errors = metadata_errors
-        self.proxy = ContainerProxy(_cinit_sentinel, self)
-
-        if format_name is None:
-            self.format = build_container_format(self.proxy.ptr.iformat, self.proxy.ptr.oformat)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
 
+    cdef int err_check(self, int value) except -1:
+        return err_check(value, filename=self.name)
+
     def dumps_format(self):
         with LogCapture() as logs:
-            lib.av_dump_format(self.proxy.ptr, 0, "", isinstance(self, OutputContainer))
+            lib.av_dump_format(self.ptr, 0, "", isinstance(self, OutputContainer))
         return ''.join(log[2] for log in logs)
 
 
-
 def open(file, mode=None, format=None, options=None,
-    container_options=None, stream_options=None,
-    metadata_encoding=None, metadata_errors='strict'):
+         container_options=None, stream_options=None,
+         metadata_encoding=None, metadata_errors='strict',
+         buffer_size=32768):
     """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
 
     Main entrypoint to opening files/streams.
 
-    :param str file: The file to open.
+    :param str file: The file to open, which can be either a string or a file-like object.
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and all streams.
@@ -251,6 +204,8 @@ def open(file, mode=None, format=None, options=None,
         reading on Python 2 (returning ``str`` instead of ``unicode``).
     :param str metadata_errors: Specifies how to handle encoding errors; behaves like
         ``str.encode`` parameter. Defaults to strict.
+    :param int buffer_size: Size of buffer for Python input/output operations in bytes.
+        Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -258,6 +213,8 @@ def open(file, mode=None, format=None, options=None,
         >>> # Open webcam on OS X.
         >>> av.open(format='avfoundation', file='0') # doctest: +SKIP
 
+    More information on using input and output devices is available on the
+    `FFmpeg website <https://www.ffmpeg.org/ffmpeg-devices.html>`_.
     """
 
     if mode is None:
@@ -266,15 +223,19 @@ def open(file, mode=None, format=None, options=None,
         mode = 'r'
 
     if mode.startswith('r'):
-        return InputContainer(_cinit_sentinel, file, format, options,
+        return InputContainer(
+            _cinit_sentinel, file, format, options,
             container_options, stream_options,
-            metadata_encoding, metadata_errors
+            metadata_encoding, metadata_errors,
+            buffer_size
         )
     if mode.startswith('w'):
         if stream_options:
             raise ValueError("Provide stream options via Container.add_stream(..., options={}).")
-        return OutputContainer(_cinit_sentinel, file, format, options,
+        return OutputContainer(
+            _cinit_sentinel, file, format, options,
             container_options, stream_options,
-            metadata_encoding, metadata_errors
+            metadata_encoding, metadata_errors,
+            buffer_size
         )
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)

@@ -54,15 +54,15 @@ cdef class AudioFifo:
 
             # Figure out our "time_base".
             if frame._time_base.num and frame.ptr.sample_rate:
-                self.pts_per_sample  = frame._time_base.den / float(frame._time_base.num)
+                self.pts_per_sample = frame._time_base.den / float(frame._time_base.num)
                 self.pts_per_sample /= frame.ptr.sample_rate
             else:
                 self.pts_per_sample = 0
 
             self.ptr = lib.av_audio_fifo_alloc(
                 <lib.AVSampleFormat>frame.ptr.format,
-                len(frame.layout.channels), # TODO: Can we safely use frame.ptr.nb_channels?
-                frame.ptr.nb_samples * 2, # Just a default number of samples; it will adjust.
+                len(frame.layout.channels),  # TODO: Can we safely use frame.ptr.nb_channels?
+                frame.ptr.nb_samples * 2,  # Just a default number of samples; it will adjust.
             )
 
             if not self.ptr:
@@ -70,12 +70,12 @@ cdef class AudioFifo:
 
         # Make sure nothing changed.
         elif (
-            frame.ptr.format         != self.template.ptr.format or
+            frame.ptr.format != self.template.ptr.format or
             frame.ptr.channel_layout != self.template.ptr.channel_layout or
-            frame.ptr.sample_rate    != self.template.ptr.sample_rate or
+            frame.ptr.sample_rate != self.template.ptr.sample_rate or
             (frame._time_base.num and self.template._time_base.num and (
-                frame._time_base.num     != self.template._time_base.num or
-                frame._time_base.den     != self.template._time_base.den
+                frame._time_base.num != self.template._time_base.num or
+                frame._time_base.den != self.template._time_base.den
             ))
         ):
             raise ValueError('Frame does not match AudioFifo parameters.')
@@ -95,8 +95,7 @@ cdef class AudioFifo:
 
         self.samples_written += frame.ptr.nb_samples
 
-
-    cpdef read(self, unsigned int samples=0, bint partial=False):
+    cpdef read(self, int samples=0, bint partial=False):
         """read(samples=0, partial=False)
 
         Read samples from the queue.
@@ -132,7 +131,7 @@ cdef class AudioFifo:
             <lib.AVSampleFormat>self.template.ptr.format,
             self.template.ptr.channel_layout,
             samples,
-            1, # Align?
+            1,  # Align?
         )
 
         err_check(lib.av_audio_fifo_read(
@@ -150,7 +149,7 @@ cdef class AudioFifo:
 
         return frame
 
-    cpdef read_many(self, unsigned int samples, bint partial=False):
+    cpdef read_many(self, int samples, bint partial=False):
         """read_many(samples, partial=False)
 
         Read as many frames as we can.

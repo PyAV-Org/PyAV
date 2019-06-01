@@ -14,6 +14,21 @@ from av.dictionary import Dictionary
 log = logging.getLogger(__name__)
 
 
+cdef close_output(OutputContainer self):
+    cdef Stream stream
+
+    if self._started and not self._done:
+        self.err_check(lib.av_write_trailer(self.ptr))
+
+        for stream in self.streams:
+            stream.codec_context.close()
+
+        if self.file is None and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
+            lib.avio_closep(&self.ptr.pb)
+
+        self._done = True
+
+
 cdef class OutputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
@@ -21,7 +36,7 @@ cdef class OutputContainer(Container):
         self.metadata = {}
 
     def __dealloc__(self):
-        self.close()
+        close_output(self)
 
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)
@@ -56,7 +71,7 @@ cdef class OutputContainer(Container):
 
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(
-            self.proxy.ptr.oformat,
+            self.ptr.oformat,
             codec.id,
             lib.FF_COMPLIANCE_NORMAL,
         ):
@@ -66,9 +81,9 @@ cdef class OutputContainer(Container):
         # As of last check, avformat_new_stream only calls avcodec_alloc_context3 to create
         # the context, but doesn't modify it in any other way. Ergo, we can allow CodecContext
         # to finish initializing it.
-        lib.avformat_new_stream(self.proxy.ptr, codec)
-        cdef lib.AVStream *stream = self.proxy.ptr.streams[self.proxy.ptr.nb_streams - 1]
-        cdef lib.AVCodecContext *codec_context = stream.codec # For readability.
+        lib.avformat_new_stream(self.ptr, codec)
+        cdef lib.AVStream *stream = self.ptr.streams[self.ptr.nb_streams - 1]
+        cdef lib.AVCodecContext *codec_context = stream.codec  # For readability.
 
         # Copy from the template.
         if template is not None:
@@ -102,7 +117,7 @@ cdef class OutputContainer(Container):
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
         # Some formats want stream headers to be separate
-        if self.proxy.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+        if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
 
         # Construct the user-land stream
@@ -126,7 +141,7 @@ cdef class OutputContainer(Container):
         # TODO: This does NOT handle options coming from 3 sources.
         # This is only a rough approximation of what would be cool to do.
         used_options = set()
-        
+
         # Finalize and open all streams.
         cdef Stream stream
         for stream in self.streams:
@@ -146,18 +161,18 @@ cdef class OutputContainer(Container):
             stream._finalize_for_output()
 
         # Open the output file, if needed.
-        cdef char *name = "" if self.proxy.file is not None else self.name
-        if self.proxy.ptr.pb == NULL and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            err_check(lib.avio_open(&self.proxy.ptr.pb, name, lib.AVIO_FLAG_WRITE))
+        cdef char *name = "" if self.file is not None else self.name
+        if self.ptr.pb == NULL and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
+            err_check(lib.avio_open(&self.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
         # Copy the metadata dict.
-        dict_to_avdict(&self.proxy.ptr.metadata, self.metadata, clear=True,
+        dict_to_avdict(&self.ptr.metadata, self.metadata, clear=True,
                        encoding=self.metadata_encoding, errors=self.metadata_errors)
 
         cdef _Dictionary all_options = Dictionary(self.options, self.container_options)
         cdef _Dictionary options = all_options.copy()
-        self.proxy.err_check(lib.avformat_write_header(
-            self.proxy.ptr,
+        self.err_check(lib.avformat_write_header(
+            self.ptr,
             &options.ptr
         ))
 
@@ -172,27 +187,8 @@ cdef class OutputContainer(Container):
 
         self._started = True
 
-    def close(self, strict=False):
-
-        # Normally, we just ignore that we've already done this.
-        if self._done:
-            if strict:
-                raise ValueError("Already closed.")
-            return
-        if not self._started:
-            if strict:
-                raise ValueError("Encoding hasn't started.")
-            return
-
-        self.proxy.err_check(lib.av_write_trailer(self.proxy.ptr))
-        cdef Stream stream
-        for stream in self.streams:
-            stream.codec_context.close()
-
-        if self.file is None and not self.proxy.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            lib.avio_closep(&self.proxy.ptr.pb)
-
-        self._done = True
+    def close(self):
+        close_output(self)
 
     def mux(self, packets):
         # We accept either a Packet, or a sequence of packets. This should
@@ -208,18 +204,18 @@ cdef class OutputContainer(Container):
         self.start_encoding()
 
         # Assert the packet is in stream time.
-        if packet.struct.stream_index < 0 or packet.struct.stream_index >= self.proxy.ptr.nb_streams:
+        if packet.struct.stream_index < 0 or <unsigned int>packet.struct.stream_index >= self.ptr.nb_streams:
             raise ValueError('Bad Packet stream_index.')
-        cdef lib.AVStream *stream = self.proxy.ptr.streams[packet.struct.stream_index]
+        cdef lib.AVStream *stream = self.ptr.streams[packet.struct.stream_index]
         packet._rebase_time(stream.time_base)
 
         # Make another reference to the packet, as av_interleaved_write_frame
         # takes ownership of it.
         cdef lib.AVPacket packet_ref
         lib.av_init_packet(&packet_ref)
-        self.proxy.err_check(lib.av_packet_ref(&packet_ref, &packet.struct))
+        self.err_check(lib.av_packet_ref(&packet_ref, &packet.struct))
 
         cdef int ret
         with nogil:
-            ret = lib.av_interleaved_write_frame(self.proxy.ptr, &packet_ref)
-        self.proxy.err_check(ret)
+            ret = lib.av_interleaved_write_frame(self.ptr, &packet_ref)
+        self.err_check(ret)

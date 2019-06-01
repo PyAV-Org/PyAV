@@ -1,6 +1,6 @@
-from .common import *
-
 from av.dictionary import Dictionary
+
+from .common import TestCase
 
 
 class TestDictionary(TestCase):

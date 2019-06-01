@@ -21,6 +21,72 @@ HEAD
 ----
 
 
+v6.2.0
+------
+
+Major:
+
+- Allow :meth:`av.open` to be used as a context manager.
+- Fix compatibility with PyPy, the full test suite now passes. (:issue:`130`)
+
+Minor:
+
+- Add :meth:`.InputContainer.close` method. (:issue:`317`, :issue:`456`)
+- Ensure audio output gets flushes when using a FIFO. (:issue:`511`)
+- Make Python I/O buffer size configurable. (:issue:`512`)
+- Make :class:`.AudioFrame` and :class:`VideoFrame` more garbage-collector friendly by breaking a reference cycle. (:issue:`517`)
+
+Build:
+
+- Do not install the `scratchpad` package.
+
+
+v6.1.2
+------
+
+Micro:
+
+- Fix a numpy deprecation warning in :meth:`.AudioFrame.to_ndarray`.
+
+
+v6.1.1
+------
+
+Micro:
+
+- Fix alignment in :meth:`.VideoFrame.from_ndarray`. (:issue:`478`)
+- Fix error message in :meth:`.Buffer.update`.
+
+Build:
+
+- Fix more compiler warnings.
+
+
+v6.1.0
+------
+
+Minor:
+
+- ``av.datasets`` for sample data that is pulled from either FFmpeg's FATE suite, or our documentation server.
+- :meth:`.InputContainer.seek` gets a ``stream`` argument to specify the ``time_base`` the requested ``offset`` is in.
+
+Micro:
+
+- Avoid infinite look in ``Stream.__getattr__``. (:issue:`450`)
+- Correctly handle Python I/O with no ``seek`` method.
+- Remove ``Datastream.seek`` override (:issue:`299`)
+
+Build:
+
+- Assert building against compatible FFmpeg. (:issue:`401`)
+- Lock down Cython lanaguage level to avoid build warnings. (:issue:`443`)
+
+Other:
+
+- Incremental improvements to docs and tests.
+- Examples directory will now always be runnable as-is, and embeded in the docs (in a copy-pastable form).
+
+
 v6.0.0
 ------
 

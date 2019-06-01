@@ -65,14 +65,14 @@ cdef class Buffer(_Buffer):
 
     def to_bytes(self):
         """Return the contents of this buffer as ``bytes``.
-    
+
         This copies the entire contents; consider using something that uses
         the `buffer protocol <https://docs.python.org/3/c-api/buffer.html>`_
         as that will be more efficient.
 
         This is largely for Python2, as Python 3 can do the same via
         ``bytes(the_buffer)``.
-        
+
         """
         return <bytes>(<char*>self._buffer_ptr())[:self._buffer_size()]
 
@@ -88,7 +88,7 @@ cdef class Buffer(_Buffer):
         cdef ByteSource source = bytesource(input)
         cdef size_t size = self._buffer_size()
         if source.length != size:
-            raise ValueError('got %d bytes; need %d bytes' % (len(input), size))
+            raise ValueError('got %d bytes; need %d bytes' % (source.length, size))
         memcpy(self._buffer_ptr(), source.ptr, size)
 
     update_buffer = renamed_attr('update')

@@ -5,11 +5,13 @@ import warnings
 class AVDeprecationWarning(DeprecationWarning):
     pass
 
+
 class AttributeRenamedWarning(AVDeprecationWarning):
     pass
 
+
 class MethodDeprecationWarning(AVDeprecationWarning):
-    pass   
+    pass
 
 
 # DeprecationWarning is not printed by default (unless in __main__). We

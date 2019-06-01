@@ -47,7 +47,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 
     """
 
-    if index < 0 or index >= subtitle.proxy.struct.num_rects:
+    if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
         raise ValueError('subtitle rect index out of range')
     cdef lib.AVSubtitleRect *ptr = subtitle.proxy.struct.rects[index]
 
@@ -66,7 +66,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 cdef class Subtitle(object):
 
     def __cinit__(self, SubtitleSet subtitle, int index):
-        if index < 0 or index >= subtitle.proxy.struct.num_rects:
+        if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
             raise ValueError('subtitle rect index out of range')
         self.proxy = subtitle.proxy
         self.ptr = self.proxy.struct.rects[index]
@@ -167,12 +167,10 @@ cdef class BitmapSubtitlePlane(object):
         data[0] = self._buffer
         return <Py_ssize_t>self.buffer_size
 
-
     # New-style buffer support.
 
     def __getbuffer__(self, Py_buffer *view, int flags):
         PyBuffer_FillInfo(view, self, self._buffer, self.buffer_size, 0, flags)
-
 
 
 cdef class TextSubtitle(Subtitle):

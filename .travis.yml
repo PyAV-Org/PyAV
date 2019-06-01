@@ -23,6 +23,22 @@ addons:
             - wget
             - yasm
             - zlib1g-dev
+    homebrew:
+        packages:
+            - automake
+            - libass
+            - libjpeg
+            - libpng
+            - libtool
+            - libvorbis
+            - libvpx
+            - nasm
+            - opus
+            - shtool
+            - texi2html
+            - theora
+            - wget
+            - x264
 
 cache:
     directories:
@@ -40,10 +56,23 @@ matrix:
 
         # Our primary targets are:
         # - Python 3.6 and 2.7;
-        # - FFmpeg 4.0, 3.4, 3.3, and 3.2 (i.e. major versions > 3.0 on the
+        # - FFmpeg 4.1, 4.0, 3.4, 3.3, and 3.2 (i.e. major versions > 3.0 on the
         #   FFmpeg download page).
 
+        # Source linting.
+        - python: "3.6"
+          env: TESTSUITE=flake8
+        - python: "3.6"
+          env: TESTSUITE=isort
+
+        # Source distribution.
+        - python: "3.6"
+          env: TESTSUITE=sdist
+
         # Python 3.6.
+        - python: "3.6"
+          env: LIBRARY=ffmpeg-4.1
+          os: linux
         - python: "3.6"
           env: LIBRARY=ffmpeg-4.0
           os: linux
@@ -59,6 +88,9 @@ matrix:
 
         # Python 2.7.
         - python: "2.7"
+          env: LIBRARY=ffmpeg-4.1
+          os: linux
+        - python: "2.7"
           env: LIBRARY=ffmpeg-4.0
           os: linux
         - python: "2.7"
@@ -73,6 +105,9 @@ matrix:
 
         # Mac OS X (python3.6)
         - language: generic
+          env: LIBRARY=ffmpeg-4.1
+          os: osx
+        - language: generic
           env: LIBRARY=ffmpeg-4.0
           os: osx
         - language: generic
@@ -86,11 +121,12 @@ matrix:
           os: osx
 
         # PyPy
-        # These are known to be broken.
         - python: "pypy"
+          dist: xenial
           env: LIBRARY=ffmpeg-4.0
           os: linux
         - python: "pypy3"
+          dist: xenial
           env: LIBRARY=ffmpeg-4.0
           os: linux
 
@@ -113,16 +149,12 @@ matrix:
 
     allow_failures:
 
-        - python: "pypy"
-          env: LIBRARY=ffmpeg-4.0
-          os: linux
         - python: "pypy3"
+          dist: xenial
           env: LIBRARY=ffmpeg-4.0
           os: linux
-
 
 before_install:
-    - scripts/travis-setup
     - scripts/build-deps
 
 install:

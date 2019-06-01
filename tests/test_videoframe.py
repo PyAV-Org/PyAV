@@ -1,10 +1,12 @@
 import warnings
+from unittest import SkipTest
 
 import numpy
+
 from av import VideoFrame
 from av.deprecation import AttributeRenamedWarning
 
-from .common import fate_png, is_py3, Image, SkipTest, TestCase
+from .common import Image, TestCase, fate_png, is_py3
 
 
 class TestVideoFrameConstructors(TestCase):
@@ -31,7 +33,7 @@ class TestVideoFrameConstructors(TestCase):
 class TestVideoFramePlanes(TestCase):
 
     def test_null_planes(self):
-        frame = VideoFrame() # yuv420p
+        frame = VideoFrame()  # yuv420p
         self.assertEqual(len(frame.planes), 0)
 
     def test_yuv420p_planes(self):
@@ -74,24 +76,22 @@ class TestVideoFramePlanes(TestCase):
 class TestVideoFrameBuffers(TestCase):
 
     def test_buffer(self):
-        try:
-            buffer
-        except NameError:
+        if not hasattr(__builtins__, 'buffer'):
             raise SkipTest()
+
         frame = VideoFrame(640, 480, 'rgb24')
         frame.planes[0].update(b'01234' + (b'x' * (640 * 480 * 3 - 5)))
-        buf = buffer(frame.planes[0])
+        buf = buffer(frame.planes[0])  # noqa
         self.assertEqual(buf[1], b'1')
         self.assertEqual(buf[:7], b'01234xx')
 
     def test_memoryview_read(self):
-        try:
-            memoryview
-        except NameError:
+        if not hasattr(__builtins__, 'memoryview'):
             raise SkipTest()
+
         frame = VideoFrame(640, 480, 'rgb24')
         frame.planes[0].update(b'01234' + (b'x' * (640 * 480 * 3 - 5)))
-        mem = memoryview(frame.planes[0])
+        mem = memoryview(frame.planes[0])  # noqa
         self.assertEqual(mem.ndim, 1)
         self.assertEqual(mem.shape, (640 * 480 * 3, ))
         self.assertFalse(mem.readonly)
@@ -176,10 +176,13 @@ class TestVideoFrameNdarray(TestCase):
             self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_gray_align(self):
+        array = numpy.random.randint(0, 256, size=(238, 318), dtype=numpy.uint8)
         for format in ['gray', 'gray8']:
-            frame = VideoFrame(318, 238, format=format)
-            array = frame.to_ndarray()
-            self.assertEqual(array.shape, (238, 318))
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, 'gray')
+            self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_rgb(self):
         array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
@@ -191,10 +194,13 @@ class TestVideoFrameNdarray(TestCase):
             self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_rgb_align(self):
+        array = numpy.random.randint(0, 256, size=(238, 318, 3), dtype=numpy.uint8)
         for format in ['rgb24', 'bgr24']:
-            frame = VideoFrame(318, 238, format=format)
-            array = frame.to_ndarray()
-            self.assertEqual(array.shape, (238, 318, 3))
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, format)
+            self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_rgba(self):
         array = numpy.random.randint(0, 256, size=(480, 640, 4), dtype=numpy.uint8)
@@ -206,10 +212,13 @@ class TestVideoFrameNdarray(TestCase):
             self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_rgba_align(self):
+        array = numpy.random.randint(0, 256, size=(238, 318, 4), dtype=numpy.uint8)
         for format in ['argb', 'rgba', 'abgr', 'bgra']:
-            frame = VideoFrame(318, 238, format=format)
-            array = frame.to_ndarray()
-            self.assertEqual(array.shape, (238, 318, 4))
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, format)
+            self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_yuv420p(self):
         array = numpy.random.randint(0, 256, size=(720, 640), dtype=numpy.uint8)
@@ -220,9 +229,12 @@ class TestVideoFrameNdarray(TestCase):
         self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_yuv420p_align(self):
-        frame = VideoFrame(318, 238, format='yuv420p')
-        array = frame.to_ndarray()
-        self.assertEqual(array.shape, (357, 318))
+        array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format='yuv420p')
+        self.assertEqual(frame.width, 318)
+        self.assertEqual(frame.height, 238)
+        self.assertEqual(frame.format.name, 'yuv420p')
+        self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_yuyv422(self):
         array = numpy.random.randint(0, 256, size=(480, 640, 2), dtype=numpy.uint8)
@@ -233,9 +245,12 @@ class TestVideoFrameNdarray(TestCase):
         self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_yuyv422_align(self):
-        frame = VideoFrame(318, 238, format='yuyv422')
-        array = frame.to_ndarray()
-        self.assertEqual(array.shape, (238, 318, 2))
+        array = numpy.random.randint(0, 256, size=(238, 318, 2), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format='yuyv422')
+        self.assertEqual(frame.width, 318)
+        self.assertEqual(frame.height, 238)
+        self.assertEqual(frame.format.name, 'yuyv422')
+        self.assertTrue((frame.to_ndarray() == array).all())
 
 
 class TestVideoFrameTiming(TestCase):
@@ -243,7 +258,7 @@ class TestVideoFrameTiming(TestCase):
     def test_reformat_pts(self):
         frame = VideoFrame(640, 480, 'rgb24')
         frame.pts = 123
-        frame.time_base = '456/1' # Just to be different.
+        frame.time_base = '456/1'  # Just to be different.
         frame = frame.reformat(320, 240)
         self.assertEqual(frame.pts, 123)
         self.assertEqual(frame.time_base, 456)
@@ -260,11 +275,11 @@ class TestVideoFrameReformat(TestCase):
 
         # This is allowed.
         frame = VideoFrame(640, 480, 'rgb24')
-        frame2 = frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
+        frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
 
         # I thought this was not allowed, but it seems to be.
         frame = VideoFrame(640, 480, 'yuv420p')
-        frame2 = frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
+        frame.reformat(src_colorspace=None, dst_colorspace='smpte240')
 
     def test_reformat_pixel_format_align(self):
         height = 480
@@ -274,9 +289,9 @@ class TestVideoFrameReformat(TestCase):
                 plane.update(b'\xff' * plane.buffer_size)
 
             expected_rgb = numpy.zeros(shape=(height, width, 3), dtype=numpy.uint8)
-            expected_rgb[:,:,0] = 255
-            expected_rgb[:,:,1] = 124
-            expected_rgb[:,:,2] = 255
+            expected_rgb[:, :, 0] = 255
+            expected_rgb[:, :, 1] = 124
+            expected_rgb[:, :, 2] = 255
 
             frame_rgb = frame_yuv.reformat(format='rgb24')
             array_rgb = frame_rgb.to_ndarray()

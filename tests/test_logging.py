@@ -1,12 +1,13 @@
 from __future__ import division
 
-from .common import *
-
 import logging
 import threading
 
 import av.logging
 import av.utils
+from av import AVError
+
+from .common import TestCase
 
 
 def do_log(message):

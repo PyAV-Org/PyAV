@@ -1,6 +1,7 @@
 autopep8
 Cython
 editorconfig
-nose
+flake8
+isort
 numpy
 Pillow

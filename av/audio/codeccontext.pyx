@@ -10,7 +10,6 @@ from av.utils cimport err_check
 
 cdef class AudioCodecContext(CodecContext):
 
-
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)
 
@@ -49,7 +48,8 @@ cdef class AudioCodecContext(CodecContext):
             if frame is not None:
                 self.fifo.write(frame)
             frames = self.fifo.read_many(self.ptr.frame_size, partial=is_flushing)
-
+            if is_flushing:
+                frames.append(None)
         else:
             frames = [frame]
 
@@ -79,6 +79,7 @@ cdef class AudioCodecContext(CodecContext):
         """
         def __get__(self):
             return self.ptr.sample_rate
+
         def __set__(self, int value):
             self.ptr.sample_rate = value
 
@@ -86,6 +87,7 @@ cdef class AudioCodecContext(CodecContext):
         """Another name for :attr:`sample_rate`."""
         def __get__(self):
             return self.sample_rate
+
         def __set__(self, value):
             self.sample_rate = value
 
@@ -93,6 +95,7 @@ cdef class AudioCodecContext(CodecContext):
     property channels:
         def __get__(self):
             return self.ptr.channels
+
         def __set__(self, value):
             self.ptr.channels = value
             self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
@@ -108,6 +111,7 @@ cdef class AudioCodecContext(CodecContext):
         """
         def __get__(self):
             return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
+
         def __set__(self, value):
             cdef AudioLayout layout = AudioLayout(value)
             self.ptr.channel_layout = layout.layout
@@ -121,6 +125,7 @@ cdef class AudioCodecContext(CodecContext):
         """
         def __get__(self):
             return get_audio_format(self.ptr.sample_fmt)
+
         def __set__(self, value):
             cdef AudioFormat format = AudioFormat(value)
             self.ptr.sample_fmt = format.sample_fmt

@@ -1,8 +1,8 @@
 import pickle
 
-from .common import *
+from av.enums import EnumType, define_enum
 
-from av.enums import *
+from .common import TestCase
 
 
 # This must be at the top-level.
@@ -29,6 +29,8 @@ class TestEnums(TestCase):
         self.assertEqual(foo.name, 'FOO')
         self.assertEqual(foo.value, 1)
 
+        self.assertNotIsInstance(foo, PickleableFooBar)
+
     def test_access(self):
 
         cls = self.define_foobar()
@@ -51,7 +53,6 @@ class TestEnums(TestCase):
         self.assertEqual(cls.get('FOO'), foo1)
         self.assertIs(cls.get('not a foo'), None)
 
-
     def test_casting(self):
 
         cls = self.define_foobar()
@@ -66,7 +67,6 @@ class TestEnums(TestCase):
         int_foo = int(foo)
         self.assertIsInstance(int_foo, int)
         self.assertEqual(int_foo, 1)
-
 
     def test_iteration(self):
         cls = self.define_foobar()
@@ -105,7 +105,6 @@ class TestEnums(TestCase):
         foo = cls.FOO
 
         enc = pickle.dumps(foo)
-        print(enc)
 
         foo2 = pickle.loads(enc)
 
@@ -131,7 +130,7 @@ class TestEnums(TestCase):
         self.assertIs(cls.F, cls.FOO)
 
         self.assertEqual(cls.F.name, 'FOO')
-        self.assertNotEqual(cls.F.name, 'F') # This is actually the string.
+        self.assertNotEqual(cls.F.name, 'F')  # This is actually the string.
 
         self.assertEqual(cls.F, 'FOO')
         self.assertEqual(cls.F, 'F')
@@ -181,7 +180,7 @@ class TestEnums(TestCase):
 
         self.assertRaises(KeyError, lambda: cls['FOO|BAR'])
 
-        self.assertEqual(len(cls), 2) # It didn't get bigger
+        self.assertEqual(len(cls), 2)  # It didn't get bigger
         self.assertEqual(list(cls), [foo, bar])
 
     def test_multi_flags_create_missing(self):
@@ -191,5 +190,5 @@ class TestEnums(TestCase):
         foobar = cls[3]
         self.assertIs(foobar, cls.FOO | cls.BAR)
 
-        self.assertRaises(KeyError, lambda: cls[4]) # Not FOO or BAR
-        self.assertRaises(KeyError, lambda: cls[7]) # FOO and BAR and missing flag.
+        self.assertRaises(KeyError, lambda: cls[4])  # Not FOO or BAR
+        self.assertRaises(KeyError, lambda: cls[7])  # FOO and BAR and missing flag.

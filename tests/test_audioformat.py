@@ -1,5 +1,8 @@
-from .common import *
-from av.audio.format import AudioFormat
+import sys
+
+from av import AudioFormat
+
+from .common import TestCase
 
 
 postfix = 'le' if sys.byteorder == 'little' else 'be'

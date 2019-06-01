@@ -9,6 +9,7 @@ from av.codec.context cimport wrap_codec_context
 from av.packet cimport Packet
 from av.utils cimport err_check, dict_to_avdict, avdict_to_dict, avrational_to_fraction, to_avrational
 
+from av import deprecation
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -23,7 +24,7 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
     """
 
     # This better be the right one...
-    assert container.proxy.ptr.streams[c_stream.index] == c_stream
+    assert container.ptr.streams[c_stream.index] == c_stream
 
     cdef Stream py_stream
 
@@ -58,24 +59,25 @@ cdef class Stream(object):
 
     cdef _init(self, Container container, lib.AVStream *stream):
 
-        self._container = container.proxy
-        self._weak_container = PyWeakref_NewRef(container, None)
+        self.container = container
         self._stream = stream
 
         self._codec_context = stream.codec
 
-        self.metadata = avdict_to_dict(stream.metadata,
-            encoding=self._container.metadata_encoding,
-            errors=self._container.metadata_errors,
+        self.metadata = avdict_to_dict(
+            stream.metadata,
+            encoding=self.container.metadata_encoding,
+            errors=self.container.metadata_errors,
         )
 
         # This is an input container!
-        if self._container.ptr.iformat:
+        if self.container.ptr.iformat:
 
             # Find the codec.
             self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
             if not self._codec:
                 # TODO: Setup a dummy CodecContext.
+                self.codec_context = None
                 return
 
         # This is an output container!
@@ -84,10 +86,6 @@ cdef class Stream(object):
 
         self.codec_context = wrap_codec_context(self._codec_context, self._codec, False)
         self.codec_context.stream_index = stream.index
-
-    def __dealloc__(self):
-        if self._codec_options:
-            lib.av_dict_free(&self._codec_options)
 
     def __repr__(self):
         return '<av.%s #%d %s/%s at 0x%x>' % (
@@ -99,11 +97,15 @@ cdef class Stream(object):
         )
 
     def __getattr__(self, name):
+        # avoid an infinite loop for unsupported codecs
+        if self.codec_context is None:
+            return
+
         try:
             return getattr(self.codec_context, name)
         except AttributeError:
             try:
-                return getattr(self.codec, name)
+                return getattr(self.codec_context.codec, name)
             except AttributeError:
                 raise AttributeError(name)
 
@@ -111,10 +113,11 @@ cdef class Stream(object):
         setattr(self.codec_context, name, value)
 
     cdef _finalize_for_output(self):
-        dict_to_avdict(&self._stream.metadata, self.metadata,
+        dict_to_avdict(
+            &self._stream.metadata, self.metadata,
             clear=True,
-            encoding=self._container.metadata_encoding,
-            errors=self._container.metadata_errors,
+            encoding=self.container.metadata_encoding,
+            errors=self.container.metadata_errors,
         )
         if not self._stream.time_base.num:
             self._stream.time_base = self._codec_context.time_base
@@ -138,14 +141,18 @@ cdef class Stream(object):
         """
         return self.codec_context.decode(packet)
 
+    @deprecation.method
     def seek(self, offset, whence='time', backward=True, any_frame=False):
         """
         .. seealso:: :meth:`.InputContainer.seek` for documentation on parameters.
             The only difference is that ``offset`` will be interpreted in
             :attr:`.Stream.time_base` when ``whence == 'time'``.
 
+        .. deprecated:: 6.1.0
+            Use :meth:`.InputContainer.seek` with ``stream`` argument instead.
+
         """
-        self._container.seek(self._stream.index, offset, whence, backward, any_frame)
+        self.container.seek(offset, whence, backward, any_frame, stream=self)
 
     property id:
         """
@@ -155,6 +162,7 @@ cdef class Stream(object):
         """
         def __get__(self):
             return self._stream.id
+
         def __set__(self, v):
             if v is None:
                 self._stream.id = 0
@@ -189,6 +197,7 @@ cdef class Stream(object):
         """
         def __get__(self):
             return avrational_to_fraction(&self._stream.time_base)
+
         def __set__(self, value):
             to_avrational(value, &self._stream.time_base)
 
@@ -246,3 +255,14 @@ cdef class Stream(object):
         """
         def __get__(self):
             return self.metadata.get('language')
+
+    @property
+    def type(self):
+        """
+        The type of the stream.
+
+        Examples: `'audio'`, `'video'`, `'subtitle'`.
+
+        :type: str
+        """
+        return lib.av_get_media_type_string(self._codec_context.codec_type)

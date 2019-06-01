@@ -175,13 +175,13 @@ cdef class Codec(object):
         :type: list of AudioFormat
         """
         if not self.ptr.sample_fmts:
-           return
+            return
 
         ret = []
         cdef int i = 0
         while self.ptr.sample_fmts[i] != -1:
-           ret.append(get_audio_format(self.ptr.sample_fmts[i]))
-           i += 1
+            ret.append(get_audio_format(self.ptr.sample_fmts[i]))
+            i += 1
         return ret
 
     # Capabilities.
@@ -245,13 +245,12 @@ cdef class Codec(object):
         def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
 
 
-
 cdef get_codec_names():
     names = set()
     cdef const lib.AVCodec *ptr
     cdef void *opaque = NULL
     while True:
-        ptr = pyav_codec_iterate(&opaque);
+        ptr = pyav_codec_iterate(&opaque)
         if ptr:
             names.add(ptr.name)
         else:

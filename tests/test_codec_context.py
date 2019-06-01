@@ -1,13 +1,12 @@
-from __future__ import print_function
-
+import os
 from fractions import Fraction
+from unittest import SkipTest
 
-from .common import *
-
-from av.buffer import Buffer
-from av.packet import Packet
+import av
+from av import AudioResampler, AVError, Codec, Packet
 from av.codec.codec import UnknownCodecError
-from av.audio.resampler import AudioResampler
+
+from .common import TestCase, fate_suite
 
 
 def iter_frames(container, stream):
@@ -23,22 +22,18 @@ def iter_raw_frames(path, packet_sizes, ctx):
             read_size = f.readinto(packet)
             assert size
             assert read_size == size
-            print(i + 1, size, read_size)
             if not read_size:
                 break
             for frame in ctx.decode(packet):
-                print('   ', frame)
                 yield frame
-        print('flushing...')
         while True:
             try:
                 frames = ctx.decode(None)
             except AVError as e:
-                if e.errno != 541478725: # EOF
+                if e.errno != 541478725:  # EOF
                     raise
                 break
             for frame in frames:
-                print('   ', frame)
                 yield frame
             if not frames:
                 break
@@ -135,7 +130,7 @@ class TestEncoding(TestCase):
         self.video_encoding('dvvideo', options)
 
     def test_encoding_dnxhd(self):
-        options = {'b': '90M', #bitrate
+        options = {'b': '90M',  # bitrate
                    'pix_fmt': 'yuv422p',
                    'width': 1920,
                    'height': 1080,
@@ -165,34 +160,30 @@ class TestEncoding(TestCase):
         ctx.time_base = time_base
         ctx.framerate = 1 / ctx.time_base
         ctx.pix_fmt = pix_fmt
-        ctx.options = options # TODO!
+        ctx.options = options  # TODO
         ctx.open()
 
         path = self.sandboxed('encoder.%s' % codec_name)
         packet_sizes = []
         frame_count = 0
-        test_bad = False # TODO
 
         with open(path, 'wb') as f:
 
             for frame in iter_frames(container, video_stream):
 
+                """
+                bad_frame = frame.reformat(width, 100, pix_fmt)
+                with self.assertRaises(ValueError):
+                    ctx.encode(bad_frame)
 
-                if test_bad:
+                bad_frame = frame.reformat(100, height, pix_fmt)
+                with self.assertRaises(ValueError):
+                    ctx.encode(bad_frame)
 
-                    bad_frame = frame.reformat(width, 100, pix_fmt)
-                    with self.assertRaises(ValueError):
-                        ctx.encode(bad_frame)
-
-                    bad_frame = frame.reformat(100, height, pix_fmt)
-                    with self.assertRaises(ValueError):
-                        ctx.encode(bad_frame)
-
-                    bad_frame = frame.reformat(width, height, "rgb24")
-                    with self.assertRaises(ValueError):
-                        ctx.encode(bad_frame)
-
-                    test_bad = False
+                bad_frame = frame.reformat(width, height, "rgb24")
+                with self.assertRaises(ValueError):
+                    ctx.encode(bad_frame)
+                """
 
                 if frame:
                     frame_count += 1
@@ -268,34 +259,30 @@ class TestEncoding(TestCase):
         samples = 0
         packet_sizes = []
 
-        test_bad = False
-
         with open(path, 'wb') as f:
             for frame in iter_frames(container, audio_stream):
 
                 # We need to let the encoder retime.
                 frame.pts = None
 
-                if test_bad:
+                """
+                bad_resampler = AudioResampler(sample_fmt, "mono", sample_rate)
+                bad_frame = bad_resampler.resample(frame)
+                with self.assertRaises(ValueError):
+                    next(encoder.encode(bad_frame))
 
-                    bad_resampler = AudioResampler(sample_fmt, "mono", sample_rate)
-                    bad_frame = bad_resampler.resample(frame)
-                    with self.assertRaises(ValueError):
-                        next(encoder.encode(bad_frame))
+                bad_resampler = AudioResampler(sample_fmt, channel_layout, 3000)
+                bad_frame = bad_resampler.resample(frame)
 
-                    bad_resampler = AudioResampler(sample_fmt, channel_layout, 3000)
-                    bad_frame = bad_resampler.resample(frame)
+                with self.assertRaises(ValueError):
+                    next(encoder.encode(bad_frame))
 
-                    with self.assertRaises(ValueError):
-                        next(encoder.encode(bad_frame))
+                bad_resampler = AudioResampler('u8', channel_layout, 3000)
+                bad_frame = bad_resampler.resample(frame)
 
-                    bad_resampler = AudioResampler('u8', channel_layout, 3000)
-                    bad_frame = bad_resampler.resample(frame)
-
-                    with self.assertRaises(ValueError):
-                        next(encoder.encode(bad_frame))
-
-                    test_bad = False
+                with self.assertRaises(ValueError):
+                    next(encoder.encode(bad_frame))
+                """
 
                 resampled_frame = resampler.resample(frame)
                 samples += resampled_frame.samples

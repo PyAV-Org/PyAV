@@ -2,7 +2,7 @@ from libc.string cimport memcpy
 
 cimport libav as lib
 
-from av.container.core cimport ContainerProxy
+from av.container.core cimport Container
 from av.utils cimport stash_exception
 
 
@@ -11,10 +11,10 @@ cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
         return pyio_read_gil(opaque, buf, buf_size)
 
 cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
-    cdef ContainerProxy self
+    cdef Container self
     cdef bytes res
     try:
-        self = <ContainerProxy>opaque
+        self = <Container>opaque
         res = self.fread(buf_size)
         memcpy(buf, <void*><char*>res, len(res))
         self.pos += len(res)
@@ -30,11 +30,11 @@ cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
         return pyio_write_gil(opaque, buf, buf_size)
 
 cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
-    cdef ContainerProxy self
+    cdef Container self
     cdef bytes bytes_to_write
     cdef int bytes_written
     try:
-        self = <ContainerProxy>opaque
+        self = <Container>opaque
         bytes_to_write = buf[:buf_size]
         ret_value = self.fwrite(bytes_to_write)
         bytes_written = ret_value if isinstance(ret_value, int) else buf_size
@@ -54,9 +54,9 @@ cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
         return pyio_seek_gil(opaque, offset, whence)
 
 cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
-    cdef ContainerProxy self
+    cdef Container self
     try:
-        self = <ContainerProxy>opaque
+        self = <Container>opaque
         res = self.fseek(offset, whence)
 
         # Track the position for the user.

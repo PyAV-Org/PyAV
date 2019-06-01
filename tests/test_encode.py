@@ -1,16 +1,21 @@
 from __future__ import division
 
 import math
+from fractions import Fraction
+from unittest import SkipTest
 
-from .common import *
-
-from av.video.stream import VideoStream
+import av
+from av import AudioFrame, VideoFrame
 from av.audio.stream import AudioStream
+from av.video.stream import VideoStream
+
+from .common import Image, TestCase, fate_suite
 
 
 WIDTH = 320
 HEIGHT = 240
 DURATION = 48
+
 
 def write_rgb_rotate(output):
 
@@ -47,7 +52,6 @@ def write_rgb_rotate(output):
 
 def assert_rgb_rotate(self, input_):
 
-
     # Now inspect it a little.
     self.assertEqual(len(input_.streams), 1)
     self.assertEqual(input_.metadata.get('title'), 'container', input_.metadata)
@@ -56,7 +60,7 @@ def assert_rgb_rotate(self, input_):
     self.assertIsInstance(stream, VideoStream)
     self.assertEqual(stream.type, 'video')
     self.assertEqual(stream.name, 'mpeg4')
-    self.assertEqual(stream.average_rate, 24) # Only because we constructed is precisely.
+    self.assertEqual(stream.average_rate, 24)  # Only because we constructed is precisely.
     self.assertEqual(stream.rate, Fraction(24, 1))
     self.assertEqual(stream.time_base * stream.duration, 2)
     self.assertEqual(stream.format.name, 'yuv420p')
@@ -120,6 +124,7 @@ class TestBasicAudioEncoding(TestCase):
         ctx.time_base = sample_rate
         ctx.sample_rate = sample_rate
         ctx.format = sample_fmt
+        ctx.layout = channel_layout
         ctx.channels = channels
 
         src = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))

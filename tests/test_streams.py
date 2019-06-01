@@ -1,4 +1,6 @@
-from .common import *
+import av
+
+from .common import TestCase, fate_suite
 
 
 class TestStreams(TestCase):
@@ -19,8 +21,8 @@ class TestStreams(TestCase):
 
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
         video = container.streams.video[0]
-        #audio_stream = container.streams.audio[0]
-        #audio_streams = list(container.streams.audio[0:2])
+        # audio_stream = container.streams.audio[0]
+        # audio_streams = list(container.streams.audio[0:2])
 
         self.assertEqual([video], container.streams.get(video=0))
         self.assertEqual([video], container.streams.get(video=(0, )))

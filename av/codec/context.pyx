@@ -9,7 +9,7 @@ from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
-from av.enums cimport EnumType, define_enum
+from av.enums cimport define_enum
 from av.packet cimport Packet
 from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational
 
@@ -41,15 +41,14 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     return py_ctx
 
 
-cdef EnumType _ThreadType = define_enum('ThreadType', (
+ThreadType = define_enum('ThreadType', (
     ('NONE', 0),
     ('FRAME', lib.FF_THREAD_FRAME),
     ('SLICE', lib.FF_THREAD_SLICE),
     ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME),
 ), is_flags=True)
-ThreadType = _ThreadType
 
-cdef EnumType _SkipType = define_enum('SkipType', (
+SkipType = define_enum('SkipType', (
     ('NONE', lib.AVDISCARD_NONE),
     ('DEFAULT', lib.AVDISCARD_DEFAULT),
     ('NONREF', lib.AVDISCARD_NONREF),
@@ -58,7 +57,6 @@ cdef EnumType _SkipType = define_enum('SkipType', (
     ('NONKEY', lib.AVDISCARD_NONKEY),
     ('ALL', lib.AVDISCARD_ALL),
 ))
-SkipType = _SkipType
 
 cdef class CodecContext(object):
 
@@ -71,10 +69,9 @@ cdef class CodecContext(object):
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('Cannot instantiate CodecContext')
-        
-        self.options = {}
-        self.stream_index = -1 # This is set by the container immediately.
 
+        self.options = {}
+        self.stream_index = -1  # This is set by the container immediately.
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
 
@@ -89,13 +86,13 @@ cdef class CodecContext(object):
         self.ptr.thread_count = 0
         self.ptr.thread_type = 2
 
-
     property extradata:
         def __get__(self):
             if self.ptr.extradata_size > 0:
                 return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
             else:
                 return None
+
         def __set__(self, data):
             self.extradata_source = bytesource(data)
             self.ptr.extradata = self.extradata_source.ptr
@@ -191,12 +188,12 @@ cdef class CodecContext(object):
                 self.parse_buffer_max_size = new_buffer_size
 
             # Copy to the end of the buffer.
-            c_input = input_ # for casting
+            c_input = input_  # for casting
             memcpy(self.parse_buffer + self.parse_buffer_size, c_input, len(input_))
             self.parse_buffer_size = new_buffer_size
 
         cdef size_t base = 0
-        cdef size_t used = 0 # To signal to the while.
+        cdef size_t used = 0  # To signal to the while.
         cdef Packet packet = None
         packets = []
 
@@ -384,6 +381,7 @@ cdef class CodecContext(object):
     property time_base:
         def __get__(self):
             return avrational_to_fraction(&self.ptr.time_base)
+
         def __set__(self, value):
             to_avrational(value, &self.ptr.time_base)
 
@@ -394,6 +392,7 @@ cdef class CodecContext(object):
     property bit_rate:
         def __get__(self):
             return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
+
         def __set__(self, int value):
             self.ptr.bit_rate = value
 
@@ -407,6 +406,7 @@ cdef class CodecContext(object):
     property bit_rate_tolerance:
         def __get__(self):
             self.ptr.bit_rate_tolerance
+
         def __set__(self, int value):
             self.ptr.bit_rate_tolerance = value
 
@@ -415,21 +415,26 @@ cdef class CodecContext(object):
     property thread_count:
         def __get__(self):
             return self.ptr.thread_count
+
         def __set__(self, int value):
             if lib.avcodec_is_open(self.ptr):
                 raise RuntimeError("Cannot change thread_count after codec is open.")
             self.ptr.thread_count = value
 
     property thread_type:
+        """One of :class:`.ThreadType`."""
         def __get__(self):
-            return _ThreadType.get(self.ptr.thread_type, create=True)
+            return ThreadType.get(self.ptr.thread_type, create=True)
+
         def __set__(self, value):
             if lib.avcodec_is_open(self.ptr):
                 raise RuntimeError("Cannot change thread_type after codec is open.")
-            self.ptr.thread_type = _ThreadType[value].value
+            self.ptr.thread_type = ThreadType[value].value
 
     property skip_frame:
+        """One of :class:`.SkipType`."""
         def __get__(self):
-            return _SkipType._get(self.ptr.skip_frame, create=True)
+            return SkipType._get(self.ptr.skip_frame, create=True)
+
         def __set__(self, value):
-            self.ptr.skip_frame = _SkipType[value].value
+            self.ptr.skip_frame = SkipType[value].value

@@ -2,7 +2,7 @@ import warnings
 
 from av import deprecation
 
-from .common import *
+from .common import TestCase
 
 
 class TestDeprecations(TestCase):
@@ -30,10 +30,10 @@ class TestDeprecations(TestCase):
 
             new_value = 'foo'
             old_value = deprecation.renamed_attr('new_value')
-            
+
             def new_func(self, a, b):
                 return a + b
-                
+
             old_func = deprecation.renamed_attr('new_func')
 
         obj = Example()
@@ -45,7 +45,6 @@ class TestDeprecations(TestCase):
 
             obj.old_value = 'bar'
             self.assertIn('Example.old_value is deprecated', captured[1].message.args[0])
-
 
         with warnings.catch_warnings(record=True) as captured:
             self.assertEqual(obj.old_func(1, 2), 3)

@@ -1,11 +1,12 @@
 from __future__ import division
 
-import math
+import unittest
+import warnings
 
-from .common import *
-
-from av.packet import Packet
+import av
 from av import time_base as AV_TIME_BASE
+
+from .common import TestCase, fate_suite
 
 
 def timestamp_to_frame(timestamp, stream):
@@ -69,7 +70,6 @@ class TestSeek(TestCase):
         for packet in container.demux():
             seek_packet_count += 1
 
-
         self.assertTrue(seek_packet_count < total_packet_count)
 
     def test_seek_end(self):
@@ -130,7 +130,7 @@ class TestSeek(TestCase):
 
         self.assertEqual(frame_count, total_frame_count - target_frame)
 
-    def test_stream_seek(self):
+    def test_stream_seek(self, use_deprecated_api=False):
 
         container = av.open(fate_suite('h264/interlaced_crop.mp4'))
 
@@ -150,7 +150,13 @@ class TestSeek(TestCase):
 
         target_timestamp = int(target_sec / time_base) + video_stream.start_time
 
-        video_stream.seek(target_timestamp)
+        if use_deprecated_api:
+            with warnings.catch_warnings(record=True) as captured:
+                video_stream.seek(target_timestamp)
+            self.assertEqual(len(captured), 1)
+            self.assertIn('Stream.seek is deprecated.', captured[0].message.args[0])
+        else:
+            container.seek(target_timestamp, stream=video_stream)
 
         current_frame = None
         frame_count = 0
@@ -168,6 +174,9 @@ class TestSeek(TestCase):
                     frame_count += 1
 
         self.assertEqual(frame_count, total_frame_count - target_frame)
+
+    def test_deprecated_stream_seek(self):
+        self.test_stream_seek(use_deprecated_api=True)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,8 @@ All contributors (by number of commits):
 
 email_map = {
 
-    # Me.
+    # Maintainers.
+    'git@mikeboers.com': 'github@mikeboers.com',
     'mboers@keypics.com': 'github@mikeboers.com',
     'mikeb@loftysky.com': 'github@mikeboers.com',
     'mikeb@markmedia.co': 'github@mikeboers.com',

@@ -1,5 +1,6 @@
-from .common import *
-from av.audio.layout import AudioLayout
+from av import AudioLayout
+
+from .common import TestCase
 
 
 class TestAudioLayout(TestCase):

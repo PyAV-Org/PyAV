@@ -4,7 +4,6 @@ from av.container.core cimport Container
 from av.stream cimport Stream
 
 
-
 cdef class OutputContainer(Container):
 
     cdef bint _started

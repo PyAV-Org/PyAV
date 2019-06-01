@@ -1,8 +1,7 @@
-import sys
+import av
+from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
 
-from .common import *
-
-from av.subtitles.subtitle import *
+from .common import TestCase, fate_suite
 
 
 class TestSubtitle(TestCase):
@@ -44,6 +43,6 @@ class TestSubtitle(TestCase):
         bms = sub.planes
         self.assertEqual(len(bms), 1)
         if hasattr(__builtins__, 'buffer'):
-            self.assertEqual(len(buffer(bms[0])), 4800)
+            self.assertEqual(len(buffer(bms[0])), 4800)  # noqa
         if hasattr(__builtins__, 'memoryview'):
-            self.assertEqual(len(memoryview(bms[0])), 4800)
+            self.assertEqual(len(memoryview(bms[0])), 4800)  # noqa

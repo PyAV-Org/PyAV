@@ -21,7 +21,7 @@ cdef class AudioResampler(object):
     # Destination descriptors
     cdef readonly AudioFormat format
     cdef readonly AudioLayout layout
-    cdef readonly unsigned int rate
+    cdef readonly int rate
 
     # Retiming.
     cdef readonly uint64_t samples_in
