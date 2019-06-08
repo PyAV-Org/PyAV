@@ -31,12 +31,12 @@ If you want to use your existing FFmpeg/Libav, the C-source version of PyAV is o
 pip install av
 ```
 
-And if you want to build from the absolute source (for development or testing):
+And if you want to build from the absolute source (for development or testing, make sure dependencies like virtualenv and Cython have been installed):
 
 ```
 git clone git@github.com:mikeboers/PyAV
 cd PyAV
-source scripts/activate
+source scripts/activate.sh
 make
 ```
 
