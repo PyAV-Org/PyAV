@@ -125,8 +125,5 @@ def main(duration):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Usage: {0} <duration>'.format(sys.argv[0]))
-        exit(1)
-
-    main(float(sys.argv[1]))
+    duration = 1.0 if len(sys.argv) < 2 else float(sys.argv[1])
+    main(duration)
