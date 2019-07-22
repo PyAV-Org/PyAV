@@ -322,25 +322,54 @@ cdef class BufferedDecoder(object):
         cdef long long seek_offset
         cdef int end_idx
         cdef CircularBuffer tmp_buf
-        cdef lib.AVFrame *start_frm
-        cdef lib.AVFrame *end_frm
+        cdef lib.AVFrame *start_frame
+        cdef lib.AVFrame *tmp_frame
 
         #end_idx = self.buf_end - 1
         #if end_idx < 0:
         #    end_idx = self.dec_buffer_size - 1
 
-
         ext_seek = False
         if self.active_buffer.count() < 3:
             ext_seek = True
         else:
-            start_frm = self.active_buffer.at(0)
-            if start_frm.pts < seek_pts < self.active_buffer.last_pts:
-                #print("Seeking inside buffer!")
-                seek_offset = self.pts_to_idx(seek_pts - start_frm.pts)
-                self.active_buffer.forward(seek_offset)
-            else:
+            start_frame = self.active_buffer.at(0)
+
+            if not start_frame:
+                # This should never happen if used correctly, but we can still
+                # handle it gracefully.
+                print("Error accessing start frame!")
                 ext_seek = True
+
+            elif start_frame.pts <= seek_pts <= self.active_buffer.last_pts:
+                # Binary search through buffer
+                # TODO: Can be done more efficiently directly in the buffer.
+                target_idx = -1
+                left = 0
+                right = self.active_buffer.count() - 1
+                while left <= right:
+                    mid = (left + right) // 2
+                    tmp_frame = self.active_buffer.at(mid)
+                    if tmp_frame.pts == seek_pts:
+                        target_idx = mid
+                        break
+                    elif tmp_frame.pts < seek_pts:
+                        left = mid + 1
+                    else:
+                        right = mid - 1
+
+                if target_idx == -1:
+                    print(f"Warn: no frame found with pts {seek_pts}! Taking next one!")
+                    # TODO: determine closest one?
+                    # Note: we know have right < left!
+                    target_idx = left
+                
+                self.active_buffer.forward(target_idx)
+
+            else:
+                # seek_pts is not in buffer
+                ext_seek = True
+
         if ext_seek:
             #if self.active_buffer.count() > 2:
             #    print("Ext seek to {} last buf pts is {}".format(seek_pts, self.active_buffer.last_pts))
@@ -358,7 +387,3 @@ cdef class BufferedDecoder(object):
             #print("Switched buffers")
 
             self.buffering_sem.release()
-
-
-    cdef long long pts_to_idx(self, long long pts):
-        return pts // self.pts_rate

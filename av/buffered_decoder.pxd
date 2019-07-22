@@ -28,7 +28,6 @@ cdef class CircularBuffer:
 
 
 cdef class BufferedDecoder(object):
-    cdef long long pts_to_idx(self, long long pts)
     cpdef buffering_thread(self)
     cdef:
         CircularBuffer active_buffer
