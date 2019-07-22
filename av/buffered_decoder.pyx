@@ -28,6 +28,10 @@ cdef class CircularBuffer:
         self.last_pts = -1
 
     def __dealloc__(self):
+        for i in range(self.buffer_size):
+            frame = self.at(i)
+            if frame:
+                lib.av_frame_free(&frame)
         free(self.buffer)
 
     cdef:
