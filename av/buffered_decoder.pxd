@@ -34,10 +34,8 @@ cdef class BufferedDecoder(object):
         CircularBuffer standby_buffer
         CircularBuffer backlog_buffer
         int dec_batch
-        int pts_rate
         long long external_seek
         bint eos
-        object next_frame
         object buffering_sem
         object buffering_lock
         object av_lock

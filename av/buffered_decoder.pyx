@@ -116,11 +116,6 @@ cdef class BufferedDecoder(object):
         self.dec_batch = dec_batch
         self.external_seek = -1
         self.buffered_stream.seek(0)
-        self.next_frame = self.decode(container, stream)
-        f1, f2 = next(self.next_frame), next(self.next_frame)
-        self.pts_rate = f2.pts
-        self.buffered_stream.seek(0)
-        #self.next_frame = self.decode(container, stream)
         self.buffering_sem = Semaphore()
         self.buffering_lock = Lock()
         self.av_lock = Lock()
