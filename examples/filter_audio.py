@@ -4,6 +4,7 @@ Simple audio filtering example ported from C code:
 """
 from __future__ import division, print_function
 
+import errno
 import hashlib
 import sys
 from fractions import Fraction
@@ -13,7 +14,7 @@ import numpy as np
 import av
 import av.audio.frame as af
 import av.filter
-
+from av.utils import AV_ERROR_EOF
 
 FRAME_SIZE = 1024
 
@@ -108,10 +109,10 @@ def main(duration):
                 out_frame = graph.pull()
                 process_output(out_frame)
             except av.AVError as ex:
-                if ex.errno != 11:
-                    raise ex
-                else:
+                if ex.errno == errno.EAGAIN or ex.errno == AV_ERROR_EOF:
                     break
+                else:
+                    raise ex
 
     # process any remaining buffered frames
     while True:
@@ -119,10 +120,10 @@ def main(duration):
             out_frame = graph.pull()
             process_output(out_frame)
         except av.AVError as ex:
-            if ex.errno != 11:
-                raise ex
-            else:
+            if ex.errno == errno.EAGAIN or ex.errno == AV_ERROR_EOF:
                 break
+            else:
+                raise ex
 
 
 if __name__ == '__main__':
