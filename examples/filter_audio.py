@@ -16,6 +16,7 @@ import av.audio.frame as af
 import av.filter
 from av.utils import AV_ERROR_EOF
 
+
 FRAME_SIZE = 1024
 
 INPUT_SAMPLE_RATE = 48000
