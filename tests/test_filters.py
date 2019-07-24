@@ -1,5 +1,4 @@
 import errno
-
 from fractions import Fraction
 from unittest import SkipTest
 
