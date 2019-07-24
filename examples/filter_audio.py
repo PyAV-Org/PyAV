@@ -78,10 +78,10 @@ def get_input(frame_num):
     frame.pts = frame_num * FRAME_SIZE
 
     for i in range(len(frame.layout.channels)):
+        data = np.zeros(FRAME_SIZE, dtype=af.format_dtypes[INPUT_FORMAT])
         for j in range(FRAME_SIZE):
-            data = np.zeros(FRAME_SIZE, dtype=af.format_dtypes[INPUT_FORMAT])
-            data[j] = np.sin(2 * np.pi * (frame_num + j) * (i + 1) / FRAME_SIZE)
-            frame.planes[i].update(data)
+            data[j] = np.sin(2 * np.pi * (frame_num + j) * (i + 1) / float(FRAME_SIZE))
+        frame.planes[i].update(data)
 
     return frame
 
