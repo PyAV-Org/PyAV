@@ -1,8 +1,9 @@
 import errno
-import numpy as np
 
 from fractions import Fraction
 from unittest import SkipTest
+
+import numpy as np
 
 from av import AudioFrame, AVError, VideoFrame
 from av.audio.frame import format_dtypes
