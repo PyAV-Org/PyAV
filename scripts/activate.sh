@@ -39,7 +39,7 @@ fi
 export PYAV_PYTHON
 export PYAV_PIP="${PYAV_PIP-$PYAV_PYTHON -m pip}"
 
-if [[ "$TRAVIS" ]]; then
+if [[ "$TRAVIS" ]] && [[ "$TRAVIS_OS_NAME" != "osx" ]]; then
 
     # Travis as a very self-contained environment. Lets just work in that.
     echo "We're on Travis, so not setting up another virtualenv."
