@@ -148,11 +148,7 @@ else:
 # The "extras" to be supplied to every one of our modules.
 # This is expanded heavily by the `config` command.
 extension_extra = {
-    "include_dirs": [
-        "include",
-        "/Users/papr/.py37/lib/python3.7/site-packages/cysignals/",
-    ]
-    + ffmpeg_include,  # The first are PyAV's includes.
+    "include_dirs": ["include"] + ffmpeg_include,  # The first are PyAV's includes.
     "libraries": [],
     "library_dirs": ffmpeg_lib,
 }
@@ -192,10 +188,12 @@ if os.name == "nt":
             return False
 
     distclass = BinaryDistribution
+    setup_requires = []
 
 else:
 
     distclass = Distribution
+    setup_requires = ["cysignals"]
 
 
 # Monkey-patch for CCompiler to be silent.
@@ -760,7 +758,7 @@ setup(
     packages=find_packages(exclude=["build*", "tests*", "examples*"]),
     zip_safe=False,
     ext_modules=ext_modules,
-    setup_requires=["cysignals"],
+    setup_requires=setup_requires,
     cmdclass={
         "build_ext": BuildExtCommand,
         "clean": CleanCommand,
