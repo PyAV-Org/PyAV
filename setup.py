@@ -44,7 +44,7 @@ is_py3 = sys.version_info[0] >= 3
 
 
 # We will embed this metadata into the package so it can be recalled for debugging.
-version = "0.4.2.dev0"
+version = "0.4.3"
 try:
     git_commit, _ = Popen(
         ["git", "describe", "--tags"], stdout=PIPE, stderr=PIPE
@@ -791,5 +791,4 @@ setup(
         "Topic :: Multimedia :: Video :: Conversion",
     ],
     distclass=distclass,
-
 )
