@@ -24,6 +24,8 @@ addons:
             - yasm
             - zlib1g-dev
     homebrew:
+        # Unfortunately, as of writing, we need to update Homebrew.
+        update: true
         packages:
             - automake
             - libass
