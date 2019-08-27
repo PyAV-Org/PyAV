@@ -1,3 +1,35 @@
+"""
+FFmpeg has a logging system that it uses extensively. PyAV hooks into that system
+to translate FFmpeg logs into Python's
+`logging system <https://docs.python.org/3/library/logging.html#logging.basicConfig>`_.
+
+If you are not already using Python's logging system, you can initialize it
+quickly with::
+
+    import logging
+    logging.basicConfig()
+
+
+.. _disable_logging:
+
+Disabling Logging
+~~~~~~~~~~~~~~~~~
+
+You can disable hooking the logging system with an environment variable::
+
+    export PYAV_LOGGING=off
+
+or at runtime with :func:`restore_default_callback`.
+
+This will leave (or restore) the FFmpeg logging system, which prints to the terminal.
+This may also result in raised errors having less detailed messages.
+
+
+API Reference
+~~~~~~~~~~~~~
+
+"""
+
 from __future__ import absolute_import
 
 from libc.stdio cimport printf, fprintf, stderr
@@ -7,6 +39,7 @@ cimport libav as lib
 
 from threading import Lock
 import logging
+import os
 import sys
 
 try:
@@ -28,7 +61,7 @@ WARNING = lib.AV_LOG_WARNING
 INFO = lib.AV_LOG_INFO
 VERBOSE = lib.AV_LOG_VERBOSE
 DEBUG = lib.AV_LOG_DEBUG
-# TRACE  = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
+TRACE  = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
 
 # Mimicking stdlib.
 CRITICAL = FATAL
@@ -49,7 +82,7 @@ cpdef adapt_level(int level):
         return 10  # logging.DEBUG
     elif level <= lib.AV_LOG_DEBUG:
         return 5  # Lower than any logging constant.
-    else:
+    else:  # lib.AV_LOG_TRACE
         return 1  # ... yeah.
 
 
@@ -64,14 +97,14 @@ if 'libav' not in logging.Logger.manager.loggerDict:
 
 
 def get_level():
-    """Return current logging threshold. See :func:`set_level`."""
+    """Return current FFmpeg logging threshold. See :func:`set_level`."""
     return level_threshold
 
 
 def set_level(int level):
     """set_level(level)
 
-    Sets logging threshold when converting from the library's logging system
+    Sets logging threshold when converting from FFmpeg's logging system
     to Python's. It is recommended to use the constants availible in this
     module to set the level: ``QUIET``, ``PANIC``, ``FATAL``, ``ERROR``,
     ``WARNING``, ``INFO``, ``VERBOSE``, and ``DEBUG``.
@@ -84,13 +117,18 @@ def set_level(int level):
     PyAV defaults to translating everything except ``AV_LOG_DEBUG``, so this
     function is only nessesary to use if you want to see those messages as well.
     ``AV_LOG_DEBUG`` will be translated to a level 5 message, which is lower
-    than any builting Python logging level, so you must lower that as well::
+    than any builtin Python logging level, so you must lower that as well::
 
         logging.getLogger().setLevel(5)
 
     """
     global level_threshold
     level_threshold = level
+
+
+def restore_default_callback():
+    """Revert back to FFmpeg's log callback, which prints to the terminal."""
+    lib.av_log_set_callback(lib.av_log_default_callback)
 
 
 cdef bint print_after_shutdown = False
@@ -142,7 +180,7 @@ cdef thread_captures = {}
 
 cdef class Capture(object):
 
-    """Context manager for capturing logs.
+    """A context manager for capturing logs.
 
     :param bool local: Should logs from all threads be captured, or just one
         this object is constructed in?
@@ -156,16 +194,14 @@ cdef class Capture(object):
 
     """
 
-    cdef readonly bint local
     cdef readonly list logs
     cdef list captures
 
-    def __init__(self, local=True):
+    def __init__(self, bint local=True):
 
-        self.local = local
         self.logs = []
 
-        if self.local:
+        if local:
             self.captures = thread_captures.setdefault(get_ident(), [])
         else:
             self.captures = global_captures
@@ -313,4 +349,7 @@ cdef log_callback_emit(log):
 
 
 # Start the magic!
-lib.av_log_set_callback(log_callback)
+# We allow the user to fully disable the logging system as it will not play
+# nicely with subinterpreters due to FFmpeg-created threads.
+if os.environ.get('PYAV_LOGGING') != 'off':
+    lib.av_log_set_callback(log_callback)

@@ -66,6 +66,7 @@ Overview
 
     about
     installation
+    caveats
 
 
 Cookbook
