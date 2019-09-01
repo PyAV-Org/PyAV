@@ -167,7 +167,7 @@ cdef class CodecContext(object):
             id(self),
         )
 
-    def parse(self, str input_, allow_stream=False):
+    def parse(self, bytes input_, allow_stream=False):
 
         if not self.parser:
             self.parser = lib.av_parser_init(self.codec.ptr.id)
