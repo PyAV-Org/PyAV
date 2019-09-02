@@ -20,6 +20,7 @@ This is a bug encountered while building or installing PyAV. If you can import a
 ## Actual behavior
 {{ A clear and concise description of what actually happened. }}
 
+Build report:
 ```
 {{ Complete output of `python setup.py build`. Reports that do not show compiler commands will not be accepted (e.g. results from `pip install av`). }}
 ```
@@ -32,9 +33,13 @@ This is a bug encountered while building or installing PyAV. If you can import a
 
 ## Versions
 - OS: {{ e.g. macOS 10.13.6 }}
-- PyAV:
+- PyAV runtime:
 ```
-{{ Complete output of `python -m av --version` if you can run it, otherwise the PyPI version or git commit. }}
+{{ Complete output of `python -m av --version` if you can run it. }}
+```
+- PyAV build:
+```
+{{ Complete output of `python setup.py config --verbose`. }}
 ```
 - FFmpeg:
 ```

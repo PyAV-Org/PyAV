@@ -169,7 +169,7 @@ config_macros = {
 def dump_config():
     """Print out all the config information we have so far (for debugging)."""
     print('PyAV:', version, git_commit or '(unknown commit)')
-    print('Python:', sys.version.encode('unicode_escape' if PY3 else 'string-escape'))
+    print('Python:', sys.version.encode('unicode_escape' if PY3 else 'string-escape').decode())
     print('platform:', platform.platform())
     print('extension_extra:')
     for k, vs in extension_extra.items():
@@ -301,6 +301,8 @@ class ConfigCommand(Command):
     user_options = [
         ('no-pkg-config', None,
          "do not use pkg-config to configure dependencies"),
+        ('verbose', None,
+         "dump out configuration"),
         ('compiler=', 'c',
          "specify the compiler type"), ]
 
@@ -360,6 +362,9 @@ class ConfigCommand(Command):
                 # We don't need macros for these, since they all must exist.
             else:
                 errors.append('Could not find ' + name + ' with pkg-config.')
+
+        if self.verbose:
+            dump_config()
 
         # Don't continue if we have errors.
         # TODO: Warn Ubuntu 12 users that they can't satisfy requirements with the

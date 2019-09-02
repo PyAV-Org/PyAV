@@ -20,6 +20,7 @@ This is a bug encountered while using PyAV. If you cannot build or import PyAV, 
 ## Actual behavior
 {{ A clear and concise description of what actually happened. }}
 
+Traceback:
 ```
 {{ Include complete tracebacks if there are any exceptions. }}
 ```
@@ -32,9 +33,13 @@ This is a bug encountered while using PyAV. If you cannot build or import PyAV, 
 
 ## Versions
 - OS: {{ e.g. macOS 10.13.6 }}
-- PyAV:
+- PyAV runtime:
 ```
-{{ Complete output of `python -m av --version`. }}
+{{ Complete output of `python -m av --version`. If this command won't run, you are likely dealing with the build issue and should use the appropriate template. }}
+```
+- PyAV build:
+```
+{{ Complete output of `python setup.py config --verbose`. }}
 ```
 - FFmpeg:
 ```
