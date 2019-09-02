@@ -2,7 +2,7 @@
 name: Build bug report
 about: Report on an issue while building PyAV.
 title: "[BUILD] The foo does not build."
-labels: bug
+labels: build
 assignees: ''
 
 ---
