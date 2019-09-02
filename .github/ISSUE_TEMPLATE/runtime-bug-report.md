@@ -1,23 +1,27 @@
 ---
 name: Runtime bug report
 about: Report on an issue while running PyAV.
-title: "[BUG] The foo does not bar."
+title: "The FOO does not BAR."
 labels: bug
 assignees: ''
 
 ---
 
-This is a bug encountered while using PyAV. If you cannot build or import PyAV, it is considered a build issue and you must use the appropriate template.
-
 **IMPORTANT:** Be sure to fill in all applicable sections {{ in braces }} or your issue may be discarded.
 
+
 ## Overview
+
 {{ A clear and concise description of what the bug is. }}
 
+
 ## Expected behavior
+
 {{ A clear and concise description of what you expected to happen. }}
 
+
 ## Actual behavior
+
 {{ A clear and concise description of what actually happened. }}
 
 Traceback:
@@ -25,13 +29,19 @@ Traceback:
 {{ Include complete tracebacks if there are any exceptions. }}
 ```
 
+
 ## Investigation
+
 {{ What you did to isolate the problem. }}
 
+
 ## Reproduction
+
 {{ Steps to reproduce the behavior. If the problem is media specific, include a link to it. Only send media that you have the rights to. }}
 
+
 ## Versions
+
 - OS: {{ e.g. macOS 10.13.6 }}
 - PyAV runtime:
 ```
@@ -46,5 +56,19 @@ Traceback:
 {{ Complete output of `ffmpeg -version` }}
 ```
 
+
+## Research
+
+I have done the following:
+
+- [ ] Checked the [PyAV documentation](http://docs.mikeboers.com/pyav/stable/)
+- [ ] Searched on [Google](https://www.google.com/search?q=pyav+how+do+I+foo)
+- [ ] Searched on [Stack Overflow](https://stackoverflow.com/search?q=pyav)
+- [ ] Looked through [old GitHub issues](https://github.com/mikeboers/PyAV/issues?&q=is%3Aissue)
+- [ ] Asked on [PyAV Gitter](https://gitter.im/mikeboers/PyAV)
+- [ ] ... and waited 72 hours for a response.
+
+
 ## Additional context
+
 {{ Add any other context about the problem here. }}

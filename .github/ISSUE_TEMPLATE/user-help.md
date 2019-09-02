@@ -1,8 +1,8 @@
 ---
-name: Build bug report
-about: Report on an issue while building or installing PyAV.
-title: "FOO does not build."
-labels: build
+name: User help
+about: Request help with using PyAV.
+title: "How do I FOO?"
+labels: 'user help'
 assignees: ''
 
 ---
@@ -12,7 +12,7 @@ assignees: ''
 
 ## Overview
 
-{{ A clear and concise description of what the bug is. }}
+{{ A clear and concise description of your problem. }}
 
 
 ## Expected behavior
@@ -24,37 +24,15 @@ assignees: ''
 
 {{ A clear and concise description of what actually happened. }}
 
-Build report:
+Traceback:
 ```
-{{ Complete output of `python setup.py build`. Reports that do not show compiler commands will not be accepted (e.g. results from `pip install av`). }}
+{{ Include complete tracebacks if there are any exceptions. }}
 ```
 
 
 ## Investigation
 
-{{ What you did to isolate the problem. }}
-
-
-## Reproduction
-
-{{ Steps to reproduce the behavior. }}
-
-
-## Versions
-
-- OS: {{ e.g. macOS 10.13.6 }}
-- PyAV runtime:
-```
-{{ Complete output of `python -m av --version` if you can run it. }}
-```
-- PyAV build:
-```
-{{ Complete output of `python setup.py config --verbose`. }}
-```
-- FFmpeg:
-```
-{{ Complete output of `ffmpeg -version` }}
-```
+{{ What you tried so far to fix your problem. }}
 
 
 ## Research
