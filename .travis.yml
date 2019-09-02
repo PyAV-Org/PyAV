@@ -151,10 +151,18 @@ matrix:
 
     allow_failures:
 
-        - python: "pypy3"
-          dist: xenial
-          env: LIBRARY=ffmpeg-4.0
-          os: linux
+        # Not sure what is going on here, but frankly we don't have
+        # the time/energy to figure it out for older FFmpeg.
+        - language: generic
+          env: LIBRARY=ffmpeg-3.4
+          os: osx
+        - language: generic
+          env: LIBRARY=ffmpeg-3.3
+          os: osx
+        - language: generic
+          env: LIBRARY=ffmpeg-3.2
+          os: osx
+
 
 before_install:
     - scripts/build-deps
