@@ -20,6 +20,10 @@ We are operating with `semantic versioning <http://semver.org>`_.
 HEAD
 ----
 
+Minor:
+
+- Users can disable the logging system to avoid lockups in sub-interpreters. (:issue:`545`)
+
 
 v6.2.0
 ------

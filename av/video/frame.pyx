@@ -83,6 +83,9 @@ cdef class VideoFrame(Frame):
         self._init(c_format, width, height)
 
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height):
+
+        cdef int res = 0
+
         with nogil:
             self.ptr.width = width
             self.ptr.height = height
@@ -93,16 +96,17 @@ cdef class VideoFrame(Frame):
             # We enforce aligned buffers, otherwise `sws_scale` can perform
             # poorly or even cause out-of-bounds reads and writes.
             if width and height:
-                ret = lib.av_image_alloc(
+                res = lib.av_image_alloc(
                     self.ptr.data,
                     self.ptr.linesize,
                     width,
                     height,
                     format,
                     16)
-                with gil:
-                    err_check(ret)
                 self._buffer = self.ptr.data[0]
+
+        if res:
+            err_check(res)
 
         self._init_user_attributes()
 

@@ -327,4 +327,5 @@ cdef extern from "libavutil/log.h" nogil:
 
     # Get the logs.
     ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
+    void av_log_default_callback(void *, int, const char *, va_list)
     void av_log_set_callback (av_log_callback callback)
