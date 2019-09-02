@@ -61,7 +61,7 @@ WARNING = lib.AV_LOG_WARNING
 INFO = lib.AV_LOG_INFO
 VERBOSE = lib.AV_LOG_VERBOSE
 DEBUG = lib.AV_LOG_DEBUG
-TRACE  = lib.AV_LOG_TRACE # 56 # Does not exist in ffmpeg <= 2.2.4.
+TRACE = lib.AV_LOG_TRACE
 
 # Mimicking stdlib.
 CRITICAL = FATAL
