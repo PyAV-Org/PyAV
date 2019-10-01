@@ -216,6 +216,30 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     cdef int AV_NUM_DATA_POINTERS
 
+    cdef enum AVFrameSideDataType:
+        AV_FRAME_DATA_PANSCAN
+        AV_FRAME_DATA_A53_CC
+        AV_FRAME_DATA_STEREO3D
+        AV_FRAME_DATA_MATRIXENCODING
+        AV_FRAME_DATA_DOWNMIX_INFO
+        AV_FRAME_DATA_REPLAYGAIN
+        AV_FRAME_DATA_DISPLAYMATRIX
+        AV_FRAME_DATA_AFD
+        AV_FRAME_DATA_MOTION_VECTORS
+        AV_FRAME_DATA_SKIP_SAMPLES
+        AV_FRAME_DATA_AUDIO_SERVICE_TYPE
+        AV_FRAME_DATA_MASTERING_DISPLAY_METADATA
+        AV_FRAME_DATA_GOP_TIMECODE
+        AV_FRAME_DATA_SPHERICAL
+        AV_FRAME_DATA_CONTENT_LIGHT_LEVEL
+        AV_FRAME_DATA_ICC_PROFILE
+
+    cdef struct AVFrameSideData:
+        AVFrameSideDataType type
+        uint8_t *data
+        int size
+        AVDictionary *metadata
+
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
     cdef struct AVFrame:
         uint8_t *data[4];
