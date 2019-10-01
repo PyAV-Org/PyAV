@@ -11,3 +11,4 @@ cdef extern from "libavutil/frame.h" nogil:
     cdef int av_frame_make_writable(AVFrame *frame)
     cdef int av_frame_copy(AVFrame *dst, const AVFrame *src)
     cdef int av_frame_copy_props(AVFrame *dst, const AVFrame *src)
+    cdef AVFrameSideData* av_frame_get_side_data(AVFrame *frame, AVFrameSideDataType type)
