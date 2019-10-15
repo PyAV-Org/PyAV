@@ -13,10 +13,10 @@ cdef class DataStream(Stream):
         )
 
     def encode(self, frame=None):
-        pass
+        return []
 
     def decode(self, packet=None, count=0):
-        pass
+        return []
 
     property name:
         def __get__(self):
