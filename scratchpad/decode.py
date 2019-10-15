@@ -27,6 +27,8 @@ arg_parser.add_argument('-a', '--audio', action='store_true')
 arg_parser.add_argument('-v', '--video', action='store_true')
 arg_parser.add_argument('-s', '--subs', action='store_true')
 arg_parser.add_argument('-d', '--data', action='store_true')
+arg_parser.add_argument('--dump-packets', action='store_true')
+arg_parser.add_argument('--dump-planes', action='store_true')
 arg_parser.add_argument('-p', '--play', action='store_true')
 arg_parser.add_argument('-t', '--thread-type')
 arg_parser.add_argument('-o', '--option', action='append', default=[])
@@ -62,8 +64,9 @@ for i, stream in enumerate(container.streams):
     print('\t\tbit_rate_tolerance: %r' % stream.bit_rate_tolerance)
 
     codec_context = stream.codec_context
-    print('\t\tcodec_context:', codec_context)
-    print('\t\t\ttime_base:', codec_context.time_base)
+    if codec_context:
+        print('\t\tcodec_context:', codec_context)
+        print('\t\t\ttime_base:', codec_context.time_base)
 
     if stream.type == b'audio':
         print('\t\taudio:')
@@ -85,7 +88,8 @@ for i, stream in enumerate(container.streams):
 streams = [s for s in container.streams if
     (s.type == 'audio' and args.audio) or
     (s.type == 'video' and args.video) or
-    (s.type == 'subtitle' and args.subs)
+    (s.type == 'subtitle' and args.subs) or
+    (s.type == 'data' and args.data)
 ]
 
 
@@ -99,6 +103,9 @@ for i, packet in enumerate(container.demux(streams)):
     print('\tpts: %s' % format_time(packet.pts, packet.stream.time_base))
     print('\tdts: %s' % format_time(packet.dts, packet.stream.time_base))
     print('\tkey: %s' % packet.is_keyframe)
+
+    if args.dump_packets:
+        print(bytes(packet))
 
     for frame in packet.decode():
 
@@ -143,8 +150,8 @@ for i, packet in enumerate(container.demux(streams)):
                 print(e)
                 exit()
 
-        if args.data:
-            print('\t\tdata')
+        if args.dump_planes:
+            print('\t\tplanes')
             for i, plane in enumerate(frame.planes or ()):
                 data = plane.to_bytes()
                 print('\t\t\tPLANE %d, %d bytes' % (i, len(data)))
