@@ -8,8 +8,16 @@ fh = av.open(sys.argv[1])
 fh.streams.video[0].flags2 = 'EXPORT_MVS'
 
 for pi, packet in enumerate(fh.demux()):
-    #print(pi, packet)
     for fi, frame in enumerate(packet.decode()):
-        #print(pi, fi, frame)
         for di, data in enumerate(frame.side_data):
+
             print(pi, fi, di, data)
+
+            print(data.to_ndarray())
+
+            for mi, vec in enumerate(data):
+
+                print(mi, vec)
+
+                if mi > 10:
+                    exit()

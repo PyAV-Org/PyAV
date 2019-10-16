@@ -59,12 +59,13 @@ class TestDecode(TestCase):
 
         for packet in container.demux(stream):
             for frame in packet.decode():
-                vectors = frame.motion_vectors()
+                vectors = frame.side_data.get('MOTION_VECTORS')
                 if frame.key_frame:
                     # Key frame don't have motion vectors
-                    assert len(vectors) == 0
+                    assert vectors is None
                 else:
                     assert len(vectors) > 0
+                    return
 
     def test_decoded_motion_vectors_no_flag(self):
 
@@ -73,5 +74,8 @@ class TestDecode(TestCase):
 
         for packet in container.demux(stream):
             for frame in packet.decode():
-                vectors = frame.motion_vectors()
-                assert len(vectors) == 0
+                vectors = frame.side_data.get('MOTION_VECTORS')
+                if not frame.key_frame:
+                    assert vectors is None
+                    return
+

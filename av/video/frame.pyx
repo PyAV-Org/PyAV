@@ -6,8 +6,6 @@ from av.error cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.plane cimport VideoPlane
 
-import numpy as np
-
 
 cdef object _cinit_bypass_sentinel
 
@@ -130,29 +128,6 @@ cdef class VideoFrame(Frame):
             self.height,
             id(self),
         )
-
-    def motion_vectors(self, only_moving=True):
-        """
-        Return a motion vectors as a numpy array of:
-        [mvs.w, mvs.h, mvs.src_x, mvs.src_y, mvs.dst_x, mvs.dst_y]
-
-        Depending on ``only_moving``
-        """
-        return self._get_motion_vectors(only_moving)
-
-    cdef _get_motion_vectors(self, int only_moving):
-        result = []
-
-        cdef lib.AVFrameSideData *sd = lib.av_frame_get_side_data(self.ptr, lib.AV_FRAME_DATA_MOTION_VECTORS)
-        if sd:
-            mvs = <AVMotionVector *>sd.data
-
-            for i in range(sd.size // sizeof(AVMotionVector)):
-                if not only_moving or mvs.src_x != mvs.dst_x or mvs.src_y != mvs.dst_y:
-                    result.append([mvs.w, mvs.h, mvs.src_x, mvs.src_y, mvs.dst_x, mvs.dst_y])
-                mvs += 1
-
-        return np.array(result, np.int)
 
     def reformat(self, width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None)

@@ -1,6 +1,8 @@
 
 from av.enums cimport define_enum
 
+from av.sidedata.motionvectors import MotionVectors
+
 import collections
 
 
@@ -30,7 +32,12 @@ SideDataType = define_enum('SideDataType', (
 
 
 cdef SideData wrap_side_data(Frame frame, int index):
-    return SideData(_cinit_bypass_sentinel, frame, index)
+
+    cdef lib.AVFrameSideDataType type_ = frame.ptr.side_data[index].type
+    if type_ == lib.AV_FRAME_DATA_MOTION_VECTORS:
+        return MotionVectors(_cinit_bypass_sentinel, frame, index)
+    else:
+        return SideData(_cinit_bypass_sentinel, frame, index)
 
 
 cdef class SideData(Buffer):
@@ -51,7 +58,7 @@ cdef class SideData(Buffer):
         return False
 
     def __repr__(self):
-        return f'<av.sidedata.SideData {self.ptr.size} bytes of {self.type} at 0x{<unsigned int>self.ptr.data:0x}>'
+        return f'<av.sidedata.{self.__class__.__name__} {self.ptr.size} bytes of {self.type} at 0x{<unsigned int>self.ptr.data:0x}>'
 
     @property
     def type(self):
@@ -85,7 +92,7 @@ cdef class _SideDataContainer(object):
             return self._by_index[key]
 
         type_ = SideDataType.get(key)
-        return self._by_type(type_)
+        return self._by_type[type_]
 
 
 class SideDataContainer(_SideDataContainer, collections.Mapping):
