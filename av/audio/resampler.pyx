@@ -54,8 +54,9 @@ cdef class AudioResampler(object):
         # Take source settings from the first frame.
         if not self.ptr:
 
+            # We don't have any input, so don't bother even setting up.
             if not frame:
-                raise ValueError('Cannot flush AudioResampler before it is used.')
+                return
 
             # Hold onto a copy of the attributes of the first frame to populate
             # output frames with.
