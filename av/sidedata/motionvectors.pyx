@@ -31,8 +31,8 @@ cdef class _MotionVectors(SideData):
         return self._len
 
     def to_ndarray(self):
-        import numpy
-        return numpy.frombuffer(self, dtype=[
+        import numpy as np
+        return np.frombuffer(self, dtype=np.dtype([
             ('source', 'int32'),
             ('w', 'uint8'),
             ('h', 'uint8'),
@@ -44,8 +44,7 @@ cdef class _MotionVectors(SideData):
             ('motion_x', 'int32'),
             ('motion_y', 'int32'),
             ('motion_scale', 'uint16'),
-            ('junk', 'int64'), # Not sure why this is required.
-        ])
+        ], align=True))
 
 
 class MotionVectors(_MotionVectors, collections.Sequence):
