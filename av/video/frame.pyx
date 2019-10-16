@@ -32,22 +32,6 @@ PictureType = define_enum('PictureType', (
     ('BI', lib.AV_PICTURE_TYPE_BI),
 ))
 
-SideDataType = define_enum('SideDataType', (
-    ('PANSCAN', lib.AV_FRAME_DATA_PANSCAN),
-    ('A53_CC', lib.AV_FRAME_DATA_A53_CC),
-    ('STEREO3D', lib.AV_FRAME_DATA_STEREO3D),
-    ('MATRIXENCODING', lib.AV_FRAME_DATA_MATRIXENCODING),
-    ('DOWNMIX_INFO', lib.AV_FRAME_DATA_DOWNMIX_INFO),
-    ('REPLAYGAIN', lib.AV_FRAME_DATA_REPLAYGAIN),
-    ('DISPLAYMATRIX', lib.AV_FRAME_DATA_DISPLAYMATRIX),
-    ('AFD', lib.AV_FRAME_DATA_AFD),
-    ('MOTION_VECTORS', lib.AV_FRAME_DATA_MOTION_VECTORS),
-    ('SKIP_SAMPLES', lib.AV_FRAME_DATA_SKIP_SAMPLES),
-    ('AUDIO_SERVICE_TYPE', lib.AV_FRAME_DATA_AUDIO_SERVICE_TYPE),
-    ('MASTERING_DISPLAY_METADATA', lib.AV_FRAME_DATA_MASTERING_DISPLAY_METADATA),
-    ('GOP_TIMECODE', lib.AV_FRAME_DATA_GOP_TIMECODE),
-))
-
 
 cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
     cdef bytes imgbytes = array.tobytes()

@@ -47,9 +47,36 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         FF_THREAD_SLICE
 
     cdef enum:
-        AV_CODEC_FLAG_GLOBAL_HEADER
+        AV_CODEC_FLAG_UNALIGNED
         AV_CODEC_FLAG_QSCALE
+        AV_CODEC_FLAG_4MV
+        AV_CODEC_FLAG_OUTPUT_CORRUPT
+        AV_CODEC_FLAG_QPEL
+        AV_CODEC_FLAG_PASS1
+        AV_CODEC_FLAG_PASS2
+        AV_CODEC_FLAG_LOOP_FILTER
+        AV_CODEC_FLAG_GRAY
+        AV_CODEC_FLAG_PSNR
         AV_CODEC_FLAG_TRUNCATED
+        AV_CODEC_FLAG_INTERLACED_DCT
+        AV_CODEC_FLAG_LOW_DELAY
+        AV_CODEC_FLAG_GLOBAL_HEADER
+        AV_CODEC_FLAG_BITEXACT
+        AV_CODEC_FLAG_AC_PRED
+        AV_CODEC_FLAG_INTERLACED_ME
+        AV_CODEC_FLAG_CLOSED_GOP
+
+    cdef enum:
+        AV_CODEC_FLAG2_FAST
+        AV_CODEC_FLAG2_NO_OUTPUT
+        AV_CODEC_FLAG2_LOCAL_HEADER
+        AV_CODEC_FLAG2_DROP_FRAME_TIMECODE
+        AV_CODEC_FLAG2_CHUNKS
+        AV_CODEC_FLAG2_IGNORE_CROP
+        AV_CODEC_FLAG2_SHOW_ALL
+        AV_CODEC_FLAG2_EXPORT_MVS
+        AV_CODEC_FLAG2_SKIP_MANUAL
+        AV_CODEC_FLAG2_RO_FLUSH_NOOP
 
     cdef enum:
         AV_PKT_FLAG_KEY
@@ -119,6 +146,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AVCodecID codec_id
 
         int flags
+        int flags2
+
         int thread_count
         int thread_type
 
@@ -236,6 +265,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
         AV_FRAME_DATA_SPHERICAL
         AV_FRAME_DATA_CONTENT_LIGHT_LEVEL
         AV_FRAME_DATA_ICC_PROFILE
+        AV_FRAME_DATA_QP_TABLE_PROPERTIES
+        AV_FRAME_DATA_QP_TABLE_DATA
 
     cdef struct AVFrameSideData:
         AVFrameSideDataType type
@@ -257,6 +288,9 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
         int width
         int height
+
+        int nb_side_data
+        AVFrameSideData **side_data
 
         int nb_samples # Audio samples
         int sample_rate # Audio Sample rate

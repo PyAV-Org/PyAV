@@ -1,5 +1,7 @@
 from av.utils cimport avrational_to_fraction, to_avrational
 
+from av.sidedata.sidedata import SideDataContainer
+
 from fractions import Fraction
 
 
@@ -128,3 +130,9 @@ cdef class Frame(object):
         :type: bool
         """
         def __get__(self): return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
+
+    @property
+    def side_data(self):
+        if self._side_data is None:
+            self._side_data = SideDataContainer(self)
+        return self._side_data
