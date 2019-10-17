@@ -6,7 +6,7 @@ if os.name == 'nt':
 
 # MUST import the core before anything else in order to initalize the underlying
 # library that is being wrapped.
-from av._core import time_base, pyav_version as __version__
+from av._core import time_base, pyav_version as __version__, library_versions
 
 # Capture logging (by importing it).
 from av import logging
