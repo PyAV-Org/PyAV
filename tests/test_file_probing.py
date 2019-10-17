@@ -1,6 +1,7 @@
 from __future__ import division
 
 from fractions import Fraction
+import json
 
 import av
 
@@ -63,10 +64,12 @@ class TestAudioProbe(TestCase):
 
 
 class TestDataProbe(TestCase):
+
     def setUp(self):
         self.file = av.open(fate_suite('mxf/track_01_v02.mxf'))
 
     def test_container_probing(self):
+
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mxf'>")
         self.assertEqual(self.file.format.name, 'mxf')
         self.assertEqual(self.file.format.long_name, 'MXF (Material eXchange Format)')
@@ -75,21 +78,30 @@ class TestDataProbe(TestCase):
         self.assertEqual(self.file.bit_rate, 8 * self.file.size * av.time_base // self.file.duration)
         self.assertEqual(self.file.duration, 417083)
         self.assertEqual(len(self.file.streams), 4)
-        self.assertEqual(self.file.metadata, {
-            'application_platform': 'AAFSDK (MacOS X)',
-            'comment_Comments': 'example comment',
-            'comment_UNC Path': '/Users/mark/Desktop/dnxhr_tracknames_export.aaf',
-            'company_name': 'Avid Technology, Inc.',
-            'generation_uid': 'b6bcfcab-70ff-7331-c592-233869de11d2',
-            'material_package_name': 'Example.new.04',
-            'material_package_umid': '0x060A2B340101010101010F001300000057E19D16BA8202DB060E2B347F7F2A80',
-            'modification_date': '2016-09-20T20:33:26.000000Z',
-            'product_name': 'Avid Media Composer 8.6.3.43955',
-            'product_uid': 'acfbf03a-4f42-a231-d0b7-c06ecd3d4ad7',
-            'product_version': 'Unknown version',
-            'project_name': 'UHD',
-            'uid': '4482d537-4203-ea40-9e4e-08a22900dd39',
-        })
+
+        for key, value, min_version in (
+            ('application_platform', 'AAFSDK (MacOS X)', None),
+            ('comment_Comments', 'example comment', None),
+            ('comment_UNC Path', '/Users/mark/Desktop/dnxhr_tracknames_export.aaf', None),
+            ('company_name', 'Avid Technology, Inc.', None),
+            ('generation_uid', 'b6bcfcab-70ff-7331-c592-233869de11d2', None),
+            ('material_package_name', 'Example.new.04', None),
+            ('material_package_umid', '0x060A2B340101010101010F001300000057E19D16BA8202DB060E2B347F7F2A80', None),
+            ('modification_date', '2016-09-20T20:33:26.000000Z', None),
+            # Next one is FFmpeg >= 4.2.
+            ('operational_pattern_ul', '060e2b34.04010102.0d010201.10030000', {'libavformat': (58, 29)}),
+            ('product_name', 'Avid Media Composer 8.6.3.43955', None),
+            ('product_uid', 'acfbf03a-4f42-a231-d0b7-c06ecd3d4ad7', None),
+            ('product_version', 'Unknown version', None),
+            ('project_name', 'UHD', None),
+            ('uid', '4482d537-4203-ea40-9e4e-08a22900dd39', None),
+        ):
+            if min_version and any(
+                av.library_versions[name] < version
+                for name, version in min_version.items()
+            ):
+                continue
+            self.assertEqual(self.file.metadata.get(key), value)
 
     def test_stream_probing(self):
         stream = self.file.streams[0]

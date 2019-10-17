@@ -21,7 +21,7 @@ def main():
         print('git commit:', av._core.pyav_commit)
 
         by_config = {}
-        for libname, config in sorted(av._core.versions.items()):
+        for libname, config in sorted(av._core.library_meta.items()):
             version = config['version']
             if version[0] >= 0:
                 by_config.setdefault(
