@@ -4,10 +4,46 @@ on: [push]
 
 jobs:
   
-  test-nix:
 
-    name: "test: ${{matrix.config.os}}, python${{ matrix.config.python }}, ffmpeg-${{ matrix.config.ffmpeg }}"
+  style:
 
+    name: "style"
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v1
+        name: Checkout
+        with:
+            fetch-depth: 1
+
+      - name: Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.config.python }}
+
+      - name: Environment
+        run: env | sort
+
+      - name: Packages
+        run: |
+          . scripts/activate.sh
+          pip install isort flake8
+
+      - name: "${{ matrix.config.suite }}"
+        run: |
+          . scripts/activate.sh
+          ./scripts/test isort
+
+      - name: "Test flake8"
+        run: |
+          . scripts/activate.sh
+          ./scripts/test flake8
+
+
+  nix:
+
+    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
+    
     runs-on: ${{ matrix.config.os }}
 
     strategy:
@@ -17,7 +53,7 @@ jobs:
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.1"}
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.0"}
           - {os: ubuntu-latest, python: 2.7, ffmpeg: "4.2"}
-          - {os: macos-latest,  python: 2.7, ffmpeg: "4.2"}
+          - {os: macos-latest,  python: 3.7, ffmpeg: "4.2"}
 
     steps:
 
@@ -31,7 +67,7 @@ jobs:
       with:
         python-version: ${{ matrix.config.python }}
 
-    - name: Package Manager
+    - name: OS Packages
       run: |
         case ${{ matrix.config.os }} in
           ubuntu-latest)
@@ -48,7 +84,7 @@ jobs:
             ;;
         esac
 
-    - name: Dependencies
+    - name: Pip and FFmpeg
       run: |
         #pip install --upgrade pip
         pip install virtualenv
@@ -66,10 +102,9 @@ jobs:
         scripts/test
 
 
+  windows:
 
-  test-windows:
-
-    name: "test: ${{matrix.config.os}}, python${{ matrix.config.python }}, ffmpeg-${{ matrix.config.ffmpeg }}"
+    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
 
     runs-on: ${{ matrix.config.os }}
 

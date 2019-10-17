@@ -11,8 +11,10 @@ fi
 cd "$PYAV_ROOT"
 
 
+TESTSUITE="${TESTSUITE-$1}"
+
 if [[ ! "$TESTSUITE" ]]; then
-    if [[ "$TRAVIS" ]]; then
+    if [[ "GITHUB_ACTION" || "$TRAVIS" ]]; then
         TESTSUITE=main
     else
         TESTSUITE=all
@@ -21,6 +23,7 @@ fi
 
 
 if [[ "$TESTSUITE" == all || "$TESTSUITE" == flake8 ]]; then
+    # Settings in setup.cfg
     $PYAV_PYTHON -m flake8 av examples tests
     if [[ "$TESTSUITE" != all ]]; then
         # We've only gotten this far if it was successful.
@@ -29,7 +32,8 @@ if [[ "$TESTSUITE" == all || "$TESTSUITE" == flake8 ]]; then
 fi
 
 if [[ "$TESTSUITE" == all || "$TESTSUITE" == isort ]]; then
-    out="$($PYAV_PYTHON -m isort -df -rc -lai 2 examples tests)"
+    # More settings in setup.cfg
+    out="$($PYAV_PYTHON -m isort -q -df -rc av examples tests)"
     if [[ "$out" ]]; then
         echo -n "$out"
         exit 1
