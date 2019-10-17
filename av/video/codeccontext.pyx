@@ -110,6 +110,7 @@ cdef class VideoCodecContext(CodecContext):
     @property
     def flags(self):
         return CodecContextFlags.get(self.ptr.flags)
+
     @flags.setter
     def flags(self, value):
         enum = CodecContextFlags.get(value)
@@ -118,6 +119,7 @@ cdef class VideoCodecContext(CodecContext):
     @property
     def flags2(self):
         return CodecContextFlags.get(self.ptr.flags2)
+
     @flags2.setter
     def flags2(self, value):
         enum = CodecContextFlags2.get(value)

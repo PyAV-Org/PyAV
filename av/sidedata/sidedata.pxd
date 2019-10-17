@@ -18,4 +18,3 @@ cdef class _SideDataContainer(object):
 
     cdef list _by_index
     cdef dict _by_type
-

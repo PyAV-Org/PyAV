@@ -78,4 +78,3 @@ class TestDecode(TestCase):
                 if not frame.key_frame:
                     assert vectors is None
                     return
-

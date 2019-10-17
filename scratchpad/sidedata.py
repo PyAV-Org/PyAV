@@ -3,7 +3,6 @@ import sys
 import av
 
 
-
 fh = av.open(sys.argv[1])
 fh.streams.video[0].flags2 = 'EXPORT_MVS'
 
@@ -21,3 +20,4 @@ for pi, packet in enumerate(fh.demux()):
 
                 if mi > 10:
                     exit()
+

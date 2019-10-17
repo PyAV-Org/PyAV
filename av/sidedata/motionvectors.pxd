@@ -1,4 +1,3 @@
-
 from av.frame cimport Frame
 from av.sidedata.sidedata cimport SideData
 
@@ -15,4 +14,3 @@ cdef class MotionVector(object):
 
     cdef _MotionVectors parent
     cdef lib.AVMotionVector *ptr
-

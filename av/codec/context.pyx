@@ -110,6 +110,7 @@ cdef class CodecContext(object):
     property is_encoder:
         def __get__(self):
             return lib.av_codec_is_encoder(self.ptr.codec)
+
     property is_decoder:
         def __get__(self):
             return lib.av_codec_is_decoder(self.ptr.codec)

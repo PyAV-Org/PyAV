@@ -4,6 +4,8 @@ import collections
 cdef object _cinit_bypass_sentinel = object()
 
 
+# Cython doesn't let us inherit from the abstract Sequence, so we will subclass
+# it later.
 cdef class _MotionVectors(SideData):
 
     def __init__(self, *args, **kwargs):
@@ -51,7 +53,6 @@ class MotionVectors(_MotionVectors, collections.Sequence):
     pass
 
 
-
 cdef class MotionVector(object):
 
     def __init__(self, sentinel, _MotionVectors parent, int index):
@@ -67,34 +68,39 @@ cdef class MotionVector(object):
     @property
     def source(self):
         return self.ptr.source
+
     @property
     def w(self):
         return self.ptr.w
+
     @property
     def h(self):
         return self.ptr.h
+
     @property
     def src_x(self):
         return self.ptr.src_x
+
     @property
     def src_y(self):
         return self.ptr.src_y
+
     @property
     def dst_x(self):
         return self.ptr.dst_x
+
     @property
     def dst_y(self):
         return self.ptr.dst_y
-    @property
-    def flags(self):
-        return self.ptr.flags
+
     @property
     def motion_x(self):
         return self.ptr.motion_x
+
     @property
     def motion_y(self):
         return self.ptr.motion_y
+
     @property
     def motion_scale(self):
         return self.ptr.motion_scale
-

@@ -1,4 +1,3 @@
-
 from av.enums cimport define_enum
 
 from av.sidedata.motionvectors import MotionVectors
@@ -97,5 +96,3 @@ cdef class _SideDataContainer(object):
 
 class SideDataContainer(_SideDataContainer, collections.Mapping):
     pass
-
-
