@@ -46,6 +46,7 @@ cdef class SideData(Buffer):
             raise RuntimeError('cannot manually instatiate SideData')
         self.frame = frame
         self.ptr = frame.ptr.side_data[index]
+        self.metadata = wrap_dictionary(self.ptr.metadata)
 
     cdef size_t _buffer_size(self):
         return self.ptr.size
