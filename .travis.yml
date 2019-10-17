@@ -78,15 +78,6 @@ matrix:
         - python: "3.6"
           env: LIBRARY=ffmpeg-4.0
           os: linux
-        - python: "3.6"
-          env: LIBRARY=ffmpeg-3.4
-          os: linux
-        - python: "3.6"
-          env: LIBRARY=ffmpeg-3.3
-          os: linux
-        - python: "3.6"
-          env: LIBRARY=ffmpeg-3.2
-          os: linux
 
         # Python 2.7.
         - python: "2.7"
@@ -95,15 +86,6 @@ matrix:
         - python: "2.7"
           env: LIBRARY=ffmpeg-4.0
           os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-3.4
-          os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-3.3
-          os: linux
-        - python: "2.7"
-          env: LIBRARY=ffmpeg-3.2
-          os: linux
 
         # Mac OS X (python3.6)
         - language: generic
@@ -111,15 +93,6 @@ matrix:
           os: osx
         - language: generic
           env: LIBRARY=ffmpeg-4.0
-          os: osx
-        - language: generic
-          env: LIBRARY=ffmpeg-3.4
-          os: osx
-        - language: generic
-          env: LIBRARY=ffmpeg-3.3
-          os: osx
-        - language: generic
-          env: LIBRARY=ffmpeg-3.2
           os: osx
 
         # PyPy
@@ -148,20 +121,6 @@ matrix:
         - python: "3.4"
           env: LIBRARY=ffmpeg-4.0
           os: linux
-
-    allow_failures:
-
-        # Not sure what is going on here, but frankly we don't have
-        # the time/energy to figure it out for older FFmpeg.
-        - language: generic
-          env: LIBRARY=ffmpeg-3.4
-          os: osx
-        - language: generic
-          env: LIBRARY=ffmpeg-3.3
-          os: osx
-        - language: generic
-          env: LIBRARY=ffmpeg-3.2
-          os: osx
 
 
 before_install:
