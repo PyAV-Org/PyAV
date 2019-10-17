@@ -100,7 +100,7 @@ pep8_fixes_by_ext = {
             E20  - Remove extraneous whitespace.
             E211 - Remove extraneous whitespace.
         ''',
-    }.iteritems()
+    }.items()
 }
 
 def apply_autopep8(source, path):
@@ -174,6 +174,7 @@ def main():
     for path in iter_source_paths():
 
         before = after = open(path).read()
+        print(path)
 
         if args.all or args.pep8:
             after = apply_autopep8(after, path)
@@ -187,8 +188,7 @@ def main():
         if before == after:
             continue
 
-        print(path)
-        with open(path, 'wb') as fh:
+        with open(path, 'w') as fh:
             fh.write(after)
 
 
