@@ -62,5 +62,3 @@ library_meta = {
 }
 
 library_versions = {name: meta['version'] for name, meta in library_meta.items()}
-
-

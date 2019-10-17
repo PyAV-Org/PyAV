@@ -1,0 +1,162 @@
+name: Test
+
+on: [push]
+
+jobs:
+  
+
+  style:
+
+    name: "${{ matrix.config.suite }}"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        config:
+          - {suite: isort}
+          - {suite: flake8}
+
+    env:
+      PYAV_PYTHON: python3
+      PYAV_LIBRARY: ffmpeg-4.2 # doesn't matter
+
+    steps:
+
+      - uses: actions/checkout@v1
+        name: Checkout
+        with:
+            fetch-depth: 1
+
+      - name: Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Environment
+        run: env | sort
+
+      - name: Packages
+        run: |
+          . scripts/activate.sh
+          # A bit of a hack that we can get away with this.
+          python -m pip install ${{ matrix.config.suite }}
+
+      - name: "${{ matrix.config.suite }}"
+        run: |
+          . scripts/activate.sh
+          ./scripts/test ${{ matrix.config.suite }}
+
+
+  nix:
+
+    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
+    
+    runs-on: ${{ matrix.config.os }}
+
+    strategy:
+      matrix:
+        config:
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.2"}
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.1"}
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.0"}
+          - {os: ubuntu-latest, python: 2.7, ffmpeg: "4.2"}
+          - {os: macos-latest,  python: 3.7, ffmpeg: "4.2"}
+
+    env:
+      PYAV_PYTHON: python${{ matrix.config.python }}
+      PYAV_LIBRARY: ffmpeg-${{ matrix.config.ffmpeg }}
+
+    steps:
+
+    - uses: actions/checkout@v1
+      name: Checkout
+      with:
+          fetch-depth: 1
+
+    - name: Python ${{ matrix.config.python }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.config.python }}
+
+    - name: OS Packages
+      run: |
+        case ${{ matrix.config.os }} in
+          ubuntu-latest)
+            sudo apt-get update
+            sudo apt-get install autoconf automake build-essential cmake \
+              libtool mercurial pkg-config texinfo wget yasm zlib1g-dev
+            sudo apt-get install libass-dev libfreetype6-dev libjpeg-dev \
+              libtheora-dev libvorbis-dev libx264-dev
+            ;;
+          macos-latest)
+            brew update
+            brew install automake libtool nasm pkg-config shtool texi2html wget
+            brew install libass libjpeg libpng libvorbis libvpx opus theora x264
+            ;;
+        esac
+
+    - name: Pip and FFmpeg
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        scripts/build-deps
+
+    - name: Build
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        scripts/build
+
+    - name: Test
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        scripts/test
+
+
+  windows:
+
+    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
+
+    runs-on: ${{ matrix.config.os }}
+
+    strategy:
+      matrix:
+        config:
+          - {os: windows-latest, python: 3.7, ffmpeg: "4.2"}
+          - {os: windows-latest, python: 3.7, ffmpeg: "4.1"}
+          - {os: windows-latest, python: 3.7, ffmpeg: "4.0"}
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+          fetch-depth: 1
+
+    - name: Set up Conda
+      shell: bash
+      run: |
+        . $CONDA/etc/profile.d/conda.sh
+        conda config --set always_yes true
+        conda config --add channels conda-forge
+        conda create -q -n pyav \
+          cython \
+          ffmpeg=${{ matrix.config.ffmpeg }} \
+          numpy \
+          pillow \
+          python=${{ matrix.config.python }} \
+          setuptools
+
+    - name: Build
+      shell: bash
+      run: |
+        . $CONDA/etc/profile.d/conda.sh
+        conda activate pyav
+        python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library
+
+    - name: Test
+      shell: bash
+      run: |
+        . $CONDA/etc/profile.d/conda.sh
+        conda activate pyav
+        python setup.py test
+
+
