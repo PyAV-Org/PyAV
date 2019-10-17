@@ -7,8 +7,19 @@ jobs:
 
   style:
 
-    name: "style"
+    name: "${{ matrix.config.suite }}"
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        config:
+          - {suite: isort}
+          - {suite: flake8}
+
+    env:
+      PYAV_PYTHON: python3
+      PYAV_LIBRARY: ffmpeg-4.2 # doesn't matter
+
     steps:
 
       - uses: actions/checkout@v1
@@ -19,7 +30,7 @@ jobs:
       - name: Python
         uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.config.python }}
+          python-version: 3.7
 
       - name: Environment
         run: env | sort
@@ -27,17 +38,13 @@ jobs:
       - name: Packages
         run: |
           . scripts/activate.sh
-          pip install isort flake8
+          # A bit of a hack that we can get away with this.
+          python -m pip install ${{ matrix.config.suite }}
 
       - name: "${{ matrix.config.suite }}"
         run: |
           . scripts/activate.sh
-          ./scripts/test isort
-
-      - name: "Test flake8"
-        run: |
-          . scripts/activate.sh
-          ./scripts/test flake8
+          ./scripts/test ${{ matrix.config.suite }}
 
 
   nix:
@@ -54,6 +61,10 @@ jobs:
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.0"}
           - {os: ubuntu-latest, python: 2.7, ffmpeg: "4.2"}
           - {os: macos-latest,  python: 3.7, ffmpeg: "4.2"}
+
+    env:
+      PYAV_PYTHON: python${{ matrix.config.python }}
+      PYAV_LIBRARY: ffmpeg-${{ matrix.config.ffmpeg }}
 
     steps:
 
@@ -86,8 +97,6 @@ jobs:
 
     - name: Pip and FFmpeg
       run: |
-        #pip install --upgrade pip
-        pip install virtualenv
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
         scripts/build-deps
 

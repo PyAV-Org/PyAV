@@ -14,7 +14,7 @@ cd "$PYAV_ROOT"
 TESTSUITE="${TESTSUITE-$1}"
 
 if [[ ! "$TESTSUITE" ]]; then
-    if [[ "GITHUB_ACTION" || "$TRAVIS" ]]; then
+    if [[ "$GITHUB_ACTION" || "$TRAVIS" ]]; then
         TESTSUITE=main
     else
         TESTSUITE=all
