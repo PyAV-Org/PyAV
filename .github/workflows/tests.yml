@@ -1,9 +1,9 @@
-name: Test
+name: tests
 
 on: [push]
 
 jobs:
-  
+
 
   style:
 
@@ -50,7 +50,7 @@ jobs:
   nix:
 
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-    
+
     runs-on: ${{ matrix.config.os }}
 
     strategy:

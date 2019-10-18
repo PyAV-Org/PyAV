@@ -1,7 +1,7 @@
 PyAV
 ====
 
-[![Travis Build Status][travis-badge]][travis] [![AppVeyor Build Status][appveyor-badge]][appveyor] \
+[![GitHub Test Status][github-tests-badge]][github-tests] \
 [![Gitter Chat][gitter-badge]][gitter] [![Documentation][docs-badge]][docs] \
 [![GitHub][github-badge]][github] [![Python Package Index][pypi-badge]][pypi] [![Conda Forge][conda-badge]][conda]
 
@@ -53,8 +53,6 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 
 
 
-[appveyor-badge]: https://img.shields.io/appveyor/ci/mikeboers/PyAV/develop.svg?logo=appveyor&label=appveyor
-[appveyor]: https://ci.appveyor.com/project/mikeboers/pyav
 [conda-badge]: https://img.shields.io/conda/vn/conda-forge/av.svg?colorB=CCB39A
 [conda]: https://anaconda.org/conda-forge/av
 [docs-badge]: https://img.shields.io/badge/docs-on%20mikeboers.com-blue.svg
@@ -63,9 +61,9 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [gitter]: https://gitter.im/mikeboers/PyAV
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
 [pypi]: https://pypi.org/project/av
-[travis-badge]: https://img.shields.io/travis/mikeboers/PyAV/develop.svg?logo=travis&label=travis
-[travis]: https://travis-ci.org/mikeboers/PyAV
 
+[github-tests-badge]: https://github.com/mikeboers/PyAV/workflows/tests/badge.svg
+[github-tests]: https://github.com/mikeboers/PyAV/actions?workflow=tests
 [github-badge]: https://img.shields.io/badge/dynamic/xml.svg?label=github&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmikeboers%2FPyAV%2Fdevelop%2FVERSION.txt&query=.&colorB=CCB39A&prefix=v
 [github]: https://github.com/mikeboers/PyAV
 
