@@ -36,6 +36,15 @@ if [[ ! "$PYAV_PYTHON" ]]; then
     PYAV_PYTHON="${PYAV_PYTHON-python3}"
     echo 'No $PYAV_PYTHON set; defaulting to python3.'
 fi
+
+# Hack for PyPy on GitHub Actions.
+# This is because PYAV_PYTHON is constructed from "python${{ matrix.config.python }}"
+# resulting in "pythonpypy3", which won't work.
+# It would be nice to clean this up, but I want it to work ASAP.
+if [[ "$PYAV_PYTHON" == *pypy* ]]; then
+    PYAV_PYTHON=python
+fi
+
 export PYAV_PYTHON
 export PYAV_PIP="${PYAV_PIP-$PYAV_PYTHON -m pip}"
 
