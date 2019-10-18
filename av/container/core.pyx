@@ -212,13 +212,13 @@ cdef class Container(object):
             lib.av_dump_format(self.ptr, 0, "", isinstance(self, OutputContainer))
         return ''.join(log[2] for log in logs)
 
-    def set_timeout(self, timeout):
+    cdef set_timeout(self, timeout):
         if timeout is None:
             self.interrupt_callback_info.timeout = -1.0
         else:
             self.interrupt_callback_info.timeout = timeout
 
-    def start_timeout(self):
+    cdef start_timeout(self):
         self.interrupt_callback_info.start_time = time.time()
 
 

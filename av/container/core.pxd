@@ -50,3 +50,5 @@ cdef class Container(object):
     cdef readonly object open_timeout
     cdef readonly object read_timeout
     cdef timeout_info interrupt_callback_info
+    cdef set_timeout(self, object)
+    cdef start_timeout(self)
