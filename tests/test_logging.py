@@ -5,7 +5,6 @@ import threading
 
 import av.error
 import av.logging
-from av import AVError
 
 from .common import TestCase
 
@@ -78,7 +77,7 @@ class TestLogging(TestCase):
         av.logging.log(*log)
         try:
             av.error.err_check(-1)
-        except AVError as e:
+        except OSError as e:
             self.assertEqual(e.log, log)
         else:
             self.fail()

@@ -108,6 +108,7 @@ jobs:
     - name: Test
       run: |
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        python -m av --version # Assert it can import.
         scripts/test
 
 

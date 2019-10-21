@@ -19,6 +19,7 @@ except ImportError:
 
 
 is_py3 = sys.version_info[0] > 2
+is_py33 = sys.version_info >= (3, 3)
 is_windows = os.name == 'nt'
 
 if not is_py3:

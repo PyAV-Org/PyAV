@@ -22,6 +22,6 @@ from av.codec.context import CodecContext
 from av.container import open
 from av.format import ContainerFormat, formats_available
 from av.packet import Packet
-from av.error import AVError
+from av.error import *  # noqa: F403; This is limited to exception types.
 from av.video.format import VideoFormat
 from av.video.frame import VideoFrame
