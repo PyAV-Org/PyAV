@@ -9,6 +9,9 @@ import sys
 import traceback
 
 
+cdef is_py3 = sys.version_info[0] >= 3
+
+
 cpdef code_to_tag(int code):
     """Convert an integer error code into 4-byte tag.
 
@@ -154,17 +157,18 @@ cpdef int err_check(int res=0, filename=None) except -1:
     cdef int code = -res
     cdef bytes py_buffer
     cdef char *c_buffer
-    cdef unicode message
 
     if code == c_PYAV_ERROR:
-        message = u'Error in PyAV callback'
+        message = 'Error in PyAV callback'
 
     else:
         py_buffer = b"\0" * lib.AV_ERROR_MAX_STRING_SIZE
         c_buffer = py_buffer
         lib.av_strerror(res, c_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
         py_buffer = c_buffer
-        message = py_buffer.decode('latin1')
+
+        # We want the native string type.
+        message = py_buffer.decode('latin1') if is_py3 else py_buffer
 
     # Add details from the last log onto the end.
     log_count, last_log = get_last_error()
