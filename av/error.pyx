@@ -114,6 +114,17 @@ ErrorType = define_enum("ErrorType", (
 
 ), allow_user_create=True)
 
+ErrorType.__doc__ = """An enumeration of FFmpeg's error types.
+
+.. attribute:: tag
+
+    The FFmpeg byte tag for the error.
+
+.. attribute:: strerror
+
+    The error message that would be returned.
+
+"""
 ErrorType.tag = property(lambda self: code_to_tag(self.value))
 
 # Define them globally as well to mimick `errno` module.
@@ -127,7 +138,25 @@ for enum in ErrorType:
 
 class AVError(EnvironmentError):
 
-    """Exception class for errors from within FFmpeg."""
+    """Exception class for errors from within FFmpeg.
+
+    .. attribute:: errno
+
+        FFmpeg's integer error code.
+
+    .. attribute:: filename
+
+        The filename that was being operated on (if availible).
+
+    .. attribute:: type
+
+        The :class:`av.error.ErrorType` enum value for the error type.
+
+    .. attribute:: log
+
+        The tuple from :func:`av.logging.get_last_log`, or ``None``.
+
+    """
 
     # Make it look like <av.Error ...>
     __module__ = 'av'

@@ -25,6 +25,7 @@
 /build
 /dist
 /docs/_build
+/docs/error_table.rst
 /docs/includes.rst
 /ipch
 /msvc-projects
