@@ -39,19 +39,8 @@ cdef extern from "libavutil/avutil.h" nogil:
         # This is nice, but only in FFMpeg:
         # AV_ROUND_PASS_MINMAX
 
-    cdef int AV_ERROR_MAX_STRING_SIZE
-    cdef int AVERROR_EOF
-    cdef int AVERROR_NOMEM "AVERROR(ENOMEM)"
-
-    cdef int ENOMEM
-
-    cdef int EAGAIN
 
     cdef double M_PI
-
-    cdef int AVERROR(int error)
-    cdef int av_strerror(int errno, char *output, size_t output_size)
-    cdef char* av_err2str(int errnum)
 
     cdef void* av_malloc(size_t size)
     cdef void *av_calloc(size_t nmemb, size_t size)

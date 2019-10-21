@@ -1,10 +1,10 @@
 from libc.string cimport memcpy
 
+from av.error cimport err_check
 from av.filter.context cimport FilterContext, wrap_filter_context
 from av.filter.filter cimport Filter, wrap_filter
-from av.utils cimport err_check
-from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.format cimport VideoFormat
+from av.video.frame cimport VideoFrame, alloc_video_frame
 
 cdef class Graph(object):
 

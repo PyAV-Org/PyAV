@@ -3,7 +3,7 @@ from libc.string cimport memcpy
 cimport libav as lib
 
 from av.container.core cimport Container
-from av.utils cimport stash_exception
+from av.error cimport stash_exception
 
 
 cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:

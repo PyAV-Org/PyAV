@@ -1,7 +1,7 @@
 cimport libav as lib
 
-from av.utils cimport flag_in_bitfield
 from av.enums cimport define_enum
+from av.utils cimport flag_in_bitfield
 
 
 cdef object _cinit_sentinel = object()

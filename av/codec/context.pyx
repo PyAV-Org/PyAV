@@ -10,8 +10,9 @@ from av.codec.codec cimport Codec, wrap_codec
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.enums cimport define_enum
+from av.error cimport err_check
 from av.packet cimport Packet
-from av.utils cimport err_check, avdict_to_dict, avrational_to_fraction, to_avrational
+from av.utils cimport avdict_to_dict, avrational_to_fraction, to_avrational
 
 
 cdef object _cinit_sentinel = object()
