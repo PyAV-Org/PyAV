@@ -38,9 +38,7 @@ class TestLogging(TestCase):
             thread.start()
             thread.join()
 
-        self.assertEqual(logs, [
-            (av.logging.INFO, 'test', 'main'),
-        ])
+        self.assertIn((av.logging.INFO, 'test', 'main'), logs)
 
     def test_global_captures(self):
 
@@ -50,10 +48,8 @@ class TestLogging(TestCase):
             thread.start()
             thread.join()
 
-        self.assertEqual(logs, [
-            (av.logging.INFO, 'test', 'main'),
-            (av.logging.INFO, 'test', 'thread'),
-        ])
+        self.assertIn((av.logging.INFO, 'test', 'main'), logs)
+        self.assertIn((av.logging.INFO, 'test', 'thread'), logs)
 
     def test_repeats(self):
 
