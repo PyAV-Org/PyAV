@@ -3,7 +3,7 @@ from fractions import Fraction
 from unittest import SkipTest
 
 import av
-from av import AudioResampler, AVError, Codec, Packet
+from av import AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
 
 from .common import TestCase, fate_suite
@@ -29,9 +29,7 @@ def iter_raw_frames(path, packet_sizes, ctx):
         while True:
             try:
                 frames = ctx.decode(None)
-            except AVError as e:
-                if e.errno != 541478725:  # EOF
-                    raise
+            except EOFError:
                 break
             for frame in frames:
                 yield frame

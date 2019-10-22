@@ -25,3 +25,6 @@ from av.packet import Packet
 from av.error import *  # noqa: F403; This is limited to exception types.
 from av.video.format import VideoFormat
 from av.video.frame import VideoFrame
+
+# Backwards compatibility
+AVError = FFmpegError  # noqa: F405

@@ -10,7 +10,15 @@ rows = [(
 )]
 
 for code, cls in av.error.classes.items():
+    
     enum = av.error.ErrorType.get(code)
+    
+    if not enum:
+        continue
+
+    if enum.tag == b'PyAV':
+        continue
+
     rows.append((
         #'{} ({})'.format(enum.tag, code),
         '``av.{}``'.format(cls.__name__),

@@ -341,7 +341,7 @@ for extern, events in sorted(defs_by_extern.items()):
             print()
             print(indent + '.. rst-class:: ffmpeg-quicklink')
             print()
-            print(indent + '    `FFmpeg Docs <%s>`_' % url)
+            print(indent + '    `FFmpeg Docs <%s>`__' % url)
 
         print(indent + headline)
         print()

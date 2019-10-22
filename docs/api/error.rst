@@ -14,7 +14,8 @@ FFmpeg has a couple dozen of its own error types which we represent via
 :ref:`error_classes` and at a lower level via :ref:`error_types`.
 
 FFmpeg will also return more typical errors such as ``ENOENT`` or ``EAGAIN``,
-which we do our best to translate to the builtin exceptions as defined by
+which we do our best to translate to extensions of the builtin exceptions
+as defined by
 `PEP 3151 <https://www.python.org/dev/peps/pep-3151/#new-exception-classes>`_
 (and fall back onto ``OSError`` if using Python < 3.3).
 
@@ -44,9 +45,26 @@ the ``av.error`` module, e.g.::
 Error Exception Classes
 -----------------------
 
-PyAV provides an exception type for each FFmpeg error. All such exceptions
-inherit from a base :class:`av.AVError`, and they are availible on the top-level
-``av`` package, e.g.::
+PyAV raises the typical builtin exceptions within its own codebase, but things
+get a little more complex when it comes to translating FFmpeg errors.
+
+There are two competing ideas that have influenced the final design:
+
+1. We want every exception that originates within FFmpeg to inherit from a common
+   :class:`.FFmpegError` exception;
+
+2. We want to use the builtin exceptions whenever possible.
+
+As such, PyAV effectivly shadows as much of the builtin exception heirarchy as
+it requires, extending from both the builtins and from :class:`FFmpegError`.
+
+Therefore, an argument error within FFmpeg will raise a ``av.error.ValueError``, which
+can be caught via either :class:`FFmpegError` or ``ValueError``. All of these
+exceptions expose the typical ``errno`` and ``strerror`` attributes (even
+``ValueError`` which doesn't typically), as well as some PyAV extensions such
+as :attr:`FFmpegError.log`.
+
+All of these exceptions are availible on the top-level ``av`` package, e.g.::
 
     try:
         do_something()
@@ -54,11 +72,7 @@ inherit from a base :class:`av.AVError`, and they are availible on the top-level
         handle_error()
 
 
-.. autoclass:: av.AVError
-
-.. note:: Not all exceptions raised by PyAV will be ``AVError``, just the
-    ones internal to the operation of FFmpeg. FFmpeg may raise "normal"
-    ``OSError`` derivatives, e.g. ``FileNotFoundError``. See :ref:`error_behaviour`.
+.. autoclass:: av.FFmpegError
 
 
 Mapping Codes and Classes

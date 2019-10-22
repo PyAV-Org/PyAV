@@ -77,4 +77,4 @@ cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
 
 
 # === BACKWARDS COMPAT ===
-from .error import AVError, err_check
+from .error import FFmpegError as AVError, err_check

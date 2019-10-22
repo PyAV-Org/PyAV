@@ -1,13 +1,51 @@
+import traceback
+
 import av
 
-from .common import TestCase, is_py33, is_windows
+from .common import TestCase, is_py3, is_py33, is_windows
 
 
 class TestErrorBasics(TestCase):
 
-    def test_filenotfound(self):
+    def test_stringify(self):
 
-        errcls = FileNotFoundError if is_py33 else OSError
+        for cls in (av.ValueError, av.FileNotFoundError, av.DecoderNotFoundError):
+            e = cls(1, 'foo')
+            self.assertEqual(str(e), '[Errno 1] foo')
+            self.assertEqual(repr(e), "{}(1, 'foo')".format(cls.__name__))
+            self.assertEqual(
+                traceback.format_exception_only(cls, e)[-1],
+                '{}{}: [Errno 1] foo\n'.format(
+                    'av.error.' if is_py3 else '',
+                    cls.__name__,
+                ),
+            )
+
+        for cls in (av.ValueError, av.FileNotFoundError, av.DecoderNotFoundError):
+            e = cls(1, 'foo', 'bar.txt')
+            self.assertEqual(str(e), "[Errno 1] foo: 'bar.txt'")
+            self.assertEqual(repr(e), "{}(1, 'foo', 'bar.txt')".format(cls.__name__))
+            self.assertEqual(
+                traceback.format_exception_only(cls, e)[-1],
+                "{}{}: [Errno 1] foo: 'bar.txt'\n".format(
+                    'av.error.' if is_py3 else '',
+                    cls.__name__,
+                ),
+            )
+
+    def test_bases(self):
+
+        self.assertTrue(issubclass(av.ValueError, ValueError))
+        self.assertTrue(issubclass(av.ValueError, av.FFmpegError))
+
+        if is_py33:
+            self.assertTrue(issubclass(av.FileNotFoundError, FileNotFoundError))
+        self.assertTrue(issubclass(av.FileNotFoundError, OSError))
+        self.assertTrue(issubclass(av.FileNotFoundError, av.FFmpegError))
+
+    def test_filenotfound(self):
+        """Catch using builtin class on Python 3.3"""
+        errcls = FileNotFoundError if is_py33 else av.FileNotFoundError
         try:
             av.open('does not exist')
         except errcls as e:
@@ -22,7 +60,7 @@ class TestErrorBasics(TestCase):
             self.fail('no exception raised')
 
     def test_buffertoosmall(self):
-
+        """Throw an exception from an enum."""
         try:
             av.error.err_check(-av.error.BUFFER_TOO_SMALL.value)
         except av.BufferTooSmallError as e:
