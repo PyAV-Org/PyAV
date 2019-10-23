@@ -9,14 +9,18 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 .DEFAULT: html
 
 includes.rst: includes.py $(shell find ../include ../av -name '*.pyx' -or -name '*.pxd')
-	python includes.py > $@.tmp
+	python $< > $@.tmp
+	mv $@.tmp $@
+
+error_table.rst: error_table.py ../av/error.pyx
+	python $< > $@.tmp
 	mv $@.tmp $@
 
 clean:
 	- rm -rf $(BUILDDIR)/*
 	- rm includes.rst
 
-html: includes.rst
+html: includes.rst error_table.rst
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 test:

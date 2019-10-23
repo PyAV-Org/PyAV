@@ -4,9 +4,10 @@ import logging
 from av.codec.codec cimport Codec
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
+from av.error cimport err_check
 from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
-from av.utils cimport err_check, dict_to_avdict
+from av.utils cimport dict_to_avdict
 
 from av.dictionary import Dictionary
 

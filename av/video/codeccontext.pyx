@@ -6,7 +6,7 @@ from av.codec.context cimport CodecContext
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
-from av.utils cimport err_check
+from av.error cimport err_check
 from av.video.format cimport get_video_format, VideoFormat
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter

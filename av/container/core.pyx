@@ -8,12 +8,12 @@ cimport libav as lib
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
+from av.error cimport err_check
 from av.format cimport build_container_format
-from av.utils cimport err_check, dict_to_avdict
+from av.utils cimport dict_to_avdict
 
-from av.dictionary import Dictionary  # not cimport
-from av.logging import Capture as LogCapture  # not cimport
-from av.utils import AVError  # not cimport
+from av.dictionary import Dictionary
+from av.logging import Capture as LogCapture
 
 try:
     from os import fsencode

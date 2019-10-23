@@ -3,11 +3,11 @@ from libc.stdlib cimport malloc, free
 
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
+from av.error cimport err_check
 from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
-from av.utils cimport err_check, avdict_to_dict
+from av.utils cimport avdict_to_dict
 
-from av.utils import AVError  # not cimport
 from av.dictionary import Dictionary
 
 
@@ -135,7 +135,7 @@ cdef class InputContainer(Container):
                     with nogil:
                         ret = lib.av_read_frame(self.ptr, &packet.struct)
                     self.err_check(ret)
-                except AVError:
+                except EOFError:
                     break
 
                 if include_stream[packet.struct.stream_index]:

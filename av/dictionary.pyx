@@ -1,6 +1,6 @@
 import collections
 
-from av.utils cimport err_check
+from av.error cimport err_check
 
 
 cdef class _Dictionary(object):

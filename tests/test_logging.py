@@ -3,9 +3,8 @@ from __future__ import division
 import logging
 import threading
 
+import av.error
 import av.logging
-import av.utils
-from av import AVError
 
 from .common import TestCase
 
@@ -77,8 +76,8 @@ class TestLogging(TestCase):
         log = (av.logging.ERROR, 'test', 'This is a test.')
         av.logging.log(*log)
         try:
-            av.utils.err_check(-1)
-        except AVError as e:
+            av.error.err_check(-1)
+        except OSError as e:
             self.assertEqual(e.log, log)
         else:
             self.fail()
