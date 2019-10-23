@@ -1,10 +1,10 @@
-import errno
-import numpy as np
-
 from fractions import Fraction
 from unittest import SkipTest
+import errno
 
-from av import AudioFrame, AVError, VideoFrame
+import numpy as np
+
+from av import AudioFrame, VideoFrame
 from av.audio.frame import format_dtypes
 from av.filter import Filter, Graph
 
@@ -113,11 +113,7 @@ class TestFilters(TestCase):
         hald_frame = VideoFrame.from_image(hald_img)
         hald_source = graph.add_buffer(hald_frame)
 
-        try:
-            hald_filter = graph.add('haldclut')
-        except ValueError:
-            # Not in Libav.
-            raise SkipTest()
+        hald_filter = graph.add('haldclut')
 
         sink = graph.add('buffersink')
 
@@ -143,7 +139,7 @@ class TestFilters(TestCase):
         audio_buffer = graph.add_abuffer(
             format='fltp',
             sample_rate=48000,
-            layout='5.0(side)',
+            layout='stereo',
             time_base=Fraction(1, 48000)
         )
         audio_buffer.link_to(graph.add('abuffersink'))
@@ -151,10 +147,10 @@ class TestFilters(TestCase):
 
         try:
             graph.pull()
-        except AVError as ex:
+        except OSError as e:
             # we haven't pushed any input so expect no frames / EAGAIN
-            if ex.errno != errno.EAGAIN:
-                raise ex
+            if e.errno != errno.EAGAIN:
+                raise
 
     @staticmethod
     def link_nodes(*nodes):
@@ -167,7 +163,7 @@ class TestFilters(TestCase):
             graph.add_abuffer(
                 format='fltp',
                 sample_rate=48000,
-                layout='5.0(side)',
+                layout='stereo',
                 time_base=Fraction(1, 48000)
             ),
             graph.add(
@@ -182,14 +178,14 @@ class TestFilters(TestCase):
             generate_audio_frame(
                 0,
                 input_format='fltp',
-                layout='5.0(side)',
+                layout='stereo',
                 sample_rate=48000
             )
         )
         out_frame = graph.pull()
-        self.assertEqual(out_frame.format.name, 's16', "Check output format")
-        self.assertEqual(out_frame.layout.name, 'stereo', "Check output layout")
-        self.assertEqual(out_frame.sample_rate, 44100, "Check output sample rate")
+        self.assertEqual(out_frame.format.name, 's16')
+        self.assertEqual(out_frame.layout.name, 'stereo')
+        self.assertEqual(out_frame.sample_rate, 44100)
 
     def test_audio_buffer_volume_filter(self):
         graph = Graph()
@@ -197,7 +193,7 @@ class TestFilters(TestCase):
             graph.add_abuffer(
                 format='fltp',
                 sample_rate=48000,
-                layout='5.0(side)',
+                layout='stereo',
                 time_base=Fraction(1, 48000)
             ),
             graph.add('volume', volume='0.5'),
@@ -205,13 +201,13 @@ class TestFilters(TestCase):
         )
         graph.configure()
 
-        input_frame = generate_audio_frame(0, input_format='fltp', layout='5.0(side)', sample_rate=48000)
+        input_frame = generate_audio_frame(0, input_format='fltp', layout='stereo', sample_rate=48000)
         graph.push(input_frame)
 
         out_frame = graph.pull()
-        self.assertEqual(out_frame.format.name, 'fltp', "Check output format")
-        self.assertEqual(out_frame.layout.name, '5.0(side)', "Check output layout")
-        self.assertEqual(out_frame.sample_rate, 48000, "Check output sample rate")
+        self.assertEqual(out_frame.format.name, 'fltp')
+        self.assertEqual(out_frame.layout.name, 'stereo')
+        self.assertEqual(out_frame.sample_rate, 48000)
 
         input_data = input_frame.to_ndarray()
         output_data = out_frame.to_ndarray()
