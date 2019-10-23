@@ -1,5 +1,3 @@
-from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
-
 cimport libav as lib
 
 
@@ -93,15 +91,7 @@ cdef class AudioLayout(object):
     cdef _init(self, uint64_t layout):
         self.layout = layout
         self.nb_channels = lib.av_get_channel_layout_nb_channels(layout)  # This just counts bits.
-        self.channels = PyTuple_New(self.nb_channels)
-        cdef AudioChannel c
-        for i in range(self.nb_channels):
-            # We are constructing this tuple manually, but since Cython does
-            # not understand reference stealing we must manually Py_INCREF
-            # so that when Cython Py_DECREFs it doesn't release our object.
-            c = AudioChannel(self, i)
-            Py_INCREF(c)
-            PyTuple_SET_ITEM(self.channels, i, c)
+        self.channels = tuple(AudioChannel(self, i) for i in range(self.nb_channels))
 
     def __repr__(self):
         return '<av.%s %r>' % (self.__class__.__name__, self.name)

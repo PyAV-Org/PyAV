@@ -1,5 +1,3 @@
-from cpython cimport Py_INCREF, PyTuple_New, PyTuple_SET_ITEM
-
 
 cdef object _cinit_bypass_sentinel = object()
 
@@ -37,20 +35,14 @@ cdef class VideoFormat(object):
         self._init(pix_fmt, width, height)
 
     cdef _init(self, lib.AVPixelFormat pix_fmt, unsigned int width, unsigned int height):
-
         self.pix_fmt = pix_fmt
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-
-        self.components = PyTuple_New(self.ptr.nb_components)
-        for i in range(self.ptr.nb_components):
-            # We are constructing this tuple manually, but since Cython does
-            # not understand reference stealing we must manually Py_INCREF
-            # so that when Cython Py_DECREFs it doesn't release our object.
-            c = VideoFormatComponent(self, i)
-            Py_INCREF(c)
-            PyTuple_SET_ITEM(self.components, i, c)
+        self.components = tuple(
+            VideoFormatComponent(self, i)
+            for i in range(self.ptr.nb_components)
+        )
 
     def __repr__(self):
         if self.width or self.height:
