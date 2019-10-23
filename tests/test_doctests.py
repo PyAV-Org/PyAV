@@ -1,7 +1,7 @@
+from unittest import TestCase
 import doctest
 import pkgutil
 import re
-from unittest import TestCase
 
 import av
 

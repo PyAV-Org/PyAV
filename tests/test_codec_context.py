@@ -1,10 +1,10 @@
-import os
 from fractions import Fraction
 from unittest import SkipTest
+import os
 
-import av
 from av import AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
+import av
 
 from .common import TestCase, fate_suite
 

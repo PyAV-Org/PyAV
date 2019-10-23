@@ -1,12 +1,12 @@
 from __future__ import division
 
+from unittest import TestCase as _Base
 import datetime
 import errno
 import functools
 import os
 import sys
 import types
-from unittest import TestCase as _Base
 
 from av.datasets import fate as fate_suite
 

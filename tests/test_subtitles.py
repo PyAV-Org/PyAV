@@ -1,5 +1,5 @@
-import av
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
+import av
 
 from .common import TestCase, fate_suite
 
