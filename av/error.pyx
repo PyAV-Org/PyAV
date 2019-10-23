@@ -120,7 +120,7 @@ class FFmpegError(Exception):
             msg = f'{msg}: {self.filename!r}'
 
         if self.log:
-            msg = f'{msg} ({self.log[0]}: {self.log[1]})'
+            msg = f'{msg}; last error log: [{self.log[1].strip()}] {self.log[2].strip()}'
 
         return msg
 
