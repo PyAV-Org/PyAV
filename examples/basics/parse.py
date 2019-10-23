@@ -9,10 +9,11 @@ import av.datasets
 # We haven't exposed bitstream filters yet, so we're gonna use the `ffmpeg` CLI.
 h264_path = 'night-sky.h264'
 if not os.path.exists(h264_path):
-    subprocess.check_call(['ffmpeg',
+    subprocess.check_call([
+        'ffmpeg',
         '-i', av.datasets.curated('pexels/time-lapse-video-of-night-sky-857195.mp4'),
-        '-vcodec', 'copy', 
-        '-an', 
+        '-vcodec', 'copy',
+        '-an',
         '-bsf:v', 'h264_mp4toannexb',
         h264_path,
     ])
