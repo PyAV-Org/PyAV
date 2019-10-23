@@ -139,13 +139,14 @@ cdef class Graph(object):
         if format is None:
             raise ValueError('missing format')
 
-        args = "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d" % (
-            width, height, int(VideoFormat(format)),
-            1, 1000,
-            1, 1
+        return self.add(
+            'buffer',
+            name=name,
+            video_size=f'{width}x{height}',
+            pix_fmt=str(int(VideoFormat(format))),
+            time_base='1/1000',
+            pixel_aspect='1/1',
         )
-
-        return self.add('buffer', args, name=name)
 
     def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None, time_base=None):
         """
@@ -162,7 +163,7 @@ cdef class Graph(object):
             if channels is None:
                 channels = template.channels
             if time_base is None:
-                time_base = Fraction(template.time_base.numerator, template.time_base.denominator)
+                time_base = template.time_base
 
         if sample_rate is None:
             raise ValueError('missing sample_rate')
@@ -173,18 +174,17 @@ cdef class Graph(object):
         if time_base is None:
             time_base = Fraction(1, sample_rate)
 
-        args = "sample_rate=%d:sample_fmt=%s:time_base=%d/%d" % (sample_rate,
-                                                                 AudioFormat(format).name,
-                                                                 time_base.numerator,
-                                                                 time_base.denominator)
+        kwargs = dict(
+            sample_rate=str(sample_rate),
+            sample_fmt=AudioFormat(format).name,
+            time_base=str(time_base),
+        )
         if layout:
-            # Use AudioLayout constructor to handle AudioLayout, numerical and string layout descriptors
-            # see av/audio/layout.pyx
-            args += ":channel_layout=" + AudioLayout(layout).name
+            kwargs['channel_layout'] = AudioLayout(layout).name
         if channels:
-            args += ":channels=" + str(channels)
+            kwargs['channels'] = str(channels)
 
-        return self.add('abuffer', args, name=name)
+        return self.add('abuffer', name=name, **kwargs)
 
     def push(self, frame):
 
