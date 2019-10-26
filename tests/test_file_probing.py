@@ -36,6 +36,7 @@ class TestAudioProbe(TestCase):
         # actual stream properties
         self.assertEqual(stream.average_rate, None)
         self.assertEqual(stream.base_rate, None)
+        self.assertEqual(stream.guessed_rate, None)
         self.assertEqual(stream.duration, 554880)
         self.assertEqual(stream.frames, 0)
         self.assertEqual(stream.id, 256)
@@ -109,6 +110,7 @@ class TestDataProbe(TestCase):
         # actual stream properties
         self.assertEqual(stream.average_rate, None)
         self.assertEqual(stream.base_rate, None)
+        self.assertEqual(stream.guessed_rate, None)
         self.assertEqual(stream.duration, 37537)
         self.assertEqual(stream.frames, 0)
         self.assertEqual(stream.id, 1)

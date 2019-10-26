@@ -274,6 +274,12 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
     )
 
+    cdef AVRational av_guess_frame_rate(
+        AVFormatContext *ctx,
+        AVStream *stream,
+        AVFrame *frame
+    )
+
     # custom
     
     cdef set pyav_get_available_formats()

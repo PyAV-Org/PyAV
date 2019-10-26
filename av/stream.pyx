@@ -219,7 +219,17 @@ cdef class Stream(object):
         """
         def __get__(self):
             return avrational_to_fraction(&self._stream.r_frame_rate)
-        
+
+    property guessed_rate:
+        """The guessed frame rate of this stream.
+
+        :type: fractions.Fraction
+        """
+        def __get__(self):
+            # The two NULL arguments aren't used in FFmpeg >= 4.0
+            cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self._stream, NULL)
+            return avrational_to_fraction(&val)
+
     property start_time:
         """
         The presentation timestamp in :attr:`time_base` units of the first
