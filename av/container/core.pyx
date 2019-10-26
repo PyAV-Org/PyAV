@@ -11,7 +11,7 @@ from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
-from av.error cimport err_check
+from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
 from av.utils cimport dict_to_avdict
 
@@ -33,17 +33,30 @@ ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 cdef object _cinit_sentinel = object()
 
 
-cdef int interrupt_cb (void *p) nogil:
-    cdef timeout_info info = dereference(<timeout_info*> p)
-    cdef double current_time
+# We want to use the monotonic clock if it is availible.
+cdef object clock = getattr(time, 'monotonic', time.time)
 
-    # timeout < 0 means no timeout
-    if info.timeout < 0:
+cdef int interrupt_cb (void *p) nogil:
+
+    cdef timeout_info info = dereference(<timeout_info*> p)
+    if info.timeout < 0:  # timeout < 0 means no timeout
         return 0
 
+    cdef double current_time
     with gil:
-        current_time = time.time()
-    return int(current_time > info.start_time + info.timeout)
+
+        current_time = clock()
+
+        # Check if the clock has been changed.
+        if current_time < info.start_time:
+            # Raise this when we get back to Python.
+            stash_exception((RuntimeError, RuntimeError("Clock has been changed to before timeout start"), None))
+            return 1
+
+    if current_time > info.start_time + info.timeout:
+        return 1
+
+    return 0
 
 
 cdef class Container(object):
@@ -219,7 +232,7 @@ cdef class Container(object):
             self.interrupt_callback_info.timeout = timeout
 
     cdef start_timeout(self):
-        self.interrupt_callback_info.start_time = time.time()
+        self.interrupt_callback_info.start_time = clock()
 
 
 def open(file, mode=None, format=None, options=None,
