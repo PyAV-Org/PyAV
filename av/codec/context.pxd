@@ -21,10 +21,6 @@ cdef class CodecContext(object):
     cdef int stream_index
 
     cdef lib.AVCodecParserContext *parser
-    cdef unsigned char *parse_buffer
-    cdef size_t parse_buffer_size
-    cdef size_t parse_buffer_max_size
-    cdef size_t parse_pos
 
     # To hold a reference to passed extradata.
     cdef ByteSource extradata_source
