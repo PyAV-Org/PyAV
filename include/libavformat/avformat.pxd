@@ -55,6 +55,11 @@ cdef extern from "libavformat/avformat.h" nogil:
         int seekable
         int max_packet_size
 
+    # http://ffmpeg.org/doxygen/trunk/structAVIOInterruptCB.html
+    cdef struct AVIOInterruptCB:
+        int (*callback)(void*)
+        void *opaque
+
     cdef int AVIO_FLAG_DIRECT
     cdef int AVIO_SEEKABLE_NORMAL
 
@@ -139,6 +144,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVOutputFormat *oformat
 
         AVIOContext *pb
+        AVIOInterruptCB interrupt_callback
 
         AVDictionary *metadata
 

@@ -1,14 +1,17 @@
 from libc.stdint cimport int64_t
 from libc.stdlib cimport malloc, free
+from cython.operator cimport dereference
 
 import sys
+import time
 
 cimport libav as lib
 
+from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
-from av.error cimport err_check
+from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
 from av.utils cimport dict_to_avdict
 
@@ -30,12 +33,38 @@ ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 cdef object _cinit_sentinel = object()
 
 
+# We want to use the monotonic clock if it is availible.
+cdef object clock = getattr(time, 'monotonic', time.time)
+
+cdef int interrupt_cb (void *p) nogil:
+
+    cdef timeout_info info = dereference(<timeout_info*> p)
+    if info.timeout < 0:  # timeout < 0 means no timeout
+        return 0
+
+    cdef double current_time
+    with gil:
+
+        current_time = clock()
+
+        # Check if the clock has been changed.
+        if current_time < info.start_time:
+            # Raise this when we get back to Python.
+            stash_exception((RuntimeError, RuntimeError("Clock has been changed to before timeout start"), None))
+            return 1
+
+    if current_time > info.start_time + info.timeout:
+        return 1
+
+    return 0
+
+
 cdef class Container(object):
 
     def __cinit__(self, sentinel, file_, format_name, options,
                   container_options, stream_options,
                   metadata_encoding, metadata_errors,
-                  buffer_size):
+                  buffer_size, open_timeout, read_timeout):
 
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -58,6 +87,9 @@ cdef class Container(object):
 
         self.metadata_encoding = metadata_encoding
         self.metadata_errors = metadata_errors
+
+        self.open_timeout = open_timeout
+        self.read_timeout = read_timeout
 
         if format_name is not None:
             self.format = ContainerFormat(format_name)
@@ -89,6 +121,11 @@ cdef class Container(object):
         else:
             # We need the context before we open the input AND setup Python IO.
             self.ptr = lib.avformat_alloc_context()
+
+            # Setup interrupt callback
+            if self.open_timeout is not None or self.read_timeout is not None:
+                self.ptr.interrupt_callback.callback = interrupt_cb
+                self.ptr.interrupt_callback.opaque = &self.interrupt_callback_info
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.max_analyze_duration = 10000000
@@ -138,6 +175,9 @@ cdef class Container(object):
             ifmt = self.format.iptr if self.format else NULL
 
             c_options = Dictionary(self.options, self.container_options)
+
+            self.set_timeout(self.open_timeout)
+            self.start_timeout()
             with nogil:
                 res = lib.avformat_open_input(
                     &self.ptr,
@@ -145,6 +185,7 @@ cdef class Container(object):
                     ifmt,
                     &c_options.ptr
                 )
+            self.set_timeout(None)
             self.err_check(res)
             self.input_was_opened = True
 
@@ -184,11 +225,20 @@ cdef class Container(object):
             lib.av_dump_format(self.ptr, 0, "", isinstance(self, OutputContainer))
         return ''.join(log[2] for log in logs)
 
+    cdef set_timeout(self, timeout):
+        if timeout is None:
+            self.interrupt_callback_info.timeout = -1.0
+        else:
+            self.interrupt_callback_info.timeout = timeout
+
+    cdef start_timeout(self):
+        self.interrupt_callback_info.start_time = clock()
+
 
 def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
          metadata_encoding=None, metadata_errors='strict',
-         buffer_size=32768):
+         buffer_size=32768, timeout=None):
     """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
 
     Main entrypoint to opening files/streams.
@@ -206,6 +256,9 @@ def open(file, mode=None, format=None, options=None,
         ``str.encode`` parameter. Defaults to strict.
     :param int buffer_size: Size of buffer for Python input/output operations in bytes.
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
+    :param timeout: How many seconds to wait for data before giving up, as a float, or a
+        :ref:`(open timeout, read timeout) <timeouts>` tuple.
+    :type timeout: float or tuple
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -222,12 +275,19 @@ def open(file, mode=None, format=None, options=None,
     if mode is None:
         mode = 'r'
 
+    if isinstance(timeout, tuple):
+        open_timeout = timeout[0]
+        read_timeout = timeout[1]
+    else:
+        open_timeout = timeout
+        read_timeout = timeout
+
     if mode.startswith('r'):
         return InputContainer(
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors,
-            buffer_size
+            buffer_size, open_timeout, read_timeout
         )
     if mode.startswith('w'):
         if stream_options:
@@ -236,6 +296,6 @@ def open(file, mode=None, format=None, options=None,
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors,
-            buffer_size
+            buffer_size, open_timeout, read_timeout
         )
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
