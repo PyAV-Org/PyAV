@@ -167,7 +167,7 @@ cdef class CodecContext(object):
         )
 
     def parse(self, raw_input=None):
-        """Split up a byte shttps://github.com/mikeboers/PyAV/pull/472tream into list of :class:`.Packet`.
+        """Split up a byte stream into list of :class:`.Packet`.
 
         This is only effectively splitting up a byte stream, and does no
         actual interpretation of the data.
