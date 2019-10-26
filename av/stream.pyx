@@ -211,9 +211,9 @@ cdef class Stream(object):
         def __get__(self):
             return avrational_to_fraction(&self._stream.avg_frame_rate)
 
-    property r_rate:
+    property base_rate:
         """
-        The Real base framerate of this stream.
+        The base frame rate of this stream.
 
         :type: fractions.Fraction
         """
