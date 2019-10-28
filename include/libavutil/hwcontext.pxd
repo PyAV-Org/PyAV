@@ -13,6 +13,8 @@ cdef extern from "libavutil/hwcontext.h" nogil:
         AV_HWDEVICE_TYPE_OPENCL
         AV_HWDEVICE_TYPE_MEDIACODEC
 
+    cdef AVHWDeviceType av_hwdevice_iterate_types(AVHWDeviceType prev)
+
     cdef int av_hwdevice_ctx_create(AVBufferRef **device_ctx, AVHWDeviceType type, const char *device, AVDictionary *opts, int flags)
 
     cdef AVHWDeviceType av_hwdevice_find_type_by_name(const char *name)

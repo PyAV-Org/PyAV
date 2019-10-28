@@ -1,4 +1,7 @@
+from __future__ import print_function
+
 from av.audio.format cimport get_audio_format
+from av.codec.hwaccel cimport wrap_hwconfig
 from av.descriptor cimport wrap_avclass
 from av.utils cimport avrational_to_fraction, flag_in_bitfield
 from av.video.format cimport get_video_format
@@ -86,6 +89,9 @@ cdef class Codec(object):
         if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
             raise RuntimeError('%s is both encoder and decoder.')
 
+    def __repr__(self):
+        return f'<av.{self.__class__.__name__}({self.name!r}, {self.mode!r})>'
+
     def create(self):
         from .context import CodecContext
         return CodecContext.create(self)
@@ -93,6 +99,10 @@ cdef class Codec(object):
     property is_decoder:
         def __get__(self):
             return not self.is_encoder
+
+    @property
+    def mode(self):
+        return 'w' if self.is_encoder else 'r'
 
     property descriptor:
         def __get__(self): return wrap_avclass(self.ptr.priv_class)
@@ -184,6 +194,26 @@ cdef class Codec(object):
             i += 1
         return ret
 
+    @property
+    def hardware_configs(self):
+
+        if self._hardware_configs:
+            return self._hardware_configs
+
+        ret = []
+        cdef int i = 0
+        cdef lib.AVCodecHWConfig *ptr
+        while True:
+            ptr = lib.avcodec_get_hw_config(self.ptr, i)
+            if not ptr:
+                break
+            ret.append(wrap_hwconfig(ptr))
+            i += 1
+
+        ret = tuple(ret)
+        self._hardware_configs = ret
+        return ret
+
     # Capabilities.
     property draw_horiz_band:
         def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_DRAW_HORIZ_BAND)
@@ -266,16 +296,16 @@ codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 def dump_codecs():
     """Print information about availible codecs."""
 
-    print '''Codecs:
- D..... = Decoding supported
- .E.... = Encoding supported
- ..V... = Video codec
- ..A... = Audio codec
- ..S... = Subtitle codec
- ...I.. = Intra frame-only codec
- ....L. = Lossy compression
- .....S = Lossless compression
- ------'''
+    print('''Codecs:
+    D....  = Decoding supported
+    .E...  = Encoding supported
+    ..V..  = Video codec
+    ..A..  = Audio codec
+    ..S..  = Subtitle codec
+    ...I.  = Intra frame-only codec
+    ....L  = Lossless compression
+    .....H = Hardware decoding supported
+    ------''')
 
     for name in sorted(codecs_available):
 
@@ -292,13 +322,33 @@ def dump_codecs():
         # TODO: Assert these always have the same properties.
         codec = e_codec or d_codec
 
-        print ' %s%s%s%s%s%s %-18s %s' % (
+        print('    %s%s%s%s%s%s %-18s %s' % (
             '.D'[bool(d_codec)],
             '.E'[bool(e_codec)],
             codec.type[0].upper(),
             '.I'[codec.intra_only],
-            'L.'[codec.lossless],
-            '.S'[codec.lossless],
+            '.L'[codec.lossless],
+            '.H'[bool((d_codec or codec).hardware_configs)],
             codec.name,
             codec.long_name
-        )
+        ))
+
+
+def dump_hwconfigs():
+
+    print('Hardware configs:')
+
+    for name in sorted(codecs_available):
+
+        try:
+            codec = Codec(name, 'r')
+        except ValueError:
+            continue
+
+        configs = codec.hardware_configs
+        if not configs:
+            continue
+
+        print('   ', codec.name)
+        for config in configs:
+            print('       ', config)

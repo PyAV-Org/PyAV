@@ -16,6 +16,8 @@ include "libavutil/buffer.pxd"
 include "libavutil/hwcontext.pxd"
 
 include "libavcodec/avcodec.pxd"
+include "libavcodec/hwaccel.pxd"
+
 include "libavdevice/avdevice.pxd"
 include "libavformat/avformat.pxd"
 include "libswresample/swresample.pxd"
