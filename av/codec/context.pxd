@@ -2,10 +2,11 @@ from libc.stdint cimport int64_t
 
 cimport libav as lib
 
+from av.bytesource cimport ByteSource
 from av.codec.codec cimport Codec
+from av.codec.hwaccel cimport HWAccel, HWAccelContext
 from av.frame cimport Frame
 from av.packet cimport Packet
-from av.bytesource cimport ByteSource
 
 
 cdef class CodecContext(object):
@@ -25,10 +26,12 @@ cdef class CodecContext(object):
     # To hold a reference to passed extradata.
     cdef ByteSource extradata_source
 
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec)
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel)
 
     cdef readonly Codec codec
 
+    cdef readonly HWAccelContext hwaccel
+    
     cdef public dict options
 
     # Public API.
@@ -67,4 +70,4 @@ cdef class CodecContext(object):
     cdef Frame _alloc_next_frame(self)
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated, dict hwaccel)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated, HWAccel hwaccel)

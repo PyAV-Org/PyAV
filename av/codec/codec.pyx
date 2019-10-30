@@ -92,9 +92,9 @@ cdef class Codec(object):
     def __repr__(self):
         return f'<av.{self.__class__.__name__}({self.name!r}, {self.mode!r})>'
 
-    def create(self):
+    def create(self, *args, **kwargs):
         from .context import CodecContext
-        return CodecContext.create(self)
+        return CodecContext.create(self, *args, **kwargs)
 
     property is_decoder:
         def __get__(self):

@@ -27,6 +27,7 @@ arg_parser.add_argument('-a', '--audio', action='store_true')
 arg_parser.add_argument('-v', '--video', action='store_true')
 arg_parser.add_argument('-s', '--subs', action='store_true')
 arg_parser.add_argument('-d', '--data', action='store_true')
+arg_parser.add_argument('-H', '--hwaccel', action='store_true')
 arg_parser.add_argument('--dump-packets', action='store_true')
 arg_parser.add_argument('--dump-planes', action='store_true')
 arg_parser.add_argument('-p', '--play', action='store_true')
@@ -39,7 +40,7 @@ args = arg_parser.parse_args()
 proc = None
 
 options = dict(x.split('=') for x in args.option)
-container = open(args.path, format=args.format, options=options)
+container = open(args.path, format=args.format, options=options, hwaccel=args.hwaccel or None)
 
 print('container:', container)
 print('\tformat:', container.format)

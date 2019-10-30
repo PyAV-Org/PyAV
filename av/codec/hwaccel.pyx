@@ -5,8 +5,12 @@ import weakref
 cimport libav as lib
 
 from av.codec.codec cimport Codec
+from av.dictionary cimport _Dictionary
 from av.enums cimport define_enum
+from av.error cimport err_check
 from av.video.format cimport get_video_format
+
+from av.dictionary import Dictionary
 
 
 HWDeviceType = define_enum('HWDeviceType', (
@@ -100,12 +104,73 @@ def dump_hwdevices():
 
 cdef class HWAccel(object):
 
+    @classmethod
+    def adapt(cls, input_):
+        if input_ is True:
+            return cls()
+        if isinstance(input_, cls):
+            return input_
+        if isinstance(input_, (str, HWDeviceType)):
+            return cls(input_)
+        if isinstance(input_, (list, tuple)):
+            return cls(*input_)
+        if isinstance(input_, dict):
+            return cls(**input_)
+        raise TypeError(f"can't adapt to HWAccel; {input_!r}")
+
     def __init__(self, device_type=None, device=None, options=None, **kwargs):
 
-        self._device_type = device_type
+        self._device_type = HWDeviceType(device_type) if device_type else None
         self._device = device
 
         if options and kwargs:
             raise ValueError("accepts only one of options arg or kwargs")
         self.options = dict(options or kwargs)
+
+    def create(self, Codec codec):
+        return HWAccelContext(self._device_type, self._device, self.options, codec)
+
+
+cdef class HWAccelContext(HWAccel):
+
+    def __init__(self, device_type=None, device=None, options=None, codec=None, **kwargs):
+        super().__init__(device_type, device, options, **kwargs)
+
+        if not codec:
+            raise ValueError("codec is required")
+        self.codec = codec
+
+        cdef HWConfig config
+        for config in codec.hardware_configs:
+
+            if not (config.ptr.methods & lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX):
+                continue
+
+            if self._device_type and config.device_type != self._device_type:
+                continue
+
+            break
+
+        else:
+            raise ValueError(f"no supported hardware config for {codec}")
+
+        self.config = config
+
+        cdef char *c_device = NULL
+        if self._device:
+            device_bytes = self._device.encode()
+            c_device = device_bytes
+
+        cdef _Dictionary c_options = Dictionary(self.options)
+
+        err_check(lib.av_hwdevice_ctx_create(&self.ptr, config.ptr.device_type, c_device, c_options.ptr, 0))
+
+    def __dealloc__(self):
+        if self.ptr:
+            lib.av_buffer_unref(&self.ptr)
+
+    def create(self, *args, **kwargs):
+        raise ValueError("cannot call HWAccelContext.create")
+
+
 

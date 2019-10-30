@@ -7,6 +7,7 @@ cimport libav as lib
 
 from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec
+from av.codec.hwaccel cimport HWAccel
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.enums cimport define_enum
@@ -18,7 +19,7 @@ from av.utils cimport avdict_to_dict, avrational_to_fraction, to_avrational
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated, dict hwaccel):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated, HWAccel hwaccel):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -26,7 +27,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     # TODO: This.
     if c_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
         from av.video.codeccontext import VideoCodecContext
-        py_ctx = VideoCodecContext(_cinit_sentinel, hwaccel=hwaccel)
+        py_ctx = VideoCodecContext(_cinit_sentinel)
     elif c_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
         from av.audio.codeccontext import AudioCodecContext
         py_ctx = AudioCodecContext(_cinit_sentinel)
@@ -37,7 +38,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
         py_ctx = CodecContext(_cinit_sentinel)
 
     py_ctx.allocated = allocated
-    py_ctx._init(c_ctx, c_codec)
+    py_ctx._init(c_ctx, c_codec, hwaccel)
 
     return py_ctx
 
@@ -62,10 +63,10 @@ SkipType = define_enum('SkipType', (
 cdef class CodecContext(object):
 
     @staticmethod
-    def create(codec, mode=None):
+    def create(codec, mode=None, hwaccel=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        return wrap_codec_context(c_ctx, cy_codec.ptr, True, None)
+        return wrap_codec_context(c_ctx, cy_codec.ptr, True, hwaccel)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -74,7 +75,7 @@ cdef class CodecContext(object):
         self.options = {}
         self.stream_index = -1  # This is set by the container immediately.
 
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel):
 
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:

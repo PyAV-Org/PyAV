@@ -3,6 +3,7 @@ cimport libav as lib
 from av.audio.format cimport AudioFormat, get_audio_format
 from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.audio.layout cimport AudioLayout, get_audio_layout
+from av.codec.hwaccel cimport HWAccel
 from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
@@ -10,8 +11,8 @@ from av.packet cimport Packet
 
 cdef class AudioCodecContext(CodecContext):
 
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
-        CodecContext._init(self, ptr, codec)
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel):
+        CodecContext._init(self, ptr, codec, hwaccel)
 
         # Sometimes there isn't a layout set, but there are a number of
         # channels. Assume it is the default layout.

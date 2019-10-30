@@ -7,6 +7,7 @@ import time
 
 cimport libav as lib
 
+from av.codec.hwaccel cimport HWAccel
 from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
@@ -287,7 +288,7 @@ def open(file, mode=None, format=None, options=None,
         read_timeout = timeout
 
     if hwaccel is not None:
-        hwaccel = dict(hwaccel)
+        hwaccel = HWAccel.adapt(hwaccel)
 
     if mode.startswith('r'):
         return InputContainer(
