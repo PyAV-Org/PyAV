@@ -17,7 +17,7 @@ assignees: ''
 
 ## Existing FFmpeg API
 
-{{ Link to appropriate FFmpeg documentation, ideally the API doxygen files }}
+{{ Link to appropriate FFmpeg documentation, ideally the API doxygen files at https://ffmpeg.org/doxygen/trunk/ }}
 
 
 ## Expected PyAV API

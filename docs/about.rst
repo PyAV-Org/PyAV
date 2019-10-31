@@ -20,5 +20,21 @@ While we could have theoretically continued to support both, it has been years s
 
 Many Libav-isms remain in PyAV, and we will slowly scrub them out to clean up PyAV as we come across them again.
 
+
+Unsupported Features
+--------------------
+
+Our goal is to provide all of the features that make sense for the contexts that PyAV would be used in. If there is something missing, please reach out on Gitter_ or open a feature request on GitHub_ (or even better a pull request). Your request will be more likely to be addressed if you can point to the relevant `FFmpeg API documentation <https://ffmpeg.org/doxygen/trunk/index.html>`__.
+
+There are some features we may elect to not implement because we don't believe they fit the PyAV ethos. The only one that we've encountered so far is hardware decoding. The `FFmpeg man page <https://ffmpeg.org/ffmpeg.html>`__ discusses the drawback of ``-hwaccel``:
+
+    Note that most acceleration methods are intended for playback and will not be faster than software decoding on modern CPUs. Additionally, ``ffmpeg`` will usually need to copy the decoded frames from the GPU memory into the system memory, resulting in further performance loss.
+
+Since PyAV is not expected to be used in a high performance playback loop, we do not find the added code complexity worth the benefits of supporting this feature
+
+
 .. _FFmpeg: https://ffmpeg.org/
 .. _Libav: https://libav.org/
+
+.. _Gitter: https://gitter.im/mikeboers/PyAV
+.. _GitHub: https://github.com/mikeboers/pyav
