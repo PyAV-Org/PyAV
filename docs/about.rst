@@ -20,3 +20,5 @@ While we could have theoretically continued to support both, it has been years s
 
 Many Libav-isms remain in PyAV, and we will slowly scrub them out to clean up PyAV as we come across them again.
 
+.. _FFmpeg: https://ffmpeg.org/
+.. _Libav: https://libav.org/

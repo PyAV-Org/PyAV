@@ -16,12 +16,13 @@ Dependencies
 
 PyAV depends upon several libraries from FFmpeg (version ``4.0`` or higher):
 
-- ``libavformat``
 - ``libavcodec``
 - ``libavdevice``
+- ``libavfilter``
+- ``libavformat``
 - ``libavutil``
+- ``libswresample``
 - ``libswscale``
-- ``libswresample``:
 
 and a few other tools in general:
 
@@ -103,7 +104,7 @@ Via PyPI/CheeseShop
 ^^^^^^^^^^^^^^^^^^^
 ::
 
-    $ pip install av
+    pip install av
 
 
 Via Source
@@ -112,22 +113,22 @@ Via Source
 ::
 
     # Get PyAV from GitHub.
-    $ git clone git@github.com:mikeboers/PyAV.git
-    $ cd PyAV
+    git clone git@github.com:mikeboers/PyAV.git
+    cd PyAV
 
     # Prep a virtualenv.
-    $ source scripts/activate.sh
+    source scripts/activate.sh
 
     # Install basic requirements.
-    $ pip install -r tests/requirements.txt
+    pip install -r tests/requirements.txt
 
     # Optionally build FFmpeg.
-    $ ./scripts/build-deps
+    ./scripts/build-deps
 
     # Build PyAV.
-    $ make
+    make
     # or
-    $ python setup.py build_ext --inplace
+    python setup.py build_ext --inplace
 
 
 On **Mac OS X** you may have issues with regards to Python expecting gcc but finding clang. Try to export the following before installation::

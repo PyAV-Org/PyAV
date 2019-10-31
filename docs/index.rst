@@ -37,7 +37,7 @@ Currently we provide:
 
 - and a few more utilities.
 
-.. _FFmpeg: http://ffmpeg.org
+.. _FFmpeg: https://ffmpeg.org/
 
 
 Basic Demo
