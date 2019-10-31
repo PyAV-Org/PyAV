@@ -239,9 +239,7 @@ def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
          metadata_encoding=None, metadata_errors='strict',
          buffer_size=32768, timeout=None):
-    """open(file, mode='r', format=None, options=None, metadata_encoding=None, metadata_errors='strict')
-
-    Main entrypoint to opening files/streams.
+    """Main entrypoint to opening files/streams.
 
     :param str file: The file to open, which can be either a string or a file-like object.
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
