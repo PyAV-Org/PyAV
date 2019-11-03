@@ -5,20 +5,28 @@ BUILDDIR      = _build
 
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 
-.PHONY: clean html open upload
-.DEFAULT: html
+.PHONY: clean html open upload default
+
+default: html
+
+
+TAGFILE := _build/doxygen/tagfile.xml
+$(TAGFILE) :
+	./generate-tagfile -o $(TAGFILE)
+
 
 TEMPLATES := $(wildcard api/*.py development/*.py)
 RENDERED := $(TEMPLATES:%.py=_build/rst/%.rst)
-_build/rst/%.rst: %.py $(shell find ../include ../av -name '*.pyx' -or -name '*.pxd')
+_build/rst/%.rst: %.py $(TAGFILE) $(shell find ../include ../av -name '*.pyx' -or -name '*.pxd')
 	@ mkdir -p $(@D)
 	python $< > $@.tmp
 	mv $@.tmp $@
 
+
 clean:
 	- rm -rf $(BUILDDIR)/*
 
-html: $(RENDERED)
+html: $(RENDERED) $(TAGFILE)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 test:

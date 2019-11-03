@@ -133,7 +133,7 @@ def iter_cython(path):
 
 doxygen = {}
 doxygen_base = 'https://ffmpeg.org/doxygen/trunk'
-tagfile_path = 'tmp/tagfile.xml'
+tagfile_path = 'docs/_build/doxygen/tagfile.xml'
 
 tagfile_json = tagfile_path + '.json'
 if os.path.exists(tagfile_json):

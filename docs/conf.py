@@ -253,11 +253,11 @@ todo_include_todos = True
 
 
 doxylink = {}
-ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', '..', 'tmp', 'tagfile.xml'))
-if os.path.exists(ffmpeg_tagfile):
-    doxylink['ffmpeg'] = (ffmpeg_tagfile, 'https://ffmpeg.org/doxygen/trunk/')
-else:
-    print("WARNING: Please build FFmpeg's docs with: GENERATE_TAGFILE = %s" % ffmpeg_tagfile)
+ffmpeg_tagfile = os.path.abspath(os.path.join(__file__, '..', '_build', 'doxygen', 'tagfile.xml'))
+if not os.path.exists(ffmpeg_tagfile):
+    print("ERROR: Missing FFmpeg tagfile.")
+    exit(1)
+doxylink['ffmpeg'] = (ffmpeg_tagfile, 'https://ffmpeg.org/doxygen/trunk/')
 
 
 def setup(app):
