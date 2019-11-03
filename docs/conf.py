@@ -12,13 +12,16 @@ from __future__ import print_function
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from docutils import nodes
 import logging
-import sys
 import os
 import re
 import sys
+import sys
+import xml.etree.ElementTree as etree
 
 import sphinx
+from sphinx import addnodes
 
 
 logging.basicConfig()
@@ -39,13 +42,6 @@ sys.path.insert(0, os.path.abspath('..'))
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 
-try:
-    import sphinxcontrib.doxylink
-    has_doxylink = True
-except ImportError:
-    print("WARNING: Please install sphinxcontrib-doxylink for links to FFmpeg's docs.")
-    has_doxylink = False
-
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
@@ -56,9 +52,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
     'sphinx.ext.doctest',
+
+    # We used to use doxylink, but we found its caching behaviour annoying, and
+    # so made a minimally viable version of our own.
 ]
-if has_doxylink:
-    extensions.append('sphinxcontrib.doxylink')
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -203,8 +200,8 @@ doctest_global_setup = '''
 import errno
 import os
 
-from av.testdata import fate_suite
 import av
+from av.datasets import fate, fate as fate_suite
 
 from tests import common
 from tests.common import sandboxed as _sandboxed
@@ -242,11 +239,14 @@ extlinks = {
 }
 
 intersphinx_mapping = {
-    'http://docs.python.org/': None,
+    'https://docs.python.org/3': None,
 }
 
 autodoc_member_order = 'bysource'
-autodoc_default_flags = ['undoc-members', 'show-inheritance']
+autodoc_default_options = {
+    'undoc-members': True,
+    'show-inheritance': True,
+}
 
 
 todo_include_todos = True
@@ -260,5 +260,100 @@ if not os.path.exists(ffmpeg_tagfile):
 doxylink['ffmpeg'] = (ffmpeg_tagfile, 'https://ffmpeg.org/doxygen/trunk/')
 
 
+def doxylink_create_handler(app, file_name, url_base):
+
+    print("Finding all names in Doxygen tagfile", file_name)
+
+    doc = etree.parse(file_name)
+    root = doc.getroot()
+
+    parent_map = {}  # ElementTree doesn't five us access to parents.
+    urls = {}
+
+    for node in root.findall('.//name/..'):
+
+        for child in node:
+            parent_map[child] = node
+
+        kind = node.attrib['kind']
+        if kind not in ('function', 'struct', 'variable'):
+            continue
+
+        name = node.find('name').text
+
+        if kind not in ('function', ):
+            parent = parent_map.get(node)
+            parent_name = parent.find('name') if parent else None
+            if parent_name is not None:
+                name = '{}.{}'.format(parent_name.text, name)
+
+        filenode = node.find('filename')
+        if filenode is not None:
+            url = filenode.text
+        else:
+            url = '{}#{}'.format(
+                node.find('anchorfile').text,
+                node.find('anchor').text,
+            )
+
+        urls.setdefault(kind, {})[name] = url
+
+    def get_url(name):
+        # These are all the kinds that seem to exist.
+        for kind in (
+            'function',
+            'struct',
+            'variable', # These are struct members.
+            # 'class',
+            # 'define',
+            # 'enumeration',
+            # 'enumvalue',
+            # 'file',
+            # 'group',
+            # 'page',
+            # 'typedef',
+            # 'union',
+        ):
+            try:
+                return urls[kind][name]
+            except KeyError:
+                pass
+
+
+    def _doxylink_handler(name, rawtext, text, lineno, inliner, options={}, content=[]):
+
+        m = re.match(r'^(.+?)(?:<(.+?)>)?$', text)
+        title, name = m.groups()
+        name = name or title
+
+        url = get_url(name)
+        if not url:
+            print("ERROR: Could not find", name)
+            exit(1)
+
+        node = addnodes.literal_strong(title, title)
+        if url:
+            url = url_base + url
+            node = nodes.reference(
+                '', '', node, refuri=url
+            )
+
+        return [node], []
+
+    return _doxylink_handler
+
+
+
+
 def setup(app):
+
     app.add_stylesheet('custom.css')
+
+    skip = os.environ.get('PYAV_SKIP_DOXYLINK')
+    for role, (filename, url_base) in doxylink.items():
+        if skip:
+            app.add_role(role, lambda *args: ([], []))
+        else:
+            app.add_role(role, doxylink_create_handler(app, filename, url_base))
+
+

@@ -49,7 +49,7 @@ GENERATE_TAGFILE = {}
 GENERATE_HTML = no
 GENERATE_LATEX = no
 CASE_SENSE_NAMES = yes
-INPUT = libavcodec,libavdevice,libavfilter,libavformat,libavresample,libavutil,libswresample,libswscale
+INPUT = libavcodec libavdevice libavfilter libavformat libavresample libavutil libswresample libswscale
 
 '''.format(output).encode())
 

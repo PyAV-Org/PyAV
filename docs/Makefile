@@ -30,7 +30,7 @@ html: $(RENDERED) $(TAGFILE)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 test:
-	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
+	PYAV_SKIP_DOXYLINK=1 $(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 
 open:
 	open _build/html/index.html
