@@ -8,5 +8,5 @@ License
 
 From `LICENSE.txt <https://github.com/mikeboers/PyAV/blob/master/LICENSE.txt>`_:
 
-.. literalinclude:: ../LICENSE.txt
+.. literalinclude:: ../../LICENSE.txt
     :language: text

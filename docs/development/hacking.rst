@@ -3,4 +3,4 @@
 
 .. _hacking:
 
-.. include:: ../HACKING.rst
+.. include:: ../../HACKING.rst

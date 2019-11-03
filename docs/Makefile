@@ -8,19 +8,17 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 .PHONY: clean html open upload
 .DEFAULT: html
 
-includes.rst: includes.py $(shell find ../include ../av -name '*.pyx' -or -name '*.pxd')
-	python $< > $@.tmp
-	mv $@.tmp $@
-
-error_table.rst: error_table.py ../av/error.pyx
+TEMPLATES := $(wildcard api/*.py development/*.py)
+RENDERED := $(TEMPLATES:%.py=_build/rst/%.rst)
+_build/rst/%.rst: %.py $(shell find ../include ../av -name '*.pyx' -or -name '*.pxd')
+	@ mkdir -p $(@D)
 	python $< > $@.tmp
 	mv $@.tmp $@
 
 clean:
 	- rm -rf $(BUILDDIR)/*
-	- rm includes.rst
 
-html: includes.rst error_table.rst
+html: $(RENDERED)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 test:
