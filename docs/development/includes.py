@@ -12,7 +12,7 @@ from Cython.Compiler.TreeFragment import parse_from_strings
 from Cython.Compiler.Visitor import TreeVisitor
 from Cython.Compiler import Nodes
 
-os.chdir(os.path.abspath(os.path.join(__file__, '..', '..')))
+os.chdir(os.path.abspath(os.path.join(__file__, '..', '..', '..')))
 
 
 class Visitor(TreeVisitor):
