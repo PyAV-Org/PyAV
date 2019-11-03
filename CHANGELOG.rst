@@ -22,12 +22,25 @@ v7.0.0.dev0
 
 Major:
 
-- Drop support for FFmpeg < 4.0
+- Drop support for FFmpeg < 4.0. (:issue:`559`)
+- Introduce per-error exceptions, and mirror the builtin exception heirarchy.
+  It is recommended to examine your error handling code, as common FFmpeg errors
+  will result in `ValueError` baseclasses now. (:issue:`563`)
+- Data stream's `encode` and `decode` return empty lists instead of none
+  allowing common API use patterns with data streams.
 
 Minor:
 
 - Users can disable the logging system to avoid lockups in sub-interpreters. (:issue:`545`)
+- Filters support audio in general, and a new :meth:`.Graph.add_abuffer`. (:issue:`562`)
+- :func:`av.open` supports `timeout` parameters. (:issue:`480` and :issue:`316`)
 
+Fixes:
+
+- Fix typing in :meth:`.CodecContext.parse` and make it more robust.
+- Fix wrong attribute in ByteSource. (:issue:`340`)
+- Remove exception that would break audio remuxing. (:issue:`537`)
+- Log messages include last FFmpeg error log in more helpful way.
 
 v6.2.0
 ------
