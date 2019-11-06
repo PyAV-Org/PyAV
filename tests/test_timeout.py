@@ -21,7 +21,7 @@ CONTENT = open(fate_suite('mpeg2/mpeg2_field_encoding.ts'), 'rb').read()\
 
 # Needs to be long enough for all host OSes to deal.
 TIMEOUT = 0.25
-DELAY = 2 * TIMEOUT
+DELAY = 4 * TIMEOUT
 
 
 class HttpServer(TCPServer):
