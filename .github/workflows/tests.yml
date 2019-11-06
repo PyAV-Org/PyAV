@@ -56,7 +56,7 @@ jobs:
     strategy:
       matrix:
         config:
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.2"}
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.2", extras: true}
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.1"}
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.0"}
           - {os: ubuntu-latest, python: 2.7, ffmpeg: "4.2"}
@@ -89,6 +89,9 @@ jobs:
               libtool mercurial pkg-config texinfo wget yasm zlib1g-dev
             sudo apt-get install libass-dev libfreetype6-dev libjpeg-dev \
               libtheora-dev libvorbis-dev libx264-dev
+            if [[ "${{ matrix.config.extras }}" ]]; then
+              sudo apt-get install doxygen
+            fi
             ;;
           macos-latest)
             brew update
@@ -112,6 +115,24 @@ jobs:
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
         python -m av --version # Assert it can import.
         scripts/test
+
+    - name: Source Distribution
+      if: matrix.config.extras
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        python setup.py sdist
+
+    - name: Docs
+      if: matrix.config.extras
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        make -C docs html
+
+    - name: Doctest
+      if: matrix.config.extras
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        make -C docs test
 
 
   windows:
