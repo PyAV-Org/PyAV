@@ -116,12 +116,6 @@ jobs:
         python -m av --version # Assert it can import.
         scripts/test
 
-    - name: Source Distribution
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        python setup.py sdist
-
     - name: Docs
       if: matrix.config.extras
       run: |
@@ -132,8 +126,19 @@ jobs:
       if: matrix.config.extras
       run: |
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        make -C docs test
+        scripts/test doctest
 
+    - name: Examples
+      if: matrix.config.extras
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        scripts/test examples
+
+    - name: Source Distribution
+      if: matrix.config.extras
+      run: |
+        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        scripts/test sdist
 
   windows:
 

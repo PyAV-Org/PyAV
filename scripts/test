@@ -11,47 +11,54 @@ fi
 cd "$PYAV_ROOT"
 
 
-TESTSUITE="${TESTSUITE-$1}"
+TESTSUITE="${1-main}"
 
-if [[ ! "$TESTSUITE" ]]; then
-    if [[ "$GITHUB_ACTION" || "$TRAVIS" ]]; then
-        TESTSUITE=main
-    else
-        TESTSUITE=all
-    fi
-fi
+istest() {
+    [[ "$TESTSUITE" == all || "$TESTSUITE" == "$1" ]]
+    return $?
+}
 
-
-if [[ "$TESTSUITE" == all || "$TESTSUITE" == flake8 ]]; then
-    # Settings in setup.cfg
+if istest flake8; then
+    # Settings are in setup.cfg
     $PYAV_PYTHON -m flake8 av examples tests
-    if [[ "$TESTSUITE" != all ]]; then
-        # We've only gotten this far if it was successful.
-        exit
-    fi
 fi
 
-if [[ "$TESTSUITE" == all || "$TESTSUITE" == isort ]]; then
+if istest isort; then
     # More settings in setup.cfg
     out="$($PYAV_PYTHON -m isort -q -df -rc av examples tests)"
     if [[ "$out" ]]; then
         echo -n "$out"
         exit 1
     fi
-    if [[ "$TESTSUITE" != all ]]; then
-        exit
-    fi
 fi
 
-if [[ "$TESTSUITE" == all || "$TESTSUITE" == main ]]; then
+if istest main; then
     $PYAV_PYTHON setup.py test
 fi
 
-if [[ "$TESTSUITE" == sdist ]]; then
+if istest sdist; then
     $PYAV_PYTHON setup.py build_ext
     $PYAV_PYTHON setup.py sdist
     if [[ "$TRAVIS_TAG" ]]; then
         $PYAV_PIP install twine
         $PYAV_PYTHON -m twine upload --skip-existing dist/*
     fi
+fi
+
+if istest doctest; then
+    make -C docs test
+fi
+
+if istest examples; then
+    for name in $(find examples -name '*.py'); do
+        echo
+        echo === $name
+        cd "$PYAV_ROOT"
+        mkdir -p "sandbox/$1"
+        cd "sandbox/$1"
+        if ! python "$PYAV_ROOT/$name"; then
+            echo FAILED $name with code $?
+            exit $?
+        fi
+    done
 fi
