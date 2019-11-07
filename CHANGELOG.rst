@@ -34,6 +34,7 @@ Minor:
 - Users can disable the logging system to avoid lockups in sub-interpreters. (:issue:`545`)
 - Filters support audio in general, and a new :meth:`.Graph.add_abuffer`. (:issue:`562`)
 - :func:`av.open` supports `timeout` parameters. (:issue:`480` and :issue:`316`)
+- Expose :attr:`Stream.base_rate` and :attr:`Stream.guessed_rate`. (:issue:`564`)
 
 Fixes:
 

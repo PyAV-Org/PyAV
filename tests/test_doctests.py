@@ -26,6 +26,7 @@ def fix_doctests(suite):
         )
 
         case._dt_test.globs['av'] = av
+        case._dt_test.globs['video_path'] = av.datasets.curated('pexels/time-lapse-video-of-night-sky-857195.mp4')
 
         for example in case._dt_test.examples:
 
