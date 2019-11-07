@@ -12,7 +12,7 @@ from Cython.Compiler.TreeFragment import parse_from_strings
 from Cython.Compiler.Visitor import TreeVisitor
 from Cython.Compiler import Nodes
 
-os.chdir(os.path.abspath(os.path.join(__file__, '..', '..')))
+os.chdir(os.path.abspath(os.path.join(__file__, '..', '..', '..')))
 
 
 class Visitor(TreeVisitor):
@@ -133,7 +133,7 @@ def iter_cython(path):
 
 doxygen = {}
 doxygen_base = 'https://ffmpeg.org/doxygen/trunk'
-tagfile_path = 'tmp/tagfile.xml'
+tagfile_path = 'docs/_build/doxygen/tagfile.xml'
 
 tagfile_json = tagfile_path + '.json'
 if os.path.exists(tagfile_json):

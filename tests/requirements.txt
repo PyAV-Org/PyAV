@@ -5,3 +5,4 @@ flake8
 isort
 numpy
 Pillow
+sphinx

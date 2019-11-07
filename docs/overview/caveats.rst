@@ -1,6 +1,20 @@
 Caveats
 =======
 
+.. _authority_of_docs:
+
+Authority of Documentation
+--------------------------
+
+FFmpeg is extremely complex, and the PyAV developers have not been successful in making it 100% clear to themselves in all aspects. Our understanding of how it works and how to work with it is via reading the docs, digging through the source, perfoming experiments, and hearing from users where PyAV isn't doing the right thing.
+
+Only where this documentation is about the mechanics of PyAV can it be considered authoritative. Anywhere that we discuss something that is actually about the underlying FFmpeg libraries comes with the caveat that we can not always be 100% on it.
+
+It is, unfortunately, often on the user the understand and deal with the edge cases. We encourage you to bring them to our attension via GitHub_ so that we can try to make PyAV deal with it, but we can't always make it work.
+
+.. _GitHub: https://github.com/mikeboers/pyav/issues
+
+
 Sub-Interpeters
 ---------------
 
