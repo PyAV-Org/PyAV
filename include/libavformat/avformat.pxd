@@ -33,6 +33,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int id
 
         AVCodecContext *codec
+        AVCodecParameters *codecpar
 
         AVRational time_base
 
@@ -281,5 +282,5 @@ cdef extern from "libavformat/avformat.h" nogil:
     )
 
     # custom
-    
+
     cdef set pyav_get_available_formats()
