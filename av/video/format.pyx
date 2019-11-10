@@ -58,6 +58,12 @@ cdef class VideoFormat(object):
         def __get__(self):
             return <str>self.ptr.name
 
+    property bits_per_pixel:
+        def __get__(self): return lib.av_get_bits_per_pixel(self.ptr)
+
+    property padded_bits_per_pixel:
+        def __get__(self): return lib.av_get_padded_bits_per_pixel(self.ptr)
+
     property is_big_endian:
         """Pixel format is big-endian."""
         def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BE)

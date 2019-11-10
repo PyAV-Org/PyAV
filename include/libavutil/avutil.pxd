@@ -121,6 +121,10 @@ cdef extern from "libavutil/pixdesc.h" nogil:
         AV_PIX_FMT_FLAG_HWACCEL
         AV_PIX_FMT_FLAG_PLANAR
         AV_PIX_FMT_FLAG_RGB
+        AV_PIX_FMT_FLAG_PSEUDOPAL
+        AV_PIX_FMT_FLAG_ALPHA
+        AV_PIX_FMT_FLAG_BAYER
+        AV_PIX_FMT_FLAG_FLOAT
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVPixFmtDescriptor.html
     cdef struct AVPixFmtDescriptor:
@@ -137,6 +141,8 @@ cdef extern from "libavutil/pixdesc.h" nogil:
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(char* name)
 
+    int av_get_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
+    int av_get_padded_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
 
 
 

@@ -3,6 +3,9 @@ from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t, int64_t
 
 cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
+    # custom
+    cdef set pyav_get_available_codecs()
+
     cdef int   avcodec_version()
     cdef char* avcodec_configuration()
     cdef char* avcodec_license()
@@ -368,5 +371,12 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
     )
     cdef void av_parser_close(AVCodecParserContext *s)
 
-    # custom
-    cdef set pyav_get_available_codecs()
+
+    cdef struct AVCodecParameters:
+        pass
+
+    cdef int avcodec_parameters_from_context(
+        AVCodecParameters *par,
+        const AVCodecContext *codec,
+    )
+

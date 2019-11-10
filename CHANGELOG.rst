@@ -42,6 +42,8 @@ Fixes:
 - Fix wrong attribute in ByteSource. (:issue:`340`)
 - Remove exception that would break audio remuxing. (:issue:`537`)
 - Log messages include last FFmpeg error log in more helpful way.
+- Use AVCodecParameters so FFmpeg doesn't complain. (:issue:`222`)
+
 
 v6.2.0
 ------
