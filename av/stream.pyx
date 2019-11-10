@@ -169,7 +169,7 @@ cdef class Stream(object):
         return self.codec_context.decode(packet)
 
     @deprecation.method
-    def seek(self, offset, whence='time', backward=True, any_frame=False):
+    def seek(self, offset, **kwargs):
         """
         .. seealso:: :meth:`.InputContainer.seek` for documentation on parameters.
             The only difference is that ``offset`` will be interpreted in
@@ -179,7 +179,7 @@ cdef class Stream(object):
             Use :meth:`.InputContainer.seek` with ``stream`` argument instead.
 
         """
-        self.container.seek(offset, whence, backward, any_frame, stream=self)
+        self.container.seek(offset, stream=self, **kwargs)
 
     property id:
         """

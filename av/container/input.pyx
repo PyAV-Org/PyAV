@@ -180,28 +180,41 @@ cdef class InputContainer(Container):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, offset, str whence='time', bint backward=True, bint any_frame=False, Stream stream=None):
-        """Seek to a (key)frame nearsest to the given timestamp.
+    def seek(self, offset, *, str whence='time', bint backward=True,
+             bint any_frame=False, Stream stream=None,
+             bint unsupported_frame_offset=False,
+             bint unsupported_byte_offset=False):
+        """seek(offset, *, backward=True, any_frame=False, stream=None)
 
-        :param int offset: Location to seek to. Interpretation depends on ``whence``.
-        :param str whence: One of ``'time'``, ``'frame'``, or ``'byte'``
+        Seek to a (key)frame nearsest to the given timestamp.
+
+        :param int offset: Time to seek to, expressed in``stream.time_base`` if ``stream``
+            is given, otherwise in :data:`av.time_base`.
         :param bool backward: If there is not a (key)frame at the given offset,
             look backwards for it.
         :param bool any_frame: Seek to any frame, not just a keyframe.
         :param Stream stream: The stream who's ``time_base`` the ``offset`` is in.
 
-        ``whence`` has the following meanings:
+        :param bool unsupported_frame_offset: ``offset`` is a frame
+            index instead of a time; not supported by any known format.
+        :param bool unsupported_byte_offset: ``offset`` is a byte
+            location in the file; not supported by any known format.
 
-        - ``'time'``: ``offset`` is in ``stream.time_base`` if ``stream`` else ``av.time_base``.
-        - ``'frame'``: ``offset`` is a frame index
-        - ``'byte'``: ``offset`` is the byte location in the file to seek to.
+        After seeking, packets that you demux should correspond (roughly) to
+        the position you requested.
 
-        .. warning:: Not all formats support all options, and may fail silently.
+        In most cases, the defaults of ``backwards = True`` and ``any_frame = False``
+        are the best course of action, followed by you demuxing/decoding to
+        the position that you want. This is becase to properly decode video frames
+        you need to start from the previous keyframe.
+
+        .. seealso:: :ffmpeg:`avformat_seek_file` for discussion of the flags.
 
         """
 
         # We used to take floats here and assume they were in seconds. This
-        # was super confusing, so lets go in the complete opposite direction.
+        # was super confusing, so lets go in the complete opposite direction
+        # and reject non-ints.
         if not isinstance(offset, (int, long)):
             raise TypeError('Container.seek only accepts integer offset.', type(offset))
         cdef int64_t c_offset = offset
@@ -209,18 +222,22 @@ cdef class InputContainer(Container):
         cdef int flags = 0
         cdef int ret
 
-        if whence == 'frame':
-            flags |= lib.AVSEEK_FLAG_FRAME
-        elif whence == 'byte':
-            flags |= lib.AVSEEK_FLAG_BYTE
-        elif whence != 'time':
-            raise ValueError("whence must be one of 'frame', 'byte', or 'time'.", whence)
+        # We used to support whence in 'time', 'frame', and 'byte', but later
+        # realized that FFmpged doens't implement the frame or byte ones.
+        # We don't even document this anymore, but do allow 'time' to pass through.
+        if whence != 'time':
+            raise ValueError("whence != 'time' is no longer supported")
 
         if backward:
             flags |= lib.AVSEEK_FLAG_BACKWARD
-
         if any_frame:
             flags |= lib.AVSEEK_FLAG_ANY
+
+        # If someone really wants (and to experiment), expose these.
+        if unsupported_frame_offset:
+            flags |= lib.AVSEEK_FLAG_FRAME
+        if unsupported_byte_offset:
+            flags |= lib.AVSEEK_FLAG_BYTE
 
         cdef int stream_index = stream.index if stream else -1
         with nogil:

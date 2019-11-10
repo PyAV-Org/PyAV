@@ -28,6 +28,7 @@ Major:
   will result in `ValueError` baseclasses now. (:issue:`563`)
 - Data stream's `encode` and `decode` return empty lists instead of none
   allowing common API use patterns with data streams.
+- Remove ``whence`` parameter from :meth:`InputContainer.seek` as non-time seeking doesn't seem to actually be supported by any FFmpeg formats.
 
 Minor:
 
