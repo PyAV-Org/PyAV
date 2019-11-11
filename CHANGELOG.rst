@@ -23,11 +23,8 @@ v7.0.0.dev0
 Major:
 
 - Drop support for FFmpeg < 4.0. (:issue:`559`)
-- Introduce per-error exceptions, and mirror the builtin exception heirarchy.
-  It is recommended to examine your error handling code, as common FFmpeg errors
-  will result in `ValueError` baseclasses now. (:issue:`563`)
-- Data stream's `encode` and `decode` return empty lists instead of none
-  allowing common API use patterns with data streams.
+- Introduce per-error exceptions, and mirror the builtin exception heirarchy. It is recommended to examine your error handling code, as common FFmpeg errors will result in `ValueError` baseclasses now. (:issue:`563`)
+- Data stream's `encode` and `decode` return empty lists instead of none allowing common API use patterns with data streams.
 - Remove ``whence`` parameter from :meth:`InputContainer.seek` as non-time seeking doesn't seem to actually be supported by any FFmpeg formats.
 
 Minor:
