@@ -124,23 +124,47 @@ cdef class CodecContext(object):
         self.ptr.thread_count = 0
         self.ptr.thread_type = 2
 
-    @property
-    def flags(self):
-        return Flags.get(self.ptr.flags)
+    def _get_flags(self):
+        return self.ptr.flags
+    def _set_flags(self, value):
+        self.ptr.flags = value
+    flags = Flags.property(_get_flags, _set_flags)
 
-    @flags.setter
-    def flags(self, value):
-        enum = Flags.get(value)
-        self.ptr.flags = enum.value
+    unaligned = flags.flag_property('UNALIGNED')
+    qscale = flags.flag_property('QSCALE')
+    #4mv = flags.flag_property('4MV')
+    output_corrupt = flags.flag_property('OUTPUT_CORRUPT')
+    qpel = flags.flag_property('QPEL')
+    pass1 = flags.flag_property('PASS1')
+    pass2 = flags.flag_property('PASS2')
+    loop_filter = flags.flag_property('LOOP_FILTER')
+    gray = flags.flag_property('GRAY')
+    psnr = flags.flag_property('PSNR')
+    truncated = flags.flag_property('TRUNCATED')
+    interlaced_dct = flags.flag_property('INTERLACED_DCT')
+    low_delay = flags.flag_property('LOW_DELAY')
+    global_header = flags.flag_property('GLOBAL_HEADER')
+    bitexact = flags.flag_property('BITEXACT')
+    ac_pred = flags.flag_property('AC_PRED')
+    interlaced_me = flags.flag_property('INTERLACED_ME')
+    closed_gop = flags.flag_property('CLOSED_GOP')
 
-    @property
-    def flags2(self):
-        return Flags2.get(self.ptr.flags2)
+    def _get_flags2(self):
+        return self.ptr.flags2
+    def _set_flags2(self, value):
+        self.ptr.flags2 = value
+    flags2 = Flags2.property(_get_flags2, _set_flags2)
 
-    @flags2.setter
-    def flags2(self, value):
-        enum = Flags2.get(value)
-        self.ptr.flags2 = enum.value
+    fast = flags2.flag_property('FAST')
+    no_output = flags2.flag_property('NO_OUTPUT')
+    local_header = flags2.flag_property('LOCAL_HEADER')
+    drop_frame_timecode = flags2.flag_property('DROP_FRAME_TIMECODE')
+    chunks = flags2.flag_property('CHUNKS')
+    ignore_crop = flags2.flag_property('IGNORE_CROP')
+    show_all = flags2.flag_property('SHOW_ALL')
+    export_mvs = flags2.flag_property('EXPORT_MVS')
+    skip_manual = flags2.flag_property('SKIP_MANUAL')
+    ro_flush_noop = flags2.flag_property('RO_FLUSH_NOOP')
 
     property extradata:
         def __get__(self):

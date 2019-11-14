@@ -200,3 +200,42 @@ class TestEnums(TestCase):
 
         self.assertRaises(KeyError, lambda: cls[4])  # Not FOO or BAR
         self.assertRaises(KeyError, lambda: cls[7])  # FOO and BAR and missing flag.
+
+    def test_properties(self):
+
+        Flags = self.define_foobar(is_flags=True, allow_multi_flags=True)
+        foobar = Flags.FOO | Flags.BAR
+
+        class Class(object):
+
+            def __init__(self, value):
+                self.value = Flags[value].value
+
+            @Flags.property
+            def flags(self):
+                return self.value
+
+            @flags.setter
+            def flags(self, value):
+                self.value = value
+
+            foo = flags.flag_property('FOO')
+            bar = flags.flag_property('BAR')
+
+        obj = Class('FOO')
+
+        self.assertIs(obj.flags, Flags.FOO)
+        self.assertTrue(obj.foo)
+        self.assertFalse(obj.bar)
+
+        obj.bar = True
+        self.assertIs(obj.flags, foobar)
+        self.assertTrue(obj.foo)
+        self.assertTrue(obj.bar)
+
+        obj.foo = False
+        self.assertIs(obj.flags, Flags.BAR)
+        self.assertFalse(obj.foo)
+        self.assertTrue(obj.bar)
+
+

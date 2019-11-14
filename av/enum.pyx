@@ -115,6 +115,9 @@ class EnumType(type):
                 return self._get(key, create=True)
             return default
 
+    def property(self, *args, **kwargs):
+        return EnumProperty(self, *args, **kwargs)
+
 
 def _unpickle(mod_name, cls_name, item_name):
     mod = __import__(mod_name, fromlist=['.'])
@@ -221,6 +224,53 @@ cdef class EnumFlag(EnumItem):
     def __invert__(self):
         # This can't result in a flag, but is helpful.
         return ~self.value
+
+
+cdef class EnumProperty(object):
+
+    cdef object enum
+    cdef object fget
+    cdef object fset
+
+    def __init__(self, enum, fget, fset=None):
+        self.enum = enum
+        self.fget = fget
+        self.fset = fset
+
+    def setter(self, fset):
+        self.fset = fset
+        return self
+
+    def __get__(self, inst, owner):
+        if inst is not None:
+            value = self.fget(inst)
+            return self.enum.get(value)
+        else:
+            return self
+
+    def __set__(self, inst, value):
+        item = self.enum.get(value)
+        self.fset(inst, item.value)
+
+    def flag_property(self, name):
+
+        item = self.enum[name]
+        cdef int item_value = item.value
+
+        @property
+        def _property(inst):
+            return bool(self.fget(inst) & item_value)
+
+        if self.fset:
+            @_property.setter
+            def _property(inst, value):
+                if value:
+                    flags = self.fget(inst) | item_value
+                else:
+                    flags = self.fget(inst) & ~item_value
+                self.fset(inst, flags)
+
+        return _property
 
 
 cpdef define_enum(name, items, bint is_flags=False, bint allow_multi_flags=False, bint allow_user_create=False):
