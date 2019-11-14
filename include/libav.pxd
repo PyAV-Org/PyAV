@@ -12,6 +12,7 @@ include "libavutil/dict.pxd"
 include "libavutil/error.pxd"
 include "libavutil/frame.pxd"
 include "libavutil/samplefmt.pxd"
+include "libavutil/motion_vector.pxd"
 
 include "libavcodec/avcodec.pxd"
 include "libavdevice/avdevice.pxd"

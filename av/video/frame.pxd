@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t, uint16_t, int16_t, int32_t, uint64_t
 
 cimport libav as lib
 

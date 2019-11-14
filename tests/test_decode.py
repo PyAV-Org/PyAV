@@ -49,3 +49,32 @@ class TestDecode(TestCase):
                 self.assertEqual(packet.time_base, frame.time_base)
                 self.assertEqual(stream.time_base, frame.time_base)
                 return
+
+    def test_decoded_motion_vectors(self):
+
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        stream = container.streams.video[0]
+        codec_context = stream.codec_context
+        codec_context.options = {"flags2": "+export_mvs"}
+
+        for packet in container.demux(stream):
+            for frame in packet.decode():
+                vectors = frame.side_data.get('MOTION_VECTORS')
+                if frame.key_frame:
+                    # Key frame don't have motion vectors
+                    assert vectors is None
+                else:
+                    assert len(vectors) > 0
+                    return
+
+    def test_decoded_motion_vectors_no_flag(self):
+
+        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        stream = container.streams.video[0]
+
+        for packet in container.demux(stream):
+            for frame in packet.decode():
+                vectors = frame.side_data.get('MOTION_VECTORS')
+                if not frame.key_frame:
+                    assert vectors is None
+                    return
