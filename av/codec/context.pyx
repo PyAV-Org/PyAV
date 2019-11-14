@@ -126,13 +126,15 @@ cdef class CodecContext(object):
 
     def _get_flags(self):
         return self.ptr.flags
+
     def _set_flags(self, value):
         self.ptr.flags = value
+
     flags = Flags.property(_get_flags, _set_flags)
 
     unaligned = flags.flag_property('UNALIGNED')
     qscale = flags.flag_property('QSCALE')
-    #4mv = flags.flag_property('4MV')
+    four_mv = flags.flag_property('4MV')
     output_corrupt = flags.flag_property('OUTPUT_CORRUPT')
     qpel = flags.flag_property('QPEL')
     pass1 = flags.flag_property('PASS1')
@@ -151,8 +153,10 @@ cdef class CodecContext(object):
 
     def _get_flags2(self):
         return self.ptr.flags2
+
     def _set_flags2(self, value):
         self.ptr.flags2 = value
+
     flags2 = Flags2.property(_get_flags2, _set_flags2)
 
     fast = flags2.flag_property('FAST')

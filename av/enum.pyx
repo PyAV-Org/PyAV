@@ -244,7 +244,7 @@ cdef class EnumProperty(object):
     def __get__(self, inst, owner):
         if inst is not None:
             value = self.fget(inst)
-            return self.enum.get(value)
+            return self.enum.get(value, create=True)
         else:
             return self
 

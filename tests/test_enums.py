@@ -237,5 +237,3 @@ class TestEnums(TestCase):
         self.assertIs(obj.flags, Flags.BAR)
         self.assertFalse(obj.foo)
         self.assertTrue(obj.bar)
-
-

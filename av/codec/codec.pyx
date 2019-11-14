@@ -1,8 +1,8 @@
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
+from av.enum cimport define_enum
 from av.utils cimport avrational_to_fraction, flag_in_bitfield
 from av.video.format cimport get_video_format
-
 
 cdef extern from "codec-shims.c" nogil:
     cdef const lib.AVCodec* pyav_codec_iterate(void **opaque)
@@ -17,6 +17,39 @@ cdef Codec wrap_codec(const lib.AVCodec *ptr):
     codec.is_encoder = lib.av_codec_is_encoder(ptr)
     codec._init()
     return codec
+
+
+CodecProperties = define_enum('CodecProperties', (
+    ('NONE', 0),
+    ('INTRA_ONLY', lib.AV_CODEC_PROP_INTRA_ONLY),
+    ('LOSSY', lib.AV_CODEC_PROP_LOSSY),
+    ('LOSSLESS', lib.AV_CODEC_PROP_LOSSLESS),
+    ('REORDER', lib.AV_CODEC_PROP_REORDER),
+    ('BITMAP_SUB', lib.AV_CODEC_PROP_BITMAP_SUB),
+    ('TEXT_SUB', lib.AV_CODEC_PROP_TEXT_SUB),
+), is_flags=True, allow_multi_flags=True, allow_user_create=True)
+
+CodecCapabilities = define_enum('CodecCapabilities', (
+    ('NONE', 0),
+    ('DRAW_HORIZ_BAND', lib.CODEC_CAP_DRAW_HORIZ_BAND),
+    ('DR1', lib.CODEC_CAP_DR1),
+    ('TRUNCATED', lib.CODEC_CAP_TRUNCATED),
+    ('HWACCEL', lib.CODEC_CAP_HWACCEL),
+    ('DELAY', lib.CODEC_CAP_DELAY),
+    ('SMALL_LAST_FRAME', lib.CODEC_CAP_SMALL_LAST_FRAME),
+    ('HWACCEL_VDPAU', lib.CODEC_CAP_HWACCEL_VDPAU),
+    ('SUBFRAMES', lib.CODEC_CAP_SUBFRAMES),
+    ('EXPERIMENTAL', lib.CODEC_CAP_EXPERIMENTAL),
+    ('CHANNEL_CONF', lib.CODEC_CAP_CHANNEL_CONF),
+    ('NEG_LINESIZES', lib.CODEC_CAP_NEG_LINESIZES),
+    ('FRAME_THREADS', lib.CODEC_CAP_FRAME_THREADS),
+    ('SLICE_THREADS', lib.CODEC_CAP_SLICE_THREADS),
+    ('PARAM_CHANGE', lib.CODEC_CAP_PARAM_CHANGE),
+    ('AUTO_THREADS', lib.CODEC_CAP_AUTO_THREADS),
+    ('VARIABLE_FRAME_SIZE', lib.CODEC_CAP_VARIABLE_FRAME_SIZE),
+    ('INTRA_ONLY', lib.CODEC_CAP_INTRA_ONLY),
+    ('LOSSLESS', lib.CODEC_CAP_LOSSLESS),
+), is_flags=True, allow_multi_flags=True, allow_user_create=True)
 
 
 class UnknownCodecError(ValueError):
@@ -184,65 +217,65 @@ cdef class Codec(object):
             i += 1
         return ret
 
-    # Capabilities.
-    property draw_horiz_band:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_DRAW_HORIZ_BAND)
-    property dr1:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_DR1)
-    property truncated:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_TRUNCATED)
-    property hwaccel:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_HWACCEL)
-    property delay:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_DELAY)
-    property small_last_frame:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_SMALL_LAST_FRAME)
-    property hwaccel_vdpau:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_HWACCEL_VDPAU)
-    property subframes:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_SUBFRAMES)
-    property experimental:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_EXPERIMENTAL)
-    property channel_conf:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_CHANNEL_CONF)
-    property neg_linesizes:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_NEG_LINESIZES)
-    property frame_threads:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_FRAME_THREADS)
-    property slice_threads:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_SLICE_THREADS)
-    property param_change:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_PARAM_CHANGE)
-    property auto_threads:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_AUTO_THREADS)
-    property variable_frame_size:
-        def __get__(self): return flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_VARIABLE_FRAME_SIZE)
+    # NOTE: there are some overlaps, which we define below these blocks with
+    # runtime checks to make sure they are sane.
 
-    # Capabilities and properties overlap.
-    # TODO: Is this really the right way to combine these things?
-    property intra_only:
-        def __get__(self): return (
-            flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_INTRA_ONLY) or
-            flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_INTRA_ONLY)
-        )
-    property lossless:
-        def __get__(self): return (
-            flag_in_bitfield(self.ptr.capabilities, lib.CODEC_CAP_LOSSLESS) or
-            flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_LOSSLESS)
-        )
-    property lossy:
-        def __get__(self): return (
-            flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_LOSSY) or
-            not self.lossless
-        )
+    @CodecProperties.property
+    def properties(self):
+        return self.desc.props
 
-    # Properties.
-    property reorder:
-        def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_REORDER)
-    property bitmap_sub:
-        def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_BITMAP_SUB)
-    property text_sub:
-        def __get__(self): return flag_in_bitfield(self.desc.props, lib.AV_CODEC_PROP_TEXT_SUB)
+    # intra_only = properties.flag_property('INTRA_ONLY')
+    # lossy = properties.flag_property('LOSSY')
+    # lossless = properties.flag_property('LOSSLESS')
+    reorder = properties.flag_property('REORDER')
+    bitmap_sub = properties.flag_property('BITMAP_SUB')
+    text_sub = properties.flag_property('TEXT_SUB')
+
+    @CodecCapabilities.property
+    def capabilities(self):
+        return self.ptr.capabilities
+
+    draw_horiz_band = capabilities.flag_property('DRAW_HORIZ_BAND')
+    dr1 = capabilities.flag_property('DR1')
+    truncated = capabilities.flag_property('TRUNCATED')
+    hwaccel = capabilities.flag_property('HWACCEL')
+    delay = capabilities.flag_property('DELAY')
+    small_last_frame = capabilities.flag_property('SMALL_LAST_FRAME')
+    hwaccel_vdpau = capabilities.flag_property('HWACCEL_VDPAU')
+    subframes = capabilities.flag_property('SUBFRAMES')
+    experimental = capabilities.flag_property('EXPERIMENTAL')
+    channel_conf = capabilities.flag_property('CHANNEL_CONF')
+    neg_linesizes = capabilities.flag_property('NEG_LINESIZES')
+    frame_threads = capabilities.flag_property('FRAME_THREADS')
+    slice_threads = capabilities.flag_property('SLICE_THREADS')
+    param_change = capabilities.flag_property('PARAM_CHANGE')
+    auto_threads = capabilities.flag_property('AUTO_THREADS')
+    variable_frame_size = capabilities.flag_property('VARIABLE_FRAME_SIZE')
+    # intra_only = capabilities.flag_property('INTRA_ONLY')
+    # lossless = capabilities.flag_property('LOSSLESS')
+
+    @property
+    def intra_only(self):
+        # Assert they agree.
+        cdef bint c = bool(self.capabilities & 'INTRA_ONLY')
+        cdef bint p = bool(self.properties & 'INTRA_ONLY')
+        if (c and p) or not (c or p):
+            return c
+        raise RuntimeError('capabilities and properties dont agree on INTRA_ONLY')
+
+    @property
+    def lossless(self):
+        # Assert they agree.
+        cdef bint c = bool(self.capabilities & 'LOSSLESS')
+        cdef bint p1 = bool(self.properties & 'LOSSLESS')
+        cdef bint p2 = bool(self.properties & 'LOSSY')
+        if (c and p1 and p2) or not (c or p1 or p2):
+            return c
+        raise RuntimeError('capabilities and properties dont agree on LOSSLESS and LOSSY')
+
+    @property
+    def lossy(self):
+        return not self.lossless
 
 
 cdef get_codec_names():
