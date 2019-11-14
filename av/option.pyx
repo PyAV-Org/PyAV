@@ -1,6 +1,6 @@
 cimport libav as lib
 
-from av.enums cimport define_enum
+from av.enum cimport define_enum
 from av.utils cimport flag_in_bitfield
 
 

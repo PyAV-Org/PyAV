@@ -1,4 +1,4 @@
-from av.enums cimport define_enum
+from av.enum cimport define_enum
 
 from av.sidedata.motionvectors import MotionVectors
 

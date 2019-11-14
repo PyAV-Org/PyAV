@@ -2,7 +2,7 @@ cimport libav as lib
 
 from av.logging cimport get_last_error
 
-from av.enums import define_enum
+from av.enum import define_enum
 
 from threading import local
 import errno

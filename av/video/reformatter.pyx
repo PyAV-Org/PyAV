@@ -2,7 +2,7 @@ from libc.stdint cimport uint8_t
 
 cimport libav as lib
 
-from av.enums cimport define_enum
+from av.enum cimport define_enum
 from av.error cimport err_check
 from av.video.format cimport VideoFormat
 from av.video.frame cimport alloc_video_frame

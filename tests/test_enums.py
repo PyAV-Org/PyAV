@@ -1,6 +1,6 @@
 import pickle
 
-from av.enums import EnumType, define_enum
+from av.enum import EnumType, define_enum
 
 from .common import TestCase
 
