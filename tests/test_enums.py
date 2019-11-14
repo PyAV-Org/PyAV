@@ -156,6 +156,14 @@ class TestEnums(TestCase):
         bar3 = foobar & ~foo
         self.assertIs(bar3, bar)
 
+        x = cls.FOO
+        x |= cls.BAR
+        self.assertIs(x, cls.FOOBAR)
+
+        x = cls.FOOBAR
+        x &= cls.FOO
+        self.assertIs(x, cls.FOO)
+
     def test_multi_flags_basics(self):
 
         cls = self.define_foobar(is_flags=True)

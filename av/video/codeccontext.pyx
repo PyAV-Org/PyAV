@@ -13,41 +13,6 @@ from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 
 
-CodecContextFlags = define_enum('CodecContextFlags', (
-    ('UNALIGNED', lib.AV_CODEC_FLAG_UNALIGNED),
-    ('QSCALE', lib.AV_CODEC_FLAG_QSCALE),
-    ('4MV', lib.AV_CODEC_FLAG_4MV),
-    ('OUTPUT_CORRUPT', lib.AV_CODEC_FLAG_OUTPUT_CORRUPT),
-    ('QPEL', lib.AV_CODEC_FLAG_QPEL),
-    ('PASS1', lib.AV_CODEC_FLAG_PASS1),
-    ('PASS2', lib.AV_CODEC_FLAG_PASS2),
-    ('LOOP_FILTER', lib.AV_CODEC_FLAG_LOOP_FILTER),
-    ('GRAY', lib.AV_CODEC_FLAG_GRAY),
-    ('PSNR', lib.AV_CODEC_FLAG_PSNR),
-    ('TRUNCATED', lib.AV_CODEC_FLAG_TRUNCATED),
-    ('INTERLACED_DCT', lib.AV_CODEC_FLAG_INTERLACED_DCT),
-    ('LOW_DELAY', lib.AV_CODEC_FLAG_LOW_DELAY),
-    ('GLOBAL_HEADER', lib.AV_CODEC_FLAG_GLOBAL_HEADER),
-    ('BITEXACT', lib.AV_CODEC_FLAG_BITEXACT),
-    ('AC_PRED', lib.AV_CODEC_FLAG_AC_PRED),
-    ('INTERLACED_ME', lib.AV_CODEC_FLAG_INTERLACED_ME),
-    ('CLOSED_GOP', lib.AV_CODEC_FLAG_CLOSED_GOP),
-), is_flags=True)
-
-CodecContextFlags2 = define_enum('CodecContextFlags2', (
-    ('FAST', lib.AV_CODEC_FLAG2_FAST),
-    ('NO_OUTPUT', lib.AV_CODEC_FLAG2_NO_OUTPUT),
-    ('LOCAL_HEADER', lib.AV_CODEC_FLAG2_LOCAL_HEADER),
-    ('DROP_FRAME_TIMECODE', lib.AV_CODEC_FLAG2_DROP_FRAME_TIMECODE),
-    ('CHUNKS', lib.AV_CODEC_FLAG2_CHUNKS),
-    ('IGNORE_CROP', lib.AV_CODEC_FLAG2_IGNORE_CROP),
-    ('SHOW_ALL', lib.AV_CODEC_FLAG2_SHOW_ALL),
-    ('EXPORT_MVS', lib.AV_CODEC_FLAG2_EXPORT_MVS),
-    ('SKIP_MANUAL', lib.AV_CODEC_FLAG2_SKIP_MANUAL),
-    ('RO_FLUSH_NOOP', lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP),
-), is_flags=True)
-
-
 cdef class VideoCodecContext(CodecContext):
 
     def __cinit__(self, *args, **kwargs):
@@ -106,24 +71,6 @@ cdef class VideoCodecContext(CodecContext):
 
     cdef _build_format(self):
         self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
-
-    @property
-    def flags(self):
-        return CodecContextFlags.get(self.ptr.flags)
-
-    @flags.setter
-    def flags(self, value):
-        enum = CodecContextFlags.get(value)
-        self.ptr.flags = enum.value
-
-    @property
-    def flags2(self):
-        return CodecContextFlags.get(self.ptr.flags2)
-
-    @flags2.setter
-    def flags2(self, value):
-        enum = CodecContextFlags2.get(value)
-        self.ptr.flags2 = enum.value
 
     property format:
         def __get__(self):
