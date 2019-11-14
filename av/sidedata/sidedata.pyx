@@ -8,7 +8,7 @@ import collections
 cdef object _cinit_bypass_sentinel = object()
 
 
-SideDataType = define_enum('SideDataType', (
+Type = define_enum('Type', (
     ('PANSCAN', lib.AV_FRAME_DATA_PANSCAN),
     ('A53_CC', lib.AV_FRAME_DATA_A53_CC),
     ('STEREO3D', lib.AV_FRAME_DATA_STEREO3D),
@@ -62,7 +62,7 @@ cdef class SideData(Buffer):
 
     @property
     def type(self):
-        return SideDataType.get(self.ptr.type) or self.ptr.type
+        return Type.get(self.ptr.type) or self.ptr.type
 
 
 cdef class _SideDataContainer(object):
@@ -91,7 +91,7 @@ cdef class _SideDataContainer(object):
         if isinstance(key, int):
             return self._by_index[key]
 
-        type_ = SideDataType.get(key)
+        type_ = Type.get(key)
         return self._by_type[type_]
 
 
