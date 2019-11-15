@@ -112,7 +112,7 @@ class TestEnums(TestCase):
 
     def test_create_unknown(self):
 
-        cls = self.define_foobar(allow_user_create=True)
+        cls = self.define_foobar()
         baz = cls.get(3, create=True)
 
         self.assertEqual(baz.name, 'FOOBAR_3')
@@ -167,9 +167,6 @@ class TestEnums(TestCase):
     def test_multi_flags_basics(self):
 
         cls = self.define_foobar(is_flags=True)
-        self.assertRaises(ValueError, lambda: cls.FOO | cls.BAR)
-
-        cls = self.define_foobar(is_flags=True, allow_multi_flags=True)
 
         foo = cls.FOO
         bar = cls.BAR
@@ -193,7 +190,7 @@ class TestEnums(TestCase):
 
     def test_multi_flags_create_missing(self):
 
-        cls = self.define_foobar(is_flags=True, allow_multi_flags=True)
+        cls = self.define_foobar(is_flags=True)
 
         foobar = cls[3]
         self.assertIs(foobar, cls.FOO | cls.BAR)
@@ -203,7 +200,7 @@ class TestEnums(TestCase):
 
     def test_properties(self):
 
-        Flags = self.define_foobar(is_flags=True, allow_multi_flags=True)
+        Flags = self.define_foobar(is_flags=True)
         foobar = Flags.FOO | Flags.BAR
 
         class Class(object):

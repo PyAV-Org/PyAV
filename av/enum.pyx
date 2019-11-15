@@ -15,14 +15,11 @@ class EnumType(type):
         # Just adapting the method signature.
         return super().__new__(mcl, name, bases, attrs)
 
-    def __init__(self, name, bases, attrs, items, allow_multi_flags, allow_user_create):
+    def __init__(self, name, bases, attrs, items):
 
         self._by_name = {}
         self._by_value = {}
         self._all = []
-
-        self._allow_multi_flags = allow_multi_flags
-        self._allow_user_create = allow_user_create
 
         for name, value in items.items():
             self._create(name, value)
@@ -50,20 +47,25 @@ class EnumType(type):
         return iter(self._all)
 
     def __getitem__(self, key):
+
         if isinstance(key, basestring):
             return self._by_name[key]
+
         if isinstance(key, int):
+
             try:
                 return self._by_value[key]
             except KeyError:
-                if not self._allow_multi_flags:
-                    raise
-                try:
-                    return self._get_multi_flags(key)
-                except ValueError:
-                    raise KeyError(key)
+                pass
+
+            if issubclass(self, EnumFlag):
+                return self._get_multi_flags(key)
+
+            raise KeyError(key)
+
         if isinstance(key, self):
             return key
+
         raise TypeError("Uncomparable to {}.".format(self.__name__), key)
 
     def _get(self, long value, bint create=False):
@@ -85,9 +87,6 @@ class EnumType(type):
         except KeyError:
             pass
 
-        if not self._allow_multi_flags:
-            raise ValueError("Missing flag in {}.".format(self.__name__), value)
-
         flags = []
         cdef long to_find = value
         for item in self:
@@ -96,8 +95,9 @@ class EnumType(type):
                 to_find = to_find ^ item.value
                 if not to_find:
                     break
+
         if to_find:
-            raise ValueError("Could not build combo in {}.".format(self.__name__), value)
+            raise KeyError(value)
 
         name = '|'.join(f.name for f in flags)
         cdef EnumFlag combo = self._create(name, value, by_value_only=True)
@@ -110,8 +110,6 @@ class EnumType(type):
             return self[key]
         except KeyError:
             if create:
-                if not self._allow_user_create:
-                    raise ValueError("Cannot create {}.".format(self.__name__))
                 return self._get(key, create=True)
             return default
 
@@ -273,14 +271,13 @@ cdef class EnumProperty(object):
         return _property
 
 
-cpdef define_enum(name, items, bint is_flags=False, bint allow_multi_flags=False, bint allow_user_create=False):
+cpdef define_enum(name, items, bint is_flags=False):
 
     if is_flags:
         base_cls = EnumFlag
     else:
         base_cls = EnumItem
 
-    cls = EnumType(name, (base_cls, ), {}, OrderedDict(items),
-                   allow_multi_flags, allow_user_create)
+    cls = EnumType(name, (base_cls, ), {}, OrderedDict(items))
 
     return cls

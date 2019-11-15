@@ -27,7 +27,7 @@ CodecProperties = define_enum('CodecProperties', (
     ('REORDER', lib.AV_CODEC_PROP_REORDER),
     ('BITMAP_SUB', lib.AV_CODEC_PROP_BITMAP_SUB),
     ('TEXT_SUB', lib.AV_CODEC_PROP_TEXT_SUB),
-), is_flags=True, allow_multi_flags=True, allow_user_create=True)
+), is_flags=True)
 
 CodecCapabilities = define_enum('CodecCapabilities', (
     ('NONE', 0),
@@ -49,7 +49,7 @@ CodecCapabilities = define_enum('CodecCapabilities', (
     ('VARIABLE_FRAME_SIZE', lib.CODEC_CAP_VARIABLE_FRAME_SIZE),
     ('INTRA_ONLY', lib.CODEC_CAP_INTRA_ONLY),
     ('LOSSLESS', lib.CODEC_CAP_LOSSLESS),
-), is_flags=True, allow_multi_flags=True, allow_user_create=True)
+), is_flags=True)
 
 
 class UnknownCodecError(ValueError):
