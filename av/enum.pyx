@@ -66,7 +66,9 @@ class EnumType(type):
         if isinstance(key, self):
             return key
 
-        raise TypeError("Uncomparable to {}.".format(self.__name__), key)
+        raise TypeError("{0} indices must be str, int, or {0}".format(
+            self.__name__,
+        ))
 
     def _get(self, long value, bint create=False):
 
@@ -174,7 +176,10 @@ cdef class EnumItem(object):
             try:
                 other_inst = self.__class__._by_name[other]
             except KeyError:
-                raise ValueError("Name not in {}.".format(self.__class__.__name__), other)
+                raise ValueError("{} does not have item named {!r}".format(
+                    self.__class__.__name__,
+                    other,
+                ))
             else:
                 return self is other_inst
 
@@ -183,12 +188,18 @@ cdef class EnumItem(object):
                 return True
             if other in self.__class__._by_value:
                 return False
-            raise ValueError("Value not in {}.".format(self.__class__.__name__), other)
+            raise ValueError("{} does not have item valued {}".format(
+                self.__class__.__name__,
+                other,
+            ))
 
         if isinstance(other, self.__class__):
             return self is other
 
-        raise TypeError("Uncomparable to {}.".format(self.__class__.__name__), other)
+        raise TypeError("'==' not supported between {} and {}".format(
+            self.__class__.__name__,
+            type(other).__name__,
+        ))
 
     def __ne__(self, other):
         return not (self == other)

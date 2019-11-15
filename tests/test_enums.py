@@ -48,7 +48,7 @@ class TestEnums(TestCase):
 
         self.assertRaises(KeyError, lambda: cls['not a foo'])
         self.assertRaises(KeyError, lambda: cls[10])
-        self.assertRaises(TypeError, lambda: cls[{}])
+        self.assertRaises(TypeError, lambda: cls[()])
 
         self.assertEqual(cls.get('FOO'), foo1)
         self.assertIs(cls.get('not a foo'), None)
@@ -87,7 +87,7 @@ class TestEnums(TestCase):
 
         self.assertRaises(ValueError, lambda: foo == 'not a foo')
         self.assertRaises(ValueError, lambda: foo == 10)
-        self.assertRaises(TypeError, lambda: foo == {})
+        self.assertRaises(TypeError, lambda: foo == ())
 
     def test_as_key(self):
 
