@@ -21,16 +21,16 @@ class EnumType(type):
         self._by_value = {}
         self._all = []
 
-        for name, value in items.items():
-            self._create(name, value)
+        for spec in items:
+            self._create(*spec)
 
-    def _create(self, name, value, by_value_only=False):
+    def _create(self, name, value, doc=None, by_value_only=False):
 
         # We only have one instance per value.
         try:
             item = self._by_value[value]
         except KeyError:
-            item = self(sentinel, name, value)
+            item = self(sentinel, name, value, doc)
             self._by_value[value] = item
 
         if not by_value_only:
@@ -52,7 +52,6 @@ class EnumType(type):
             return self._by_name[key]
 
         if isinstance(key, int):
-
             try:
                 return self._by_value[key]
             except KeyError:
@@ -134,12 +133,14 @@ cdef class EnumItem(object):
     cdef readonly int value
     cdef Py_hash_t _hash
 
-    def __cinit__(self, sentinel_, str name, int value):
+    def __cinit__(self, sentinel_, str name, int value, doc=None):
 
         if sentinel_ is not sentinel:
             raise RuntimeError("Cannot instantiate {}.".format(self.__class__.__name__))
+
         self.name = name
         self.value = value
+        self.__doc__ = doc  # This is not cdef because it doesn't work if it is.
 
         # We need to establish a hash that doesn't collide with anything that
         # would return true from `__eq__`. This is because these enums (vs
@@ -209,7 +210,7 @@ cdef class EnumFlag(EnumItem):
 
     cdef readonly tuple flags
 
-    def __cinit__(self, sentinel, name, value):
+    def __cinit__(self, sentinel, name, value, doc=None):
         self.flags = (self, )
 
     def __and__(self, other):
@@ -261,12 +262,15 @@ cdef class EnumProperty(object):
         item = self.enum.get(value)
         self.fset(inst, item.value)
 
-    def flag_property(self, name):
+    def flag_property(self, name, doc=None):
 
         item = self.enum[name]
         cdef int item_value = item.value
 
-        @property
+        class Property(property):
+            pass
+
+        @Property
         def _property(inst):
             return bool(self.fget(inst) & item_value)
 
@@ -279,6 +283,9 @@ cdef class EnumProperty(object):
                     flags = self.fget(inst) & ~item_value
                 self.fset(inst, flags)
 
+        _property.__doc__ = doc or item.__doc__
+        _property._enum_item = item
+
         return _property
 
 
@@ -289,6 +296,6 @@ cpdef define_enum(name, items, bint is_flags=False):
     else:
         base_cls = EnumItem
 
-    cls = EnumType(name, (base_cls, ), {}, OrderedDict(items))
+    cls = EnumType(name, (base_cls, ), {}, items)
 
     return cls

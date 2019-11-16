@@ -31,24 +31,28 @@ CodecProperties = define_enum('CodecProperties', (
 
 CodecCapabilities = define_enum('CodecCapabilities', (
     ('NONE', 0),
-    ('DRAW_HORIZ_BAND', lib.CODEC_CAP_DRAW_HORIZ_BAND),
-    ('DR1', lib.CODEC_CAP_DR1),
-    ('TRUNCATED', lib.CODEC_CAP_TRUNCATED),
-    ('HWACCEL', lib.CODEC_CAP_HWACCEL),
-    ('DELAY', lib.CODEC_CAP_DELAY),
-    ('SMALL_LAST_FRAME', lib.CODEC_CAP_SMALL_LAST_FRAME),
-    ('HWACCEL_VDPAU', lib.CODEC_CAP_HWACCEL_VDPAU),
-    ('SUBFRAMES', lib.CODEC_CAP_SUBFRAMES),
-    ('EXPERIMENTAL', lib.CODEC_CAP_EXPERIMENTAL),
-    ('CHANNEL_CONF', lib.CODEC_CAP_CHANNEL_CONF),
-    ('NEG_LINESIZES', lib.CODEC_CAP_NEG_LINESIZES),
-    ('FRAME_THREADS', lib.CODEC_CAP_FRAME_THREADS),
-    ('SLICE_THREADS', lib.CODEC_CAP_SLICE_THREADS),
-    ('PARAM_CHANGE', lib.CODEC_CAP_PARAM_CHANGE),
-    ('AUTO_THREADS', lib.CODEC_CAP_AUTO_THREADS),
-    ('VARIABLE_FRAME_SIZE', lib.CODEC_CAP_VARIABLE_FRAME_SIZE),
-    ('INTRA_ONLY', lib.CODEC_CAP_INTRA_ONLY),
-    ('LOSSLESS', lib.CODEC_CAP_LOSSLESS),
+    ('DRAW_HORIZ_BAND', lib.AV_CODEC_CAP_DRAW_HORIZ_BAND),
+    ('DR1', lib.AV_CODEC_CAP_DR1),
+    ('TRUNCATED', lib.AV_CODEC_CAP_TRUNCATED),
+    ('HWACCEL', 1 << 4),
+    ('DELAY', lib.AV_CODEC_CAP_DELAY),
+    ('SMALL_LAST_FRAME', lib.AV_CODEC_CAP_SMALL_LAST_FRAME),
+    ('HWACCEL_VDPAU', 1 << 7),
+    ('SUBFRAMES', lib.AV_CODEC_CAP_SUBFRAMES),
+    ('EXPERIMENTAL', lib.AV_CODEC_CAP_EXPERIMENTAL),
+    ('CHANNEL_CONF', lib.AV_CODEC_CAP_CHANNEL_CONF),
+    ('NEG_LINESIZES', 1 << 11),
+    ('FRAME_THREADS', lib.AV_CODEC_CAP_FRAME_THREADS),
+    ('SLICE_THREADS', lib.AV_CODEC_CAP_SLICE_THREADS),
+    ('PARAM_CHANGE', lib.AV_CODEC_CAP_PARAM_CHANGE),
+    ('AUTO_THREADS', lib.AV_CODEC_CAP_AUTO_THREADS),
+    ('VARIABLE_FRAME_SIZE', lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE),
+    ('AVOID_PROBING', lib.AV_CODEC_CAP_AVOID_PROBING),
+    ('INTRA_ONLY', lib.AV_CODEC_CAP_INTRA_ONLY),
+    ('LOSSLESS', lib.AV_CODEC_CAP_LOSSLESS),
+    ('HARDWARE', lib.AV_CODEC_CAP_HARDWARE),
+    ('HYBRID', lib.AV_CODEC_CAP_HYBRID),
+    ('ENCODER_REORDERED_OPAQUE', lib.AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE),
 ), is_flags=True)
 
 
@@ -251,8 +255,12 @@ cdef class Codec(object):
     param_change = capabilities.flag_property('PARAM_CHANGE')
     auto_threads = capabilities.flag_property('AUTO_THREADS')
     variable_frame_size = capabilities.flag_property('VARIABLE_FRAME_SIZE')
+    avoid_probing = capabilities.flag_property('AVOID_PROBING')
     # intra_only = capabilities.flag_property('INTRA_ONLY')
     # lossless = capabilities.flag_property('LOSSLESS')
+    hardware = capabilities.flag_property('HARDWARE')
+    hybrid = capabilities.flag_property('HYBRID')
+    encoder_reordered_opaque = capabilities.flag_property('ENCODER_REORDERED_OPAQUE')
 
     @property
     def intra_only(self):

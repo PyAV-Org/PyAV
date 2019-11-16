@@ -11,6 +11,7 @@ from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
+from av.enum cimport define_enum
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
 from av.utils cimport dict_to_avdict
@@ -57,6 +58,54 @@ cdef int interrupt_cb (void *p) nogil:
         return 1
 
     return 0
+
+
+ContainerContextFlags = define_enum('ContainerContextFlags', (
+    ('GENPTS', lib.AVFMT_FLAG_GENPTS,
+        "Generate missing pts even if it requires parsing future frames."),
+    ('IGNIDX', lib.AVFMT_FLAG_IGNIDX,
+        "Ignore index."),
+    ('NONBLOCK', lib.AVFMT_FLAG_NONBLOCK,
+        "Do not block when reading packets from input."),
+    ('IGNDTS', lib.AVFMT_FLAG_IGNDTS,
+        "Ignore DTS on frames that contain both DTS & PTS."),
+    ('NOFILLIN', lib.AVFMT_FLAG_NOFILLIN,
+        "Do not infer any values from other values, just return what is stored in the container."),
+    ('NOPARSE', lib.AVFMT_FLAG_NOPARSE,
+        """Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fillin code works on frames and no parsing -> no frames.
+
+        Also seeking to frames can not work if parsing to find frame boundaries has been disabled."""),
+    ('NOBUFFER', lib.AVFMT_FLAG_NOBUFFER,
+        "Do not buffer frames when possible."),
+    ('CUSTOM_IO', lib.AVFMT_FLAG_CUSTOM_IO,
+        "The caller has supplied a custom AVIOContext, don't avio_close() it."),
+    ('DISCARD_CORRUPT', lib.AVFMT_FLAG_DISCARD_CORRUPT,
+        "Discard frames marked corrupted."),
+    ('FLUSH_PACKETS', lib.AVFMT_FLAG_FLUSH_PACKETS,
+        "Flush the AVIOContext every packet."),
+    ('BITEXACT', lib.AVFMT_FLAG_BITEXACT,
+        """When muxing, try to avoid writing any random/volatile data to the output.
+
+        This includes any random IDs, real-time timestamps/dates, muxer version, etc.
+        This flag is mainly intended for testing."""),
+    ('MP4A_LATM', lib.AVFMT_FLAG_MP4A_LATM,
+        "Enable RTP MP4A-LATM payload"),
+    ('SORT_DTS', lib.AVFMT_FLAG_SORT_DTS,
+        "Try to interleave outputted packets by dts (using this flag can slow demuxing down)."),
+    ('PRIV_OPT', lib.AVFMT_FLAG_PRIV_OPT,
+        "Enable use of private options by delaying codec open (this could be made default once all code is converted)."),
+    ('KEEP_SIDE_DATA', lib.AVFMT_FLAG_KEEP_SIDE_DATA,
+        "Deprecated, does nothing."),
+    ('FAST_SEEK', lib.AVFMT_FLAG_FAST_SEEK,
+        "Enable fast, but inaccurate seeks for some formats."),
+    ('SHORTEST', lib.AVFMT_FLAG_SHORTEST,
+        "Stop muxing when the shortest stream stops."),
+    ('AUTO_BSF', lib.AVFMT_FLAG_AUTO_BSF,
+        "Add bitstream filters as requested by the muxer."),
+), is_flags=True)
+
+
+
 
 
 cdef class Container(object):
@@ -233,6 +282,34 @@ cdef class Container(object):
 
     cdef start_timeout(self):
         self.interrupt_callback_info.start_time = clock()
+
+    def _get_flags(self):
+        return self.ptr.flags
+
+    def _set_flags(self, value):
+        self.ptr.flags = value
+
+    flags = ContainerContextFlags.property(_get_flags, _set_flags)
+
+    gen_pts = flags.flag_property('GENPTS')
+    ign_idx = flags.flag_property('IGNIDX')
+    non_block = flags.flag_property('NONBLOCK')
+    ign_dts = flags.flag_property('IGNDTS')
+    no_fill_in = flags.flag_property('NOFILLIN')
+    no_parse = flags.flag_property('NOPARSE')
+    no_buffer = flags.flag_property('NOBUFFER')
+    custom_io = flags.flag_property('CUSTOM_IO')
+    discard_corrupt = flags.flag_property('DISCARD_CORRUPT')
+    flush_packets = flags.flag_property('FLUSH_PACKETS')
+    bit_exact = flags.flag_property('BITEXACT')
+    mp4a_latm = flags.flag_property('MP4A_LATM')
+    sort_dts = flags.flag_property('SORT_DTS')
+    priv_opt = flags.flag_property('PRIV_OPT')
+    keep_side_data = flags.flag_property('KEEP_SIDE_DATA')
+    fast_seek = flags.flag_property('FAST_SEEK')
+    shortest = flags.flag_property('SHORTEST')
+    auto_bsf = flags.flag_property('AUTO_BSF')
+
 
 
 def open(file, mode=None, format=None, options=None,

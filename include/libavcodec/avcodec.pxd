@@ -6,7 +6,7 @@ from libc.stdint cimport (
 )
 
 
-cdef extern from "libavcodec/avcodec.pyav.h" nogil:
+cdef extern from "libavcodec/avcodec.h" nogil:
 
     # custom
     cdef set pyav_get_available_codecs()
@@ -28,24 +28,28 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
     #AVCodec.capabilities
     cdef enum:
-        CODEC_CAP_DRAW_HORIZ_BAND
-        CODEC_CAP_DR1
-        CODEC_CAP_TRUNCATED
-        CODEC_CAP_HWACCEL
-        CODEC_CAP_DELAY
-        CODEC_CAP_SMALL_LAST_FRAME
-        CODEC_CAP_HWACCEL_VDPAU
-        CODEC_CAP_SUBFRAMES
-        CODEC_CAP_EXPERIMENTAL
-        CODEC_CAP_CHANNEL_CONF
-        CODEC_CAP_NEG_LINESIZES
-        CODEC_CAP_FRAME_THREADS
-        CODEC_CAP_SLICE_THREADS
-        CODEC_CAP_PARAM_CHANGE
-        CODEC_CAP_AUTO_THREADS
-        CODEC_CAP_VARIABLE_FRAME_SIZE
-        CODEC_CAP_INTRA_ONLY
-        CODEC_CAP_LOSSLESS
+        AV_CODEC_CAP_DRAW_HORIZ_BAND
+        AV_CODEC_CAP_DR1
+        AV_CODEC_CAP_TRUNCATED
+        # AV_CODEC_CAP_HWACCEL
+        AV_CODEC_CAP_DELAY
+        AV_CODEC_CAP_SMALL_LAST_FRAME
+        # AV_CODEC_CAP_HWACCEL_VDPAU
+        AV_CODEC_CAP_SUBFRAMES
+        AV_CODEC_CAP_EXPERIMENTAL
+        AV_CODEC_CAP_CHANNEL_CONF
+        # AV_CODEC_CAP_NEG_LINESIZES
+        AV_CODEC_CAP_FRAME_THREADS
+        AV_CODEC_CAP_SLICE_THREADS
+        AV_CODEC_CAP_PARAM_CHANGE
+        AV_CODEC_CAP_AUTO_THREADS
+        AV_CODEC_CAP_VARIABLE_FRAME_SIZE
+        AV_CODEC_CAP_AVOID_PROBING
+        AV_CODEC_CAP_INTRA_ONLY
+        AV_CODEC_CAP_LOSSLESS
+        AV_CODEC_CAP_HARDWARE
+        AV_CODEC_CAP_HYBRID
+        AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
 
     cdef enum:
         FF_THREAD_FRAME

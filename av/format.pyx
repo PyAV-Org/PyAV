@@ -1,6 +1,7 @@
 cimport libav as lib
 
 from av.descriptor cimport wrap_avclass
+from av.enum cimport define_enum
 
 
 cdef extern from "format-shims.c" nogil:
@@ -19,6 +20,27 @@ cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutpu
     format.optr = optr
     format.name = optr.name if optr else iptr.name
     return format
+
+
+ContainerFormatFlags = define_enum('ContainerFormatFlags', (
+    ('NOFILE', lib.AVFMT_NOFILE),
+    ('NEEDNUMBER', lib.AVFMT_NEEDNUMBER),
+    ('SHOW_IDS', lib.AVFMT_SHOW_IDS),
+    ('GLOBALHEADER', lib.AVFMT_GLOBALHEADER),
+    ('NOTIMESTAMPS', lib.AVFMT_NOTIMESTAMPS),
+    ('GENERIC_INDEX', lib.AVFMT_GENERIC_INDEX),
+    ('TS_DISCONT', lib.AVFMT_TS_DISCONT),
+    ('VARIABLE_FPS', lib.AVFMT_VARIABLE_FPS),
+    ('NODIMENSIONS', lib.AVFMT_NODIMENSIONS),
+    ('NOSTREAMS', lib.AVFMT_NOSTREAMS),
+    ('NOBINSEARCH', lib.AVFMT_NOBINSEARCH),
+    ('NOGENSEARCH', lib.AVFMT_NOGENSEARCH),
+    ('NO_BYTE_SEEK', lib.AVFMT_NO_BYTE_SEEK),
+    ('ALLOW_FLUSH', lib.AVFMT_ALLOW_FLUSH),
+    ('TS_NONSTRICT', lib.AVFMT_TS_NONSTRICT),
+    ('TS_NEGATIVE', lib.AVFMT_TS_NEGATIVE),
+    ('SEEK_TO_PTS', lib.AVFMT_SEEK_TO_PTS),
+), is_flags=True)
 
 
 cdef class ContainerFormat(object):
@@ -107,6 +129,31 @@ cdef class ContainerFormat(object):
             if self.optr and self.optr.extensions:
                 exts.update(self.optr.extensions.split(','))
             return exts
+
+    @ContainerFormatFlags.property
+    def flags(self):
+        return (
+            (self.iptr.flags if self.iptr else 0) |
+            (self.optr.flags if self.optr else 0)
+        )
+
+    no_file = flags.flag_property('NOFILE')
+    need_number = flags.flag_property('NEEDNUMBER')
+    show_ids = flags.flag_property('SHOW_IDS')
+    global_header = flags.flag_property('GLOBALHEADER')
+    no_timestamps = flags.flag_property('NOTIMESTAMPS')
+    generic_index = flags.flag_property('GENERIC_INDEX')
+    ts_discont = flags.flag_property('TS_DISCONT')
+    variable_fps = flags.flag_property('VARIABLE_FPS')
+    no_dimensions = flags.flag_property('NODIMENSIONS')
+    no_streams = flags.flag_property('NOSTREAMS')
+    no_bin_search = flags.flag_property('NOBINSEARCH')
+    no_gen_search = flags.flag_property('NOGENSEARCH')
+    no_byte_seek = flags.flag_property('NO_BYTE_SEEK')
+    allow_flush = flags.flag_property('ALLOW_FLUSH')
+    ts_nonstrict = flags.flag_property('TS_NONSTRICT')
+    ts_negative = flags.flag_property('TS_NEGATIVE')
+    seek_to_pts = flags.flag_property('SEEK_TO_PTS')
 
 
 cdef get_output_format_names():
