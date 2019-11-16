@@ -17,7 +17,6 @@ class TestContainerFormats(TestCase):
 
         self.assertFalse(fmt.no_file)
 
-
     def test_mov(self):
         fmt = ContainerFormat('mov')
         self.assertTrue(fmt.is_input)

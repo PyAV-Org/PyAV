@@ -7,12 +7,23 @@ Codecs
     .. autoclass:: Codec
         :members:
 
+
+.. flagtable::
+    :cls: av.codec.context:CodecContext
+    :enum: av.codec.context:CodecContextFlags
+
+
+.. flagtable::
+    :cls: av.codec.context:CodecContext
+    :enum: av.codec.context:CodecContextFlags2
+
+
 .. automodule:: av.codec.context
 
-    .. autoclass:: ThreadType
+    .. autoclass:: CodecContextThreadType
         :members:
 
-    .. autoclass:: SkipType
+    .. autoclass:: CodecContextSkipType
         :members:
 
     .. autoclass:: CodecContext

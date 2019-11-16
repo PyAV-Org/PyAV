@@ -58,7 +58,7 @@ class TestEnums(TestCase):
         cls = self.define_foobar()
         foo = cls.FOO
 
-        self.assertEqual(repr(foo), '<Foobar:FOO(1)>')
+        self.assertEqual(repr(foo), '<Foobar:FOO(0x1)>')
 
         str_foo = str(foo)
         self.assertIsInstance(str_foo, str)

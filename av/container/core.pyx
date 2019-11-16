@@ -105,9 +105,6 @@ ContainerContextFlags = define_enum('ContainerContextFlags', (
 ), is_flags=True)
 
 
-
-
-
 cdef class Container(object):
 
     def __cinit__(self, sentinel, file_, format_name, options,
@@ -289,7 +286,11 @@ cdef class Container(object):
     def _set_flags(self, value):
         self.ptr.flags = value
 
-    flags = ContainerContextFlags.property(_get_flags, _set_flags)
+    flags = ContainerContextFlags.property(
+        _get_flags,
+        _set_flags,
+        doc=":class:`av.enum.EnumFlag` set for :ffmpeg:`AVFormatContext.flags`."
+    )
 
     gen_pts = flags.flag_property('GENPTS')
     ign_idx = flags.flag_property('IGNIDX')
@@ -309,7 +310,6 @@ cdef class Container(object):
     fast_seek = flags.flag_property('FAST_SEEK')
     shortest = flags.flag_property('SHORTEST')
     auto_bsf = flags.flag_property('AUTO_BSF')
-
 
 
 def open(file, mode=None, format=None, options=None,

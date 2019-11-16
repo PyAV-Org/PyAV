@@ -1,3 +1,95 @@
+"""
+
+PyAV provides enumeration and flag classes that are similar to the stdlib ``enum``
+module that shipped with Python 3.4.
+
+PyAV's enums are a little more forgiving to preserve backwards compatibility
+with earlier PyAV patterns. e.g., they can be freely compared to strings or
+integers for names and values respectively.
+
+
+.. _enums:
+
+Enumerations
+------------
+
+Enumerations are when an attribute may only take on a single value at once, and
+they are represented as integers in the FFmpeg API. We associate names with each
+value that are easier to operate with.
+
+Consider :data:`CodecContextSkipType`, which is the type of the :attr:`CodecContext.skip_frame` attribute::
+
+    >>> fh = av.open(video_path)
+    >>> cc = fh.streams.video[0].codec_context
+
+    >>> # The skip_frame attribute has a name and value:
+    >>> cc.skip_frame.name
+    'DEFAULT'
+    >>> cc.skip_frame.value
+    0
+
+    >>> # You can compare it to strings and ints:
+    >>> cc.skip_frame == 'DEFAULT'
+    True
+    >>> cc.skip_frame == 0
+    True
+
+    >>> # You can assign strings and ints:
+    >>> cc.skip_frame = 'NONKEY'
+    >>> cc.skip_frame == 'NONKEY'
+    True
+    >>> cc.skip_frame == 32
+    True
+
+
+.. _flags:
+
+Flags
+-----
+
+Flags are sets of boolean attributes, which the FFmpeg API represents as individual
+bits in a larger integer which you manipulate with the bitwise operators.
+We associate names with each flag that are easier to operate with.
+
+Consider :data:`CodecContextFlags`, whis is the type of the :attr:`CodecContext.flags`
+attribute, and the set of boolean properties::
+
+    >>> fh = av.open(video_path)
+    >>> cc = fh.streams.video[0].codec_context
+
+    >>> cc.flags
+    <CodecContextFlags:NONE(0x0)>
+
+    >>> # You can set flags via bitwise operations with the objects, names, or values:
+    >>> cc.flags |= cc.flags.OUTPUT_CORRUPT
+    >>> cc.flags |= 'GLOBAL_HEADER'
+    >>> cc.flags
+    <CodecContextFlags:OUTPUT_CORRUPT|GLOBAL_HEADER(0x400008)>
+
+    >>> # You can test flags via bitwise operations with objects, names, or values:
+    >>> bool(cc.flags & cc.flags.OUTPUT_CORRUPT)
+    True
+    >>> bool(cc.flags & 'QSCALE')
+    False
+
+    >>> # There are boolean properties for each flag:
+    >>> cc.output_corrupt
+    True
+    >>> cc.qscale
+    False
+
+    >>> # You can set them:
+    >>> cc.qscale = True
+    >>> cc.flags
+    <CodecContextFlags:QSCALE|OUTPUT_CORRUPT|GLOBAL_HEADER(0x40000a)>
+
+
+API
+---
+
+
+"""
+
 from collections import OrderedDict
 
 try:
@@ -153,7 +245,7 @@ cdef class EnumItem(object):
         self._hash = hash_
 
     def __repr__(self):
-        return '<{}:{}({})>'.format(self.__class__.__name__, self.name, self.value)
+        return '<{}:{}(0x{:x})>'.format(self.__class__.__name__, self.name, self.value)
 
     def __str__(self):
         return self.name
@@ -235,17 +327,22 @@ cdef class EnumFlag(EnumItem):
         # This can't result in a flag, but is helpful.
         return ~self.value
 
+    def __nonzero__(self):
+        return bool(self.value)
+
 
 cdef class EnumProperty(object):
 
     cdef object enum
     cdef object fget
     cdef object fset
+    cdef public __doc__
 
-    def __init__(self, enum, fget, fset=None):
+    def __init__(self, enum, fget, fset=None, doc=None):
         self.enum = enum
         self.fget = fget
         self.fset = fset
+        self.__doc__ = doc or fget.__doc__
 
     def setter(self, fset):
         self.fset = fset
