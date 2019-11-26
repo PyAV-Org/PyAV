@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-**IMPORTANT:** Be sure to fill in all applicable sections {{ in braces }} or your issue may be discarded.
+**IMPORTANT:** Be sure to replace all template sections {{ like this }} or your issue may be discarded.
 
 
 ## Overview
