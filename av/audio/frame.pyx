@@ -136,4 +136,4 @@ cdef class AudioFrame(Frame):
             raise AssertionError("Don't know how to convert data type.", self.format.name)
 
         # convert and return data
-        return np.vstack(map(lambda x: np.frombuffer(x, dtype), self.planes))
+        return np.vstack(tuple(map(lambda x: np.frombuffer(x, dtype), self.planes)))
