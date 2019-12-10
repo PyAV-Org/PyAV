@@ -129,7 +129,7 @@ cdef class VideoFrame(Frame):
             id(self),
         )
 
-    def reformat(self, width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None):
+    def reformat(self, width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, flags=lib.SWS_BILINEAR):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None)
 
         Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
@@ -170,10 +170,11 @@ cdef class VideoFrame(Frame):
             c_dst_colorspace = colorspace_flags[dst_colorspace]
         except KeyError:
             raise ValueError("Invalid dst_colorspace %r" % dst_colorspace)
+        cdef int c_flags = flags
 
-        return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace)
+        return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace, c_flags)
 
-    cdef _reformat(self, int width, int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace):
+    cdef _reformat(self, int width, int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace, int flags=lib.SWS_BILINEAR):
 
         if self.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
@@ -205,7 +206,7 @@ cdef class VideoFrame(Frame):
                 width,
                 height,
                 dst_format,
-                lib.SWS_BILINEAR,
+                flags,
                 NULL,
                 NULL,
                 NULL
