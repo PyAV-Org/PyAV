@@ -4,7 +4,7 @@ from libc.stdint cimport uint64_t
 cdef class AudioLayout(object):
 
     # The layout for FFMpeg; this is essentially a bitmask of channels.
-    cdef uint64_t layout
+    cdef readonly uint64_t layout
     cdef int nb_channels
 
     cdef readonly tuple channels
