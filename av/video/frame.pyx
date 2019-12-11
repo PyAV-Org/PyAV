@@ -19,7 +19,7 @@ cdef VideoFrame alloc_video_frame():
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
 
 
-PictureType = define_enum('PictureType', (
+PictureType = define_enum('PictureType', __name__, (
     ('NONE', lib.AV_PICTURE_TYPE_NONE),
     ('I', lib.AV_PICTURE_TYPE_I),
     ('P', lib.AV_PICTURE_TYPE_P),

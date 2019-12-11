@@ -8,7 +8,7 @@ from av.video.format cimport VideoFormat
 from av.video.frame cimport alloc_video_frame
 
 
-Interpolation = define_enum('Interpolation', (
+Interpolation = define_enum('Interpolation', __name__, (
     ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR),
     ('BILINEAR', lib.SWS_BILINEAR),
     ('BICUBIC', lib.SWS_BICUBIC),
@@ -22,7 +22,7 @@ Interpolation = define_enum('Interpolation', (
     ('SPLINE', lib.SWS_SPLINE),
 ))
 
-Colorspace = define_enum('Colorspace', (
+Colorspace = define_enum('Colorspace', __name__, (
 
     ('ITU709', lib.SWS_CS_ITU709),
     ('FCC', lib.SWS_CS_FCC),

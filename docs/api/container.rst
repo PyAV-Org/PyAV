@@ -26,11 +26,18 @@ Flags
 
 .. seealso:: Interpreting :ref:`flags`.
 
-.. autoattribute:: Container.flags
+.. class:: av.container.core.Flags
+
+    :class:`av.enum.EnumType` set for :ffmpeg:`AVFormatContext.flags`.
+
+.. attribute:: av.container.core.Container.flags
+
+    :class:`av.enum.EnumFlag` set for :ffmpeg:`AVFormatContext.flags`.
+
 
 .. flagtable::
     :cls: av.container.core:Container
-    :enum: av.container.core:ContainerContextFlags
+    :enum: av.container.core:Flags
 
 
 Input Containers

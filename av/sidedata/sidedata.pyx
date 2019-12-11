@@ -8,7 +8,7 @@ import collections
 cdef object _cinit_bypass_sentinel = object()
 
 
-Type = define_enum('Type', (
+Type = define_enum('Type', __name__, (
     ('PANSCAN', lib.AV_FRAME_DATA_PANSCAN),
     ('A53_CC', lib.AV_FRAME_DATA_A53_CC),
     ('STEREO3D', lib.AV_FRAME_DATA_STEREO3D),

@@ -17,7 +17,7 @@ Enumerations are when an attribute may only take on a single value at once, and
 they are represented as integers in the FFmpeg API. We associate names with each
 value that are easier to operate with.
 
-Consider :data:`CodecContextSkipType`, which is the type of the :attr:`CodecContext.skip_frame` attribute::
+Consider :data:`av.codec.context.SkipType`, which is the type of the :attr:`CodecContext.skip_frame` attribute::
 
     >>> fh = av.open(video_path)
     >>> cc = fh.streams.video[0].codec_context
@@ -58,13 +58,13 @@ attribute, and the set of boolean properties::
     >>> cc = fh.streams.video[0].codec_context
 
     >>> cc.flags
-    <CodecContextFlags:NONE(0x0)>
+    <av.codec.context.Flags:NONE(0x0)>
 
     >>> # You can set flags via bitwise operations with the objects, names, or values:
     >>> cc.flags |= cc.flags.OUTPUT_CORRUPT
     >>> cc.flags |= 'GLOBAL_HEADER'
     >>> cc.flags
-    <CodecContextFlags:OUTPUT_CORRUPT|GLOBAL_HEADER(0x400008)>
+    <av.codec.context.Flags:OUTPUT_CORRUPT|GLOBAL_HEADER(0x400008)>
 
     >>> # You can test flags via bitwise operations with objects, names, or values:
     >>> bool(cc.flags & cc.flags.OUTPUT_CORRUPT)
@@ -81,7 +81,7 @@ attribute, and the set of boolean properties::
     >>> # You can set them:
     >>> cc.qscale = True
     >>> cc.flags
-    <CodecContextFlags:QSCALE|OUTPUT_CORRUPT|GLOBAL_HEADER(0x40000a)>
+    <av.codec.context.Flags:QSCALE|OUTPUT_CORRUPT|GLOBAL_HEADER(0x40000a)>
 
 
 API
@@ -91,6 +91,7 @@ API
 """
 
 from collections import OrderedDict
+import sys
 
 try:
     import copyreg
@@ -245,7 +246,12 @@ cdef class EnumItem(object):
         self._hash = hash_
 
     def __repr__(self):
-        return '<{}:{}(0x{:x})>'.format(self.__class__.__name__, self.name, self.value)
+        return '<{}.{}:{}(0x{:x})>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.name,
+            self.value,
+        )
 
     def __str__(self):
         return self.name
@@ -386,13 +392,13 @@ cdef class EnumProperty(object):
         return _property
 
 
-cpdef define_enum(name, items, bint is_flags=False):
+cpdef define_enum(name, module, items, bint is_flags=False):
 
     if is_flags:
         base_cls = EnumFlag
     else:
         base_cls = EnumItem
 
-    cls = EnumType(name, (base_cls, ), {}, items)
+    cls = EnumType(name, (base_cls, ), {'__module__': module}, items)
 
     return cls

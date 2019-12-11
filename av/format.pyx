@@ -22,7 +22,7 @@ cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutpu
     return format
 
 
-ContainerFormatFlags = define_enum('ContainerFormatFlags', (
+Flags = define_enum('Flags', __name__, (
     ('NOFILE', lib.AVFMT_NOFILE),
     ('NEEDNUMBER', lib.AVFMT_NEEDNUMBER),
     ('SHOW_IDS', lib.AVFMT_SHOW_IDS),
@@ -130,7 +130,7 @@ cdef class ContainerFormat(object):
                 exts.update(self.optr.extensions.split(','))
             return exts
 
-    @ContainerFormatFlags.property
+    @Flags.property
     def flags(self):
         return (
             (self.iptr.flags if self.iptr else 0) |

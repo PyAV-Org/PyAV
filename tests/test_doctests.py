@@ -15,6 +15,7 @@ except NameError:
 
 
 def fix_doctests(suite):
+
     for case in suite._tests:
 
         # Add some more flags.
@@ -39,6 +40,7 @@ def register_doctests(mod):
 
     if isinstance(mod, basestring):
         mod = __import__(mod, fromlist=[''])
+
     try:
         suite = doctest.DocTestSuite(mod)
     except ValueError:

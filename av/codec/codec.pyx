@@ -19,7 +19,7 @@ cdef Codec wrap_codec(const lib.AVCodec *ptr):
     return codec
 
 
-CodecProperties = define_enum('CodecProperties', (
+Properties = define_enum('Properties', __name__, (
     ('NONE', 0),
     ('INTRA_ONLY', lib.AV_CODEC_PROP_INTRA_ONLY),
     ('LOSSY', lib.AV_CODEC_PROP_LOSSY),
@@ -29,7 +29,7 @@ CodecProperties = define_enum('CodecProperties', (
     ('TEXT_SUB', lib.AV_CODEC_PROP_TEXT_SUB),
 ), is_flags=True)
 
-CodecCapabilities = define_enum('CodecCapabilities', (
+Capabilities = define_enum('Capabilities', __name__, (
     ('NONE', 0),
     ('DRAW_HORIZ_BAND', lib.AV_CODEC_CAP_DRAW_HORIZ_BAND),
     ('DR1', lib.AV_CODEC_CAP_DR1),
@@ -224,7 +224,7 @@ cdef class Codec(object):
     # NOTE: there are some overlaps, which we define below these blocks with
     # runtime checks to make sure they are sane.
 
-    @CodecProperties.property
+    @Properties.property
     def properties(self):
         return self.desc.props
 
@@ -235,7 +235,7 @@ cdef class Codec(object):
     bitmap_sub = properties.flag_property('BITMAP_SUB')
     text_sub = properties.flag_property('TEXT_SUB')
 
-    @CodecCapabilities.property
+    @Capabilities.property
     def capabilities(self):
         return self.ptr.capabilities
 

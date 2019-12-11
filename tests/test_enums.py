@@ -6,13 +6,13 @@ from .common import TestCase
 
 
 # This must be at the top-level.
-PickleableFooBar = define_enum('PickleableFooBar', [('FOO', 1)])
+PickleableFooBar = define_enum('PickleableFooBar', __name__, [('FOO', 1)])
 
 
 class TestEnums(TestCase):
 
     def define_foobar(self, **kwargs):
-        return define_enum('Foobar', (
+        return define_enum('Foobar', __name__, (
             ('FOO', 1),
             ('BAR', 2),
         ), **kwargs)
@@ -58,7 +58,7 @@ class TestEnums(TestCase):
         cls = self.define_foobar()
         foo = cls.FOO
 
-        self.assertEqual(repr(foo), '<Foobar:FOO(0x1)>')
+        self.assertEqual(repr(foo), '<tests.test_enums.Foobar:FOO(0x1)>')
 
         str_foo = str(foo)
         self.assertIsInstance(str_foo, str)
@@ -120,7 +120,7 @@ class TestEnums(TestCase):
 
     def test_multiple_names(self):
 
-        cls = define_enum('FFooBBar', (
+        cls = define_enum('FFooBBar', __name__, (
             ('FOO', 1),
             ('F', 1),
             ('BAR', 2),
@@ -140,7 +140,7 @@ class TestEnums(TestCase):
 
     def test_flag_basics(self):
 
-        cls = define_enum('FoobarAllFlags', dict(FOO=1, BAR=2, FOOBAR=3).items(), is_flags=True)
+        cls = define_enum('FoobarAllFlags', __name__, dict(FOO=1, BAR=2, FOOBAR=3).items(), is_flags=True)
         foo = cls.FOO
         bar = cls.BAR
 

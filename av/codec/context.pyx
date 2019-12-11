@@ -42,14 +42,14 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     return py_ctx
 
 
-ThreadType = define_enum('ThreadType', (
+ThreadType = define_enum('ThreadType', __name__, (
     ('NONE', 0),
     ('FRAME', lib.FF_THREAD_FRAME),
     ('SLICE', lib.FF_THREAD_SLICE),
     ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME),
 ), is_flags=True)
 
-SkipType = define_enum('SkipType', (
+SkipType = define_enum('SkipType', __name__, (
     ('NONE', lib.AVDISCARD_NONE),
     ('DEFAULT', lib.AVDISCARD_DEFAULT),
     ('NONREF', lib.AVDISCARD_NONREF),
@@ -59,7 +59,7 @@ SkipType = define_enum('SkipType', (
     ('ALL', lib.AVDISCARD_ALL),
 ))
 
-Flags = define_enum('Flags', (
+Flags = define_enum('Flags', __name__, (
     ('NONE', 0),
     ('UNALIGNED', lib.AV_CODEC_FLAG_UNALIGNED),
     ('QSCALE', lib.AV_CODEC_FLAG_QSCALE),
@@ -81,7 +81,7 @@ Flags = define_enum('Flags', (
     ('CLOSED_GOP', lib.AV_CODEC_FLAG_CLOSED_GOP),
 ), is_flags=True)
 
-Flags2 = define_enum('Flags2', (
+Flags2 = define_enum('Flags2', __name__, (
     ('NONE', 0),
     ('FAST', lib.AV_CODEC_FLAG2_FAST),
     ('NO_OUTPUT', lib.AV_CODEC_FLAG2_NO_OUTPUT),

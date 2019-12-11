@@ -60,7 +60,7 @@ cdef int interrupt_cb (void *p) nogil:
     return 0
 
 
-ContainerContextFlags = define_enum('ContainerContextFlags', (
+Flags = define_enum('Flags', __name__, (
     ('GENPTS', lib.AVFMT_FLAG_GENPTS,
         "Generate missing pts even if it requires parsing future frames."),
     ('IGNIDX', lib.AVFMT_FLAG_IGNIDX,
@@ -286,11 +286,7 @@ cdef class Container(object):
     def _set_flags(self, value):
         self.ptr.flags = value
 
-    flags = ContainerContextFlags.property(
-        _get_flags,
-        _set_flags,
-        doc=":class:`av.enum.EnumFlag` set for :ffmpeg:`AVFormatContext.flags`."
-    )
+    flags = Flags.property(_get_flags, _set_flags)
 
     gen_pts = flags.flag_property('GENPTS')
     ign_idx = flags.flag_property('IGNIDX')
