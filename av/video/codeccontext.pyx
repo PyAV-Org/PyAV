@@ -35,23 +35,19 @@ cdef class VideoCodecContext(CodecContext):
 
         cdef VideoFrame vframe = input
 
-        if not self.reformatter:
-            self.reformatter = VideoReformatter()
-
         # Reformat if it doesn't match.
         if (
             vframe.format.pix_fmt != self._format.pix_fmt or
             vframe.width != self.ptr.width or
             vframe.height != self.ptr.height
         ):
-            vframe.reformatter = self.reformatter
-            vframe = vframe._reformat(
+            if not self.reformatter:
+                self.reformatter = VideoReformatter()
+            vframe = self.reformatter.reformat(
+                vframe,
                 self.ptr.width,
                 self.ptr.height,
-                self._format.pix_fmt,
-                lib.SWS_CS_DEFAULT,
-                lib.SWS_CS_DEFAULT,
-                lib.SWS_BILINEAR,
+                self._format,
             )
 
         # There is no pts, so create one.

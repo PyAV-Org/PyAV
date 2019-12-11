@@ -30,38 +30,6 @@ PictureType = define_enum('PictureType', (
     ('BI', lib.AV_PICTURE_TYPE_BI),
 ))
 
-Interpolation = define_enum('Interpolation', (
-    ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR),
-    ('BILINEAR', lib.SWS_BILINEAR),
-    ('BICUBIC', lib.SWS_BICUBIC),
-    ('X', lib.SWS_X),
-    ('POINT', lib.SWS_POINT),
-    ('AREA', lib.SWS_AREA),
-    ('BICUBLIN', lib.SWS_BICUBLIN),
-    ('GAUSS', lib.SWS_GAUSS),
-    ('SINC', lib.SWS_SINC),
-    ('LANCZOS', lib.SWS_LANCZOS),
-    ('SPLINE', lib.SWS_SPLINE),
-))
-
-Colorspace = define_enum('Colorspace', (
-
-    ('ITU709', lib.SWS_CS_ITU709),
-    ('FCC', lib.SWS_CS_FCC),
-    ('ITU601', lib.SWS_CS_ITU601),
-    ('SMPTE170M', lib.SWS_CS_SMPTE170M),
-    ('SMPTE240M', lib.SWS_CS_SMPTE240M),
-    ('DEFAULT', lib.SWS_CS_DEFAULT),
-
-    # Lowercase for b/c.
-    ('itu709', lib.SWS_CS_ITU709),
-    ('fcc', lib.SWS_CS_FCC),
-    ('itu601', lib.SWS_CS_ITU601),
-    ('itu624', lib.SWS_CS_SMPTE170M),
-    ('smpte240', lib.SWS_CS_SMPTE240M),
-    ('default', lib.SWS_CS_DEFAULT),
-
-))
 
 cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
     cdef bytes imgbytes = array.tobytes()
@@ -161,136 +129,6 @@ cdef class VideoFrame(Frame):
             id(self),
         )
 
-    def reformat(self, width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None):
-        """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None)
-
-        Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
-
-        :param int width: New width, or ``None`` for the same width.
-        :param int height: New height, or ``None`` for the same height.
-        :param str format: New format, or ``None`` for the same format; see :attr:`VideoFrame.format`.
-        :param Colorspace src_colorspace: Current colorspace.
-        :param Colorspace dst_colorspace: Desired colorspace.
-
-        Supported colorspaces are currently:
-            - ``'itu709'``
-            - ``'fcc'``
-            - ``'itu601'``
-            - ``'itu624'``
-            - ``'smpte240'``
-            - ``'default'`` or ``None``
-
-        """
-
-        cdef VideoFormat video_format = VideoFormat(format or self.format)
-
-        cdef int c_src_colorspace = (Colorspace[src_colorspace] if src_colorspace else Colorspace.DEFAULT).value
-        cdef int c_dst_colorspace = (Colorspace[dst_colorspace] if dst_colorspace else Colorspace.DEFAULT).value
-        cdef int c_interpolation = (Interpolation[interpolation] if interpolation else Interpolation.BILINEAR).value
-
-        return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace, c_interpolation)
-
-    cdef _reformat(self, int width, int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace, int interpolation):
-
-        if self.ptr.format < 0:
-            raise ValueError("Frame does not have format set.")
-
-        cdef lib.AVPixelFormat src_format = <lib.AVPixelFormat> self.ptr.format
-
-        # Shortcut!
-        if (
-            dst_format == src_format and
-            width == self.ptr.width and
-            height == self.ptr.height and
-            dst_colorspace == src_colorspace
-        ):
-            return self
-
-        # If we don't have a SwsContextProxy, create one.
-        if not self.reformatter:
-            self.reformatter = VideoReformatter()
-
-        # Try and reuse existing SwsContextProxy
-        # VideoStream.decode will copy its SwsContextProxy to VideoFrame
-        # So all Video frames from the same VideoStream should have the same one
-        with nogil:
-            self.reformatter.ptr = lib.sws_getCachedContext(
-                self.reformatter.ptr,
-                self.ptr.width,
-                self.ptr.height,
-                src_format,
-                width,
-                height,
-                dst_format,
-                interpolation,
-                NULL,
-                NULL,
-                NULL
-            )
-
-        # We want to change the colorspace transforms. We do that by grabbing
-        # all of the current settings, changing a couple, and setting them all.
-        # We need a lot of state here.
-        cdef const int *inv_tbl
-        cdef const int *tbl
-        cdef int src_range, dst_range, brightness, contrast, saturation
-        cdef int ret
-        if src_colorspace != dst_colorspace:
-
-            with nogil:
-
-                # Casts for const-ness, because Cython isn't expressive enough.
-                ret = lib.sws_getColorspaceDetails(
-                    self.reformatter.ptr,
-                    <int**>&inv_tbl,
-                    &src_range,
-                    <int**>&tbl,
-                    &dst_range,
-                    &brightness,
-                    &contrast,
-                    &saturation
-                )
-
-            # I don't think this one can actually come up.
-            if ret < 0:
-                raise ValueError("Can't get colorspace of current format.")
-
-            with nogil:
-
-                # Grab the coefficients for the requested transforms.
-                # The inv_table brings us to linear, and `tbl` to the new space.
-                if src_colorspace != lib.SWS_CS_DEFAULT:
-                    inv_tbl = lib.sws_getCoefficients(src_colorspace)
-                if dst_colorspace != lib.SWS_CS_DEFAULT:
-                    tbl = lib.sws_getCoefficients(dst_colorspace)
-
-                # Apply!
-                ret = lib.sws_setColorspaceDetails(self.reformatter.ptr, inv_tbl, src_range, tbl, dst_range, brightness, contrast, saturation)
-
-            # This one can come up, but I'm not really sure in what scenarios.
-            if ret < 0:
-                raise ValueError("Can't set colorspace of current format.")
-
-        # Create a new VideoFrame.
-        cdef VideoFrame frame = alloc_video_frame()
-        frame._copy_internal_attributes(self)
-        frame._init(dst_format, width, height)
-
-        # Finally, scale the image.
-        with nogil:
-            lib.sws_scale(
-                self.reformatter.ptr,
-                # Cast for const-ness, because Cython isn't expressive enough.
-                <const uint8_t**>self.ptr.data,
-                self.ptr.linesize,
-                0,  # slice Y
-                self.ptr.height,
-                frame.ptr.data,
-                frame.ptr.linesize,
-            )
-
-        return frame
-
     @property
     def planes(self):
         """
@@ -333,10 +171,22 @@ cdef class VideoFrame(Frame):
     def pict_type(self, value):
         self.ptr.pict_type = PictureType[value].value
 
+    def reformat(self, *args, **kwargs):
+        """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None)
+
+        Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
+
+        .. seealso:: :meth:`.VideoReformatter.reformat` for arguments.
+
+        """
+        if not self.reformatter:
+            self.reformatter = VideoReformatter()
+        return self.reformatter.reformat(self, *args, **kwargs)
+
     def to_rgb(self, **kwargs):
         """Get an RGB version of this frame.
 
-        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+        Any ``**kwargs`` are passed to :meth:`.VideoReformatter.reformat`.
 
         >>> frame = VideoFrame(1920, 1080)
         >>> frame.format.name
@@ -350,7 +200,7 @@ cdef class VideoFrame(Frame):
     def to_image(self, **kwargs):
         """Get an RGB ``PIL.Image`` of this frame.
 
-        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+        Any ``**kwargs`` are passed to :meth:`.VideoReformatter.reformat`.
 
         .. note:: PIL or Pillow must be installed.
 
@@ -377,7 +227,7 @@ cdef class VideoFrame(Frame):
     def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
 
-        Any ``**kwargs`` are passed to :meth:`VideoFrame.reformat`.
+        Any ``**kwargs`` are passed to :meth:`.VideoReformatter.reformat`.
 
         .. note:: Numpy must be installed.
 
