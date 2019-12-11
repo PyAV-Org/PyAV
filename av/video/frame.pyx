@@ -30,6 +30,38 @@ PictureType = define_enum('PictureType', (
     ('BI', lib.AV_PICTURE_TYPE_BI),
 ))
 
+Interpolation = define_enum('Interpolation', (
+    ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR),
+    ('BILINEAR', lib.SWS_BILINEAR),
+    ('BICUBIC', lib.SWS_BICUBIC),
+    ('X', lib.SWS_X),
+    ('POINT', lib.SWS_POINT),
+    ('AREA', lib.SWS_AREA),
+    ('BICUBLIN', lib.SWS_BICUBLIN),
+    ('GAUSS', lib.SWS_GAUSS),
+    ('SINC', lib.SWS_SINC),
+    ('LANCZOS', lib.SWS_LANCZOS),
+    ('SPLINE', lib.SWS_SPLINE),
+))
+
+Colorspace = define_enum('Colorspace', (
+
+    ('ITU709', lib.SWS_CS_ITU709),
+    ('FCC', lib.SWS_CS_FCC),
+    ('ITU601', lib.SWS_CS_ITU601),
+    ('SMPTE170M', lib.SWS_CS_SMPTE170M),
+    ('SMPTE240M', lib.SWS_CS_SMPTE240M),
+    ('DEFAULT', lib.SWS_CS_DEFAULT),
+
+    # Lowercase for b/c.
+    ('itu709', lib.SWS_CS_ITU709),
+    ('fcc', lib.SWS_CS_FCC),
+    ('itu601', lib.SWS_CS_ITU601),
+    ('itu624', lib.SWS_CS_SMPTE170M),
+    ('smpte240', lib.SWS_CS_SMPTE240M),
+    ('default', lib.SWS_CS_DEFAULT),
+
+))
 
 cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
     cdef bytes imgbytes = array.tobytes()
@@ -129,7 +161,7 @@ cdef class VideoFrame(Frame):
             id(self),
         )
 
-    def reformat(self, width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, flags=lib.SWS_BILINEAR):
+    def reformat(self, width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None)
 
         Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
@@ -137,8 +169,8 @@ cdef class VideoFrame(Frame):
         :param int width: New width, or ``None`` for the same width.
         :param int height: New height, or ``None`` for the same height.
         :param str format: New format, or ``None`` for the same format; see :attr:`VideoFrame.format`.
-        :param str src_colorspace: Current colorspace.
-        :param str dst_colorspace: Desired colorspace.
+        :param Colorspace src_colorspace: Current colorspace.
+        :param Colorspace dst_colorspace: Desired colorspace.
 
         Supported colorspaces are currently:
             - ``'itu709'``
@@ -152,29 +184,13 @@ cdef class VideoFrame(Frame):
 
         cdef VideoFormat video_format = VideoFormat(format or self.format)
 
-        colorspace_flags = {
-            'itu709': lib.SWS_CS_ITU709,
-            'fcc': lib.SWS_CS_FCC,
-            'itu601': lib.SWS_CS_ITU601,
-            'itu624': lib.SWS_CS_SMPTE170M,
-            'smpte240': lib.SWS_CS_SMPTE240M,
-            'default': lib.SWS_CS_DEFAULT,
-            None: lib.SWS_CS_DEFAULT,
-        }
-        cdef int c_src_colorspace, c_dst_colorspace
-        try:
-            c_src_colorspace = colorspace_flags[src_colorspace]
-        except KeyError:
-            raise ValueError("Invalid src_colorspace %r" % src_colorspace)
-        try:
-            c_dst_colorspace = colorspace_flags[dst_colorspace]
-        except KeyError:
-            raise ValueError("Invalid dst_colorspace %r" % dst_colorspace)
-        cdef int c_flags = flags
+        cdef int c_src_colorspace = (Colorspace[src_colorspace] if src_colorspace else Colorspace.DEFAULT).value
+        cdef int c_dst_colorspace = (Colorspace[dst_colorspace] if dst_colorspace else Colorspace.DEFAULT).value
+        cdef int c_interpolation = (Interpolation[interpolation] if interpolation else Interpolation.BILINEAR).value
 
-        return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace, c_flags)
+        return self._reformat(width or self.width, height or self.height, video_format.pix_fmt, c_src_colorspace, c_dst_colorspace, c_interpolation)
 
-    cdef _reformat(self, int width, int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace, int flags=lib.SWS_BILINEAR):
+    cdef _reformat(self, int width, int height, lib.AVPixelFormat dst_format, int src_colorspace, int dst_colorspace, int interpolation):
 
         if self.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
@@ -206,7 +222,7 @@ cdef class VideoFrame(Frame):
                 width,
                 height,
                 dst_format,
-                flags,
+                interpolation,
                 NULL,
                 NULL,
                 NULL

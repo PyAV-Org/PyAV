@@ -50,7 +50,8 @@ cdef class VideoCodecContext(CodecContext):
                 self.ptr.height,
                 self._format.pix_fmt,
                 lib.SWS_CS_DEFAULT,
-                lib.SWS_CS_DEFAULT
+                lib.SWS_CS_DEFAULT,
+                lib.SWS_BILINEAR,
             )
 
         # There is no pts, so create one.
