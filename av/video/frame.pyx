@@ -163,6 +163,10 @@ cdef class VideoFrame(Frame):
         """Is this frame an interlaced or progressive?"""
         def __get__(self): return self.ptr.interlaced_frame
 
+    property coded_picture_number:
+        """picture number in bitstream order"""
+        def __get__(self): return self.ptr.coded_picture_number
+
     @property
     def pict_type(self):
         return PictureType.get(self.ptr.pict_type, create=True)

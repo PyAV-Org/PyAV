@@ -291,6 +291,8 @@ cdef extern from "libavcodec/avcodec.pyav.h" nogil:
 
         int interlaced_frame # 0 or 1.
 
+        int coded_picture_number
+
         int width
         int height
 
