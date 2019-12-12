@@ -19,40 +19,120 @@ cdef Codec wrap_codec(const lib.AVCodec *ptr):
     return codec
 
 
-Properties = define_enum('Properties', __name__, (
+Properties = define_enum('Properties', 'av.codec', (
     ('NONE', 0),
-    ('INTRA_ONLY', lib.AV_CODEC_PROP_INTRA_ONLY),
-    ('LOSSY', lib.AV_CODEC_PROP_LOSSY),
-    ('LOSSLESS', lib.AV_CODEC_PROP_LOSSLESS),
-    ('REORDER', lib.AV_CODEC_PROP_REORDER),
-    ('BITMAP_SUB', lib.AV_CODEC_PROP_BITMAP_SUB),
-    ('TEXT_SUB', lib.AV_CODEC_PROP_TEXT_SUB),
+    ('INTRA_ONLY', lib.AV_CODEC_PROP_INTRA_ONLY,
+        """Codec uses only intra compression.
+        Video and audio codecs only."""),
+    ('LOSSY', lib.AV_CODEC_PROP_LOSSY,
+        """Codec supports lossy compression. Audio and video codecs only.
+
+        Note: A codec may support both lossy and lossless
+        compression modes."""),
+    ('LOSSLESS', lib.AV_CODEC_PROP_LOSSLESS,
+        """Codec supports lossless compression. Audio and video codecs only."""),
+    ('REORDER', lib.AV_CODEC_PROP_REORDER,
+        """Codec supports frame reordering. That is, the coded order (the order in which
+        the encoded packets are output by the encoders / stored / input to the
+        decoders) may be different from the presentation order of the corresponding
+        frames.
+
+        For codecs that do not have this property set, PTS and DTS should always be
+        equal."""),
+    ('BITMAP_SUB', lib.AV_CODEC_PROP_BITMAP_SUB,
+        """Subtitle codec is bitmap based
+        Decoded AVSubtitle data can be read from the AVSubtitleRect->pict field."""),
+    ('TEXT_SUB', lib.AV_CODEC_PROP_TEXT_SUB,
+        """Subtitle codec is text based.
+        Decoded AVSubtitle data can be read from the AVSubtitleRect->ass field."""),
 ), is_flags=True)
 
-Capabilities = define_enum('Capabilities', __name__, (
+Capabilities = define_enum('Capabilities', 'av.codec', (
     ('NONE', 0),
-    ('DRAW_HORIZ_BAND', lib.AV_CODEC_CAP_DRAW_HORIZ_BAND),
-    ('DR1', lib.AV_CODEC_CAP_DR1),
+    ('DRAW_HORIZ_BAND', lib.AV_CODEC_CAP_DRAW_HORIZ_BAND,
+        """Decoder can use draw_horiz_band callback."""),
+    ('DR1', lib.AV_CODEC_CAP_DR1,
+        """Codec uses get_buffer() for allocating buffers and supports custom allocators.
+        If not set, it might not use get_buffer() at all or use operations that
+        assume the buffer was allocated by avcodec_default_get_buffer."""),
     ('TRUNCATED', lib.AV_CODEC_CAP_TRUNCATED),
     ('HWACCEL', 1 << 4),
-    ('DELAY', lib.AV_CODEC_CAP_DELAY),
-    ('SMALL_LAST_FRAME', lib.AV_CODEC_CAP_SMALL_LAST_FRAME),
+    ('DELAY', lib.AV_CODEC_CAP_DELAY,
+        """Encoder or decoder requires flushing with NULL input at the end in order to
+        give the complete and correct output.
+
+        NOTE: If this flag is not set, the codec is guaranteed to never be fed with
+              with NULL data. The user can still send NULL data to the public encode
+              or decode function, but libavcodec will not pass it along to the codec
+              unless this flag is set.
+
+        Decoders:
+        The decoder has a non-zero delay and needs to be fed with avpkt->data=NULL,
+        avpkt->size=0 at the end to get the delayed data until the decoder no longer
+        returns frames.
+
+        Encoders:
+        The encoder needs to be fed with NULL data at the end of encoding until the
+        encoder no longer returns data.
+
+        NOTE: For encoders implementing the AVCodec.encode2() function, setting this
+              flag also means that the encoder must set the pts and duration for
+              each output packet. If this flag is not set, the pts and duration will
+              be determined by libavcodec from the input frame."""),
+    ('SMALL_LAST_FRAME', lib.AV_CODEC_CAP_SMALL_LAST_FRAME,
+        """Codec can be fed a final frame with a smaller size.
+        This can be used to prevent truncation of the last audio samples."""),
     ('HWACCEL_VDPAU', 1 << 7),
-    ('SUBFRAMES', lib.AV_CODEC_CAP_SUBFRAMES),
-    ('EXPERIMENTAL', lib.AV_CODEC_CAP_EXPERIMENTAL),
-    ('CHANNEL_CONF', lib.AV_CODEC_CAP_CHANNEL_CONF),
+    ('SUBFRAMES', lib.AV_CODEC_CAP_SUBFRAMES,
+        """Codec can output multiple frames per AVPacket
+        Normally demuxers return one frame at a time, demuxers which do not do
+        are connected to a parser to split what they return into proper frames.
+        This flag is reserved to the very rare category of codecs which have a
+        bitstream that cannot be split into frames without timeconsuming
+        operations like full decoding. Demuxers carrying such bitstreams thus
+        may return multiple frames in a packet. This has many disadvantages like
+        prohibiting stream copy in many cases thus it should only be considered
+        as a last resort."""),
+    ('EXPERIMENTAL', lib.AV_CODEC_CAP_EXPERIMENTAL,
+        """Codec is experimental and is thus avoided in favor of non experimental
+        encoders"""),
+    ('CHANNEL_CONF', lib.AV_CODEC_CAP_CHANNEL_CONF,
+        """Codec should fill in channel configuration and samplerate instead of container"""),
     ('NEG_LINESIZES', 1 << 11),
-    ('FRAME_THREADS', lib.AV_CODEC_CAP_FRAME_THREADS),
-    ('SLICE_THREADS', lib.AV_CODEC_CAP_SLICE_THREADS),
-    ('PARAM_CHANGE', lib.AV_CODEC_CAP_PARAM_CHANGE),
-    ('AUTO_THREADS', lib.AV_CODEC_CAP_AUTO_THREADS),
-    ('VARIABLE_FRAME_SIZE', lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE),
-    ('AVOID_PROBING', lib.AV_CODEC_CAP_AVOID_PROBING),
-    ('INTRA_ONLY', lib.AV_CODEC_CAP_INTRA_ONLY),
-    ('LOSSLESS', lib.AV_CODEC_CAP_LOSSLESS),
-    ('HARDWARE', lib.AV_CODEC_CAP_HARDWARE),
-    ('HYBRID', lib.AV_CODEC_CAP_HYBRID),
-    ('ENCODER_REORDERED_OPAQUE', lib.AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE),
+    ('FRAME_THREADS', lib.AV_CODEC_CAP_FRAME_THREADS,
+        """Codec supports frame-level multithreading""",),
+    ('SLICE_THREADS', lib.AV_CODEC_CAP_SLICE_THREADS,
+        """Codec supports slice-based (or partition-based) multithreading."""),
+    ('PARAM_CHANGE', lib.AV_CODEC_CAP_PARAM_CHANGE,
+        """Codec supports changed parameters at any point."""),
+    ('AUTO_THREADS', lib.AV_CODEC_CAP_AUTO_THREADS,
+        """Codec supports avctx->thread_count == 0 (auto)."""),
+    ('VARIABLE_FRAME_SIZE', lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE,
+        """Audio encoder supports receiving a different number of samples in each call."""),
+    ('AVOID_PROBING', lib.AV_CODEC_CAP_AVOID_PROBING,
+        """Decoder is not a preferred choice for probing.
+        This indicates that the decoder is not a good choice for probing.
+        It could for example be an expensive to spin up hardware decoder,
+        or it could simply not provide a lot of useful information about
+        the stream.
+        A decoder marked with this flag should only be used as last resort
+        choice for probing."""),
+    ('INTRA_ONLY', lib.AV_CODEC_CAP_INTRA_ONLY,
+        """Codec is intra only."""),
+    ('LOSSLESS', lib.AV_CODEC_CAP_LOSSLESS,
+        """Codec is lossless."""),
+    ('HARDWARE', lib.AV_CODEC_CAP_HARDWARE,
+        """Codec is backed by a hardware implementation. Typically used to
+        identify a non-hwaccel hardware decoder. For information about hwaccels, use
+        avcodec_get_hw_config() instead."""),
+    ('HYBRID', lib.AV_CODEC_CAP_HYBRID,
+        """Codec is potentially backed by a hardware implementation, but not
+        necessarily. This is used instead of AV_CODEC_CAP_HARDWARE, if the
+        implementation provides some sort of internal fallback."""),
+    ('ENCODER_REORDERED_OPAQUE', 1 << 20,  # lib.AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,  # FFmpeg 4.2
+        """This codec takes the reordered_opaque field from input AVFrames
+        and returns it in the corresponding field in AVCodecContext after
+        encoding."""),
 ), is_flags=True)
 
 
@@ -221,22 +301,25 @@ cdef class Codec(object):
             i += 1
         return ret
 
-    # NOTE: there are some overlaps, which we define below these blocks with
-    # runtime checks to make sure they are sane.
+    # NOTE: there are some overlaps, which we defer to how `ffmpeg -codecs`
+    # handles them (by prefering the capablity to the property).
+    # Also, LOSSLESS and LOSSY don't have to agree.
 
     @Properties.property
     def properties(self):
+        """Flag property of :class:`.Properties`"""
         return self.desc.props
 
-    # intra_only = properties.flag_property('INTRA_ONLY')
-    # lossy = properties.flag_property('LOSSY')
-    # lossless = properties.flag_property('LOSSLESS')
+    intra_only = properties.flag_property('INTRA_ONLY')
+    lossy = properties.flag_property('LOSSY')  # Defer to capability.
+    lossless = properties.flag_property('LOSSLESS')  # Defer to capability.
     reorder = properties.flag_property('REORDER')
     bitmap_sub = properties.flag_property('BITMAP_SUB')
     text_sub = properties.flag_property('TEXT_SUB')
 
     @Capabilities.property
     def capabilities(self):
+        """Flag property of :class:`.Capabilities`"""
         return self.ptr.capabilities
 
     draw_horiz_band = capabilities.flag_property('DRAW_HORIZ_BAND')
@@ -256,34 +339,11 @@ cdef class Codec(object):
     auto_threads = capabilities.flag_property('AUTO_THREADS')
     variable_frame_size = capabilities.flag_property('VARIABLE_FRAME_SIZE')
     avoid_probing = capabilities.flag_property('AVOID_PROBING')
-    # intra_only = capabilities.flag_property('INTRA_ONLY')
-    # lossless = capabilities.flag_property('LOSSLESS')
+    # intra_only = capabilities.flag_property('INTRA_ONLY')  # Dupes.
+    # lossless = capabilities.flag_property('LOSSLESS')  # Dupes.
     hardware = capabilities.flag_property('HARDWARE')
     hybrid = capabilities.flag_property('HYBRID')
     encoder_reordered_opaque = capabilities.flag_property('ENCODER_REORDERED_OPAQUE')
-
-    @property
-    def intra_only(self):
-        # Assert they agree.
-        cdef bint c = bool(self.capabilities & 'INTRA_ONLY')
-        cdef bint p = bool(self.properties & 'INTRA_ONLY')
-        if (c and p) or not (c or p):
-            return c
-        raise RuntimeError('capabilities and properties dont agree on INTRA_ONLY')
-
-    @property
-    def lossless(self):
-        # Assert they agree.
-        cdef bint c = bool(self.capabilities & 'LOSSLESS')
-        cdef bint p1 = bool(self.properties & 'LOSSLESS')
-        cdef bint p2 = bool(self.properties & 'LOSSY')
-        if (c and p1 and p2) or not (c or p1 or p2):
-            return c
-        raise RuntimeError('capabilities and properties dont agree on LOSSLESS and LOSSY')
-
-    @property
-    def lossy(self):
-        return not self.lossless
 
 
 cdef get_codec_names():
@@ -333,13 +393,16 @@ def dump_codecs():
         # TODO: Assert these always have the same properties.
         codec = e_codec or d_codec
 
-        print ' %s%s%s%s%s%s %-18s %s' % (
-            '.D'[bool(d_codec)],
-            '.E'[bool(e_codec)],
-            codec.type[0].upper(),
-            '.I'[codec.intra_only],
-            'L.'[codec.lossless],
-            '.S'[codec.lossless],
-            codec.name,
-            codec.long_name
-        )
+        try:
+            print ' %s%s%s%s%s%s %-18s %s' % (
+                '.D'[bool(d_codec)],
+                '.E'[bool(e_codec)],
+                codec.type[0].upper(),
+                '.I'[codec.intra_only],
+                '.L'[codec.lossy],
+                '.S'[codec.lossless],
+                codec.name,
+                codec.long_name
+            )
+        except Exception as e:
+            print '...... %-18s ERROR: %s' % (codec.name, e)

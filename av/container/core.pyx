@@ -286,7 +286,11 @@ cdef class Container(object):
     def _set_flags(self, value):
         self.ptr.flags = value
 
-    flags = Flags.property(_get_flags, _set_flags)
+    flags = Flags.property(
+        _get_flags,
+        _set_flags,
+        """Flags property of :class:`.Flags`"""
+    )
 
     gen_pts = flags.flag_property('GENPTS')
     ign_idx = flags.flag_property('IGNIDX')

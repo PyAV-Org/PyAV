@@ -61,6 +61,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG_4MV
         AV_CODEC_FLAG_OUTPUT_CORRUPT
         AV_CODEC_FLAG_QPEL
+        AV_CODEC_FLAG_DROPCHANGED
         AV_CODEC_FLAG_PASS1
         AV_CODEC_FLAG_PASS2
         AV_CODEC_FLAG_LOOP_FILTER

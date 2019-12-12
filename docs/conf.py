@@ -278,39 +278,50 @@ class PyInclude(SphinxDirective):
 
 
 def load_entrypoint(name):
-    mod_name, attrs = name.split(':')
+
+    parts = name.split(':')
+    if len(parts) == 1:
+        parts = name.rsplit('.', 1)
+    mod_name, attrs = parts
+
     attrs = attrs.split('.')
-    obj = __import__(mod_name, fromlist=['.'])
+    try:
+        obj = __import__(mod_name, fromlist=['.'])
+    except ImportError as e:
+        print('Error while importing.', (name, mod_name, attrs, e))
+        raise
     for attr in attrs:
         obj = getattr(obj, attr)
     return obj
 
-class FlagTable(SphinxDirective):
+class EnumTable(SphinxDirective):
 
-    # required_arguments = 2
-    option_spec = dict(
-        cls=lambda x: x,
-        attr=lambda x: x,
-        enum=lambda x: x,
-    )
+    required_arguments = 1
+    option_spec = {
+        'class': lambda x: x,
+    }
 
     def run(self):
 
-        cls = load_entrypoint(self.options['cls'])
-        enum = load_entrypoint(self.options['enum'])
+        cls_ep = self.options.get('class')
+        cls = load_entrypoint(cls_ep) if cls_ep else None
+
+        enum = load_entrypoint(self.arguments[0])
 
         properties = {}
-        for name, value in vars(cls).items():
-            if isinstance(value, property):
-                try:
-                    item = value._enum_item
-                except AttributeError:
-                    pass
-                else:
-                    if isinstance(item, enum):
-                        properties[item] = name
 
-        colwidths = [15, 15, 70]
+        if cls is not None:
+            for name, value in vars(cls).items():
+                if isinstance(value, property):
+                    try:
+                        item = value._enum_item
+                    except AttributeError:
+                        pass
+                    else:
+                        if isinstance(item, enum):
+                            properties[item] = name
+
+        colwidths = [15, 15, 5, 65] if cls else [15, 5, 75]
         ncols = len(colwidths)
 
         table = nodes.table()
@@ -330,39 +341,41 @@ class FlagTable(SphinxDirective):
         def makerow(*texts):
             row = nodes.row()
             for text in texts:
+                if text is None:
+                    continue
                 row += nodes.entry('', nodes.paragraph('', str(text)))
             return row
 
         thead += makerow(
-            '{} Attribute'.format(cls.__name__),
+            '{} Attribute'.format(cls.__name__) if cls else None,
             '{} Name'.format(enum.__name__),
-            #'Flag Value',
+            'Flag Value',
             'Meaning in FFmpeg',
         )
 
-        for flag in enum:
+        seen = set()
 
-            item = enum[flag]
+        for name, item in enum._by_name.items():
+
+            if name.lower() in seen:
+                continue
+            seen.add(name.lower())
+
             try:
                 attr = properties[item]
             except KeyError:
-                continue
+                if cls:
+                    continue
+                attr = None
 
-            value = item.value
-            try:
-                pow_ = math.log(value, 2)
-            except ValueError:
-                pass
-            else:
-                if int(pow_) == pow_:
-                    value = '1 << {}'.format(int(pow_))
+            value = '0x{:X}'.format(item.value)
 
             doc = item.__doc__ or '-'
 
             tbody += makerow(
                 attr,
-                flag,
-                #value,
+                name,
+                value,
                 doc,
             )
 
@@ -468,7 +481,8 @@ def setup(app):
 
     app.add_stylesheet('custom.css')
 
-    app.add_directive('flagtable', FlagTable)
+    app.add_directive('flagtable', EnumTable)
+    app.add_directive('enumtable', EnumTable)
     app.add_directive('pyinclude', PyInclude)
 
     skip = os.environ.get('PYAV_SKIP_DOXYLINK')

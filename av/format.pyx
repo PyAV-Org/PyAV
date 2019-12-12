@@ -24,22 +24,44 @@ cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutpu
 
 Flags = define_enum('Flags', __name__, (
     ('NOFILE', lib.AVFMT_NOFILE),
-    ('NEEDNUMBER', lib.AVFMT_NEEDNUMBER),
-    ('SHOW_IDS', lib.AVFMT_SHOW_IDS),
-    ('GLOBALHEADER', lib.AVFMT_GLOBALHEADER),
-    ('NOTIMESTAMPS', lib.AVFMT_NOTIMESTAMPS),
-    ('GENERIC_INDEX', lib.AVFMT_GENERIC_INDEX),
-    ('TS_DISCONT', lib.AVFMT_TS_DISCONT),
-    ('VARIABLE_FPS', lib.AVFMT_VARIABLE_FPS),
-    ('NODIMENSIONS', lib.AVFMT_NODIMENSIONS),
-    ('NOSTREAMS', lib.AVFMT_NOSTREAMS),
-    ('NOBINSEARCH', lib.AVFMT_NOBINSEARCH),
-    ('NOGENSEARCH', lib.AVFMT_NOGENSEARCH),
-    ('NO_BYTE_SEEK', lib.AVFMT_NO_BYTE_SEEK),
-    ('ALLOW_FLUSH', lib.AVFMT_ALLOW_FLUSH),
-    ('TS_NONSTRICT', lib.AVFMT_TS_NONSTRICT),
-    ('TS_NEGATIVE', lib.AVFMT_TS_NEGATIVE),
-    ('SEEK_TO_PTS', lib.AVFMT_SEEK_TO_PTS),
+    ('NEEDNUMBER', lib.AVFMT_NEEDNUMBER,
+        """Needs '%d' in filename."""),
+    ('SHOW_IDS', lib.AVFMT_SHOW_IDS,
+        """Show format stream IDs numbers."""),
+    ('GLOBALHEADER', lib.AVFMT_GLOBALHEADER,
+        """Format wants global header."""),
+    ('NOTIMESTAMPS', lib.AVFMT_NOTIMESTAMPS,
+        """Format does not need / have any timestamps."""),
+    ('GENERIC_INDEX', lib.AVFMT_GENERIC_INDEX,
+        """Use generic index building code."""),
+    ('TS_DISCONT', lib.AVFMT_TS_DISCONT,
+        """Format allows timestamp discontinuities.
+        Note, muxers always require valid (monotone) timestamps"""),
+    ('VARIABLE_FPS', lib.AVFMT_VARIABLE_FPS,
+        """Format allows variable fps."""),
+    ('NODIMENSIONS', lib.AVFMT_NODIMENSIONS,
+        """Format does not need width/height"""),
+    ('NOSTREAMS', lib.AVFMT_NOSTREAMS,
+        """Format does not require any streams"""),
+    ('NOBINSEARCH', lib.AVFMT_NOBINSEARCH,
+        """Format does not allow to fall back on binary search via read_timestamp"""),
+    ('NOGENSEARCH', lib.AVFMT_NOGENSEARCH,
+        """Format does not allow to fall back on generic search"""),
+    ('NO_BYTE_SEEK', lib.AVFMT_NO_BYTE_SEEK,
+        """Format does not allow seeking by bytes"""),
+    ('ALLOW_FLUSH', lib.AVFMT_ALLOW_FLUSH,
+        """Format allows flushing. If not set, the muxer will not receive a NULL
+        packet in the write_packet function."""),
+    ('TS_NONSTRICT', lib.AVFMT_TS_NONSTRICT,
+        """Format does not require strictly increasing timestamps, but they must
+        still be monotonic."""),
+    ('TS_NEGATIVE', lib.AVFMT_TS_NEGATIVE,
+        """Format allows muxing negative timestamps. If not set the timestamp
+        will be shifted in av_write_frame and av_interleaved_write_frame so they
+        start from 0. The user or muxer can override this through
+        AVFormatContext.avoid_negative_ts"""),
+    ('SEEK_TO_PTS', lib.AVFMT_SEEK_TO_PTS,
+        """Seeking is based on PTS"""),
 ), is_flags=True)
 
 

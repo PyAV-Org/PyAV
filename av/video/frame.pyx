@@ -20,14 +20,14 @@ cdef VideoFrame alloc_video_frame():
 
 
 PictureType = define_enum('PictureType', __name__, (
-    ('NONE', lib.AV_PICTURE_TYPE_NONE),
-    ('I', lib.AV_PICTURE_TYPE_I),
-    ('P', lib.AV_PICTURE_TYPE_P),
-    ('B', lib.AV_PICTURE_TYPE_B),
-    ('S', lib.AV_PICTURE_TYPE_S),
-    ('SI', lib.AV_PICTURE_TYPE_SI),
-    ('SP', lib.AV_PICTURE_TYPE_SP),
-    ('BI', lib.AV_PICTURE_TYPE_BI),
+    ('NONE', lib.AV_PICTURE_TYPE_NONE, "Undefined"),
+    ('I', lib.AV_PICTURE_TYPE_I, "Intra"),
+    ('P', lib.AV_PICTURE_TYPE_P, "Predicted"),
+    ('B', lib.AV_PICTURE_TYPE_B, "Bi-directional predicted"),
+    ('S', lib.AV_PICTURE_TYPE_S, "S(GMC)-VOP MPEG-4"),
+    ('SI', lib.AV_PICTURE_TYPE_SI, "Switching intra"),
+    ('SP', lib.AV_PICTURE_TYPE_SP, "Switching predicted"),
+    ('BI', lib.AV_PICTURE_TYPE_BI, "BI type"),
 ))
 
 
@@ -165,6 +165,7 @@ cdef class VideoFrame(Frame):
 
     @property
     def pict_type(self):
+        """One of :class:`.PictureType`"""
         return PictureType.get(self.ptr.pict_type, create=True)
 
     @pict_type.setter

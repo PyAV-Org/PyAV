@@ -9,17 +9,17 @@ from av.video.frame cimport alloc_video_frame
 
 
 Interpolation = define_enum('Interpolation', __name__, (
-    ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR),
-    ('BILINEAR', lib.SWS_BILINEAR),
-    ('BICUBIC', lib.SWS_BICUBIC),
-    ('X', lib.SWS_X),
-    ('POINT', lib.SWS_POINT),
-    ('AREA', lib.SWS_AREA),
-    ('BICUBLIN', lib.SWS_BICUBLIN),
-    ('GAUSS', lib.SWS_GAUSS),
-    ('SINC', lib.SWS_SINC),
-    ('LANCZOS', lib.SWS_LANCZOS),
-    ('SPLINE', lib.SWS_SPLINE),
+    ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR, "Fast bilinear"),
+    ('BILINEAR', lib.SWS_BILINEAR, "Bilinear"),
+    ('BICUBIC', lib.SWS_BICUBIC, "Bicubic"),
+    ('X', lib.SWS_X, "Experimental"),
+    ('POINT', lib.SWS_POINT, "Nearest neighbor / point"),
+    ('AREA', lib.SWS_AREA, "Area averaging"),
+    ('BICUBLIN', lib.SWS_BICUBLIN, "Luma bicubic / chroma bilinear"),
+    ('GAUSS', lib.SWS_GAUSS, "Gaussian"),
+    ('SINC', lib.SWS_SINC, "Sinc"),
+    ('LANCZOS', lib.SWS_LANCZOS, "Lanczos"),
+    ('SPLINE', lib.SWS_SPLINE, "Bicubic spline"),
 ))
 
 Colorspace = define_enum('Colorspace', __name__, (
@@ -27,6 +27,7 @@ Colorspace = define_enum('Colorspace', __name__, (
     ('ITU709', lib.SWS_CS_ITU709),
     ('FCC', lib.SWS_CS_FCC),
     ('ITU601', lib.SWS_CS_ITU601),
+    ('ITU624', lib.SWS_CS_ITU624),
     ('SMPTE170M', lib.SWS_CS_SMPTE170M),
     ('SMPTE240M', lib.SWS_CS_SMPTE240M),
     ('DEFAULT', lib.SWS_CS_DEFAULT),
