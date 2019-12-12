@@ -1,4 +1,3 @@
-import av
 import av.datasets
 
 
@@ -23,4 +22,5 @@ for packet in input_.demux(in_stream):
 
     output.mux(packet)
 
+input_.close()
 output.close()

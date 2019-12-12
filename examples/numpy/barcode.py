@@ -1,7 +1,6 @@
 from PIL import Image
 import numpy as np
 
-import av
 import av.datasets
 
 
@@ -24,6 +23,9 @@ for frame in container.decode(video=0):
     column = column.reshape(-1, 1, 3)
 
     columns.append(column)
+
+# Close the file, free memory
+container.close()
 
 full_array = np.hstack(columns)
 full_img = Image.fromarray(full_array, 'RGB')
