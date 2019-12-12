@@ -1,0 +1,53 @@
+
+
+Objects with flags
+===
+√ AVCodec.capabilities
+√ AVCodecDescriptor.props
+√ AVCodecContext.flags and flags2
+AVOutputFormat.flags
+
+
+
+Thoughts
+===
+
+- Having both individual properties AND the flags objects is kinda nice.
+- I want lowercase flag/enum names, but to also work with the upper ones for b/c.
+
+
+Option: av.enum flags.
+    - context.flags2 & 'EXPORT_MVS'
+    - context.flags2 |= 'EXPORT_MVS'
+    - new APIs:
+        - 'export_mvs' in context.flags2
+        - context.flags2.export_mvs = True
+        - context.flags2['export_mvs'] = True
+
+Option: object which represents all flags, but can't work with integer values
+    - context.flags merges flags and flags2
+    - this is really only handy on AVCodecContext, so... fuckit?
+
+Option: all exposed as individual properties
+    - context.export_mvs
+
+    - This polutes the attribute space a lot.
+    - This feels the most "pythonic".
+    - If you can set multiple in constructors, then NBD if you want to do many.
+    - I don't like how I have to pick names.
+
+
+
+
+
+How to name
+===
+
+If a prefix is required, one of:
+    - is
+    - has
+    - can
+    - use
+    - do
+
+

@@ -14,6 +14,7 @@ from __future__ import print_function
 
 from docutils import nodes
 import logging
+import math
 import os
 import re
 import sys
@@ -22,6 +23,7 @@ import xml.etree.ElementTree as etree
 
 import sphinx
 from sphinx import addnodes
+from sphinx.util.docutils import SphinxDirective
 
 
 logging.basicConfig()
@@ -201,7 +203,7 @@ import errno
 import os
 
 import av
-from av.datasets import fate, fate as fate_suite
+from av.datasets import fate, fate as fate_suite, curated
 
 from tests import common
 from tests.common import sandboxed as _sandboxed
@@ -218,6 +220,8 @@ except OSError as e:
     if e.errno != errno.EEXIST:
         raise
 os.chdir(here)
+
+video_path = curated('pexels/time-lapse-video-of-night-sky-857195.mp4')
 
 '''
 
@@ -250,6 +254,134 @@ autodoc_default_options = {
 
 
 todo_include_todos = True
+
+
+class PyInclude(SphinxDirective):
+
+    has_content = True
+
+    def run(self):
+
+
+        source = '\n'.join(self.content)
+        output = []
+        def write(*content, sep=' ', end='\n'):
+            output.append(sep.join(map(str, content)) + end)
+
+        namespace = dict(write=write)
+        exec(compile(source, '<docs>', 'exec'), namespace, namespace)
+
+        output = ''.join(output).splitlines()
+        self.state_machine.insert_input(output, 'blah')
+
+        return [] #[nodes.literal('hello', repr(content))]
+
+
+def load_entrypoint(name):
+
+    parts = name.split(':')
+    if len(parts) == 1:
+        parts = name.rsplit('.', 1)
+    mod_name, attrs = parts
+
+    attrs = attrs.split('.')
+    try:
+        obj = __import__(mod_name, fromlist=['.'])
+    except ImportError as e:
+        print('Error while importing.', (name, mod_name, attrs, e))
+        raise
+    for attr in attrs:
+        obj = getattr(obj, attr)
+    return obj
+
+class EnumTable(SphinxDirective):
+
+    required_arguments = 1
+    option_spec = {
+        'class': lambda x: x,
+    }
+
+    def run(self):
+
+        cls_ep = self.options.get('class')
+        cls = load_entrypoint(cls_ep) if cls_ep else None
+
+        enum = load_entrypoint(self.arguments[0])
+
+        properties = {}
+
+        if cls is not None:
+            for name, value in vars(cls).items():
+                if isinstance(value, property):
+                    try:
+                        item = value._enum_item
+                    except AttributeError:
+                        pass
+                    else:
+                        if isinstance(item, enum):
+                            properties[item] = name
+
+        colwidths = [15, 15, 5, 65] if cls else [15, 5, 75]
+        ncols = len(colwidths)
+
+        table = nodes.table()
+
+        tgroup = nodes.tgroup(cols=ncols)
+        table += tgroup
+
+        for width in colwidths:
+            tgroup += nodes.colspec(colwidth=width)
+
+        thead = nodes.thead()
+        tgroup += thead
+
+        tbody = nodes.tbody()
+        tgroup += tbody
+
+        def makerow(*texts):
+            row = nodes.row()
+            for text in texts:
+                if text is None:
+                    continue
+                row += nodes.entry('', nodes.paragraph('', str(text)))
+            return row
+
+        thead += makerow(
+            '{} Attribute'.format(cls.__name__) if cls else None,
+            '{} Name'.format(enum.__name__),
+            'Flag Value',
+            'Meaning in FFmpeg',
+        )
+
+        seen = set()
+
+        for name, item in enum._by_name.items():
+
+            if name.lower() in seen:
+                continue
+            seen.add(name.lower())
+
+            try:
+                attr = properties[item]
+            except KeyError:
+                if cls:
+                    continue
+                attr = None
+
+            value = '0x{:X}'.format(item.value)
+
+            doc = item.__doc__ or '-'
+
+            tbody += makerow(
+                attr,
+                name,
+                value,
+                doc,
+            )
+
+        return [table]
+
+
 
 
 doxylink = {}
@@ -348,6 +480,10 @@ def doxylink_create_handler(app, file_name, url_base):
 def setup(app):
 
     app.add_stylesheet('custom.css')
+
+    app.add_directive('flagtable', EnumTable)
+    app.add_directive('enumtable', EnumTable)
+    app.add_directive('pyinclude', PyInclude)
 
     skip = os.environ.get('PYAV_SKIP_DOXYLINK')
     for role, (filename, url_base) in doxylink.items():

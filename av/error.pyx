@@ -2,7 +2,7 @@ cimport libav as lib
 
 from av.logging cimport get_last_error
 
-from av.enums import define_enum
+from av.enum import define_enum
 
 from threading import local
 import errno
@@ -175,7 +175,7 @@ _ffmpeg_specs = (
 
 
 # The actual enum.
-ErrorType = define_enum("ErrorType", [x[:2] for x in _ffmpeg_specs], allow_user_create=True)
+ErrorType = define_enum("ErrorType", __name__, [x[:2] for x in _ffmpeg_specs])
 
 # It has to be monkey-patched.
 ErrorType.__doc__ = """An enumeration of FFmpeg's error types.

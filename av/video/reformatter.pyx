@@ -2,31 +2,32 @@ from libc.stdint cimport uint8_t
 
 cimport libav as lib
 
-from av.enums cimport define_enum
+from av.enum cimport define_enum
 from av.error cimport err_check
 from av.video.format cimport VideoFormat
 from av.video.frame cimport alloc_video_frame
 
 
-Interpolation = define_enum('Interpolation', (
-    ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR),
-    ('BILINEAR', lib.SWS_BILINEAR),
-    ('BICUBIC', lib.SWS_BICUBIC),
-    ('X', lib.SWS_X),
-    ('POINT', lib.SWS_POINT),
-    ('AREA', lib.SWS_AREA),
-    ('BICUBLIN', lib.SWS_BICUBLIN),
-    ('GAUSS', lib.SWS_GAUSS),
-    ('SINC', lib.SWS_SINC),
-    ('LANCZOS', lib.SWS_LANCZOS),
-    ('SPLINE', lib.SWS_SPLINE),
+Interpolation = define_enum('Interpolation', __name__, (
+    ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR, "Fast bilinear"),
+    ('BILINEAR', lib.SWS_BILINEAR, "Bilinear"),
+    ('BICUBIC', lib.SWS_BICUBIC, "Bicubic"),
+    ('X', lib.SWS_X, "Experimental"),
+    ('POINT', lib.SWS_POINT, "Nearest neighbor / point"),
+    ('AREA', lib.SWS_AREA, "Area averaging"),
+    ('BICUBLIN', lib.SWS_BICUBLIN, "Luma bicubic / chroma bilinear"),
+    ('GAUSS', lib.SWS_GAUSS, "Gaussian"),
+    ('SINC', lib.SWS_SINC, "Sinc"),
+    ('LANCZOS', lib.SWS_LANCZOS, "Lanczos"),
+    ('SPLINE', lib.SWS_SPLINE, "Bicubic spline"),
 ))
 
-Colorspace = define_enum('Colorspace', (
+Colorspace = define_enum('Colorspace', __name__, (
 
     ('ITU709', lib.SWS_CS_ITU709),
     ('FCC', lib.SWS_CS_FCC),
     ('ITU601', lib.SWS_CS_ITU601),
+    ('ITU624', lib.SWS_CS_ITU624),
     ('SMPTE170M', lib.SWS_CS_SMPTE170M),
     ('SMPTE240M', lib.SWS_CS_SMPTE240M),
     ('DEFAULT', lib.SWS_CS_DEFAULT),
@@ -44,6 +45,13 @@ Colorspace = define_enum('Colorspace', (
 
 cdef class VideoReformatter(object):
 
+    """An object for reformatting size and pixel format of :class:`.VideoFrame`.
+
+    It is most efficient to have a reformatter object for each set of parameters
+    you will use as calling :meth:`reformat` will reconfigure the internal object.
+
+    """
+
     def __dealloc__(self):
         with nogil:
             lib.sws_freeContext(self.ptr)
@@ -53,12 +61,18 @@ cdef class VideoReformatter(object):
                  interpolation=None):
         """Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
 
+        Returns the same frame untouched if nothing needs to be done to it.
+
         :param int width: New width, or ``None`` for the same width.
         :param int height: New height, or ``None`` for the same height.
-        :param str format: New format, or ``None`` for the same format; see :attr:`VideoFrame.format`.
-        :param Colorspace src_colorspace: Current colorspace.
-        :param Colorspace dst_colorspace: Desired colorspace.
-        :param Interpolation interpolation: The interpolation method to use.
+        :param format: New format, or ``None`` for the same format.
+        :type  format: :class:`.VideoFormat` or ``str``
+        :param src_colorspace: Current colorspace, or ``None`` for ``DEFAULT``.
+        :type  src_colorspace: :class:`Colorspace` or ``str``
+        :param dst_colorspace: Desired colorspace, or ``None`` for ``DEFAULT``.
+        :type  dst_colorspace: :class:`Colorspace` or ``str``
+        :param interpolation: The interpolation method to use, or ``None`` for ``BILINEAR``.
+        :type  interpolation: :class:`Interpolation` or ``str``
 
         """
 

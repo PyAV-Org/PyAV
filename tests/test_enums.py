@@ -1,18 +1,18 @@
 import pickle
 
-from av.enums import EnumType, define_enum
+from av.enum import EnumType, define_enum
 
 from .common import TestCase
 
 
 # This must be at the top-level.
-PickleableFooBar = define_enum('PickleableFooBar', [('FOO', 1)])
+PickleableFooBar = define_enum('PickleableFooBar', __name__, [('FOO', 1)])
 
 
 class TestEnums(TestCase):
 
     def define_foobar(self, **kwargs):
-        return define_enum('Foobar', (
+        return define_enum('Foobar', __name__, (
             ('FOO', 1),
             ('BAR', 2),
         ), **kwargs)
@@ -48,7 +48,7 @@ class TestEnums(TestCase):
 
         self.assertRaises(KeyError, lambda: cls['not a foo'])
         self.assertRaises(KeyError, lambda: cls[10])
-        self.assertRaises(TypeError, lambda: cls[{}])
+        self.assertRaises(TypeError, lambda: cls[()])
 
         self.assertEqual(cls.get('FOO'), foo1)
         self.assertIs(cls.get('not a foo'), None)
@@ -58,7 +58,7 @@ class TestEnums(TestCase):
         cls = self.define_foobar()
         foo = cls.FOO
 
-        self.assertEqual(repr(foo), '<Foobar:FOO(1)>')
+        self.assertEqual(repr(foo), '<tests.test_enums.Foobar:FOO(0x1)>')
 
         str_foo = str(foo)
         self.assertIsInstance(str_foo, str)
@@ -87,7 +87,7 @@ class TestEnums(TestCase):
 
         self.assertRaises(ValueError, lambda: foo == 'not a foo')
         self.assertRaises(ValueError, lambda: foo == 10)
-        self.assertRaises(TypeError, lambda: foo == {})
+        self.assertRaises(TypeError, lambda: foo == ())
 
     def test_as_key(self):
 
@@ -112,7 +112,7 @@ class TestEnums(TestCase):
 
     def test_create_unknown(self):
 
-        cls = self.define_foobar(allow_user_create=True)
+        cls = self.define_foobar()
         baz = cls.get(3, create=True)
 
         self.assertEqual(baz.name, 'FOOBAR_3')
@@ -120,7 +120,7 @@ class TestEnums(TestCase):
 
     def test_multiple_names(self):
 
-        cls = define_enum('FFooBBar', (
+        cls = define_enum('FFooBBar', __name__, (
             ('FOO', 1),
             ('F', 1),
             ('BAR', 2),
@@ -140,7 +140,7 @@ class TestEnums(TestCase):
 
     def test_flag_basics(self):
 
-        cls = define_enum('FoobarAllFlags', dict(FOO=1, BAR=2, FOOBAR=3).items(), is_flags=True)
+        cls = define_enum('FoobarAllFlags', __name__, dict(FOO=1, BAR=2, FOOBAR=3).items(), is_flags=True)
         foo = cls.FOO
         bar = cls.BAR
 
@@ -167,9 +167,6 @@ class TestEnums(TestCase):
     def test_multi_flags_basics(self):
 
         cls = self.define_foobar(is_flags=True)
-        self.assertRaises(ValueError, lambda: cls.FOO | cls.BAR)
-
-        cls = self.define_foobar(is_flags=True, allow_multi_flags=True)
 
         foo = cls.FOO
         bar = cls.BAR
@@ -193,10 +190,47 @@ class TestEnums(TestCase):
 
     def test_multi_flags_create_missing(self):
 
-        cls = self.define_foobar(is_flags=True, allow_multi_flags=True)
+        cls = self.define_foobar(is_flags=True)
 
         foobar = cls[3]
         self.assertIs(foobar, cls.FOO | cls.BAR)
 
         self.assertRaises(KeyError, lambda: cls[4])  # Not FOO or BAR
         self.assertRaises(KeyError, lambda: cls[7])  # FOO and BAR and missing flag.
+
+    def test_properties(self):
+
+        Flags = self.define_foobar(is_flags=True)
+        foobar = Flags.FOO | Flags.BAR
+
+        class Class(object):
+
+            def __init__(self, value):
+                self.value = Flags[value].value
+
+            @Flags.property
+            def flags(self):
+                return self.value
+
+            @flags.setter
+            def flags(self, value):
+                self.value = value
+
+            foo = flags.flag_property('FOO')
+            bar = flags.flag_property('BAR')
+
+        obj = Class('FOO')
+
+        self.assertIs(obj.flags, Flags.FOO)
+        self.assertTrue(obj.foo)
+        self.assertFalse(obj.bar)
+
+        obj.bar = True
+        self.assertIs(obj.flags, foobar)
+        self.assertTrue(obj.foo)
+        self.assertTrue(obj.bar)
+
+        obj.foo = False
+        self.assertIs(obj.flags, Flags.BAR)
+        self.assertFalse(obj.foo)
+        self.assertTrue(obj.bar)
