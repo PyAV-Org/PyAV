@@ -565,14 +565,10 @@ cdef class CodecContext(object):
         def __set__(self, int value):
             self.ptr.bit_rate_tolerance = value
 
-    # TODO: Does it conceptually make sense that this is on streams, instead
-    # of on the container?
     property thread_count:
-        """How many threads to use.
+        """How many threads to use; 0 means auto.
 
-        0 is automatic.
-
-        .. seealso:: :ffmpeg:`AVCodecContext.thread_count`
+        Wraps :ffmpeg:`AVCodecContext.thread_count`.
 
         """
 
@@ -587,7 +583,7 @@ cdef class CodecContext(object):
     property thread_type:
         """One of :class:`.ThreadType`.
 
-        .. seealso:: :ffmpeg:`AVCodecContext.thread_type`
+        Wraps :ffmpeg:`AVCodecContext.thread_type`.
 
         """
 
@@ -602,7 +598,7 @@ cdef class CodecContext(object):
     property skip_frame:
         """One of :class:`.SkipType`.
 
-        .. seealso:: ffmpeg:`AVCodecContext.skip_frame`
+        Wraps ffmpeg:`AVCodecContext.skip_frame`.
 
         """
 

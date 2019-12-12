@@ -45,6 +45,13 @@ Colorspace = define_enum('Colorspace', __name__, (
 
 cdef class VideoReformatter(object):
 
+    """An object for reformatting size and pixel format of :class:`.VideoFrame`.
+
+    It is most efficient to have a reformatter object for each set of parameters
+    you will use as calling :meth:`reformat` will reconfigure the internal object.
+
+    """
+
     def __dealloc__(self):
         with nogil:
             lib.sws_freeContext(self.ptr)
@@ -54,12 +61,18 @@ cdef class VideoReformatter(object):
                  interpolation=None):
         """Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
 
+        Returns the same frame untouched if nothing needs to be done to it.
+
         :param int width: New width, or ``None`` for the same width.
         :param int height: New height, or ``None`` for the same height.
-        :param str format: New format, or ``None`` for the same format; see :attr:`VideoFrame.format`.
-        :param Colorspace src_colorspace: Current colorspace.
-        :param Colorspace dst_colorspace: Desired colorspace.
-        :param Interpolation interpolation: The interpolation method to use.
+        :param format: New format, or ``None`` for the same format.
+        :type  format: :class:`.VideoFormat` or ``str``
+        :param src_colorspace: Current colorspace, or ``None`` for ``DEFAULT``.
+        :type  src_colorspace: :class:`Colorspace` or ``str``
+        :param dst_colorspace: Desired colorspace, or ``None`` for ``DEFAULT``.
+        :type  dst_colorspace: :class:`Colorspace` or ``str``
+        :param interpolation: The interpolation method to use, or ``None`` for ``BILINEAR``.
+        :type  interpolation: :class:`Interpolation` or ``str``
 
         """
 

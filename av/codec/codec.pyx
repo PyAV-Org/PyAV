@@ -142,7 +142,10 @@ class UnknownCodecError(ValueError):
 
 cdef class Codec(object):
 
-    """A single encoding or decoding codec.
+    """Codec(name, mode='r')
+
+    :param str name: The codec name.
+    :param str mode: ``'r'`` for decoding or ``'w'`` for encoding.
 
     This object exposes information about an availible codec, and an avenue to
     create a :class:`.CodecContext` to encode/decode directly.
@@ -204,6 +207,7 @@ cdef class Codec(object):
             raise RuntimeError('%s is both encoder and decoder.')
 
     def create(self):
+        """Create a :class:`.CodecContext` for this codec."""
         from .context import CodecContext
         return CodecContext.create(self)
 
@@ -224,9 +228,8 @@ cdef class Codec(object):
         """
         The media type of this codec.
 
-        Examples: `'audio'`, `'video'`, `'subtitle'`.
+        E.g: ``'audio'``, ``'video'``, ``'subtitle'``.
 
-        :type: str
         """
         return lib.av_get_media_type_string(self.ptr.type)
 
@@ -235,11 +238,7 @@ cdef class Codec(object):
 
     @property
     def frame_rates(self):
-        """
-        A list of supported frame rates, or None.
-
-        :type: list of fractions.Fraction
-        """
+        """A list of supported frame rates (:class:`fractions.Fraction`), or ``None``."""
         if not self.ptr.supported_framerates:
             return
 
@@ -252,11 +251,7 @@ cdef class Codec(object):
 
     @property
     def audio_rates(self):
-        """
-        A list of supported audio sample rates, or None.
-
-        :type: list of int
-        """
+        """A list of supported audio sample rates (``int``), or ``None``."""
         if not self.ptr.supported_samplerates:
             return
 
@@ -269,11 +264,7 @@ cdef class Codec(object):
 
     @property
     def video_formats(self):
-        """
-        A list of supported video formats, or None.
-
-        :type: list of VideoFormat
-        """
+        """A list of supported :class:`.VideoFormat`, or ``None``."""
         if not self.ptr.pix_fmts:
             return
 
@@ -286,11 +277,7 @@ cdef class Codec(object):
 
     @property
     def audio_formats(self):
-        """
-        A list of supported audio formats, or None.
-
-        :type: list of AudioFormat
-        """
+        """A list of supported :class:`.AudioFormat`, or ``None``."""
         if not self.ptr.sample_fmts:
             return
 

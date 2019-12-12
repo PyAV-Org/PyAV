@@ -65,12 +65,6 @@ cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1):
 
 cdef class VideoFrame(Frame):
 
-    """A frame of video.
-
-    >>> frame = VideoFrame(1920, 1080, 'rgb24')
-
-    """
-
     def __cinit__(self, width=0, height=0, format='yuv420p'):
 
         if width is _cinit_bypass_sentinel:
@@ -132,9 +126,7 @@ cdef class VideoFrame(Frame):
     @property
     def planes(self):
         """
-        A tuple of :class:`~av.video.plane.VideoPlane` objects.
-
-        :type: tuple
+        A tuple of :class:`.VideoPlane` objects.
         """
         # We need to detect which planes actually exist, but also contrain
         # ourselves to the maximum plane count (as determined only by VideoFrames
@@ -156,16 +148,28 @@ cdef class VideoFrame(Frame):
         def __get__(self): return self.ptr.height
 
     property key_frame:
-        """Is this frame a key frame?"""
+        """Is this frame a key frame?
+
+        Wraps :ffmpeg:`AVFrame.key_frame`.
+
+        """
         def __get__(self): return self.ptr.key_frame
 
     property interlaced_frame:
-        """Is this frame an interlaced or progressive?"""
+        """Is this frame an interlaced or progressive?
+
+        Wraps :ffmpeg:`AVFrame.interlaced_frame`.
+
+        """
         def __get__(self): return self.ptr.interlaced_frame
 
     @property
     def pict_type(self):
-        """One of :class:`.PictureType`"""
+        """One of :class:`.PictureType`.
+
+        Wraps :ffmpeg:`AVFrame.pict_type`.
+
+        """
         return PictureType.get(self.ptr.pict_type, create=True)
 
     @pict_type.setter
@@ -263,7 +267,7 @@ cdef class VideoFrame(Frame):
     @staticmethod
     def from_image(img):
         """
-        Construct a frame from a `PIL.Image`.
+        Construct a frame from a ``PIL.Image``.
         """
         if img.mode != 'RGB':
             img = img.convert('RGB')

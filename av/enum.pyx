@@ -7,87 +7,6 @@ PyAV's enums are a little more forgiving to preserve backwards compatibility
 with earlier PyAV patterns. e.g., they can be freely compared to strings or
 integers for names and values respectively.
 
-
-.. _enums:
-
-Enumerations
-------------
-
-Enumerations are when an attribute may only take on a single value at once, and
-they are represented as integers in the FFmpeg API. We associate names with each
-value that are easier to operate with.
-
-Consider :data:`av.codec.context.SkipType`, which is the type of the :attr:`CodecContext.skip_frame` attribute::
-
-    >>> fh = av.open(video_path)
-    >>> cc = fh.streams.video[0].codec_context
-
-    >>> # The skip_frame attribute has a name and value:
-    >>> cc.skip_frame.name
-    'DEFAULT'
-    >>> cc.skip_frame.value
-    0
-
-    >>> # You can compare it to strings and ints:
-    >>> cc.skip_frame == 'DEFAULT'
-    True
-    >>> cc.skip_frame == 0
-    True
-
-    >>> # You can assign strings and ints:
-    >>> cc.skip_frame = 'NONKEY'
-    >>> cc.skip_frame == 'NONKEY'
-    True
-    >>> cc.skip_frame == 32
-    True
-
-
-.. _flags:
-
-Flags
------
-
-Flags are sets of boolean attributes, which the FFmpeg API represents as individual
-bits in a larger integer which you manipulate with the bitwise operators.
-We associate names with each flag that are easier to operate with.
-
-Consider :data:`CodecContextFlags`, whis is the type of the :attr:`CodecContext.flags`
-attribute, and the set of boolean properties::
-
-    >>> fh = av.open(video_path)
-    >>> cc = fh.streams.video[0].codec_context
-
-    >>> cc.flags
-    <av.codec.context.Flags:NONE(0x0)>
-
-    >>> # You can set flags via bitwise operations with the objects, names, or values:
-    >>> cc.flags |= cc.flags.OUTPUT_CORRUPT
-    >>> cc.flags |= 'GLOBAL_HEADER'
-    >>> cc.flags
-    <av.codec.context.Flags:OUTPUT_CORRUPT|GLOBAL_HEADER(0x400008)>
-
-    >>> # You can test flags via bitwise operations with objects, names, or values:
-    >>> bool(cc.flags & cc.flags.OUTPUT_CORRUPT)
-    True
-    >>> bool(cc.flags & 'QSCALE')
-    False
-
-    >>> # There are boolean properties for each flag:
-    >>> cc.output_corrupt
-    True
-    >>> cc.qscale
-    False
-
-    >>> # You can set them:
-    >>> cc.qscale = True
-    >>> cc.flags
-    <av.codec.context.Flags:QSCALE|OUTPUT_CORRUPT|GLOBAL_HEADER(0x40000a)>
-
-
-API
----
-
-
 """
 
 from collections import OrderedDict
@@ -222,6 +141,37 @@ copyreg.constructor(_unpickle)
 
 cdef class EnumItem(object):
 
+    """
+    Enumerations are when an attribute may only take on a single value at once, and
+    they are represented as integers in the FFmpeg API. We associate names with each
+    value that are easier to operate with.
+
+    Consider :data:`av.codec.context.SkipType`, which is the type of the :attr:`CodecContext.skip_frame` attribute::
+
+        >>> fh = av.open(video_path)
+        >>> cc = fh.streams.video[0].codec_context
+
+        >>> # The skip_frame attribute has a name and value:
+        >>> cc.skip_frame.name
+        'DEFAULT'
+        >>> cc.skip_frame.value
+        0
+
+        >>> # You can compare it to strings and ints:
+        >>> cc.skip_frame == 'DEFAULT'
+        True
+        >>> cc.skip_frame == 0
+        True
+
+        >>> # You can assign strings and ints:
+        >>> cc.skip_frame = 'NONKEY'
+        >>> cc.skip_frame == 'NONKEY'
+        True
+        >>> cc.skip_frame == 32
+        True
+
+    """
+
     cdef readonly str name
     cdef readonly int value
     cdef Py_hash_t _hash
@@ -305,6 +255,45 @@ cdef class EnumItem(object):
 
 
 cdef class EnumFlag(EnumItem):
+
+    """
+    Flags are sets of boolean attributes, which the FFmpeg API represents as individual
+    bits in a larger integer which you manipulate with the bitwise operators.
+    We associate names with each flag that are easier to operate with.
+
+    Consider :data:`CodecContextFlags`, whis is the type of the :attr:`CodecContext.flags`
+    attribute, and the set of boolean properties::
+
+        >>> fh = av.open(video_path)
+        >>> cc = fh.streams.video[0].codec_context
+
+        >>> cc.flags
+        <av.codec.context.Flags:NONE(0x0)>
+
+        >>> # You can set flags via bitwise operations with the objects, names, or values:
+        >>> cc.flags |= cc.flags.OUTPUT_CORRUPT
+        >>> cc.flags |= 'GLOBAL_HEADER'
+        >>> cc.flags
+        <av.codec.context.Flags:OUTPUT_CORRUPT|GLOBAL_HEADER(0x400008)>
+
+        >>> # You can test flags via bitwise operations with objects, names, or values:
+        >>> bool(cc.flags & cc.flags.OUTPUT_CORRUPT)
+        True
+        >>> bool(cc.flags & 'QSCALE')
+        False
+
+        >>> # There are boolean properties for each flag:
+        >>> cc.output_corrupt
+        True
+        >>> cc.qscale
+        False
+
+        >>> # You can set them:
+        >>> cc.qscale = True
+        >>> cc.flags
+        <av.codec.context.Flags:QSCALE|OUTPUT_CORRUPT|GLOBAL_HEADER(0x40000a)>
+
+    """
 
     cdef readonly tuple flags
 

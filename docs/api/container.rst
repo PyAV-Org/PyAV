@@ -24,18 +24,14 @@ Generic
 Flags
 ~~~~~
 
-.. seealso:: Interpreting :ref:`flags`.
+.. attribute:: av.container.Container.flags
 
 .. class:: av.container.Flags
 
-    :class:`av.enum.EnumType` set for :ffmpeg:`AVFormatContext.flags`.
+    Wraps :ffmpeg:`AVFormatContext.flags`.
 
-.. attribute:: av.container.Container.flags
-
-    :class:`av.enum.EnumFlag` set for :ffmpeg:`AVFormatContext.flags`.
-
-.. enumtable:: av.container.core:Flags
-    :class: av.container.core:Container
+    .. enumtable:: av.container.core:Flags
+        :class: av.container.core:Container
 
 
 Input Containers
@@ -59,9 +55,25 @@ Formats
 
 .. automodule:: av.format
 
-    .. autoclass:: ContainerFormat
-        :members:
+.. autoclass:: ContainerFormat
+
+.. autoattribute:: ContainerFormat.name
+.. autoattribute:: ContainerFormat.long_name
+
+.. autoattribute:: ContainerFormat.options
+.. autoattribute:: ContainerFormat.input
+.. autoattribute:: ContainerFormat.output
+.. autoattribute:: ContainerFormat.is_input
+.. autoattribute:: ContainerFormat.is_output
+.. autoattribute:: ContainerFormat.extensions
+
+Flags
+~~~~~
+
+.. autoattribute:: ContainerFormat.flags
 
 .. autoclass:: av.format.Flags
-.. enumtable:: av.format.Flags
+
+    .. enumtable:: av.format.Flags
+        :class: av.format.ContainerFormat
 

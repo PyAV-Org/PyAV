@@ -6,10 +6,19 @@ Enumerations and Flags
 
 .. automodule:: av.enum
 
-.. autoclass:: EnumType
+
+.. _enums:
+
+Enumerations
+------------
 
 .. autoclass:: EnumItem
 
-.. autoclass:: EnumFlag
 
+.. _flags:
+
+Flags
+-----
+
+.. autoclass:: EnumFlag
 
