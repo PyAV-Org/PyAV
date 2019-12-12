@@ -15,6 +15,7 @@ for packet in container.demux():
         print(frame)
 
 default_time = time.time() - start_time
+container.close()
 
 
 print("Decoding with auto threading...")
@@ -31,6 +32,7 @@ for packet in container.demux():
         print(frame)
 
 auto_time = time.time() - start_time
+container.close()
 
 
 print("Decoded with default threading in {:.2f}s.".format(default_time))
