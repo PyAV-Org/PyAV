@@ -25,6 +25,9 @@ for frame in container.decode(video=0):
 
     columns.append(column)
 
+# Close the file, free memory
+container.close()
+
 full_array = np.hstack(columns)
 full_img = Image.fromarray(full_array, 'RGB')
 full_img = full_img.resize((800, 200))

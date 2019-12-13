@@ -23,4 +23,5 @@ for packet in input_.demux(in_stream):
 
     output.mux(packet)
 
+input_.close()
 output.close()

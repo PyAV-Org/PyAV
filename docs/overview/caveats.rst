@@ -27,3 +27,16 @@ The two main features that are able to cause lockups are:
 1. Python IO (passing a file-like object to ``av.open``). While this is in theory possible, so far it seems like the callbacks are made in the calling thread, and so are safe.
 
 2. Logging. As soon as you en/decode with threads you are highly likely to get log messages issues from threads started by FFmpeg, and you will get lockups. See :ref:`disable_logging`.
+
+
+.. _garbage_collection:
+
+Garbage Collection
+------------------
+
+PyAV currently has a number of reference cycles that make it more difficult for the garbage collector than we would like. In some circumstances (usually tight loops involving opening many containers), a :class:`.Container` will not auto-close until many a few thousand have built-up.
+
+Until we resolve this issue, you should explicitly call :meth:`.Container.close` or use the container as a context manager::
+
+    with av.open(path) as fh:
+        # Do stuff with it.

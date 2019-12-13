@@ -343,6 +343,8 @@ def open(file, mode=None, format=None, options=None,
         >>> # Open webcam on OS X.
         >>> av.open(format='avfoundation', file='0') # doctest: +SKIP
 
+    .. seealso:: :ref:`garbage_collection`
+
     More information on using input and output devices is available on the
     `FFmpeg website <https://www.ffmpeg.org/ffmpeg-devices.html>`_.
     """
