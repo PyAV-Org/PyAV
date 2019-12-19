@@ -236,7 +236,7 @@ cdef class VideoFrame(Frame):
 
         import numpy as np
 
-        if frame.format.name == 'yuv420p':
+        if frame.format.name in ('yuv420p', 'yuvj420p'):
             assert frame.width % 2 == 0
             assert frame.height % 2 == 0
             return np.hstack((
@@ -277,7 +277,7 @@ cdef class VideoFrame(Frame):
         """
         Construct a frame from a numpy array.
         """
-        if format == 'yuv420p':
+        if format in ('yuv420p', 'yuvj420p'):
             assert array.dtype == 'uint8'
             assert array.ndim == 2
             assert array.shape[0] % 3 == 0

@@ -236,6 +236,14 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.format.name, 'yuv420p')
         self.assertTrue((frame.to_ndarray() == array).all())
 
+    def test_ndarray_yuvj420p(self):
+        array = numpy.random.randint(0, 256, size=(720, 640), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format='yuvj420p')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'yuvj420p')
+        self.assertTrue((frame.to_ndarray() == array).all())
+
     def test_ndarray_yuyv422(self):
         array = numpy.random.randint(0, 256, size=(480, 640, 2), dtype=numpy.uint8)
         frame = VideoFrame.from_ndarray(array, format='yuyv422')
