@@ -40,6 +40,8 @@ cdef class InputContainer(Container):
                 else:
                     lib.av_dict_copy(&c_options[i], base_dict.ptr, 0)
 
+        self.set_timeout(self.open_timeout)
+        self.start_timeout()
         with nogil:
             # This peeks are the first few frames to:
             #   - set stream.disposition from codec.audio_service_type (not exposed);
@@ -52,6 +54,7 @@ cdef class InputContainer(Container):
                 self.ptr,
                 c_options
             )
+        self.set_timeout(None)
         self.err_check(ret)
 
         # Cleanup all of our options.
