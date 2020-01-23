@@ -5,9 +5,17 @@ cdef class VideoPlane(Plane):
 
     def __cinit__(self, VideoFrame frame, int index):
 
+        if frame.format.name == 'pal8' and index == 1:
+            self.width = 256
+            self.height = 1
+            self.buffer_size = 256 * 4
+            return
+
         for i in range(frame.format.ptr.nb_components):
             if frame.format.ptr.comp[i].plane == index:
-                self.component = frame.format.components[i]
+                component = frame.format.components[i]
+                self.width = component.width
+                self.height = component.height
                 break
         else:
             raise RuntimeError('could not find plane %d of %r' % (index, frame.format))
@@ -15,7 +23,7 @@ cdef class VideoPlane(Plane):
         # Sometimes, linesize is negative (and that is meaningful). We are only
         # insisting that the buffer size be based on the extent of linesize, and
         # ignore it's direction.
-        self.buffer_size = abs(self.frame.ptr.linesize[self.index]) * self.component.height
+        self.buffer_size = abs(self.frame.ptr.linesize[self.index]) * self.height
 
     cdef size_t _buffer_size(self):
         return self.buffer_size
@@ -28,13 +36,3 @@ cdef class VideoPlane(Plane):
         """
         def __get__(self):
             return self.frame.ptr.linesize[self.index]
-
-    property width:
-        """Pixel width of this plane."""
-        def __get__(self):
-            return self.component.width
-
-    property height:
-        """Pixel height of this plane."""
-        def __get__(self):
-            return self.component.height
