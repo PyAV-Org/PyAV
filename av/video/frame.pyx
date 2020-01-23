@@ -132,7 +132,11 @@ cdef class VideoFrame(Frame):
         # ourselves to the maximum plane count (as determined only by VideoFrames
         # so far), in case the library implementation does not set the last
         # plane to NULL.
-        cdef int max_plane_count = self.format.ptr.nb_components
+        cdef int max_plane_count = 0
+        for i in range(self.format.ptr.nb_components):
+            count = self.format.ptr.comp[i].plane + 1
+            if max_plane_count < count:
+                max_plane_count = count
         cdef int plane_count = 0
         while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:
             plane_count += 1
@@ -257,7 +261,7 @@ cdef class VideoFrame(Frame):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
             return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
-        elif frame.format.name in ('gray', 'gray8'):
+        elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
             return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         else:
             raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % frame.format.name)
@@ -309,7 +313,7 @@ cdef class VideoFrame(Frame):
             assert array.dtype == 'uint8'
             assert array.ndim == 3
             assert array.shape[2] == 4
-        elif format in ('gray', 'gray8'):
+        elif format in ('gray', 'gray8', 'rgb8', 'bgr8'):
             assert array.dtype == 'uint8'
             assert array.ndim == 2
         else:
