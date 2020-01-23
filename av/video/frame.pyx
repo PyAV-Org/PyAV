@@ -137,6 +137,9 @@ cdef class VideoFrame(Frame):
             count = self.format.ptr.comp[i].plane + 1
             if max_plane_count < count:
                 max_plane_count = count
+        if self.format.name == 'pal8':
+            max_plane_count = 2
+
         cdef int plane_count = 0
         while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:
             plane_count += 1
@@ -240,6 +243,9 @@ cdef class VideoFrame(Frame):
 
         .. note:: Numpy must be installed.
 
+        .. note:: For ``pal8``, an ``(image, palette)`` tuple will be returned,
+        with the palette being in ARGB (PyAV will swap bytes according to endianness).
+
         """
         cdef VideoFrame frame = self.reformat(**kwargs)
 
@@ -263,6 +269,10 @@ cdef class VideoFrame(Frame):
             return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
             return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
+        elif frame.format.name == 'pal8':
+            image = useful_array(frame.planes[0]).reshape(frame.height, frame.width)
+            palette = np.frombuffer(frame.planes[1], 'i4').astype('>i4').reshape(-1, 1).view(np.uint8)
+            return image, palette
         else:
             raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % frame.format.name)
 
@@ -282,10 +292,24 @@ cdef class VideoFrame(Frame):
         return frame
 
     @staticmethod
-    def from_ndarray(array, format='rgb24'):
+    def from_ndarray(array, format='rgb24', palette=None):
         """
         Construct a frame from a numpy array.
+
+        .. note:: ``palette`` must be given only for ``pal8``, and in ARGB format
+        (PyAV will swap bytes according to the endianness).
         """
+        if format == 'pal8':
+            assert array.dtype == 'uint8'
+            assert array.ndim == 2
+            assert palette.dtype == 'uint8'
+            assert palette.shape == (256, 4)
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array, frame.planes[0], 1)
+            frame.planes[1].update(palette.view('>i4').astype('i4').tobytes())
+            return frame
+        assert palette is None
+
         if format in ('yuv420p', 'yuvj420p'):
             assert array.dtype == 'uint8'
             assert array.ndim == 2
