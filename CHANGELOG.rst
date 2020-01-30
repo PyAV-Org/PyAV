@@ -17,8 +17,8 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
-v7.0.0.dev0
------------
+v7.0.0
+------
 
 Major:
 
@@ -33,6 +33,8 @@ Minor:
 - Filters support audio in general, and a new :meth:`.Graph.add_abuffer`. (:issue:`562`)
 - :func:`av.open` supports `timeout` parameters. (:issue:`480` and :issue:`316`)
 - Expose :attr:`Stream.base_rate` and :attr:`Stream.guessed_rate`. (:issue:`564`)
+- :meth:`.VideoFrame.reformat` can specify interpolation.
+- Expose many sets of flags.
 
 Fixes:
 
