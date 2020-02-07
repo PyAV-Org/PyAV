@@ -20,6 +20,10 @@ We are operating with `semantic versioning <http://semver.org>`_.
 v7.0.1.dev0
 -----------
 
+Fixes:
+
+- Removed deprecated ``AV_FRAME_DATA_QP_TABLE_*`` enums. (:issue:`607`)
+
 
 v7.0.0
 ------

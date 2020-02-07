@@ -25,8 +25,11 @@ Type = define_enum('Type', __name__, (
     ('SPHERICAL', lib.AV_FRAME_DATA_SPHERICAL),
     ('CONTENT_LIGHT_LEVEL', lib.AV_FRAME_DATA_CONTENT_LIGHT_LEVEL),
     ('ICC_PROFILE', lib.AV_FRAME_DATA_ICC_PROFILE),
-    ('QP_TABLE_PROPERTIES', lib.AV_FRAME_DATA_QP_TABLE_PROPERTIES),
-    ('QP_TABLE_DATA', lib.AV_FRAME_DATA_QP_TABLE_DATA),
+
+    # These are deprecated. See https://github.com/mikeboers/PyAV/issues/607
+    # ('QP_TABLE_PROPERTIES', lib.AV_FRAME_DATA_QP_TABLE_PROPERTIES),
+    # ('QP_TABLE_DATA', lib.AV_FRAME_DATA_QP_TABLE_DATA),
+
 ))
 
 
