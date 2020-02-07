@@ -17,8 +17,8 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
-v7.0.1.dev0
------------
+v7.0.1
+------
 
 Fixes:
 
