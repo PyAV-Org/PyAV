@@ -4,12 +4,6 @@ from av.descriptor cimport wrap_avclass
 from av.enum cimport define_enum
 
 
-cdef extern from "format-shims.c" nogil:
-    cdef const lib.AVOutputFormat* pyav_find_output_format(const char *name)
-    cdef const lib.AVOutputFormat* pyav_muxer_iterate(void **opaque)
-    cdef const lib.AVInputFormat* pyav_demuxer_iterate(void **opaque)
-
-
 cdef object _cinit_bypass_sentinel = object()
 
 cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutputFormat* optr):
@@ -90,7 +84,7 @@ cdef class ContainerFormat(object):
             self.iptr = lib.av_find_input_format(name)
 
         if mode is None or mode == 'w':
-            self.optr = pyav_find_output_format(name)
+            self.optr = find_output_format(name)
 
         if not self.iptr and not self.optr:
             raise ValueError('no container format %r' % name)
@@ -178,12 +172,26 @@ cdef class ContainerFormat(object):
     seek_to_pts = flags.flag_property('SEEK_TO_PTS')
 
 
+cdef lib.AVOutputFormat* find_output_format(name):
+    cdef const lib.AVOutputFormat *ptr
+    cdef void *opaque = NULL
+
+    while True:
+        ptr = lib.av_muxer_iterate(&opaque)
+        if not ptr:
+            break
+        if ptr.name == name:
+            return <lib.AVOutputFormat*>ptr
+
+    return NULL
+
+
 cdef get_output_format_names():
     names = set()
     cdef const lib.AVOutputFormat *ptr
     cdef void *opaque = NULL
     while True:
-        ptr = pyav_muxer_iterate(&opaque)
+        ptr = lib.av_muxer_iterate(&opaque)
         if ptr:
             names.add(ptr.name)
         else:
@@ -195,7 +203,7 @@ cdef get_input_format_names():
     cdef const lib.AVInputFormat *ptr
     cdef void *opaque = NULL
     while True:
-        ptr = pyav_demuxer_iterate(&opaque)
+        ptr = lib.av_demuxer_iterate(&opaque)
         if ptr:
             names.add(ptr.name)
         else:

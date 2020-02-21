@@ -4,9 +4,6 @@ from av.enum cimport define_enum
 from av.utils cimport avrational_to_fraction, flag_in_bitfield
 from av.video.format cimport get_video_format
 
-cdef extern from "codec-shims.c" nogil:
-    cdef const lib.AVCodec* pyav_codec_iterate(void **opaque)
-
 
 cdef object _cinit_sentinel = object()
 
@@ -338,7 +335,7 @@ cdef get_codec_names():
     cdef const lib.AVCodec *ptr
     cdef void *opaque = NULL
     while True:
-        ptr = pyav_codec_iterate(&opaque)
+        ptr = lib.av_codec_iterate(&opaque)
         if ptr:
             names.add(ptr.name)
         else:

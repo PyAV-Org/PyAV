@@ -240,6 +240,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef AVCodec* avcodec_find_decoder_by_name(char *name)
     cdef AVCodec* avcodec_find_encoder_by_name(char *name)
 
+    cdef const AVCodec* av_codec_iterate(void **opaque)
+
     cdef AVCodecDescriptor* avcodec_descriptor_get (AVCodecID id)
     cdef AVCodecDescriptor* avcodec_descriptor_get_by_name (char *name)
 
