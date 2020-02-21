@@ -6,6 +6,7 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int   avformat_version()
     cdef char* avformat_configuration()
     cdef char* avformat_license()
+    cdef void  avformat_network_init()
 
     cdef int64_t INT64_MIN
 
@@ -308,6 +309,9 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVStream *stream,
         AVFrame *frame
     )
+
+    cdef const AVInputFormat* av_demuxer_iterate(void **opaque)
+    cdef const AVOutputFormat* av_muxer_iterate(void **opaque)
 
     # custom
 
