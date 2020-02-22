@@ -244,7 +244,7 @@ cdef class VideoFrame(Frame):
         .. note:: Numpy must be installed.
 
         .. note:: For ``pal8``, an ``(image, palette)`` tuple will be returned,
-        with the palette being in ARGB (PyAV will swap bytes according to endianness).
+        with the palette being in ARGB (PyAV will swap bytes if needed).
 
         """
         cdef VideoFrame frame = self.reformat(**kwargs)
@@ -292,14 +292,16 @@ cdef class VideoFrame(Frame):
         return frame
 
     @staticmethod
-    def from_ndarray(array, format='rgb24', palette=None):
+    def from_ndarray(array, format='rgb24'):
         """
         Construct a frame from a numpy array.
 
-        .. note:: ``palette`` must be given only for ``pal8``, and in ARGB format
-        (PyAV will swap bytes according to the endianness).
+        .. note:: for ``pal8``, an ``(image, palette)`` pair must be passed.
+        `palette` must have shape (256, 4) and is given in ARGB format
+        (PyAV will swap bytes if needed).
         """
         if format == 'pal8':
+            array, palette = array
             assert array.dtype == 'uint8'
             assert array.ndim == 2
             assert palette.dtype == 'uint8'
@@ -308,7 +310,6 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(array, frame.planes[0], 1)
             frame.planes[1].update(palette.view('>i4').astype('i4').tobytes())
             return frame
-        assert palette is None
 
         if format in ('yuv420p', 'yuvj420p'):
             assert array.dtype == 'uint8'
