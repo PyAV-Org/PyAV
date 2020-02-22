@@ -260,6 +260,34 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.format.name, 'yuyv422')
         self.assertTrue((frame.to_ndarray() == array).all())
 
+    def test_ndarray_rgb8(self):
+        array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format='rgb8')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'rgb8')
+        self.assertTrue((frame.to_ndarray() == array).all())
+
+    def test_ndarray_bgr8(self):
+        array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format='bgr8')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'bgr8')
+        self.assertTrue((frame.to_ndarray() == array).all())
+
+    def test_ndarray_pal8(self):
+        array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
+        palette = numpy.random.randint(0, 256, size=(256, 4), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray((array, palette), format='pal8')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'pal8')
+        returned = frame.to_ndarray()
+        self.assertTrue((type(returned) is tuple) and len(returned) == 2)
+        self.assertTrue((returned[0] == array).all())
+        self.assertTrue((returned[1] == palette).all())
+
 
 class TestVideoFrameTiming(TestCase):
 
