@@ -23,14 +23,6 @@ if [[ ! "$PYAV_LIBRARY" ]]; then
     fi
 fi
 export PYAV_LIBRARY
-_lib_parts=(${PYAV_LIBRARY//-/ })
-if [[ ${#_lib_parts[@]} != 2 ]]; then
-    echo "Malformed \$PYAV_LIBRARY: \"$PYAV_LIBRARY\""
-    exit 1
-fi
-export PYAV_LIBRARY_NAME=${_lib_parts[0]}
-export PYAV_LIBRARY_VERSION=${_lib_parts[1]}
-
 
 if [[ ! "$PYAV_PYTHON" ]]; then
     PYAV_PYTHON="${PYAV_PYTHON-python3}"

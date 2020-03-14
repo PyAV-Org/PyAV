@@ -30,7 +30,7 @@ cd "$PYAV_LIBRARY_ROOT"
 
 # Download and expand the source.
 if [[ ! -d $PYAV_LIBRARY ]]; then
-    url="https://$PYAV_LIBRARY_NAME.org/releases/$PYAV_LIBRARY.tar.gz"
+    url="https://ffmpeg.org/releases/$PYAV_LIBRARY.tar.gz"
     echo Downloading $url
     wget --no-check-certificate "$url" || exit 1
     tar -xzf $PYAV_LIBRARY.tar.gz
@@ -40,19 +40,16 @@ fi
 cd $PYAV_LIBRARY
 
 echo ./configure
-if [[ "$PYAV_LIBRARY_NAME" == ffmpeg ]]; then
-    CONFFLAGS=--disable-stripping
-fi
 ./configure \
-    --disable-static \
-    --enable-shared \
     --disable-doc \
-    --disable-optimizations \
     --disable-mmx \
+    --disable-optimizations \
+    --disable-static \
+    --disable-stripping \
     --enable-debug=3 \
     --enable-gpl \
     --enable-libx264 \
-    $CONFFLAGS \
+    --enable-shared \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo
