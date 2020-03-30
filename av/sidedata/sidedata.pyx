@@ -2,7 +2,10 @@ from av.enum cimport define_enum
 
 from av.sidedata.motionvectors import MotionVectors
 
-import collections
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -98,5 +101,5 @@ cdef class _SideDataContainer(object):
         return self._by_type[type_]
 
 
-class SideDataContainer(_SideDataContainer, collections.Mapping):
+class SideDataContainer(_SideDataContainer, Mapping):
     pass

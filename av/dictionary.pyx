@@ -1,4 +1,7 @@
-import collections
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
 
 from av.error cimport err_check
 
@@ -48,7 +51,7 @@ cdef class _Dictionary(object):
         return other
 
 
-class Dictionary(_Dictionary, collections.MutableMapping):
+class Dictionary(_Dictionary, MutableMapping):
     pass
 
 

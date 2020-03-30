@@ -1,4 +1,7 @@
-import collections
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -49,7 +52,7 @@ cdef class _MotionVectors(SideData):
         ], align=True))
 
 
-class MotionVectors(_MotionVectors, collections.Sequence):
+class MotionVectors(_MotionVectors, Sequence):
     pass
 
 
