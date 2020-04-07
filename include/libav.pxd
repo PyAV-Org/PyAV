@@ -6,6 +6,12 @@ cdef extern from "pyav/config.h" nogil:
     char* PYAV_VERSION_STR
     char* PYAV_COMMIT_STR
 
+
+# This asserts we've found a usable version of the various libraries.
+cdef extern from "libav.pyav.h" nogil:
+    pass
+
+
 include "libavutil/avutil.pxd"
 include "libavutil/channel_layout.pxd"
 include "libavutil/dict.pxd"
