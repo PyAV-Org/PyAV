@@ -157,6 +157,7 @@ cdef class CodecContext(object):
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
 
         self.ptr = ptr
+        self.ptr.opaque = <void*>self
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError('Wrapping CodecContext with mismatched codec.')
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)

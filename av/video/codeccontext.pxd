@@ -1,4 +1,5 @@
 
+cimport libav as lib
 from av.codec.context cimport CodecContext
 from av.video.format cimport VideoFormat
 from av.video.frame cimport VideoFrame
@@ -6,6 +7,8 @@ from av.video.reformatter cimport VideoReformatter
 
 
 cdef class VideoCodecContext(CodecContext):
+
+    cdef lib.AVPixelFormat _preferred_format
 
     cdef VideoFormat _format
     cdef _build_format(self)

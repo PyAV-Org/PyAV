@@ -202,6 +202,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int coded_height
 
         AVPixelFormat pix_fmt
+        AVPixelFormat get_format(AVCodecContext *ctx, const AVPixelFormat *fmt)
         AVRational sample_aspect_ratio
         int gop_size # The number of pictures in a group of pictures, or 0 for intra_only.
         int max_b_frames
@@ -244,6 +245,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef AVCodecDescriptor* avcodec_descriptor_get (AVCodecID id)
     cdef AVCodecDescriptor* avcodec_descriptor_get_by_name (char *name)
+
+    cdef AVPixelFormat avcodec_default_get_format(AVCodecContext *ctx, const AVPixelFormat *fmt)
 
     cdef char* avcodec_get_name(AVCodecID id)
 

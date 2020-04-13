@@ -11,6 +11,14 @@ from av.video.format cimport get_video_format, VideoFormat
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 
+cdef lib.AVPixelFormat get_format_callback(lib.AVCodecContext *ptr, const lib.AVPixelFormat *fmt):
+    cdef lib.AVPixelFormat pref = (<VideoCodecContext>ptr.opaque)._preferred_format
+    cdef int current = 0
+    while fmt[current] != -1:
+        if fmt[current] == pref:
+            return pref
+        current += 1
+    return lib.avcodec_default_get_format(ptr, fmt)
 
 cdef class VideoCodecContext(CodecContext):
 
@@ -22,6 +30,8 @@ cdef class VideoCodecContext(CodecContext):
         CodecContext._init(self, ptr, codec)  # TODO: Can this be `super`?
         self._build_format()
         self.encoded_frame_count = 0
+        self._preferred_format = lib.AV_PIX_FMT_NONE
+        self.ptr.get_format = get_format_callback
 
     cdef _set_default_time_base(self):
         self.ptr.time_base.num = self.ptr.framerate.den or 1
@@ -77,6 +87,15 @@ cdef class VideoCodecContext(CodecContext):
             self.ptr.width = format.width
             self.ptr.height = format.height
             self._build_format()  # Kinda wasteful.
+
+    property preferred_format:
+        def __get__(self):
+            if self._preferred_format == lib.AV_PIX_FMT_NONE:
+                return None
+            return lib.av_get_pix_fmt_name(self._preferred_format)
+
+        def __set__(self, value):
+            self._preferred_format = lib.av_get_pix_fmt(value)
 
     property width:
         def __get__(self):
