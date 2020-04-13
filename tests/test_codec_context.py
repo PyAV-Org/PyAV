@@ -51,6 +51,26 @@ class TestCodecContext(TestCase):
         # This one parses into many small packets.
         self._assert_parse('mpeg2video', fate_suite('mpeg2/mpeg2_field_encoding.ts'))
 
+    def test_format_override(self):
+        # Some decoders may override pix_fmt
+        ctx = Codec('gif', 'r').create()
+        ctx.pix_fmt = 'yuv420p'
+        ctx.width = 500
+        ctx.height = 500
+        ctx.open()
+        self.assertNotEqual(ctx.pix_fmt, 'yuv420p')
+
+    def test_format_not_set(self):
+        ctx = Codec('png', 'w').create()
+        self.assertEqual(ctx.format, None)
+        self.assertEqual(ctx.pix_fmt, None)
+        ctx.pix_fmt = 'bgra'
+        self.assertEqual(ctx.format.name, 'bgra')
+        self.assertEqual(ctx.pix_fmt, 'bgra')
+        ctx.pix_fmt = 'invalid'
+        self.assertEqual(ctx.format, None)
+        self.assertEqual(ctx.pix_fmt, None)
+
     def _assert_parse(self, codec_name, path):
 
         fh = av.open(path)

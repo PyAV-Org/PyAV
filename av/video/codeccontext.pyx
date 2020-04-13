@@ -28,7 +28,7 @@ cdef class VideoCodecContext(CodecContext):
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)  # TODO: Can this be `super`?
-        self._build_format()
+        self._last_format = None
         self.encoded_frame_count = 0
         self._preferred_format = lib.AV_PIX_FMT_NONE
         self.ptr.get_format = get_format_callback
@@ -46,7 +46,7 @@ cdef class VideoCodecContext(CodecContext):
 
         # Reformat if it doesn't match.
         if (
-            vframe.format.pix_fmt != self._format.pix_fmt or
+            vframe.format.pix_fmt != self.ptr.pix_fmt or
             vframe.width != self.ptr.width or
             vframe.height != self.ptr.height
         ):
@@ -56,7 +56,7 @@ cdef class VideoCodecContext(CodecContext):
                 vframe,
                 self.ptr.width,
                 self.ptr.height,
-                self._format,
+                self.format,
             )
 
         # There is no pts, so create one.
@@ -75,18 +75,21 @@ cdef class VideoCodecContext(CodecContext):
         cdef VideoFrame vframe = frame
         vframe._init_user_attributes()
 
-    cdef _build_format(self):
-        self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
-
     property format:
         def __get__(self):
-            return self._format
+            if not (
+                self._last_format != None and
+                self._last_format.pix_fmt == self.ptr.pix_fmt and
+                self._last_format.width == self.ptr.width and
+                self._last_format.height == self.ptr.height
+            ):
+                self._last_format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
+            return self._last_format
 
         def __set__(self, VideoFormat format):
             self.ptr.pix_fmt = format.pix_fmt
             self.ptr.width = format.width
             self.ptr.height = format.height
-            self._build_format()  # Kinda wasteful.
 
     property preferred_format:
         def __get__(self):
@@ -103,7 +106,6 @@ cdef class VideoCodecContext(CodecContext):
 
         def __set__(self, unsigned int value):
             self.ptr.width = value
-            self._build_format()
 
     property height:
         def __get__(self):
@@ -111,16 +113,15 @@ cdef class VideoCodecContext(CodecContext):
 
         def __set__(self, unsigned int value):
             self.ptr.height = value
-            self._build_format()
 
     # TODO: Replace with `format`.
     property pix_fmt:
         def __get__(self):
-            return self._format.name
+            if self.format != None:
+                return self.format.name
 
         def __set__(self, value):
             self.ptr.pix_fmt = lib.av_get_pix_fmt(value)
-            self._build_format()
 
     property framerate:
         """

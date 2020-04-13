@@ -10,8 +10,7 @@ cdef class VideoCodecContext(CodecContext):
 
     cdef lib.AVPixelFormat _preferred_format
 
-    cdef VideoFormat _format
-    cdef _build_format(self)
+    cdef VideoFormat _last_format
 
     cdef int last_w
     cdef int last_h
