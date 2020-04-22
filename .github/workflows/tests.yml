@@ -192,16 +192,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
           python-version: 3.7
+      - name: Install packages
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install nasm pkg-config
       - name: Build wheels
         env:
           CIBW_BEFORE_BUILD: pip install cython && scripts/build-ffmpeg /tmp/vendor
           CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig
+          CIBW_ENVIRONMENT_MACOS: DYLD_LIBRARY_PATH=/tmp/vendor/lib:$DYLD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_SKIP: py27-* cp33-*
         run: |
           pip install cibuildwheel
