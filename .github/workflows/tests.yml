@@ -62,7 +62,7 @@ jobs:
           - {os: ubuntu-latest, python: 2.7, ffmpeg: "4.2"}
           - {os: ubuntu-latest, python: pypy3, ffmpeg: "4.2"}
           #- {os: ubuntu-latest, python: pypy2, ffmpeg: "4.2"}
-          - {os: macos-latest,  python: 3.7, ffmpeg: "4.2"}
+          #- {os: macos-latest,  python: 3.7, ffmpeg: "4.2"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
