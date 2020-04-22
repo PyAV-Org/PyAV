@@ -180,4 +180,41 @@ jobs:
         conda activate pyav
         python setup.py test
 
-
+  package-wheel:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install packages
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install pkg-config
+      - name: Build wheels
+        env:
+          CIBW_BEFORE_BUILD: pip install cython && python scripts/fetch-ffmpeg /tmp/vendor
+          CIBW_BEFORE_BUILD_WINDOWS: pip install cython && python scripts\fetch-ffmpeg C:\cibw\vendor
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig
+          CIBW_ENVIRONMENT_MACOS: DYLD_LIBRARY_PATH=/tmp/vendor/lib:$DYLD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
+          CIBW_ENVIRONMENT_WINDOWS: CL="/IC:\cibw\vendor\include" LINK="/LIBPATH:C:\cibw\vendor\lib"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: python scripts/inject-dll {wheel} {dest_dir} C:\cibw\vendor\bin
+          CIBW_SKIP: cp27-* pp27-* pp36-win*
+          CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
+          # disable test suite on OS X, the SSL config seems broken
+          CIBW_TEST_COMMAND_MACOS: true
+          CIBW_TEST_REQUIRES: numpy
+        run: |
+          pip install cibuildwheel
+          cibuildwheel --output-dir dist
+        shell: bash
+      - name: Upload wheels
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist
+          path: dist/
