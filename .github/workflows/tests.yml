@@ -188,4 +188,27 @@ jobs:
         conda activate pyav
         python setup.py test
 
-
+  package-wheel:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Build wheels
+        env:
+          CIBW_BEFORE_BUILD: pip install cython && scripts/build-ffmpeg /tmp/vendor
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig
+          CIBW_SKIP: py27-* cp33-*
+        run: |
+          pip install cibuildwheel
+          cibuildwheel --output-dir dist
+        shell: bash
+      - name: Upload wheels
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist
+          path: dist/

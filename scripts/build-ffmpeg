@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e
+
+destdir=$1
+cachedir=$1.$PYTHON_ARCH
+tmpdir=$1.tmp
+
+for d in ffmpeg $destdir $tmpdir; do
+    if [ -e $d ]; then
+        rm -rf $d
+    fi
+done
+
+if [ ! -e $cachedir ]; then
+    # build ffmpeg
+    mkdir ffmpeg
+    if [ ! -e ffmpeg.tar.gz ]; then
+        curl -L -o ffmpeg.tar.gz https://ffmpeg.org/releases/ffmpeg-4.2.2.tar.gz
+    fi
+    tar xf ffmpeg.tar.gz -C ffmpeg --strip-components 1
+    cd ffmpeg
+    ./configure \
+        --disable-doc \
+        --disable-static \
+        --enable-gpl \
+        --enable-shared \
+        --prefix=$destdir
+    make -j
+    make install DESTDIR=$tmpdir
+    cd ..
+
+    mv $tmpdir$destdir $cachedir
+    rm -rf $tmpdir
+fi
+
+cp -R $cachedir $destdir
