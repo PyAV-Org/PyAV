@@ -4,15 +4,42 @@ set -e
 
 destdir=$1
 cachedir=$1.$PYTHON_ARCH
-tmpdir=$1.tmp
 
-for d in ffmpeg $destdir $tmpdir; do
+for d in ffmpeg nasm x264 $destdir; do
     if [ -e $d ]; then
         rm -rf $d
     fi
 done
 
 if [ ! -e $cachedir ]; then
+    # install nasm
+    if [ "`uname`" = "Linux" ]; then
+        mkdir nasm
+        if [ ! -e nasm.tar.bz2 ]; then
+            curl -L -o nasm.tar.bz2 https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2
+        fi
+        tar xf nasm.tar.bz2 -C nasm --strip-components 1
+        cd nasm
+        ./configure --prefix=$destdir
+        make -j
+        make install
+        cd ..
+
+        export PATH=$destdir/bin:$PATH
+    fi
+
+    # build x264
+    mkdir x264
+    if [ ! -e x264.tar.bz2 ]; then
+        curl -L -o x264.tar.bz2 https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2
+    fi
+    tar xf x264.tar.bz2 -C x264 --strip-components 1
+    cd x264
+    ./configure --enable-shared --prefix=$destdir
+    make -j
+    make install
+    cd ..
+
     # build ffmpeg
     mkdir ffmpeg
     if [ ! -e ffmpeg.tar.gz ]; then
@@ -24,14 +51,14 @@ if [ ! -e $cachedir ]; then
         --disable-doc \
         --disable-static \
         --enable-gpl \
+        --enable-libx264 \
         --enable-shared \
         --prefix=$destdir
     make -j
-    make install DESTDIR=$tmpdir
+    make install
     cd ..
 
-    mv $tmpdir$destdir $cachedir
-    rm -rf $tmpdir
+    cp -R $destdir $cachedir
+else
+    cp -R $cachedir $destdir
 fi
-
-cp -R $cachedir $destdir
