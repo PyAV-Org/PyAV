@@ -8,6 +8,7 @@ from distutils.errors import DistutilsExecError
 from distutils.msvccompiler import MSVCCompiler
 from setuptools import setup, find_packages, Extension, Distribution
 from setuptools.command.build_ext import build_ext
+from shlex import quote
 from subprocess import Popen, PIPE
 import argparse
 import errno
@@ -16,14 +17,6 @@ import platform
 import re
 import shlex
 import sys
-
-# We don't need six...
-PY3 = sys.version_info[0] >= 3
-
-if PY3:
-    from shlex import quote as shell_quote
-else:
-    from pipes import quote as shell_quote
 
 try:
     # This depends on _winreg, which is not availible on not-Windows.
@@ -71,7 +64,7 @@ def parse_cflags(raw_cflags):
         parts = x.split('=', 1)
         value = x[1] or None if len(x) == 2 else None
         config['define_macros'][i] = (parts[0], value)
-    return config, ' '.join(shell_quote(x) for x in unknown)
+    return config, ' '.join(quote(x) for x in unknown)
 
 def get_library_config(name):
     """Get distutils-compatible extension extras for the given library.
@@ -169,7 +162,7 @@ config_macros = {
 def dump_config():
     """Print out all the config information we have so far (for debugging)."""
     print('PyAV:', version, git_commit or '(unknown commit)')
-    print('Python:', sys.version.encode('unicode_escape' if PY3 else 'string-escape').decode())
+    print('Python:', sys.version.encode('unicode_escape').decode())
     print('platform:', platform.platform())
     print('extension_extra:')
     for k, vs in extension_extra.items():
@@ -535,11 +528,10 @@ setup(
        'Operating System :: Unix',
        'Operating System :: Microsoft :: Windows',
        'Programming Language :: Cython',
-       'Programming Language :: Python :: 2.7',
-       'Programming Language :: Python :: 3.4',
        'Programming Language :: Python :: 3.5',
        'Programming Language :: Python :: 3.6',
        'Programming Language :: Python :: 3.7',
+       'Programming Language :: Python :: 3.8',
        'Topic :: Software Development :: Libraries :: Python Modules',
        'Topic :: Multimedia :: Sound/Audio',
        'Topic :: Multimedia :: Sound/Audio :: Conversion',

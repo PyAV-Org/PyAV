@@ -17,9 +17,12 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
-v7.0.2.dev0
+v8.0.0.dev0
 ------
 
+Major:
+
+- Drop support for Python 2 and Python 3.4
 
 v7.0.1
 ------

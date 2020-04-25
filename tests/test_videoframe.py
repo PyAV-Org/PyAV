@@ -6,7 +6,7 @@ import numpy
 from av import VideoFrame
 from av.deprecation import AttributeRenamedWarning
 
-from .common import Image, TestCase, fate_png, is_py3
+from .common import Image, TestCase, fate_png
 
 
 class TestVideoFrameConstructors(TestCase):
@@ -95,9 +95,9 @@ class TestVideoFrameBuffers(TestCase):
         self.assertEqual(mem.ndim, 1)
         self.assertEqual(mem.shape, (640 * 480 * 3, ))
         self.assertFalse(mem.readonly)
-        self.assertEqual(mem[1], 49 if is_py3 else b'1')
+        self.assertEqual(mem[1], 49)
         self.assertEqual(mem[:7], b'01234xx')
-        mem[1] = 46 if is_py3 else b'.'
+        mem[1] = 46
         self.assertEqual(mem[:7], b'0.234xx')
 
 

@@ -18,10 +18,6 @@ __all__ = [
 ]
 
 
-cdef is_py3 = sys.version_info[0] >= 3
-cdef is_py33 = sys.version_info >= (3, 3)
-
-
 cpdef code_to_tag(int code):
     """Convert an integer error code into 4-byte tag.
 
@@ -362,7 +358,7 @@ cpdef make_error(int res, filename=None, log=None):
         c_buffer = py_buffer
         lib.av_strerror(res, c_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
         py_buffer = c_buffer
-        message = py_buffer.decode('latin1') if is_py3 else py_buffer
+        message = py_buffer.decode('latin1')
 
         # Default to the OS if we have no message; this should not get called.
         message = message or os.strerror(code)
