@@ -63,7 +63,6 @@ print("{}{}.{}".format(platform.python_implementation().lower(), *sys.version_in
     if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
         mkdir -p "$PYAV_VENV"
         virtualenv -p "$PYAV_PYTHON" "$PYAV_VENV"
-        "$PYAV_VENV/bin/pip" install --upgrade pip setuptools
     fi
 
     if [[ -e "$PYAV_VENV/bin/activate" ]]; then

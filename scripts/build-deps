@@ -8,6 +8,7 @@ fi
 cd "$PYAV_ROOT"
 
 # Always try to install the Python dependencies they are cheap.
+$PYAV_PIP install --upgrade pip setuptools
 $PYAV_PIP install --upgrade -r tests/requirements.txt
 
 
