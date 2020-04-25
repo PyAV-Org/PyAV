@@ -44,7 +44,11 @@ extract() {
     tar xf $tarball -C $path --strip-components 1
 }
 
-outputfile=$outputdir/ffmpeg-$ffmpeg_version-manylinux_$(uname -m).tar.bz2
+if [ "`uname`" = "Linux" ]; then
+    outputfile=$outputdir/ffmpeg-$ffmpeg_version-manylinux_$(uname -m).tar.bz2
+else
+    outputfile=$outputdir/ffmpeg-$ffmpeg_version-macosx_$(uname -m).tar.bz2
+fi
 
 mkdir -p $outputdir
 if [ ! -e $outputfile ]; then

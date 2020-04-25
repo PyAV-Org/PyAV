@@ -7,12 +7,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
           python-version: 3.8
+      - name: Install packages
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install pkg-config
       - name: Build FFmpeg
         env:
           CIBW_BEFORE_BUILD: scripts/build-ffmpeg /tmp/vendor
