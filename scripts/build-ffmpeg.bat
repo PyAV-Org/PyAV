@@ -22,9 +22,9 @@ if not exist %outputfile% (
     )
     unzip %ffmpeg_basename%-dev.zip
     mkdir %destdir%\include
-    xcopy %ffmpeg_basename%-dev\include %destdir%\ /E
+    xcopy %ffmpeg_basename%-dev\include %destdir%\include /E
     mkdir %destdir%\lib
-    xcopy %ffmpeg_basename%-dev\lib %destdir%\ /E
+    xcopy %ffmpeg_basename%-dev\lib %destdir%\lib /E
 
     if not exist %ffmpeg_basename%-shared.zip (
         curl -L -o %ffmpeg_basename%-shared.zip https://ffmpeg.zeranoe.com/builds/win%PYTHON_ARCH%/shared/%ffmpeg_basename%-shared.zip
@@ -33,5 +33,5 @@ if not exist %outputfile% (
     mkdir %destdir%\bin
     xcopy %ffmpeg_basename%-shared\bin %destdir%\bin\ /E
 
-    tar cjvf %outputfile% -C %destdir% include lib
+    tar cjvf %outputfile% -C %destdir% bin include lib
 )
