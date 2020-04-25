@@ -46,9 +46,11 @@ extract() {
 if [ "`uname`" = "Linux" ]; then
     outputdir=/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-manylinux_$(uname -m).tar.bz2
+    x265_args=""
 else
     outputdir=`pwd`/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-macosx_$(uname -m).tar.bz2
+    x265_args="-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE"
 fi
 
 mkdir -p $outputdir
@@ -144,7 +146,7 @@ EOF
     # build x265
     extract x265 http://ftp.videolan.org/pub/videolan/x265/x265_3.2.1.tar.gz
     cd x265/build
-    cmake ../source -DCMAKE_INSTALL_PREFIX=$destdir
+    cmake ../source -DCMAKE_INSTALL_PREFIX=$destdir $x265_args
     make -j
     make install
     cd $builddir
