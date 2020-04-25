@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
@@ -21,6 +21,7 @@ jobs:
       - name: Build FFmpeg
         env:
           CIBW_BEFORE_BUILD: scripts/build-ffmpeg /tmp/vendor
+          CIBW_BEFORE_BUILD_WINDOWS: scripts\build-ffmpeg.bat C:\cibw\vendor
           CIBW_BUILD: cp38-*
         run: |
           pip install cibuildwheel
