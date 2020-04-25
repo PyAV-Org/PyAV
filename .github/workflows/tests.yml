@@ -186,4 +186,35 @@ jobs:
         conda activate pyav
         python setup.py test
 
+  package-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Build source package
+        run: |
+          pip install cython
+          python setup.py sdist
+      - name: Upload source package
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist
+          path: dist/
 
+  publish:
+    runs-on: ubuntu-latest
+    needs: [package-source]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
