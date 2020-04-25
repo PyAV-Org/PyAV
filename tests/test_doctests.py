@@ -5,8 +5,6 @@ import re
 
 import av
 
-from .common import is_py3
-
 
 try:
     basestring
@@ -32,7 +30,7 @@ def fix_doctests(suite):
         for example in case._dt_test.examples:
 
             # Remove b prefix from strings.
-            if is_py3 and example.want.startswith("b'"):
+            if example.want.startswith("b'"):
                 example.want = example.want[1:]
 
 

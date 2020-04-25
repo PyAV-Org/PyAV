@@ -2,7 +2,7 @@ import traceback
 
 import av
 
-from .common import TestCase, is_py3, is_py33, is_windows
+from .common import TestCase, is_windows
 
 
 class TestErrorBasics(TestCase):
@@ -16,7 +16,7 @@ class TestErrorBasics(TestCase):
             self.assertEqual(
                 traceback.format_exception_only(cls, e)[-1],
                 '{}{}: [Errno 1] foo\n'.format(
-                    'av.error.' if is_py3 else '',
+                    'av.error.',
                     cls.__name__,
                 ),
             )
@@ -28,7 +28,7 @@ class TestErrorBasics(TestCase):
             self.assertEqual(
                 traceback.format_exception_only(cls, e)[-1],
                 "{}{}: [Errno 1] foo: 'bar.txt'\n".format(
-                    'av.error.' if is_py3 else '',
+                    'av.error.',
                     cls.__name__,
                 ),
             )
@@ -38,17 +38,15 @@ class TestErrorBasics(TestCase):
         self.assertTrue(issubclass(av.ValueError, ValueError))
         self.assertTrue(issubclass(av.ValueError, av.FFmpegError))
 
-        if is_py33:
-            self.assertTrue(issubclass(av.FileNotFoundError, FileNotFoundError))
+        self.assertTrue(issubclass(av.FileNotFoundError, FileNotFoundError))
         self.assertTrue(issubclass(av.FileNotFoundError, OSError))
         self.assertTrue(issubclass(av.FileNotFoundError, av.FFmpegError))
 
     def test_filenotfound(self):
         """Catch using builtin class on Python 3.3"""
-        errcls = FileNotFoundError if is_py33 else av.FileNotFoundError
         try:
             av.open('does not exist')
-        except errcls as e:
+        except FileNotFoundError as e:
             self.assertEqual(e.errno, 2)
             if is_windows:
                 self.assertTrue(e.strerror in ['Error number -2 occurred',

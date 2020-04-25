@@ -103,7 +103,6 @@ def extract(path, **kwargs):
 
     options = CompilationOptions()
     options.include_path.append('include')
-    options.language_level = 2
     options.compiler_directives = dict(
         c_string_type='str',
         c_string_encoding='ascii',

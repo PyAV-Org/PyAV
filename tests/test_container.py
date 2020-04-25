@@ -1,12 +1,11 @@
 # coding: utf8
 
-import os
 import sys
 import unittest
 
 import av
 
-from .common import TestCase, fate_suite
+from .common import TestCase, fate_suite, is_windows
 
 
 # On Windows, Python 3.0 - 3.5 have issues handling unicode filenames.
@@ -14,10 +13,7 @@ from .common import TestCase, fate_suite
 #
 # https://www.python.org/dev/peps/pep-0529/
 
-broken_unicode = (
-    os.name == 'nt' and
-    sys.version_info >= (3, 0) and
-    sys.version_info < (3, 6))
+broken_unicode = is_windows and sys.version_info < (3, 6)
 
 
 class TestContainers(TestCase):
