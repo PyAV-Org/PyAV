@@ -25,7 +25,8 @@ jobs:
           CIBW_BUILD: cp38-*
         run: |
           pip install cibuildwheel
-          cibuildwheel --output-dir dist
+          cibuildwheel --output-dir output
+          rm -f output/*.whl
         shell: bash
       - name: Upload FFmpeg
         uses: actions/upload-artifact@v1

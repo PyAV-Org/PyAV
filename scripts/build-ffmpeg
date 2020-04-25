@@ -11,7 +11,6 @@ destdir=$1
 ffmpeg_version=4.2.2
 
 builddir=`pwd`/build
-outputdir=`pwd`/output
 sourcedir=`pwd`/source
 
 for d in $builddir $destdir; do
@@ -45,8 +44,10 @@ extract() {
 }
 
 if [ "`uname`" = "Linux" ]; then
+    outputdir=/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-manylinux_$(uname -m).tar.bz2
 else
+    outputdir=`pwd`/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-macosx_$(uname -m).tar.bz2
 fi
 
