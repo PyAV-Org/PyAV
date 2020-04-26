@@ -17,19 +17,28 @@ But where you can't work without it, PyAV is a critical tool.
 Installation
 ------------
 
-Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install. The most straight-foward install is via [conda-forge][conda-forge]:
+Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. Since release 8.0.0 binary wheels are provided on [PyPI][pypi] for Linux, Mac and Windows linked against a modern FFmpeg. You can install these wheels by running:
+
+```
+pip install av
+```
+
+If you want to use your existing FFmpeg/Libav, the C-source version of PyAV is on [PyPI][pypi] too:
+
+```
+pip install av --no-binary av
+```
+
+Alternative installation methods
+--------------------------------
+
+Another way of installing PyAV is via [conda-forge][conda-forge]:
 
 ```
 conda install av -c conda-forge
 ```
 
 See the [Conda quick install][conda-install] docs to get started with (mini)Conda.
-
-If you want to use your existing FFmpeg/Libav, the C-source version of PyAV is on [PyPI][pypi]:
-
-```
-pip install av
-```
 
 And if you want to build from the absolute source (for development or testing):
 
