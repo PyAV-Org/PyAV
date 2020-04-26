@@ -17,12 +17,25 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
-v8.0.0.dev0
+v8.0.0
 ------
 
 Major:
 
-- Drop support for Python 2 and Python 3.4
+- Drop support for Python 2 and Python 3.4.
+- Provide binary wheels for Linux, Mac and Windows.
+
+Minor:
+
+- Remove shims for obsolete FFmpeg versions (:issue:`588`).
+- Add yuvj420p format for :meth:`VideoFrame.from_ndarray` and :meth:`VideoFrame.to_ndarray` (:issue:`583`).
+- Add support for palette formats in :meth:`VideoFrame.from_ndarray` and :meth:`VideoFrame.to_ndarray` (:issue:`601`).
+- Fix Python 3.8 deprecation warning related to abstract base classes (:issue:`616`).
+- Remove ICC profiles from logos (:issue:`622`).
+
+Fixes:
+
+- Avoid infinite timeout in :func:`av.open` (:issue:`589`).
 
 v7.0.1
 ------
@@ -38,7 +51,7 @@ v7.0.0
 Major:
 
 - Drop support for FFmpeg < 4.0. (:issue:`559`)
-- Introduce per-error exceptions, and mirror the builtin exception heirarchy. It is recommended to examine your error handling code, as common FFmpeg errors will result in `ValueError` baseclasses now. (:issue:`563`)
+- Introduce per-error exceptions, and mirror the builtin exception hierarchy. It is recommended to examine your error handling code, as common FFmpeg errors will result in `ValueError` baseclasses now. (:issue:`563`)
 - Data stream's `encode` and `decode` return empty lists instead of none allowing common API use patterns with data streams.
 - Remove ``whence`` parameter from :meth:`InputContainer.seek` as non-time seeking doesn't seem to actually be supported by any FFmpeg formats.
 
