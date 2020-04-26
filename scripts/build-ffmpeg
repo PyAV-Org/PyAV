@@ -47,10 +47,13 @@ if [ "`uname`" = "Linux" ]; then
     outputdir=/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-manylinux_$(uname -m).tar.bz2
     x265_args=""
-else
+elif [ "`uname`" = "Darwin" ]; then
     outputdir=`pwd`/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-macosx_$(uname -m).tar.bz2
-    x265_args="-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE"
+    x265_args="-DCMAKE_INSTALL_NAME_DIR=$destdir/lib"
+else
+    echo "Unknown platform"
+    exit 1
 fi
 
 mkdir -p $outputdir
@@ -174,5 +177,8 @@ EOF
         --enable-version3 \
         --enable-zlib
 
+    if [ "`uname`" = "Darwin" ]; then
+        otool -L $destdir/lib/*.dylib
+    fi
     tar cjvf $outputfile -C $destdir include lib
 fi
