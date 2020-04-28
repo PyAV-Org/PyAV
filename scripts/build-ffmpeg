@@ -35,22 +35,28 @@ extract() {
     url=$2
     tarball=$sourcedir/`echo $url | sed -e 's/.*\///'`
 
+    if [ -z "$3" ]; then
+        strip_components=1
+    else
+        strip_components=$3
+    fi
+
     if [ ! -e $tarball ]; then
         curl -L -o $tarball $url
     fi
 
     mkdir $path
-    tar xf $tarball -C $path --strip-components 1
+    tar xf $tarball -C $path --strip-components $strip_components
 }
 
+cmake_args="-DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_PREFIX=$destdir"
 if [ "`uname`" = "Linux" ]; then
     outputdir=/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-manylinux_$(uname -m).tar.bz2
-    x265_args=""
 elif [ "`uname`" = "Darwin" ]; then
     outputdir=`pwd`/output
     outputfile=$outputdir/ffmpeg-$ffmpeg_version-macosx_$(uname -m).tar.bz2
-    x265_args="-DCMAKE_INSTALL_NAME_DIR=$destdir/lib"
+    cmake_args="$cmake_args -DCMAKE_INSTALL_NAME_DIR=$destdir/lib"
 else
     echo "Unknown platform"
     exit 1
@@ -65,6 +71,9 @@ if [ ! -e $outputfile ]; then
     export LDFLAGS="-L$destdir/lib $LDFLAGS"
     export PATH=$destdir/bin:$PATH
     export PKG_CONFIG_PATH=$destdir/lib/pkgconfig
+
+    # install cmake
+    pip install cmake
 
     # install nasm
     extract nasm https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2
@@ -81,6 +90,15 @@ if [ ! -e $outputfile ]; then
     # build xml2 (uses xz and zlib)
     extract xml2 ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.10.tar.gz
     build xml2 --without-python
+
+    # build aom
+    extract aom https://aomedia.googlesource.com/aom/+archive/a6091ebb8a7da245373e56a005f2bb95be064e03.tar.gz 0
+    mkdir aom/tmp
+    cd aom/tmp
+    cmake .. $cmake_args -DBUILD_SHARED_LIBS=1
+    make -j
+    make install
+    cd $builddir
 
     # build lame
     extract lame http://deb.debian.org/debian/pool/main/l/lame/lame_3.100.orig.tar.gz
@@ -117,7 +135,7 @@ EOF
     # build openjpeg
     extract openjpeg https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz
     cd openjpeg
-    cmake . -DCMAKE_INSTALL_PREFIX=$destdir
+    cmake . $cmake_args
     make -j
     make install
     cd $builddir
@@ -149,7 +167,7 @@ EOF
     # build x265
     extract x265 http://ftp.videolan.org/pub/videolan/x265/x265_3.2.1.tar.gz
     cd x265/build
-    cmake ../source -DCMAKE_INSTALL_PREFIX=$destdir $x265_args
+    cmake ../source $cmake_args
     make -j
     make install
     cd $builddir
@@ -160,6 +178,7 @@ EOF
         --disable-doc \
         --disable-static \
         --enable-gpl \
+        --enable-libaom \
         --enable-libmp3lame \
         --enable-libopencore-amrnb \
         --enable-libopencore-amrwb \
