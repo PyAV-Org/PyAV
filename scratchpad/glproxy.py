@@ -45,7 +45,7 @@ class GLProxy(ModuleProxy):
     def attrib(self, *args):
         mask = 0
         for arg in args:
-            if isinstance(arg, basestring):
+            if isinstance(arg, str):
                 arg = getattr(self.module, 'GL_%s_BIT' % arg.upper())
             mask |= arg
         self.module.glPushAttrib(mask)
@@ -65,7 +65,7 @@ class GLProxy(ModuleProxy):
     def _enable(self, enable, args, kwargs):
         todo = []
         for arg in args:
-            if isinstance(arg, basestring):
+            if isinstance(arg, str):
                 arg = getattr(self.module, 'GL_%s' % arg.upper())
             todo.append((arg, enable))
         for key, value in kwargs.iteritems():
@@ -79,7 +79,7 @@ class GLProxy(ModuleProxy):
                 self.module.glDisable(flag)
 
     def begin(self, arg):
-        if isinstance(arg, basestring):
+        if isinstance(arg, str):
             arg = getattr(self.module, 'GL_%s' % arg.upper())
         self.module.glBegin(arg)
         return self._apply_on_exit(self.module.glEnd)

@@ -76,7 +76,7 @@ cdef class AudioLayout(object):
             if layout < 0 or layout > 8:
                 raise ValueError('no layout with %d channels' % layout)
             c_layout = default_layouts[layout]
-        elif isinstance(layout, basestring):
+        elif isinstance(layout, str):
             c_layout = lib.av_get_channel_layout(layout)
         elif isinstance(layout, AudioLayout):
             c_layout = layout.layout

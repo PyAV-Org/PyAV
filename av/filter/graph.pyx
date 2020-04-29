@@ -76,7 +76,7 @@ cdef class Graph(object):
     def add(self, filter, args=None, **kwargs):
 
         cdef Filter cy_filter
-        if isinstance(filter, basestring):
+        if isinstance(filter, str):
             cy_filter = Filter(filter)
         elif isinstance(filter, Filter):
             cy_filter = filter
