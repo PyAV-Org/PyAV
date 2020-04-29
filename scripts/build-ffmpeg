@@ -72,8 +72,19 @@ if [ ! -e $outputfile ]; then
     export PATH=$destdir/bin:$PATH
     export PKG_CONFIG_PATH=$destdir/lib/pkgconfig
 
+    #### BUILD TOOLS ####
+
+    # needed for fontconfig
+    if [ "$CIBUILDWHEEL" = "1" ] && [ "`uname`" = "Linux" ]; then
+        yum -y install libuuid-devel
+    fi
+
     # install cmake and meson
     pip install cmake meson
+
+    # install gperf
+    extract gperf http://ftp.gnu.org/pub/gnu/gperf/gperf-3.1.tar.gz
+    build gperf
 
     # install nasm
     extract nasm https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2
@@ -87,6 +98,8 @@ if [ ! -e $outputfile ]; then
     cp ninja $destdir/bin
     cd $builddir
 
+    #### LIBRARIES ###
+
     # build xz
     extract xz https://tukaani.org/xz/xz-5.2.5.tar.bz2
     build xz
@@ -99,6 +112,16 @@ if [ ! -e $outputfile ]; then
     extract xml2 ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.10.tar.gz
     build xml2 --without-python
 
+    # build freetype
+    extract freetype https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz
+    build freetype
+
+    # build fontconfig (requires freetype and libxml2)
+    extract fontconfig https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.13.1.tar.bz2
+    build fontconfig --enable-libxml2
+
+    #### CODECS ###
+
     # build aom
     extract aom https://aomedia.googlesource.com/aom/+archive/a6091ebb8a7da245373e56a005f2bb95be064e03.tar.gz 0
     mkdir aom/tmp
@@ -107,6 +130,10 @@ if [ ! -e $outputfile ]; then
     make -j
     make install
     cd $builddir
+
+    # build bluray (requires fontconfig)
+    extract bluray https://download.videolan.org/pub/videolan/libbluray/1.1.2/libbluray-1.1.2.tar.bz2
+    build bluray --disable-bdjava-jar
 
     # build dav1d (requires meson, nasm and ninja)
     extract dav1d https://code.videolan.org/videolan/dav1d/-/archive/master/dav1d-master.tar.bz2
@@ -198,8 +225,10 @@ EOF
     build ffmpeg \
         --disable-doc \
         --disable-static \
+        --enable-fontconfig \
         --enable-gpl \
         --enable-libaom \
+        --enable-libbluray \
         --enable-libdav1d \
         --enable-libmp3lame \
         --enable-libopencore-amrnb \
