@@ -1,19 +1,11 @@
+from http.server import BaseHTTPRequestHandler
+from socketserver import TCPServer
 import threading
 import time
 
 import av
 
 from .common import TestCase, fate_suite
-
-
-try:
-    # Python 3
-    from http.server import BaseHTTPRequestHandler
-    from socketserver import TCPServer
-except ImportError:
-    # Python 2
-    from BaseHTTPServer import BaseHTTPRequestHandler
-    from SocketServer import TCPServer
 
 
 PORT = 8002

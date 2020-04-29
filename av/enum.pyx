@@ -60,7 +60,7 @@ class EnumType(type):
 
     def __getitem__(self, key):
 
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             return self._by_name[key]
 
         if isinstance(key, int):
@@ -217,7 +217,7 @@ cdef class EnumItem(object):
 
     def __eq__(self, other):
 
-        if isinstance(other, basestring):
+        if isinstance(other, str):
 
             if self.name == other:  # The quick method.
                 return True

@@ -14,7 +14,6 @@ from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
 from av.enum cimport define_enum
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
-from av.utils cimport dict_to_avdict
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
@@ -110,11 +109,11 @@ cdef class Container(object):
         if not self.writeable and not isinstance(self, InputContainer):
             raise RuntimeError('Container cannot be directly extended.')
 
-        if isinstance(file_, basestring):
+        if isinstance(file_, str):
             self.name = file_
         else:
             self.name = getattr(file_, 'name', '<none>')
-            if not isinstance(self.name, basestring):
+            if not isinstance(self.name, str):
                 raise TypeError("File's name attribute must be string-like.")
             self.file = file_
 
@@ -305,7 +304,7 @@ cdef class Container(object):
 
 def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
-         metadata_encoding=None, metadata_errors='strict',
+         metadata_encoding='utf-8', metadata_errors='strict',
          buffer_size=32768, timeout=None):
     """open(file, mode='r', **kwargs)
 
@@ -318,10 +317,9 @@ def open(file, mode=None, format=None, options=None,
     :param dict container_options: Options to pass to the container.
     :param list stream_options: Options to pass to each stream.
     :param str metadata_encoding: Encoding to use when reading or writing file metadata.
-        Defaults to utf-8, except no decoding is performed by default when
-        reading on Python 2 (returning ``str`` instead of ``unicode``).
+        Defaults to ``"utf-8"``.
     :param str metadata_errors: Specifies how to handle encoding errors; behaves like
-        ``str.encode`` parameter. Defaults to strict.
+        ``str.encode`` parameter. Defaults to ``"strict"``.
     :param int buffer_size: Size of buffer for Python input/output operations in bytes.
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
     :param timeout: How many seconds to wait for data before giving up, as a float, or a

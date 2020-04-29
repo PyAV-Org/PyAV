@@ -169,8 +169,11 @@ cdef class OutputContainer(Container):
             err_check(lib.avio_open(&self.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
         # Copy the metadata dict.
-        dict_to_avdict(&self.ptr.metadata, self.metadata, clear=True,
-                       encoding=self.metadata_encoding, errors=self.metadata_errors)
+        dict_to_avdict(
+            &self.ptr.metadata, self.metadata,
+            encoding=self.metadata_encoding,
+            errors=self.metadata_errors
+        )
 
         cdef _Dictionary all_options = Dictionary(self.options, self.container_options)
         cdef _Dictionary options = all_options.copy()

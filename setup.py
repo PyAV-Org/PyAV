@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from distutils.ccompiler import new_compiler as _new_compiler
 from distutils.command.clean import clean, log
 from distutils.core import Command

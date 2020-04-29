@@ -3,8 +3,8 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 cimport libav as lib
 
 
-cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding=*, str errors=*)
-cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=*, str encoding=*, str errors=*)
+cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding, str errors)
+cdef dict_to_avdict(lib.AVDictionary **dst, dict src, str encoding, str errors)
 
 
 cdef object avrational_to_fraction(const lib.AVRational *input)

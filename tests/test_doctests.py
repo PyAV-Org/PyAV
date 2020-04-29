@@ -6,12 +6,6 @@ import re
 import av
 
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
-
 def fix_doctests(suite):
 
     for case in suite._tests:
@@ -36,7 +30,7 @@ def fix_doctests(suite):
 
 def register_doctests(mod):
 
-    if isinstance(mod, basestring):
+    if isinstance(mod, str):
         mod = __import__(mod, fromlist=[''])
 
     try:

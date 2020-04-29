@@ -1,4 +1,3 @@
-from __future__ import print_function
 # -*- coding: utf-8 -*-
 #
 # PyAV documentation build configuration file, created by

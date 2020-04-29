@@ -53,7 +53,6 @@ if [[ "$GITHUB_ACTION" || "$TRAVIS" ]]; then
 else
 
     export PYAV_VENV_NAME="$(uname -s).$(uname -r).$("$PYAV_PYTHON" -c '
-from __future__ import print_function
 import sys
 import platform
 print("{}{}.{}".format(platform.python_implementation().lower(), *sys.version_info[:2]))

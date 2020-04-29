@@ -25,7 +25,7 @@ We will also sometimes duplicate APIs in order to provide both a low-level and h
 Version Compatibility
 ---------------------
 
-We currently support FFmpeg 4.0 through 4.2, on Python 2.7 and 3.3 through 3.7, on Linux, macOS, and Windows. We `continually test <https://github.com/mikeboers/PyAV/actions>`_  these configurations.
+We currently support FFmpeg 4.0 through 4.2, on Python 3.5 through 3.8, on Linux, macOS, and Windows. We `continually test <https://github.com/mikeboers/PyAV/actions>`_  these configurations.
 
 Differences are handled at compile time, in C, by checking against ``LIBAV*_VERSION_INT`` macros. We have not been able to perform this sort of checking in Cython as we have not been able to have it fully remove the code-paths, and so there are missing functions in newer FFmpeg's, and deprecated ones that emit compiler warnings in older FFmpeg's.
 

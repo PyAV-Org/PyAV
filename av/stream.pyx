@@ -129,7 +129,6 @@ cdef class Stream(object):
 
         dict_to_avdict(
             &self._stream.metadata, self.metadata,
-            clear=True,
             encoding=self.container.metadata_encoding,
             errors=self.container.metadata_errors,
         )

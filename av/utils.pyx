@@ -14,14 +14,9 @@ cdef _decode(char *s, encoding, errors):
     return (<bytes>s).decode(encoding, errors)
 
 cdef bytes _encode(s, encoding, errors):
-    if isinstance(s, unicode):
-        return s.encode(encoding, errors)
-    return s
+    return s.encode(encoding, errors)
 
-cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding=None, str errors='strict'):
-    if encoding is None:
-        encoding = 'utf8'
-
+cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding, str errors):
     cdef lib.AVDictionaryEntry *element = NULL
     cdef dict output = {}
     while True:
@@ -32,11 +27,8 @@ cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding=None, str errors=
     return output
 
 
-cdef dict_to_avdict(lib.AVDictionary **dst, dict src, bint clear=True, str encoding=None, str errors='strict'):
-    if clear:
-        lib.av_dict_free(dst)
-    if encoding is None:
-        encoding = 'utf8'
+cdef dict_to_avdict(lib.AVDictionary **dst, dict src, str encoding, str errors):
+    lib.av_dict_free(dst)
     for key, value in src.items():
         err_check(lib.av_dict_set(dst, _encode(key, encoding, errors),
                                   _encode(value, encoding, errors), 0))

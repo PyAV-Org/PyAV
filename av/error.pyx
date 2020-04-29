@@ -41,12 +41,11 @@ cpdef tag_to_code(bytes tag):
     """
     if len(tag) != 4:
         raise ValueError("Error tags are 4 bytes.")
-    atag = bytearray(tag)  # Python 2. Ugh.
     return (
-        (atag[0]) +
-        (atag[1] << 8) +
-        (atag[2] << 16) +
-        (atag[3] << 24)
+        (tag[0]) +
+        (tag[1] << 8) +
+        (tag[2] << 16) +
+        (tag[3] << 24)
     )
 
 
