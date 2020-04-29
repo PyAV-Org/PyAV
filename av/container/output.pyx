@@ -1,4 +1,5 @@
 from fractions import Fraction
+import os
 import logging
 
 from av.codec.codec cimport Codec
@@ -162,7 +163,8 @@ cdef class OutputContainer(Container):
             stream._finalize_for_output()
 
         # Open the output file, if needed.
-        cdef char *name = "" if self.file is not None else self.name
+        cdef bytes name_obj = os.fsencode(self.name if self.file is None else "")
+        cdef char *name = name_obj
         if self.ptr.pb == NULL and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
             err_check(lib.avio_open(&self.ptr.pb, name, lib.AVIO_FLAG_WRITE))
 
