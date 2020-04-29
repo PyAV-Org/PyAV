@@ -239,6 +239,7 @@ EOF
         --enable-libass \
         --enable-libbluray \
         --enable-libdav1d \
+        --enable-libfreetype \
         --enable-libmp3lame \
         --enable-libopencore-amrnb \
         --enable-libopencore-amrwb \
