@@ -2,7 +2,7 @@ from libc.stdint cimport int64_t
 from libc.stdlib cimport malloc, free
 from cython.operator cimport dereference
 
-import sys
+import os
 import time
 
 cimport libav as lib
@@ -18,15 +18,6 @@ from av.utils cimport dict_to_avdict
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
-
-try:
-    from os import fsencode
-except ImportError:
-    _fsencoding = sys.getfilesystemencoding()
-
-    def fsencode(s):
-        return s.encode(_fsencoding)
-
 
 ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 
@@ -143,7 +134,7 @@ cdef class Container(object):
         self.input_was_opened = False
         cdef int res
 
-        cdef bytes name_obj = fsencode(self.name) if isinstance(self.name, unicode) else self.name
+        cdef bytes name_obj = os.fsencode(self.name)
         cdef char *name = name_obj
         cdef seek_func_t seek_func = NULL
 
