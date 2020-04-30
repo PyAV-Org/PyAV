@@ -1,32 +1,21 @@
-LDFLAGS ?= ""
-CFLAGS ?= "-O0"
 
-PYAV_PYTHON ?= python
+PYAV_PYTHON ?= python3
 PYTHON := $(PYAV_PYTHON)
 
 
-.PHONY: default build cythonize clean clean-all info lint test fate-suite test-assets docs
+.PHONY: build clean clean-all lint test fate-suite docs
 
 default: build
 
 
 build:
-	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) $(PYTHON) setup.py build_ext --inplace --debug
-
-cythonize:
-	$(PYTHON) setup.py cythonize
-
-
-
-wheel: build-mingw32
-	$(PYTHON) setup.py bdist_wheel
+	scripts/build
 
 build-mingw32:
 	# before running, set PKG_CONFIG_PATH to the pkgconfig dir of the ffmpeg build.
 	# set PKG_CONFIG_PATH=D:\dev\3rd\media-autobuild_suite\local32\bin-video\ffmpegSHARED\lib\pkgconfig
-	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) $(PYTHON) setup.py build_ext --inplace -c mingw32
+	$(PYTHON) setup.py build_ext --inplace -c mingw32
 	mv *.pyd av
-
 
 
 fate-suite:
@@ -34,40 +23,15 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
-	TESTSUITE=flake8 scripts/test
-	TESTSUITE=isort scripts/test
+	scripts/test flake8
+	scripts/test isort
 
 test:
-	$(PYTHON) setup.py test
+	scripts/test
 
 
-
-vagrant:
-	vagrant box list | grep -q precise32 || vagrant box add precise32 http://files.vagrantup.com/precise32.box
-
-vtest:
-	vagrant ssh -c /vagrant/scripts/vagrant-test
-
-
-
-tmp/ffmpeg-git:
-	@ mkdir -p tmp/ffmpeg-git
-	git clone --depth=1 git://source.ffmpeg.org/ffmpeg.git tmp/ffmpeg-git
-
-tmp/Doxyfile: tmp/ffmpeg-git
-	cp tmp/ffmpeg-git/doc/Doxyfile $@
-	echo "GENERATE_TAGFILE = ../tagfile.xml" >> $@
-
-tmp/tagfile.xml: tmp/Doxyfile
-	cd tmp/ffmpeg-git; doxygen ../Doxyfile
-
-docs: tmp/tagfile.xml
-	PYTHONPATH=.. make -C docs html
-
-deploy-docs: docs
-	./docs/upload docs
-
-
+docs: 
+	make -C docs
 
 
 clean-build:

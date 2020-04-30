@@ -1,7 +1,0 @@
-#!/bin/bash
-
-cd /vagrant
-
-./scripts/build-deps
-./scripts/build
-./scripts/test

@@ -1,24 +1,24 @@
 #!/bin/bash
 
-if [[ ! "$_PYAV_ACTIVATED" ]]; then
+# Exit as soon as something errors.
+set -e
+
+# Assert we're in the dev environment.
+if [[ ! "$PYAV_ACTIVATED" ]]; then
     export here="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
     source "$here/activate.sh"
 fi
 
 cd "$PYAV_ROOT"
 
-# Always try to install the Python dependencies they are cheap.
+
+# Always try to install the Python dependencies since they are cheap.
 $PYAV_PIP install --upgrade -r tests/requirements.txt
 
 
-if [[ "$TRAVIS" && ("$TESTSUITE" == "isort" || "$TESTSUITE" == "flake8") ]]; then
-    echo "We don't need to build dependencies for source linting."
-    exit 0
-fi
-
 # Skip the rest of the build if it already exists.
 if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
-    echo "We have a cached build of $PYAV_LIBRARY; skipping re-build."
+    echo "Using cached build of $PYAV_LIBRARY"
     exit 0
 fi
 
@@ -39,6 +39,7 @@ if [[ ! -d $PYAV_LIBRARY ]]; then
 fi
 cd $PYAV_LIBRARY
 
+
 echo ./configure
 ./configure \
     --disable-doc \
@@ -54,14 +55,19 @@ echo ./configure
     || exit 2
 echo
 
+
 echo make
-make -j4 || exit 3
+# This works for linux and macOS.
+nprocs=$(test -e /proc/cpuinfo && cat /proc/cpuinfo | grep -c processor || sysctl -n hw.ncpu)
+make -j$nprocs || exit 3
 echo
+
 
 echo make install
 make install || exit 4
 echo
 
+
 echo Build products:
-cd ~
 find "$PYAV_LIBRARY_PREFIX" -name '*libav*'
+
