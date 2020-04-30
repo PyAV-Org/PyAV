@@ -64,7 +64,7 @@ I have done the following:
 - [ ] Checked the [PyAV documentation](http://docs.mikeboers.com/pyav/stable/)
 - [ ] Searched on [Google](https://www.google.com/search?q=pyav+how+do+I+foo)
 - [ ] Searched on [Stack Overflow](https://stackoverflow.com/search?q=pyav)
-- [ ] Looked through [old GitHub issues](https://github.com/mikeboers/PyAV/issues?&q=is%3Aissue)
+- [ ] Looked through [old GitHub issues](https://github.com/PyAV-Org/PyAV/issues?&q=is%3Aissue)
 - [ ] Asked on [PyAV Gitter](https://gitter.im/mikeboers/PyAV)
 - [ ] ... and waited 72 hours for a response.
 

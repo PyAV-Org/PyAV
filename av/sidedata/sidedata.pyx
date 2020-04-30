@@ -29,7 +29,7 @@ Type = define_enum('Type', __name__, (
     ('CONTENT_LIGHT_LEVEL', lib.AV_FRAME_DATA_CONTENT_LIGHT_LEVEL),
     ('ICC_PROFILE', lib.AV_FRAME_DATA_ICC_PROFILE),
 
-    # These are deprecated. See https://github.com/mikeboers/PyAV/issues/607
+    # These are deprecated. See https://github.com/PyAV-Org/PyAV/issues/607
     # ('QP_TABLE_PROPERTIES', lib.AV_FRAME_DATA_QP_TABLE_PROPERTIES),
     # ('QP_TABLE_DATA', lib.AV_FRAME_DATA_QP_TABLE_DATA),
 
