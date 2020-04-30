@@ -1,10 +1,42 @@
 More About PyAV
 ===============
 
+Binary wheels
+-------------
+
+Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Windows linked against FFmpeg. Currently FFmpeg 4.2.2 is used with the following features enabled for all platforms:
+
+- fontconfig
+- libaom
+- libass
+- libbluray
+- libdav1d
+- libfreetype
+- libmp3lame
+- libopencore-amrnb
+- libopencore-amrwb
+- libopenjpeg
+- libopus
+- libspeex
+- libtheora
+- libtwolame
+- libvorbis
+- libwavpack
+- libx264
+- libx265
+- libxml2
+- libxvid
+- lzma
+- zlib
+
 Bring your own FFmpeg
 ---------------------
 
-PyAV does not bundle FFmpeg, and while it must be built for the specific FFmpeg version installed it does not require a specific version.
+PyAV can also be compiled against your own build of FFmpeg. While it must be built for the specific FFmpeg version installed it does not require a specific version. You can force installing PyAV from source by running:
+
+```
+pip install av --no-binary av
+```
 
 We automatically detect the differences that we depended on at build time. This is a fairly trial-and-error process, so please let us know if something won't compile due to missing functions or members.
 
