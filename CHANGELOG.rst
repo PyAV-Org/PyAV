@@ -17,9 +17,13 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
-v8.0.1.dev0
+v8.0.1
 ------
 
+Minor:
+
+- Enable additional FFmpeg features in the binary wheels.
+- Use os.fsencode for both input and output file names (:issue:`600`).
 
 v8.0.0
 ------
