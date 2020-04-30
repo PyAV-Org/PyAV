@@ -3,10 +3,14 @@ from libc.string cimport memcpy
 from cpython cimport PyBuffer_FillInfo, PyBUF_WRITABLE
 
 from av.bytesource cimport ByteSource, bytesource
-from av.deprecation import renamed_attr
 
 
-cdef class _Buffer(object):
+cdef class Buffer(object):
+
+    """A base class for PyAV objects which support the buffer protocol, such
+    as :class:`.Packet` and :class:`.Plane`.
+
+    """
 
     cdef size_t _buffer_size(self):
         return 0
@@ -17,41 +21,10 @@ cdef class _Buffer(object):
     cdef bint _buffer_writable(self):
         return True
 
-    # Legacy buffer support. For `buffer` and PIL.
-    # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
-
-    def __getsegcount__(self, Py_ssize_t *len_out):
-        if len_out != NULL:
-            len_out[0] = <Py_ssize_t>self._buffer_size()
-        return 1
-
-    def __getreadbuffer__(self, Py_ssize_t index, void **data):
-        if index:
-            raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = self._buffer_ptr()
-        return <Py_ssize_t>self._buffer_size()
-
-    def __getwritebuffer__(self, Py_ssize_t index, void **data):
-        if index:
-            raise RuntimeError("accessing non-existent buffer segment")
-        if not self._buffer_writable():
-            raise ValueError('buffer is not writable')
-        data[0] = self._buffer_ptr()
-        return <Py_ssize_t>self._buffer_size()
-
-    # New-style buffer support.
     def __getbuffer__(self, Py_buffer *view, int flags):
         if flags & PyBUF_WRITABLE and not self._buffer_writable():
             raise ValueError('buffer is not writable')
         PyBuffer_FillInfo(view, self, self._buffer_ptr(), self._buffer_size(), 0, flags)
-
-
-cdef class Buffer(_Buffer):
-
-    """A base class for PyAV objects which support the buffer protocol, such
-    as :class:`.Packet` and :class:`.Plane`.
-
-    """
 
     @property
     def buffer_size(self):
@@ -90,5 +63,3 @@ cdef class Buffer(_Buffer):
         if source.length != size:
             raise ValueError('got %d bytes; need %d bytes' % (source.length, size))
         memcpy(self._buffer_ptr(), source.ptr, size)
-
-    update_buffer = renamed_attr('update')

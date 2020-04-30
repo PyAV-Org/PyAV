@@ -6,4 +6,3 @@ Planes
 
     .. autoclass:: Plane
         :members:
-        :exclude-members: ptr, update_from_string
