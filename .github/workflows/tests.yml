@@ -94,45 +94,32 @@ jobs:
             ;;
         esac
 
-    - name: Pip and FFmpeg
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build-deps
+    - name: Dependencies
+      run: scripts/build-deps
 
     - name: Build
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build
+      run: scripts/build
 
     - name: Test
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        python -m av --version # Assert it can import.
-        scripts/test
+      run: scripts/test
+
+    - name: Doctest
+      if: matrix.config.extras
+      run: scripts/test doctest
+
+    - name: Examples
+      if: matrix.config.extras
+      run: scripts/test examples
+
+    - name: Source Distribution
+      if: matrix.config.extras
+      run: scripts/test sdist
 
     - name: Docs
       if: matrix.config.extras
       run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
+        . scripts/activate.sh
         make -C docs html
-
-    - name: Doctest
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test doctest
-
-    - name: Examples
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test examples
-
-    - name: Source Distribution
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test sdist
 
   windows:
 
