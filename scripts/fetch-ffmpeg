@@ -30,7 +30,7 @@ if sys.platform == "win32":
 
 # determine tarball name
 tarball_name = "ffmpeg-%s-%s.tar.bz2" % (ffmpeg_version, get_platform())
-tarball_url = "https://github.com/jlaine/pyav-ffmpeg/releases/download/%s-%s/%s" % (
+tarball_url = "https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/%s-%s/%s" % (
     ffmpeg_version,
     ffmpeg_package,
     tarball_name,
