@@ -113,7 +113,7 @@ Via Source
 ::
 
     # Get PyAV from GitHub.
-    git clone git@github.com:mikeboers/PyAV.git
+    git clone git@github.com:PyAV-Org/PyAV.git
     cd PyAV
 
     # Prep a virtualenv.

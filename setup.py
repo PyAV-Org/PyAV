@@ -494,7 +494,7 @@ setup(
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
 
-    url="https://github.com/mikeboers/PyAV",
+    url="https://github.com/PyAV-Org/PyAV",
 
     packages=find_packages(exclude=['build*', 'examples*', 'scratchpad*', 'tests*']),
 

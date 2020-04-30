@@ -43,7 +43,7 @@ See the [Conda quick install][conda-install] docs to get started with (mini)Cond
 And if you want to build from the absolute source (for development or testing):
 
 ```
-git clone git@github.com:mikeboers/PyAV
+git clone git@github.com:PyAV-Org/PyAV
 cd PyAV
 source scripts/activate.sh
 
@@ -71,10 +71,10 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
 [pypi]: https://pypi.org/project/av
 
-[github-tests-badge]: https://github.com/mikeboers/PyAV/workflows/tests/badge.svg
-[github-tests]: https://github.com/mikeboers/PyAV/actions?workflow=tests
+[github-tests-badge]: https://github.com/PyAV-Org/PyAV/workflows/tests/badge.svg
+[github-tests]: https://github.com/PyAV-Org/PyAV/actions?workflow=tests
 [github-badge]: https://img.shields.io/badge/dynamic/xml.svg?label=github&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmikeboers%2FPyAV%2Fdevelop%2FVERSION.txt&query=.&colorB=CCB39A&prefix=v
-[github]: https://github.com/mikeboers/PyAV
+[github]: https://github.com/PyAV-Org/PyAV
 
 [ffmpeg]: http://ffmpeg.org/
 [conda-forge]: https://conda-forge.github.io/

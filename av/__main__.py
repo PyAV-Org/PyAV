@@ -15,7 +15,7 @@ def main():
         import av._core
 
         print('PyAV v' + av._core.pyav_version)
-        print('git origin: git@github.com:mikeboers/PyAV')
+        print('git origin: git@github.com:PyAV-Org/PyAV')
         print('git commit:', av._core.pyav_commit)
 
         by_config = {}
