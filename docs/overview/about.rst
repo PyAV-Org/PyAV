@@ -68,5 +68,5 @@ Since PyAV is not expected to be used in a high performance playback loop, we do
 .. _FFmpeg: https://ffmpeg.org/
 .. _Libav: https://libav.org/
 
-.. _Gitter: https://gitter.im/mikeboers/PyAV
-.. _GitHub: https://github.com/mikeboers/pyav
+.. _Gitter: https://gitter.im/PyAV-Org
+.. _GitHub: https://github.com/PyAV-Org/pyav

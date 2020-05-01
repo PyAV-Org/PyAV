@@ -36,5 +36,5 @@ open:
 	open _build/html/index.html
 
 upload:
-	rsync -avxP --delete _build/html/ docs.mikeboers.com:/srv/mikeboers.com/docs/httpdocs/pyav/develop/
+	rsync -avxP --delete _build/html/ pyav.org:/srv/pyav.org/www/httpdocs/docs/develop/
 

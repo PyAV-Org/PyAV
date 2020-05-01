@@ -12,7 +12,7 @@ Only where this documentation is about the mechanics of PyAV can it be considere
 
 It is, unfortunately, often on the user the understand and deal with the edge cases. We encourage you to bring them to our attension via GitHub_ so that we can try to make PyAV deal with it, but we can't always make it work.
 
-.. _GitHub: https://github.com/mikeboers/pyav/issues
+.. _GitHub: https://github.com/PyAv-Org/PyAV/issues
 
 
 Sub-Interpeters
