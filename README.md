@@ -64,8 +64,8 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 
 [conda-badge]: https://img.shields.io/conda/vn/conda-forge/av.svg?colorB=CCB39A
 [conda]: https://anaconda.org/conda-forge/av
-[docs-badge]: https://img.shields.io/badge/docs-on%20mikeboers.com-blue.svg
-[docs]: http://docs.mikeboers.com/pyav/develop/
+[docs-badge]: https://img.shields.io/badge/docs-on%20pyav.org-blue.svg
+[docs]: http://pyav.org/docs
 [gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
 [gitter]: https://gitter.im/PyAV-Org
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A

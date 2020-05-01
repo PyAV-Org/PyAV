@@ -124,5 +124,5 @@ def curated(name):
     Data is handled by :func:`cached_download`.
 
     """
-    return cached_download('https://docs.mikeboers.com/pyav/samples/' + name,
+    return cached_download('https://pyav.org/datasets/' + name,
                            os.path.join('pyav-curated', name.replace('/', os.path.sep)))
