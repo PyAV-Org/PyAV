@@ -67,7 +67,7 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [docs-badge]: https://img.shields.io/badge/docs-on%20mikeboers.com-blue.svg
 [docs]: http://docs.mikeboers.com/pyav/develop/
 [gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
-[gitter]: https://gitter.im/mikeboers/PyAV
+[gitter]: https://gitter.im/PyAV-Org
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
 [pypi]: https://pypi.org/project/av
 
