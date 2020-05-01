@@ -69,4 +69,4 @@ Since PyAV is not expected to be used in a high performance playback loop, we do
 .. _Libav: https://libav.org/
 
 .. _Gitter: https://gitter.im/mikeboers/PyAV
-.. _GitHub: https://github.com/mikeboers/pyav
+.. _GitHub: https://github.com/PyAV-Org/pyav

@@ -73,7 +73,7 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 
 [github-tests-badge]: https://github.com/PyAV-Org/PyAV/workflows/tests/badge.svg
 [github-tests]: https://github.com/PyAV-Org/PyAV/actions?workflow=tests
-[github-badge]: https://img.shields.io/badge/dynamic/xml.svg?label=github&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmikeboers%2FPyAV%2Fdevelop%2FVERSION.txt&query=.&colorB=CCB39A&prefix=v
+[github-badge]: https://img.shields.io/badge/dynamic/xml.svg?label=github&url=https%3A%2F%2Fraw.githubusercontent.com%2FPyAV-Org%2FPyAV%2Fdevelop%2FVERSION.txt&query=.&colorB=CCB39A&prefix=v
 [github]: https://github.com/PyAV-Org/PyAV
 
 [ffmpeg]: http://ffmpeg.org/
