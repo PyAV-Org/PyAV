@@ -190,7 +190,7 @@ jobs:
       - name: Build source package
         run: |
           pip install cython
-          python scripts/fetch-ffmpeg /tmp/vendor
+          python scripts/fetch-vendor /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig make build
           python setup.py sdist
       - name: Upload source package
@@ -217,8 +217,8 @@ jobs:
           brew install pkg-config
       - name: Build wheels
         env:
-          CIBW_BEFORE_BUILD: pip install cython && python scripts/fetch-ffmpeg /tmp/vendor
-          CIBW_BEFORE_BUILD_WINDOWS: pip install cython && python scripts\fetch-ffmpeg C:\cibw\vendor
+          CIBW_BEFORE_BUILD: pip install cython && python scripts/fetch-vendor /tmp/vendor
+          CIBW_BEFORE_BUILD_WINDOWS: pip install cython && python scripts\fetch-vendor C:\cibw\vendor
           CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig
           CIBW_ENVIRONMENT_MACOS: DYLD_LIBRARY_PATH=/tmp/vendor/lib:$DYLD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: CL="/IC:\cibw\vendor\include" LINK="/LIBPATH:C:\cibw\vendor\lib"
