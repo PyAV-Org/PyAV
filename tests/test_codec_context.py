@@ -167,6 +167,12 @@ class TestEncoding(TestCase):
                    'max_frames': 5}
         self.video_encoding('dnxhd', options)
 
+    def test_codec_context_with_extra_data(self):
+        codec_new = av.codec.Codec("h264", 'r').create()
+        codec_new.open()
+        codec_new.extradata = b"x00"
+        codec_new.close()
+
     def video_encoding(self, codec_name, options={}):
 
         try:
