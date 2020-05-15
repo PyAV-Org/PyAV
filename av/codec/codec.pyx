@@ -159,43 +159,52 @@ cdef class Codec(object):
 
     """
 
-    def __cinit__(self, name, mode='r'):
-
+    def __cinit__(self, name=None, mode='r', codecid=None):
         if name is _cinit_sentinel:
             return
 
         if mode == 'w':
-            self.ptr = lib.avcodec_find_encoder_by_name(name)
-            if not self.ptr:
-                self.desc = lib.avcodec_descriptor_get_by_name(name)
+            if name is not None:
+                self.ptr = lib.avcodec_find_encoder_by_name(name)
+                if not self.ptr:
+                    self.desc = lib.avcodec_descriptor_get_by_name(name)
                 if self.desc:
                     self.ptr = lib.avcodec_find_encoder(self.desc.id)
+            elif codecid is not None:
+                self.ptr = lib.avcodec_find_encoder(codecid)
 
         elif mode == 'r':
-            self.ptr = lib.avcodec_find_decoder_by_name(name)
-            if not self.ptr:
-                self.desc = lib.avcodec_descriptor_get_by_name(name)
-                if self.desc:
-                    self.ptr = lib.avcodec_find_decoder(self.desc.id)
+            if name is not None:
+                self.ptr = lib.avcodec_find_decoder_by_name(name)
+                if not self.ptr:
+                    self.desc = lib.avcodec_descriptor_get_by_name(name)
+                    if self.desc:
+                        self.ptr = lib.avcodec_find_decoder(self.desc.id)
+            elif codecid is not None:
+                self.ptr = lib.avcodec_find_decoder(codecid)
 
         else:
             raise ValueError('Invalid mode; must be "r" or "w".', mode)
 
-        self._init(name)
+        self._init(name, codecid)
 
         # Sanity check.
         if (mode == 'w') != self.is_encoder:
             raise RuntimeError("Found codec does not match mode.", name, mode)
 
-    cdef _init(self, name=None):
-
+    cdef _init(self, name=None, codecid=None):
         if not self.ptr:
-            raise UnknownCodecError(name)
+            if name is not None:
+                raise UnknownCodecError(name)
+            elif codecid is not None:
+                raise UnknownCodecError('CodecID: ', codecid)
+            else:
+                raise ValueError('Invalid codec; name or codec id must be given')
 
         if not self.desc:
             self.desc = lib.avcodec_descriptor_get(self.ptr.id)
             if not self.desc:
-                raise RuntimeError('No codec descriptor for %r.' % name)
+                raise RuntimeError('No codec descriptor for %r.' % self.ptr.name)
 
         self.is_encoder = lib.av_codec_is_encoder(self.ptr)
 

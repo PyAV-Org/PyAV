@@ -7,7 +7,7 @@ cdef class Codec(object):
     cdef const lib.AVCodecDescriptor *desc
     cdef readonly bint is_encoder
 
-    cdef _init(self, name=?)
+    cdef _init(self, name=?, codecid=?)
 
 
 cdef Codec wrap_codec(const lib.AVCodec *ptr)

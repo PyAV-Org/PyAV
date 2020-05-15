@@ -2,6 +2,7 @@ cimport libav as lib
 
 from av.descriptor cimport wrap_avclass
 from av.enum cimport define_enum
+from av.codec.codec cimport Codec
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -145,6 +146,24 @@ cdef class ContainerFormat(object):
             if self.optr and self.optr.extensions:
                 exts.update(self.optr.extensions.split(','))
             return exts
+
+    property audio_codec:
+        def __get__(self):
+            if self.optr == NULL or self.optr.audio_codec == lib.AV_CODEC_ID_NONE:
+                return None
+            return Codec(None, 'w', self.optr.audio_codec)
+
+    property video_codec:
+        def __get__(self):
+            if self.optr == NULL or self.optr.video_codec == lib.AV_CODEC_ID_NONE:
+                return None
+            return Codec(None, 'w', self.optr.video_codec)
+
+    property subtitle_codec:
+        def __get__(self):
+            if self.optr == NULL or self.optr.subtitle_codec == lib.AV_CODEC_ID_NONE:
+                return None
+            return Codec(None, 'w', self.optr.subtitle_codec)
 
     @Flags.property
     def flags(self):

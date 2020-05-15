@@ -177,6 +177,50 @@ class TestEncodeStreamSemantics(TestCase):
         self.assertEqual(stream.time_base, None)
         self.assertEqual(stream.width, 640)
 
+    def test_format_default_options(self):
+        output = av.open(self.sandboxed('output.mov'), 'w')
+
+        self.assertEqual(output.format.audio_codec.name, 'aac')
+        self.assertEqual(output.format.video_codec.name, 'libx264')
+        self.assertEqual(output.format.subtitle_codec, None)
+
+        audio = output.add_audio()
+        video = output.add_video()
+
+        self.assertEqual(audio.type, 'audio')
+        self.assertEqual(video.type, 'video')
+
+        try:
+            output.add_subtitle()
+        except ValueError as e:
+            self.assertEqual(str(e), "'mov' no default subtitle codec for this format")
+        else:
+            self.fail()
+
+    def test_format_default_options2(self):
+        output = av.open(self.sandboxed('output.wav'), 'w')
+
+        self.assertEqual(output.format.audio_codec.name, 'pcm_s16le')
+        self.assertEqual(output.format.video_codec, None)
+        self.assertEqual(output.format.subtitle_codec, None)
+
+        audio = output.add_audio()
+        self.assertEqual(audio.type, 'audio')
+
+        try:
+            output.add_video()
+        except ValueError as e:
+            self.assertEqual(str(e), "'wav' no default video codec for this format")
+        else:
+            self.fail()
+
+        try:
+            output.add_subtitle()
+        except ValueError as e:
+            self.assertEqual(str(e), "'wav' no default subtitle codec for this format")
+        else:
+            self.fail()
+
     def test_stream_index(self):
         output = av.open(self.sandboxed('output.mov'), 'w')
 

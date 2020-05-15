@@ -71,13 +71,70 @@ cdef class OutputContainer(Container):
                 raise ValueError("template has no codec context")
             codec = template._codec
 
+        cdef Stream py_stream = self._add_stream(codec, rate, template, options)
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+        return py_stream
+
+    def add_audio(self, object rate=None, options=None, **kwargs):
+        """add_audio(rate=None)
+
+        Create a new audio stream, using default codec for this format
+        :param rate: Same as add_stream
+        :returns: The new :class:`~av.stream.Stream`.
+
+        """
+        if self.format.audio_codec is None:
+            raise ValueError("%r no default audio codec for this format" % (self.format.name))
+
+        cdef Codec codec_obj = self.format.audio_codec
+        cdef Stream py_stream = self._add_stream(codec_obj.ptr, rate, None, options)
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+        return py_stream
+
+    def add_video(self, object rate=None, options=None, **kwargs):
+        """add_video(rate=None)
+
+        Create a new video stream, using default codec for this format
+        :param rate: Same as add_stream
+        :returns: The new :class:`~av.stream.Stream`.
+
+        """
+        if self.format.video_codec is None:
+            raise ValueError("%r no default video codec for this format" % (self.format.name))
+
+        cdef Codec codec_obj = self.format.video_codec
+        cdef Stream py_stream = self._add_stream(codec_obj.ptr, rate, None, options)
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+        return py_stream
+
+    def add_subtitle(self, object rate=None, options=None, **kwargs):
+        """add_subtitle(rate=None)
+
+        Create a new subtitle stream, using default codec for this format
+        :param rate: Same as add_stream
+        :returns: The new :class:`~av.stream.Stream`.
+
+        """
+        if self.format.subtitle_codec is None:
+            raise ValueError("%r no default subtitle codec for this format" % (self.format.name))
+
+        cdef Codec codec_obj = self.format.subtitle_codec
+        cdef Stream py_stream = self._add_stream(codec_obj.ptr, rate, None, options)
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+        return py_stream
+
+    cdef _add_stream(self, const lib.AVCodec *codec, object rate, Stream template, options):
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(
             self.ptr.oformat,
             codec.id,
             lib.FF_COMPLIANCE_NORMAL,
         ):
-            raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
+            raise ValueError("%r format does not support %r codec" % (self.format.name, lib.avcodec_get_name(codec.id)))
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
         # As of last check, avformat_new_stream only calls avcodec_alloc_context3 to create
@@ -128,9 +185,6 @@ cdef class OutputContainer(Container):
 
         if options:
             py_stream.options.update(options)
-
-        for k, v in kwargs.items():
-            setattr(py_stream, k, v)
 
         return py_stream
 
