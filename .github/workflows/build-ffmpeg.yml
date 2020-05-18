@@ -1,6 +1,6 @@
 name: build-ffmpeg
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -24,6 +24,7 @@ jobs:
           CIBW_BEFORE_BUILD: scripts/build-ffmpeg /tmp/vendor
           CIBW_BEFORE_BUILD_WINDOWS: scripts\build-ffmpeg.bat C:\cibw\vendor
           CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH
+          CIBW_ENVIRONMENT_MACOS: CFLAGS=-mmacosx-version-min=10.9
           CIBW_BUILD: cp38-*
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: python scripts/inject-dll {wheel} {dest_dir} C:\cibw\vendor\bin
           CIBW_TEST_COMMAND: python -c "import dummy"
