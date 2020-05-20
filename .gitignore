@@ -12,7 +12,9 @@
 /venvs
 
 # Build products
+*.dll
 *.egg-info
+*.lib
 *.pyc
 *.so
 /*.sdf
