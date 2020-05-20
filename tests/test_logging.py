@@ -60,7 +60,7 @@ class TestLogging(TestCase):
             do_log('bar')
             do_log('baz')
 
-        logs = [l for l in logs if l[1] == 'test']
+        logs = [log for log in logs if log[1] == 'test']
 
         self.assertEqual(logs, [
             (av.logging.INFO, 'test', 'foo'),
