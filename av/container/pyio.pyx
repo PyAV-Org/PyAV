@@ -22,6 +22,7 @@ cdef class PyIOFile(object):
         self.fwrite = getattr(self.file, 'write', None)
         self.fseek = getattr(self.file, 'seek', None)
         self.ftell = getattr(self.file, 'tell', None)
+        self.fclose = getattr(self.file, 'close', None)
 
         # To be seekable the file object must have `seek` and `tell` methods.
         # If it also has a `seekable` method, it must return True.
@@ -143,3 +144,26 @@ cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
         return res
     except Exception as e:
         return stash_exception()
+
+
+cdef void pyio_close_gil(lib.AVIOContext *pb):
+    try:
+        lib.avio_close(pb)
+
+    except Exception as e:
+        stash_exception()
+
+
+cdef void pyio_close_custom_gil(lib.AVIOContext *pb):
+    cdef PyIOFile self
+    try:
+        self = <PyIOFile>pb.opaque
+
+        # Flush bytes in the AVIOContext buffers to the custom I/O
+        lib.avio_flush(pb)
+
+        if self.fclose is not None:
+            self.fclose()
+
+    except Exception as e:
+        stash_exception()

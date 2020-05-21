@@ -66,6 +66,41 @@ class WriteOnlyPipe(BytesIO):
         return False
 
 
+CUSTOM_IO_PROTOCOL = "pyavtest://"
+CUSTOM_IO_FILENAME = "custom_io_output.mpd"
+
+
+class CustomIOLogger(object):
+    """Log calls to open a file as well as method calls on the files"""
+
+    def __init__(self, sandboxed):
+        self._sandboxed = sandboxed
+        self._log = []
+        self._method_log = []
+
+    def __call__(self, *args, **kwargs):
+        self._log.append((args, kwargs))
+        self._method_log.append(self.io_open(*args, **kwargs))
+        return self._method_log[-1]
+
+    def io_open(self, url, flags, options):
+        # Remove the protocol prefix to reveal the local filename
+        if CUSTOM_IO_PROTOCOL in url:
+            url = url.split(CUSTOM_IO_PROTOCOL, 1)[1]
+        path = self._sandboxed(url)
+
+        if (flags & 3) == 3:
+            mode = "r+b"
+        elif (flags & 1) == 1:
+            mode = "rb"
+        elif (flags & 2) == 2:
+            mode = "wb"
+        else:
+            raise RuntimeError("Unsupported io open mode {}".format(flags))
+
+        return MethodLogger(open(path, mode))
+
+
 class TestPythonIO(TestCase):
     def test_basic_errors(self):
         self.assertRaises(Exception, av.open, None)
@@ -133,6 +168,34 @@ class TestPythonIO(TestCase):
             # try to close file
             with self.assertRaises(OSError):
                 container.close()
+
+    def test_writing_to_custom_io(self):
+
+        # Custom I/O that opens file in the sandbox and logs calls
+        wrapped_custom_io = CustomIOLogger(self.sandboxed)
+
+        # Write a DASH package using the custom IO
+        with av.open(
+            CUSTOM_IO_PROTOCOL + CUSTOM_IO_FILENAME, "w", io_open=wrapped_custom_io
+        ) as container:
+            write_rgb_rotate(container)
+
+        # Check that at least 3 files were opened using the custom IO:
+        #   "CUSTOM_IO_FILENAME", init-stream0.m4s and chunk-stream-0x.m4s
+        self.assertGreaterEqual(len(wrapped_custom_io._log), 3)
+        self.assertGreaterEqual(len(wrapped_custom_io._method_log), 3)
+
+        # Check that all files were written to
+        all_write = all(
+            method_log._filter("write") for method_log in wrapped_custom_io._method_log
+        )
+        self.assertTrue(all_write)
+
+        # Check that all files were closed
+        all_closed = all(
+            method_log._filter("close") for method_log in wrapped_custom_io._method_log
+        )
+        self.assertTrue(all_closed)
 
     def test_writing_to_file(self):
         path = self.sandboxed("writing.mp4")

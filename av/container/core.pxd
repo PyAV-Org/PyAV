@@ -23,7 +23,10 @@ cdef class Container(object):
     cdef readonly str metadata_errors
 
     cdef readonly PyIOFile file
+    cdef int buffer_size
     cdef bint input_was_opened
+    cdef readonly object io_open
+    cdef readonly object open_files
 
     cdef readonly ContainerFormat format
 
