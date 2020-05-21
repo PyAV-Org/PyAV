@@ -1,5 +1,6 @@
 cimport libav as lib
 
+from av.container.pyio cimport PyIOFile
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
@@ -21,18 +22,7 @@ cdef class Container(object):
     cdef readonly str metadata_encoding
     cdef readonly str metadata_errors
 
-    # File-like source.
-    cdef readonly object file
-    cdef object fread
-    cdef object fwrite
-    cdef object fseek
-    cdef object ftell
-
-    # Custom IO for above.
-    cdef lib.AVIOContext *iocontext
-    cdef unsigned char *buffer
-    cdef long pos
-    cdef bint pos_is_valid
+    cdef readonly PyIOFile file
     cdef bint input_was_opened
 
     cdef readonly ContainerFormat format

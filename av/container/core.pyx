@@ -10,10 +10,10 @@ cimport libav as lib
 from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
-from av.container.pyio cimport pyio_read, pyio_seek, pyio_write
 from av.enum cimport define_enum
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
+from av.utils cimport avdict_to_dict
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
@@ -112,7 +112,6 @@ cdef class Container(object):
             self.name = getattr(file_, 'name', '<none>')
             if not isinstance(self.name, str):
                 raise TypeError("File's name attribute must be string-like.")
-            self.file = file_
 
         self.options = dict(options or ())
         self.container_options = dict(container_options or ())
@@ -163,42 +162,9 @@ cdef class Container(object):
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
 
         # Setup Python IO.
-        if self.file is not None:
-
-            self.fread = getattr(self.file, 'read', None)
-            self.fwrite = getattr(self.file, 'write', None)
-            self.fseek = getattr(self.file, 'seek', None)
-            self.ftell = getattr(self.file, 'tell', None)
-
-            if self.writeable:
-                if self.fwrite is None:
-                    raise ValueError("File object has no write method.")
-            else:
-                if self.fread is None:
-                    raise ValueError("File object has no read method.")
-
-            if self.fseek is not None and self.ftell is not None:
-                seek_func = pyio_seek
-
-            self.pos = 0
-            self.pos_is_valid = True
-
-            # This is effectively the maximum size of reads.
-            self.buffer = <unsigned char*>lib.av_malloc(buffer_size)
-
-            self.iocontext = lib.avio_alloc_context(
-                self.buffer, buffer_size,
-                self.writeable,  # Writeable.
-                <void*>self,  # User data.
-                pyio_read,
-                pyio_write,
-                seek_func
-            )
-
-            if seek_func:
-                self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
-            self.iocontext.max_packet_size = buffer_size
-            self.ptr.pb = self.iocontext
+        if not isinstance(file_, basestring):
+            self.file = PyIOFile(file_, buffer_size, self.writeable)
+            self.ptr.pb = self.file.iocontext
 
         cdef lib.AVInputFormat *ifmt
         cdef _Dictionary c_options
@@ -226,18 +192,6 @@ cdef class Container(object):
 
     def __dealloc__(self):
         with nogil:
-            # FFmpeg will not release custom input, so it's up to us to free it.
-            # Do not touch our original buffer as it may have been freed and replaced.
-            if self.iocontext:
-                lib.av_freep(&self.iocontext.buffer)
-                lib.av_freep(&self.iocontext)
-
-            # We likely errored badly if we got here, and so are still
-            # responsible for our buffer.
-            else:
-                lib.av_freep(&self.buffer)
-
-            # Finish releasing the whole structure.
             lib.avformat_free_context(self.ptr)
 
     def __enter__(self):
