@@ -1,8 +1,69 @@
 from libc.string cimport memcpy
 cimport libav as lib
 
-from av.container.core cimport Container
 from av.error cimport stash_exception
+
+
+ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
+
+
+cdef class PyIOFile(object):
+
+    def __cinit__(self, file, buffer_size, writeable=None):
+
+        self.file = file
+
+        cdef seek_func_t seek_func = NULL
+
+        self.fread = getattr(self.file, 'read', None)
+        self.fwrite = getattr(self.file, 'write', None)
+        self.fseek = getattr(self.file, 'seek', None)
+        self.ftell = getattr(self.file, 'tell', None)
+
+        if self.fseek is not None and self.ftell is not None:
+            seek_func = pyio_seek
+
+        if writeable is None:
+            writeable = self.fwrite is not None
+
+        if writeable:
+            if self.fwrite is None:
+                raise ValueError("File object has no write method.")
+        else:
+            if self.fread is None:
+                raise ValueError("File object has no read method.")
+
+        self.pos = 0
+        self.pos_is_valid = True
+
+        # This is effectively the maximum size of reads.
+        self.buffer = <unsigned char*>lib.av_malloc(buffer_size)
+
+        self.iocontext = lib.avio_alloc_context(
+            self.buffer, buffer_size,
+            writeable,
+            <void*>self,  # User data.
+            pyio_read,
+            pyio_write,
+            seek_func
+        )
+
+        if seek_func:
+            self.iocontext.seekable = lib.AVIO_SEEKABLE_NORMAL
+        self.iocontext.max_packet_size = buffer_size
+
+    def __dealloc__(self):
+        with nogil:
+            # FFmpeg will not release custom input, so it's up to us to free it.
+            # Do not touch our original buffer as it may have been freed and replaced.
+            if self.iocontext:
+                lib.av_freep(&self.iocontext.buffer)
+                lib.av_freep(&self.iocontext)
+
+            # We likely errored badly if we got here, and so are still
+            # responsible for our buffer.
+            else:
+                lib.av_freep(&self.buffer)
 
 
 cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
@@ -10,10 +71,10 @@ cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
         return pyio_read_gil(opaque, buf, buf_size)
 
 cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
-    cdef Container self
+    cdef PyIOFile self
     cdef bytes res
     try:
-        self = <Container>opaque
+        self = <PyIOFile>opaque
         res = self.fread(buf_size)
         memcpy(buf, <void*><char*>res, len(res))
         self.pos += len(res)
@@ -29,11 +90,11 @@ cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
         return pyio_write_gil(opaque, buf, buf_size)
 
 cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
-    cdef Container self
+    cdef PyIOFile self
     cdef bytes bytes_to_write
     cdef int bytes_written
     try:
-        self = <Container>opaque
+        self = <PyIOFile>opaque
         bytes_to_write = buf[:buf_size]
         ret_value = self.fwrite(bytes_to_write)
         bytes_written = ret_value if isinstance(ret_value, int) else buf_size
@@ -53,9 +114,9 @@ cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
         return pyio_seek_gil(opaque, offset, whence)
 
 cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
-    cdef Container self
+    cdef PyIOFile self
     try:
-        self = <Container>opaque
+        self = <PyIOFile>opaque
         res = self.fseek(offset, whence)
 
         # Track the position for the user.
@@ -71,6 +132,5 @@ cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
             else:
                 res = self.ftell()
         return res
-
     except Exception as e:
         return stash_exception()
