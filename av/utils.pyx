@@ -11,7 +11,12 @@ cimport libav as lib
 # ====================
 
 cdef _decode(char *s, encoding, errors):
-    return (<bytes>s).decode(encoding, errors)
+    try:
+      decoded = (<bytes>s).decode(encoding, errors)
+    except UnicodeDecodeError:
+      print("Ignoring UnicodeDecodeError bytes from : %s" % (str(<bytes>s)))
+      decoded = (<bytes>s).decode(encoding, errors='ignore')
+    return decoded
 
 cdef bytes _encode(s, encoding, errors):
     return s.encode(encoding, errors)
