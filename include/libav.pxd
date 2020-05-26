@@ -17,6 +17,7 @@ include "libavutil/motion_vector.pxd"
 include "libavcodec/avcodec.pxd"
 include "libavdevice/avdevice.pxd"
 include "libavformat/avformat.pxd"
+include "libavformat/rtsp.pxd"
 include "libswresample/swresample.pxd"
 include "libswscale/swscale.pxd"
 

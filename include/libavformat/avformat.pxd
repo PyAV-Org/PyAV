@@ -174,6 +174,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVInputFormat *iformat
         AVOutputFormat *oformat
 
+        void *priv_data
+
         AVIOContext *pb
         AVIOInterruptCB interrupt_callback
 

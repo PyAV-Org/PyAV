@@ -144,7 +144,7 @@ else:
 # The "extras" to be supplied to every one of our modules.
 # This is expanded heavily by the `config` command.
 extension_extra = {
-    'include_dirs': ['include'] + ffmpeg_include,  # The first are PyAV's includes.
+    'include_dirs': ['include', 'vendor/ffmpeg-4.2'] + ffmpeg_include,  # The first are PyAV's includes.
     'libraries'   : [],
     'library_dirs': ffmpeg_lib,
 }
@@ -310,7 +310,6 @@ class ConfigCommand(Command):
             ('no_pkg_config', 'no_pkg_config'),)
 
     def run(self):
-
         # For some reason we get the feeling that CFLAGS is not respected, so we parse
         # it here. TODO: Leave any arguments that we can't figure out.
         for name in 'CFLAGS', 'LDFLAGS':
