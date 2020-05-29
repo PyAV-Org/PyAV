@@ -19,6 +19,7 @@ jobs:
         run: |
           brew update
           brew install pkg-config
+          brew unlink gettext libidn2 libpng libtiff libunistring unbound
       - name: Build FFmpeg
         env:
           CIBW_BEFORE_BUILD: scripts/build-ffmpeg /tmp/vendor

@@ -68,6 +68,7 @@ if [ ! -e $outputfile ]; then
     mkdir -p $sourcedir
     cd $builddir
 
+    export CPPFLAGS="-I$destdir/include $CPPFLAGS"
     export LDFLAGS="-L$destdir/lib $LDFLAGS"
     export PATH=$destdir/bin:$PATH
     export PKG_CONFIG_PATH=$destdir/lib/pkgconfig
@@ -108,17 +109,25 @@ if [ ! -e $outputfile ]; then
     extract zlib https://www.zlib.net/zlib-1.2.11.tar.gz
     build zlib
 
+    # build gmp
+    extract gmp https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz
+    build gmp
+
     # build png (requires zlib)
     extract png http://deb.debian.org/debian/pool/main/libp/libpng1.6/libpng1.6_1.6.37.orig.tar.gz
-    build png CPPFLAGS=-I$destdir/include
+    build png
 
     # build xml2 (requires xz and zlib)
     extract xml2 ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.10.tar.gz
     build xml2 --without-python
 
-    # build gettext (requires xml2)
+    # build unistring
+    extract unistring https://ftp.gnu.org/gnu/libunistring/libunistring-0.9.10.tar.gz
+    build unistring
+
+    # build gettext (requires unistring and xml2)
     extract gettext https://ftp.gnu.org/pub/gnu/gettext/gettext-0.20.2.tar.gz
-    build gettext --disable-java --with-included-libunistring
+    build gettext --disable-java
 
     # build freetype (requires png)
     extract freetype https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz
@@ -131,6 +140,27 @@ if [ ! -e $outputfile ]; then
     # build fribidi
     extract fribidi https://github.com/fribidi/fribidi/releases/download/v1.0.9/fribidi-1.0.9.tar.xz
     build fribidi
+
+    # build nettle (requires gmp)
+    extract nettle https://ftp.gnu.org/gnu/nettle/nettle-3.6.tar.gz
+    build nettle --libdir=$destdir/lib
+
+    # build gnutls (requires nettle and unistring)
+    extract gnutls https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.13.tar.xz
+    cat <<EOF | patch -p0
+--- gnutls/lib/system/fastopen.c   2020-01-01 21:11:40.000000000 +0100
++++ gnutls/lib/system/fastopen.c        2020-05-29 22:53:17.772308587 +0200
+@@ -37,7 +37,7 @@
+ #endif
+ 
+ /* TCP Fast Open on OSX behaves differently from Linux, so define these helpers */
+-#if defined __APPLE__ && defined __MACH__ && defined CONNECT_DATA_IDEMPOTENT && defined CONNECT_RESUME_ON_READ_WRITE
++#if 0
+ # define TCP_FASTOPEN_OSX
+ #elif defined TCP_FASTOPEN && defined MSG_FASTOPEN
+ # define TCP_FASTOPEN_LINUX
+EOF
+    build gnutls --disable-doc --disable-tools --with-included-libtasn1 --without-p11-kit
 
     #### CODECS ###
 
@@ -246,6 +276,8 @@ EOF
         --disable-doc \
         --disable-static \
         --enable-fontconfig \
+        --enable-gmp \
+        --enable-gnutls \
         --enable-gpl \
         --enable-libaom \
         --enable-libass \
