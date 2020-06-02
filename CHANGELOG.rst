@@ -17,9 +17,15 @@ We are operating with `semantic versioning <http://semver.org>`_.
     are merged into the "default" branch, currently "develop").
 
 
-v8.0.2.dev0
+v8.0.2
 ------
 
+Minor:
+
+- Enable GnuTLS support in the FFmpeg build used for binary wheels (:issue:`675`).
+- Make binary wheels compatible with Mac OS X 10.9+ (:issue:`662`).
+- Drop Python 2.x buffer protocol code.
+- Remove references to previous repository location.
 
 v8.0.1
 ------
