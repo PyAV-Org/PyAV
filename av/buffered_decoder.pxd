@@ -21,7 +21,6 @@ cdef class CircularBuffer:
         void forward(self, int )
         void reset(self)
         bint empty(self) nogil
-        bint full(self) nogil
         lib.AVFrame *get_next_free_slot(self) nogil
         lib.AVFrame *at(self, int)
         lib.AVFrame *get(self) nogil

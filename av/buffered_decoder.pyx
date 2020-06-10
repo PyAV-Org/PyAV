@@ -52,8 +52,6 @@ cdef class CircularBuffer:
             return self.buffer_size - 1
         bint empty(self) nogil:
             return self.count() is 0
-        bint full(self) nogil:
-            return self.count() is self.capacity()
 
         lib.AVFrame *get_next_free_slot(self) nogil:
             if self.count() > 0:
