@@ -1,4 +1,4 @@
-﻿from libc.stdlib cimport malloc, free, calloc
+from libc.stdlib cimport malloc, free, calloc
 
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
@@ -39,10 +39,7 @@ cdef class CircularBuffer:
         self.last_pts = -1
 
     def __dealloc__(self):
-        for i in range(self.buffer_size):
-            frame = self.at(i)
-            if frame:
-                lib.av_frame_free(&frame)
+        self.reset()
         free(self.buffer)
 
     cdef:
@@ -55,8 +52,6 @@ cdef class CircularBuffer:
             return self.buffer_size - 1
         bint empty(self) nogil:
             return self.count() is 0
-        bint full(self) nogil:
-            return self.count() is self.capacity()
 
         lib.AVFrame *get_next_free_slot(self) nogil:
             if self.count() > 0:
@@ -83,28 +78,40 @@ cdef class CircularBuffer:
         void forward(self, int count):
             if count >= self.count():
                 count = self.count() - 1
+            
+            for i in range(count):
+                self._reset_index(i)
+                
             self.buf_start = (self.buf_start + count) % self.buffer_size
-        lib.AVFrame *at(self, int num):
+        
+        int _real_index(self, int num) nogil:
             cdef int idx
             if num >= 0:
-                return self.buffer[(self.buf_start + num) % self.buffer_size]
+                return (self.buf_start + num) % self.buffer_size
             else:
                 idx = self.buf_end + num
                 if idx < 0:
                     idx += self.buffer_size
-                return self.buffer[idx]
+                return idx
 
-        void add_buffer(self, CircularBuffer buf): # Source buffer gets emptied!
-            frame = buf.get()
-            while frame is not NULL:
-                self.add(frame)
-                frame = buf.get()
+        lib.AVFrame *at(self, int num):
+            return self.buffer[self._real_index(num)]
+
         void reset(self):
+            cdef int i
+            for i in range(self.buffer_size):
+                self._reset_index(i)
+
             self.buf_end = self.buf_start
             self.frame_event.clear()
             self.last_pts = -1
 
-
+        void _reset_index(self, int index) nogil:
+            cdef int real_index = self._real_index(index)
+            cdef lib.AVFrame *frame = self.buffer[real_index]
+            if frame is not NULL:
+                lib.av_frame_free(&frame)
+                self.buffer[real_index] = NULL
 
 
 

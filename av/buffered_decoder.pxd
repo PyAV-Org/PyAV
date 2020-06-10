@@ -11,14 +11,16 @@ cdef class CircularBuffer:
         int buf_start
         int buf_end
         int buffer_size
+
+        int _real_index(self, int num) nogil
+        void _reset_index(self, int index) nogil
+
         int count(self) nogil
         int capacity(self) nogil
         bint add(self, lib.AVFrame *) nogil
-        void add_buffer(self, CircularBuffer )
         void forward(self, int )
         void reset(self)
         bint empty(self) nogil
-        bint full(self) nogil
         lib.AVFrame *get_next_free_slot(self) nogil
         lib.AVFrame *at(self, int)
         lib.AVFrame *get(self) nogil
