@@ -78,6 +78,10 @@ cdef class CircularBuffer:
         void forward(self, int count):
             if count >= self.count():
                 count = self.count() - 1
+            
+            for i in range(count):
+                self._reset_index(i)
+                
             self.buf_start = (self.buf_start + count) % self.buffer_size
         
         int _real_index(self, int num) nogil:
