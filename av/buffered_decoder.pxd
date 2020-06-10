@@ -18,7 +18,6 @@ cdef class CircularBuffer:
         int count(self) nogil
         int capacity(self) nogil
         bint add(self, lib.AVFrame *) nogil
-        void add_buffer(self, CircularBuffer )
         void forward(self, int )
         void reset(self)
         bint empty(self) nogil

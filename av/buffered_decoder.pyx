@@ -95,11 +95,6 @@ cdef class CircularBuffer:
         lib.AVFrame *at(self, int num):
             return self.buffer[self._real_index(num)]
 
-        void add_buffer(self, CircularBuffer buf): # Source buffer gets emptied!
-            frame = buf.get()
-            while frame is not NULL:
-                self.add(frame)
-                frame = buf.get()
         void reset(self):
             cdef int i
             for i in range(self.buffer_size):
