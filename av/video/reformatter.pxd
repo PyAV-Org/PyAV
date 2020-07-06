@@ -9,4 +9,5 @@ cdef class VideoReformatter(object):
 
     cdef _reformat(self, VideoFrame frame, int width, int height,
                    lib.AVPixelFormat format, int src_colorspace,
-                   int dst_colorspace, int interpolation)
+                   int dst_colorspace, int interpolation,
+                   int src_color_range, int dst_color_range)

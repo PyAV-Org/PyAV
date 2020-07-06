@@ -158,3 +158,16 @@ cdef class VideoCodecContext(CodecContext):
     property coded_height:
         def __get__(self):
             return self.ptr.coded_height
+
+    @property
+    def color_range(self):
+        """
+        Color range of context.
+
+        Wraps :ffmpeg:`AVFrame.color_range`.
+        """
+        def __get__(self):
+            return self.ptr.color_range
+
+        def __set__(self, value):
+            self.ptr.color_range = value

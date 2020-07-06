@@ -42,6 +42,14 @@ Colorspace = define_enum('Colorspace', __name__, (
 ))
 
 
+ColorRange = define_enum('ColorRange', __name__, (
+    ('UNSPECIFIED', lib.AVCOL_RANGE_UNSPECIFIED, "Unspecified"),
+    ('MPEG', lib.AVCOL_RANGE_MPEG, "MPEG (limited) YUV range, 219*2^(n-8)"),
+    ('JPEG', lib.AVCOL_RANGE_JPEG, "JPEG (full) YUV range, 2^n-1"),
+    ('NB', lib.AVCOL_RANGE_NB, "Not part of ABI"),
+))
+
+
 cdef class VideoReformatter(object):
 
     """An object for reformatting size and pixel format of :class:`.VideoFrame`.
@@ -57,7 +65,8 @@ cdef class VideoReformatter(object):
 
     def reformat(self, VideoFrame frame not None, width=None, height=None,
                  format=None, src_colorspace=None, dst_colorspace=None,
-                 interpolation=None):
+                 interpolation=None, src_color_range=None,
+                 dst_color_range=None):
         """Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
 
         Returns the same frame untouched if nothing needs to be done to it.
@@ -66,19 +75,25 @@ cdef class VideoReformatter(object):
         :param int height: New height, or ``None`` for the same height.
         :param format: New format, or ``None`` for the same format.
         :type  format: :class:`.VideoFormat` or ``str``
-        :param src_colorspace: Current colorspace, or ``None`` for ``DEFAULT``.
+        :param src_colorspace: Current colorspace, or ``None`` for the frame colorspace.
         :type  src_colorspace: :class:`Colorspace` or ``str``
-        :param dst_colorspace: Desired colorspace, or ``None`` for ``DEFAULT``.
+        :param dst_colorspace: Desired colorspace, or ``None`` for the frame colorspace.
         :type  dst_colorspace: :class:`Colorspace` or ``str``
         :param interpolation: The interpolation method to use, or ``None`` for ``BILINEAR``.
         :type  interpolation: :class:`Interpolation` or ``str``
+        :param src_color_range: Current color range, or ``None`` for the frame color range.
+        :type  src_color_range: :class:`color range` or ``str``
+        :param dst_color_range: Desired color range, or ``None`` for the frame color range.
+        :type  dst_color_range: :class:`color range` or ``str``
 
         """
 
         cdef VideoFormat video_format = VideoFormat(format if format is not None else frame.format)
-        cdef int c_src_colorspace = (Colorspace[src_colorspace] if src_colorspace is not None else Colorspace.DEFAULT).value
-        cdef int c_dst_colorspace = (Colorspace[dst_colorspace] if dst_colorspace is not None else Colorspace.DEFAULT).value
+        cdef int c_src_colorspace = (Colorspace[src_colorspace].value if src_colorspace is not None else frame.colorspace)
+        cdef int c_dst_colorspace = (Colorspace[dst_colorspace].value if dst_colorspace is not None else frame.colorspace)
         cdef int c_interpolation = (Interpolation[interpolation] if interpolation is not None else Interpolation.BILINEAR).value
+        cdef int c_src_color_range = (ColorRange[src_color_range].value if src_color_range is not None else frame.color_range)
+        cdef int c_dst_color_range = (ColorRange[dst_color_range].value if dst_color_range is not None else frame.color_range)
 
         return self._reformat(
             frame,
@@ -88,11 +103,14 @@ cdef class VideoReformatter(object):
             c_src_colorspace,
             c_dst_colorspace,
             c_interpolation,
+            c_src_color_range,
+            c_dst_color_range,
         )
 
     cdef _reformat(self, VideoFrame frame, int width, int height,
                    lib.AVPixelFormat dst_format, int src_colorspace,
-                   int dst_colorspace, int interpolation):
+                   int dst_colorspace, int interpolation,
+                   int src_color_range, int dst_color_range):
 
         if frame.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
@@ -104,7 +122,8 @@ cdef class VideoReformatter(object):
             dst_format == src_format and
             width == frame.ptr.width and
             height == frame.ptr.height and
-            dst_colorspace == src_colorspace
+            dst_colorspace == src_colorspace and
+            src_color_range == dst_color_range
         ):
             return frame
 
@@ -126,24 +145,28 @@ cdef class VideoReformatter(object):
                 NULL
             )
 
-        # We want to change the colorspace transforms. We do that by grabbing
-        # all of the current settings, changing a couple, and setting them all.
-        # We need a lot of state here.
+        # We want to change the colorspace/color_range transforms.
+        # We do that by grabbing all of the current settings, changing a
+        # couple, and setting them all. We need a lot of state here.
         cdef const int *inv_tbl
         cdef const int *tbl
-        cdef int src_range, dst_range, brightness, contrast, saturation
+        cdef int src_colorspace_range, dst_colorspace_range
+        cdef int brightness, contrast, saturation
         cdef int ret
-        if src_colorspace != dst_colorspace:
 
+        if (
+            src_colorspace != dst_colorspace or
+            src_color_range != dst_color_range
+        ):
             with nogil:
 
                 # Casts for const-ness, because Cython isn't expressive enough.
                 ret = lib.sws_getColorspaceDetails(
                     self.ptr,
                     <int**>&inv_tbl,
-                    &src_range,
+                    &src_colorspace_range,
                     <int**>&tbl,
-                    &dst_range,
+                    &dst_colorspace_range,
                     &brightness,
                     &contrast,
                     &saturation
@@ -164,9 +187,9 @@ cdef class VideoReformatter(object):
                 ret = lib.sws_setColorspaceDetails(
                     self.ptr,
                     inv_tbl,
-                    src_range,
+                    src_color_range,
                     tbl,
-                    dst_range,
+                    dst_color_range,
                     brightness,
                     contrast,
                     saturation

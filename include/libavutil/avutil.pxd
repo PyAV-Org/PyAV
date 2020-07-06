@@ -39,6 +39,25 @@ cdef extern from "libavutil/avutil.h" nogil:
         # This is nice, but only in FFMpeg:
         # AV_ROUND_PASS_MINMAX
 
+    cdef enum AVColorSpace:
+        AVCOL_SPC_RGB
+        AVCOL_SPC_BT709
+        AVCOL_SPC_UNSPECIFIED
+        AVCOL_SPC_RESERVED
+        AVCOL_SPC_FCC
+        AVCOL_SPC_BT470BG
+        AVCOL_SPC_SMPTE170M
+        AVCOL_SPC_SMPTE240M
+        AVCOL_SPC_YCOCG
+        AVCOL_SPC_BT2020_NCL
+        AVCOL_SPC_BT2020_CL
+        AVCOL_SPC_NB
+
+    cdef enum AVColorRange:
+        AVCOL_RANGE_UNSPECIFIED
+        AVCOL_RANGE_MPEG
+        AVCOL_RANGE_JPEG
+        AVCOL_RANGE_NB
 
     cdef double M_PI
 
