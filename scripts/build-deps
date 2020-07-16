@@ -47,8 +47,6 @@ echo ./configure
     --disable-static \
     --disable-stripping \
     --enable-debug=3 \
-    --enable-gpl \
-    --enable-libx264 \
     --enable-shared \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
