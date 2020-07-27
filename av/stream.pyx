@@ -165,6 +165,8 @@ cdef class Stream(object):
 
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.decode`.
         """
+        if self.codec_context is None:
+            err_check(lib.AVERROR_DECODER_NOT_FOUND)
         return self.codec_context.decode(packet)
 
     @deprecation.method
