@@ -111,6 +111,7 @@ cdef class InputContainer(Container):
         # (and others).
         id(kwargs)
 
+
         streams = self.streams.get(*args, **kwargs)
 
         cdef bint *include_stream = <bint*>malloc(self.ptr.nb_streams * sizeof(bint))
@@ -124,14 +125,6 @@ cdef class InputContainer(Container):
         self.set_timeout(self.read_timeout)
         try:
 
-            for i in range(self.ptr.nb_streams):
-                include_stream[i] = False
-            for stream in streams:
-                i = stream.index
-                if i >= self.ptr.nb_streams:
-                    raise ValueError('stream index %d out of range' % i)
-                include_stream[i] = True
-
             while True:
 
                 packet = Packet()
@@ -142,6 +135,19 @@ cdef class InputContainer(Container):
                     self.err_check(ret)
                 except EOFError:
                     break
+
+                if self.ptr.nb_streams != len(self.streams):
+                    self.streams = StreamContainer()
+                    for i in range(self.ptr.nb_streams):
+                        self.streams.add_stream(wrap_stream(self, self.ptr.streams[i]))
+
+                for i in range(self.ptr.nb_streams):
+                    include_stream[i] = False
+                for stream in streams:
+                    i = stream.index
+                    if i >= self.ptr.nb_streams:
+                        raise ValueError('stream index %d out of range' % i)
+                    include_stream[i] = True
 
                 if include_stream[packet.struct.stream_index]:
                     # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
