@@ -229,7 +229,7 @@ jobs:
           CIBW_TEST_COMMAND_MACOS: true
           CIBW_TEST_REQUIRES: numpy
         run: |
-          pip install cibuildwheel
+          pip install cibuildwheel==1.4.2
           cibuildwheel --output-dir dist
         shell: bash
       - name: Upload wheels
