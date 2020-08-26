@@ -2,6 +2,7 @@ from av.enum cimport define_enum
 
 from av.sidedata.motionvectors import MotionVectors
 
+
 try:
     from collections.abc import Mapping
 except ImportError:

@@ -1,8 +1,8 @@
 from av.utils cimport avrational_to_fraction, to_avrational
 
-from av.sidedata.sidedata import SideDataContainer
-
 from fractions import Fraction
+
+from av.sidedata.sidedata import SideDataContainer
 
 
 cdef class Frame(object):

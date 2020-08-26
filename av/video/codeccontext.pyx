@@ -1,13 +1,12 @@
 from libc.stdint cimport int64_t
-
 cimport libav as lib
 
 from av.codec.context cimport CodecContext
+from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
-from av.error cimport err_check
-from av.video.format cimport get_video_format, VideoFormat
+from av.video.format cimport VideoFormat, get_video_format
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 

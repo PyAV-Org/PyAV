@@ -1,5 +1,5 @@
 from libc.stdint cimport int64_t
-from libc.stdlib cimport malloc, free
+from libc.stdlib cimport free, malloc
 
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary

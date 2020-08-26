@@ -1,6 +1,6 @@
 from fractions import Fraction
-import os
 import logging
+import os
 
 from av.codec.codec cimport Codec
 from av.container.streams cimport StreamContainer

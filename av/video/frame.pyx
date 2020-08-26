@@ -1,10 +1,11 @@
 from libc.stdint cimport uint8_t
 
-from av.deprecation import renamed_attr
 from av.enum cimport define_enum
 from av.error cimport err_check
-from av.video.format cimport get_video_format, VideoFormat
+from av.video.format cimport VideoFormat, get_video_format
 from av.video.plane cimport VideoPlane
+
+from av.deprecation import renamed_attr
 
 
 cdef object _cinit_bypass_sentinel

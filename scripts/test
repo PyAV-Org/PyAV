@@ -25,11 +25,7 @@ fi
 
 if istest isort; then
     # More settings in setup.cfg
-    out="$($PYAV_PYTHON -m isort -q -df -rc av examples tests)"
-    if [[ "$out" ]]; then
-        echo -n "$out"
-        exit 1
-    fi
+    $PYAV_PYTHON -m isort --check-only --diff av examples tests
 fi
 
 if istest main; then

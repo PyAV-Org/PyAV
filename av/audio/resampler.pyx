@@ -1,5 +1,4 @@
 from libc.stdint cimport int64_t, uint8_t
-
 cimport libav as lib
 
 from av.audio.fifo cimport AudioFifo

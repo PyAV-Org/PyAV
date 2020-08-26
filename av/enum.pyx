@@ -12,6 +12,7 @@ integers for names and values respectively.
 from collections import OrderedDict
 import sys
 
+
 try:
     import copyreg
 except ImportError:

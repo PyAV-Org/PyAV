@@ -1,18 +1,18 @@
 from libc.errno cimport EAGAIN
-from libc.stdint cimport uint8_t, int64_t
-from libc.stdlib cimport malloc, realloc, free
+from libc.stdint cimport int64_t, uint8_t
+from libc.stdlib cimport free, malloc, realloc
 from libc.string cimport memcpy
-
 cimport libav as lib
 
 from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec
 from av.dictionary cimport _Dictionary
-from av.dictionary import Dictionary
 from av.enum cimport define_enum
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
+
+from av.dictionary import Dictionary
 
 
 cdef object _cinit_sentinel = object()
