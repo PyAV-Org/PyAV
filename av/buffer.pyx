@@ -1,6 +1,5 @@
+from cpython cimport PyBUF_WRITABLE, PyBuffer_FillInfo
 from libc.string cimport memcpy
-
-from cpython cimport PyBuffer_FillInfo, PyBUF_WRITABLE
 
 from av.bytesource cimport ByteSource, bytesource
 

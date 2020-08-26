@@ -2,9 +2,9 @@ from libc.stdint cimport int64_t, uint8_t, uint64_t
 
 from fractions import Fraction
 
-from av.error cimport err_check
-
 cimport libav as lib
+
+from av.error cimport err_check
 
 
 # === DICTIONARIES ===
@@ -69,4 +69,6 @@ cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
 
 
 # === BACKWARDS COMPAT ===
-from .error import FFmpegError as AVError, err_check
+
+from .error import FFmpegError as AVError
+from .error import err_check

@@ -1,6 +1,6 @@
-from libc.stdint cimport int64_t
-from libc.stdlib cimport malloc, free
 from cython.operator cimport dereference
+from libc.stdint cimport int64_t
+from libc.stdlib cimport free, malloc
 
 import os
 import time
@@ -10,13 +10,14 @@ cimport libav as lib
 from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
-from av.container.pyio cimport pyio_read, pyio_write, pyio_seek
+from av.container.pyio cimport pyio_read, pyio_seek, pyio_write
 from av.enum cimport define_enum
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
+
 
 ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 

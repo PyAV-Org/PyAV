@@ -1,4 +1,9 @@
-from cpython.buffer cimport PyObject_CheckBuffer, PyObject_GetBuffer, PyBUF_SIMPLE, PyBuffer_Release
+from cpython.buffer cimport (
+    PyBUF_SIMPLE,
+    PyBuffer_Release,
+    PyObject_CheckBuffer,
+    PyObject_GetBuffer
+)
 
 
 cdef class ByteSource(object):

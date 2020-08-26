@@ -1,5 +1,4 @@
 from libc.string cimport memcpy
-
 cimport libav as lib
 
 from av.container.core cimport Container

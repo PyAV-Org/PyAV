@@ -1,14 +1,17 @@
-from libc.stdint cimport uint8_t, int64_t
-from libc.string cimport memcpy
 from cpython cimport PyWeakref_NewRef
-
+from libc.stdint cimport int64_t, uint8_t
+from libc.string cimport memcpy
 cimport libav as lib
-
 
 from av.codec.context cimport wrap_codec_context
 from av.error cimport err_check
 from av.packet cimport Packet
-from av.utils cimport dict_to_avdict, avdict_to_dict, avrational_to_fraction, to_avrational
+from av.utils cimport (
+    avdict_to_dict,
+    avrational_to_fraction,
+    dict_to_avdict,
+    to_avrational
+)
 
 from av import deprecation
 

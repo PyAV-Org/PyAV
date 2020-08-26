@@ -1,5 +1,4 @@
 from libc.stdint cimport uint8_t
-
 cimport libav as lib
 
 from av.enum cimport define_enum
