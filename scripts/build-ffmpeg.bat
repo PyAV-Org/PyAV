@@ -1,5 +1,5 @@
 set destdir=%1
-set ffmpeg_version=4.2.2
+set ffmpeg_version=4.3.1
 set ffmpeg_basename=ffmpeg-%ffmpeg_version%-win%PYTHON_ARCH%
 set outputdir=output
 
@@ -9,7 +9,7 @@ for %%d in (%destdir% %ffmpeg_basename%-dev %ffmpeg_basename%-shared) do (
     )
 )
 
-set outputfile=%outputdir%\ffmpeg-%ffmpeg_version%-win%PYTHON_ARCH%.tar.bz2
+set outputfile=%outputdir%\ffmpeg-win%PYTHON_ARCH%.tar.gz
 
 if not exist %outputdir% (
     mkdir %outputdir%
@@ -33,5 +33,5 @@ if not exist %outputfile% (
     mkdir %destdir%\bin
     xcopy %ffmpeg_basename%-shared\bin %destdir%\bin\ /E
 
-    tar cjvf %outputfile% -C %destdir% bin include lib
+    tar czvf %outputfile% -C %destdir% bin include lib
 )

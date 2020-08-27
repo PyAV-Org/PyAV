@@ -8,7 +8,7 @@ if [ -z "$1" ]; then
 fi
 
 destdir=$1
-ffmpeg_version=4.2.2
+ffmpeg_version=4.3.1
 
 builddir=`pwd`/build
 sourcedir=`pwd`/source
@@ -52,10 +52,10 @@ extract() {
 cmake_args="-DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_PREFIX=$destdir"
 if [ "`uname`" = "Linux" ]; then
     outputdir=/output
-    outputfile=$outputdir/ffmpeg-$ffmpeg_version-manylinux_$(uname -m).tar.bz2
+    outputfile=$outputdir/ffmpeg-manylinux_$(uname -m).tar.gz
 elif [ "`uname`" = "Darwin" ]; then
     outputdir=`pwd`/output
-    outputfile=$outputdir/ffmpeg-$ffmpeg_version-macosx_$(uname -m).tar.bz2
+    outputfile=$outputdir/ffmpeg-macosx_$(uname -m).tar.gz
     cmake_args="$cmake_args -DCMAKE_INSTALL_NAME_DIR=$destdir/lib"
 else
     echo "Unknown platform"
@@ -306,5 +306,5 @@ EOF
     if [ "`uname`" = "Darwin" ]; then
         otool -L $destdir/lib/*.dylib
     fi
-    tar cjvf $outputfile -C $destdir include lib
+    tar czvf $outputfile -C $destdir include lib
 fi
