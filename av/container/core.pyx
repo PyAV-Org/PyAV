@@ -240,6 +240,9 @@ cdef class Container(object):
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = <void*>self
 
+        # Force audio codec to be PCM signed 32-bit little-endian.
+        self.ptr.audio_codec_id = lib.AV_CODEC_ID_PCM_S32LE
+
         # Setup Python IO.
         self.open_files = {}
         if not isinstance(file_, basestring):

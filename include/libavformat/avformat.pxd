@@ -177,6 +177,8 @@ cdef extern from "libavformat/avformat.h" nogil:
 
         AVDictionary *metadata
 
+        AVCodecID audio_codec_id
+
         char filename
         int64_t start_time
         int64_t duration

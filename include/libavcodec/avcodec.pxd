@@ -115,6 +115,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_ID_NONE
         AV_CODEC_ID_MPEG2VIDEO
         AV_CODEC_ID_MPEG1VIDEO
+        AV_CODEC_ID_PCM_S32LE
 
     cdef enum AVDiscard:
         AVDISCARD_NONE
