@@ -177,6 +177,7 @@ cdef extern from "libavformat/avformat.h" nogil:
 
         AVDictionary *metadata
 
+        # Forced audio codec set by user.
         AVCodecID audio_codec_id
 
         char filename
