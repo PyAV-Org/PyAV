@@ -157,11 +157,14 @@ cdef class OutputContainer(Container):
 
             stream._finalize_for_output()
 
+        cdef _Dictionary all_options = Dictionary(self.options, self.container_options, self.protocol_options)
+        cdef _Dictionary options = all_options.copy()
+
         # Open the output file, if needed.
         cdef bytes name_obj = os.fsencode(self.name if self.file is None else "")
         cdef char *name = name_obj
         if self.ptr.pb == NULL and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            err_check(lib.avio_open(&self.ptr.pb, name, lib.AVIO_FLAG_WRITE))
+            err_check(lib.avio_open2(&self.ptr.pb, name, lib.AVIO_FLAG_WRITE, NULL, &options.ptr))
 
         # Copy the metadata dict.
         dict_to_avdict(
@@ -170,8 +173,6 @@ cdef class OutputContainer(Container):
             errors=self.metadata_errors
         )
 
-        cdef _Dictionary all_options = Dictionary(self.options, self.container_options)
-        cdef _Dictionary options = all_options.copy()
         self.err_check(lib.avformat_write_header(
             self.ptr,
             &options.ptr

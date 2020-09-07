@@ -13,6 +13,7 @@ Generic
 .. autoclass:: Container
 
     .. attribute:: options
+    .. attribute:: protocol_options
     .. attribute:: container_options
     .. attribute:: stream_options
     .. attribute:: metadata_encoding
@@ -76,4 +77,3 @@ Flags
 
     .. enumtable:: av.format.Flags
         :class: av.format.ContainerFormat
-

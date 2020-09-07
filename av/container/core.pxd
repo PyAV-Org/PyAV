@@ -31,6 +31,7 @@ cdef class Container(object):
     cdef readonly ContainerFormat format
 
     cdef readonly dict options
+    cdef readonly dict protocol_options
     cdef readonly dict container_options
     cdef readonly list stream_options
 

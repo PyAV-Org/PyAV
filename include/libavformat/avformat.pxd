@@ -240,10 +240,12 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVPacket *pkt
     )
 
-    cdef int avio_open(
+    cdef int avio_open2(
         AVIOContext **s,
         char *url,
-        int flags
+        int flags,
+        AVIOInterruptCB *interrupt_callback,
+        AVDictionary **options,
     )
 
     cdef int64_t avio_size(

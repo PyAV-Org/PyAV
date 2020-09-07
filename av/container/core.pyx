@@ -171,7 +171,7 @@ Flags = define_enum('Flags', __name__, (
 cdef class Container(object):
 
     def __cinit__(self, sentinel, file_, format_name, options,
-                  container_options, stream_options,
+                  protocol_options, container_options, stream_options,
                   metadata_encoding, metadata_errors,
                   buffer_size, open_timeout, read_timeout,
                   io_open):
@@ -189,6 +189,7 @@ cdef class Container(object):
             self.name = str(getattr(file_, 'name', '<none>'))
 
         self.options = dict(options or ())
+        self.protocol_options = dict(protocol_options or ())
         self.container_options = dict(container_options or ())
         self.stream_options = [dict(x) for x in stream_options or ()]
 
@@ -257,7 +258,7 @@ cdef class Container(object):
 
             ifmt = self.format.iptr if self.format else NULL
 
-            c_options = Dictionary(self.options, self.container_options)
+            c_options = Dictionary(self.options, self.protocol_options, self.container_options)
 
             self.set_timeout(self.open_timeout)
             self.start_timeout()
@@ -335,8 +336,8 @@ cdef class Container(object):
     auto_bsf = flags.flag_property('AUTO_BSF')
 
 
-def open(file, mode=None, format=None, options=None,
-         container_options=None, stream_options=None,
+def open(file, mode=None, format=None, options=None, *,
+         protocol_options=None, container_options=None, stream_options=None,
          metadata_encoding='utf-8', metadata_errors='strict',
          buffer_size=32768, timeout=None, io_open=None):
     """open(file, mode='r', **kwargs)
@@ -347,6 +348,7 @@ def open(file, mode=None, format=None, options=None,
     :param str mode: ``"r"`` for reading and ``"w"`` for writing.
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and all streams.
+    :param dict protocol_options: Options to pass to the protocol implementation.
     :param dict container_options: Options to pass to the container.
     :param list stream_options: Options to pass to each stream.
     :param str metadata_encoding: Encoding to use when reading or writing file metadata.
@@ -400,7 +402,7 @@ def open(file, mode=None, format=None, options=None,
     if mode.startswith('r'):
         return InputContainer(
             _cinit_sentinel, file, format, options,
-            container_options, stream_options,
+            protocol_options, container_options, stream_options,
             metadata_encoding, metadata_errors,
             buffer_size, open_timeout, read_timeout,
             io_open
@@ -410,7 +412,7 @@ def open(file, mode=None, format=None, options=None,
             raise ValueError("Provide stream options via Container.add_stream(..., options={}).")
         return OutputContainer(
             _cinit_sentinel, file, format, options,
-            container_options, stream_options,
+            protocol_options, container_options, stream_options,
             metadata_encoding, metadata_errors,
             buffer_size, open_timeout, read_timeout,
             io_open
