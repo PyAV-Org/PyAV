@@ -26,6 +26,9 @@ try:
 except ImportError:
     MSVC14Compiler = None
 
+this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(this_dir, "include"))  # needed for cythonize to work properly
+
 try:
     from Cython import __version__ as cython_version
     from Cython.Build import cythonize
@@ -33,7 +36,17 @@ except ImportError:
     cythonize = None
 else:
     # We depend upon some features in Cython 0.27; reject older ones.
-    if tuple(map(int, cython_version.split('.'))) < (0, 27):
+    def version2tuple(versionStr):
+        res = []
+        for el in versionStr.split('.'):
+            try:
+                el = int(el)
+            except ValueError:
+                el = 0
+            res.append(el)
+        return tuple(res)
+
+    if version2tuple(cython_version) < (0, 27):
         print("Cython {} is too old for PyAV; ignoring it.".format(cython_version))
         cythonize = None
 
