@@ -351,7 +351,7 @@ codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 def dump_codecs():
     """Print information about availible codecs."""
 
-    print '''Codecs:
+    print('''Codecs:
  D..... = Decoding supported
  .E.... = Encoding supported
  ..V... = Video codec
@@ -360,7 +360,7 @@ def dump_codecs():
  ...I.. = Intra frame-only codec
  ....L. = Lossy compression
  .....S = Lossless compression
- ------'''
+ ------''')
 
     for name in sorted(codecs_available):
 
@@ -378,7 +378,7 @@ def dump_codecs():
         codec = e_codec or d_codec
 
         try:
-            print ' %s%s%s%s%s%s %-18s %s' % (
+            print(' %s%s%s%s%s%s %-18s %s' % (
                 '.D'[bool(d_codec)],
                 '.E'[bool(e_codec)],
                 codec.type[0].upper(),
@@ -387,6 +387,6 @@ def dump_codecs():
                 '.S'[codec.lossless],
                 codec.name,
                 codec.long_name
-            )
+            ))
         except Exception as e:
-            print '...... %-18s ERROR: %s' % (codec.name, e)
+            print('...... %-18s ERROR: %s' % (codec.name, e))
