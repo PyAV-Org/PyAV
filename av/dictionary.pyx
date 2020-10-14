@@ -1,3 +1,5 @@
+# cython: c_string_type=unicode, c_string_encoding=utf-8
+
 try:
     from collections.abc import MutableMapping
 except ImportError:
@@ -19,7 +21,7 @@ cdef class _Dictionary(object):
             lib.av_dict_free(&self.ptr)
 
     def __getitem__(self, str key):
-        cdef lib.AVDictionaryEntry *element = lib.av_dict_get(self.ptr, key, NULL, 0)
+        cdef lib.AVDictionaryEntry *element = lib.av_dict_get(self.ptr, <bytes> key, NULL, 0)
         if element != NULL:
             return element.value
         else:

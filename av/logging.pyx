@@ -1,3 +1,5 @@
+# cython: c_string_type=unicode, c_string_encoding=utf-8
+
 """
 FFmpeg has a logging system that it uses extensively. PyAV hooks into that system
 to translate FFmpeg logs into Python's
@@ -235,7 +237,7 @@ cpdef log(int level, str name, str message):
     cdef log_context *obj = <log_context*>malloc(sizeof(log_context))
     obj.class_ = &log_class
     obj.name = name
-    lib.av_log(<void*>obj, level, "%s", message)
+    lib.av_log(<void*>obj, level, "%s", <bytes> message)
     free(obj)
 
 

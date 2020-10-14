@@ -1,3 +1,5 @@
+# cython: c_string_type=unicode, c_string_encoding=utf-8
+
 cimport libav as lib
 
 from av.descriptor cimport wrap_avclass
