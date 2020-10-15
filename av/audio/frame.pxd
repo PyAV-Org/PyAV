@@ -1,10 +1,9 @@
 from libc.stdint cimport uint8_t, uint64_t
-
 cimport libav as lib
 
-from av.frame cimport Frame
 from av.audio.format cimport AudioFormat
 from av.audio.layout cimport AudioLayout
+from av.frame cimport Frame
 
 
 cdef class AudioFrame(Frame):
