@@ -1,5 +1,4 @@
 from libc.stdint cimport uint64_t
-
 cimport libav as lib
 
 from av.audio.format cimport AudioFormat

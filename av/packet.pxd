@@ -1,8 +1,8 @@
 cimport libav as lib
 
 from av.buffer cimport Buffer
-from av.stream cimport Stream
 from av.bytesource cimport ByteSource
+from av.stream cimport Stream
 
 
 cdef class Packet(Buffer):

@@ -1,11 +1,10 @@
 from libc.stdint cimport int64_t
-
 cimport libav as lib
 
+from av.bytesource cimport ByteSource
 from av.codec.codec cimport Codec
 from av.frame cimport Frame
 from av.packet cimport Packet
-from av.bytesource cimport ByteSource
 
 
 cdef class CodecContext(object):

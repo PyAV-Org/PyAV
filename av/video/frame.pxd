@@ -1,5 +1,4 @@
-from libc.stdint cimport uint8_t, uint16_t, int16_t, int32_t, uint64_t
-
+from libc.stdint cimport int16_t, int32_t, uint8_t, uint16_t, uint64_t
 cimport libav as lib
 
 from av.frame cimport Frame
