@@ -19,6 +19,7 @@ except ImportError:
 
 
 is_windows = os.name == 'nt'
+skip_tests = frozenset(os.environ.get("PYAV_SKIP_TESTS", "").split(","))
 
 
 def makedirs(path):
