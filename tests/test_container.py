@@ -3,7 +3,7 @@ import unittest
 
 import av
 
-from .common import TestCase, fate_suite, is_windows
+from .common import TestCase, fate_suite, is_windows, skip_tests
 
 
 # On Windows, Python 3.0 - 3.5 have issues handling unicode filenames.
@@ -21,7 +21,7 @@ class TestContainers(TestCase):
             self.assertEqual(container.format.long_name, 'QuickTime / MOV')
             self.assertEqual(len(container.streams), 1)
 
-    @unittest.skipIf(broken_unicode, 'Unicode filename handling is broken')
+    @unittest.skipIf(broken_unicode or 'unicode_filename' in skip_tests, 'Unicode filename handling is broken')
     def test_unicode_filename(self):
 
         av.open(self.sandboxed(u'¢∞§¶•ªº.mov'), 'w')
