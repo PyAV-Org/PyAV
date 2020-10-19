@@ -1,3 +1,7 @@
+# include setup files
+include setup.py
+include pyproject.toml
+
 include *.txt *.md
 recursive-include av *.pyx *.pxd
 recursive-include docs *.rst *.py
