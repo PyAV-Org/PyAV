@@ -1,5 +1,6 @@
 import argparse
 import os
+import pathlib
 import platform
 import re
 import shlex
@@ -178,6 +179,9 @@ about_file = os.path.join(os.path.dirname(__file__), "av", "about.py")
 with open(about_file, encoding="utf-8") as fp:
     exec(fp.read(), about)
 
+package_folders = pathlib.Path("av").glob("**/")
+package_data = {".".join(pckg.parts): ["*.pxd"] for pckg in package_folders}
+
 
 setup(
     name="av",
@@ -187,6 +191,7 @@ setup(
     author_email="pyav@mikeboers.com",
     url="https://github.com/PyAV-Org/PyAV",
     packages=find_packages(exclude=["build*", "examples*", "scratchpad*", "tests*"]),
+    package_data=package_data,
     zip_safe=False,
     ext_modules=ext_modules,
     test_suite="tests",
