@@ -106,7 +106,7 @@ def set_level(int level):
 
     Sets logging threshold when converting from FFmpeg's logging system
     to Python's. It is recommended to use the constants availible in this
-    module to set the level: ``QUIET``, ``PANIC``, ``FATAL``, ``ERROR``,
+    module to set the level: ``PANIC``, ``FATAL``, ``ERROR``,
     ``WARNING``, ``INFO``, ``VERBOSE``, and ``DEBUG``.
 
     While less efficient, it is generally preferable to modify logging
