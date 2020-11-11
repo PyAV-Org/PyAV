@@ -52,6 +52,7 @@ _cflag_parser = argparse.ArgumentParser(add_help=False)
 _cflag_parser.add_argument('-I', dest='include_dirs', action='append')
 _cflag_parser.add_argument('-L', dest='library_dirs', action='append')
 _cflag_parser.add_argument('-l', dest='libraries', action='append')
+_cflag_parser.add_argument('-p', dest='threads', action='append')
 _cflag_parser.add_argument('-D', dest='define_macros', action='append')
 _cflag_parser.add_argument('-R', dest='runtime_library_dirs', action='append')
 def parse_cflags(raw_cflags):
