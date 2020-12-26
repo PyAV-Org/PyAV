@@ -1,3 +1,4 @@
+import errno
 import traceback
 
 import av
@@ -47,7 +48,7 @@ class TestErrorBasics(TestCase):
         try:
             av.open('does not exist')
         except FileNotFoundError as e:
-            self.assertEqual(e.errno, 2)
+            self.assertEqual(e.errno, errno.ENOENT)
             if is_windows:
                 self.assertTrue(e.strerror in ['Error number -2 occurred',
                                                'No such file or directory'])
