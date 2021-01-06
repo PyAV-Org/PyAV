@@ -125,6 +125,92 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDISCARD_NONKEY
         AVDISCARD_ALL
 
+    cdef enum AVChromaLocation:
+        AVCHROMA_LOC_UNSPECIFIED
+        AVCHROMA_LOC_LEFT
+        AVCHROMA_LOC_CENTER
+        AVCHROMA_LOC_TOPLEFT
+        AVCHROMA_LOC_TOP
+        AVCHROMA_LOC_BOTTOMLEFT
+        AVCHROMA_LOC_BOTTOM
+        AVCHROMA_LOC_NB
+
+    cdef enum AVColorSpace:
+        AVCOL_SPC_RGB
+        AVCOL_SPC_BT709
+        AVCOL_SPC_UNSPECIFIED
+        AVCOL_SPC_RESERVED
+        AVCOL_SPC_FCC
+        AVCOL_SPC_BT470BG
+        AVCOL_SPC_SMPTE170M
+        AVCOL_SPC_SMPTE240M
+        AVCOL_SPC_YCGCO
+        AVCOL_SPC_YCOCG
+        AVCOL_SPC_BT2020_NCL
+        AVCOL_SPC_BT2020_CL
+        AVCOL_SPC_SMPTE2085
+        AVCOL_SPC_CHROMA_DERIVED_NCL
+        AVCOL_SPC_CHROMA_DERIVED_CL
+        AVCOL_SPC_ICTCP
+        AVCOL_SPC_NB
+
+    cdef enum AVColorTransferCharacteristic:
+        AVCOL_TRC_RESERVED0
+        AVCOL_TRC_BT709
+        AVCOL_TRC_UNSPECIFIED
+        AVCOL_TRC_RESERVED
+        AVCOL_TRC_GAMMA22
+        AVCOL_TRC_GAMMA28
+        AVCOL_TRC_SMPTE170M
+        AVCOL_TRC_SMPTE240M
+        AVCOL_TRC_LINEAR
+        AVCOL_TRC_LOG
+        AVCOL_TRC_LOG_SQRT
+        AVCOL_TRC_IEC61966_2_4
+        AVCOL_TRC_BT1361_ECG
+        AVCOL_TRC_IEC61966_2_1
+        AVCOL_TRC_BT2020_10
+        AVCOL_TRC_BT2020_12
+        AVCOL_TRC_SMPTE2084
+        AVCOL_TRC_SMPTEST2084
+        AVCOL_TRC_SMPTE428
+        AVCOL_TRC_SMPTEST428_1
+        AVCOL_TRC_ARIB_STD_B67
+        AVCOL_TRC_NB
+
+    cdef enum AVColorPrimaries:
+        AVCOL_PRI_RESERVED0
+        AVCOL_PRI_BT709
+        AVCOL_PRI_UNSPECIFIED
+        AVCOL_PRI_RESERVED
+        AVCOL_PRI_BT470M
+        AVCOL_PRI_BT470BG
+        AVCOL_PRI_SMPTE170M
+        AVCOL_PRI_SMPTE240M
+        AVCOL_PRI_FILM
+        AVCOL_PRI_BT2020
+        AVCOL_PRI_SMPTE428
+        AVCOL_PRI_SMPTEST428_1
+        AVCOL_PRI_SMPTE431
+        AVCOL_PRI_SMPTE432
+        AVCOL_PRI_EBU3213
+        AVCOL_PRI_JEDEC_P22
+        AVCOL_PRI_NB
+
+    cdef enum AVColorRange:
+        AVCOL_RANGE_UNSPECIFIED
+        AVCOL_RANGE_MPEG
+        AVCOL_RANGE_JPEG
+        AVCOL_RANGE_NB
+
+    cdef enum AVFieldOrder:
+        AV_FIELD_UNKNOWN
+        AV_FIELD_PROGRESSIVE
+        AV_FIELD_TT
+        AV_FIELD_BB
+        AV_FIELD_TB
+        AV_FIELD_BT
+
     cdef struct AVCodec:
 
         char *name
@@ -453,12 +539,47 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     )
     cdef void av_parser_close(AVCodecParserContext *s)
 
+    cdef AVCodecParameters *avcodec_parameters_alloc()
 
+    # This struct describes the properties of an encoded stream.
     cdef struct AVCodecParameters:
-        pass
+        AVMediaType codec_type
+        AVCodecID   codec_id
+        uint32_t         codec_tag
+        uint8_t *extradata
+        int      extradata_size
+        int format
+        int64_t bit_rate
+        int bits_per_coded_sample
+        int bits_per_raw_sample
+        int profile
+        int level
+        int width
+        int height
+        AVRational sample_aspect_ratio
+        AVFieldOrder                  field_order
+        AVColorRange                  color_range
+        AVColorPrimaries              color_primaries
+        AVColorTransferCharacteristic color_trc
+        AVColorSpace                  color_space
+        AVChromaLocation              chroma_location
+        int video_delay
+        uint64_t channel_layout
+        int      channels
+        int      sample_rate
+        int      block_align
+        int      frame_size
+        int initial_padding
+        int trailing_padding
+        int seek_preroll
 
     cdef int avcodec_parameters_from_context(
         AVCodecParameters *par,
         const AVCodecContext *codec,
+    )
+
+    cdef int avcodec_parameters_to_context(
+        AVCodecContext *codec,
+        const AVCodecParameters *par,
     )
 
