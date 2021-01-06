@@ -71,7 +71,7 @@ cdef class OutputContainer(Container):
                 raise ValueError("template has no codec")
             if not template._codec_context:
                 raise ValueError("template has no codec context")
-            codec = template._codec
+            codec = lib.avcodec_find_encoder(template._codec.id)
 
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(
