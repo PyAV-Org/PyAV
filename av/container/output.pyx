@@ -92,7 +92,6 @@ cdef class OutputContainer(Container):
         # Copy from the template.
         cdef const lib.AVCodecParameters *codec_params = lib.avcodec_parameters_alloc()
         if template is not None:
-            # lib.avcodec_copy_context(codec_context, template._codec_context)
             lib.avcodec_parameters_from_context(codec_params, template._codec_context)
             lib.avcodec_parameters_to_context(codec_context, codec_params)
             # Reset the codec tag assuming we are remuxing.
