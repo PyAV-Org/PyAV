@@ -71,7 +71,7 @@ cdef class OutputContainer(Container):
                 raise ValueError("template has no codec")
             if not template._codec_context:
                 raise ValueError("template has no codec context")
-            
+
             if remux:
                 codec = template._codec
             else:
