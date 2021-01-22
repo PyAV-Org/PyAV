@@ -16,9 +16,12 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch, currently "develop").
 
-v8.0.3.dev0
+v8.0.3
 ------
 
+Minor:
+
+- Update FFmpeg to 4.3.1 for the binary wheels.
 
 v8.0.2
 ------
