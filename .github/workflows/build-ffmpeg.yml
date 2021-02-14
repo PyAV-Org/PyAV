@@ -11,14 +11,22 @@ jobs:
         include:
           - os: macos-latest
             arch: arm64
+            shell: bash
           - os: macos-latest
             arch: x86_64
+            shell: bash
           - os: ubuntu-latest
             arch: i686
+            shell: bash
           - os: ubuntu-latest
             arch: x86_64
+            shell: bash
           - os: windows-latest
             arch: AMD64
+            shell: 'msys2 {0}'
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
@@ -30,11 +38,16 @@ jobs:
           brew update
           brew install pkg-config
           brew unlink gettext libidn2 libpng libtiff libunistring unbound
+      - uses: msys2/setup-msys2@v2
+        if: matrix.os == 'windows-latest'
+        with:
+          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-nasm
+          path-type: inherit
       - name: Build FFmpeg
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: python scripts/build-ffmpeg.py /tmp/vendor
-          CIBW_BEFORE_BUILD_WINDOWS: scripts\build-ffmpeg.bat C:\cibw\vendor
+          CIBW_BEFORE_BUILD_WINDOWS: python scripts\build-ffmpeg.py C:\cibw\vendor
           CIBW_BUILD: cp38-*
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH auditwheel repair -w {dest_dir} {wheel}
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: python scripts/inject-dll.py {wheel} {dest_dir} C:\cibw\vendor\bin
@@ -44,7 +57,6 @@ jobs:
           pip install cibuildwheel
           cibuildwheel --output-dir output
           rm -f output/*.whl
-        shell: bash
       - name: Upload FFmpeg
         uses: actions/upload-artifact@v1
         with:

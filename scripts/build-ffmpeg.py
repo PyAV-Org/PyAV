@@ -1,6 +1,8 @@
 import glob
 import os
 import platform
+import shutil
+import subprocess
 import sys
 
 from cibuildpkg import Builder, Package, get_platform, log_group, run
@@ -45,6 +47,12 @@ if not os.path.exists(output_tarball):
                 ]
             )
         available_tools.update(["gperf"])
+    elif system == "Windows":
+        available_tools.update(["gperf", "nasm"])
+
+        # print tool locations
+        for tool in ["gcc", "g++", "curl", "ld", "nasm", "pkg-config"]:
+            run(["where", tool])
 
     with log_group("install python packages"):
         run(["pip", "install", "cmake", "meson", "ninja"])
@@ -88,7 +96,10 @@ if not os.path.exists(output_tarball):
             ],
         ),
         Package(
-            name="gmp", source_url="https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz"
+            name="gmp",
+            source_url="https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz",
+            # out-of-tree builds fail on Windows
+            build_dir=".",
         ),
         Package(
             name="png",
@@ -325,7 +336,39 @@ if not os.path.exists(output_tarball):
 
     if system == "Darwin":
         run(["otool", "-L"] + glob.glob(os.path.join(dest_dir, "lib", "*.dylib")))
+    elif system == "Windows":
+        # fix .lib files being installed in the wrong directory
+        for name in [
+            "avcodec",
+            "avdevice",
+            "avfilter",
+            "avformat",
+            "avutil",
+            "postproc",
+            "swresample",
+            "swscale",
+        ]:
+            shutil.move(
+                os.path.join(dest_dir, "bin", name + ".lib"),
+                os.path.join(dest_dir, "lib"),
+            )
+
+        # copy some libraries provided by mingw
+        mingw_bindir = os.path.dirname(
+            subprocess.run(["where", "gcc"], check=True, stdout=subprocess.PIPE)
+            .stdout.decode()
+            .splitlines()[0]
+            .strip()
+        )
+        for name in [
+            "libgcc_s_seh-1.dll",
+            "libiconv-2.dll",
+            "libstdc++-6.dll",
+            "libwinpthread-1.dll",
+            "zlib1.dll",
+        ]:
+            shutil.copy(os.path.join(mingw_bindir, name), os.path.join(dest_dir, "bin"))
 
     if build_stage is None or build_stage == 2:
         os.makedirs(output_dir, exist_ok=True)
-        run(["tar", "czvf", output_tarball, "-C", dest_dir, "include", "lib"])
+        run(["tar", "czvf", output_tarball, "-C", dest_dir, "bin", "include", "lib"])

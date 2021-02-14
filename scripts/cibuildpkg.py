@@ -198,8 +198,8 @@ class Builder:
         configure_args = [
             "--disable-static",
             "--enable-shared",
-            "--libdir=" + os.path.join(prefix, "lib"),
-            "--prefix=" + prefix,
+            "--libdir=" + self._mangle_path(os.path.join(prefix, "lib")),
+            "--prefix=" + self._mangle_path(prefix),
         ]
         if (
             platform.system() == "Darwin"
@@ -222,7 +222,10 @@ class Builder:
         os.makedirs(package_build_path, exist_ok=True)
         with chdir(package_build_path):
             run(
-                [os.path.join(package_source_path, "configure")]
+                [
+                    "sh",
+                    self._mangle_path(os.path.join(package_source_path, "configure")),
+                ]
                 + configure_args
                 + package.build_arguments,
                 env=env,
@@ -351,12 +354,16 @@ endian = 'little'
         env = os.environ.copy()
 
         prefix = self._prefix(for_builder=for_builder)
-        prepend_env(env, "CPPFLAGS", "-I" + os.path.join(prefix, "include"))
-        prepend_env(env, "LDFLAGS", "-L" + os.path.join(prefix, "lib"))
+        prepend_env(
+            env, "CPPFLAGS", "-I" + self._mangle_path(os.path.join(prefix, "include"))
+        )
+        prepend_env(
+            env, "LDFLAGS", "-L" + self._mangle_path(os.path.join(prefix, "lib"))
+        )
         prepend_env(
             env,
             "PKG_CONFIG_PATH",
-            os.path.join(prefix, "lib", "pkgconfig"),
+            self._mangle_path(os.path.join(prefix, "lib", "pkgconfig")),
             separator=":",
         )
 
@@ -368,6 +375,14 @@ endian = 'little'
                 prepend_env(env, var, arch_flags)
 
         return env
+
+    def _mangle_path(self, path):
+        if platform.system() == "Windows":
+            return (
+                path.replace(os.path.sep, "/").replace("C:", "/c").replace("D:", "/d")
+            )
+        else:
+            return path
 
     def _prefix(self, *, for_builder: bool) -> str:
         if for_builder:
