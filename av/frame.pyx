@@ -26,8 +26,8 @@ cdef class Frame(object):
         return 'av.%s #%d pts=%s at 0x%x>' % (
             self.__class__.__name__,
             self.index,
-            id(self),
             self.pts,
+            id(self),
         )
 
     cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
