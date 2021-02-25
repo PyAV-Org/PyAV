@@ -540,6 +540,18 @@ cdef class CodecContext(object):
         def __set__(self, value):
             to_avrational(value, &self.ptr.time_base)
 
+    property codec_tag:
+        def __get__(self):
+            return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
+                encoding="ascii")
+
+        def __set__(self, value):
+            if isinstance(value, str) and len(value) == 4:
+                self.ptr.codec_tag = int.from_bytes(value.encode(encoding="ascii"),
+                                                    byteorder="little", signed=False)
+            else:
+                raise ValueError("Codec tag should be a 4 character string.")
+
     property ticks_per_frame:
         def __get__(self):
             return self.ptr.ticks_per_frame

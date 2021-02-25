@@ -43,6 +43,22 @@ class TestCodecContext(TestCase):
         ctx = Codec('png', 'w').create()
         self.assertEqual(ctx.skip_frame.name, 'DEFAULT')
 
+    def test_codec_tag(self):
+        ctx = Codec('mpeg4', 'w').create()
+        self.assertEqual(ctx.codec_tag, '\x00\x00\x00\x00')
+        ctx.codec_tag = 'xvid'
+        self.assertEqual(ctx.codec_tag, 'xvid')
+
+        # wrong length
+        with self.assertRaises(ValueError) as cm:
+            ctx.codec_tag = 'bob'
+        self.assertEqual(str(cm.exception), 'Codec tag should be a 4 character string.')
+
+        # wrong type
+        with self.assertRaises(ValueError) as cm:
+            ctx.codec_tag = 123
+        self.assertEqual(str(cm.exception), 'Codec tag should be a 4 character string.')
+
     def test_parse(self):
 
         # This one parses into a single packet.
@@ -149,6 +165,9 @@ class TestEncoding(TestCase):
     def test_encoding_mpeg4(self):
         self.video_encoding('mpeg4')
 
+    def test_encoding_xvid(self):
+        self.video_encoding('mpeg4', codec_tag='xvid')
+
     def test_encoding_mpeg1video(self):
         self.video_encoding('mpeg1video')
 
@@ -167,7 +186,7 @@ class TestEncoding(TestCase):
                    'max_frames': 5}
         self.video_encoding('dnxhd', options)
 
-    def video_encoding(self, codec_name, options={}):
+    def video_encoding(self, codec_name, options={}, codec_tag=None):
 
         try:
             codec = Codec(codec_name, 'w')
@@ -190,6 +209,8 @@ class TestEncoding(TestCase):
         ctx.framerate = 1 / ctx.time_base
         ctx.pix_fmt = pix_fmt
         ctx.options = options  # TODO
+        if codec_tag:
+            ctx.codec_tag = codec_tag
         ctx.open()
 
         path = self.sandboxed('encoder.%s' % codec_name)
