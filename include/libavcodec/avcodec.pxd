@@ -355,6 +355,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef int av_new_packet(AVPacket*, int)
     cdef int av_packet_ref(AVPacket *dst, const AVPacket *src)
     cdef void av_packet_unref(AVPacket *pkt)
+    cdef void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb)
 
     cdef enum AVSubtitleType:
         SUBTITLE_NONE

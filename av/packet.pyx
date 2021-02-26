@@ -75,23 +75,7 @@ cdef class Packet(Buffer):
         if self._time_base.num == dst.num and self._time_base.den == dst.den:
             return
 
-        # TODO: Isn't there a function to do this?
-
-        if self.struct.pts != lib.AV_NOPTS_VALUE:
-            self.struct.pts = lib.av_rescale_q(
-                self.struct.pts,
-                self._time_base, dst
-            )
-        if self.struct.dts != lib.AV_NOPTS_VALUE:
-            self.struct.dts = lib.av_rescale_q(
-                self.struct.dts,
-                self._time_base, dst
-            )
-        if self.struct.duration > 0:
-            self.struct.duration = lib.av_rescale_q(
-                self.struct.duration,
-                self._time_base, dst
-            )
+        lib.av_packet_rescale_ts(&self.struct, self._time_base, dst)
 
         self._time_base = dst
 
