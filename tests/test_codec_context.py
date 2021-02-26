@@ -59,6 +59,9 @@ class TestCodecContext(TestCase):
             ctx.codec_tag = 123
         self.assertEqual(str(cm.exception), 'Codec tag should be a 4 character string.')
 
+        with av.open(fate_suite('h264/interlaced_crop.mp4')) as container:
+            self.assertEqual(container.streams[0].codec_tag, 'avc1')
+
     def test_parse(self):
 
         # This one parses into a single packet.
