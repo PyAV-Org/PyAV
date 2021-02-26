@@ -105,7 +105,7 @@ def set_level(int level):
     """set_level(level)
 
     Sets logging threshold when converting from FFmpeg's logging system
-    to Python's. It is recommended to use the constants availible in this
+    to Python's. It is recommended to use the constants available in this
     module to set the level: ``PANIC``, ``FATAL``, ``ERROR``,
     ``WARNING``, ``INFO``, ``VERBOSE``, and ``DEBUG``.
 
@@ -287,7 +287,7 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
     log = (level, name, message)
 
     # We have to filter it ourselves, but we will still process it in general so
-    # it is availible to our error handling.
+    # it is available to our error handling.
     # Note that FFmpeg's levels are backwards from Python's.
     cdef bint is_interesting = level <= level_threshold
 

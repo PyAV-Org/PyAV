@@ -315,7 +315,7 @@ cdef class CodecContext(object):
             Anything that can be turned into a :class:`.ByteSource` is fine.
             ``None`` or empty inputs will flush the parser's buffers.
 
-        :return: ``list`` of :class:`.Packet` newly availible.
+        :return: ``list`` of :class:`.Packet` newly available.
 
         """
 

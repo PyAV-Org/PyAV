@@ -25,7 +25,7 @@ ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
 cdef object _cinit_sentinel = object()
 
 
-# We want to use the monotonic clock if it is availible.
+# We want to use the monotonic clock if it is available.
 cdef object clock = getattr(time, 'monotonic', time.time)
 
 cdef int interrupt_cb (void *p) nogil:

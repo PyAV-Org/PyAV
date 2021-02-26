@@ -144,7 +144,7 @@ cdef class Codec(object):
     :param str name: The codec name.
     :param str mode: ``'r'`` for decoding or ``'w'`` for encoding.
 
-    This object exposes information about an availible codec, and an avenue to
+    This object exposes information about an available codec, and an avenue to
     create a :class:`.CodecContext` to encode/decode directly.
 
     ::
@@ -349,7 +349,7 @@ codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 
 
 def dump_codecs():
-    """Print information about availible codecs."""
+    """Print information about available codecs."""
 
     print '''Codecs:
  D..... = Decoding supported
