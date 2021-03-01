@@ -1,6 +1,5 @@
 from libc.errno cimport EAGAIN
 from libc.stdint cimport int64_t, uint8_t
-from libc.stdlib cimport free, malloc, realloc
 from libc.string cimport memcpy
 cimport libav as lib
 
@@ -230,9 +229,20 @@ cdef class CodecContext(object):
                 return None
 
         def __set__(self, data):
-            self.extradata_source = bytesource(data)
-            self.ptr.extradata = self.extradata_source.ptr
-            self.ptr.extradata_size = self.extradata_source.length
+            if not self.is_decoder:
+                raise ValueError("Can only set extradata for decoders.")
+
+            if data is None:
+                lib.av_freep(&self.ptr.extradata)
+                self.ptr.extradata_size = 0
+            else:
+                source = bytesource(data)
+                self.ptr.extradata = <uint8_t*>lib.av_realloc(self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE)
+                if not self.ptr.extradata:
+                    raise MemoryError("Cannot allocate extradata")
+                memcpy(self.ptr.extradata, source.ptr, source.length)
+                self.ptr.extradata_size = source.length
+            self.extradata_set = True
 
     property extradata_size:
         def __get__(self):
@@ -288,6 +298,8 @@ cdef class CodecContext(object):
         err_check(lib.avcodec_close(self.ptr))
 
     def __dealloc__(self):
+        if self.ptr and self.extradata_set:
+            lib.av_freep(&self.ptr.extradata)
         if self.ptr and self.allocated:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)

@@ -14,15 +14,15 @@ cdef class CodecContext(object):
     # Whether the AVCodecContext should be de-allocated upon destruction.
     cdef bint allocated
 
+    # Whether AVCodecContext.extradata should be de-allocated upon destruction.
+    cdef bint extradata_set
+
     # Used as a signal that this is within a stream, and also for us to access
     # that stream. This is set "manually" by the stream after constructing
     # this object.
     cdef int stream_index
 
     cdef lib.AVCodecParserContext *parser
-
-    # To hold a reference to passed extradata.
-    cdef ByteSource extradata_source
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec)
 
