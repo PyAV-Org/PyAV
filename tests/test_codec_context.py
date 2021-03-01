@@ -62,6 +62,32 @@ class TestCodecContext(TestCase):
         with av.open(fate_suite('h264/interlaced_crop.mp4')) as container:
             self.assertEqual(container.streams[0].codec_tag, 'avc1')
 
+    def test_decoder_extradata(self):
+        ctx = av.codec.Codec('h264', 'r').create()
+        self.assertEqual(ctx.extradata, None)
+        self.assertEqual(ctx.extradata_size, 0)
+
+        ctx.extradata = b"123"
+        self.assertEqual(ctx.extradata, b"123")
+        self.assertEqual(ctx.extradata_size, 3)
+
+        ctx.extradata = b"54321"
+        self.assertEqual(ctx.extradata, b"54321")
+        self.assertEqual(ctx.extradata_size, 5)
+
+        ctx.extradata = None
+        self.assertEqual(ctx.extradata, None)
+        self.assertEqual(ctx.extradata_size, 0)
+
+    def test_encoder_extradata(self):
+        ctx = av.codec.Codec('h264', 'w').create()
+        self.assertEqual(ctx.extradata, None)
+        self.assertEqual(ctx.extradata_size, 0)
+
+        with self.assertRaises(ValueError) as cm:
+            ctx.extradata = b"123"
+        self.assertEqual(str(cm.exception), "Can only set extradata for decoders.")
+
     def test_parse(self):
 
         # This one parses into a single packet.

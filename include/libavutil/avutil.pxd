@@ -44,6 +44,7 @@ cdef extern from "libavutil/avutil.h" nogil:
 
     cdef void* av_malloc(size_t size)
     cdef void *av_calloc(size_t nmemb, size_t size)
+    cdef void *av_realloc(void *ptr, size_t size)
 
     cdef void av_freep(void *ptr)
 
