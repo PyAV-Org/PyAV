@@ -269,9 +269,9 @@ cdef class VideoFrame(Frame):
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
             return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
         elif frame.format.name == 'rgb48le':
-            return useful_array(frame.planes[0], 6, 'uint16').reshape(frame.height, frame.width, -1)
+            return useful_array(frame.planes[0], 6, '<u2').reshape(frame.height, frame.width, -1)
         elif frame.format.name == 'rgba64le':
-            return useful_array(frame.planes[0], 8, 'uint16').reshape(frame.height, frame.width, -1)
+            return useful_array(frame.planes[0], 8, '<u2').reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
             return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         elif frame.format.name == 'pal8':
@@ -347,14 +347,14 @@ cdef class VideoFrame(Frame):
             assert array.dtype == 'uint8'
             assert array.ndim == 2
         elif format == 'rgb48le':
-            assert array.dtype == 'uint16'
+            assert array.dtype == '<u2'
             assert array.ndim == 3
             assert array.shape[2] == 3
             frame = VideoFrame(array.shape[1], array.shape[0], format)
             copy_array_to_plane(array, frame.planes[0], 6)
             return frame
         elif format == 'rgba64le':
-            assert array.dtype == 'uint16'
+            assert array.dtype == '<u2'
             assert array.ndim == 3
             assert array.shape[2] == 4
             frame = VideoFrame(array.shape[1], array.shape[0], format)

@@ -266,6 +266,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, 'rgb48le')
+        self.assertEqual(array.dtype, numpy.dtype('<u2'))
         self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_rgba64le(self):
@@ -274,6 +275,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, 'rgba64le')
+        self.assertEqual(array.dtype, numpy.dtype('<u2'))
         self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_rgb8(self):
