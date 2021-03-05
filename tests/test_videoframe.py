@@ -1,4 +1,5 @@
 from unittest import SkipTest
+import sys
 import warnings
 
 import numpy
@@ -261,7 +262,10 @@ class TestVideoFrameNdarray(TestCase):
         self.assertTrue((frame.to_ndarray() == array).all())
 
     def test_ndarray_rgb48le(self):
-        array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype=numpy.uint16)
+        array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype='<u2')
+        if sys.byteorder == 'big' and array.dtype.byteorder == '=':
+            array = array.newbyteorder().byteswap()
+
         frame = VideoFrame.from_ndarray(array, format='rgb48le')
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
@@ -269,14 +273,65 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(array.dtype, numpy.dtype('<u2'))
         self.assertTrue((frame.to_ndarray() == array).all())
 
+        with self.assertRaises(AssertionError):
+            VideoFrame.from_ndarray(
+                array.newbyteorder(),
+                format='rgb48le'
+            )
+
     def test_ndarray_rgba64le(self):
-        array = numpy.random.randint(0, 65536, size=(480, 640, 4), dtype=numpy.uint16)
+        array = numpy.random.randint(0, 65536, size=(480, 640, 4), dtype='<u2')
+        if sys.byteorder == 'big' and array.dtype.byteorder == '=':
+            array = array.newbyteorder().byteswap()
+
         frame = VideoFrame.from_ndarray(array, format='rgba64le')
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, 'rgba64le')
         self.assertEqual(array.dtype, numpy.dtype('<u2'))
         self.assertTrue((frame.to_ndarray() == array).all())
+
+        with self.assertRaises(AssertionError):
+            VideoFrame.from_ndarray(
+                array.newbyteorder(),
+                format='rgba64le'
+            )
+
+    def test_ndarray_rgb48be(self):
+        array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype='>u2')
+        if sys.byteorder == 'little' and array.dtype.byteorder == '=':
+            array = array.newbyteorder().byteswap()
+
+        frame = VideoFrame.from_ndarray(array, format='rgb48be')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'rgb48be')
+        self.assertEqual(array.dtype.byteorder, '>')
+        self.assertTrue((frame.to_ndarray() == array).all())
+
+        with self.assertRaises(AssertionError):
+            VideoFrame.from_ndarray(
+                array.newbyteorder(),
+                format='rgb48be'
+            )
+
+    def test_ndarray_rgba64be(self):
+        array = numpy.random.randint(0, 65536, size=(480, 640, 4), dtype='>u2')
+        if sys.byteorder == 'little' and array.dtype.byteorder == '=':
+            array = array.newbyteorder().byteswap()
+
+        frame = VideoFrame.from_ndarray(array, format='rgba64be')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'rgba64be')
+        self.assertEqual(array.dtype.byteorder, '>')
+        self.assertTrue((frame.to_ndarray() == array).all())
+
+        with self.assertRaises(AssertionError):
+            VideoFrame.from_ndarray(
+                array.newbyteorder(),
+                format='rgba64be'
+            )
 
     def test_ndarray_rgb8(self):
         array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)

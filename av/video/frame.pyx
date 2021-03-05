@@ -272,6 +272,10 @@ cdef class VideoFrame(Frame):
             return useful_array(frame.planes[0], 6, '<u2').reshape(frame.height, frame.width, -1)
         elif frame.format.name == 'rgba64le':
             return useful_array(frame.planes[0], 8, '<u2').reshape(frame.height, frame.width, -1)
+        elif frame.format.name == 'rgb48be':
+            return useful_array(frame.planes[0], 6, '>u2').reshape(frame.height, frame.width, -1)
+        elif frame.format.name == 'rgba64be':
+            return useful_array(frame.planes[0], 8, '>u2').reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
             return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         elif frame.format.name == 'pal8':
@@ -305,6 +309,10 @@ cdef class VideoFrame(Frame):
         `palette` must have shape (256, 4) and is given in ARGB format
         (PyAV will swap bytes if needed).
         """
+        # Store byteorder for checks in *le and *be pixel formats
+        import sys
+        le = sys.byteorder == 'little'
+
         if format == 'pal8':
             array, palette = array
             assert array.dtype == 'uint8'
@@ -348,6 +356,7 @@ cdef class VideoFrame(Frame):
             assert array.ndim == 2
         elif format == 'rgb48le':
             assert array.dtype == '<u2'
+            assert array.dtype.byteorder == le and '=' or '<'
             assert array.ndim == 3
             assert array.shape[2] == 3
             frame = VideoFrame(array.shape[1], array.shape[0], format)
@@ -355,6 +364,23 @@ cdef class VideoFrame(Frame):
             return frame
         elif format == 'rgba64le':
             assert array.dtype == '<u2'
+            assert array.dtype.byteorder == le and '=' or '<'
+            assert array.ndim == 3
+            assert array.shape[2] == 4
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array, frame.planes[0], 8)
+            return frame
+        elif format == 'rgb48be':
+            assert array.dtype == '>u2'
+            assert array.dtype.byteorder == le and '>' or '='
+            assert array.ndim == 3
+            assert array.shape[2] == 3
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array, frame.planes[0], 6)
+            return frame
+        elif format == 'rgba64be':
+            assert array.dtype == '>u2'
+            assert array.dtype.byteorder == le and '>' or '='
             assert array.ndim == 3
             assert array.shape[2] == 4
             frame = VideoFrame(array.shape[1], array.shape[0], format)
