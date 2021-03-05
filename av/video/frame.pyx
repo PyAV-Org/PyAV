@@ -268,9 +268,9 @@ cdef class VideoFrame(Frame):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
             return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
-        elif frame.format.name in ('rgb48le', 'rgb48be'):
+        elif frame.format.name == 'rgb48le':
             return useful_array(frame.planes[0], 6, 'uint16').reshape(frame.height, frame.width, -1)
-        elif frame.format.name in ('rgba64le', 'rgba64be'):
+        elif frame.format.name == 'rgba64le':
             return useful_array(frame.planes[0], 8, 'uint16').reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
             return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
