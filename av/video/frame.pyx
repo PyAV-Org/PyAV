@@ -49,7 +49,7 @@ cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
         o_pos += o_stride
 
 
-cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1):
+cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1, str dtype='uint8'):
     """
     Return the useful part of the VideoPlane as a single dimensional array.
 
@@ -58,7 +58,7 @@ cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1):
     import numpy as np
     cdef size_t total_line_size = abs(plane.line_size)
     cdef size_t useful_line_size = plane.width * bytes_per_pixel
-    arr = np.frombuffer(plane, np.uint8)
+    arr = np.frombuffer(plane, np.dtype(dtype))
     if total_line_size != useful_line_size:
         arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
     return arr
@@ -268,6 +268,10 @@ cdef class VideoFrame(Frame):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
             return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('rgb48le', 'rgb48be'):
+            return useful_array(frame.planes[0], 6, 'uint16').reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('rgba64le', 'rgba64be'):
+            return useful_array(frame.planes[0], 8, 'uint16').reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
             return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         elif frame.format.name == 'pal8':
@@ -342,6 +346,20 @@ cdef class VideoFrame(Frame):
         elif format in ('gray', 'gray8', 'rgb8', 'bgr8'):
             assert array.dtype == 'uint8'
             assert array.ndim == 2
+        elif format == 'rgb48le':
+            assert array.dtype == 'uint16'
+            assert array.ndim == 3
+            assert array.shape[2] == 3
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array, frame.planes[0], 6)
+            return frame
+        elif format == 'rgba64le':
+            assert array.dtype == 'uint16'
+            assert array.ndim == 3
+            assert array.shape[2] == 4
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array, frame.planes[0], 8)
+            return frame
         else:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 

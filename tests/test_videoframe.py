@@ -260,6 +260,22 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.format.name, 'yuyv422')
         self.assertTrue((frame.to_ndarray() == array).all())
 
+    def test_ndarray_rgb48le(self):
+        array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype=numpy.uint16)
+        frame = VideoFrame.from_ndarray(array, format='rgb48le')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'rgb48le')
+        self.assertTrue((frame.to_ndarray() == array).all())
+
+    def test_ndarray_rgba64le(self):
+        array = numpy.random.randint(0, 65536, size=(480, 640, 4), dtype=numpy.uint16)
+        frame = VideoFrame.from_ndarray(array, format='rgba64le')
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, 'rgba64le')
+        self.assertTrue((frame.to_ndarray() == array).all())
+
     def test_ndarray_rgb8(self):
         array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
         frame = VideoFrame.from_ndarray(array, format='rgb8')
