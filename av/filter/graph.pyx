@@ -1,4 +1,5 @@
 from fractions import Fraction
+import warnings
 
 from av.audio.format cimport AudioFormat
 from av.audio.frame cimport AudioFrame
@@ -122,7 +123,7 @@ cdef class Graph(object):
             self._register_context(py_ctx)
         self._nb_filters_seen = self.ptr.nb_filters
 
-    def add_buffer(self, template=None, width=None, height=None, format=None, name=None):
+    def add_buffer(self, template=None, width=None, height=None, format=None, name=None, time_base=None):
 
         if template is not None:
             if width is None:
@@ -131,6 +132,8 @@ cdef class Graph(object):
                 height = template.height
             if format is None:
                 format = template.format
+            if time_base is None:
+                time_base = template.time_base
 
         if width is None:
             raise ValueError('missing width')
@@ -138,13 +141,18 @@ cdef class Graph(object):
             raise ValueError('missing height')
         if format is None:
             raise ValueError('missing format')
+        if time_base is None:
+            warnings.warn('missing time_base. Guessing 1/1000 time base. '
+                          'This is deprecated and may be removed in future releases.',
+                          DeprecationWarning)
+            time_base = Fraction(1, 1000)
 
         return self.add(
             'buffer',
             name=name,
             video_size=f'{width}x{height}',
             pix_fmt=str(int(VideoFormat(format))),
-            time_base='1/1000',
+            time_base=str(time_base),
             pixel_aspect='1/1',
         )
 

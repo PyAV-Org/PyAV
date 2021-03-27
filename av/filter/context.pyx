@@ -6,6 +6,7 @@ from av.dictionary import Dictionary
 from av.error cimport err_check
 from av.filter.pad cimport alloc_filter_pads
 from av.frame cimport Frame
+from av.utils cimport avrational_to_fraction
 from av.video.frame cimport VideoFrame, alloc_video_frame
 
 
@@ -106,4 +107,5 @@ cdef class FilterContext(object):
 
         err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
         frame._init_user_attributes()
+        frame.time_base = avrational_to_fraction(&self.ptr.inputs[0].time_base)
         return frame
