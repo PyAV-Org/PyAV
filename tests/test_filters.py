@@ -7,6 +7,7 @@ import numpy as np
 from av import AudioFrame, VideoFrame
 from av.audio.frame import format_dtypes
 from av.filter import Filter, Graph
+import av
 
 from .common import Image, TestCase, fate_suite
 
@@ -32,6 +33,17 @@ def generate_audio_frame(frame_num, input_format='s16', layout='stereo', sample_
         frame.planes[i].update(data)
 
     return frame
+
+
+def pull_until_blocked(graph):
+    frames = []
+    while True:
+        try:
+            frames.append(graph.pull())
+        except av.utils.AVError as e:
+            if e.errno != errno.EAGAIN:
+                raise
+            return frames
 
 
 class TestFilters(TestCase):
@@ -213,3 +225,33 @@ class TestFilters(TestCase):
         output_data = out_frame.to_ndarray()
 
         self.assertTrue(np.allclose(input_data * 0.5, output_data), "Check that volume is reduced")
+
+    def test_video_buffer(self):
+        input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
+        input_video_stream = input_container.streams.video[0]
+
+        graph = av.filter.Graph()
+        buffer = graph.add_buffer(template=input_video_stream)
+        bwdif = graph.add("bwdif", "send_field:tff:all")
+        buffersink = graph.add("buffersink")
+        buffer.link_to(bwdif)
+        bwdif.link_to(buffersink)
+        graph.configure()
+
+        for frame in input_container.decode():
+            self.assertEqual(frame.time_base, Fraction(1, 30))
+            graph.push(frame)
+            filtered_frames = pull_until_blocked(graph)
+
+            if frame.pts == 0:
+                # no output for the first input frame
+                self.assertEqual(len(filtered_frames), 0)
+            else:
+                # we expect two filtered frames per input frame
+                self.assertEqual(len(filtered_frames), 2)
+
+                self.assertEqual(filtered_frames[0].pts, (frame.pts - 1) * 2)
+                self.assertEqual(filtered_frames[0].time_base, Fraction(1, 60))
+
+                self.assertEqual(filtered_frames[1].pts, (frame.pts - 1) * 2 + 1)
+                self.assertEqual(filtered_frames[1].time_base, Fraction(1, 60))
