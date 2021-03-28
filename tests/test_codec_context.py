@@ -376,18 +376,15 @@ class TestEncoding(TestCase):
                     next(encoder.encode(bad_frame))
                 """
 
-                resampled_frame = resampler.resample(frame)
-                samples += resampled_frame.samples
+                resampled_frames = resampler.resample(frame)
+                for resampled_frame in resampled_frames:
+                    samples += resampled_frame.samples
 
-                for packet in ctx.encode(resampled_frame):
-                    # bytearray because python can
-                    # freaks out if the first byte is NULL
-                    f.write(bytearray(packet))
-                    packet_sizes.append(packet.size)
-
-            for packet in ctx.encode(None):
-                packet_sizes.append(packet.size)
-                f.write(bytearray(packet))
+                    for packet in ctx.encode(resampled_frame):
+                        # bytearray because python can
+                        # freaks out if the first byte is NULL
+                        f.write(bytearray(packet))
+                        packet_sizes.append(packet.size)
 
         ctx = Codec(codec_name, 'r').create()
         ctx.time_base = Fraction(1) / sample_rate

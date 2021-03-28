@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 from av import AudioFrame, AudioResampler
 
 from .common import TestCase
@@ -12,7 +14,7 @@ class TestAudioResampler(TestCase):
         resampler = AudioResampler()
 
         iframe = AudioFrame('s16', 'stereo', 1024)
-        oframe = resampler.resample(iframe)
+        oframe = resampler.resample(iframe)[0]
 
         self.assertIs(iframe, oframe)
 
@@ -23,7 +25,7 @@ class TestAudioResampler(TestCase):
         resampler = AudioResampler('s16', 'stereo')
 
         iframe = AudioFrame('s16', 'stereo', 1024)
-        oframe = resampler.resample(iframe)
+        oframe = resampler.resample(iframe)[0]
 
         self.assertIs(iframe, oframe)
 
@@ -36,21 +38,21 @@ class TestAudioResampler(TestCase):
         iframe.time_base = '1/48000'
         iframe.pts = 0
 
-        oframe = resampler.resample(iframe)
+        oframe = resampler.resample(iframe)[0]
 
         self.assertEqual(oframe.pts, 0)
         self.assertEqual(oframe.time_base, iframe.time_base)
         self.assertEqual(oframe.sample_rate, iframe.sample_rate)
 
         iframe.pts = 1024
-        oframe = resampler.resample(iframe)
+        oframe = resampler.resample(iframe)[0]
 
         self.assertEqual(oframe.pts, 1024)
         self.assertEqual(oframe.time_base, iframe.time_base)
         self.assertEqual(oframe.sample_rate, iframe.sample_rate)
 
         iframe.pts = 9999
-        self.assertRaises(ValueError, resampler.resample, iframe)
+        resampler.resample(iframe)  # resampler should handle this without an exception
 
     def test_pts_assertion_new_rate(self):
 
@@ -61,17 +63,8 @@ class TestAudioResampler(TestCase):
         iframe.time_base = '1/48000'
         iframe.pts = 0
 
-        oframe = resampler.resample(iframe)
+        oframe = resampler.resample(iframe)[0]
         self.assertEqual(oframe.pts, 0)
-        self.assertEqual(str(oframe.time_base), '1/44100')
-        self.assertEqual(oframe.sample_rate, 44100)
-
-        samples_out = resampler.samples_out
-        self.assertTrue(samples_out > 0)
-
-        iframe.pts = 1024
-        oframe = resampler.resample(iframe)
-        self.assertEqual(oframe.pts, samples_out)
         self.assertEqual(str(oframe.time_base), '1/44100')
         self.assertEqual(oframe.sample_rate, 44100)
 
@@ -83,21 +76,7 @@ class TestAudioResampler(TestCase):
         iframe.sample_rate = 48000
         iframe.pts = 0
 
-        oframe = resampler.resample(iframe)
-        self.assertIs(oframe.pts, None)
-        self.assertIs(oframe.time_base, None)
-        self.assertEqual(oframe.sample_rate, 44100)
-
-    def test_pts_complex_time_base(self):
-
-        resampler = AudioResampler('s16', 'mono', 44100)
-
-        iframe = AudioFrame('s16', 'stereo', 1024)
-        iframe.sample_rate = 48000
-        iframe.time_base = '1/96000'
-        iframe.pts = 0
-
-        oframe = resampler.resample(iframe)
-        self.assertIs(oframe.pts, None)
-        self.assertIs(oframe.time_base, None)
+        oframe = resampler.resample(iframe)[0]
+        self.assertEqual(oframe.pts, 0)
+        self.assertEqual(oframe.time_base, Fraction(1, 44100))
         self.assertEqual(oframe.sample_rate, 44100)
