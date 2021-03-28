@@ -98,7 +98,11 @@ cdef class Stream(object):
 
         # This is an output container!
         else:
-            self._codec = self._codec_context.codec
+            if stream.codec.codec_type == lib.AVMEDIA_TYPE_DATA:
+                self.codec_context = None
+                return
+            else:
+                self._codec = self._codec_context.codec
 
         self.codec_context = wrap_codec_context(self._codec_context, self._codec, False)
         self.codec_context.stream_index = stream.index

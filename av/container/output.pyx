@@ -23,7 +23,8 @@ cdef close_output(OutputContainer self):
         self.err_check(lib.av_write_trailer(self.ptr))
 
         for stream in self.streams:
-            stream.codec_context.close()
+            if stream.codec_context:
+                stream.codec_context.close()
 
         if self.file is None and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
             lib.avio_closep(&self.ptr.pb)
@@ -64,7 +65,7 @@ cdef class OutputContainer(Container):
             codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
             codec = codec_obj.ptr
 
-        else:
+        elif template._codec_context.codec_type != lib.AVMEDIA_TYPE_DATA:
             if not template._codec:
                 raise ValueError("template has no codec")
             if not template._codec_context:
@@ -149,7 +150,7 @@ cdef class OutputContainer(Container):
         for stream in self.streams:
 
             ctx = stream.codec_context
-            if not ctx.is_open:
+            if ctx and not ctx.is_open:
 
                 for k, v in self.options.items():
                     ctx.options.setdefault(k, v)
