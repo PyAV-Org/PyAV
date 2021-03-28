@@ -75,3 +75,7 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
     # custom
     cdef set pyav_get_available_filters()
+
+
+cdef extern from "libavfilter/buffersink.h" nogil:
+    cdef void av_buffersink_set_frame_size(AVFilterContext *ctx, unsigned frame_size)

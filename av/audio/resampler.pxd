@@ -4,6 +4,7 @@ cimport libav as lib
 from av.audio.format cimport AudioFormat
 from av.audio.frame cimport AudioFrame
 from av.audio.layout cimport AudioLayout
+from av.filter.graph cimport Graph
 
 
 cdef class AudioResampler(object):
@@ -14,18 +15,12 @@ cdef class AudioResampler(object):
 
     cdef AudioFrame template
 
-    # Source descriptors; not for public consumption.
-    cdef unsigned int template_rate
-
     # Destination descriptors
     cdef readonly AudioFormat format
     cdef readonly AudioLayout layout
     cdef readonly int rate
+    cdef readonly unsigned int frame_size
 
-    # Retiming.
-    cdef readonly uint64_t samples_in
-    cdef readonly double pts_per_sample_in
-    cdef readonly uint64_t samples_out
-    cdef readonly bint simple_pts_out
+    cdef Graph graph
 
     cpdef resample(self, AudioFrame)
