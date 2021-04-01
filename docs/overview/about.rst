@@ -4,7 +4,7 @@ More About PyAV
 Binary wheels
 -------------
 
-Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Windows linked against FFmpeg. Currently FFmpeg 4.2.2 is used with the following features enabled for all platforms:
+Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Windows linked against FFmpeg. Currently FFmpeg 4.3.2 is used with the following features enabled for all platforms:
 
 - fontconfig
 - libaom
