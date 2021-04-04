@@ -297,7 +297,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int key_frame # 0 or 1.
         AVPictureType pict_type
 
+        int repeat_pict
         int interlaced_frame # 0 or 1.
+        int top_field_first
 
         int width
         int height
