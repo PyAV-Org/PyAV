@@ -59,7 +59,9 @@ Types
 ~~~~~
 
 .. autoattribute:: VideoFrame.key_frame
+.. autoattribute:: VideoFrame.repeat_pict
 .. autoattribute:: VideoFrame.interlaced_frame
+.. autoattribute:: VideoFrame.top_field_first
 .. autoattribute:: VideoFrame.pict_type
 
 .. autoclass:: av.video.frame.PictureType

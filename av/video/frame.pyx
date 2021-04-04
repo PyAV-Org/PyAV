@@ -163,6 +163,14 @@ cdef class VideoFrame(Frame):
         """
         def __get__(self): return self.ptr.key_frame
 
+    property repeat_pict:
+        """When decoding, this signals how much the picture must be delayed.
+
+        Wraps :ffmpeg:`AVFrame.repeat_pict`.
+
+        """
+        def __get__(self): return self.ptr.repeat_pict
+
     property interlaced_frame:
         """Is this frame an interlaced or progressive?
 
@@ -170,6 +178,14 @@ cdef class VideoFrame(Frame):
 
         """
         def __get__(self): return self.ptr.interlaced_frame
+
+    property top_field_first:
+        """If the content is interlaced, is top field displayed first.
+
+        Wraps :ffmpeg:`AVFrame.top_field_first`.
+
+        """
+        def __get__(self): return self.ptr.top_field_first
 
     @property
     def pict_type(self):
