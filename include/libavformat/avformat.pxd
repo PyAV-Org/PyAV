@@ -19,6 +19,26 @@ cdef extern from "libavformat/avformat.h" nogil:
 
     cdef int AVIO_FLAG_WRITE
 
+    #AVStream.disposition
+    cdef enum:
+        AV_DISPOSITION_DEFAULT
+        AV_DISPOSITION_DUB
+        AV_DISPOSITION_ORIGINAL
+        AV_DISPOSITION_COMMENT
+        AV_DISPOSITION_LYRICS
+        AV_DISPOSITION_KARAOKE
+        AV_DISPOSITION_FORCED
+        AV_DISPOSITION_HEARING_IMPAIRED
+        AV_DISPOSITION_VISUAL_IMPAIRED
+        AV_DISPOSITION_CLEAN_EFFECTS
+        AV_DISPOSITION_ATTACHED_PIC
+        AV_DISPOSITION_TIMED_THUMBNAILS
+        AV_DISPOSITION_CAPTIONS
+        AV_DISPOSITION_DESCRIPTIONS
+        AV_DISPOSITION_METADATA
+        AV_DISPOSITION_DEPENDENT
+        AV_DISPOSITION_STILL_IMAGE
+
     cdef enum AVMediaType:
         AVMEDIA_TYPE_UNKNOWN
         AVMEDIA_TYPE_VIDEO
@@ -42,6 +62,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         int64_t duration
         int64_t nb_frames
         int64_t cur_dts
+
+        int disposition
 
         AVDictionary *metadata
 

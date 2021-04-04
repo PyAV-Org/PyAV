@@ -4,6 +4,7 @@ from libc.string cimport memcpy
 cimport libav as lib
 
 from av.codec.context cimport wrap_codec_context
+from av.enum cimport define_enum
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport (
@@ -49,6 +50,39 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
 
     py_stream._init(container, c_stream)
     return py_stream
+
+
+Dispositions = define_enum('Dispositions', 'av.stream', (
+    ('NONE', 0),
+    ('DEFAULT', lib.AV_DISPOSITION_DEFAULT, """Default stream."""),
+    ('DUB', lib.AV_DISPOSITION_DUB, """Dub stream."""),
+    ('ORIGINAL', lib.AV_DISPOSITION_ORIGINAL, """Original stream."""),
+    ('COMMENT', lib.AV_DISPOSITION_COMMENT, """Comment stream."""),
+    ('LYRICS', lib.AV_DISPOSITION_LYRICS, """Lyrics stream."""),
+    ('KARAOKE', lib.AV_DISPOSITION_KARAOKE, """Karaoke stream."""),
+    ('FORCED', lib.AV_DISPOSITION_FORCED,
+     """Track should be used during playback by default. Useful for subtitle
+     track that should be displayed even when user did not explicitly ask for
+     subtitles."""),
+    ('HEARING_IMPAIRED', lib.AV_DISPOSITION_HEARING_IMPAIRED, """Stream for hearing impaired audiences."""),
+    ('VISUAL_IMPAIRED', lib.AV_DISPOSITION_VISUAL_IMPAIRED, """Stream for visual impaired audiences."""),
+    ('CLEAN_EFFECTS', lib.AV_DISPOSITION_CLEAN_EFFECTS, """Stream without voice."""),
+    ('ATTACHED_PIC', lib.AV_DISPOSITION_ATTACHED_PIC,
+     """The stream is stored in the file as an attached picture/"cover art"
+     (e.g. APIC frame in ID3v2). The first (usually only) packet associated
+     with it will be returned among the first few packets read from the file
+     unless seeking takes place. It can also be accessed at any time in
+     AVStream.attached_pic."""),
+    ('TIMED_THUMBNAILS', lib.AV_DISPOSITION_TIMED_THUMBNAILS,
+     """The stream is sparse, and contains thumbnail images, often
+     corresponding to chapter markers. Only ever used with
+     AV_DISPOSITION_ATTACHED_PIC."""),
+    ('CAPTIONS', lib.AV_DISPOSITION_CAPTIONS, """To specify text track kind (different from subtitles default)."""),
+    ('DESCRIPTIONS', lib.AV_DISPOSITION_DESCRIPTIONS, """Descriptions stream."""),
+    ('METADATA', lib.AV_DISPOSITION_METADATA, """Metadata stream."""),
+    ('DEPENDENT', lib.AV_DISPOSITION_DEPENDENT, """Dependent audio stream (mix_type=0 in mpegts)."""),
+    ('STILL_IMAGE', lib.AV_DISPOSITION_STILL_IMAGE, """Still images in video stream (still_picture_flag=1 in mpegts)."""),
+), is_flags=True)
 
 
 cdef class Stream(object):
@@ -295,6 +329,29 @@ cdef class Stream(object):
         def __get__(self):
             if self._stream.duration != lib.AV_NOPTS_VALUE:
                 return self._stream.duration
+
+    @Dispositions.property
+    def disposition(self):
+        """Flag property of :class:`.Dispositions`"""
+        return self._stream.disposition
+
+    disposition_default = disposition.flag_property('DEFAULT')
+    disposition_dub = disposition.flag_property('DUB')
+    disposition_original = disposition.flag_property('ORIGINAL')
+    disposition_comment = disposition.flag_property('COMMENT')
+    disposition_lyrics = disposition.flag_property('LYRICS')
+    disposition_karaoke = disposition.flag_property('KARAOKE')
+    disposition_forced = disposition.flag_property('FORCED')
+    disposition_hearing_impaired = disposition.flag_property('HEARING_IMPAIRED')
+    disposition_visual_impaired = disposition.flag_property('VISUAL_IMPAIRED')
+    disposition_clean_effects = disposition.flag_property('CLEAN_EFFECTS')
+    disposition_attached_pic = disposition.flag_property('ATTACHED_PIC')
+    disposition_timed_thumbnails = disposition.flag_property('TIMED_THUMBNAILS')
+    disposition_captions = disposition.flag_property('CAPTIONS')
+    disposition_descriptions = disposition.flag_property('DESCRIPTIONS')
+    disposition_metadata = disposition.flag_property('METADATA')
+    disposition_dependent = disposition.flag_property('DEPENDENT')
+    disposition_still_image = disposition.flag_property('STILL_IMAGE')
 
     property frames:
         """
