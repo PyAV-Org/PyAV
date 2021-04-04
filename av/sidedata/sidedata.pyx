@@ -103,4 +103,28 @@ cdef class _SideDataContainer(object):
 
 
 class SideDataContainer(_SideDataContainer, Mapping):
-    pass
+    """SideDataContainer provides a Mapping-compatible interface.
+
+    While _SideDataContainer is a sequence indexed by position,
+    SideDataContainer is a full mapping with keys/items/values methods.
+    However, contrary to usual mappings, SideDataContainer's default iterator
+    is still by value.
+
+    Design note: SideData types can be integers so they cannot be used as
+    mapping keys since __getitem__ could not differentiate an integer key from
+    a plain index. Therefore, the 0-based list index is used as mapping key.
+    Still, SideDataContainer inherits _SideDataContainer's support for indexing
+    by SideData type.
+    """
+
+    def keys(self):
+        "D.keys() -> a set-like object providing a view on D's keys"
+        return range(len(self))
+
+    def items(self):
+        "D.items() -> a set-like object providing a view on D's items"
+        return enumerate(self._by_index)
+
+    def values(self):
+        "D.values() -> an object providing a view on D's values"
+        return list(self._by_index)
