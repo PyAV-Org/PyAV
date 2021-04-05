@@ -3,6 +3,13 @@ from libc.stdint cimport int64_t, uint64_t
 
 cdef extern from "libavformat/avformat.h" nogil:
 
+    # AV_DISPOSITION_STILL_IMAGE was introduced in libav-4.1
+    """
+    #ifndef AV_DISPOSITION_STILL_IMAGE
+    # define AV_DISPOSITION_STILL_IMAGE 0x100000 ///< still images in video stream (still_picture_flag=1 in mpegts)
+    #endif
+    """
+
     cdef int   avformat_version()
     cdef char* avformat_configuration()
     cdef char* avformat_license()
