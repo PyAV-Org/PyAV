@@ -62,6 +62,9 @@ Types
 .. autoattribute:: VideoFrame.repeat_pict
 .. autoattribute:: VideoFrame.interlaced_frame
 .. autoattribute:: VideoFrame.top_field_first
+.. autoattribute:: VideoFrame.sample_aspect_ratio
+.. autoattribute:: VideoFrame.coded_picture_number
+.. autoattribute:: VideoFrame.display_picture_number
 .. autoattribute:: VideoFrame.pict_type
 
 .. autoclass:: av.video.frame.PictureType

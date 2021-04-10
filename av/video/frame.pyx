@@ -2,6 +2,7 @@ from libc.stdint cimport uint8_t
 
 from av.enum cimport define_enum
 from av.error cimport err_check
+from av.utils cimport avrational_to_fraction
 from av.video.format cimport VideoFormat, get_video_format
 from av.video.plane cimport VideoPlane
 
@@ -186,6 +187,31 @@ cdef class VideoFrame(Frame):
 
         """
         def __get__(self): return self.ptr.top_field_first
+
+    property sample_aspect_ratio:
+        """Sample aspect ratio for the video frame, 0/1 if unknown/unspecified.
+
+        Wraps :ffmpeg:`AVFrame.sample_aspect_ratio`.
+
+        """
+        def __get__(self):
+            return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
+
+    property coded_picture_number:
+        """picture number in bitstream order
+
+        Wraps :ffmpeg:`AVFrame.coded_picture_number`.
+
+        """
+        def __get__(self): return self.ptr.coded_picture_number
+
+    property display_picture_number:
+        """picture number in display order
+
+        Wraps :ffmpeg:`AVFrame.display_picture_number`.
+
+        """
+        def __get__(self): return self.ptr.display_picture_number
 
     @property
     def pict_type(self):

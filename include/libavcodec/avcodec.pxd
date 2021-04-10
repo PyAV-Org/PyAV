@@ -315,9 +315,14 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int channels # Number of audio channels
         int channel_layout # Audio channel_layout
 
+        AVRational sample_aspect_ratio
+
         int64_t pts
         int64_t pkt_dts
         int64_t best_effort_timestamp
+
+        int coded_picture_number
+        int display_picture_number
 
         int pkt_size
         int64_t pkt_pos
