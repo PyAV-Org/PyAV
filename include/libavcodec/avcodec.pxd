@@ -316,6 +316,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int64_t pkt_dts
 
         int pkt_size
+        int64_t pkt_pos
+        int64_t pkt_duration
 
         uint8_t **base
         void *opaque

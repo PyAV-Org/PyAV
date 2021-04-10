@@ -66,6 +66,36 @@ cdef class Frame(object):
 
         self._time_base = dst
 
+    property pkt_size:
+        """
+        Size of the corresponding packet containing the compressed frame.
+
+        :type: int
+        """
+        def __get__(self):
+            # It is set to a negative value if unknown.
+            if self.ptr.pkt_size >= 0:
+                return self.ptr.pkt_size
+
+    property pkt_pos:
+        """
+        Reordered pos from the last AVPacket that has been input into the decoder.
+
+        :type: int
+        """
+        def __get__(self):
+            if self.ptr.pkt_pos != -1:
+                return self.ptr.pkt_pos
+
+    property pkt_duration:
+        """duration of the corresponding packet, expressed in AVStream->time_base units, 0 if unknown.
+
+        :type: int
+        """
+        def __get__(self):
+            if self.ptr.pkt_duration != lib.AV_NOPTS_VALUE:
+                return self.ptr.pkt_duration
+
     property dts:
         """
         The decoding timestamp in :attr:`time_base` units for this frame.
