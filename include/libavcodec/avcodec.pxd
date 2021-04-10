@@ -314,6 +314,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int64_t pts
         int64_t pkt_dts
+        int64_t best_effort_timestamp
 
         int pkt_size
         int64_t pkt_pos

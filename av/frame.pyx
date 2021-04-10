@@ -161,6 +161,17 @@ cdef class Frame(object):
         """
         def __get__(self): return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
 
+    property best_effort_timestamp:
+        """
+        Frame timestamp estimated using various heuristics, in stream time base
+
+        :type: int
+        """
+        def __get__(self):
+            if self.ptr.best_effort_timestamp == lib.AV_NOPTS_VALUE:
+                return None
+            return self.ptr.best_effort_timestamp
+
     @property
     def side_data(self):
         if self._side_data is None:
