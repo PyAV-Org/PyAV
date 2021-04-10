@@ -119,7 +119,7 @@ cdef class VideoFrame(Frame):
             self.__class__.__name__,
             self.index,
             self.pts,
-            self.format.name,
+            self.format.name if self.format is not None else None,
             self.width,
             self.height,
             id(self),
