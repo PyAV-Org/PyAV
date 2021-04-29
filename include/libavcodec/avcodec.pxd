@@ -222,6 +222,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         # User Data
         void *opaque
 
+        # Two-pass encoding stats
+        char *stats_out
+        char *stats_in
+
     cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
 

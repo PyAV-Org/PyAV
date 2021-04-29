@@ -248,6 +248,42 @@ cdef class CodecContext(object):
         def __get__(self):
             return self.ptr.extradata_size
 
+    property stats_out:
+        def __get__(self):
+            if not self.is_encoder:
+                raise ValueError("Can only get stats_out for encoders")
+
+            if self.ptr.stats_out == NULL:
+                return None
+            else:
+                return (<bytes>self.ptr.stats_out).decode("utf-8")
+
+    property stats_in:
+        def __get__(self):
+            if not self.is_encoder:
+                raise ValueError("Can only get stats_in for encoders")
+
+            if self.ptr.stats_in == NULL:
+                return None
+            else:
+                return (<bytes>self.ptr.stats_in).decode("utf-8")
+
+        def __set__(self, str data):
+            if not self.is_encoder:
+                raise ValueError("Can only set stats_in for encoders")
+
+            if data is None:
+                lib.av_freep(&self.ptr.stats_in)
+            else:
+                data_bytes = data.encode("utf-8")
+                data_len = len(data_bytes)
+                self.ptr.stats_in = <char*>lib.av_realloc(self.ptr.stats_in, data_len + 1)
+                if not self.ptr.stats_in:
+                    raise MemoryError("Cannot allocate stats_in")
+                memcpy(self.ptr.stats_in, <char*>data_bytes, data_len)
+                self.ptr.stats_in[data_len] = 0
+                self.stats_in_set = True
+
     property is_open:
         def __get__(self):
             return lib.avcodec_is_open(self.ptr)
@@ -300,6 +336,8 @@ cdef class CodecContext(object):
     def __dealloc__(self):
         if self.ptr and self.extradata_set:
             lib.av_freep(&self.ptr.extradata)
+        if self.ptr and self.stats_in_set:
+            lib.av_freep(&self.ptr.stats_in)
         if self.ptr and self.allocated:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)

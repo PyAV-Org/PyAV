@@ -2,7 +2,7 @@ from fractions import Fraction
 from unittest import SkipTest
 import os
 
-from av import AudioResampler, Codec, Packet
+from av import AudioResampler, Codec, Packet, VideoFrame
 from av.codec.codec import UnknownCodecError
 import av
 
@@ -87,6 +87,54 @@ class TestCodecContext(TestCase):
         with self.assertRaises(ValueError) as cm:
             ctx.extradata = b"123"
         self.assertEqual(str(cm.exception), "Can only set extradata for decoders.")
+
+    def test_encoder_stats_in(self):
+        ctx = av.codec.Codec('vp9', 'w').create()
+        self.assertEqual(ctx.stats_in, None)
+        ctx.stats_in = "Some two-pass data"
+        self.assertEqual(ctx.stats_in, "Some two-pass data")
+        ctx.stats_in = None
+        self.assertEqual(ctx.stats_in, None)
+
+    def test_encoder_stats_out(self):
+        width = 360
+        height = 240
+        pix_fmt = 'yuv420p'
+
+        ctx = av.codec.Codec('vp9', 'w').create()
+        self.assertEqual(ctx.stats_out, None)
+
+        ctx.width = width
+        ctx.height = height
+        ctx.framerate = Fraction(24, 1)
+        ctx.time_base = 1 / ctx.framerate
+        ctx.pix_fmt = pix_fmt
+        ctx.options["flags"] = "+pass1"
+        ctx.bit_rate = 400000
+        ctx.open()
+
+        frame = VideoFrame(width, height, pix_fmt)
+        ctx.encode(frame)
+        for pkt in ctx.encode():
+            pass
+
+        self.assertIsNotNone(ctx.stats_out)
+        self.assertNotEqual(len(ctx.stats_out), 0)
+
+    def test_stats_props_not_accessible_for_decoders(self):
+        ctx = av.codec.Codec('vp9', 'r').create()
+
+        with self.assertRaises(ValueError) as cm:
+            ctx.stats_in
+        self.assertEqual(str(cm.exception), "Can only get stats_in for encoders")
+
+        with self.assertRaises(ValueError) as cm:
+            ctx.stats_in = ""
+        self.assertEqual(str(cm.exception), "Can only set stats_in for encoders")
+
+        with self.assertRaises(ValueError) as cm:
+            ctx.stats_out
+        self.assertEqual(str(cm.exception), "Can only get stats_out for encoders")
 
     def test_parse(self):
 

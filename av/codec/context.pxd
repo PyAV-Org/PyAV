@@ -17,6 +17,9 @@ cdef class CodecContext(object):
     # Whether AVCodecContext.extradata should be de-allocated upon destruction.
     cdef bint extradata_set
 
+    # Whether AVCodecContext.stats_in should be de-allocated upon destruction.
+    cdef bint stats_in_set
+
     # Used as a signal that this is within a stream, and also for us to access
     # that stream. This is set "manually" by the stream after constructing
     # this object.
