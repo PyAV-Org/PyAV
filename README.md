@@ -38,7 +38,7 @@ Another way of installing PyAV is via [conda-forge][conda-forge]:
 conda install av -c conda-forge
 ```
 
-See the [Conda quick install][conda-install] docs to get started with (mini)Conda.
+See the [Conda install][conda-install] docs to get started with (mini)Conda.
 
 And if you want to build from the absolute source (for development or testing):
 
@@ -78,5 +78,4 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 
 [ffmpeg]: http://ffmpeg.org/
 [conda-forge]: https://conda-forge.github.io/
-[conda-install]: https://conda.io/docs/install/quick.html
-
+[conda-install]: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
