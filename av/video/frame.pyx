@@ -156,14 +156,6 @@ cdef class VideoFrame(Frame):
         """Height of the image, in pixels."""
         def __get__(self): return self.ptr.height
 
-    property key_frame:
-        """Is this frame a key frame?
-
-        Wraps :ffmpeg:`AVFrame.key_frame`.
-
-        """
-        def __get__(self): return self.ptr.key_frame
-
     property repeat_pict:
         """When decoding, this signals how much the picture must be delayed.
 

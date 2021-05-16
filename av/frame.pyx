@@ -153,6 +153,14 @@ cdef class Frame(object):
         def __set__(self, value):
             to_avrational(value, &self._time_base)
 
+    property key_frame:
+        """Is this frame a key frame?
+
+        Wraps :ffmpeg:`AVFrame.key_frame`.
+
+        """
+        def __get__(self): return self.ptr.key_frame
+
     property is_corrupt:
         """
         Is this frame corrupt?
