@@ -84,6 +84,10 @@ cdef class InputContainer(Container):
     property size:
         def __get__(self): return lib.avio_size(self.ptr.pb)
 
+    property max_analyze_duration:
+        def __get__(self): return self.ptr.max_analyze_duration
+        def __set__(self, value): self.ptr.max_analyze_duration = value
+
     def close(self):
         close_input(self)
 
