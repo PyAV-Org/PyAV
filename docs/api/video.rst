@@ -66,6 +66,11 @@ Types
 .. autoattribute:: VideoFrame.coded_picture_number
 .. autoattribute:: VideoFrame.display_picture_number
 .. autoattribute:: VideoFrame.pict_type
+.. autoattribute:: VideoFrame.color_range
+.. autoattribute:: VideoFrame.color_primaries
+.. autoattribute:: VideoFrame.color_trc
+.. autoattribute:: VideoFrame.color_space
+.. autoattribute:: VideoFrame.chroma_location
 
 .. autoclass:: av.video.frame.PictureType
 

@@ -32,6 +32,79 @@ PictureType = define_enum('PictureType', __name__, (
     ('BI', lib.AV_PICTURE_TYPE_BI, "BI type"),
 ))
 
+ColorPrimariesType = define_enum('ColorPrimariesType', __name__, (
+    ('reserved0', lib.AVCOL_PRI_RESERVED0, 'Reserved (0)'),
+    ('bt709', lib.AVCOL_PRI_BT709, 'bt709'),
+    ('unknown', lib.AVCOL_PRI_UNSPECIFIED, 'Unspecified'),
+    ('reserved', lib.AVCOL_PRI_RESERVED, 'Reserved'),
+    ('bt470m', lib.AVCOL_PRI_BT470M, 'bt470m'),
+    ('bt470bg', lib.AVCOL_PRI_BT470BG, 'bt470bg'),
+    ('smpte170m', lib.AVCOL_PRI_SMPTE170M, 'smpte170m'),
+    ('smpte240m', lib.AVCOL_PRI_SMPTE240M, 'smpte240m'),
+    ('film', lib.AVCOL_PRI_FILM, 'Film'),
+    ('bt2020', lib.AVCOL_PRI_BT2020, 'ITU-R BT2020'),
+    ('smpte428', lib.AVCOL_PRI_SMPTE428, 'SMPTE ST 428-1 (CIE 1931 XYZ)'),
+    ('smpte431', lib.AVCOL_PRI_SMPTE431, 'SMPTE ST 431-2 (2011) / DCI P3'),
+    ('smpte432', lib.AVCOL_PRI_SMPTE432, 'SMPTE ST 432-1 (2010) / P3 D65 / Display P3'),
+    ('ebu3213', lib.AVCOL_PRI_EBU3213, 'EBU Tech. 3213-E / JEDEC P22 phosphors'),
+))
+
+ColorTransferCharacteristicType = define_enum('ColorTransferCharacteristicType', __name__, (
+    ('reserved0', lib.AVCOL_TRC_RESERVED0, 'Reserved (0)'),
+    ('bt709', lib.AVCOL_TRC_BT709, 'bt709'),
+    ('unknown', lib.AVCOL_TRC_UNSPECIFIED, 'Unspecified'),
+    ('reserved', lib.AVCOL_TRC_RESERVED, 'Reserved'),
+    ('bt470m', lib.AVCOL_TRC_GAMMA22, 'bt470m'),
+    ('bt470bg', lib.AVCOL_TRC_GAMMA28, 'bt470bg'),
+    ('smpte170m', lib.AVCOL_TRC_SMPTE170M, 'smpte170m'),
+    ('smpte240m', lib.AVCOL_TRC_SMPTE240M, 'smpte240m'),
+    ('linear', lib.AVCOL_TRC_LINEAR, 'Linear transfer characteristics'),
+    ('log100', lib.AVCOL_TRC_LOG, 'Logarithmic transfer characteristic'),
+    ('log316', lib.AVCOL_TRC_LOG_SQRT, 'Logarithmic transfer characteristic'),
+    ('iec61966-2-4', lib.AVCOL_TRC_IEC61966_2_4, 'IEC 61966-2-4'),
+    ('bt1361e', lib.AVCOL_TRC_BT1361_ECG, 'ITU-R BT1361 Extended Colour Gamut'),
+    ('iec61966-2-1', lib.AVCOL_TRC_IEC61966_2_1, 'IEC 61966-2-1 (sRGB or sYCC)'),
+    ('bt2020-10', lib.AVCOL_TRC_BT2020_10, 'ITU-R BT2020 for 10-bit system'),
+    ('bt2020-12', lib.AVCOL_TRC_BT2020_12, 'ITU-R BT2020 for 12-bit system'),
+    ('smpte2084', lib.AVCOL_TRC_SMPTE2084, 'SMPTE ST 2084 for 10-, 12-, 14- and 16-bit systems'),
+    ('smpte428', lib.AVCOL_TRC_SMPTE428, 'SMPTE ST 428-1'),
+    ('arib-std-b67', lib.AVCOL_TRC_ARIB_STD_B67, 'ARIB STD-B67 (Hybrid log-gamma)'),
+))
+
+
+ColorSpaceType = define_enum('ColorSpaceType', __name__, (
+    ('gbr', lib.AVCOL_SPC_RGB, 'RGB/GBR/IEC 61966-2-1 (sRGB)'),
+    ('bt709', lib.AVCOL_SPC_BT709, 'bt709'),
+    ('unknown', lib.AVCOL_SPC_UNSPECIFIED, 'Unspecified'),
+    ('reserved', lib.AVCOL_SPC_RESERVED, 'Reserved'),
+    ('fcc', lib.AVCOL_SPC_FCC, 'FCC Title 47 Code of Federal Regulations 73.682 (a)(20)'),
+    ('bt470bg', lib.AVCOL_SPC_BT470BG, 'bt470bg'),
+    ('smpte170m', lib.AVCOL_SPC_SMPTE170M, 'smpte170m'),
+    ('smpte240m', lib.AVCOL_SPC_SMPTE240M, 'smpte240m'),
+    ('ycgco', lib.AVCOL_SPC_YCGCO, 'ycgco'),
+    ('bt2020nc', lib.AVCOL_SPC_BT2020_NCL, 'ITU-R BT2020 non-constant luminance system'),
+    ('bt2020c', lib.AVCOL_SPC_BT2020_CL, 'ITU-R BT2020 constant luminance system'),
+    ('smpte2085', lib.AVCOL_SPC_SMPTE2085, 'SMPTE 2085, Y\'D\'zD\'x'),
+    ('chroma-derived-nc', lib.AVCOL_SPC_CHROMA_DERIVED_NCL, 'Chromaticity-derived non-constant luminance system'),
+    ('chroma-derived-c', lib.AVCOL_SPC_CHROMA_DERIVED_CL, 'Chromaticity-derived constant luminance system'),
+    ('ictcp', lib.AVCOL_SPC_ICTCP, 'ITU-R BT.2100-0, ICtCp'),
+))
+
+ColorRangeType = define_enum('ColorRangeType', __name__, (
+    ('unknown', lib.AVCOL_RANGE_UNSPECIFIED, 'Unspecified'),
+    ('tv', lib.AVCOL_RANGE_MPEG, 'MPEG (tv)'),
+    ('pc', lib.AVCOL_RANGE_JPEG, 'JPEG (pc)'),
+))
+
+ChromaLocationType = define_enum('ChromaLocationType', __name__, (
+    ('unknown', lib.AVCHROMA_LOC_UNSPECIFIED, 'Unspecified'),
+    ('left', lib.AVCHROMA_LOC_LEFT, 'Left'),
+    ('center', lib.AVCHROMA_LOC_CENTER, 'Center'),
+    ('topleft', lib.AVCHROMA_LOC_TOPLEFT, 'Top left'),
+    ('top', lib.AVCHROMA_LOC_TOP, 'Top'),
+    ('bottomleft', lib.AVCHROMA_LOC_BOTTOMLEFT, 'Bottom left'),
+    ('bottom', lib.AVCHROMA_LOC_BOTTOM, 'Bottom'),
+))
 
 cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
     cdef bytes imgbytes = array.tobytes()
@@ -217,6 +290,56 @@ cdef class VideoFrame(Frame):
     @pict_type.setter
     def pict_type(self, value):
         self.ptr.pict_type = PictureType[value].value
+
+    property color_range:
+        """MPEG vs JPEG YUV range
+
+        Wraps :ffmpeg:`AVFrame.color_range`.
+
+        """
+        def __get__(self):
+            if self.ptr.color_range != lib.AVCOL_RANGE_UNSPECIFIED:
+                return ColorRangeType.get(self.ptr.color_range, create=True)
+
+    property color_primaries:
+        """Color primaries
+
+        Wraps :ffmpeg:`AVFrame.color_primaries`.
+
+        """
+        def __get__(self):
+            if self.ptr.color_primaries != lib.AVCOL_PRI_UNSPECIFIED:
+                return ColorPrimariesType.get(self.ptr.color_primaries, create=True)
+
+    property color_trc:
+        """Color transfer characteristics
+
+        Wraps :ffmpeg:`AVFrame.color_trc`.
+
+        """
+        def __get__(self):
+            if self.ptr.color_trc != lib.AVCOL_TRC_UNSPECIFIED:
+                return ColorTransferCharacteristicType.get(self.ptr.color_trc, create=True)
+
+    property color_space:
+        """YUV colorspace type
+
+        Wraps :ffmpeg:`AVFrame.colorspace`.
+
+        """
+        def __get__(self):
+            if self.ptr.colorspace != lib.AVCOL_SPC_UNSPECIFIED:
+                return ColorSpaceType.get(self.ptr.colorspace, create=True)
+
+    property chroma_location:
+        """Chroma location
+
+        Wraps :ffmpeg:`AVFrame.chroma_location`.
+
+        """
+        def __get__(self):
+            if self.ptr.chroma_location != lib.AVCHROMA_LOC_UNSPECIFIED:
+                return ChromaLocationType.get(self.ptr.chroma_location, create=True)
 
     def reformat(self, *args, **kwargs):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None)
