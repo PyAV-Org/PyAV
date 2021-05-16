@@ -173,6 +173,24 @@ cdef class AudioFrame(Frame):
         def __set__(self, value):
             self.ptr.sample_rate = value
 
+    property channels:
+        """
+        number of audio channels.
+
+        :type: int
+        """
+        def __get__(self):
+            return self.ptr.channels
+
+    property channel_layout:
+        """
+        Channel layout of the audio data.
+
+        :type: int
+        """
+        def __get__(self):
+            return self.ptr.channel_layout
+
     def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
 
