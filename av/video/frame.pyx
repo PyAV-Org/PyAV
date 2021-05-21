@@ -269,6 +269,12 @@ cdef class VideoFrame(Frame):
                 useful_array(frame.planes[1]),
                 useful_array(frame.planes[2])
             )).reshape(-1, frame.width)
+        elif frame.format.name in ('yuv444p', 'yuvj444p'):
+            return np.hstack((
+                useful_array(frame.planes[0]),
+                useful_array(frame.planes[1]),
+                useful_array(frame.planes[2])
+            )).reshape(-1, frame.height, frame.width)
         elif frame.format.name == 'yuyv422':
             assert frame.width % 2 == 0
             assert frame.height % 2 == 0
@@ -371,6 +377,16 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(flat[0:u_start], frame.planes[0], 1)
             copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 1)
             copy_array_to_plane(flat[v_start:], frame.planes[2], 1)
+            return frame
+        elif format in ('yuv444p', 'yuvj444p'):
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[0] == 3)
+
+            frame = VideoFrame(array.shape[2], array.shape[1], format)
+            array = array.reshape(3, -1)
+            copy_array_to_plane(array[0], frame.planes[0], 1)
+            copy_array_to_plane(array[1], frame.planes[1], 1)
+            copy_array_to_plane(array[2], frame.planes[2], 1)
             return frame
         elif format == 'yuyv422':
             check_ndarray(array, 'uint8', 3)
