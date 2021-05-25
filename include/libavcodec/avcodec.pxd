@@ -304,7 +304,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVCOL_PRI_SMPTE428
         AVCOL_PRI_SMPTE431
         AVCOL_PRI_SMPTE432
-        AVCOL_PRI_EBU3213
+        # AVCOL_PRI_EBU3213  # introduced in n4.4-dev:
+        #   (LIBAVUTIL_VERSION_MAJOR, LIBAVUTIL_VERSION_MINOR, LIBAVUTIL_VERSION_MICRO) > (56, 34, 100)
+        # AVCOL_PRI_EBU3213
 
     cdef enum AVColorTransferCharacteristic:
         AVCOL_TRC_RESERVED0

@@ -46,7 +46,9 @@ ColorPrimariesType = define_enum('ColorPrimariesType', __name__, (
     ('smpte428', lib.AVCOL_PRI_SMPTE428, 'SMPTE ST 428-1 (CIE 1931 XYZ)'),
     ('smpte431', lib.AVCOL_PRI_SMPTE431, 'SMPTE ST 431-2 (2011) / DCI P3'),
     ('smpte432', lib.AVCOL_PRI_SMPTE432, 'SMPTE ST 432-1 (2010) / P3 D65 / Display P3'),
-    ('ebu3213', lib.AVCOL_PRI_EBU3213, 'EBU Tech. 3213-E / JEDEC P22 phosphors'),
+    # AVCOL_PRI_EBU3213  # introduced in n4.4-dev:
+    #   (LIBAVUTIL_VERSION_MAJOR, LIBAVUTIL_VERSION_MINOR, LIBAVUTIL_VERSION_MICRO) > (56, 34, 100)
+    # ('ebu3213', lib.AVCOL_PRI_EBU3213, 'EBU Tech. 3213-E / JEDEC P22 phosphors'),
 ))
 
 ColorTransferCharacteristicType = define_enum('ColorTransferCharacteristicType', __name__, (
