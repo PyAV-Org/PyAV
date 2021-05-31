@@ -92,6 +92,9 @@ Attributes
 .. autoattribute:: CodecContext.extradata
 .. autoattribute:: CodecContext.extradata_size
 
+.. autoattribute:: CodecContext.stats_out
+.. autoattribute:: CodecContext.stats_in
+
 Transcoding
 ~~~~~~~~~~~
 .. automethod:: CodecContext.parse

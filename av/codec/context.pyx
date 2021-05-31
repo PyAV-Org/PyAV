@@ -249,6 +249,20 @@ cdef class CodecContext(object):
             return self.ptr.extradata_size
 
     property stats_out:
+        """When two-pass encoding is enabled, video encoders (except libx264,
+           see below) will write the stats that they produce in the first
+           encoding pass to this property. The property's contents should be
+           copied over to the :attr:`.stats_in` property of the
+           encoding context used in the second encode pass.
+
+           For libx264, stats are saved to files, so instead of using the
+           :attr:`.stats_out`/:attr:`.stats_in` properties, set
+           :attr:`options["stats"] <.options>` to the desired output file
+           prefix (similarly to how the "-passlogfile" ffmpeg command line
+           option would be used).
+
+        """
+
         def __get__(self):
             if not self.is_encoder:
                 raise ValueError("Can only get stats_out for encoders")
@@ -259,6 +273,11 @@ cdef class CodecContext(object):
                 return (<bytes>self.ptr.stats_out).decode("utf-8")
 
     property stats_in:
+        """Stats used for two-pass encoding. See :attr:`.stats_out`
+        for more details.
+
+        """
+
         def __get__(self):
             if not self.is_encoder:
                 raise ValueError("Can only get stats_in for encoders")
