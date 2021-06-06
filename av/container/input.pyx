@@ -111,7 +111,6 @@ cdef class InputContainer(Container):
         # (and others).
         id(kwargs)
 
-
         streams = self.streams.get(*args, **kwargs)
 
         cdef bint *include_stream = <bint*>malloc(self.ptr.nb_streams * sizeof(bint))
@@ -140,6 +139,11 @@ cdef class InputContainer(Container):
                     self.streams = StreamContainer()
                     for i in range(self.ptr.nb_streams):
                         self.streams.add_stream(wrap_stream(self, self.ptr.streams[i]))
+
+                    free(include_stream)
+                    include_stream = <bint*>malloc(self.ptr.nb_streams * sizeof(bint))
+                    if include_stream == NULL:
+                        raise MemoryError()
 
                 for i in range(self.ptr.nb_streams):
                     include_stream[i] = False
