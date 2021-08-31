@@ -279,3 +279,22 @@ class TestEncodeStreamSemantics(TestCase):
         vstream.encode(vframe)[0]
 
         self.assertEqual(vstream.codec_context.ticks_per_frame, 41)
+
+    def test_ticks_per_frame_big_numbers(self):
+        output = av.open(self.sandboxed('output.mov'), 'w')
+
+        # These are numbers that have occurred in practice and caused
+        # overflow in the ticks_per_frame calculation
+        frame_rate = Fraction(580816000, 9680271)
+        time_base = Fraction(1, 16000)
+
+        vstream = output.add_stream('mpeg4', frame_rate)
+        vstream.pix_fmt = 'yuv420p'
+        vstream.width = 320
+        vstream.height = 240
+        vstream.time_base = time_base
+
+        vframe = VideoFrame(320, 240, 'yuv420p')
+        vstream.encode(vframe)[0]
+
+        self.assertEqual(vstream.codec_context.ticks_per_frame, 266)

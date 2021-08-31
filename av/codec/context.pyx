@@ -290,7 +290,7 @@ cdef class CodecContext(object):
             self._set_default_time_base()
 
         if self.ptr.framerate.num > 0:
-            self.ptr.ticks_per_frame = (self.ptr.time_base.den * self.ptr.framerate.den) / (self.ptr.time_base.num * self.ptr.framerate.num)
+            self.ptr.ticks_per_frame = int(1 / self.time_base / self.framerate)
         else:
             self.ptr.ticks_per_frame = 1
 
