@@ -252,3 +252,30 @@ class TestEncodeStreamSemantics(TestCase):
             self.assertEqual(stream.time_base, None)
             stream.time_base = Fraction(1, 48000)
             self.assertEqual(stream.time_base, Fraction(1, 48000))
+
+    def test_ticks_per_frame_basic(self):
+        output = av.open(self.sandboxed('output.mov'), 'w')
+
+        vstream = output.add_stream('mpeg4', 24)
+        vstream.pix_fmt = 'yuv420p'
+        vstream.width = 320
+        vstream.height = 240
+
+        vframe = VideoFrame(320, 240, 'yuv420p')
+        vstream.encode(vframe)[0]
+
+        self.assertEqual(vstream.codec_context.ticks_per_frame, 1)
+
+    def test_ticks_per_frame_high_res(self):
+        output = av.open(self.sandboxed('output.mov'), 'w')
+
+        vstream = output.add_stream('mpeg4', 24)
+        vstream.pix_fmt = 'yuv420p'
+        vstream.width = 320
+        vstream.height = 240
+        vstream.time_base = Fraction(1, 1000)
+
+        vframe = VideoFrame(320, 240, 'yuv420p')
+        vstream.encode(vframe)[0]
+
+        self.assertEqual(vstream.codec_context.ticks_per_frame, 41)

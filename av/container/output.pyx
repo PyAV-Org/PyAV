@@ -102,7 +102,6 @@ cdef class OutputContainer(Container):
             codec_context.height = 480
             codec_context.bit_rate = 1024000
             codec_context.bit_rate_tolerance = 128000
-            codec_context.ticks_per_frame = 1
 
             rate = Fraction(rate or 24)
 

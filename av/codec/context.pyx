@@ -289,6 +289,11 @@ cdef class CodecContext(object):
         if not self.ptr.time_base.num and self.is_encoder:
             self._set_default_time_base()
 
+        if self.ptr.framerate.num > 0:
+            self.ptr.ticks_per_frame = (self.ptr.time_base.den * self.ptr.framerate.den) / (self.ptr.time_base.num * self.ptr.framerate.num)
+        else:
+            self.ptr.ticks_per_frame = 1
+
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
 
         self.options = dict(options)
