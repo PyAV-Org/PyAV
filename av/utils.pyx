@@ -11,7 +11,10 @@ from av.error cimport err_check
 # ====================
 
 cdef _decode(char *s, encoding, errors):
-    return (<bytes>s).decode(encoding, errors)
+    try:
+        return (<bytes>s).decode(encoding, errors)
+    except UnicodeDecodeError:
+        return <bytes>s
 
 cdef bytes _encode(s, encoding, errors):
     return s.encode(encoding, errors)
