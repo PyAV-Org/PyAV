@@ -528,7 +528,8 @@ cdef class Container(object):
 def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
          metadata_encoding='utf-8', metadata_errors='strict',
-         buffer_size=32768, timeout=None, io_open=None):
+         buffer_size=32768, timeout=None, io_open=None,
+         audio_codec=AudioCodecs['NONE']):
     """open(file, mode='r', **kwargs)
 
     Main entrypoint to opening files/streams.
