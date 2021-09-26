@@ -284,7 +284,6 @@ cdef class Container(object):
         else:
             self.ptr.audio_codec_id = AudioCodecs[audio_codec]
 
-
         # Setup Python IO.
         self.open_files = {}
         if not isinstance(file_, basestring):
