@@ -213,7 +213,7 @@ cdef class Container(object):
                   container_options, stream_options,
                   metadata_encoding, metadata_errors,
                   buffer_size, open_timeout, read_timeout,
-                  io_open, audio_codec=AudioCodecs['NONE']):
+                  io_open, audio_codec=None):
 
         if sentinel is not _cinit_sentinel:
             raise RuntimeError('cannot construct base Container')
@@ -279,7 +279,11 @@ cdef class Container(object):
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = <void*>self
 
-        self.ptr.audio_codec_id = audio_codec
+        if audio_codec is None:
+            self.ptr.audio_codec_id = AudioCodecs['NONE']
+        else:
+            self.ptr.audio_codec_id = AudioCodecs[audio_codec]
+
 
         # Setup Python IO.
         self.open_files = {}
@@ -379,8 +383,12 @@ cdef class Container(object):
 def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
          metadata_encoding='utf-8', metadata_errors='strict',
+<<<<<<< HEAD
          buffer_size=32768, timeout=None, io_open=None,
          audio_codec=AudioCodecs['NONE']):
+=======
+         buffer_size=32768, timeout=None, audio_codec=None):
+>>>>>>> Use None value instead
     """open(file, mode='r', **kwargs)
 
     Main entrypoint to opening files/streams.
@@ -444,8 +452,12 @@ def open(file, mode=None, format=None, options=None,
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors,
+<<<<<<< HEAD
             buffer_size, open_timeout, read_timeout,
             io_open
+=======
+            buffer_size, open_timeout, read_timeout, audio_codec
+>>>>>>> Use None value instead
         )
     if mode.startswith('w'):
         if stream_options:
@@ -457,4 +469,5 @@ def open(file, mode=None, format=None, options=None,
             buffer_size, open_timeout, read_timeout,
             io_open
         )
+<<<<<<< HEAD
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
