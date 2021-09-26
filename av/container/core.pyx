@@ -383,12 +383,8 @@ cdef class Container(object):
 def open(file, mode=None, format=None, options=None,
          container_options=None, stream_options=None,
          metadata_encoding='utf-8', metadata_errors='strict',
-<<<<<<< HEAD
          buffer_size=32768, timeout=None, io_open=None,
-         audio_codec=AudioCodecs['NONE']):
-=======
-         buffer_size=32768, timeout=None, audio_codec=None):
->>>>>>> Use None value instead
+         audio_codec=None):
     """open(file, mode='r', **kwargs)
 
     Main entrypoint to opening files/streams.
@@ -415,6 +411,8 @@ def open(file, mode=None, format=None, options=None,
         ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
         ``options`` is a dictionary of additional options. The callable should return a
         file-like object.
+    :param str audio_codec: Specify audio input codec to be used. For example
+        ``"PCM_S32LE"``. Defaults to ``None``.
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -452,12 +450,8 @@ def open(file, mode=None, format=None, options=None,
             _cinit_sentinel, file, format, options,
             container_options, stream_options,
             metadata_encoding, metadata_errors,
-<<<<<<< HEAD
             buffer_size, open_timeout, read_timeout,
-            io_open
-=======
-            buffer_size, open_timeout, read_timeout, audio_codec
->>>>>>> Use None value instead
+            io_open, audio_codec
         )
     if mode.startswith('w'):
         if stream_options:
@@ -469,5 +463,4 @@ def open(file, mode=None, format=None, options=None,
             buffer_size, open_timeout, read_timeout,
             io_open
         )
-<<<<<<< HEAD
     raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
