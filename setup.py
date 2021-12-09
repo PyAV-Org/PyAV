@@ -516,6 +516,8 @@ setup(
         ],
     },
 
+    python_requires='<3.12',
+
     classifiers=[
        'Development Status :: 5 - Production/Stable',
        'Intended Audience :: Developers',
