@@ -1,0 +1,11 @@
+--- a/gl/c-ctype.h
++++ b/gl/c-ctype.h
+@@ -229,7 +229,7 @@
+     }
+ }
+ 
+-C_CTYPE_INLINE bool
++static bool
+ c_isdigit (int c)
+ {
+   switch (c)

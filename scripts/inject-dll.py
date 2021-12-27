@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import logging
 import os
@@ -8,13 +6,19 @@ import zipfile
 
 parser = argparse.ArgumentParser(description="Inject DLLs into a Windows binary wheel")
 parser.add_argument(
-    "wheel", type=str, help="the source wheel to which DLLs should be added",
+    "wheel",
+    type=str,
+    help="the source wheel to which DLLs should be added",
 )
 parser.add_argument(
-    "dest_dir", type=str, help="the directory where to create the repaired wheel",
+    "dest_dir",
+    type=str,
+    help="the directory where to create the repaired wheel",
 )
 parser.add_argument(
-    "dll_dir", type=str, help="the directory containing the DLLs",
+    "dll_dir",
+    type=str,
+    help="the directory containing the DLLs",
 )
 
 args = parser.parse_args()
@@ -27,7 +31,9 @@ logging.info("Copying '%s' to '%s'", args.wheel, repaired_wheel)
 shutil.copy(args.wheel, repaired_wheel)
 
 logging.info("Adding DLLs from '%s' to package '%s'", args.dll_dir, package_name)
-with zipfile.ZipFile(repaired_wheel, mode="a", compression=zipfile.ZIP_DEFLATED) as wheel:
+with zipfile.ZipFile(
+    repaired_wheel, mode="a", compression=zipfile.ZIP_DEFLATED
+) as wheel:
     for name in sorted(os.listdir(args.dll_dir)):
         if name.lower().endswith(".dll"):
             local_path = os.path.join(args.dll_dir, name)

@@ -1,9 +1,9 @@
 set destdir=%1
-set ffmpeg_version=4.3.1
-set ffmpeg_basename=ffmpeg-%ffmpeg_version%-win%PYTHON_ARCH%
+set ffmpeg_dirname=ffmpeg-4.3.2-2021-02-27-full_build-shared
+set ffmpeg_zipname=ffmpeg-4.3.2-full_build-shared.7z
 set outputdir=output
 
-for %%d in (%destdir% %ffmpeg_basename%-dev %ffmpeg_basename%-shared) do (
+for %%d in (%destdir% %ffmpeg_dirname%) do (
     if exist %%d (
         rmdir /s /q %%d
     )
@@ -17,21 +17,16 @@ if not exist %outputdir% (
 if not exist %outputfile% (
     mkdir %destdir%
 
-    if not exist %ffmpeg_basename%-dev.zip (
-        curl -L -o %ffmpeg_basename%-dev.zip https://ffmpeg.zeranoe.com/builds/win%PYTHON_ARCH%/dev/%ffmpeg_basename%-dev.zip
+    if not exist %ffmpeg_zipname% (
+        curl -L -o %ffmpeg_zipname% https://www.gyan.dev/ffmpeg/builds/packages/%ffmpeg_zipname%
     )
-    unzip %ffmpeg_basename%-dev.zip
-    mkdir %destdir%\include
-    xcopy %ffmpeg_basename%-dev\include %destdir%\include /E
-    mkdir %destdir%\lib
-    xcopy %ffmpeg_basename%-dev\lib %destdir%\lib /E
-
-    if not exist %ffmpeg_basename%-shared.zip (
-        curl -L -o %ffmpeg_basename%-shared.zip https://ffmpeg.zeranoe.com/builds/win%PYTHON_ARCH%/shared/%ffmpeg_basename%-shared.zip
-    )
-    unzip %ffmpeg_basename%-shared.zip
+    7z x %ffmpeg_zipname%
     mkdir %destdir%\bin
-    xcopy %ffmpeg_basename%-shared\bin %destdir%\bin\ /E
+    xcopy %ffmpeg_dirname%\bin %destdir%\bin /E
+    mkdir %destdir%\include
+    xcopy %ffmpeg_dirname%\include %destdir%\include /E
+    mkdir %destdir%\lib
+    xcopy %ffmpeg_dirname%\lib %destdir%\lib /E
 
     tar czvf %outputfile% -C %destdir% bin include lib
 )
