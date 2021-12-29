@@ -224,7 +224,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: python scripts/inject-dll {wheel} {dest_dir} C:\cibw\vendor\bin
-          CIBW_SKIP: cp36-* pp36-* *-musllinux*
+          CIBW_SKIP: cp36-* pp36-* pp38-win* *-musllinux*
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
           # disable test suite on OS X, the SSL config seems broken
           CIBW_TEST_COMMAND_MACOS: true
