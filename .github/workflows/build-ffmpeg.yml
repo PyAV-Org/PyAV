@@ -22,6 +22,7 @@ jobs:
           brew unlink gettext libidn2 libpng libtiff libunistring unbound
       - name: Build FFmpeg
         env:
+          CIBW_ARCHS_MACOS: arm64 x86_64
           CIBW_ARCHS_WINDOWS: AMD64
           CIBW_BEFORE_BUILD: python scripts/build-ffmpeg.py /tmp/vendor
           CIBW_BEFORE_BUILD_WINDOWS: scripts\build-ffmpeg.bat C:\cibw\vendor
