@@ -29,6 +29,7 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH
           CIBW_ENVIRONMENT_MACOS: CFLAGS=-mmacosx-version-min=10.9
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: python scripts/inject-dll.py {wheel} {dest_dir} C:\cibw\vendor\bin
+          CIBW_SKIP: "*musllinux*"
           CIBW_TEST_COMMAND: python -c "import dummy"
         run: |
           pip install cibuildwheel
