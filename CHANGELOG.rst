@@ -16,9 +16,26 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch, currently "develop").
 
-v8.0.4.dev0
+v8.1.0
 ------
 
+Minor:
+
+- Update FFmpeg to 4.3.2 for the binary wheels.
+- Provide binary wheels for Python 3.10 (:issue:`820`).
+- Stop providing binary wheels for end-of-life Python 3.6.
+- Fix args order in Frame.__repr__ (:issue:`749`).
+- Fix documentation to remove unavailable QUIET log level (:issue:`719`).
+- Expose codec_context.codec_tag (:issue:`741`).
+- Add example for encoding with a custom PTS (:issue:`725`).
+- Use av_packet_rescale_ts in Packet._rebase_time() (:issue:`737`).
+- Do not hardcode errno values in test suite (:issue:`729`).
+- Use av_guess_format for output container format (:issue:`691`).
+- Fix setting CodecContext.extradata (:issue:`658`, :issue:`740`).
+- Fix documentation code block indentation (:issue:`783`).
+- Fix link to Conda installation instructions (:issue:`782`).
+- Export AudioStream from av.audio (:issue:`775`).
+- Fix setting CodecContext.extradata (:issue:`801`).
 
 v8.0.3
 ------
