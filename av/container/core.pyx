@@ -165,7 +165,6 @@ cdef class Container(object):
                 self.ptr.interrupt_callback.opaque = &self.interrupt_callback_info
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
-        self.ptr.max_analyze_duration = 10000000
 
         # Setup Python IO.
         if self.file is not None:
