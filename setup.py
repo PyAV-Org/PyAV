@@ -1,13 +1,5 @@
-from distutils.ccompiler import new_compiler as _new_compiler
-from distutils.command.clean import clean, log
-from distutils.core import Command
-from distutils.dir_util import remove_tree
-from distutils.errors import DistutilsExecError
-from distutils.msvccompiler import MSVCCompiler
-from setuptools import setup, find_packages, Extension, Distribution
-from setuptools.command.build_ext import build_ext
 from shlex import quote
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 import argparse
 import errno
 import os
@@ -16,15 +8,9 @@ import re
 import shlex
 import sys
 
-try:
-    # This depends on _winreg, which is not available on not-Windows.
-    from distutils.msvc9compiler import MSVCCompiler as MSVC9Compiler
-except ImportError:
-    MSVC9Compiler = None
-try:
-    from distutils._msvccompiler import MSVCCompiler as MSVC14Compiler
-except ImportError:
-    MSVC14Compiler = None
+from setuptools import Command, Extension, find_packages, setup
+from setuptools.command.build_ext import build_ext
+
 
 try:
     from Cython import __version__ as cython_version
@@ -170,67 +156,6 @@ def dump_config():
         print('\t%s=%s' % x)
 
 
-# Monkey-patch for CCompiler to be silent.
-def _CCompiler_spawn_silent(cmd, dry_run=None):
-    """Spawn a process, and eat the stdio."""
-    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    out, err = proc.communicate()
-    if proc.returncode:
-        raise DistutilsExecError(err)
-
-def new_compiler(*args, **kwargs):
-    """Create a C compiler.
-
-    :param bool silent: Eat all stdio? Defaults to ``True``.
-
-    All other arguments passed to ``distutils.ccompiler.new_compiler``.
-
-    """
-    make_silent = kwargs.pop('silent', True)
-    cc = _new_compiler(*args, **kwargs)
-    # If MSVC10, initialize the compiler here and add /MANIFEST to linker flags.
-    # See Python issue 4431 (https://bugs.python.org/issue4431)
-    if is_msvc(cc):
-        from distutils.msvc9compiler import get_build_version
-        if get_build_version() == 10:
-            cc.initialize()
-            for ldflags in [cc.ldflags_shared, cc.ldflags_shared_debug]:
-                unique_extend(ldflags, ['/MANIFEST'])
-        # If MSVC14, do not silence. As msvc14 requires some custom
-        # steps before the process is spawned, we can't monkey-patch this.
-        elif get_build_version() == 14:
-            make_silent = False
-    # monkey-patch compiler to suppress stdout and stderr.
-    if make_silent:
-        cc.spawn = _CCompiler_spawn_silent
-    return cc
-
-
-_msvc_classes = tuple(filter(None, (MSVCCompiler, MSVC9Compiler, MSVC14Compiler)))
-def is_msvc(cc=None):
-    cc = _new_compiler() if cc is None else cc
-    return isinstance(cc, _msvc_classes)
-
-
-if os.name == 'nt':
-
-    if is_msvc():
-        config_macros['inline'] = '__inline'
-
-    # Since we're shipping a self contained unit on Windows, we need to mark
-    # the package as such. On other systems, let it be universal.
-    class BinaryDistribution(Distribution):
-        def is_pure(self):
-            return False
-
-    distclass = BinaryDistribution
-
-else:
-
-    # Nothing to see here.
-    distclass = Distribution
-
-
 # Monkey-patch Cython to not overwrite embedded signatures.
 if cythonize:
 
@@ -320,13 +245,6 @@ class ConfigCommand(Command):
                 os.environ[name] = unknown
             update_extend(extension_extra, known)
 
-        if is_msvc(new_compiler(compiler=self.compiler)):
-            # Assume we have to disable /OPT:REF for MSVC with ffmpeg
-            config = {
-                'extra_link_args': ['/OPT:NOREF'],
-            }
-            update_extend(extension_extra, config)
-
         # Check if we're using pkg-config or not
         if self.no_pkg_config:
             # Simply assume we have everything we need!
@@ -375,27 +293,6 @@ class ConfigCommand(Command):
                 setattr(ext, key, value)
 
 
-class CleanCommand(clean):
-
-    user_options = clean.user_options + [
-        ('sources', None,
-         "remove Cython build output (C sources)")]
-
-    boolean_options = clean.boolean_options + ['sources']
-
-    def initialize_options(self):
-        clean.initialize_options(self)
-        self.sources = None
-
-    def run(self):
-        clean.run(self)
-        if self.sources:
-            if os.path.exists('src'):
-                remove_tree('src', dry_run=self.dry_run)
-            else:
-                log.info("'%s' does not exist -- can't clean it", 'src')
-
-
 class CythonizeCommand(Command):
 
     user_options = []
@@ -410,8 +307,6 @@ class CythonizeCommand(Command):
         # the existing extension instead of replacing them all.
         for i, ext in enumerate(self.distribution.ext_modules):
             if any(s.endswith('.pyx') for s in ext.sources):
-                if is_msvc():
-                    ext.define_macros.append(('inline', '__inline'))
                 new_ext = cythonize(
                     ext,
                     compiler_directives=dict(
@@ -503,7 +398,6 @@ setup(
 
     cmdclass={
         'build_ext': BuildExtCommand,
-        'clean': CleanCommand,
         'config': ConfigCommand,
         'cythonize': CythonizeCommand,
     },
@@ -537,7 +431,4 @@ setup(
        'Topic :: Multimedia :: Video',
        'Topic :: Multimedia :: Video :: Conversion',
    ],
-
-    distclass=distclass,
-
 )
