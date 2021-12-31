@@ -2,7 +2,7 @@ from libc.stdint cimport uint8_t
 
 from av.enum cimport define_enum
 from av.error cimport err_check
-from av.video.format cimport VideoFormat, get_video_format
+from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
 
 from av.deprecation import renamed_attr
@@ -71,9 +71,7 @@ cdef class VideoFrame(Frame):
         if width is _cinit_bypass_sentinel:
             return
 
-        cdef lib.AVPixelFormat c_format = lib.av_get_pix_fmt(format)
-        if c_format < 0:
-            raise ValueError('invalid format %r' % format)
+        cdef lib.AVPixelFormat c_format = get_pix_fmt(format)
 
         self._init(c_format, width, height)
 

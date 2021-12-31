@@ -10,6 +10,10 @@ from .common import Image, TestCase, fate_png
 
 
 class TestVideoFrameConstructors(TestCase):
+    def test_invalid_pixel_format(self):
+        with self.assertRaises(ValueError) as cm:
+            VideoFrame(640, 480, "__unknown_pix_fmt")
+        self.assertEqual(str(cm.exception), "not a pixel format: '__unknown_pix_fmt'")
 
     def test_null_constructor(self):
         frame = VideoFrame()

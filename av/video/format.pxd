@@ -23,3 +23,5 @@ cdef class VideoFormatComponent(object):
 
 
 cdef VideoFormat get_video_format(lib.AVPixelFormat c_format, unsigned int width, unsigned int height)
+
+cdef lib.AVPixelFormat get_pix_fmt(const char *name) except lib.AV_PIX_FMT_NONE
