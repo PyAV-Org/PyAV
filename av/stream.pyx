@@ -127,6 +127,8 @@ cdef class Stream(object):
 
     def __setattr__(self, name, value):
         setattr(self.codec_context, name, value)
+        if name == "time_base":
+            to_avrational(value, &self._stream.time_base)
 
     cdef _finalize_for_output(self):
 
@@ -228,9 +230,6 @@ cdef class Stream(object):
         """
         def __get__(self):
             return avrational_to_fraction(&self._stream.time_base)
-
-        def __set__(self, value):
-            to_avrational(value, &self._stream.time_base)
 
     property average_rate:
         """
