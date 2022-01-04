@@ -209,7 +209,7 @@ class TestEncodeStreamSemantics(TestCase):
         self.assertIs(apacket.stream, astream)
         self.assertEqual(apacket.stream_index, 1)
 
-    def test_audio_set_time_base(self):
+    def test_audio_set_time_base_and_id(self):
         output = av.open(self.sandboxed('output.mov'), 'w')
 
         stream = output.add_stream('mp2')
@@ -217,3 +217,6 @@ class TestEncodeStreamSemantics(TestCase):
         self.assertEqual(stream.time_base, None)
         stream.time_base = Fraction(1, 48000)
         self.assertEqual(stream.time_base, Fraction(1, 48000))
+        self.assertEqual(stream.id, 0)
+        stream.id = 1
+        self.assertEqual(stream.id, 1)

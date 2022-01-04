@@ -126,9 +126,12 @@ cdef class Stream(object):
                 raise AttributeError(name)
 
     def __setattr__(self, name, value):
+        if name == "id":
+            self._set_id(value)
+            return
         setattr(self.codec_context, name, value)
         if name == "time_base":
-            to_avrational(value, &self._stream.time_base)
+            self._set_time_base(value)
 
     cdef _finalize_for_output(self):
 
@@ -195,11 +198,14 @@ cdef class Stream(object):
         def __get__(self):
             return self._stream.id
 
-        def __set__(self, v):
-            if v is None:
-                self._stream.id = 0
-            else:
-                self._stream.id = v
+    def _set_id(self, value):
+        """
+        Setter used by __setattr__ for id property.
+        """
+        if value is None:
+            self._stream.id = 0
+        else:
+            self._stream.id = value
 
     property profile:
         """
@@ -230,6 +236,12 @@ cdef class Stream(object):
         """
         def __get__(self):
             return avrational_to_fraction(&self._stream.time_base)
+
+    def _set_time_base(self, value):
+        """
+        Setter used by __setattr__ for time_base property.
+        """
+        to_avrational(value, &self._stream.time_base)
 
     property average_rate:
         """
