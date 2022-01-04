@@ -200,7 +200,7 @@ cdef class Stream(object):
 
     def _set_id(self, value):
         """
-        Setter used by __setattr__ for id property.
+        Setter used by __setattr__ for the id property.
         """
         if value is None:
             self._stream.id = 0
@@ -239,7 +239,7 @@ cdef class Stream(object):
 
     def _set_time_base(self, value):
         """
-        Setter used by __setattr__ for time_base property.
+        Setter used by __setattr__ for the time_base property.
         """
         to_avrational(value, &self._stream.time_base)
 
