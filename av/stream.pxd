@@ -24,6 +24,8 @@ cdef class Stream(object):
     # Private API.
     cdef _init(self, Container, lib.AVStream*)
     cdef _finalize_for_output(self)
+    cdef _set_time_base(self, value)
+    cdef _set_id(self, value)
 
 
 cdef Stream wrap_stream(Container, lib.AVStream*)

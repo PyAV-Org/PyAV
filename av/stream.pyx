@@ -198,7 +198,7 @@ cdef class Stream(object):
         def __get__(self):
             return self._stream.id
 
-    def _set_id(self, value):
+    cdef _set_id(self, value):
         """
         Setter used by __setattr__ for the id property.
         """
@@ -237,7 +237,7 @@ cdef class Stream(object):
         def __get__(self):
             return avrational_to_fraction(&self._stream.time_base)
 
-    def _set_time_base(self, value):
+    cdef _set_time_base(self, value):
         """
         Setter used by __setattr__ for the time_base property.
         """
