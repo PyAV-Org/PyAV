@@ -214,6 +214,6 @@ class TestEncodeStreamSemantics(TestCase):
 
         stream = output.add_stream('mp2')
         self.assertEqual(stream.rate, 48000)
-        stream.time_base = Fraction(1, 48000)
         self.assertEqual(stream.time_base, None)
+        stream.time_base = Fraction(1, 48000)
         self.assertEqual(stream.time_base, Fraction(1, 48000))
