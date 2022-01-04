@@ -217,4 +217,3 @@ class TestEncodeStreamSemantics(TestCase):
         self.assertEqual(stream.time_base, None)
         stream.time_base = Fraction(1, 48000)
         self.assertEqual(stream.time_base, Fraction(1, 48000))
-        
