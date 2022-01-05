@@ -376,7 +376,7 @@ cdef class CodecContext(object):
                 # ... but this results in corruption.
 
                 packet = Packet(out_size)
-                memcpy(packet.struct.data, out_data, out_size)
+                memcpy(packet.ptr.data, out_data, out_size)
 
                 packets.append(packet)
 
@@ -417,7 +417,7 @@ cdef class CodecContext(object):
 
         cdef int res
         with nogil:
-            res = lib.avcodec_send_packet(self.ptr, &packet.struct if packet is not None else NULL)
+            res = lib.avcodec_send_packet(self.ptr, packet.ptr if packet is not None else NULL)
         err_check(res)
 
         out = []
@@ -459,7 +459,7 @@ cdef class CodecContext(object):
 
         cdef int res
         with nogil:
-            res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
+            res = lib.avcodec_receive_packet(self.ptr, packet.ptr)
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)

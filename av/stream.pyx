@@ -156,7 +156,7 @@ cdef class Stream(object):
         cdef Packet packet
         for packet in packets:
             packet._stream = self
-            packet.struct.stream_index = self._stream.index
+            packet.ptr.stream_index = self._stream.index
         return packets
 
     def decode(self, packet=None):

@@ -138,18 +138,18 @@ cdef class InputContainer(Container):
                 try:
                     self.start_timeout()
                     with nogil:
-                        ret = lib.av_read_frame(self.ptr, &packet.struct)
+                        ret = lib.av_read_frame(self.ptr, packet.ptr)
                     self.err_check(ret)
                 except EOFError:
                     break
 
-                if include_stream[packet.struct.stream_index]:
+                if include_stream[packet.ptr.stream_index]:
                     # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
                     # may also appear in av_read_frame().
                     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
                     # TODO: find better way to handle this
-                    if packet.struct.stream_index < len(self.streams):
-                        packet._stream = self.streams[packet.struct.stream_index]
+                    if packet.ptr.stream_index < len(self.streams):
+                        packet._stream = self.streams[packet.ptr.stream_index]
                         # Keep track of this so that remuxing is easier.
                         packet._time_base = packet._stream._stream.time_base
                         yield packet

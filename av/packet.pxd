@@ -7,7 +7,7 @@ from av.stream cimport Stream
 
 cdef class Packet(Buffer):
 
-    cdef lib.AVPacket struct
+    cdef lib.AVPacket* ptr
 
     cdef Stream _stream
 

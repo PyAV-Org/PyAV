@@ -16,7 +16,7 @@ cdef class SubtitleCodecContext(CodecContext):
             self.ptr,
             &proxy.struct,
             &got_frame,
-            &packet.struct if packet else NULL))
+            packet.ptr if packet else NULL))
         if got_frame:
             return [SubtitleSet(proxy)]
         else:

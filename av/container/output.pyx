@@ -210,18 +210,17 @@ cdef class OutputContainer(Container):
         self.start_encoding()
 
         # Assert the packet is in stream time.
-        if packet.struct.stream_index < 0 or <unsigned int>packet.struct.stream_index >= self.ptr.nb_streams:
+        if packet.ptr.stream_index < 0 or <unsigned int>packet.ptr.stream_index >= self.ptr.nb_streams:
             raise ValueError('Bad Packet stream_index.')
-        cdef lib.AVStream *stream = self.ptr.streams[packet.struct.stream_index]
+        cdef lib.AVStream *stream = self.ptr.streams[packet.ptr.stream_index]
         packet._rebase_time(stream.time_base)
 
         # Make another reference to the packet, as av_interleaved_write_frame
         # takes ownership of it.
-        cdef lib.AVPacket packet_ref
-        lib.av_init_packet(&packet_ref)
-        self.err_check(lib.av_packet_ref(&packet_ref, &packet.struct))
+        cdef lib.AVPacket *packet_ptr = lib.av_packet_alloc()
+        self.err_check(lib.av_packet_ref(packet_ptr, packet.ptr))
 
         cdef int ret
         with nogil:
-            ret = lib.av_interleaved_write_frame(self.ptr, &packet_ref)
+            ret = lib.av_interleaved_write_frame(self.ptr, packet_ptr)
         self.err_check(ret)
