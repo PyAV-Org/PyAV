@@ -245,6 +245,12 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     if not inited and not print_after_shutdown:
         return
 
+    # Fast path: avoid logging overhead. This should match the
+    # log_callback_gil() checks that result in ignoring the message.
+    with gil:
+        if level > level_threshold and level != lib.AV_LOG_ERROR:
+            return
+
     # Format the message.
     cdef char message[1024]
     lib.vsnprintf(message, 1023, format, args)
