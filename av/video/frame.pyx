@@ -233,7 +233,7 @@ cdef class VideoFrame(Frame):
             i_pos += i_stride
             o_pos += o_stride
 
-        return Image.frombytes("RGB", (self.width, self.height), bytes(o_buf), "raw", "RGB", 0, 1)
+        return Image.frombytes("RGB", (plane.width, plane.height), bytes(o_buf), "raw", "RGB", 0, 1)
 
     def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
