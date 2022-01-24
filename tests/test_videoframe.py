@@ -149,6 +149,12 @@ class TestVideoFrameImage(TestCase):
             self.assertEqual(img.size, (width, height))
             self.assertEqual(img.tobytes(), expected)
 
+    def test_to_image_with_dimensions(self):
+        frame = VideoFrame(640, 480, format='rgb24')
+
+        img = frame.to_image(width=320, height=240)
+        self.assertEqual(img.size, (320, 240))
+
 
 class TestVideoFrameNdarray(TestCase):
 
