@@ -10,7 +10,7 @@ for %%d in (%destdir% %ffmpeg_dirname%) do (
     )
 )
 
-set outputfile=%outputdir%\ffmpeg-win%PYTHON_ARCH%.tar.gz
+set outputfile=%outputdir%\ffmpeg-win_amd64.tar.gz
 
 if not exist %outputdir% (
     mkdir %outputdir%
