@@ -2,6 +2,7 @@ import glob
 import os
 import platform
 import shutil
+import struct
 import subprocess
 import sys
 
@@ -28,6 +29,26 @@ def build(package, configure_args=[]):
     run(["make", "-j"])
     run(["make", "install"])
     os.chdir(build_dir)
+
+
+def get_platform():
+    system = platform.system()
+    machine = platform.machine()
+    if system == "Linux":
+        return f"manylinux_{machine}"
+    elif system == "Darwin":
+        # cibuildwheel sets ARCHFLAGS:
+        # https://github.com/pypa/cibuildwheel/blob/5255155bc57eb6224354356df648dc42e31a0028/cibuildwheel/macos.py#L207-L220
+        if "ARCHFLAGS" in os.environ:
+            machine = os.environ["ARCHFLAGS"].split()[1]
+        return f"macosx_{machine}"
+    elif system == "Windows":
+        if struct.calcsize("P") * 8 == 64:
+            return "win_amd64"
+        else:
+            return "win32"
+    else:
+        raise Exception(f"Unsupported system {system}")
 
 
 def prepend_env(name, new, separator=" "):
@@ -57,25 +78,18 @@ def extract(package, url, *, strip_components=1):
 
 
 def run(cmd):
-    sys.stdout.write(f"- Running: {cmd}")
+    sys.stdout.write(f"- Running: {cmd}\n")
     subprocess.run(cmd, check=True, stderr=sys.stderr.buffer, stdout=sys.stdout.buffer)
 
 
 cmake_args = ["-DCMAKE_INSTALL_LIBDIR=lib", "-DCMAKE_INSTALL_PREFIX=" + dest_dir]
+output_dir = os.path.abspath("output")
 system = platform.system()
 if system == "Linux":
-    machine = platform.machine()
     output_dir = "/output"
-    output_tarball = os.path.join(output_dir, f"ffmpeg-manylinux_{machine}.tar.gz")
 elif system == "Darwin":
-    # cibuildwheel sets ARCHFLAGS:
-    # https://github.com/pypa/cibuildwheel/blob/5255155bc57eb6224354356df648dc42e31a0028/cibuildwheel/macos.py#L207-L220
-    machine = os.environ["ARCHFLAGS"].split()[1]
-    output_dir = os.path.abspath("output")
-    output_tarball = os.path.join(output_dir, f"ffmpeg-macosx_{machine}.tar.gz")
     cmake_args.append("-DCMAKE_INSTALL_NAME_DIR=" + os.path.join(dest_dir, "lib"))
-else:
-    raise Exception("Unsupported system: %s" % system)
+output_tarball = os.path.join(output_dir, f"ffmpeg-{get_platform()}.tar.gz")
 
 for d in [build_dir, output_dir, source_dir]:
     if not os.path.exists(d):
