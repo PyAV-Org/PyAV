@@ -106,7 +106,11 @@ def run(cmd):
     subprocess.run(cmd, check=True)
 
 
-cmake_args = ["-DCMAKE_INSTALL_LIBDIR=lib", "-DCMAKE_INSTALL_PREFIX=" + dest_dir]
+cmake_args = [
+    "-DBUILD_SHARED_LIBS=1",
+    "-DCMAKE_INSTALL_LIBDIR=lib",
+    "-DCMAKE_INSTALL_PREFIX=" + dest_dir,
+]
 output_dir = os.path.abspath("output")
 system = platform.system()
 if system == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
@@ -260,7 +264,16 @@ if not os.path.exists(output_tarball):
         )
         os.mkdir(os.path.join("aom", "tmp"))
         os.chdir(os.path.join("aom", "tmp"))
-        run(["cmake", ".."] + cmake_args + ["-DBUILD_SHARED_LIBS=1"])
+        run(
+            ["cmake", ".."]
+            + cmake_args
+            + [
+                "-DENABLE_DOCS=0",
+                "-DENABLE_EXAMPLES=0",
+                "-DENABLE_TESTS=0",
+                "-DENABLE_TOOLS=0",
+            ]
+        )
         run(["make"])
         run(["make", "install"])
         os.chdir(build_dir)
