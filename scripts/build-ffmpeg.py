@@ -152,8 +152,12 @@ if not os.path.exists(output_tarball):
     build("unistring")
 
     # build gettext (requires unistring and xml2)
-    extract("gettext", "https://ftp.gnu.org/pub/gnu/gettext/gettext-0.20.2.tar.gz")
-    build("gettext", ["--disable-java"])
+    #
+    # this avoids picking up homebrew's libintl which may not be built
+    # for the current MACOSX_DEPLOYMENT_TARGET
+    if system == "Darwin":
+        extract("gettext", "https://ftp.gnu.org/pub/gnu/gettext/gettext-0.20.2.tar.gz")
+        build("gettext", ["--disable-java"])
 
     # build freetype (requires png)
     extract(
