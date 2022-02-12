@@ -165,7 +165,7 @@ if not os.path.exists(output_tarball):
     # build xz
     with log_group("xz"):
         extract("xz", "https://tukaani.org/xz/xz-5.2.5.tar.bz2")
-        build("xz")
+        build("xz", ["--disable-doc", "--disable-nls"])
 
     # build gmp
     with log_group("gmp"):
@@ -193,17 +193,6 @@ if not os.path.exists(output_tarball):
         )
         build("unistring")
 
-    # build gettext (requires unistring and xml2)
-    #
-    # this avoids picking up homebrew's libintl which may not be built
-    # for the current MACOSX_DEPLOYMENT_TARGET
-    if system == "Darwin":
-        with log_group("gettext"):
-            extract(
-                "gettext", "https://ftp.gnu.org/pub/gnu/gettext/gettext-0.20.2.tar.gz"
-            )
-            build("gettext", ["--disable-java"])
-
     # build freetype (requires png)
     with log_group("freetype"):
         extract(
@@ -218,7 +207,7 @@ if not os.path.exists(output_tarball):
             "fontconfig",
             "https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.13.1.tar.bz2",
         )
-        build("fontconfig", ["--enable-libxml2"])
+        build("fontconfig", ["--disable-nls", "--enable-libxml2"])
 
     # build fribidi
     with log_group("fribidi"):
@@ -245,7 +234,9 @@ if not os.path.exists(output_tarball):
         build(
             "gnutls",
             [
+                "--disable-cxx",
                 "--disable-doc",
+                "--disable-nls",
                 "--disable-tests",
                 "--disable-tools",
                 "--with-included-libtasn1",
