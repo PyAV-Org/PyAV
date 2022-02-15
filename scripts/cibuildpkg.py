@@ -60,8 +60,7 @@ def log_group(title):
     """
     start_time = time.time()
     success = False
-    sys.stdout.write(f"::group::{title}\n")
-    sys.stdout.flush()
+    log_print(f"::group::{title}")
     try:
         yield
         success = True
@@ -70,11 +69,13 @@ def log_group(title):
         outcome = "ok" if success else "failed"
         start_color = "\033[32m" if success else "\033[31m"
         end_color = "\033[0m"
-        sys.stdout.write("::endgroup::\n")
-        sys.stdout.write(
-            f"{start_color}{outcome}{end_color} {duration:.2f}s\n".rjust(78)
-        )
-        sys.stdout.flush()
+        log_print("::endgroup::")
+        log_print(f"{start_color}{outcome}{end_color} {duration:.2f}s".rjust(78))
+
+
+def log_print(msg):
+    sys.stdout.write(msg + "\n")
+    sys.stdout.flush()
 
 
 def make_args(*, parallel: bool) -> List[str]:
@@ -99,8 +100,7 @@ def prepend_env(env, name, new, separator=" "):
 
 
 def run(cmd, env=None):
-    sys.stdout.write(f"- Running: {cmd}\n")
-    sys.stdout.flush()
+    log_print(f"- Running: {cmd}")
     subprocess.run(cmd, check=True, env=env)
 
 
@@ -137,6 +137,12 @@ class Builder:
                 self._build_with_autoconf(package, for_builder=for_builder)
 
     def create_directories(self):
+        # print debugging information
+        if platform.system() == "Darwin":
+            log_print("Environment variables")
+            for var in ("ARCHFLAGS", "MACOSX_DEPLOYMENT_TARGET"):
+                log_print(" - %s: %s" % (var, os.environ[var]))
+
         # create directories
         for d in [self.build_dir, self._builder_dest_dir, self._target_dest_dir]:
             if os.path.exists(d):
@@ -182,6 +188,18 @@ class Builder:
             "--libdir=" + os.path.join(prefix, "lib"),
             "--prefix=" + prefix,
         ]
+        if (
+            platform.system() == "Darwin"
+            and not for_builder
+            and os.environ["ARCHFLAGS"] == "-arch arm64"
+        ):
+            if package.name == "ffmpeg":
+                configure_args += ["--arch=arm64", "--enable-cross-compile"]
+            else:
+                configure_args += [
+                    "--build=x86_64-apple-darwin",
+                    "--host=aarch64-apple-darwin",
+                ]
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
@@ -211,6 +229,12 @@ class Builder:
         ]
         if platform.system() == "Darwin":
             cmake_args.append("-DCMAKE_INSTALL_NAME_DIR=" + os.path.join(prefix, "lib"))
+            if not for_builder and os.environ["ARCHFLAGS"] == "-arch arm64":
+                cmake_args += [
+                    "-DCMAKE_OSX_ARCHITECTURES=arm64",
+                    "-DCMAKE_SYSTEM_NAME=Darwin",
+                    "-DCMAKE_SYSTEM_PROCESSOR=arm64",
+                ]
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
@@ -293,8 +317,11 @@ class Builder:
         )
 
         if platform.system() == "Darwin" and not for_builder:
+            arch_flags = os.environ["ARCHFLAGS"]
+            if arch_flags == "-arch arm64":
+                prepend_env(env, "ASFLAGS", arch_flags)
             for var in ["CFLAGS", "CXXFLAGS", "LDFLAGS"]:
-                prepend_env(env, var, os.environ["ARCHFLAGS"])
+                prepend_env(env, var, arch_flags)
 
         return env
 
