@@ -10,6 +10,8 @@ jobs:
       matrix:
         include:
           - os: macos-latest
+            arch: arm64
+          - os: macos-latest
             arch: x86_64
           - os: ubuntu-latest
             arch: i686
