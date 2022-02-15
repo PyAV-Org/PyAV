@@ -3,7 +3,7 @@ import os
 import platform
 import sys
 
-from cibuildpkg import Builder, Package, get_platform, log_group, prepend_env, run
+from cibuildpkg import Builder, Package, get_platform, log_group, run
 
 if len(sys.argv) < 2:
     sys.stderr.write("Usage: build-ffmpeg.py <prefix>\n")
@@ -19,13 +19,6 @@ output_tarball = os.path.join(output_dir, f"ffmpeg-{get_platform()}.tar.gz")
 if not os.path.exists(output_tarball):
     builder = Builder(dest_dir=dest_dir)
     builder.create_directories()
-
-    prepend_env("CPPFLAGS", "-I" + os.path.join(dest_dir, "include"))
-    prepend_env("LDFLAGS", "-L" + os.path.join(dest_dir, "lib"))
-    prepend_env("PATH", os.path.join(dest_dir, "bin"), separator=":")
-    prepend_env(
-        "PKG_CONFIG_PATH", os.path.join(dest_dir, "lib", "pkgconfig"), separator=":"
-    )
 
     # install packages
 
@@ -45,7 +38,8 @@ if not os.path.exists(output_tarball):
             Package(
                 name="gperf",
                 source_url="http://ftp.gnu.org/pub/gnu/gperf/gperf-3.1.tar.gz",
-            )
+            ),
+            for_builder=True,
         )
 
     if "nasm" not in available_tools:
@@ -53,7 +47,8 @@ if not os.path.exists(output_tarball):
             Package(
                 name="nasm",
                 source_url="https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2",
-            )
+            ),
+            for_builder=True,
         )
 
     # build packages
@@ -63,7 +58,16 @@ if not os.path.exists(output_tarball):
         Package(
             name="xz",
             source_url="https://tukaani.org/xz/xz-5.2.5.tar.bz2",
-            build_arguments=["--disable-doc", "--disable-nls"],
+            build_arguments=[
+                "--disable-doc",
+                "--disable-lzma-links",
+                "--disable-lzmadec",
+                "--disable-lzmainfo",
+                "--disable-nls",
+                "--disable-scripts",
+                "--disable-xz",
+                "--disable-xzdec",
+            ],
         ),
         Package(
             name="gmp", source_url="https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz"
@@ -110,6 +114,7 @@ if not os.path.exists(output_tarball):
             build_arguments=[
                 "--disable-cxx",
                 "--disable-doc",
+                "--disable-libdane",
                 "--disable-nls",
                 "--disable-tests",
                 "--disable-tools",
