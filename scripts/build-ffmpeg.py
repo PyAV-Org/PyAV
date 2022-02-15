@@ -28,17 +28,17 @@ if not os.path.exists(output_tarball):
     )
 
     # install packages
+
     available_tools = set()
     if system == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
         with log_group("install packages"):
             run(["yum", "-y", "install", "gperf", "libuuid-devel", "zlib-devel"])
         available_tools.update(["gperf"])
 
-    #### BUILD TOOLS ####
-
-    # install cmake, meson and ninja
     with log_group("install python packages"):
         run(["pip", "install", "cmake", "meson", "ninja"])
+
+    # build tools
 
     if "gperf" not in available_tools:
         builder.build(
@@ -56,70 +56,53 @@ if not os.path.exists(output_tarball):
             )
         )
 
-    #### LIBRARIES ###
+    # build packages
 
-    builder.build(
+    packages = [
+        # libraries
         Package(
             name="xz",
             source_url="https://tukaani.org/xz/xz-5.2.5.tar.bz2",
             build_arguments=["--disable-doc", "--disable-nls"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="gmp", source_url="https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz"
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="png",
             requires=["zlib"],
             source_url="http://deb.debian.org/debian/pool/main/libp/libpng1.6/libpng1.6_1.6.37.orig.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="xml2",
             requires=["xz", "zlib"],
             source_url="ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.10.tar.gz",
             build_arguments=["--without-python"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="unistring",
             source_url="https://ftp.gnu.org/gnu/libunistring/libunistring-0.9.10.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="freetype",
             requires=["png"],
             source_url="https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="fontconfig",
             source_url="https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.13.1.tar.bz2",
             build_arguments=["--disable-nls", "--enable-libxml2"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="fribidi",
             source_url="https://github.com/fribidi/fribidi/releases/download/v1.0.9/fribidi-1.0.9.tar.xz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="nettle",
             requires=["gmp"],
             source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.6.tar.gz",
             build_arguments=["--disable-documentation"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="gnutls",
             requires=["nettle", "unistring", "zlib"],
@@ -133,14 +116,11 @@ if not os.path.exists(output_tarball):
                 "--with-included-libtasn1",
                 "--without-p11-kit",
             ],
-        )
-    )
-
-    #### CODECS ###
-
-    builder.build(
+        ),
+        # codecs
         Package(
             name="aom",
+            requires=["cmake"],
             source_url="https://storage.googleapis.com/aom-releases/libaom-3.2.0.tar.gz",
             source_strip_components=0,
             build_system="cmake",
@@ -151,128 +131,94 @@ if not os.path.exists(output_tarball):
                 "-DENABLE_TOOLS=0",
             ],
             build_parallel=False,
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="ass",
             requires=["freetype", "fribidi"],
             source_url="https://github.com/libass/libass/releases/download/0.14.0/libass-0.14.0.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="bluray",
             requires=["fontconfig"],
             source_url="https://download.videolan.org/pub/videolan/libbluray/1.1.2/libbluray-1.1.2.tar.bz2",
             build_arguments=["--disable-bdjava-jar"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="dav1d",
-            requires=["nasm", "ninja"],
+            requires=["meson", "nasm", "ninja"],
             source_url="https://code.videolan.org/videolan/dav1d/-/archive/0.9.2/dav1d-0.9.2.tar.bz2",
             build_system="meson",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="lame",
             source_url="http://deb.debian.org/debian/pool/main/l/lame/lame_3.100.orig.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="ogg",
             source_url="http://downloads.xiph.org/releases/ogg/libogg-1.3.5.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="opencore-amr",
             source_url="http://deb.debian.org/debian/pool/main/o/opencore-amr/opencore-amr_0.1.5.orig.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="openjpeg",
+            requires=["cmake"],
             source_url="https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz",
             build_system="cmake",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="opus",
             source_url="https://archive.mozilla.org/pub/opus/opus-1.3.1.tar.gz",
             build_arguments=["--disable-extra-programs"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="speex",
             source_url="http://downloads.xiph.org/releases/speex/speex-1.2.0.tar.gz",
             build_arguments=["--disable-binaries"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="twolame",
             source_url="http://deb.debian.org/debian/pool/main/t/twolame/twolame_0.4.0.orig.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="vorbis",
             requires=["ogg"],
             source_url="http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.6.tar.gz",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="theora",
             requires=["vorbis"],
             source_url="http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.gz",
             build_arguments=["--disable-examples", "--disable-spec"],
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="wavpack", source_url="http://www.wavpack.com/wavpack-5.3.0.tar.bz2"
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="x264",
             source_url="https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="x265",
+            requires=["cmake"],
             source_url="http://ftp.videolan.org/pub/videolan/x265/x265_3.2.1.tar.gz",
             build_system="cmake",
             source_dir="source",
-        )
-    )
-    builder.build(
+        ),
         Package(
             name="xvid",
             source_url="https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.gz",
             source_dir="build/generic",
             build_dir="build/generic",
-        )
-    )
-
-    #### FFMPEG ###
-
-    builder.build(
+        ),
+        # ffmpeg
         Package(
             name="ffmpeg",
             requires=[
                 "aom",
                 "ass",
-                "bluerary",
+                "bluray",
                 "dav1d",
                 "fontconfig",
                 "freetype",
@@ -281,6 +227,7 @@ if not os.path.exists(output_tarball):
                 "lame",
                 "opencore-amr",
                 "openjpeg",
+                "opus",
                 "speex",
                 "theora",
                 "twolame",
@@ -323,8 +270,11 @@ if not os.path.exists(output_tarball):
                 "--enable-version3",
                 "--enable-zlib",
             ],
-        )
-    )
+        ),
+    ]
+
+    for package in packages:
+        builder.build(package)
 
     if system == "Darwin":
         run(["otool", "-L"] + glob.glob(os.path.join(dest_dir, "lib", "*.dylib")))
