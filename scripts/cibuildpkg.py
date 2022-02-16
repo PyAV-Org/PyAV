@@ -14,6 +14,10 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 
+def fetch(url, path):
+    run(["curl", "-L", "-o", path, url])
+
+
 def get_platform():
     """
     Get the current platform tag.
@@ -155,6 +159,20 @@ class Builder:
         package_source_path = os.path.join(package_path, package.source_dir)
         package_build_path = os.path.join(package_path, package.build_dir)
 
+        # update config.guess and config.sub
+        config_files = ("config.guess", "config.sub")
+        for root, dirs, files in os.walk(package_path):
+            for name in filter(lambda x: x in config_files, files):
+                script_path = os.path.join(root, name)
+                cache_path = os.path.join(self.source_dir, name)
+                if not os.path.exists(cache_path):
+                    fetch(
+                        "https://git.savannah.gnu.org/cgit/config.git/plain/" + name,
+                        cache_path,
+                    )
+                shutil.copy(cache_path, script_path)
+                os.chmod(script_path, 0o755)
+
         # determine configure arguments
         env = self._environment(for_builder=for_builder)
         prefix = self._prefix(for_builder=for_builder)
@@ -236,7 +254,7 @@ class Builder:
 
         # download tarball
         if not os.path.exists(tarball):
-            run(["curl", "-L", "-o", tarball, package.source_url])
+            fetch(package.source_url, tarball)
 
         with tarfile.open(tarball) as tar:
             # determine common prefix to strip
