@@ -185,6 +185,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="twolame",
             source_url="http://deb.debian.org/debian/pool/main/t/twolame/twolame_0.4.0.orig.tar.gz",
+            build_arguments=["--disable-sndfile"],
         ),
         Package(
             name="vorbis",
