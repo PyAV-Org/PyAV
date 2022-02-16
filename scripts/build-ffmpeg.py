@@ -70,7 +70,7 @@ if not os.path.exists(output_tarball):
             ],
         ),
         Package(
-            name="gmp", source_url="https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz"
+            name="gmp", source_url="https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz"
         ),
         Package(
             name="png",
@@ -104,13 +104,13 @@ if not os.path.exists(output_tarball):
         Package(
             name="nettle",
             requires=["gmp"],
-            source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.6.tar.gz",
+            source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.7.3.tar.gz",
             build_arguments=["--disable-documentation"],
         ),
         Package(
             name="gnutls",
             requires=["nettle", "unistring", "zlib"],
-            source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.15.tar.xz",
+            source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.16.tar.xz",
             build_arguments=[
                 "--disable-cxx",
                 "--disable-doc",
