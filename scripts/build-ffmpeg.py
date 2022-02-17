@@ -208,7 +208,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="x265",
             requires=["cmake"],
-            source_url="http://ftp.videolan.org/pub/videolan/x265/x265_3.2.1.tar.gz",
+            source_url="https://bitbucket.org/multicoreware/x265_git/downloads/x265_3.5.tar.gz",
             build_system="cmake",
             source_dir="source",
         ),
