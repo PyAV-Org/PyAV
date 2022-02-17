@@ -80,7 +80,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="xml2",
             requires=["xz", "zlib"],
-            source_url="ftp://xmlsoft.org/libxml2/libxml2-sources-2.9.10.tar.gz",
+            source_url="ftp://xmlsoft.org/libxml2/libxml2-2.9.12.tar.gz",
             build_arguments=["--without-python"],
         ),
         Package(
