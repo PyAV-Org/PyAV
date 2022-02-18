@@ -1,0 +1,28 @@
+diff -urN fontconfig-2.13.1.orig/Makefile.in fontconfig-2.13.1/Makefile.in
+--- fontconfig-2.13.1.orig/Makefile.in	2018-08-30 10:24:27.000000000 +0200
++++ fontconfig-2.13.1/Makefile.in	2022-02-21 14:56:07.051690650 +0100
+@@ -456,7 +456,7 @@
+ top_srcdir = @top_srcdir@
+ SUBDIRS = fontconfig fc-case fc-lang src fc-cache fc-cat fc-conflist \
+ 	fc-list fc-match fc-pattern fc-query fc-scan fc-validate \
+-	conf.d its po po-conf test $(am__append_1)
++	conf.d its po po-conf $(am__append_1)
+ ACLOCAL_AMFLAGS = -I m4
+ EXTRA_DIST = config.rpath fontconfig.pc.in fonts.conf.in fonts.dtd \
+ 	fontconfig.spec.in fontconfig.spec fontconfig-zip.in \
+diff -urN fontconfig-2.13.1.orig/src/Makefile.in fontconfig-2.13.1/src/Makefile.in
+--- fontconfig-2.13.1.orig/src/Makefile.in	2018-08-30 10:24:28.000000000 +0200
++++ fontconfig-2.13.1/src/Makefile.in	2022-02-21 14:53:15.733947353 +0100
+@@ -976,11 +976,10 @@
+ 
+ @OS_WIN32_TRUE@install-libtool-import-lib: libfontconfig.la
+ @OS_WIN32_TRUE@	$(MKDIR_P) $(DESTDIR)$(libdir)
+-@OS_WIN32_TRUE@	$(INSTALL) .libs/libfontconfig.dll.a $(DESTDIR)$(libdir)/libfontconfig.dll.a
+ @OS_WIN32_TRUE@	$(INSTALL) fontconfig.def $(DESTDIR)$(libdir)/fontconfig.def
+ 
+ @OS_WIN32_TRUE@uninstall-libtool-import-lib:
+-@OS_WIN32_TRUE@	$(RM) $(DESTDIR)$(libdir)/libfontconfig.dll.a $(DESTDIR)$(libdir)/fontconfig.def
++@OS_WIN32_TRUE@	$(RM) $(DESTDIR)$(libdir)/fontconfig.def
+ 
+ @OS_WIN32_FALSE@install-libtool-import-lib:
+ @OS_WIN32_FALSE@uninstall-libtool-import-lib:
