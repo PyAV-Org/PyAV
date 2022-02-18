@@ -292,6 +292,10 @@ class Builder:
             separator=":",
         )
 
+        if platform.system() == "Darwin" and not for_builder:
+            for var in ["CFLAGS", "CXXFLAGS", "LDFLAGS"]:
+                prepend_env(env, var, os.environ["ARCHFLAGS"])
+
         return env
 
     def _prefix(self, *, for_builder: bool) -> str:
