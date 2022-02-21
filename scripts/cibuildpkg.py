@@ -321,7 +321,7 @@ endian = 'little'
                 prefix = ""
 
             # extract archive
-            with tempfile.TemporaryDirectory() as temp_dir:
+            with tempfile.TemporaryDirectory(dir=self.build_dir) as temp_dir:
                 tar.extractall(temp_dir)
                 temp_subdir = os.path.join(temp_dir, prefix)
                 shutil.move(temp_subdir, path)
