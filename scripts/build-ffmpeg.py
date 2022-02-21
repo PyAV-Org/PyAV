@@ -245,7 +245,7 @@ if not os.path.exists(output_tarball):
                 "xvid",
                 "xz",
             ],
-            source_url="https://ffmpeg.org/releases/ffmpeg-4.3.2.tar.gz",
+            source_url="https://ffmpeg.org/releases/ffmpeg-4.3.3.tar.gz",
             build_arguments=[
                 "--disable-doc",
                 "--disable-libxcb",
