@@ -6,7 +6,10 @@ import sys
 from cibuildpkg import Builder, Package, get_platform, log_group, run
 
 if len(sys.argv) < 2:
-    sys.stderr.write("Usage: build-ffmpeg.py <prefix>\n")
+    sys.stderr.write("Usage: build-ffmpeg.py <prefix> [stage]\n")
+    sys.stderr.write(
+        "       AArch64 build requires stage and possible values can be 1, 2 or 3\n"
+    )
     sys.exit(1)
 
 dest_dir = sys.argv[1]
@@ -19,6 +22,11 @@ output_tarball = os.path.join(output_dir, f"ffmpeg-{get_platform()}.tar.gz")
 if not os.path.exists(output_tarball):
     builder = Builder(dest_dir=dest_dir)
     builder.create_directories()
+
+    if len(sys.argv) == 3:
+        build_stage = int(sys.argv[2]) - 1
+    else:
+        build_stage = None
 
     # install packages
 
@@ -52,8 +60,8 @@ if not os.path.exists(output_tarball):
         )
 
     # build packages
-
-    packages = [
+    package_groups = [[], [], []]
+    package_groups[0] = [
         # libraries
         Package(
             name="xz",
@@ -123,6 +131,8 @@ if not os.path.exists(output_tarball):
                 "--without-p11-kit",
             ],
         ),
+    ]
+    package_groups[1] = [
         # codecs
         Package(
             name="aom",
@@ -220,6 +230,8 @@ if not os.path.exists(output_tarball):
             source_dir="build/generic",
             build_dir="build/generic",
         ),
+    ]
+    package_groups[2] = [
         # ffmpeg
         Package(
             name="ffmpeg",
@@ -282,11 +294,17 @@ if not os.path.exists(output_tarball):
         ),
     ]
 
+    if build_stage is not None:
+        packages = package_groups[build_stage]
+    else:
+        packages = [p for p_list in package_groups for p in p_list]
+
     for package in packages:
         builder.build(package)
 
     if system == "Darwin":
         run(["otool", "-L"] + glob.glob(os.path.join(dest_dir, "lib", "*.dylib")))
 
-    os.makedirs(output_dir, exist_ok=True)
-    run(["tar", "czvf", output_tarball, "-C", dest_dir, "include", "lib"])
+    if build_stage is None or build_stage == 2:
+        os.makedirs(output_dir, exist_ok=True)
+        run(["tar", "czvf", output_tarball, "-C", dest_dir, "include", "lib"])
