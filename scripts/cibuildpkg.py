@@ -223,6 +223,7 @@ class Builder:
         env = self._environment(for_builder=for_builder)
         prefix = self._prefix(for_builder=for_builder)
         cmake_args = [
+            "-GUnix Makefiles",
             "-DBUILD_SHARED_LIBS=1",
             "-DCMAKE_INSTALL_LIBDIR=lib",
             "-DCMAKE_INSTALL_PREFIX=" + prefix,
@@ -243,8 +244,12 @@ class Builder:
                 ["cmake", package_source_path] + cmake_args + package.build_arguments,
                 env=env,
             )
-            run(["make"] + make_args(parallel=package.build_parallel), env=env)
-            run(["make", "install"], env=env)
+            run(
+                ["cmake", "--build", ".", "--verbose"]
+                + make_args(parallel=package.build_parallel),
+                env=env,
+            )
+            run(["cmake", "--install", "."], env=env)
 
     def _build_with_meson(self, package: Package, for_builder: bool) -> None:
         assert package.build_system == "meson"
