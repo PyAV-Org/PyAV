@@ -261,6 +261,26 @@ class Builder:
         env = self._environment(for_builder=for_builder)
         prefix = self._prefix(for_builder=for_builder)
         meson_args = ["--libdir=lib", "--prefix=" + prefix]
+        if (
+            platform.system() == "Darwin"
+            and not for_builder
+            and os.environ["ARCHFLAGS"] == "-arch arm64"
+        ):
+            cross_file = os.path.join(package_path, "meson.cross")
+            with open(cross_file, "w") as fp:
+                fp.write(
+                    """[binaries]
+c = 'cc'
+cpp = 'c++'
+
+[host_machine]
+system = 'darwin'
+cpu_family = 'aarch64'
+cpu = 'aarch64'
+endian = 'little'
+"""
+                )
+            meson_args.append("--cross-file=" + cross_file)
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
@@ -269,7 +289,7 @@ class Builder:
                 ["meson", package_source_path] + meson_args + package.build_arguments,
                 env=env,
             )
-            run(["ninja"], env=env)
+            run(["ninja", "--verbose"], env=env)
             run(["ninja", "install"], env=env)
 
     def _extract(self, package: Package) -> None:
