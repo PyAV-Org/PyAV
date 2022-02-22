@@ -1,0 +1,9 @@
+*.egg-info
+*.pyc
+*.so
+.vscode
+/build
+/env
+/dist
+/output
+/source
