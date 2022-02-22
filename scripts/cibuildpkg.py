@@ -210,7 +210,9 @@ class Builder:
                 + package.build_arguments,
                 env=env,
             )
-            run(["make"] + make_args(parallel=package.build_parallel), env=env)
+            run(
+                ["make"] + make_args(parallel=package.build_parallel) + ["V=1"], env=env
+            )
             run(["make", "install"], env=env)
 
     def _build_with_cmake(self, package: Package, for_builder: bool) -> None:
