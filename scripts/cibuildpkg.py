@@ -127,6 +127,14 @@ class Builder:
         self.source_dir = os.path.abspath("source")
 
     def build(self, package: Package, *, for_builder: bool = False):
+        # if the package is already installed, do nothing
+        installed_dir = os.path.join(
+            self._prefix(for_builder=for_builder), "var", "lib", "cibuildpkg"
+        )
+        installed_file = os.path.join(installed_dir, package.name)
+        if os.path.exists(installed_file):
+            return
+
         with log_group(f"build {package.name}"):
             self._extract(package)
             if package.build_system == "cmake":
@@ -136,6 +144,11 @@ class Builder:
             else:
                 self._build_with_autoconf(package, for_builder=for_builder)
 
+        # mark package as installed
+        os.makedirs(installed_dir, exist_ok=True)
+        with open(installed_file, "w") as fp:
+            fp.write("installed\n")
+
     def create_directories(self):
         # print debugging information
         if platform.system() == "Darwin":
@@ -143,13 +156,13 @@ class Builder:
             for var in ("ARCHFLAGS", "MACOSX_DEPLOYMENT_TARGET"):
                 log_print(" - %s: %s" % (var, os.environ[var]))
 
+        # delete build directory
+        if os.path.exists(self.build_dir):
+            shutil.rmtree(self.build_dir)
+
         # create directories
-        for d in [self.build_dir, self._builder_dest_dir, self._target_dest_dir]:
-            if os.path.exists(d):
-                shutil.rmtree(d)
         for d in [self.build_dir, self.source_dir]:
-            if not os.path.exists(d):
-                os.mkdir(d)
+            os.makedirs(d, exist_ok=True)
 
         # add tools to PATH
         prepend_env(
