@@ -74,12 +74,11 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="png",
-            requires=["zlib"],
             source_url="http://deb.debian.org/debian/pool/main/libp/libpng1.6/libpng1.6_1.6.37.orig.tar.gz",
         ),
         Package(
             name="xml2",
-            requires=["xz", "zlib"],
+            requires=["xz"],
             source_url="ftp://xmlsoft.org/libxml2/libxml2-2.9.12.tar.gz",
             build_arguments=["--without-python"],
         ),
@@ -94,6 +93,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="fontconfig",
+            requires=["freetype", "xml2"],
             source_url="https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.13.1.tar.bz2",
             build_arguments=["--disable-nls", "--enable-libxml2"],
         ),
@@ -109,7 +109,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="gnutls",
-            requires=["nettle", "unistring", "zlib"],
+            requires=["nettle", "unistring"],
             source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.16.tar.xz",
             build_arguments=[
                 "--disable-cxx",
@@ -140,7 +140,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="ass",
-            requires=["freetype", "fribidi"],
+            requires=["fontconfig", "freetype", "fribidi", "nasm", "png"],
             source_url="https://github.com/libass/libass/releases/download/0.14.0/libass-0.14.0.tar.gz",
         ),
         Package(
@@ -215,6 +215,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="xvid",
+            requires=["nasm"],
             source_url="https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.gz",
             source_dir="build/generic",
             build_dir="build/generic",
@@ -232,6 +233,7 @@ if not os.path.exists(output_tarball):
                 "gmp",
                 "gnutls",
                 "lame",
+                "nasm",
                 "opencore-amr",
                 "openjpeg",
                 "opus",
