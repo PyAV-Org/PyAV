@@ -114,6 +114,7 @@ if not os.path.exists(output_tarball):
             build_arguments=[
                 "--disable-cxx",
                 "--disable-doc",
+                "--disable-guile",
                 "--disable-libdane",
                 "--disable-nls",
                 "--disable-tests",

@@ -1,5 +1,18 @@
---- a/gl/c-ctype.h
-+++ b/gl/c-ctype.h
+diff -urN gnutls-3.6.16.orig/configure gnutls-3.6.16/configure
+--- gnutls-3.6.16.orig/configure	2021-05-24 10:05:44.000000000 +0200
++++ gnutls-3.6.16/configure	2022-02-23 11:07:38.455145585 +0100
+@@ -66078,7 +66078,7 @@
+ 
+ # We MUST require a Nettle version that has rsa_sec_decrypt now.
+ save_LIBS=$LIBS
+-LIBS="$LIBS $HOGWEED_LIBS $NETTLE_LIBS"
++LIBS="$LIBS $HOGWEED_LIBS $NETTLE_LIBS $GMP_LIBS"
+ for ac_func in nettle_rsa_sec_decrypt
+ do :
+   ac_fn_c_check_func "$LINENO" "nettle_rsa_sec_decrypt" "ac_cv_func_nettle_rsa_sec_decrypt"
+diff -urN gnutls-3.6.16.orig/gl/c-ctype.h gnutls-3.6.16/gl/c-ctype.h
+--- gnutls-3.6.16.orig/gl/c-ctype.h	2021-05-24 10:04:41.000000000 +0200
++++ gnutls-3.6.16/gl/c-ctype.h	2022-02-23 11:07:46.587381473 +0100
 @@ -229,7 +229,7 @@
      }
  }
