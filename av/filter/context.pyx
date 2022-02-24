@@ -77,7 +77,10 @@ cdef class FilterContext(object):
 
     def push(self, Frame frame):
 
-        if self.filter.name in ('abuffer', 'buffer'):
+        if frame is None:
+            err_check(lib.av_buffersrc_write_frame(self.ptr, NULL))
+            return
+        elif self.filter.name in ('abuffer', 'buffer'):
             err_check(lib.av_buffersrc_write_frame(self.ptr, frame.ptr))
             return
 

@@ -196,12 +196,14 @@ cdef class Graph(object):
 
     def push(self, frame):
 
-        if isinstance(frame, VideoFrame):
+        if frame is None:
+            contexts = self._context_by_type.get('buffer', []) + self._context_by_type.get('abuffer', [])
+        elif isinstance(frame, VideoFrame):
             contexts = self._context_by_type.get('buffer', [])
         elif isinstance(frame, AudioFrame):
             contexts = self._context_by_type.get('abuffer', [])
         else:
-            raise ValueError('can only push VideoFrame or AudioFrame', type(frame))
+            raise ValueError('can only AudioFrame, VideoFrame or None; got %s' % type(frame))
 
         if len(contexts) != 1:
             raise ValueError('can only auto-push with single buffer; found %s' % len(contexts))
