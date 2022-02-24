@@ -260,3 +260,27 @@ class TestFilters(TestCase):
 
                 self.assertEqual(filtered_frames[1].pts, (frame.pts - 1) * 2 + 1)
                 self.assertEqual(filtered_frames[1].time_base, Fraction(1, 60))
+
+    def test_EOF(self):
+        input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
+        video_stream = input_container.streams.video[0]
+
+        graph = av.filter.Graph()
+        video_in = graph.add_buffer(template=video_stream)
+        palette_gen_filter = graph.add("palettegen")
+        video_out = graph.add("buffersink")
+        video_in.link_to(palette_gen_filter)
+        palette_gen_filter.link_to(video_out)
+        graph.configure()
+
+        for frame in input_container.decode(video=0):
+            graph.push(frame)
+
+        graph.push(None)
+
+        # if we do not push None, we get a BlockingIOError
+        palette_frame = graph.pull()
+
+        self.assertIsInstance(palette_frame, av.VideoFrame)
+        self.assertEqual(palette_frame.width, 16)
+        self.assertEqual(palette_frame.height, 16)
