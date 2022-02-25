@@ -2,8 +2,8 @@ import av
 import av.datasets
 
 
-input_ = av.open(av.datasets.curated('pexels/time-lapse-video-of-night-sky-857195.mp4'))
-output = av.open('remuxed.mkv', 'w')
+input_ = av.open(av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4"))
+output = av.open("remuxed.mkv", "w")
 
 # Make an output stream using the input as a template. This copies the stream
 # setup from one to the other.

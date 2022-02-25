@@ -5,10 +5,9 @@ from .common import TestCase, fate_suite
 
 
 class TestSubtitle(TestCase):
-
     def test_movtext(self):
 
-        path = fate_suite('sub/MovText_capability_tester.mp4')
+        path = fate_suite("sub/MovText_capability_tester.mp4")
 
         fh = av.open(path)
         subs = []
@@ -19,12 +18,17 @@ class TestSubtitle(TestCase):
         self.assertIsInstance(subs[0][0], AssSubtitle)
 
         # The format FFmpeg gives us changed at one point.
-        self.assertIn(subs[0][0].ass, ('Dialogue: 0,0:00:00.97,0:00:02.54,Default,- Test 1.\\N- Test 2.\r\n',
-                                       'Dialogue: 0,0:00:00.97,0:00:02.54,Default,,0,0,0,,- Test 1.\\N- Test 2.\r\n'))
+        self.assertIn(
+            subs[0][0].ass,
+            (
+                "Dialogue: 0,0:00:00.97,0:00:02.54,Default,- Test 1.\\N- Test 2.\r\n",
+                "Dialogue: 0,0:00:00.97,0:00:02.54,Default,,0,0,0,,- Test 1.\\N- Test 2.\r\n",
+            ),
+        )
 
     def test_vobsub(self):
 
-        path = fate_suite('sub/vobsub.sub')
+        path = fate_suite("sub/vobsub.sub")
 
         fh = av.open(path)
         subs = []
@@ -42,7 +46,7 @@ class TestSubtitle(TestCase):
 
         bms = sub.planes
         self.assertEqual(len(bms), 1)
-        if hasattr(__builtins__, 'buffer'):
+        if hasattr(__builtins__, "buffer"):
             self.assertEqual(len(buffer(bms[0])), 4800)  # noqa
-        if hasattr(__builtins__, 'memoryview'):
+        if hasattr(__builtins__, "memoryview"):
             self.assertEqual(len(memoryview(bms[0])), 4800)  # noqa

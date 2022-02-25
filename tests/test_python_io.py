@@ -23,26 +23,27 @@ class NonSeekableBuffer:
 
 
 class TestPythonIO(TestCase):
-
     def test_reading(self):
 
-        with open(fate_suite('mpeg2/mpeg2_field_encoding.ts'), 'rb') as fh:
+        with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
             wrapped = MethodLogger(fh)
 
             container = av.open(wrapped)
 
-            self.assertEqual(container.format.name, 'mpegts')
-            self.assertEqual(container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
+            self.assertEqual(container.format.name, "mpegts")
+            self.assertEqual(
+                container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)"
+            )
             self.assertEqual(len(container.streams), 1)
             self.assertEqual(container.size, 800000)
             self.assertEqual(container.metadata, {})
 
             # Make sure it did actually call "read".
-            reads = wrapped._filter('read')
+            reads = wrapped._filter("read")
             self.assertTrue(reads)
 
     def test_reading_no_seek(self):
-        with open(fate_suite('mpeg2/mpeg2_field_encoding.ts'), 'rb') as fh:
+        with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
             data = fh.read()
 
         buf = NonSeekableBuffer(data)
@@ -50,32 +51,34 @@ class TestPythonIO(TestCase):
 
         container = av.open(wrapped)
 
-        self.assertEqual(container.format.name, 'mpegts')
-        self.assertEqual(container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)")
+        self.assertEqual(container.format.name, "mpegts")
+        self.assertEqual(
+            container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)"
+        )
         self.assertEqual(len(container.streams), 1)
         self.assertEqual(container.metadata, {})
 
         # Make sure it did actually call "read".
-        reads = wrapped._filter('read')
+        reads = wrapped._filter("read")
         self.assertTrue(reads)
 
     def test_basic_errors(self):
         self.assertRaises(Exception, av.open, None)
-        self.assertRaises(Exception, av.open, None, 'w')
+        self.assertRaises(Exception, av.open, None, "w")
 
     def test_writing(self):
 
-        path = self.sandboxed('writing.mov')
-        with open(path, 'wb') as fh:
+        path = self.sandboxed("writing.mov")
+        with open(path, "wb") as fh:
             wrapped = MethodLogger(fh)
 
-            output = av.open(wrapped, 'w', 'mov')
+            output = av.open(wrapped, "w", "mov")
             write_rgb_rotate(output)
             output.close()
             fh.close()
 
             # Make sure it did actually write.
-            writes = wrapped._filter('write')
+            writes = wrapped._filter("write")
             self.assertTrue(writes)
 
             # Standard assertions.
@@ -85,10 +88,10 @@ class TestPythonIO(TestCase):
 
         buffer_ = StringIO()
         wrapped = MethodLogger(buffer_)
-        write_rgb_rotate(av.open(wrapped, 'w', 'mp4'))
+        write_rgb_rotate(av.open(wrapped, "w", "mp4"))
 
         # Make sure it did actually write.
-        writes = wrapped._filter('write')
+        writes = wrapped._filter("write")
         self.assertTrue(writes)
 
         self.assertTrue(buffer_.tell())

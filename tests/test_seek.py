@@ -24,20 +24,19 @@ def step_forward(container, stream):
 
 
 class TestSeek(TestCase):
-
     def test_seek_float(self):
-        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         self.assertRaises(TypeError, container.seek, 1.0)
         self.assertRaises(TypeError, container.streams.video[0].seek, 1.0)
 
     def test_seek_int64(self):
         # Assert that it accepts large values.
         # Issue 251 pointed this out.
-        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         container.seek(2**32)
 
     def test_seek_start(self):
-        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         # count all the packets
         total_packet_count = 0
@@ -55,7 +54,7 @@ class TestSeek(TestCase):
         self.assertEqual(total_packet_count, seek_packet_count)
 
     def test_seek_middle(self):
-        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         # count all the packets
         total_packet_count = 0
@@ -72,7 +71,7 @@ class TestSeek(TestCase):
         self.assertTrue(seek_packet_count < total_packet_count)
 
     def test_seek_end(self):
-        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         # seek to middle
         container.seek(container.duration // 2)
@@ -94,9 +93,9 @@ class TestSeek(TestCase):
 
     def test_decode_half(self):
 
-        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
-        video_stream = next(s for s in container.streams if s.type == 'video')
+        video_stream = next(s for s in container.streams if s.type == "video")
         total_frame_count = 0
 
         # Count number of frames in video
@@ -131,9 +130,9 @@ class TestSeek(TestCase):
 
     def test_stream_seek(self, use_deprecated_api=False):
 
-        container = av.open(fate_suite('h264/interlaced_crop.mp4'))
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
-        video_stream = next(s for s in container.streams if s.type == 'video')
+        video_stream = next(s for s in container.streams if s.type == "video")
         total_frame_count = 0
 
         # Count number of frames in video
@@ -153,7 +152,7 @@ class TestSeek(TestCase):
             with warnings.catch_warnings(record=True) as captured:
                 video_stream.seek(target_timestamp)
             self.assertEqual(len(captured), 1)
-            self.assertIn('Stream.seek is deprecated.', captured[0].message.args[0])
+            self.assertIn("Stream.seek is deprecated.", captured[0].message.args[0])
         else:
             container.seek(target_timestamp, stream=video_stream)
 

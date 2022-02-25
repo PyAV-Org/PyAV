@@ -6,16 +6,20 @@ from .common import TestCase
 
 
 # This must be at the top-level.
-PickleableFooBar = define_enum('PickleableFooBar', __name__, [('FOO', 1)])
+PickleableFooBar = define_enum("PickleableFooBar", __name__, [("FOO", 1)])
 
 
 class TestEnums(TestCase):
-
     def define_foobar(self, **kwargs):
-        return define_enum('Foobar', __name__, (
-            ('FOO', 1),
-            ('BAR', 2),
-        ), **kwargs)
+        return define_enum(
+            "Foobar",
+            __name__,
+            (
+                ("FOO", 1),
+                ("BAR", 2),
+            ),
+            **kwargs
+        )
 
     def test_basics(self):
 
@@ -26,7 +30,7 @@ class TestEnums(TestCase):
         foo = cls.FOO
 
         self.assertIsInstance(foo, cls)
-        self.assertEqual(foo.name, 'FOO')
+        self.assertEqual(foo.name, "FOO")
         self.assertEqual(foo.value, 1)
 
         self.assertNotIsInstance(foo, PickleableFooBar)
@@ -35,7 +39,7 @@ class TestEnums(TestCase):
 
         cls = self.define_foobar()
         foo1 = cls.FOO
-        foo2 = cls['FOO']
+        foo2 = cls["FOO"]
         foo3 = cls[1]
         foo4 = cls[foo1]
         self.assertIs(foo1, foo2)
@@ -43,26 +47,26 @@ class TestEnums(TestCase):
         self.assertIs(foo1, foo4)
 
         self.assertIn(foo1, cls)
-        self.assertIn('FOO', cls)
+        self.assertIn("FOO", cls)
         self.assertIn(1, cls)
 
-        self.assertRaises(KeyError, lambda: cls['not a foo'])
+        self.assertRaises(KeyError, lambda: cls["not a foo"])
         self.assertRaises(KeyError, lambda: cls[10])
         self.assertRaises(TypeError, lambda: cls[()])
 
-        self.assertEqual(cls.get('FOO'), foo1)
-        self.assertIs(cls.get('not a foo'), None)
+        self.assertEqual(cls.get("FOO"), foo1)
+        self.assertIs(cls.get("not a foo"), None)
 
     def test_casting(self):
 
         cls = self.define_foobar()
         foo = cls.FOO
 
-        self.assertEqual(repr(foo), '<tests.test_enums.Foobar:FOO(0x1)>')
+        self.assertEqual(repr(foo), "<tests.test_enums.Foobar:FOO(0x1)>")
 
         str_foo = str(foo)
         self.assertIsInstance(str_foo, str)
-        self.assertEqual(str_foo, 'FOO')
+        self.assertEqual(str_foo, "FOO")
 
         int_foo = int(foo)
         self.assertIsInstance(int_foo, int)
@@ -78,14 +82,14 @@ class TestEnums(TestCase):
         foo = cls.FOO
         bar = cls.BAR
 
-        self.assertEqual(foo, 'FOO')
+        self.assertEqual(foo, "FOO")
         self.assertEqual(foo, 1)
         self.assertEqual(foo, foo)
-        self.assertNotEqual(foo, 'BAR')
+        self.assertNotEqual(foo, "BAR")
         self.assertNotEqual(foo, 2)
         self.assertNotEqual(foo, bar)
 
-        self.assertRaises(ValueError, lambda: foo == 'not a foo')
+        self.assertRaises(ValueError, lambda: foo == "not a foo")
         self.assertRaises(ValueError, lambda: foo == 10)
         self.assertRaises(TypeError, lambda: foo == ())
 
@@ -94,9 +98,9 @@ class TestEnums(TestCase):
         cls = self.define_foobar()
         foo = cls.FOO
 
-        d = {foo: 'value'}
-        self.assertEqual(d[foo], 'value')
-        self.assertIs(d.get('FOO'), None)
+        d = {foo: "value"}
+        self.assertEqual(d[foo], "value")
+        self.assertIs(d.get("FOO"), None)
         self.assertIs(d.get(1), None)
 
     def test_pickleable(self):
@@ -115,32 +119,41 @@ class TestEnums(TestCase):
         cls = self.define_foobar()
         baz = cls.get(3, create=True)
 
-        self.assertEqual(baz.name, 'FOOBAR_3')
+        self.assertEqual(baz.name, "FOOBAR_3")
         self.assertEqual(baz.value, 3)
 
     def test_multiple_names(self):
 
-        cls = define_enum('FFooBBar', __name__, (
-            ('FOO', 1),
-            ('F', 1),
-            ('BAR', 2),
-            ('B', 2),
-        ))
+        cls = define_enum(
+            "FFooBBar",
+            __name__,
+            (
+                ("FOO", 1),
+                ("F", 1),
+                ("BAR", 2),
+                ("B", 2),
+            ),
+        )
 
         self.assertIs(cls.F, cls.FOO)
 
-        self.assertEqual(cls.F.name, 'FOO')
-        self.assertNotEqual(cls.F.name, 'F')  # This is actually the string.
+        self.assertEqual(cls.F.name, "FOO")
+        self.assertNotEqual(cls.F.name, "F")  # This is actually the string.
 
-        self.assertEqual(cls.F, 'FOO')
-        self.assertEqual(cls.F, 'F')
-        self.assertNotEqual(cls.F, 'BAR')
-        self.assertNotEqual(cls.F, 'B')
-        self.assertRaises(ValueError, lambda: cls.F == 'x')
+        self.assertEqual(cls.F, "FOO")
+        self.assertEqual(cls.F, "F")
+        self.assertNotEqual(cls.F, "BAR")
+        self.assertNotEqual(cls.F, "B")
+        self.assertRaises(ValueError, lambda: cls.F == "x")
 
     def test_flag_basics(self):
 
-        cls = define_enum('FoobarAllFlags', __name__, dict(FOO=1, BAR=2, FOOBAR=3).items(), is_flags=True)
+        cls = define_enum(
+            "FoobarAllFlags",
+            __name__,
+            dict(FOO=1, BAR=2, FOOBAR=3).items(),
+            is_flags=True,
+        )
         foo = cls.FOO
         bar = cls.BAR
 
@@ -171,7 +184,7 @@ class TestEnums(TestCase):
         foo = cls.FOO
         bar = cls.BAR
         foobar = foo | bar
-        self.assertEqual(foobar.name, 'FOO|BAR')
+        self.assertEqual(foobar.name, "FOO|BAR")
         self.assertEqual(foobar.value, 3)
         self.assertEqual(foobar.flags, (foo, bar))
 
@@ -183,7 +196,7 @@ class TestEnums(TestCase):
         self.assertIs(foobar, foobar3)
         self.assertIs(foobar, foobar4)
 
-        self.assertRaises(KeyError, lambda: cls['FOO|BAR'])
+        self.assertRaises(KeyError, lambda: cls["FOO|BAR"])
 
         self.assertEqual(len(cls), 2)  # It didn't get bigger
         self.assertEqual(list(cls), [foo, bar])
@@ -204,7 +217,6 @@ class TestEnums(TestCase):
         foobar = Flags.FOO | Flags.BAR
 
         class Class(object):
-
             def __init__(self, value):
                 self.value = Flags[value].value
 
@@ -216,10 +228,10 @@ class TestEnums(TestCase):
             def flags(self, value):
                 self.value = value
 
-            foo = flags.flag_property('FOO')
-            bar = flags.flag_property('BAR')
+            foo = flags.flag_property("FOO")
+            bar = flags.flag_property("BAR")
 
-        obj = Class('FOO')
+        obj = Class("FOO")
 
         self.assertIs(obj.flags, Flags.FOO)
         self.assertTrue(obj.foo)

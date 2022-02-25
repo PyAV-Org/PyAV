@@ -4,10 +4,9 @@ from .common import TestCase, fate_suite
 
 
 class TestAudioFifo(TestCase):
-
     def test_data(self):
 
-        container = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
+        container = av.open(fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav"))
         stream = container.streams.audio[0]
 
         fifo = av.AudioFifo()
@@ -24,8 +23,8 @@ class TestAudioFifo(TestCase):
             if i == 10:
                 break
 
-        input_ = b''.join(input_)
-        output = b''.join(output)
+        input_ = b"".join(input_)
+        output = b"".join(output)
         min_len = min(len(input_), len(output))
 
         self.assertTrue(min_len > 10 * 512 * 2 * 2)
@@ -38,7 +37,7 @@ class TestAudioFifo(TestCase):
         iframe = av.AudioFrame(samples=1024)
         iframe.pts = 0
         iframe.sample_rate = 48000
-        iframe.time_base = '1/48000'
+        iframe.time_base = "1/48000"
 
         fifo.write(iframe)
 
@@ -68,7 +67,7 @@ class TestAudioFifo(TestCase):
         iframe = av.AudioFrame(samples=1024)
         iframe.pts = 0
         iframe.sample_rate = 48000
-        iframe.time_base = '1/96000'
+        iframe.time_base = "1/96000"
 
         fifo.write(iframe)
         iframe.pts = 2048
@@ -85,7 +84,7 @@ class TestAudioFifo(TestCase):
 
         iframe = av.AudioFrame(samples=1024)
         iframe.pts = 0
-        iframe.time_base = '1/48000'
+        iframe.time_base = "1/48000"
 
         fifo.write(iframe)
 

@@ -22,8 +22,8 @@ def write_rgb_rotate(output):
     if not Image:
         raise SkipTest()
 
-    output.metadata['title'] = 'container'
-    output.metadata['key'] = 'value'
+    output.metadata["title"] = "container"
+    output.metadata["key"] = "value"
 
     stream = output.add_stream("mpeg4", 24)
     stream.width = WIDTH
@@ -32,12 +32,30 @@ def write_rgb_rotate(output):
 
     for frame_i in range(DURATION):
 
-        frame = VideoFrame(WIDTH, HEIGHT, 'rgb24')
-        image = Image.new('RGB', (WIDTH, HEIGHT), (
-            int(255 * (0.5 + 0.5 * math.sin(frame_i / DURATION * 2 * math.pi))),
-            int(255 * (0.5 + 0.5 * math.sin(frame_i / DURATION * 2 * math.pi + 2 / 3 * math.pi))),
-            int(255 * (0.5 + 0.5 * math.sin(frame_i / DURATION * 2 * math.pi + 4 / 3 * math.pi))),
-        ))
+        frame = VideoFrame(WIDTH, HEIGHT, "rgb24")
+        image = Image.new(
+            "RGB",
+            (WIDTH, HEIGHT),
+            (
+                int(255 * (0.5 + 0.5 * math.sin(frame_i / DURATION * 2 * math.pi))),
+                int(
+                    255
+                    * (
+                        0.5
+                        + 0.5
+                        * math.sin(frame_i / DURATION * 2 * math.pi + 2 / 3 * math.pi)
+                    )
+                ),
+                int(
+                    255
+                    * (
+                        0.5
+                        + 0.5
+                        * math.sin(frame_i / DURATION * 2 * math.pi + 4 / 3 * math.pi)
+                    )
+                ),
+            ),
+        )
         frame.planes[0].update(image.tobytes())
 
         for packet in stream.encode(frame):
@@ -54,42 +72,43 @@ def assert_rgb_rotate(self, input_):
 
     # Now inspect it a little.
     self.assertEqual(len(input_.streams), 1)
-    self.assertEqual(input_.metadata.get('title'), 'container', input_.metadata)
-    self.assertEqual(input_.metadata.get('key'), None)
+    self.assertEqual(input_.metadata.get("title"), "container", input_.metadata)
+    self.assertEqual(input_.metadata.get("key"), None)
     stream = input_.streams[0]
     self.assertIsInstance(stream, VideoStream)
-    self.assertEqual(stream.type, 'video')
-    self.assertEqual(stream.name, 'mpeg4')
-    self.assertEqual(stream.average_rate, 24)  # Only because we constructed is precisely.
+    self.assertEqual(stream.type, "video")
+    self.assertEqual(stream.name, "mpeg4")
+    self.assertEqual(
+        stream.average_rate, 24
+    )  # Only because we constructed is precisely.
     self.assertEqual(stream.rate, Fraction(24, 1))
     self.assertEqual(stream.time_base * stream.duration, 2)
-    self.assertEqual(stream.format.name, 'yuv420p')
+    self.assertEqual(stream.format.name, "yuv420p")
     self.assertEqual(stream.format.width, WIDTH)
     self.assertEqual(stream.format.height, HEIGHT)
 
 
 class TestBasicVideoEncoding(TestCase):
-
     def test_rgb_rotate(self):
 
-        path = self.sandboxed('rgb_rotate.mov')
-        output = av.open(path, 'w')
+        path = self.sandboxed("rgb_rotate.mov")
+        output = av.open(path, "w")
 
         write_rgb_rotate(output)
         assert_rgb_rotate(self, av.open(path))
 
     def test_encoding_with_pts(self):
 
-        path = self.sandboxed('video_with_pts.mov')
-        output = av.open(path, 'w')
+        path = self.sandboxed("video_with_pts.mov")
+        output = av.open(path, "w")
 
-        stream = output.add_stream('libx264', 24)
+        stream = output.add_stream("libx264", 24)
         stream.width = WIDTH
         stream.height = HEIGHT
         stream.pix_fmt = "yuv420p"
 
         for i in range(DURATION):
-            frame = VideoFrame(WIDTH, HEIGHT, 'rgb24')
+            frame = VideoFrame(WIDTH, HEIGHT, "rgb24")
             frame.pts = i * 2000
             frame.time_base = Fraction(1, 48000)
 
@@ -105,20 +124,19 @@ class TestBasicVideoEncoding(TestCase):
 
 
 class TestBasicAudioEncoding(TestCase):
-
     def test_audio_transcode(self):
 
-        path = self.sandboxed('audio_transcode.mov')
-        output = av.open(path, 'w')
-        output.metadata['title'] = 'container'
-        output.metadata['key'] = 'value'
+        path = self.sandboxed("audio_transcode.mov")
+        output = av.open(path, "w")
+        output.metadata["title"] = "container"
+        output.metadata["key"] = "value"
 
         sample_rate = 48000
-        channel_layout = 'stereo'
+        channel_layout = "stereo"
         channels = 2
-        sample_fmt = 's16'
+        sample_fmt = "s16"
 
-        stream = output.add_stream('mp2', sample_rate)
+        stream = output.add_stream("mp2", sample_rate)
 
         ctx = stream.codec_context
         ctx.time_base = sample_rate
@@ -127,7 +145,7 @@ class TestBasicAudioEncoding(TestCase):
         ctx.layout = channel_layout
         ctx.channels = channels
 
-        src = av.open(fate_suite('audio-reference/chorusnoise_2ch_44kHz_s16.wav'))
+        src = av.open(fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav"))
         for frame in src.decode(audio=0):
             frame.pts = None
             for packet in stream.encode(frame):
@@ -140,59 +158,60 @@ class TestBasicAudioEncoding(TestCase):
 
         container = av.open(path)
         self.assertEqual(len(container.streams), 1)
-        self.assertEqual(container.metadata.get('title'), 'container', container.metadata)
-        self.assertEqual(container.metadata.get('key'), None)
+        self.assertEqual(
+            container.metadata.get("title"), "container", container.metadata
+        )
+        self.assertEqual(container.metadata.get("key"), None)
 
         stream = container.streams[0]
         self.assertIsInstance(stream, AudioStream)
         self.assertEqual(stream.codec_context.sample_rate, sample_rate)
-        self.assertEqual(stream.codec_context.format.name, 's16p')
+        self.assertEqual(stream.codec_context.format.name, "s16p")
         self.assertEqual(stream.codec_context.channels, channels)
 
 
 class TestEncodeStreamSemantics(TestCase):
-
     def test_audio_default_options(self):
-        output = av.open(self.sandboxed('output.mov'), 'w')
+        output = av.open(self.sandboxed("output.mov"), "w")
 
-        stream = output.add_stream('mp2')
+        stream = output.add_stream("mp2")
         self.assertEqual(stream.bit_rate, 128000)
-        self.assertEqual(stream.format.name, 's16')
+        self.assertEqual(stream.format.name, "s16")
         self.assertEqual(stream.rate, 48000)
         self.assertEqual(stream.ticks_per_frame, 1)
         self.assertEqual(stream.time_base, None)
 
     def test_video_default_options(self):
-        output = av.open(self.sandboxed('output.mov'), 'w')
+        output = av.open(self.sandboxed("output.mov"), "w")
 
-        stream = output.add_stream('mpeg4')
+        stream = output.add_stream("mpeg4")
         self.assertEqual(stream.bit_rate, 1024000)
         self.assertEqual(stream.format.height, 480)
-        self.assertEqual(stream.format.name, 'yuv420p')
+        self.assertEqual(stream.format.name, "yuv420p")
         self.assertEqual(stream.format.width, 640)
         self.assertEqual(stream.height, 480)
-        self.assertEqual(stream.pix_fmt, 'yuv420p')
+        self.assertEqual(stream.pix_fmt, "yuv420p")
         self.assertEqual(stream.rate, Fraction(24, 1))
         self.assertEqual(stream.ticks_per_frame, 1)
         self.assertEqual(stream.time_base, None)
         self.assertEqual(stream.width, 640)
 
     def test_stream_index(self):
-        output = av.open(self.sandboxed('output.mov'), 'w')
+        output = av.open(self.sandboxed("output.mov"), "w")
 
-        vstream = output.add_stream('mpeg4', 24)
-        vstream.pix_fmt = 'yuv420p'
+        vstream = output.add_stream("mpeg4", 24)
+        vstream.pix_fmt = "yuv420p"
         vstream.width = 320
         vstream.height = 240
 
-        astream = output.add_stream('mp2', 48000)
+        astream = output.add_stream("mp2", 48000)
         astream.channels = 2
-        astream.format = 's16'
+        astream.format = "s16"
 
         self.assertEqual(vstream.index, 0)
         self.assertEqual(astream.index, 1)
 
-        vframe = VideoFrame(320, 240, 'yuv420p')
+        vframe = VideoFrame(320, 240, "yuv420p")
         vpacket = vstream.encode(vframe)[0]
 
         self.assertIs(vpacket.stream, vstream)
@@ -204,7 +223,7 @@ class TestEncodeStreamSemantics(TestCase):
             else:
                 # decoder didn't indicate constant frame size
                 frame_size = 1000
-            aframe = AudioFrame('s16', 'stereo', samples=frame_size)
+            aframe = AudioFrame("s16", "stereo", samples=frame_size)
             aframe.rate = 48000
             apackets = astream.encode(aframe)
             if apackets:
@@ -215,9 +234,9 @@ class TestEncodeStreamSemantics(TestCase):
         self.assertEqual(apacket.stream_index, 1)
 
     def test_audio_set_time_base_and_id(self):
-        output = av.open(self.sandboxed('output.mov'), 'w')
+        output = av.open(self.sandboxed("output.mov"), "w")
 
-        stream = output.add_stream('mp2')
+        stream = output.add_stream("mp2")
         self.assertEqual(stream.rate, 48000)
         self.assertEqual(stream.time_base, None)
         stream.time_base = Fraction(1, 48000)

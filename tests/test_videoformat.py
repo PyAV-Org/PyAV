@@ -10,8 +10,8 @@ class TestVideoFormats(TestCase):
         self.assertEqual(str(cm.exception), "not a pixel format: '__unknown_pix_fmt'")
 
     def test_rgb24_inspection(self):
-        fmt = VideoFormat('rgb24', 640, 480)
-        self.assertEqual(fmt.name, 'rgb24')
+        fmt = VideoFormat("rgb24", 640, 480)
+        self.assertEqual(fmt.name, "rgb24")
         self.assertEqual(len(fmt.components), 3)
         self.assertFalse(fmt.is_planar)
         self.assertFalse(fmt.has_palette)
@@ -31,8 +31,8 @@ class TestVideoFormats(TestCase):
             self.assertEqual(comp.height, 480)
 
     def test_yuv420p_inspection(self):
-        fmt = VideoFormat('yuv420p', 640, 480)
-        self.assertEqual(fmt.name, 'yuv420p')
+        fmt = VideoFormat("yuv420p", 640, 480)
+        self.assertEqual(fmt.name, "yuv420p")
         self.assertEqual(len(fmt.components), 3)
         self._test_yuv420(fmt)
 
@@ -62,15 +62,15 @@ class TestVideoFormats(TestCase):
         self.assertEqual(fmt.components[2].width, 320)
 
     def test_yuva420p_inspection(self):
-        fmt = VideoFormat('yuva420p', 640, 480)
+        fmt = VideoFormat("yuva420p", 640, 480)
         self.assertEqual(len(fmt.components), 4)
         self._test_yuv420(fmt)
         self.assertFalse(fmt.components[3].is_chroma)
         self.assertEqual(fmt.components[3].width, 640)
 
     def test_gray16be_inspection(self):
-        fmt = VideoFormat('gray16be', 640, 480)
-        self.assertEqual(fmt.name, 'gray16be')
+        fmt = VideoFormat("gray16be", 640, 480)
+        self.assertEqual(fmt.name, "gray16be")
         self.assertEqual(len(fmt.components), 1)
         self.assertFalse(fmt.is_planar)
         self.assertFalse(fmt.has_palette)
@@ -89,6 +89,6 @@ class TestVideoFormats(TestCase):
         self.assertFalse(comp.is_alpha)
 
     def test_pal8_inspection(self):
-        fmt = VideoFormat('pal8', 640, 480)
+        fmt = VideoFormat("pal8", 640, 480)
         self.assertEqual(len(fmt.components), 1)
         self.assertTrue(fmt.has_palette)

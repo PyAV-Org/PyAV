@@ -1,4 +1,3 @@
-
 from __future__ import division
 
 import numpy as np
@@ -10,12 +9,12 @@ duration = 4
 fps = 24
 total_frames = duration * fps
 
-container = av.open('test.mp4', mode='w')
+container = av.open("test.mp4", mode="w")
 
-stream = container.add_stream('mpeg4', rate=fps)
+stream = container.add_stream("mpeg4", rate=fps)
 stream.width = 480
 stream.height = 320
-stream.pix_fmt = 'yuv420p'
+stream.pix_fmt = "yuv420p"
 
 for frame_i in range(total_frames):
 
@@ -27,7 +26,7 @@ for frame_i in range(total_frames):
     img = np.round(255 * img).astype(np.uint8)
     img = np.clip(img, 0, 255)
 
-    frame = av.VideoFrame.from_ndarray(img, format='rgb24')
+    frame = av.VideoFrame.from_ndarray(img, format="rgb24")
     for packet in stream.encode(frame):
         container.mux(packet)
 
