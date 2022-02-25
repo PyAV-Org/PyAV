@@ -114,6 +114,8 @@ if not os.path.exists(output_tarball):
             requires=["gmp"],
             source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.7.3.tar.gz",
             build_arguments=["--disable-documentation"],
+            # build randomly fails with "*** missing separator.  Stop."
+            build_parallel=False,
         ),
         Package(
             name="gnutls",
