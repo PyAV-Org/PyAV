@@ -180,7 +180,7 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.width, 640)
             self.assertEqual(frame.height, 480)
             self.assertEqual(frame.format.name, "gray")
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_gray_align(self):
         array = numpy.random.randint(0, 256, size=(238, 318), dtype=numpy.uint8)
@@ -189,7 +189,7 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.width, 318)
             self.assertEqual(frame.height, 238)
             self.assertEqual(frame.format.name, "gray")
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_rgb(self):
         array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
@@ -198,7 +198,7 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.width, 640)
             self.assertEqual(frame.height, 480)
             self.assertEqual(frame.format.name, format)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_rgb_align(self):
         array = numpy.random.randint(0, 256, size=(238, 318, 3), dtype=numpy.uint8)
@@ -207,7 +207,7 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.width, 318)
             self.assertEqual(frame.height, 238)
             self.assertEqual(frame.format.name, format)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_rgba(self):
         array = numpy.random.randint(0, 256, size=(480, 640, 4), dtype=numpy.uint8)
@@ -216,7 +216,7 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.width, 640)
             self.assertEqual(frame.height, 480)
             self.assertEqual(frame.format.name, format)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_rgba_align(self):
         array = numpy.random.randint(0, 256, size=(238, 318, 4), dtype=numpy.uint8)
@@ -225,7 +225,7 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.width, 318)
             self.assertEqual(frame.height, 238)
             self.assertEqual(frame.format.name, format)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_yuv420p(self):
         array = numpy.random.randint(0, 256, size=(720, 640), dtype=numpy.uint8)
@@ -233,7 +233,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, "yuv420p")
-        self.assertTrue((frame.to_ndarray() == array).all())
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_yuv420p_align(self):
         array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
@@ -241,7 +241,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 318)
         self.assertEqual(frame.height, 238)
         self.assertEqual(frame.format.name, "yuv420p")
-        self.assertTrue((frame.to_ndarray() == array).all())
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_yuvj420p(self):
         array = numpy.random.randint(0, 256, size=(720, 640), dtype=numpy.uint8)
@@ -249,7 +249,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, "yuvj420p")
-        self.assertTrue((frame.to_ndarray() == array).all())
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_yuyv422(self):
         array = numpy.random.randint(0, 256, size=(480, 640, 2), dtype=numpy.uint8)
@@ -257,7 +257,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, "yuyv422")
-        self.assertTrue((frame.to_ndarray() == array).all())
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_yuyv422_align(self):
         array = numpy.random.randint(0, 256, size=(238, 318, 2), dtype=numpy.uint8)
@@ -265,7 +265,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 318)
         self.assertEqual(frame.height, 238)
         self.assertEqual(frame.format.name, "yuyv422")
-        self.assertTrue((frame.to_ndarray() == array).all())
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_rgb8(self):
         array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
@@ -273,7 +273,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, "rgb8")
-        self.assertTrue((frame.to_ndarray() == array).all())
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_bgr8(self):
         array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
@@ -281,7 +281,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.width, 640)
         self.assertEqual(frame.height, 480)
         self.assertEqual(frame.format.name, "bgr8")
-        self.assertTrue((frame.to_ndarray() == array).all())
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_pal8(self):
         array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
@@ -292,8 +292,8 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.format.name, "pal8")
         returned = frame.to_ndarray()
         self.assertTrue((type(returned) is tuple) and len(returned) == 2)
-        self.assertTrue((returned[0] == array).all())
-        self.assertTrue((returned[1] == palette).all())
+        self.assertNdarraysEqual(returned[0], array)
+        self.assertNdarraysEqual(returned[1], palette)
 
 
 class TestVideoFrameTiming(TestCase):
@@ -335,6 +335,4 @@ class TestVideoFrameReformat(TestCase):
             expected_rgb[:, :, 2] = 255
 
             frame_rgb = frame_yuv.reformat(format="rgb24")
-            array_rgb = frame_rgb.to_ndarray()
-            self.assertEqual(array_rgb.shape, (height, width, 3))
-            self.assertTrue((array_rgb == expected_rgb).all())
+            self.assertNdarraysEqual(frame_rgb.to_ndarray(), expected_rgb)
