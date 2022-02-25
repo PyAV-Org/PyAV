@@ -111,7 +111,7 @@ class TestAudioFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_from_ndarray_value_error(self):
         # incorrect dtype
@@ -152,7 +152,7 @@ class TestAudioFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_s16(self):
         layouts = [
@@ -167,7 +167,7 @@ class TestAudioFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_s16p_align_8(self):
         frame = AudioFrame(format="s16p", layout="stereo", samples=159, align=8)
@@ -188,7 +188,7 @@ class TestAudioFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
 
     def test_ndarray_u8(self):
         layouts = [
@@ -203,4 +203,4 @@ class TestAudioFrameConveniences(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
-            self.assertTrue((frame.to_ndarray() == array).all())
+            self.assertNdarraysEqual(frame.to_ndarray(), array)

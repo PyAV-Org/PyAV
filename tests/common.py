@@ -119,6 +119,24 @@ class TestCase(_Base):
         kwargs.setdefault("timed", True)
         return sandboxed(*args, **kwargs)
 
+    def assertNdarraysEqual(self, a, b):
+        import numpy
+
+        self.assertEqual(a.shape, b.shape)
+
+        comparison = a == b
+        if not comparison.all():
+            it = numpy.nditer(comparison, flags=["multi_index"])
+            msg = ""
+            for equal in it:
+                if not equal:
+                    msg += "- arrays differ at index %s; %s %s\n" % (
+                        it.multi_index,
+                        a[it.multi_index],
+                        b[it.multi_index],
+                    )
+            self.fail("ndarrays contents differ\n%s" % msg)
+
     def assertImagesAlmostEqual(self, a, b, epsilon=0.1, *args):
         self.assertEqual(a.size, b.size, "sizes dont match")
         a = a.filter(ImageFilter.BLUR).getdata()
