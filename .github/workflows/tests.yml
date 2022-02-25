@@ -240,6 +240,8 @@ jobs:
           # disable test suite on OS X, the SSL config seems broken
           CIBW_TEST_COMMAND_MACOS: true
           CIBW_TEST_REQUIRES: numpy
+          # skip tests when there are no binary wheels of numpy
+          CIBW_TEST_SKIP: cp37-* pp* *-i686
         run: |
           pip install cibuildwheel
           cibuildwheel --output-dir dist
