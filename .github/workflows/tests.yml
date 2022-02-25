@@ -237,11 +237,9 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: python scripts/inject-dll {wheel} {dest_dir} C:\cibw\vendor\bin
           CIBW_SKIP: cp36-* pp36-* pp38-win* *-musllinux*
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
-          # disable test suite on OS X, the SSL config seems broken
-          CIBW_TEST_COMMAND_MACOS: true
           CIBW_TEST_REQUIRES: numpy
           # skip tests when there are no binary wheels of numpy
-          CIBW_TEST_SKIP: cp37-* pp* *-i686
+          CIBW_TEST_SKIP: cp37-* pp* *_i686
         run: |
           pip install cibuildwheel
           cibuildwheel --output-dir dist
