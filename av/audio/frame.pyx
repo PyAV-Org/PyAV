@@ -3,6 +3,7 @@ from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
 from av.deprecation import renamed_attr
 from av.error cimport err_check
+from av.utils cimport check_ndarray, check_ndarray_shape
 
 
 cdef object _cinit_bypass_sentinel
@@ -116,14 +117,14 @@ cdef class AudioFrame(Frame):
         except KeyError:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
+        # check input format
         nb_channels = len(AudioLayout(layout).channels)
-        assert array.dtype == dtype
-        assert array.ndim == 2
+        check_ndarray(array, dtype, 2)
         if AudioFormat(format).is_planar:
-            assert array.shape[0] == nb_channels
+            check_ndarray_shape(array, array.shape[0] == nb_channels)
             samples = array.shape[1]
         else:
-            assert array.shape[0] == 1
+            check_ndarray_shape(array, array.shape[0] == 1)
             samples = array.shape[1] // nb_channels
 
         frame = AudioFrame(format=format, layout=layout, samples=samples)
