@@ -9,14 +9,14 @@ cdef object _cinit_bypass_sentinel
 
 
 format_dtypes = {
-    'dbl': '<f8',
-    'dblp': '<f8',
-    'flt': '<f4',
-    'fltp': '<f4',
-    's16': '<i2',
-    's16p': '<i2',
-    's32': '<i4',
-    's32p': '<i4',
+    'dbl': 'f8',
+    'dblp': 'f8',
+    'flt': 'f4',
+    'fltp': 'f4',
+    's16': 'i2',
+    's16p': 'i2',
+    's32': 'i4',
+    's32p': 'i4',
     'u8': 'u1',
     'u8p': 'u1',
 }
