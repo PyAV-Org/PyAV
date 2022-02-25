@@ -18,27 +18,27 @@ log = logging.getLogger(__name__)
 def iter_data_dirs(check_writable=False):
 
     try:
-        yield os.environ['PYAV_TESTDATA_DIR']
+        yield os.environ["PYAV_TESTDATA_DIR"]
     except KeyError:
         pass
 
-    if os.name == 'nt':
-        yield os.path.join(sys.prefix, 'pyav', 'datasets')
+    if os.name == "nt":
+        yield os.path.join(sys.prefix, "pyav", "datasets")
         return
 
     bases = [
-        '/usr/local/share',
-        '/usr/local/lib',
-        '/usr/share',
-        '/usr/lib',
+        "/usr/local/share",
+        "/usr/local/lib",
+        "/usr/share",
+        "/usr/lib",
     ]
 
     # Prefer the local virtualenv.
-    if hasattr(sys, 'real_prefix'):
+    if hasattr(sys, "real_prefix"):
         bases.insert(0, sys.prefix)
 
     for base in bases:
-        dir_ = os.path.join(base, 'pyav', 'datasets')
+        dir_ = os.path.join(base, "pyav", "datasets")
         if check_writable:
             if os.path.exists(dir_):
                 if not os.access(dir_, os.W_OK):
@@ -48,7 +48,7 @@ def iter_data_dirs(check_writable=False):
                     continue
         yield dir_
 
-    yield os.path.join(os.path.expanduser('~'), '.pyav', 'datasets')
+    yield os.path.join(os.path.expanduser("~"), ".pyav", "datasets")
 
 
 def cached_download(url, name):
@@ -92,8 +92,8 @@ def cached_download(url, name):
         if e.errno != errno.EEXIST:
             raise
 
-    tmp_path = path + '.tmp'
-    with open(tmp_path, 'wb') as fh:
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "wb") as fh:
         while True:
             chunk = response.read(8196)
             if chunk:
@@ -114,8 +114,10 @@ def fate(name):
     See the `FFmpeg Automated Test Environment <https://www.ffmpeg.org/fate.html>`_
 
     """
-    return cached_download('http://fate.ffmpeg.org/fate-suite/' + name,
-                           os.path.join('fate-suite', name.replace('/', os.path.sep)))
+    return cached_download(
+        "http://fate.ffmpeg.org/fate-suite/" + name,
+        os.path.join("fate-suite", name.replace("/", os.path.sep)),
+    )
 
 
 def curated(name):
@@ -124,5 +126,7 @@ def curated(name):
     Data is handled by :func:`cached_download`.
 
     """
-    return cached_download('https://pyav.org/datasets/' + name,
-                           os.path.join('pyav-curated', name.replace('/', os.path.sep)))
+    return cached_download(
+        "https://pyav.org/datasets/" + name,
+        os.path.join("pyav-curated", name.replace("/", os.path.sep)),
+    )

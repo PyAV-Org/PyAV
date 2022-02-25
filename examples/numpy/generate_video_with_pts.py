@@ -12,12 +12,12 @@ import av
 total_frames = 20
 fps = 30
 
-container = av.open('generate_video_with_pts.mp4', mode='w')
+container = av.open("generate_video_with_pts.mp4", mode="w")
 
-stream = container.add_stream('mpeg4', rate=fps)  # alibi frame rate
+stream = container.add_stream("mpeg4", rate=fps)  # alibi frame rate
 stream.width = width
 stream.height = height
-stream.pix_fmt = 'yuv420p'
+stream.pix_fmt = "yuv420p"
 
 # ffmpeg time is complicated
 # more at https://github.com/PyAV-Org/PyAV/blob/main/docs/api/time.rst
@@ -51,9 +51,11 @@ for frame_i in range(total_frames):
     # draw blocks of a progress bar
     cx = int(width / total_frames * (frame_i + 0.5))
     cy = int(height / 2)
-    the_canvas[cy-block_h2: cy+block_h2, cx-block_w2: cx+block_w2] = nice_color
+    the_canvas[
+        cy - block_h2 : cy + block_h2, cx - block_w2 : cx + block_w2
+    ] = nice_color
 
-    frame = av.VideoFrame.from_ndarray(the_canvas, format='rgb24')
+    frame = av.VideoFrame.from_ndarray(the_canvas, format="rgb24")
 
     # seconds -> counts of time_base
     frame.pts = int(round(my_pts / stream.codec_context.time_base))
@@ -70,7 +72,7 @@ for frame_i in range(total_frames):
 # this black frame will probably be shown for 1/fps time
 # at least, that is the analysis of ffprobe
 the_canvas[:] = 0
-frame = av.VideoFrame.from_ndarray(the_canvas, format='rgb24')
+frame = av.VideoFrame.from_ndarray(the_canvas, format="rgb24")
 frame.pts = int(round(my_pts / stream.codec_context.time_base))
 for packet in stream.encode(frame):
     container.mux(packet)

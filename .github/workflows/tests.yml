@@ -13,8 +13,9 @@ jobs:
     strategy:
       matrix:
         config:
-          - {suite: isort}
+          - {suite: black}
           - {suite: flake8}
+          - {suite: isort}
 
     env:
       PYAV_PYTHON: python3

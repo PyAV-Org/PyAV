@@ -18,6 +18,10 @@ istest() {
     return $?
 }
 
+if istest black; then
+    $PYAV_PYTHON -m black av examples tests
+fi
+
 if istest flake8; then
     # Settings are in setup.cfg
     $PYAV_PYTHON -m flake8 av examples tests
