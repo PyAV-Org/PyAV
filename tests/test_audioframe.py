@@ -114,6 +114,25 @@ class TestAudioFrameConveniences(TestCase):
             self.assertEqual(frame.samples, 160)
             self.assertTrue((frame.to_ndarray() == array).all())
 
+    def test_from_ndarray_value_error(self):
+        # incorrect dtype
+        array = numpy.ndarray(shape=(1, 160), dtype="f2")
+        with self.assertRaises(ValueError) as cm:
+            AudioFrame.from_ndarray(array, format="flt", layout="mono")
+        self.assertEqual(str(cm.exception), "Expected numpy array with dtype `float32` but got `float16`")
+
+        # incorrect number of dimensions
+        array = numpy.ndarray(shape=(1, 160, 2), dtype="f4")
+        with self.assertRaises(ValueError) as cm:
+            AudioFrame.from_ndarray(array, format="flt", layout="mono")
+        self.assertEqual(str(cm.exception), "Expected numpy array with ndim `2` but got `3`")
+
+        # incorrect shape
+        array = numpy.ndarray(shape=(2, 160), dtype="f4")
+        with self.assertRaises(ValueError) as cm:
+            AudioFrame.from_ndarray(array, format="flt", layout="mono")
+        self.assertEqual(str(cm.exception), "Unexpected numpy array shape `(2, 160)`")
+
     def test_ndarray_flt(self):
         layouts = [
             ('flt', 'mono', 'f4', (1, 160)),

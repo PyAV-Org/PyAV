@@ -2,6 +2,7 @@ from libc.stdint cimport uint8_t
 
 from av.enum cimport define_enum
 from av.error cimport err_check
+from av.utils cimport check_ndarray, check_ndarray_shape
 from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
 
@@ -301,20 +302,19 @@ cdef class VideoFrame(Frame):
         """
         if format == 'pal8':
             array, palette = array
-            assert array.dtype == 'uint8'
-            assert array.ndim == 2
-            assert palette.dtype == 'uint8'
-            assert palette.shape == (256, 4)
+            check_ndarray(array, 'uint8', 2)
+            check_ndarray(palette, 'uint8', 2)
+            check_ndarray_shape(palette, palette.shape == (256, 4))
+
             frame = VideoFrame(array.shape[1], array.shape[0], format)
             copy_array_to_plane(array, frame.planes[0], 1)
             frame.planes[1].update(palette.view('>i4').astype('i4').tobytes())
             return frame
+        elif format in ('yuv420p', 'yuvj420p'):
+            check_ndarray(array, 'uint8', 2)
+            check_ndarray_shape(array, array.shape[0] % 3 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
 
-        if format in ('yuv420p', 'yuvj420p'):
-            assert array.dtype == 'uint8'
-            assert array.ndim == 2
-            assert array.shape[0] % 3 == 0
-            assert array.shape[1] % 2 == 0
             frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
             u_start = frame.width * frame.height
             v_start = 5 * u_start // 4
@@ -324,22 +324,18 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(flat[v_start:], frame.planes[2], 1)
             return frame
         elif format == 'yuyv422':
-            assert array.dtype == 'uint8'
-            assert array.ndim == 3
-            assert array.shape[0] % 2 == 0
-            assert array.shape[1] % 2 == 0
-            assert array.shape[2] == 2
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[0] % 2 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+            check_ndarray_shape(array, array.shape[2] == 2)
         elif format in ('rgb24', 'bgr24'):
-            assert array.dtype == 'uint8'
-            assert array.ndim == 3
-            assert array.shape[2] == 3
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
         elif format in ('argb', 'rgba', 'abgr', 'bgra'):
-            assert array.dtype == 'uint8'
-            assert array.ndim == 3
-            assert array.shape[2] == 4
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[2] == 4)
         elif format in ('gray', 'gray8', 'rgb8', 'bgr8'):
-            assert array.dtype == 'uint8'
-            assert array.ndim == 2
+            check_ndarray(array, 'uint8', 2)
         else:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
