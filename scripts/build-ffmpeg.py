@@ -265,7 +265,6 @@ if not os.path.exists(output_tarball):
             source_url="https://ffmpeg.org/releases/ffmpeg-4.3.3.tar.gz",
             build_arguments=[
                 "--disable-doc",
-                "--disable-libxcb",
                 "--enable-fontconfig",
                 "--enable-gmp",
                 "--enable-gnutls",
@@ -287,6 +286,9 @@ if not os.path.exists(output_tarball):
                 "--enable-libwavpack",
                 "--enable-libx264",
                 "--enable-libx265",
+                "--enable-libxcb"
+                if platform.system() == "Linux"
+                else "--disable-libxcb",
                 "--enable-libxml2",
                 "--enable-libxvid",
                 "--enable-lzma",
