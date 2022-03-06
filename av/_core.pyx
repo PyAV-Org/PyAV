@@ -8,9 +8,6 @@ lib.avdevice_register_all()
 # Exports.
 time_base = lib.AV_TIME_BASE
 
-pyav_version = lib.PYAV_VERSION_STR
-pyav_commit = lib.PYAV_COMMIT_STR
-
 
 cdef decode_version(v):
     if v < 0:
