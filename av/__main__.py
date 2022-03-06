@@ -12,11 +12,10 @@ def main():
 
     if args.version:
 
+        import av
         import av._core
 
-        print("PyAV v" + av._core.pyav_version)
-        print("git origin: git@github.com:PyAV-Org/PyAV")
-        print("git commit:", av._core.pyav_commit)
+        print("PyAV v" + av.__version__)
 
         by_config = {}
         for libname, config in sorted(av._core.library_meta.items()):

@@ -79,8 +79,12 @@ copyright = u'2017, Mike Boers'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
+about = {}
+with open('../av/about.py') as fp:
+    exec(fp.read(), about)
+
 # The full version, including alpha/beta/rc tags.
-release = open('../VERSION.txt').read().strip()
+release = about['__version__']
 
 # The short X.Y version.
 version = release.split('-')[0]

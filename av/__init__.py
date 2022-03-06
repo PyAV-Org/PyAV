@@ -9,12 +9,13 @@ if os.name == "nt":
 
 # MUST import the core before anything else in order to initalize the underlying
 # library that is being wrapped.
-from av._core import time_base, pyav_version as __version__, library_versions
+from av._core import time_base, library_versions
 
 # Capture logging (by importing it).
 from av import logging
 
 # For convenience, IMPORT ALL OF THE THINGS (that are constructable by the user).
+from av.about import __version__
 from av.audio.fifo import AudioFifo
 from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
