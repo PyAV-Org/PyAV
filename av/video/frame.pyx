@@ -6,8 +6,6 @@ from av.utils cimport check_ndarray, check_ndarray_shape
 from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
 
-from av.deprecation import renamed_attr
-
 
 cdef object _cinit_bypass_sentinel
 
@@ -275,8 +273,6 @@ cdef class VideoFrame(Frame):
             return image, palette
         else:
             raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % frame.format.name)
-
-    to_nd_array = renamed_attr('to_ndarray')
 
     @staticmethod
     def from_image(img):

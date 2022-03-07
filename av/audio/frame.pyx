@@ -1,7 +1,6 @@
 from av.audio.format cimport get_audio_format
 from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
-from av.deprecation import renamed_attr
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
 
@@ -195,5 +194,3 @@ cdef class AudioFrame(Frame):
 
         # convert and return data
         return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
-
-    to_nd_array = renamed_attr('to_ndarray')
