@@ -1,9 +1,21 @@
-diff -urN lame.orig/include/libmp3lame.sym lame/include/libmp3lame.sym
---- lame.orig/include/libmp3lame.sym	2017-09-06 21:33:35.000000000 +0200
-+++ lame/include/libmp3lame.sym	2022-02-14 00:30:07.926310241 +0100
+diff -urN lame-3.100.orig/include/libmp3lame.sym lame-3.100/include/libmp3lame.sym
+--- lame-3.100.orig/include/libmp3lame.sym	2017-09-06 21:33:35.000000000 +0200
++++ lame-3.100/include/libmp3lame.sym	2022-03-07 20:44:59.057774572 +0100
 @@ -1,5 +1,4 @@
  lame_init
 -lame_init_old
  lame_set_num_samples
  lame_get_num_samples
  lame_set_in_samplerate
+diff -urN lame-3.100.orig/Makefile.in lame-3.100/Makefile.in
+--- lame-3.100.orig/Makefile.in	2017-10-13 22:21:58.000000000 +0200
++++ lame-3.100/Makefile.in	2022-03-07 20:46:02.497996649 +0100
+@@ -353,7 +353,7 @@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+ AUTOMAKE_OPTIONS = 1.15 foreign
+-SUBDIRS = mpglib libmp3lame frontend Dll doc include misc dshow ACM \
++SUBDIRS = mpglib libmp3lame Dll doc include misc dshow ACM \
+ 	mac macosx vc_solution
+ 
+ CLEANFILES = testcase.new.mp3
