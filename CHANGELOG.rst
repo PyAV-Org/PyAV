@@ -16,9 +16,29 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch, currently "develop").
 
-v8.1.1.dev0
+v9.0.0
 ------
 
+Major:
+
+- Re-implement AudioResampler with aformat and buffersink (:issue:`761`).
+  AudioResampler.resample() now returns a list of frames.
+- Remove deprecated methods: AudioFrame.to_nd_array, VideoFrame.to_nd_array and Stream.seek.
+
+Minor:
+
+- Provide binary wheels for macOS/arm64 and Linux/aarch64.
+- Simplify setup.py, require Cython.
+- Update the installation instructions in favor of PyPI.
+- Fix VideoFrame.to_image with height & width (:issue:`878`).
+- Fix setting Stream time_base (:issue:`784`).
+- Replace deprecated av_init_packet with av_packet_alloc (:issue:`872`).
+- Validate pixel format in VideoCodecContext.pix_fmt setter (:issue:`815`).
+- Fix AudioFrame ndarray conversion endianness (:issue:`833`).
+- Improve time_base support with filters (:issue:`765`).
+- Allow flushing filters by sending `None` (:issue:`886`).
+- Avoid unnecessary vsnprintf() calls in log_callback() (:issue:`877`).
+- Make Frame.from_ndarray raise ValueError instead of AssertionError.
 
 v8.1.0
 ------
