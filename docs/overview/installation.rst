@@ -1,20 +1,64 @@
 Installation
 ============
 
+Binary wheels
+-------------
+
+Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Windows linked against FFmpeg. The most straight-forward way to install PyAV is to run:
+
+.. code-block:: bash
+
+    pip install av
+
+
+Currently FFmpeg 4.3.3 is used with the following features enabled for all platforms:
+
+- fontconfig
+- gmp
+- gnutls
+- libaom
+- libass
+- libbluray
+- libdav1d
+- libfreetype
+- libmp3lame
+- libopencore-amrnb
+- libopencore-amrwb
+- libopenjpeg
+- libopus
+- libspeex
+- libtheora
+- libtwolame
+- libvorbis
+- libwavpack
+- libx264
+- libx265
+- libxml2
+- libxvid
+- lzma
+- zlib
+
+
 Conda
 -----
 
-Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install. The most straight-foward install is via `conda-forge <https://conda-forge.github.io>`_::
+Another way to install PyAV is via `conda-forge <https://conda-forge.github.io>`_::
 
     conda install av -c conda-forge
 
 See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs to get started with (mini)Conda.
 
 
-Dependencies
-------------
+Bring your own FFmpeg
+---------------------
 
-PyAV depends upon several libraries from FFmpeg (version ``4.0`` or higher):
+PyAV can also be compiled against your own build of FFmpeg ((version ``4.0`` or higher). You can force installing PyAV from source by running:
+
+.. code-block:: bash
+
+    pip install av --no-binary av
+
+PyAV depends upon several libraries from FFmpeg:
 
 - ``libavcodec``
 - ``libavdevice``
@@ -54,39 +98,6 @@ On **Ubuntu 18.04 LTS** everything can come from the default sources::
         libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
 
-Ubuntu < 18.04 LTS
-^^^^^^^^^^^^^^^^^^
-
-On older Ubuntu releases you will be unable to satisfy these requirements with the default package sources. We recommend compiling and installing FFmpeg from source. For FFmpeg::
-
-    sudo apt install \
-        autoconf \
-        automake \
-        build-essential \
-        cmake \
-        libass-dev \
-        libfreetype6-dev \
-        libjpeg-dev \
-        libtheora-dev \
-        libtool \
-        libvorbis-dev \
-        libx264-dev \
-        pkg-config \
-        wget \
-        yasm \
-        zlib1g-dev
-
-    wget http://ffmpeg.org/releases/ffmpeg-3.2.tar.bz2
-    tar -xjf ffmpeg-3.2.tar.bz2
-    cd ffmpeg-3.2
-
-    ./configure --disable-static --enable-shared --disable-doc
-    make
-    sudo make install
-
-`See this script <https://gist.github.com/mkassner/1caa1b45c19521c884d5>`_ for a very detailed installation of all dependencies.
-
-
 Windows
 ^^^^^^^
 
@@ -95,20 +106,8 @@ It is possible to build PyAV on Windows without Conda by installing FFmpeg yours
 Unpack them somewhere (like ``C:\ffmpeg``), and then :ref:`tell PyAV where they are located <build_on_windows>`.
 
 
-
-PyAV
-----
-
-
-Via PyPI/CheeseShop
-^^^^^^^^^^^^^^^^^^^
-::
-
-    pip install av
-
-
-Via Source
-^^^^^^^^^^
+Building from the latest source
+-------------------------------
 
 ::
 
