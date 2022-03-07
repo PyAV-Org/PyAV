@@ -1,11 +1,9 @@
-from libc.stdint cimport int64_t, uint8_t
 cimport libav as lib
 
 from av.filter.context cimport FilterContext
 
 import errno
 
-from av.error import FFmpegError
 import av.filter
 
 

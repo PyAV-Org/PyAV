@@ -1,5 +1,4 @@
 
-from av.audio.fifo cimport AudioFifo
 from av.audio.frame cimport AudioFrame
 from av.audio.resampler cimport AudioResampler
 from av.codec.context cimport CodecContext
@@ -12,4 +11,3 @@ cdef class AudioCodecContext(CodecContext):
 
     # For encoding.
     cdef AudioResampler resampler
-    cdef AudioFifo fifo
