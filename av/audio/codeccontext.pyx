@@ -39,13 +39,7 @@ cdef class AudioCodecContext(CodecContext):
                 rate=self.ptr.sample_rate,
                 frame_size=None if allow_var_frame_size else self.ptr.frame_size
             )
-        frames = self.resampler.resample(frame)
-
-        # flush if input frame is None
-        if input_frame is None:
-            frames.append(None)
-
-        return frames
+        return self.resampler.resample(frame)
 
     cdef Frame _alloc_next_frame(self):
         return alloc_audio_frame()
