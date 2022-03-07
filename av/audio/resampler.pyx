@@ -39,17 +39,18 @@ cdef class AudioResampler(object):
         Convert the ``sample_rate``, ``channel_layout`` and/or ``format`` of
         a :class:`~.AudioFrame`.
 
-        :param AudioFrame frame: The frame to convert.
+        :param AudioFrame frame: The frame to convert or `None` to flush.
         :returns: A list of :class:`AudioFrame` in new parameters. If the nothing is to be done return the same frame
             as a single element list.
 
         """
+        # We don't have any input, so don't bother even setting up.
+        if not self.graph and frame is None:
+            return []
+
+        # Shortcut for passthrough.
         if self.is_passthrough:
             return [frame]
-
-        # We don't have any input, so don't bother even setting up.
-        if not frame:
-            return []
 
         # Take source settings from the first frame.
         if not self.graph:
@@ -89,7 +90,7 @@ cdef class AudioResampler(object):
             if self.frame_size > 0:
                 lib.av_buffersink_set_frame_size((<FilterContext>abuffersink).ptr, self.frame_size)
 
-        elif frame:
+        elif frame is not None:
 
             # Assert the settings are the same on consecutive frames.
             if (
@@ -105,6 +106,8 @@ cdef class AudioResampler(object):
         while True:
             try:
                 output.append(self.graph.pull())
+            except EOFError:
+                break
             except av.utils.AVError as e:
                 if e.errno != errno.EAGAIN:
                     raise
