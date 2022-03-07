@@ -1,9 +1,6 @@
-import warnings
-
 import numpy
 
 from av import AudioFrame
-from av.deprecation import AttributeRenamedWarning
 
 from .common import TestCase
 
@@ -81,20 +78,6 @@ class TestAudioFrameConveniences(TestCase):
         array = frame.to_ndarray()
         self.assertEqual(array.dtype, "i2")
         self.assertEqual(array.shape, (2, 160))
-
-    def test_basic_to_nd_array(self):
-        frame = AudioFrame(format="s16p", layout="stereo", samples=160)
-        with warnings.catch_warnings(record=True) as recorded:
-            array = frame.to_nd_array()
-        self.assertEqual(array.shape, (2, 160))
-
-        # check deprecation warning
-        self.assertEqual(len(recorded), 1)
-        self.assertEqual(recorded[0].category, AttributeRenamedWarning)
-        self.assertEqual(
-            str(recorded[0].message),
-            "AudioFrame.to_nd_array is deprecated; please use AudioFrame.to_ndarray.",
-        )
 
     def test_ndarray_dbl(self):
         layouts = [

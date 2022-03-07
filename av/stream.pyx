@@ -13,8 +13,6 @@ from av.utils cimport (
     to_avrational
 )
 
-from av import deprecation
-
 
 cdef object _cinit_bypass_sentinel = object()
 
@@ -174,19 +172,6 @@ cdef class Stream(object):
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.decode`.
         """
         return self.codec_context.decode(packet)
-
-    @deprecation.method
-    def seek(self, offset, **kwargs):
-        """
-        .. seealso:: :meth:`.InputContainer.seek` for documentation on parameters.
-            The only difference is that ``offset`` will be interpreted in
-            :attr:`.Stream.time_base` when ``whence == 'time'``.
-
-        .. deprecated:: 6.1.0
-            Use :meth:`.InputContainer.seek` with ``stream`` argument instead.
-
-        """
-        self.container.seek(offset, stream=self, **kwargs)
 
     property id:
         """

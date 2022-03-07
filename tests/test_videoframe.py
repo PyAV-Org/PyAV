@@ -1,10 +1,8 @@
 from unittest import SkipTest
-import warnings
 
 import numpy
 
 from av import VideoFrame
-from av.deprecation import AttributeRenamedWarning
 
 from .common import Image, TestCase, fate_png
 
@@ -158,20 +156,6 @@ class TestVideoFrameNdarray(TestCase):
         frame = VideoFrame(640, 480, "rgb24")
         array = frame.to_ndarray()
         self.assertEqual(array.shape, (480, 640, 3))
-
-    def test_basic_to_nd_array(self):
-        frame = VideoFrame(640, 480, "rgb24")
-        with warnings.catch_warnings(record=True) as recorded:
-            array = frame.to_nd_array()
-        self.assertEqual(array.shape, (480, 640, 3))
-
-        # check deprecation warning
-        self.assertEqual(len(recorded), 1)
-        self.assertEqual(recorded[0].category, AttributeRenamedWarning)
-        self.assertEqual(
-            str(recorded[0].message),
-            "VideoFrame.to_nd_array is deprecated; please use VideoFrame.to_ndarray.",
-        )
 
     def test_ndarray_gray(self):
         array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
