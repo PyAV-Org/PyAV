@@ -214,6 +214,8 @@ if not os.path.exists(output_tarball):
         Package(
             name="opencore-amr",
             source_url="http://deb.debian.org/debian/pool/main/o/opencore-amr/opencore-amr_0.1.5.orig.tar.gz",
+            # parallel build hangs on Windows
+            build_parallel=platform.system() != "Windows",
         ),
         Package(
             name="openjpeg",
