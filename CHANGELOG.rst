@@ -14,7 +14,11 @@ We are operating with `semantic versioning <http://semver.org>`_.
     <https://blog.github.com/2013-01-22-closing-issues-via-commit-messages/>.
 
     Note that they these tags will not actually close the issue/PR until they
-    are merged into the "default" branch, currently "develop").
+    are merged into the "default" branch.
+
+v9.0.1.dev0
+------
+
 
 v9.0.0
 ------

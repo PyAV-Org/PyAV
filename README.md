@@ -23,7 +23,7 @@ Due to the complexity of the dependencies, PyAV is not always the easiest Python
 pip install av
 ```
 
-If you want to use your existing FFmpeg/Libav, the C-source version of PyAV is on [PyPI][pypi] too:
+If you want to use your existing FFmpeg, the source version of PyAV is on [PyPI][pypi] too:
 
 ```bash
 pip install av --no-binary av
