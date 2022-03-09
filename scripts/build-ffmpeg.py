@@ -182,7 +182,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="openjpeg",
             requires=["cmake"],
-            source_url="https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz",
+            source_url="https://github.com/uclouvain/openjpeg/archive/v2.4.0.tar.gz",
             build_system="cmake",
         ),
         Package(
