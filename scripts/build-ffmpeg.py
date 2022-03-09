@@ -212,7 +212,7 @@ if not os.path.exists(output_tarball):
             build_arguments=["--disable-examples", "--disable-spec"],
         ),
         Package(
-            name="wavpack", source_url="http://www.wavpack.com/wavpack-5.3.0.tar.bz2"
+            name="wavpack", source_url="http://www.wavpack.com/wavpack-5.4.0.tar.bz2"
         ),
         Package(
             name="x264",
