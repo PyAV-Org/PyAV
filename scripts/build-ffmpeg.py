@@ -120,7 +120,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="gnutls",
             requires=["nettle", "unistring"],
-            source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.16.tar.xz",
+            source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7/gnutls-3.7.3.tar.xz",
             build_arguments=[
                 "--disable-cxx",
                 "--disable-doc",

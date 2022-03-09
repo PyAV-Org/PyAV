@@ -206,6 +206,10 @@ class Builder:
             and not for_builder
             and os.environ["ARCHFLAGS"] == "-arch arm64"
         ):
+            # AC_FUNC_MALLOC and AC_FUNC_REALLOC fail when cross-compiling
+            env["ac_cv_func_malloc_0_nonnull"] = "yes"
+            env["ac_cv_func_realloc_0_nonnull"] = "yes"
+
             if package.name == "ffmpeg":
                 configure_args += ["--arch=arm64", "--enable-cross-compile"]
             else:
