@@ -46,7 +46,4 @@ class TestSubtitle(TestCase):
 
         bms = sub.planes
         self.assertEqual(len(bms), 1)
-        if hasattr(__builtins__, "buffer"):
-            self.assertEqual(len(buffer(bms[0])), 4800)  # noqa
-        if hasattr(__builtins__, "memoryview"):
-            self.assertEqual(len(memoryview(bms[0])), 4800)  # noqa
+        self.assertEqual(len(memoryview(bms[0])), 4800)
