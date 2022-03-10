@@ -75,23 +75,10 @@ class TestVideoFramePlanes(TestCase):
 
 
 class TestVideoFrameBuffers(TestCase):
-    def test_buffer(self):
-        if not hasattr(__builtins__, "buffer"):
-            raise SkipTest()
-
-        frame = VideoFrame(640, 480, "rgb24")
-        frame.planes[0].update(b"01234" + (b"x" * (640 * 480 * 3 - 5)))
-        buf = buffer(frame.planes[0])  # noqa
-        self.assertEqual(buf[1], b"1")
-        self.assertEqual(buf[:7], b"01234xx")
-
     def test_memoryview_read(self):
-        if not hasattr(__builtins__, "memoryview"):
-            raise SkipTest()
-
         frame = VideoFrame(640, 480, "rgb24")
         frame.planes[0].update(b"01234" + (b"x" * (640 * 480 * 3 - 5)))
-        mem = memoryview(frame.planes[0])  # noqa
+        mem = memoryview(frame.planes[0])
         self.assertEqual(mem.ndim, 1)
         self.assertEqual(mem.shape, (640 * 480 * 3,))
         self.assertFalse(mem.readonly)
