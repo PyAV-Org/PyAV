@@ -19,7 +19,7 @@ jobs:
 
     env:
       PYAV_PYTHON: python3
-      PYAV_LIBRARY: ffmpeg-4.2 # doesn't matter
+      PYAV_LIBRARY: ffmpeg-4.3 # doesn't matter
 
     steps:
 
@@ -55,11 +55,12 @@ jobs:
     strategy:
       matrix:
         config:
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.2", extras: true}
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.3", extras: true}
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.2"}
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.1"}
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.0"}
-          - {os: ubuntu-latest, python: pypy3, ffmpeg: "4.2"}
-          #- {os: macos-latest,  python: 3.7, ffmpeg: "4.2"}
+          - {os: ubuntu-latest, python: pypy3, ffmpeg: "4.3"}
+          - {os: macos-latest,  python: 3.7, ffmpeg: "4.3"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -144,6 +145,7 @@ jobs:
     strategy:
       matrix:
         config:
+          - {os: windows-latest, python: 3.7, ffmpeg: "4.3"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.2"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.1"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.0"}
