@@ -1,4 +1,3 @@
-
 cdef class AudioStream(Stream):
 
     def __repr__(self):

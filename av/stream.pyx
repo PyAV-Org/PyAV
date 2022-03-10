@@ -260,7 +260,7 @@ cdef class Stream(object):
         """The guessed frame rate of this stream.
 
         This is a wrapper around :ffmpeg:`av_guess_frame_rate`, and uses multiple
-        huristics to decide what is "the" frame rate.
+        heuristics to decide what is "the" frame rate.
 
         :type: :class:`~fractions.Fraction` or ``None``
 
