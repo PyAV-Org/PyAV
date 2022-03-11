@@ -16,9 +16,12 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
-v9.0.1.dev0
+v9.0.1
 ------
 
+Minor:
+
+- Update binary wheels to fix security vulnerabilities (:issue:`901`).
 
 v9.0.0
 ------
