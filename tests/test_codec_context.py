@@ -180,7 +180,7 @@ class TestEncoding(TestCase):
 
         ctx.width = width
         ctx.height = height
-        ctx.time_base = video_stream.codec_context.time_base
+        ctx.time_base = video_stream.time_base
         ctx.pix_fmt = pix_fmt
         ctx.open()
 
@@ -262,7 +262,7 @@ class TestEncoding(TestCase):
         width = options.pop("width", 640)
         height = options.pop("height", 480)
         max_frames = options.pop("max_frames", 50)
-        time_base = options.pop("time_base", video_stream.codec_context.time_base)
+        time_base = options.pop("time_base", video_stream.time_base)
 
         ctx = codec.create()
         ctx.width = width

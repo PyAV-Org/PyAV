@@ -20,7 +20,7 @@ from av.dictionary import Dictionary
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -38,7 +38,6 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
-    py_ctx.allocated = allocated
     py_ctx._init(c_ctx, c_codec)
 
     return py_ctx
@@ -147,7 +146,7 @@ cdef class CodecContext(object):
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
+        return wrap_codec_context(c_ctx, cy_codec.ptr)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -307,7 +306,7 @@ cdef class CodecContext(object):
     def __dealloc__(self):
         if self.ptr and self.extradata_set:
             lib.av_freep(&self.ptr.extradata)
-        if self.ptr and self.allocated:
+        if self.ptr:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)
         if self.parser:

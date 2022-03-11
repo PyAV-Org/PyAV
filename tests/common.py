@@ -82,6 +82,7 @@ def run_in_sandbox(func):
             return func(self, *args, **kwargs)
         finally:
             os.chdir(current_dir)
+
     return _inner
 
 
