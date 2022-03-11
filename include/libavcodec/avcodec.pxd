@@ -194,6 +194,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         float rc_min_vbv_overflow_use
 
         AVRational framerate
+        AVRational pkt_timebase
         AVRational time_base
         int ticks_per_frame
 
@@ -237,7 +238,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef void avcodec_free_context(AVCodecContext **ctx)
 
     cdef AVClass* avcodec_get_class()
-    cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
     cdef struct AVCodecDescriptor:
         AVCodecID id
@@ -455,10 +455,18 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
 
     cdef struct AVCodecParameters:
-        pass
+        AVMediaType codec_type
+        AVCodecID codec_id
 
+    cdef int avcodec_parameters_copy(
+        AVCodecParameters *dst,
+        const AVCodecParameters *src
+    )
     cdef int avcodec_parameters_from_context(
         AVCodecParameters *par,
         const AVCodecContext *codec,
     )
-
+    cdef int avcodec_parameters_to_context(
+        AVCodecContext *codec,
+        const AVCodecParameters *par
+    )

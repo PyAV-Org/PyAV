@@ -70,27 +70,59 @@ def assert_rgb_rotate(self, input_, is_dash=False):
     if is_dash:
         # FFmpeg 4.2 added parsing of the programme information and it is named "Title"
         if av.library_versions["libavformat"] >= (58, 28):
-            self.assertTrue(input_.metadata.get("Title") == "container", input_.metadata)
+            self.assertTrue(
+                input_.metadata.get("Title") == "container", input_.metadata
+            )
     else:
         self.assertEqual(input_.metadata.get("title"), "container", input_.metadata)
     self.assertEqual(input_.metadata.get("key"), None)
+
     stream = input_.streams[0]
-    self.assertIsInstance(stream, VideoStream)
-    self.assertEqual(stream.type, "video")
-    self.assertEqual(stream.name, "mpeg4")
-    self.assertEqual(
-        stream.average_rate, 24
-    )  # Only because we constructed is precisely.
-    self.assertEqual(stream.rate, Fraction(24, 1))
+
     if is_dash:
         # The DASH format doesn't provide a duration for the stream
         # and so the container duration (micro seconds) is checked instead
         self.assertEqual(input_.duration, 2000000)
+        expected_average_rate = 24
+        expected_duration = None
+        expected_frames = 0
+        expected_id = 0
     else:
-        self.assertEqual(stream.time_base * stream.duration, 2)
+        if av.library_versions["libavformat"] < (58, 76):
+            # FFmpeg < 4.4
+            expected_average_rate = Fraction(1152, 47)
+            expected_duration = 24064
+        else:
+            # FFmpeg >= 4.4
+            expected_average_rate = 24
+            expected_duration = 24576
+        expected_frames = 48
+        expected_id = 1
+
+    # actual stream properties
+    self.assertIsInstance(stream, VideoStream)
+    self.assertEqual(stream.average_rate, expected_average_rate)
+    self.assertEqual(stream.base_rate, 24)
+    self.assertEqual(stream.duration, expected_duration)
+    self.assertEqual(stream.guessed_rate, 24)
+    self.assertEqual(stream.frames, expected_frames)
+    self.assertEqual(stream.id, expected_id)
+    self.assertEqual(stream.index, 0)
+    self.assertEqual(stream.profile, "Simple Profile")
+    self.assertEqual(stream.start_time, 0)
+    self.assertEqual(stream.time_base, Fraction(1, 12288))
+    self.assertEqual(stream.type, "video")
+
+    # codec properties
+    self.assertEqual(stream.name, "mpeg4")
+    self.assertEqual(stream.long_name, "MPEG-4 part 2")
+
+    # codec context properties
     self.assertEqual(stream.format.name, "yuv420p")
     self.assertEqual(stream.format.width, WIDTH)
     self.assertEqual(stream.format.height, HEIGHT)
+    self.assertEqual(stream.rate, None)
+    self.assertEqual(stream.ticks_per_frame, 1)
 
 
 class TestBasicVideoEncoding(TestCase):

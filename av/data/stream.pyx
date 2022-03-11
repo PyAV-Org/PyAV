@@ -20,7 +20,7 @@ cdef class DataStream(Stream):
 
     property name:
         def __get__(self):
-            cdef const lib.AVCodecDescriptor *desc = lib.avcodec_descriptor_get(self._codec_context.codec_id)
+            cdef const lib.AVCodecDescriptor *desc = lib.avcodec_descriptor_get(self.ptr.codecpar.codec_id)
             if desc == NULL:
                 return None
             return desc.name

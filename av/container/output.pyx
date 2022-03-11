@@ -3,12 +3,13 @@ import logging
 import os
 
 from av.codec.codec cimport Codec
+from av.codec.context cimport CodecContext, wrap_codec_context
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.stream cimport Stream, wrap_stream
-from av.utils cimport dict_to_avdict
+from av.utils cimport dict_to_avdict, to_avrational
 
 from av.dictionary import Dictionary
 
@@ -64,14 +65,11 @@ cdef class OutputContainer(Container):
 
         if codec_name is not None:
             codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
-            codec = codec_obj.ptr
-
         else:
-            if not template._codec:
-                raise ValueError("template has no codec")
-            if not template._codec_context:
+            if not template.codec_context:
                 raise ValueError("template has no codec context")
-            codec = template._codec
+            codec_obj = template.codec_context.codec
+        codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(
@@ -82,16 +80,13 @@ cdef class OutputContainer(Container):
             raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
-        # As of last check, avformat_new_stream only calls avcodec_alloc_context3 to create
-        # the context, but doesn't modify it in any other way. Ergo, we can allow CodecContext
-        # to finish initializing it.
         lib.avformat_new_stream(self.ptr, codec)
         cdef lib.AVStream *stream = self.ptr.streams[self.ptr.nb_streams - 1]
-        cdef lib.AVCodecContext *codec_context = stream.codec  # For readability.
+        cdef lib.AVCodecContext *codec_context = lib.avcodec_alloc_context3(codec)
 
         # Copy from the template.
         if template is not None:
-            lib.avcodec_copy_context(codec_context, template._codec_context)
+            err_check(lib.avcodec_parameters_to_context(codec_context, template.ptr.codecpar))
             # Reset the codec tag assuming we are remuxing.
             codec_context.codec_tag = 0
 
@@ -103,11 +98,7 @@ cdef class OutputContainer(Container):
             codec_context.bit_rate = 1024000
             codec_context.bit_rate_tolerance = 128000
             codec_context.ticks_per_frame = 1
-
-            rate = Fraction(rate or 24)
-
-            codec_context.framerate.num = rate.numerator
-            codec_context.framerate.den = rate.denominator
+            to_avrational(rate or 24, &codec_context.framerate)
 
             stream.avg_frame_rate = codec_context.framerate
             stream.time_base = codec_context.time_base
@@ -126,7 +117,8 @@ cdef class OutputContainer(Container):
             codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
 
         # Construct the user-land stream
-        cdef Stream py_stream = wrap_stream(self, stream)
+        cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec)
+        cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
 
         if options:

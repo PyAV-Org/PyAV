@@ -33,7 +33,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         int index
         int id
 
-        AVCodecContext *codec
         AVCodecParameters *codecpar
 
         AVRational time_base

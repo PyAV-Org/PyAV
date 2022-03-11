@@ -17,7 +17,7 @@ from av.utils cimport (
 cdef object _cinit_bypass_sentinel = object()
 
 
-cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
+cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContext codec_context):
     """Build an av.Stream for an existing AVStream.
 
     The AVStream MUST be fully constructed and ready for use before this is
@@ -30,22 +30,22 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream):
 
     cdef Stream py_stream
 
-    if c_stream.codec.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+    if c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO:
         from av.video.stream import VideoStream
         py_stream = VideoStream.__new__(VideoStream, _cinit_bypass_sentinel)
-    elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+    elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_AUDIO:
         from av.audio.stream import AudioStream
         py_stream = AudioStream.__new__(AudioStream, _cinit_bypass_sentinel)
-    elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
+    elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
         from av.subtitles.stream import SubtitleStream
         py_stream = SubtitleStream.__new__(SubtitleStream, _cinit_bypass_sentinel)
-    elif c_stream.codec.codec_type == lib.AVMEDIA_TYPE_DATA:
+    elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA:
         from av.data.stream import DataStream
         py_stream = DataStream.__new__(DataStream, _cinit_bypass_sentinel)
     else:
         py_stream = Stream.__new__(Stream, _cinit_bypass_sentinel)
 
-    py_stream._init(container, c_stream)
+    py_stream._init(container, c_stream, codec_context)
     return py_stream
 
 
@@ -69,37 +69,21 @@ cdef class Stream(object):
     def __cinit__(self, name):
         if name is _cinit_bypass_sentinel:
             return
-        raise RuntimeError('cannot manually instatiate Stream')
+        raise RuntimeError('cannot manually instantiate Stream')
 
-    cdef _init(self, Container container, lib.AVStream *stream):
-
+    cdef _init(self, Container container, lib.AVStream *stream, CodecContext codec_context):
         self.container = container
-        self._stream = stream
+        self.ptr = stream
 
-        self._codec_context = stream.codec
+        self.codec_context = codec_context
+        if self.codec_context:
+            self.codec_context.stream_index = stream.index
 
         self.metadata = avdict_to_dict(
             stream.metadata,
             encoding=self.container.metadata_encoding,
             errors=self.container.metadata_errors,
         )
-
-        # This is an input container!
-        if self.container.ptr.iformat:
-
-            # Find the codec.
-            self._codec = lib.avcodec_find_decoder(self._codec_context.codec_id)
-            if not self._codec:
-                # TODO: Setup a dummy CodecContext.
-                self.codec_context = None
-                return
-
-        # This is an output container!
-        else:
-            self._codec = self._codec_context.codec
-
-        self.codec_context = wrap_codec_context(self._codec_context, self._codec, False)
-        self.codec_context.stream_index = stream.index
 
     def __repr__(self):
         return '<av.%s #%d %s/%s at 0x%x>' % (
@@ -137,17 +121,17 @@ cdef class Stream(object):
     cdef _finalize_for_output(self):
 
         dict_to_avdict(
-            &self._stream.metadata, self.metadata,
+            &self.ptr.metadata, self.metadata,
             encoding=self.container.metadata_encoding,
             errors=self.container.metadata_errors,
         )
 
-        if not self._stream.time_base.num:
-            self._stream.time_base = self._codec_context.time_base
+        if not self.ptr.time_base.num:
+            self.ptr.time_base = self.codec_context.ptr.time_base
 
         # It prefers if we pass it parameters via this other object.
         # Lets just copy what we want.
-        err_check(lib.avcodec_parameters_from_context(self._stream.codecpar, self._stream.codec))
+        err_check(lib.avcodec_parameters_from_context(self.ptr.codecpar, self.codec_context.ptr))
 
     def encode(self, frame=None):
         """
@@ -165,7 +149,7 @@ cdef class Stream(object):
         cdef Packet packet
         for packet in packets:
             packet._stream = self
-            packet.ptr.stream_index = self._stream.index
+            packet.ptr.stream_index = self.ptr.index
         return packets
 
     def decode(self, packet=None):
@@ -190,16 +174,16 @@ cdef class Stream(object):
 
         """
         def __get__(self):
-            return self._stream.id
+            return self.ptr.id
 
     cdef _set_id(self, value):
         """
         Setter used by __setattr__ for the id property.
         """
         if value is None:
-            self._stream.id = 0
+            self.ptr.id = 0
         else:
-            self._stream.id = value
+            self.ptr.id = value
 
     property profile:
         """
@@ -208,8 +192,8 @@ cdef class Stream(object):
         :type: str
         """
         def __get__(self):
-            if self._codec and lib.av_get_profile_name(self._codec, self._codec_context.profile):
-                return lib.av_get_profile_name(self._codec, self._codec_context.profile)
+            if self.codec_context:
+                return self.codec_context.profile
             else:
                 return None
 
@@ -219,7 +203,7 @@ cdef class Stream(object):
 
         :type: int
         """
-        def __get__(self): return self._stream.index
+        def __get__(self): return self.ptr.index
 
     property time_base:
         """
@@ -229,13 +213,13 @@ cdef class Stream(object):
 
         """
         def __get__(self):
-            return avrational_to_fraction(&self._stream.time_base)
+            return avrational_to_fraction(&self.ptr.time_base)
 
     cdef _set_time_base(self, value):
         """
         Setter used by __setattr__ for the time_base property.
         """
-        to_avrational(value, &self._stream.time_base)
+        to_avrational(value, &self.ptr.time_base)
 
     property average_rate:
         """
@@ -249,7 +233,7 @@ cdef class Stream(object):
 
         """
         def __get__(self):
-            return avrational_to_fraction(&self._stream.avg_frame_rate)
+            return avrational_to_fraction(&self.ptr.avg_frame_rate)
 
     property base_rate:
         """
@@ -263,7 +247,7 @@ cdef class Stream(object):
 
         """
         def __get__(self):
-            return avrational_to_fraction(&self._stream.r_frame_rate)
+            return avrational_to_fraction(&self.ptr.r_frame_rate)
 
     property guessed_rate:
         """The guessed frame rate of this stream.
@@ -276,7 +260,7 @@ cdef class Stream(object):
         """
         def __get__(self):
             # The two NULL arguments aren't used in FFmpeg >= 4.0
-            cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self._stream, NULL)
+            cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self.ptr, NULL)
             return avrational_to_fraction(&val)
 
     property start_time:
@@ -287,8 +271,8 @@ cdef class Stream(object):
         :type: :class:`int` or ``None``
         """
         def __get__(self):
-            if self._stream.start_time != lib.AV_NOPTS_VALUE:
-                return self._stream.start_time
+            if self.ptr.start_time != lib.AV_NOPTS_VALUE:
+                return self.ptr.start_time
 
     property duration:
         """
@@ -298,8 +282,8 @@ cdef class Stream(object):
 
         """
         def __get__(self):
-            if self._stream.duration != lib.AV_NOPTS_VALUE:
-                return self._stream.duration
+            if self.ptr.duration != lib.AV_NOPTS_VALUE:
+                return self.ptr.duration
 
     property frames:
         """
@@ -309,7 +293,8 @@ cdef class Stream(object):
 
         :type: :class:`int`
         """
-        def __get__(self): return self._stream.nb_frames
+        def __get__(self):
+            return self.ptr.nb_frames
 
     property language:
         """
@@ -329,4 +314,4 @@ cdef class Stream(object):
 
         :type: str
         """
-        return lib.av_get_media_type_string(self._codec_context.codec_type)
+        return lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
