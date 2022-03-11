@@ -194,8 +194,7 @@ jobs:
         run: |
           pip install cython
           python scripts/fetch-vendor.py /tmp/vendor
-          PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig make build
-          python setup.py sdist
+          PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
         uses: actions/upload-artifact@v1
         with:
