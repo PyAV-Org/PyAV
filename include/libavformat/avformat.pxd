@@ -145,10 +145,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVFMT_FLAG_DISCARD_CORRUPT
         AVFMT_FLAG_FLUSH_PACKETS
         AVFMT_FLAG_BITEXACT
-        AVFMT_FLAG_MP4A_LATM
         AVFMT_FLAG_SORT_DTS
         AVFMT_FLAG_PRIV_OPT
-        AVFMT_FLAG_KEEP_SIDE_DATA  # deprecated; does nothing
         AVFMT_FLAG_FAST_SEEK
         AVFMT_FLAG_SHORTEST
         AVFMT_FLAG_AUTO_BSF
