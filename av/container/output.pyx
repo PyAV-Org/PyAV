@@ -107,6 +107,7 @@ cdef class OutputContainer(Container):
             codec_context.framerate.num = rate.numerator
             codec_context.framerate.den = rate.denominator
 
+            stream.avg_frame_rate = codec_context.framerate
             stream.time_base = codec_context.time_base
 
         # Some sane audio defaults
