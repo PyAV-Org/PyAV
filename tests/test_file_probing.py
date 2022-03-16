@@ -7,12 +7,6 @@ import av
 from .common import TestCase, fate_suite
 
 
-try:
-    long
-except NameError:
-    long = int
-
-
 class TestAudioProbe(TestCase):
     def setUp(self):
         self.file = av.open(fate_suite("aac/latm_stereo_to_51.ts"))
@@ -29,7 +23,7 @@ class TestAudioProbe(TestCase):
         self.assertIn(self.file.bit_rate, (269558, 270494))
 
         self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, long(1400000))
+        self.assertEqual(self.file.start_time, 1400000)
         self.assertEqual(self.file.metadata, {})
 
     def test_stream_probing(self):
@@ -228,7 +222,7 @@ class TestVideoProbe(TestCase):
             self.file.bit_rate, 8 * self.file.size * av.time_base // self.file.duration
         )
         self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, long(22953408322))
+        self.assertEqual(self.file.start_time, 22953408322)
         self.assertEqual(self.file.metadata, {})
 
     def test_stream_probing(self):
