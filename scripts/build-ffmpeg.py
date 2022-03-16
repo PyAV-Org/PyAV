@@ -212,9 +212,6 @@ if not os.path.exists(output_tarball):
             build_arguments=["--disable-examples", "--disable-spec"],
         ),
         Package(
-            name="wavpack", source_url="http://www.wavpack.com/wavpack-5.4.0.tar.bz2"
-        ),
-        Package(
             name="x264",
             source_url="https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2",
         ),
@@ -255,14 +252,13 @@ if not os.path.exists(output_tarball):
                 "theora",
                 "twolame",
                 "vorbis",
-                "wavpack",
                 "x264",
                 "x265",
                 "xml2",
                 "xvid",
                 "xz",
             ],
-            source_url="https://ffmpeg.org/releases/ffmpeg-4.3.3.tar.gz",
+            source_url="https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz",
             build_arguments=[
                 "--disable-doc",
                 "--enable-fontconfig",
@@ -283,7 +279,6 @@ if not os.path.exists(output_tarball):
                 "--enable-libtheora",
                 "--enable-libtwolame",
                 "--enable-libvorbis",
-                "--enable-libwavpack",
                 "--enable-libx264",
                 "--enable-libx265",
                 "--enable-libxcb"

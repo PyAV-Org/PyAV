@@ -1,5 +1,5 @@
 set destdir=%1
-set ffmpeg_version=4.3.2-2021-02-27
+set ffmpeg_version=4.4.1
 set ffmpeg_dirname=ffmpeg-%ffmpeg_version%-full_build-shared
 set ffmpeg_zipname=ffmpeg-%ffmpeg_version%-full_build-shared.7z
 set outputdir=output
