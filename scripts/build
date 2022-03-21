@@ -1,11 +1,5 @@
 #!/bin/bash
 
-if [[ "$TRAVIS" && ("$TESTSUITE" == "isort" || "$TESTSUITE" == "flake8") ]]; then
-    echo "We don't need to build PyAV for source linting."
-    exit 0
-fi
-
-
 if [[ ! "$_PYAV_ACTIVATED" ]]; then
     export here="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
     source "$here/activate.sh"
