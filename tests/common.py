@@ -1,5 +1,3 @@
-from __future__ import division
-
 from unittest import TestCase as _Base
 import datetime
 import errno

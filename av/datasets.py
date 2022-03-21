@@ -1,15 +1,8 @@
-from __future__ import absolute_import
-
+from urllib.request import urlopen
 import errno
 import logging
 import os
 import sys
-
-
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
 
 
 log = logging.getLogger(__name__)

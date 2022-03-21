@@ -10,13 +10,8 @@ integers for names and values respectively.
 """
 
 from collections import OrderedDict
+import copyreg
 import sys
-
-
-try:
-    import copyreg
-except ImportError:
-    import copy_reg as copyreg
 
 
 cdef sentinel = object()
