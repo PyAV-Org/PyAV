@@ -1,7 +1,4 @@
-try:
-    from collections.abc import Sequence
-except ImportError:
-    from collections import Sequence
+from collections.abc import Sequence
 
 
 cdef object _cinit_bypass_sentinel = object()

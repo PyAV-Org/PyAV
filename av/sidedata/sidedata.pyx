@@ -1,12 +1,8 @@
 from av.enum cimport define_enum
 
+from collections.abc import Mapping
+
 from av.sidedata.motionvectors import MotionVectors
-
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
 
 
 cdef object _cinit_bypass_sentinel = object()

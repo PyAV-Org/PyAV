@@ -36,20 +36,10 @@ from libc.stdio cimport fprintf, printf, stderr
 from libc.stdlib cimport free, malloc
 cimport libav as lib
 
-from threading import Lock
+from threading import Lock, get_ident
 import logging
 import os
 import sys
-
-
-try:
-    from threading import get_ident
-except ImportError:
-    from thread import get_ident
-
-
-cdef bint is_py35 = sys.version_info[:2] >= (3, 5)
-cdef str decode_error_handler = 'backslashreplace' if is_py35 else 'replace'
 
 
 # Library levels.
@@ -289,7 +279,7 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
     global last_error
 
     name = <str>c_name if c_name is not NULL else ''
-    message = (<bytes>c_message).decode('utf8', decode_error_handler)
+    message = (<bytes>c_message).decode('utf8', 'backslashreplace')
     log = (level, name, message)
 
     # We have to filter it ourselves, but we will still process it in general so

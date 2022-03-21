@@ -1,5 +1,3 @@
-from __future__ import division
-
 from fractions import Fraction
 
 import av

@@ -1,15 +1,9 @@
-from __future__ import division
+from io import BytesIO
 
 import av
 
 from .common import MethodLogger, TestCase, fate_suite
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
-
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
 
 
 class NonSeekableBuffer:
@@ -86,7 +80,7 @@ class TestPythonIO(TestCase):
 
     def test_buffer_read_write(self):
 
-        buffer_ = StringIO()
+        buffer_ = BytesIO()
         wrapped = MethodLogger(buffer_)
         write_rgb_rotate(av.open(wrapped, "w", "mp4"))
 
