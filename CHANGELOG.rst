@@ -16,9 +16,13 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
-v9.0.2.dev0
+v9.0.2
 ------
 
+Minor:
+
+- Update FFmpeg to 4.4.1 for the binary wheels.
+- Fix framerate when writing video with FFmpeg 4.4 (:issue:`876`).
 
 v9.0.1
 ------
