@@ -109,9 +109,7 @@ cdef class Container(object):
         if isinstance(file_, str):
             self.name = file_
         else:
-            self.name = getattr(file_, 'name', '<none>')
-            if not isinstance(self.name, str):
-                raise TypeError("File's name attribute must be string-like.")
+            self.name = str(getattr(file_, 'name', '<none>'))
             self.file = file_
 
         self.options = dict(options or ())
@@ -165,6 +163,7 @@ cdef class Container(object):
         # Setup Python IO.
         if self.file is not None:
 
+            seekable = getattr(self.file, 'seekable', None)
             self.fread = getattr(self.file, 'read', None)
             self.fwrite = getattr(self.file, 'write', None)
             self.fseek = getattr(self.file, 'seek', None)
@@ -177,7 +176,13 @@ cdef class Container(object):
                 if self.fread is None:
                     raise ValueError("File object has no read method.")
 
-            if self.fseek is not None and self.ftell is not None:
+            # To be seekable the file object must have `seek`, `tell` and `seekable`
+            # methods and `seekable()` must return True.
+            if (
+                self.fseek is not None
+                and self.ftell is not None
+                and seekable is not None and seekable()
+            ):
                 seek_func = pyio_seek
 
             self.pos = 0
