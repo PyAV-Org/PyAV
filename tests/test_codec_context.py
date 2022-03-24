@@ -4,6 +4,7 @@ import os
 
 from av import AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
+from av.video.frame import PictureType
 import av
 
 from .common import TestCase, fate_suite
@@ -264,28 +265,16 @@ class TestEncoding(TestCase):
 
             for frame in iter_frames(container, video_stream):
 
-                """
-                bad_frame = frame.reformat(width, 100, pix_fmt)
-                with self.assertRaises(ValueError):
-                    ctx.encode(bad_frame)
+                new_frame = frame.reformat(width, height, pix_fmt)
 
-                bad_frame = frame.reformat(100, height, pix_fmt)
-                with self.assertRaises(ValueError):
-                    ctx.encode(bad_frame)
+                # reset the picture type
+                new_frame.pict_type = PictureType.NONE
 
-                bad_frame = frame.reformat(width, height, "rgb24")
-                with self.assertRaises(ValueError):
-                    ctx.encode(bad_frame)
-                """
-
-                if frame:
-                    frame_count += 1
-
-                new_frame = frame.reformat(width, height, pix_fmt) if frame else None
                 for packet in ctx.encode(new_frame):
                     packet_sizes.append(packet.size)
                     f.write(packet)
 
+                frame_count += 1
                 if frame_count >= max_frames:
                     break
 
@@ -355,37 +344,17 @@ class TestEncoding(TestCase):
         with open(path, "wb") as f:
             for frame in iter_frames(container, audio_stream):
 
-                # We need to let the encoder retime.
-                frame.pts = None
-
-                """
-                bad_resampler = AudioResampler(sample_fmt, "mono", sample_rate)
-                bad_frame = bad_resampler.resample(frame)
-                with self.assertRaises(ValueError):
-                    next(encoder.encode(bad_frame))
-
-                bad_resampler = AudioResampler(sample_fmt, channel_layout, 3000)
-                bad_frame = bad_resampler.resample(frame)
-
-                with self.assertRaises(ValueError):
-                    next(encoder.encode(bad_frame))
-
-                bad_resampler = AudioResampler('u8', channel_layout, 3000)
-                bad_frame = bad_resampler.resample(frame)
-
-                with self.assertRaises(ValueError):
-                    next(encoder.encode(bad_frame))
-                """
-
                 resampled_frames = resampler.resample(frame)
                 for resampled_frame in resampled_frames:
                     samples += resampled_frame.samples
 
                     for packet in ctx.encode(resampled_frame):
-                        # bytearray because python can
-                        # freaks out if the first byte is NULL
-                        f.write(bytearray(packet))
                         packet_sizes.append(packet.size)
+                        f.write(packet)
+
+            for packet in ctx.encode(None):
+                packet_sizes.append(packet.size)
+                f.write(packet)
 
         ctx = Codec(codec_name, "r").create()
         ctx.time_base = Fraction(1) / sample_rate
