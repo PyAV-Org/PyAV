@@ -384,6 +384,7 @@ cpdef define_enum(name, module, items, bint is_flags=False):
     else:
         base_cls = EnumItem
 
-    cls = EnumType(name, (base_cls, ), {'__module__': module}, items)
+    # Some items may be None if they correspond to an unsupported FFmpeg feature
+    cls = EnumType(name, (base_cls, ), {'__module__': module}, [i for i in items if i is not None])
 
     return cls

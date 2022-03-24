@@ -7,6 +7,14 @@ from libc.stdint cimport (
 
 
 cdef extern from "libavcodec/avcodec.h" nogil:
+    """
+    // AV_FRAME_DATA_SEI_UNREGISTERED available since version 56.54.100 of libavutil (FFmpeg >= 4.4)
+    #define HAS_AV_FRAME_DATA_SEI_UNREGISTERED  (LIBAVUTIL_VERSION_INT >= 3683940)
+
+    #if !HAS_AV_FRAME_DATA_SEI_UNREGISTERED
+        #define AV_FRAME_DATA_SEI_UNREGISTERED -1
+    #endif
+    """
 
     # custom
     cdef set pyav_get_available_codecs()
@@ -283,6 +291,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_FRAME_DATA_ICC_PROFILE
         AV_FRAME_DATA_QP_TABLE_PROPERTIES
         AV_FRAME_DATA_QP_TABLE_DATA
+        AV_FRAME_DATA_SEI_UNREGISTERED
 
     cdef struct AVFrameSideData:
         AVFrameSideDataType type
