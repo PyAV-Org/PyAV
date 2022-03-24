@@ -15,23 +15,32 @@ cdef class PyIOFile(object):
 
         cdef seek_func_t seek_func = NULL
 
+        readable = getattr(self.file, 'readable', None)
+        writable = getattr(self.file, 'writable', None)
+        seekable = getattr(self.file, 'seekable', None)
         self.fread = getattr(self.file, 'read', None)
         self.fwrite = getattr(self.file, 'write', None)
         self.fseek = getattr(self.file, 'seek', None)
         self.ftell = getattr(self.file, 'tell', None)
 
-        if self.fseek is not None and self.ftell is not None:
+        # To be seekable the file object must have `seek` and `tell` methods.
+        # If it also has a `seekable` method, it must return True.
+        if (
+            self.fseek is not None
+            and self.ftell is not None
+            and (seekable is None or seekable())
+        ):
             seek_func = pyio_seek
 
         if writeable is None:
             writeable = self.fwrite is not None
 
         if writeable:
-            if self.fwrite is None:
-                raise ValueError("File object has no write method.")
+            if self.fwrite is None or (writable is not None and not writable()):
+                raise ValueError("File object has no write() method, or writable() returned False.")
         else:
-            if self.fread is None:
-                raise ValueError("File object has no read method.")
+            if self.fread is None or (readable is not None and not readable()):
+                raise ValueError("File object has no read() method, or readable() returned False.")
 
         self.pos = 0
         self.pos_is_valid = True

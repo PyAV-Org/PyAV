@@ -109,9 +109,7 @@ cdef class Container(object):
         if isinstance(file_, str):
             self.name = file_
         else:
-            self.name = getattr(file_, 'name', '<none>')
-            if not isinstance(self.name, str):
-                raise TypeError("File's name attribute must be string-like.")
+            self.name = str(getattr(file_, 'name', '<none>'))
 
         self.options = dict(options or ())
         self.container_options = dict(container_options or ())

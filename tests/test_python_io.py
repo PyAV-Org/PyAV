@@ -6,7 +6,11 @@ from .common import MethodLogger, TestCase, fate_suite
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
 
-class NonSeekableBuffer:
+class ReadOnlyBuffer:
+    """
+    Minimal buffer which *only* implements the read() method.
+    """
+
     def __init__(self, data):
         self.data = data
 
@@ -14,6 +18,38 @@ class NonSeekableBuffer:
         data = self.data[0:n]
         self.data = self.data[n:]
         return data
+
+
+class ReadOnlyPipe(BytesIO):
+    """
+    Buffer which behaves like a readable pipe.
+    """
+
+    @property
+    def name(self):
+        return 123
+
+    def seekable(self):
+        return False
+
+    def writable(self):
+        return False
+
+
+class WriteOnlyPipe(BytesIO):
+    """
+    Buffer which behaves like a writable pipe.
+    """
+
+    @property
+    def name(self):
+        return 123
+
+    def readable(self):
+        return False
+
+    def seekable(self):
+        return False
 
 
 class TestPythonIO(TestCase):
@@ -24,16 +60,31 @@ class TestPythonIO(TestCase):
     def test_reading_from_buffer(self):
         with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
             buf = BytesIO(fh.read())
-            self.read(buf, seekable=True)
+        self.read(buf, seekable=True)
 
     def test_reading_from_buffer_no_seek(self):
         with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
-            buf = NonSeekableBuffer(fh.read())
-            self.read(buf, seekable=False)
+            buf = ReadOnlyBuffer(fh.read())
+        self.read(buf, seekable=False)
 
     def test_reading_from_file(self):
         with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
             self.read(fh, seekable=True)
+
+    def test_reading_from_pipe_readonly(self):
+        with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
+            buf = ReadOnlyPipe(fh.read())
+        self.read(buf, seekable=False)
+
+    def test_reading_from_write_readonly(self):
+        with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
+            buf = WriteOnlyPipe(fh.read())
+        with self.assertRaises(ValueError) as cm:
+            self.read(buf, seekable=False)
+        self.assertEqual(
+            str(cm.exception),
+            "File object has no read() method, or readable() returned False.",
+        )
 
     def test_writing_to_buffer(self):
         fh = BytesIO()
@@ -54,6 +105,24 @@ class TestPythonIO(TestCase):
         # Check contents.
         with av.open(path) as container:
             assert_rgb_rotate(self, container)
+
+    def test_writing_to_pipe_readonly(self):
+        buf = ReadOnlyPipe()
+        with self.assertRaises(ValueError) as cm:
+            self.write(buf)
+        self.assertEqual(
+            str(cm.exception),
+            "File object has no write() method, or writable() returned False.",
+        )
+
+    def test_writing_to_pipe_writeonly(self):
+        buf = WriteOnlyPipe()
+        with self.assertRaises(ValueError) as cm:
+            self.write(buf)
+        self.assertIn(
+            "[mp4] muxer does not support non seekable output",
+            str(cm.exception),
+        )
 
     def read(self, fh, seekable=True):
         wrapped = MethodLogger(fh)
