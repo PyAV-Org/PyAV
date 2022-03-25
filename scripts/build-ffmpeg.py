@@ -87,7 +87,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="xml2",
             requires=["xz"],
-            source_url="ftp://xmlsoft.org/libxml2/libxml2-2.9.12.tar.gz",
+            source_url="https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz",
             build_arguments=["--without-python"],
         ),
         Package(
@@ -203,7 +203,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="vorbis",
             requires=["ogg"],
-            source_url="http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.6.tar.gz",
+            source_url="http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.gz",
         ),
         Package(
             name="vpx",
