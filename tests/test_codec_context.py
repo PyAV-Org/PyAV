@@ -116,7 +116,7 @@ class TestCodecContext(TestCase):
         for packet in fh.demux(video=0):
             packets.append(packet)
 
-        full_source = b"".join(p.to_bytes() for p in packets)
+        full_source = b"".join(bytes(p) for p in packets)
 
         for size in 1024, 8192, 65535:
 
@@ -128,7 +128,7 @@ class TestCodecContext(TestCase):
                 packets.extend(ctx.parse(block))
             packets.extend(ctx.parse())
 
-            parsed_source = b"".join(p.to_bytes() for p in packets)
+            parsed_source = b"".join(bytes(p) for p in packets)
             self.assertEqual(len(parsed_source), len(full_source))
             self.assertEqual(full_source, parsed_source)
 

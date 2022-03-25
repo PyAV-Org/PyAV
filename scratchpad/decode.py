@@ -144,7 +144,7 @@ for i, packet in enumerate(container.demux(streams)):
                 ]
                 proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
             try:
-                proc.stdin.write(frame.planes[0].to_bytes())
+                proc.stdin.write(bytes(frame.planes[0]))
             except IOError as e:
                 print(e)
                 exit()
@@ -152,7 +152,7 @@ for i, packet in enumerate(container.demux(streams)):
         if args.dump_planes:
             print('\t\tplanes')
             for i, plane in enumerate(frame.planes or ()):
-                data = plane.to_bytes()
+                data = bytes(plane)
                 print('\t\t\tPLANE %d, %d bytes' % (i, len(data)))
                 data = data.encode('hex')
                 for i in xrange(0, len(data), 128):

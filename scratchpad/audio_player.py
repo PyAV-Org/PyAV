@@ -60,7 +60,7 @@ for pi, fi, frame in decode_iter():
     print('pts: %.3f, played: %.3f, buffered: %.3f' % (frame.time or 0, us_processed / 1000000.0, us_buffered / 1000000.0))
 
 
-    data = frame.planes[0].to_bytes()
+    data = bytes(frame.planes[0])
     while data:
         written = device.write(data)
         if written:
