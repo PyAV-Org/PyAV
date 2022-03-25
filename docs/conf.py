@@ -482,7 +482,7 @@ def doxylink_create_handler(app, file_name, url_base):
 
 def setup(app):
 
-    app.add_stylesheet('custom.css')
+    app.add_css_file('custom.css')
 
     app.add_directive('flagtable', EnumTable)
     app.add_directive('enumtable', EnumTable)
