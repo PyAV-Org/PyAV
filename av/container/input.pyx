@@ -73,10 +73,14 @@ cdef class InputContainer(Container):
         close_input(self)
 
     property start_time:
-        def __get__(self): return self.ptr.start_time
+        def __get__(self):
+            if self.ptr.start_time != lib.AV_NOPTS_VALUE:
+                return self.ptr.start_time
 
     property duration:
-        def __get__(self): return self.ptr.duration
+        def __get__(self):
+            if self.ptr.duration != lib.AV_NOPTS_VALUE:
+                return self.ptr.duration
 
     property bit_rate:
         def __get__(self): return self.ptr.bit_rate

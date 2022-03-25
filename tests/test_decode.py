@@ -19,6 +19,24 @@ class TestDecode(TestCase):
 
         self.assertEqual(frame_count, video_stream.frames)
 
+    def test_decode_audio_corrupt(self):
+        # write an empty file
+        path = self.sandboxed("empty.flac")
+        with open(path, "wb"):
+            pass
+
+        packet_count = 0
+        frame_count = 0
+
+        with av.open(path) as container:
+            for packet in container.demux(audio=0):
+                for frame in packet.decode():
+                    frame_count += 1
+                packet_count += 1
+
+        self.assertEqual(packet_count, 1)
+        self.assertEqual(frame_count, 0)
+
     def test_decode_audio_sample_count(self):
 
         container = av.open(fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav"))
@@ -79,3 +97,21 @@ class TestDecode(TestCase):
                 if not frame.key_frame:
                     assert vectors is None
                     return
+
+    def test_decode_video_corrupt(self):
+        # write an empty file
+        path = self.sandboxed("empty.h264")
+        with open(path, "wb"):
+            pass
+
+        packet_count = 0
+        frame_count = 0
+
+        with av.open(path) as container:
+            for packet in container.demux(video=0):
+                for frame in packet.decode():
+                    frame_count += 1
+                packet_count += 1
+
+        self.assertEqual(packet_count, 1)
+        self.assertEqual(frame_count, 0)
