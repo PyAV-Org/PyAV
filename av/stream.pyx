@@ -127,7 +127,10 @@ cdef class Stream(object):
         if name == "id":
             self._set_id(value)
             return
-        setattr(self.codec_context, name, value)
+
+        if self.codec_context is not None:
+            setattr(self.codec_context, name, value)
+
         if name == "time_base":
             self._set_time_base(value)
 
@@ -155,6 +158,9 @@ cdef class Stream(object):
 
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode`.
         """
+        if self.codec_context is None:
+            raise RuntimeError("Stream.encode requires a valid CodecContext")
+
         packets = self.codec_context.encode(frame)
         cdef Packet packet
         for packet in packets:
@@ -171,6 +177,9 @@ cdef class Stream(object):
 
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.decode`.
         """
+        if self.codec_context is None:
+            raise RuntimeError("Stream.decode requires a valid CodecContext")
+
         return self.codec_context.decode(packet)
 
     property id:
