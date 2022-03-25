@@ -87,6 +87,8 @@ def get_config_from_pkg_config():
     known, unknown = parse_cflags(raw_cflags.decode("utf-8"))
     if unknown:
         print("pkg-config returned flags we don't understand: {}".format(unknown))
+        if "-pthread" in unknown:
+            print("Building PyAV against static FFmpeg libraries is not supported.")
         exit(1)
 
     return known
@@ -117,10 +119,16 @@ for i, arg in enumerate(sys.argv):
         FFMPEG_DIR = arg.split("=")[1]
         del sys.argv[i]
 
+# Do not cythonize or use pkg-config when cleaning.
+use_pkg_config = platform.system() != "Windows"
+if len(sys.argv) > 1 and sys.argv[1] == "clean":
+    cythonize = lambda ext, **kwargs: [ext]
+    use_pkg_config = False
+
 # Locate FFmpeg libraries and headers.
 if FFMPEG_DIR is not None:
     extension_extra = get_config_from_directory(FFMPEG_DIR)
-elif platform.system() != "Windows":
+elif use_pkg_config:
     extension_extra = get_config_from_pkg_config()
 else:
     extension_extra = {
