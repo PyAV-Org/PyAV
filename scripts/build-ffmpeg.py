@@ -110,6 +110,17 @@ if not os.path.exists(output_tarball):
             source_url="https://github.com/fribidi/fribidi/releases/download/v1.0.11/fribidi-1.0.11.tar.xz",
         ),
         Package(
+            name="harfbuzz",
+            requires=["freetype"],
+            source_url="https://github.com/harfbuzz/harfbuzz/releases/download/4.1.0/harfbuzz-4.1.0.tar.xz",
+            build_arguments=[
+                "--with-cairo=no",
+                "--with-chafa=no",
+                "--with-freetype=yes",
+                "--with-glib=no",
+            ],
+        ),
+        Package(
             name="nettle",
             requires=["gmp"],
             source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.7.3.tar.gz",
@@ -152,8 +163,8 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="ass",
-            requires=["fontconfig", "freetype", "fribidi", "nasm", "png"],
-            source_url="https://github.com/libass/libass/releases/download/0.14.0/libass-0.14.0.tar.gz",
+            requires=["fontconfig", "freetype", "fribidi", "harfbuzz", "nasm", "png"],
+            source_url="https://github.com/libass/libass/releases/download/0.15.2/libass-0.15.2.tar.gz",
         ),
         Package(
             name="bluray",
