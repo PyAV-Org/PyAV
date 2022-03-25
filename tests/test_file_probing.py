@@ -63,6 +63,65 @@ class TestAudioProbe(TestCase):
         self.assertEqual(stream.rate, 48000)
 
 
+class TestAudioProbeCorrupt(TestCase):
+    def setUp(self):
+        # write an empty file
+        path = self.sandboxed("empty.flac")
+        with open(path, "wb"):
+            pass
+
+        self.file = av.open(path)
+
+    def test_container_probing(self):
+        self.assertEqual(str(self.file.format), "<av.ContainerFormat 'flac'>")
+        self.assertEqual(self.file.format.name, "flac")
+        self.assertEqual(self.file.format.long_name, "raw FLAC")
+        self.assertEqual(self.file.size, 0)
+        self.assertEqual(self.file.bit_rate, 0)
+        self.assertEqual(self.file.duration, None)
+
+        self.assertEqual(len(self.file.streams), 1)
+        self.assertEqual(self.file.start_time, None)
+        self.assertEqual(self.file.metadata, {})
+
+    def test_stream_probing(self):
+        stream = self.file.streams[0]
+
+        # ensure __repr__ does not crash
+        self.assertTrue(
+            str(stream).startswith(
+                "<av.AudioStream #0 flac at 0Hz, 0 channels, None at "
+            )
+        )
+
+        # actual stream properties
+        self.assertEqual(stream.average_rate, None)
+        self.assertEqual(stream.base_rate, None)
+        self.assertEqual(stream.guessed_rate, None)
+        self.assertEqual(stream.duration, None)
+        self.assertEqual(stream.frames, 0)
+        self.assertEqual(stream.id, 0)
+        self.assertEqual(stream.index, 0)
+        self.assertEqual(stream.language, None)
+        self.assertEqual(stream.metadata, {})
+        self.assertEqual(stream.profile, None)
+        self.assertEqual(stream.start_time, None)
+        self.assertEqual(stream.time_base, Fraction(1, 90000))
+        self.assertEqual(stream.type, "audio")
+
+        # codec properties
+        self.assertEqual(stream.name, "flac")
+        self.assertEqual(stream.long_name, "FLAC (Free Lossless Audio Codec)")
+
+        # codec context properties
+        self.assertEqual(stream.bit_rate, None)
+        self.assertEqual(stream.channels, 0)
+        self.assertEqual(stream.format, None)
+        self.assertEqual(stream.layout.name, "0 channels")
+        self.assertEqual(stream.max_bit_rate, None)
+        self.assertEqual(stream.rate, 0)
+
+
 class TestDataProbe(TestCase):
     def setUp(self):
         self.file = av.open(fate_suite("mxf/track_01_v02.mxf"))
@@ -259,3 +318,61 @@ class TestVideoProbe(TestCase):
         # confirm.
         self.assertIn(stream.coded_width, (720, 0))
         self.assertIn(stream.coded_height, (576, 0))
+
+
+class TestVideoProbeCorrupt(TestCase):
+    def setUp(self):
+        path = self.sandboxed("empty.h264")
+        with open(path, "wb"):
+            pass
+
+        self.file = av.open(path)
+
+    def test_container_probing(self):
+        self.assertEqual(str(self.file.format), "<av.ContainerFormat 'h264'>")
+        self.assertEqual(self.file.format.name, "h264")
+        self.assertEqual(self.file.format.long_name, "raw H.264 video")
+        self.assertEqual(self.file.size, 0)
+        self.assertEqual(self.file.bit_rate, 0)
+        self.assertEqual(self.file.duration, None)
+
+        self.assertEqual(len(self.file.streams), 1)
+        self.assertEqual(self.file.start_time, None)
+        self.assertEqual(self.file.metadata, {})
+
+    def test_stream_probing(self):
+        stream = self.file.streams[0]
+
+        # ensure __repr__ does not crash
+        self.assertTrue(str(stream).startswith("<av.VideoStream #0 h264, None 0x0 at "))
+
+        # actual stream properties
+        self.assertEqual(stream.average_rate, None)
+        self.assertEqual(stream.duration, None)
+        self.assertEqual(stream.frames, 0)
+        self.assertEqual(stream.id, 0)
+        self.assertEqual(stream.index, 0)
+        self.assertEqual(stream.language, None)
+        self.assertEqual(stream.metadata, {})
+        self.assertEqual(stream.profile, None)
+        self.assertEqual(stream.start_time, None)
+        self.assertEqual(stream.time_base, Fraction(1, 1200000))
+        self.assertEqual(stream.type, "video")
+
+        # codec properties
+        self.assertEqual(stream.long_name, "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10")
+        self.assertEqual(stream.name, "h264")
+
+        # codec context properties
+        self.assertEqual(stream.bit_rate, None)
+        self.assertEqual(stream.display_aspect_ratio, None)
+        self.assertEqual(stream.format, None)
+        self.assertFalse(stream.has_b_frames)
+        self.assertEqual(stream.gop_size, 12)
+        self.assertEqual(stream.height, 0)
+        self.assertEqual(stream.max_bit_rate, None)
+        self.assertEqual(stream.sample_aspect_ratio, None)
+        self.assertEqual(stream.width, 0)
+
+        self.assertEqual(stream.coded_width, 0)
+        self.assertEqual(stream.coded_height, 0)

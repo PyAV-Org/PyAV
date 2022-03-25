@@ -8,6 +8,10 @@ cdef object _cinit_bypass_sentinel
 
 cdef AudioFormat get_audio_format(lib.AVSampleFormat c_format):
     """Get an AudioFormat without going through a string."""
+
+    if c_format < 0:
+        return None
+
     cdef AudioFormat format = AudioFormat.__new__(AudioFormat, _cinit_bypass_sentinel)
     format._init(c_format)
     return format
