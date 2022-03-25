@@ -298,7 +298,7 @@ cdef class Stream(object):
 
         Returns ``0`` if it is not known.
 
-        :type: int
+        :type: :class:`int`
         """
         def __get__(self): return self._stream.nb_frames
 
@@ -306,7 +306,7 @@ cdef class Stream(object):
         """
         The language of the stream.
 
-        :type: :class:``str`` or ``None``
+        :type: :class:`str` or ``None``
         """
         def __get__(self):
             return self.metadata.get('language')

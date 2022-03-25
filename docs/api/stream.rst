@@ -111,8 +111,6 @@ Whenever possible, we advise that you use raw timing instead of frame rates.
 Others
 ~~~~~~
 
-.. automethod:: Stream.seek
-
 .. autoattribute:: Stream.profile
 
 .. autoattribute:: Stream.language
