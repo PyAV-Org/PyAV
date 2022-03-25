@@ -16,10 +16,10 @@ class TestAudioFifo(TestCase):
 
         for i, packet in enumerate(container.demux(stream)):
             for frame in packet.decode():
-                input_.append(frame.planes[0].to_bytes())
+                input_.append(bytes(frame.planes[0]))
                 fifo.write(frame)
                 for frame in fifo.read_many(512, partial=i == 10):
-                    output.append(frame.planes[0].to_bytes())
+                    output.append(bytes(frame.planes[0]))
             if i == 10:
                 break
 
