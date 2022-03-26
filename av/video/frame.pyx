@@ -1,3 +1,5 @@
+import sys
+
 from libc.stdint cimport uint8_t
 
 from av.enum cimport define_enum
@@ -31,6 +33,13 @@ PictureType = define_enum('PictureType', __name__, (
 ))
 
 
+cdef byteswap_array(array, bint big_endian):
+    if (sys.byteorder == 'big') != big_endian:
+        return array.byteswap()
+    else:
+        return array
+
+
 cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
     cdef bytes imgbytes = array.tobytes()
     cdef const uint8_t[:] i_buf = imgbytes
@@ -48,7 +57,7 @@ cdef copy_array_to_plane(array, VideoPlane plane, unsigned int bytes_per_pixel):
         o_pos += o_stride
 
 
-cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1):
+cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1, str dtype='uint8'):
     """
     Return the useful part of the VideoPlane as a single dimensional array.
 
@@ -57,7 +66,7 @@ cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1):
     import numpy as np
     cdef size_t total_line_size = abs(plane.line_size)
     cdef size_t useful_line_size = plane.width * bytes_per_pixel
-    arr = np.frombuffer(plane, np.uint8)
+    arr = np.frombuffer(plane, np.dtype(dtype))
     if total_line_size != useful_line_size:
         arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
     return arr
@@ -265,6 +274,16 @@ cdef class VideoFrame(Frame):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
             return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('rgb48be', 'rgb48le'):
+            return byteswap_array(
+                useful_array(frame.planes[0], 6, 'uint16').reshape(frame.height, frame.width, -1),
+                frame.format.name == 'rgb48be',
+            )
+        elif frame.format.name in ('rgba64be', 'rgba64le'):
+            return byteswap_array(
+                useful_array(frame.planes[0], 8, 'uint16').reshape(frame.height, frame.width, -1),
+                frame.format.name == 'rgba64be',
+            )
         elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
             return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         elif frame.format.name == 'pal8':
@@ -332,6 +351,18 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[2] == 4)
         elif format in ('gray', 'gray8', 'rgb8', 'bgr8'):
             check_ndarray(array, 'uint8', 2)
+        elif format in ('rgb48be', 'rgb48le'):
+            check_ndarray(array, 'uint16', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(byteswap_array(array, format == 'rgb48be'), frame.planes[0], 6)
+            return frame
+        elif format in ('rgba64be', 'rgba64le'):
+            check_ndarray(array, 'uint16', 3)
+            check_ndarray_shape(array, array.shape[2] == 4)
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(byteswap_array(array, format == 'rgba64be'), frame.planes[0], 8)
+            return frame
         else:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
