@@ -250,6 +250,9 @@ cdef class VideoFrame(Frame):
 
         .. note:: Numpy must be installed.
 
+        .. note:: For formats which return an array of ``uint16`, the samples
+        will be in the system's native byte order.
+
         .. note:: For ``pal8``, an ``(image, palette)`` tuple will be returned,
         with the palette being in ARGB (PyAV will swap bytes if needed).
 
@@ -274,6 +277,13 @@ cdef class VideoFrame(Frame):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
             return useful_array(frame.planes[0], 4).reshape(frame.height, frame.width, -1)
+        elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
+            return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
+        elif frame.format.name in ('gray16be', 'gray16le'):
+            return byteswap_array(
+                useful_array(frame.planes[0], 2, 'uint16').reshape(frame.height, frame.width),
+                frame.format.name == 'gray16be',
+            )
         elif frame.format.name in ('rgb48be', 'rgb48le'):
             return byteswap_array(
                 useful_array(frame.planes[0], 6, 'uint16').reshape(frame.height, frame.width, -1),
@@ -284,8 +294,6 @@ cdef class VideoFrame(Frame):
                 useful_array(frame.planes[0], 8, 'uint16').reshape(frame.height, frame.width, -1),
                 frame.format.name == 'rgba64be',
             )
-        elif frame.format.name in ('gray', 'gray8', 'rgb8', 'bgr8'):
-            return useful_array(frame.planes[0]).reshape(frame.height, frame.width)
         elif frame.format.name == 'pal8':
             image = useful_array(frame.planes[0]).reshape(frame.height, frame.width)
             palette = np.frombuffer(frame.planes[1], 'i4').astype('>i4').reshape(-1, 1).view(np.uint8)
@@ -310,6 +318,9 @@ cdef class VideoFrame(Frame):
     def from_ndarray(array, format='rgb24'):
         """
         Construct a frame from a numpy array.
+
+        .. note:: For formats which expect an array of ``uint16``, the samples
+        must be in the system's native byte order.
 
         .. note:: for ``pal8``, an ``(image, palette)`` pair must be passed.
         `palette` must have shape (256, 4) and is given in ARGB format
@@ -351,6 +362,11 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[2] == 4)
         elif format in ('gray', 'gray8', 'rgb8', 'bgr8'):
             check_ndarray(array, 'uint8', 2)
+        elif format in ('gray16be', 'gray16le'):
+            check_ndarray(array, 'uint16', 2)
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(byteswap_array(array, format == 'gray16be'), frame.planes[0], 2)
+            return frame
         elif format in ('rgb48be', 'rgb48le'):
             check_ndarray(array, 'uint16', 3)
             check_ndarray_shape(array, array.shape[2] == 3)

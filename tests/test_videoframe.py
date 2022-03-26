@@ -139,6 +139,15 @@ class TestVideoFrameImage(TestCase):
 
 
 class TestVideoFrameNdarray(TestCase):
+    def assertPixelValue16(self, plane, expected, byteorder: str):
+        view = memoryview(plane)
+        if byteorder == "big":
+            self.assertEqual(view[0], (expected >> 8) & 0xFF)
+            self.assertEqual(view[1], expected & 0xFF)
+        else:
+            self.assertEqual(view[0], expected & 0xFF)
+            self.assertEqual(view[1], (expected >> 8) & 0xFF)
+
     def test_basic_to_ndarray(self):
         frame = VideoFrame(640, 480, "rgb24")
         array = frame.to_ndarray()
@@ -238,6 +247,28 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.format.name, "yuyv422")
         self.assertNdarraysEqual(frame.to_ndarray(), array)
 
+    def test_ndarray_gray16be(self):
+        array = numpy.random.randint(0, 65536, size=(480, 640), dtype=numpy.uint16)
+        frame = VideoFrame.from_ndarray(array, format="gray16be")
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, "gray16be")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # check endianness by examining value of first pixel
+        self.assertPixelValue16(frame.planes[0], array[0][0], "big")
+
+    def test_ndarray_gray16le(self):
+        array = numpy.random.randint(0, 65536, size=(480, 640), dtype=numpy.uint16)
+        frame = VideoFrame.from_ndarray(array, format="gray16le")
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, "gray16le")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # check endianness by examining value of first pixel
+        self.assertPixelValue16(frame.planes[0], array[0][0], "little")
+
     def test_ndarray_rgb48be(self):
         array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype=numpy.uint16)
         frame = VideoFrame.from_ndarray(array, format="rgb48be")
@@ -247,8 +278,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertNdarraysEqual(frame.to_ndarray(), array)
 
         # check endianness by examining red value of first pixel
-        self.assertEqual(memoryview(frame.planes[0])[0], (array[0][0][0] >> 8) & 0xFF)
-        self.assertEqual(memoryview(frame.planes[0])[1], array[0][0][0] & 0xFF)
+        self.assertPixelValue16(frame.planes[0], array[0][0][0], "big")
 
     def test_ndarray_rgb48le(self):
         array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype=numpy.uint16)
@@ -259,8 +289,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertNdarraysEqual(frame.to_ndarray(), array)
 
         # check endianness by examining red value of first pixel
-        self.assertEqual(memoryview(frame.planes[0])[0], array[0][0][0] & 0xFF)
-        self.assertEqual(memoryview(frame.planes[0])[1], (array[0][0][0] >> 8) & 0xFF)
+        self.assertPixelValue16(frame.planes[0], array[0][0][0], "little")
 
     def test_ndarray_rgba64be(self):
         array = numpy.random.randint(0, 65536, size=(480, 640, 4), dtype=numpy.uint16)
@@ -271,8 +300,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertNdarraysEqual(frame.to_ndarray(), array)
 
         # check endianness by examining red value of first pixel
-        self.assertEqual(memoryview(frame.planes[0])[0], (array[0][0][0] >> 8) & 0xFF)
-        self.assertEqual(memoryview(frame.planes[0])[1], array[0][0][0] & 0xFF)
+        self.assertPixelValue16(frame.planes[0], array[0][0][0], "big")
 
     def test_ndarray_rgba64le(self):
         array = numpy.random.randint(0, 65536, size=(480, 640, 4), dtype=numpy.uint16)
@@ -283,8 +311,7 @@ class TestVideoFrameNdarray(TestCase):
         self.assertNdarraysEqual(frame.to_ndarray(), array)
 
         # check endianness by examining red value of first pixel
-        self.assertEqual(memoryview(frame.planes[0])[0], array[0][0][0] & 0xFF)
-        self.assertEqual(memoryview(frame.planes[0])[1], (array[0][0][0] >> 8) & 0xFF)
+        self.assertPixelValue16(frame.planes[0], array[0][0][0], "little")
 
     def test_ndarray_rgb8(self):
         array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
