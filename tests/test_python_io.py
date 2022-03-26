@@ -87,14 +87,15 @@ class TestPythonIO(TestCase):
         )
 
     def test_writing_to_buffer(self):
-        fh = BytesIO()
+        buf = BytesIO()
 
-        self.write(fh)
+        self.write(buf)
 
         # Check contents.
-        self.assertTrue(fh.tell())
-        fh.seek(0)
-        assert_rgb_rotate(self, av.open(fh))
+        self.assertTrue(buf.tell())
+        buf.seek(0)
+        with av.open(buf) as container:
+            assert_rgb_rotate(self, container)
 
     def test_writing_to_file(self):
         path = self.sandboxed("writing.mp4")
