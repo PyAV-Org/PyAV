@@ -6,6 +6,20 @@ from .common import MethodLogger, TestCase, fate_suite
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
 
+class BrokenBuffer(BytesIO):
+    """
+    Buffer which can be "broken" to simulate an I/O error.
+    """
+
+    broken = False
+
+    def write(self, data):
+        if self.broken:
+            raise OSError("It's broken")
+        else:
+            return super().write(data)
+
+
 class ReadOnlyBuffer:
     """
     Minimal buffer which *only* implements the read() method.
@@ -96,6 +110,29 @@ class TestPythonIO(TestCase):
         buf.seek(0)
         with av.open(buf) as container:
             assert_rgb_rotate(self, container)
+
+    def test_writing_to_buffer_broken(self):
+        buf = BrokenBuffer()
+
+        with self.assertRaises(OSError):
+            with av.open(buf, "w", "mp4") as container:
+                write_rgb_rotate(container)
+
+                # break I/O
+                buf.broken = True
+
+    def test_writing_to_buffer_broken_with_close(self):
+        buf = BrokenBuffer()
+
+        with av.open(buf, "w", "mp4") as container:
+            write_rgb_rotate(container)
+
+            # break I/O
+            buf.broken = True
+
+            # try to close file
+            with self.assertRaises(OSError):
+                container.close()
 
     def test_writing_to_file(self):
         path = self.sandboxed("writing.mp4")

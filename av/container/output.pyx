@@ -17,18 +17,16 @@ log = logging.getLogger(__name__)
 
 
 cdef close_output(OutputContainer self):
-    cdef Stream stream
-
     if self._started and not self._done:
-        self.err_check(lib.av_write_trailer(self.ptr))
-
-        for stream in self.streams:
-            stream.codec_context.close()
-
-        if self.file is None and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            lib.avio_closep(&self.ptr.pb)
-
-        self._done = True
+        # We must only ever call av_write_trailer *once*, otherwise we get a
+        # segmentation fault. Therefore no matter whether it succeeds or not
+        # we must absolutely set self._done.
+        try:
+            self.err_check(lib.av_write_trailer(self.ptr))
+        finally:
+            if self.file is None and not (self.ptr.oformat.flags & lib.AVFMT_NOFILE):
+                lib.avio_closep(&self.ptr.pb)
+            self._done = True
 
 
 cdef class OutputContainer(Container):
@@ -195,6 +193,10 @@ cdef class OutputContainer(Container):
         self._started = True
 
     def close(self):
+        for stream in self.streams:
+            if stream.codec_context:
+                stream.codec_context.close(strict=False)
+
         close_output(self)
 
     def mux(self, packets):
