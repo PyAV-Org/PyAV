@@ -48,7 +48,7 @@ ThreadType = define_enum('ThreadType', __name__, (
     ('SLICE', lib.FF_THREAD_SLICE,
         """Decode more than one part of a single frame at once"""),
     ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME,
-        """Either method."""),
+        """Decode using both FRAME and SLICE methods."""),
 ), is_flags=True)
 
 SkipType = define_enum('SkipType', __name__, (
