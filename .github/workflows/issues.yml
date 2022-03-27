@@ -15,3 +15,4 @@ jobs:
           days-before-close: 14
           days-before-pr-stale: -1
           days-before-pr-close: -1
+          operations-per-run: 60
