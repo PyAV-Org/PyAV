@@ -166,6 +166,10 @@ cdef class CodecContext(object):
         self.ptr.thread_count = 0
         self.ptr.thread_type = 2
 
+        # Use "ass" format for subtitles (default as of FFmpeg 5.0), not the
+        # deprecated "ass_with_timings" formats.
+        self.ptr.sub_text_format = 0
+
     def _get_flags(self):
         return self.ptr.flags
 
