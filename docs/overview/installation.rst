@@ -30,6 +30,7 @@ Currently FFmpeg 4.4.1 is used with the following features enabled for all platf
 - libtheora
 - libtwolame
 - libvorbis
+- libvpx
 - libx264
 - libx265
 - libxml2
