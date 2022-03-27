@@ -10,19 +10,17 @@ class TestAudioProbe(TestCase):
         self.file = av.open(fate_suite("aac/latm_stereo_to_51.ts"))
 
     def test_container_probing(self):
+        self.assertEqual(self.file.bit_rate, 269558)
+        self.assertEqual(self.file.duration, 6165333)
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
         self.assertEqual(self.file.format.name, "mpegts")
         self.assertEqual(
             self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)"
         )
-        self.assertEqual(self.file.size, 207740)
-
-        # This is a little odd, but on OS X with FFmpeg we get a different value.
-        self.assertIn(self.file.bit_rate, (269558, 270494))
-
-        self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, 1400000)
         self.assertEqual(self.file.metadata, {})
+        self.assertEqual(self.file.size, 207740)
+        self.assertEqual(self.file.start_time, 1400000)
+        self.assertEqual(len(self.file.streams), 1)
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
@@ -73,16 +71,15 @@ class TestAudioProbeCorrupt(TestCase):
         self.file = av.open(path)
 
     def test_container_probing(self):
+        self.assertEqual(self.file.bit_rate, 0)
+        self.assertEqual(self.file.duration, None)
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'flac'>")
         self.assertEqual(self.file.format.name, "flac")
         self.assertEqual(self.file.format.long_name, "raw FLAC")
-        self.assertEqual(self.file.size, 0)
-        self.assertEqual(self.file.bit_rate, 0)
-        self.assertEqual(self.file.duration, None)
-
-        self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, None)
         self.assertEqual(self.file.metadata, {})
+        self.assertEqual(self.file.size, 0)
+        self.assertEqual(self.file.start_time, None)
+        self.assertEqual(len(self.file.streams), 1)
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
@@ -127,16 +124,13 @@ class TestDataProbe(TestCase):
         self.file = av.open(fate_suite("mxf/track_01_v02.mxf"))
 
     def test_container_probing(self):
-
+        self.assertEqual(self.file.bit_rate, 27872687)
+        self.assertEqual(self.file.duration, 417083)
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mxf'>")
         self.assertEqual(self.file.format.name, "mxf")
         self.assertEqual(self.file.format.long_name, "MXF (Material eXchange Format)")
         self.assertEqual(self.file.size, 1453153)
-
-        self.assertEqual(
-            self.file.bit_rate, 8 * self.file.size * av.time_base // self.file.duration
-        )
-        self.assertEqual(self.file.duration, 417083)
+        self.assertEqual(self.file.start_time, 0)
         self.assertEqual(len(self.file.streams), 4)
 
         for key, value, min_version in (
@@ -210,18 +204,13 @@ class TestSubtitleProbe(TestCase):
         self.file = av.open(fate_suite("sub/MovText_capability_tester.mp4"))
 
     def test_container_probing(self):
+        self.assertEqual(self.file.bit_rate, 810)
+        self.assertEqual(self.file.duration, 8140000)
         self.assertEqual(
             str(self.file.format), "<av.ContainerFormat 'mov,mp4,m4a,3gp,3g2,mj2'>"
         )
         self.assertEqual(self.file.format.name, "mov,mp4,m4a,3gp,3g2,mj2")
         self.assertEqual(self.file.format.long_name, "QuickTime / MOV")
-        self.assertEqual(self.file.size, 825)
-
-        self.assertEqual(
-            self.file.bit_rate, 8 * self.file.size * av.time_base // self.file.duration
-        )
-        self.assertEqual(self.file.duration, 8140000)
-        self.assertEqual(len(self.file.streams), 1)
         self.assertEqual(
             self.file.metadata,
             {
@@ -231,6 +220,9 @@ class TestSubtitleProbe(TestCase):
                 "minor_version": "1",
             },
         )
+        self.assertEqual(self.file.size, 825)
+        self.assertEqual(self.file.start_time, None)
+        self.assertEqual(len(self.file.streams), 1)
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
@@ -265,22 +257,17 @@ class TestVideoProbe(TestCase):
         self.file = av.open(fate_suite("mpeg2/mpeg2_field_encoding.ts"))
 
     def test_container_probing(self):
+        self.assertEqual(self.file.bit_rate, 3950617)
+        self.assertEqual(self.file.duration, 1620000)
         self.assertEqual(str(self.file.format), "<av.ContainerFormat 'mpegts'>")
         self.assertEqual(self.file.format.name, "mpegts")
         self.assertEqual(
             self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)"
         )
-        self.assertEqual(self.file.size, 800000)
-
-        # This is a little odd, but on OS X with FFmpeg we get a different value.
-        self.assertIn(self.file.duration, (1620000, 1580000))
-
-        self.assertEqual(
-            self.file.bit_rate, 8 * self.file.size * av.time_base // self.file.duration
-        )
-        self.assertEqual(len(self.file.streams), 1)
-        self.assertEqual(self.file.start_time, 22953408322)
         self.assertEqual(self.file.metadata, {})
+        self.assertEqual(self.file.size, 800000)
+        self.assertEqual(self.file.start_time, 22953408322)
+        self.assertEqual(len(self.file.streams), 1)
 
     def test_stream_probing(self):
         stream = self.file.streams[0]
