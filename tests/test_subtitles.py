@@ -9,35 +9,44 @@ class TestSubtitle(TestCase):
 
         path = fate_suite("sub/MovText_capability_tester.mp4")
 
-        fh = av.open(path)
         subs = []
-        for packet in fh.demux():
-            subs.extend(packet.decode())
+        with av.open(path) as container:
+            for packet in container.demux():
+                subs.extend(packet.decode())
 
         self.assertEqual(len(subs), 3)
-        self.assertIsInstance(subs[0][0], AssSubtitle)
 
-        # The format FFmpeg gives us changed at one point.
-        self.assertIn(
-            subs[0][0].ass,
-            (
-                "Dialogue: 0,0:00:00.97,0:00:02.54,Default,- Test 1.\\N- Test 2.\r\n",
-                "Dialogue: 0,0:00:00.97,0:00:02.54,Default,,0,0,0,,- Test 1.\\N- Test 2.\r\n",
-            ),
+        subset = subs[0]
+        self.assertEqual(subset.format, 1)
+        self.assertEqual(subset.pts, 970000)
+        self.assertEqual(subset.start_display_time, 0)
+        self.assertEqual(subset.end_display_time, 1570)
+
+        sub = subset[0]
+        self.assertIsInstance(sub, AssSubtitle)
+        self.assertEqual(
+            sub.ass,
+            "Dialogue: 0,0:00:00.97,0:00:02.54,Default,,0,0,0,,- Test 1.\\N- Test 2.\r\n",
         )
 
     def test_vobsub(self):
 
         path = fate_suite("sub/vobsub.sub")
 
-        fh = av.open(path)
         subs = []
-        for packet in fh.demux():
-            subs.extend(packet.decode())
+        with av.open(path) as container:
+            for packet in container.demux():
+                subs.extend(packet.decode())
 
         self.assertEqual(len(subs), 43)
 
-        sub = subs[0][0]
+        subset = subs[0]
+        self.assertEqual(subset.format, 0)
+        self.assertEqual(subset.pts, 132499044)
+        self.assertEqual(subset.start_display_time, 0)
+        self.assertEqual(subset.end_display_time, 4960)
+
+        sub = subset[0]
         self.assertIsInstance(sub, BitmapSubtitle)
         self.assertEqual(sub.x, 259)
         self.assertEqual(sub.y, 379)
