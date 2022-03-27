@@ -33,7 +33,17 @@ if not os.path.exists(output_tarball):
     available_tools = set()
     if system == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
         with log_group("install packages"):
-            run(["yum", "-y", "install", "gperf", "libuuid-devel", "zlib-devel"])
+            run(
+                [
+                    "yum",
+                    "-y",
+                    "install",
+                    "alsa-lib-devel",
+                    "gperf",
+                    "libuuid-devel",
+                    "zlib-devel",
+                ]
+            )
         available_tools.update(["gperf"])
 
     with log_group("install python packages"):
@@ -282,6 +292,7 @@ if not os.path.exists(output_tarball):
             source_url="https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz",
             build_arguments=[
                 "--disable-doc",
+                "--enable-alsa" if platform.system() == "Linux" else "--disable-alsa",
                 "--enable-fontconfig",
                 "--enable-gmp",
                 "--enable-gnutls",
