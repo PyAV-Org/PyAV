@@ -227,15 +227,6 @@ if not os.path.exists(output_tarball):
             source_url="http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.gz",
         ),
         Package(
-            name="vpx",
-            source_url="https://github.com/webmproject/libvpx/archive/v1.11.0.tar.gz",
-            build_arguments=[
-                "--disable-examples",
-                "--disable-tools",
-                "--disable-unit-tests",
-            ],
-        ),
-        Package(
             name="theora",
             requires=["vorbis"],
             source_url="http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.gz",
@@ -282,7 +273,6 @@ if not os.path.exists(output_tarball):
                 "theora",
                 "twolame",
                 "vorbis",
-                "vpx",
                 "x264",
                 "x265",
                 "xml2",
@@ -311,7 +301,6 @@ if not os.path.exists(output_tarball):
                 "--enable-libtheora",
                 "--enable-libtwolame",
                 "--enable-libvorbis",
-                "--enable-libvpx",
                 "--enable-libx264",
                 "--enable-libx265",
                 "--enable-libxcb"
