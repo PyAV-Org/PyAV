@@ -38,7 +38,6 @@ if not os.path.exists(output_tarball):
                     "yum",
                     "-y",
                     "install",
-                    "alsa-lib-devel",
                     "gperf",
                     "libuuid-devel",
                     "libxcb-devel",
@@ -282,8 +281,8 @@ if not os.path.exists(output_tarball):
             ],
             source_url="https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz",
             build_arguments=[
+                "--disable-alsa",
                 "--disable-doc",
-                "--enable-alsa" if platform.system() == "Linux" else "--disable-alsa",
                 "--enable-fontconfig",
                 "--enable-gmp",
                 "--enable-gnutls",
