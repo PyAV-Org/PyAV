@@ -1,0 +1,21 @@
+From: Sebastian Ramacher <sramacher@debian.org>
+Date: Tue, 15 Oct 2019 20:22:34 +0200
+Subject: Add missing TL_API
+
+---
+ libtwolame/twolame.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libtwolame/twolame.h b/libtwolame/twolame.h
+index 4348fde..a88e8ac 100644
+--- a/libtwolame/twolame.h
++++ b/libtwolame/twolame.h
+@@ -263,7 +263,7 @@ TL_API int twolame_encode_buffer_float32(twolame_options * glopts,
+  *  \return                The number of bytes put in output buffer
+  *                         or a negative value on error
+  */
+-int twolame_encode_buffer_float32_interleaved(twolame_options * glopts,
++TL_API int twolame_encode_buffer_float32_interleaved(twolame_options * glopts,
+         const float pcm[],
+         int num_samples,
+         unsigned char *mp2buffer, int mp2buffer_size);
