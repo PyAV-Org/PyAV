@@ -142,6 +142,8 @@ if not os.path.exists(output_tarball):
                 "--with-freetype=yes",
                 "--with-glib=no",
             ],
+            # parallel build fails on Windows
+            build_parallel=platform.system() != "Windows",
         ),
         Package(
             name="nettle",
