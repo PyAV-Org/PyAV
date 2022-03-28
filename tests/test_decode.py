@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import av
 
 from .common import TestCase, fate_suite
@@ -59,9 +61,8 @@ class TestDecode(TestCase):
 
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
-        codec_context = stream.codec_context
 
-        self.assertNotEqual(stream.time_base, codec_context.time_base)
+        self.assertEqual(stream.time_base, Fraction(1, 25))
 
         for packet in container.demux(stream):
             for frame in packet.decode():
