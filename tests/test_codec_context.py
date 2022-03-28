@@ -1,6 +1,7 @@
 from fractions import Fraction
 from unittest import SkipTest
 import os
+import warnings
 
 from av import AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
@@ -78,6 +79,23 @@ class TestCodecContext(TestCase):
         ctx.extradata = None
         self.assertEqual(ctx.extradata, None)
         self.assertEqual(ctx.extradata_size, 0)
+
+    def test_decoder_timebase(self):
+        ctx = av.codec.Codec("h264", "r").create()
+
+        with warnings.catch_warnings(record=True) as captured:
+            self.assertIsNone(ctx.time_base)
+            self.assertEqual(
+                captured[0].message.args[0],
+                "Using CodecContext.time_base for decoders is deprecated.",
+            )
+
+        with warnings.catch_warnings(record=True) as captured:
+            ctx.time_base = Fraction(1, 25)
+            self.assertEqual(
+                captured[0].message.args[0],
+                "Using CodecContext.time_base for decoders is deprecated.",
+            )
 
     def test_encoder_extradata(self):
         ctx = av.codec.Codec("h264", "w").create()
@@ -357,7 +375,6 @@ class TestEncoding(TestCase):
                 f.write(packet)
 
         ctx = Codec(codec_name, "r").create()
-        ctx.time_base = Fraction(1) / sample_rate
         ctx.sample_rate = sample_rate
         ctx.format = sample_fmt
         ctx.layout = channel_layout

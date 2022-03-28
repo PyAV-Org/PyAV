@@ -1,3 +1,5 @@
+import warnings
+
 from libc.errno cimport EAGAIN
 from libc.stdint cimport int64_t, uint8_t
 from libc.string cimport memcpy
@@ -11,6 +13,7 @@ from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
 
+from av.deprecation import AVDeprecationWarning
 from av.dictionary import Dictionary
 
 
@@ -282,8 +285,8 @@ cdef class CodecContext(object):
         cdef _Dictionary options = Dictionary()
         options.update(self.options or {})
 
-        # Assert we have a time_base.
-        if not self.ptr.time_base.num:
+        # Assert we have a time_base for encoders.
+        if not self.ptr.time_base.num and self.is_encoder:
             self._set_default_time_base()
 
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
@@ -551,9 +554,19 @@ cdef class CodecContext(object):
 
     property time_base:
         def __get__(self):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using CodecContext.time_base for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             return avrational_to_fraction(&self.ptr.time_base)
 
         def __set__(self, value):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using CodecContext.time_base for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             to_avrational(value, &self.ptr.time_base)
 
     property codec_tag:
