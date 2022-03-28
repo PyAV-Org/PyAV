@@ -244,6 +244,9 @@ cdef class Container(object):
             # Finish releasing the whole structure.
             lib.avformat_free_context(self.ptr)
 
+    def __del__(self):
+        self.close()
+        
     def __enter__(self):
         return self
 
