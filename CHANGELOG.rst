@@ -16,9 +16,24 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
-v9.0.3.dev0
+v9.1.0
 ------
 
+Features:
+
+- Add VideoFrame ndarray operations for rgb48be, rgb48le, rgb64be, rgb64le pixel formats.
+- Add VideoFrame ndarray operations for gray16be, gray16le pixel formats (:issue:`674`).
+- Make it possible to use av.open() on a pipe (:issue:`738`).
+- Use the "ASS without timings" format when decoding subtitles.
+
+Fixes:
+
+- Update binary wheels to fix security vulnerabilities (:issue:`921`) and enable ALSA on Linux (:issue:`941`).
+- Fix crash when closing an output container an encountering an I/O error (:issue:`613`).
+- Fix crash when probing corrupt raw format files (:issue:`590`).
+- Fix crash when manipulating streams with an unknown codec (:issue:`689`).
+- Remove obsolete KEEP_SIDE_DATA and MP4A_LATM flags which are gone in FFmpeg 5.0.
+- Deprecate `to_bytes()` method of Packet, Plane and SideData, use `bytes(packet)` instead.
 
 v9.0.2
 ------
