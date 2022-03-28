@@ -41,6 +41,7 @@ if not os.path.exists(output_tarball):
                     "alsa-lib-devel",
                     "gperf",
                     "libuuid-devel",
+                    "libxcb-devel",
                     "zlib-devel",
                 ]
             )
