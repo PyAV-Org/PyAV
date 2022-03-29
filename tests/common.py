@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from unittest import TestCase as _Base
 import datetime
 import errno
@@ -70,6 +71,17 @@ def sandboxed(*args, **kwargs):
     if do_makedirs:
         makedirs(os.path.dirname(path))
     return path
+
+
+# Context manager for running a test in a directory, e.g. path is the sandbox
+@contextmanager
+def run_in_directory(path):
+    current_dir = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(current_dir)
 
 
 class MethodLogger(object):
