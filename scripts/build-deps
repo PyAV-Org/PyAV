@@ -44,6 +44,7 @@ echo ./configure
     --enable-debug=3 \
     --enable-gpl \
     --enable-libx264 \
+    --enable-libxml2 \
     --enable-shared \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
