@@ -115,7 +115,6 @@ cdef void pyav_io_close_gil(lib.AVFormatContext *s,
 
             # Remove it from the container so that it can be deallocated
             del container.open_files[<int64_t>pb.opaque]
-            pb.opaque = NULL
         else:
             pyio_close_gil(pb)
 
