@@ -212,11 +212,15 @@ class Builder:
 
             if package.name == "ffmpeg":
                 configure_args += ["--arch=arm64", "--enable-cross-compile"]
+            elif package.name == "vpx":
+                configure_args += ["--target=arm64-darwin-gcc"]
             else:
                 configure_args += [
                     "--build=x86_64-apple-darwin",
                     "--host=aarch64-apple-darwin",
                 ]
+        elif platform.system() == "Windows" and package.name == "vpx":
+            configure_args += ["--target=x86_64-win64-gcc"]
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
