@@ -201,7 +201,7 @@ class TestPythonIO(TestCase):
             # Check contents.
             # Note that the dash demuxer doesn't support custom I/O.
             with av.open(CUSTOM_IO_FILENAME, "r") as container:
-                assert_rgb_rotate(self, container)
+                assert_rgb_rotate(self, container, is_dash=True)
 
     def test_writing_to_file(self):
         path = self.sandboxed("writing.mp4")

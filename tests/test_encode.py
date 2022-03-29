@@ -63,16 +63,15 @@ def write_rgb_rotate(output):
         output.mux(packet)
 
 
-def assert_rgb_rotate(self, input_):
+def assert_rgb_rotate(self, input_, is_dash=False):
 
     # Now inspect it a little.
     self.assertEqual(len(input_.streams), 1)
-    self.assertEqual(
-        # Fallback to "Title" for the DASH format
-        input_.metadata.get("title", input_.metadata.get("Title")),
-        "container",
-        input_.metadata
-    )
+    if is_dash:
+        # The "title" metadata is named "Title" in the DASH format
+        self.assertEqual(input_.metadata.get("Title"), "container", input_.metadata)
+    else:
+        self.assertEqual(input_.metadata.get("title"), "container", input_.metadata)
     self.assertEqual(input_.metadata.get("key"), None)
     stream = input_.streams[0]
     self.assertIsInstance(stream, VideoStream)
@@ -82,12 +81,12 @@ def assert_rgb_rotate(self, input_):
         stream.average_rate, 24
     )  # Only because we constructed is precisely.
     self.assertEqual(stream.rate, Fraction(24, 1))
-    if stream.duration is not None:
-        self.assertEqual(stream.time_base * stream.duration, 2)
-    else:
+    if is_dash:
         # The DASH format doesn't provide a duration for the stream
-        # and the container duration (micro seconds) is checked instead
+        # and so the container duration (micro seconds) is checked instead
         self.assertEqual(input_.duration, 2000000)
+    else:
+        self.assertEqual(stream.time_base * stream.duration, 2)
     self.assertEqual(stream.format.name, "yuv420p")
     self.assertEqual(stream.format.width, WIDTH)
     self.assertEqual(stream.format.height, HEIGHT)
