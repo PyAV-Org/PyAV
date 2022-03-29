@@ -68,8 +68,9 @@ def assert_rgb_rotate(self, input_, is_dash=False):
     # Now inspect it a little.
     self.assertEqual(len(input_.streams), 1)
     if is_dash:
-        # The "title" metadata is named "Title" in the DASH format
-        self.assertEqual(input_.metadata.get("Title"), "container", input_.metadata)
+        # FFmpeg 4.2 added parsing of the programme information and it is named "Title"
+        if av.library_versions["libavformat"] >= (58, 28):
+            self.assertTrue(input_.metadata.get("Title") == "container", input_.metadata)
     else:
         self.assertEqual(input_.metadata.get("title"), "container", input_.metadata)
     self.assertEqual(input_.metadata.get("key"), None)
