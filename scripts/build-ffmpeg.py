@@ -342,9 +342,7 @@ if not os.path.exists(output_tarball):
     for package in packages:
         builder.build(package)
 
-    if system == "Darwin":
-        run(["otool", "-L"] + glob.glob(os.path.join(dest_dir, "lib", "*.dylib")))
-    elif system == "Windows":
+    if system == "Windows":
         # fix .lib files being installed in the wrong directory
         for name in [
             "avcodec",
@@ -377,6 +375,22 @@ if not os.path.exists(output_tarball):
         ]:
             shutil.copy(os.path.join(mingw_bindir, name), os.path.join(dest_dir, "bin"))
 
+    # find libraries
+    if system == "Darwin":
+        libraries = glob.glob(os.path.join(dest_dir, "lib", "*.dylib"))
+    elif system == "Linux":
+        libraries = glob.glob(os.path.join(dest_dir, "lib", "*.so"))
+    elif system == "Windows":
+        libraries = glob.glob(os.path.join(dest_dir, "bin", "*.dll"))
+
+    # strip libraries
+    if system == "Darwin":
+        run(["strip", "-S"] + libraries)
+        run(["otool", "-L"] + libraries)
+    else:
+        run(["strip", "-s"] + libraries)
+
+    # build output tarball
     if build_stage is None or build_stage == 2:
         os.makedirs(output_dir, exist_ok=True)
         run(["tar", "czvf", output_tarball, "-C", dest_dir, "bin", "include", "lib"])
