@@ -244,6 +244,7 @@ cdef class Container(object):
         if io_open is not None:
             self.ptr.io_open = pyav_io_open
             self.ptr.io_close = pyav_io_close
+            self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt
         cdef _Dictionary c_options
