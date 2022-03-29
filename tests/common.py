@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from unittest import TestCase as _Base
 import datetime
 import errno
@@ -73,15 +72,17 @@ def sandboxed(*args, **kwargs):
     return path
 
 
-# Context manager for running a test in a directory, e.g. path is the sandbox
-@contextmanager
-def run_in_directory(path):
-    current_dir = os.getcwd()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(current_dir)
+# Decorator for running a test in the sandbox directory
+def run_in_sandbox(func):
+    @functools.wraps(func)
+    def _inner(self, *args, **kwargs):
+        current_dir = os.getcwd()
+        try:
+            os.chdir(self.sandbox)
+            return func(self, *args, **kwargs)
+        finally:
+            os.chdir(current_dir)
+    return _inner
 
 
 class MethodLogger(object):

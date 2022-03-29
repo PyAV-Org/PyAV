@@ -2,7 +2,7 @@ from io import BytesIO
 
 import av
 
-from .common import MethodLogger, TestCase, fate_suite, run_in_directory
+from .common import MethodLogger, TestCase, fate_suite, run_in_sandbox
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
 
@@ -167,41 +167,39 @@ class TestPythonIO(TestCase):
             with self.assertRaises(OSError):
                 container.close()
 
+    @run_in_sandbox
     def test_writing_to_custom_io(self):
 
-        # Run the test in the sandbox directory to workaround the limitation of the DASH demuxer
-        # whe dealing with relative files in the manifest.
-        with run_in_directory(self.sandbox):
-            # Custom I/O that opens file and logs calls
-            wrapped_custom_io = CustomIOLogger()
+        # Custom I/O that opens file and logs calls
+        wrapped_custom_io = CustomIOLogger()
 
-            # Write a DASH package using the custom IO
-            with av.open(
-                CUSTOM_IO_PROTOCOL + CUSTOM_IO_FILENAME, "w", io_open=wrapped_custom_io
-            ) as container:
-                write_rgb_rotate(container)
+        # Write a DASH package using the custom IO
+        with av.open(
+            CUSTOM_IO_PROTOCOL + CUSTOM_IO_FILENAME, "w", io_open=wrapped_custom_io
+        ) as container:
+            write_rgb_rotate(container)
 
-            # Check that at least 3 files were opened using the custom IO:
-            #   "CUSTOM_IO_FILENAME", init-stream0.m4s and chunk-stream-0x.m4s
-            self.assertGreaterEqual(len(wrapped_custom_io._log), 3)
-            self.assertGreaterEqual(len(wrapped_custom_io._method_log), 3)
+        # Check that at least 3 files were opened using the custom IO:
+        #   "CUSTOM_IO_FILENAME", init-stream0.m4s and chunk-stream-0x.m4s
+        self.assertGreaterEqual(len(wrapped_custom_io._log), 3)
+        self.assertGreaterEqual(len(wrapped_custom_io._method_log), 3)
 
-            # Check that all files were written to
-            all_write = all(
-                method_log._filter("write") for method_log in wrapped_custom_io._method_log
-            )
-            self.assertTrue(all_write)
+        # Check that all files were written to
+        all_write = all(
+            method_log._filter("write") for method_log in wrapped_custom_io._method_log
+        )
+        self.assertTrue(all_write)
 
-            # Check that all files were closed
-            all_closed = all(
-                method_log._filter("close") for method_log in wrapped_custom_io._method_log
-            )
-            self.assertTrue(all_closed)
+        # Check that all files were closed
+        all_closed = all(
+            method_log._filter("close") for method_log in wrapped_custom_io._method_log
+        )
+        self.assertTrue(all_closed)
 
-            # Check contents.
-            # Note that the dash demuxer doesn't support custom I/O.
-            with av.open(CUSTOM_IO_FILENAME, "r") as container:
-                assert_rgb_rotate(self, container, is_dash=True)
+        # Check contents.
+        # Note that the dash demuxer doesn't support custom I/O.
+        with av.open(CUSTOM_IO_FILENAME, "r") as container:
+            assert_rgb_rotate(self, container, is_dash=True)
 
     def test_writing_to_file(self):
         path = self.sandboxed("writing.mp4")
