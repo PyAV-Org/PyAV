@@ -2,7 +2,7 @@ from io import BytesIO
 
 import av
 
-from .common import MethodLogger, TestCase, fate_suite, run_in_sandbox
+from .common import Image, MethodLogger, TestCase, fate_png, fate_suite, run_in_sandbox
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
 
@@ -66,8 +66,9 @@ class WriteOnlyPipe(BytesIO):
         return False
 
 
+# Using a custom protocol will avoid the DASH muxer detecting or defaulting to a
+# file: protocol and enabling the use of temporary files and renaming.
 CUSTOM_IO_PROTOCOL = "pyavtest://"
-CUSTOM_IO_FILENAME = "custom_io_output.mpd"
 
 
 class CustomIOLogger(object):
@@ -168,19 +169,22 @@ class TestPythonIO(TestCase):
                 container.close()
 
     @run_in_sandbox
-    def test_writing_to_custom_io(self):
+    def test_writing_to_custom_io_dash(self):
 
         # Custom I/O that opens file and logs calls
         wrapped_custom_io = CustomIOLogger()
 
-        # Write a DASH package using the custom IO
+        output_filename = "custom_io_output.mpd"
+
+        # Write a DASH package using the custom IO. Prefix the name with CUSTOM_IO_PROTOCOL to
+        # avoid temporary file and renaming.
         with av.open(
-            CUSTOM_IO_PROTOCOL + CUSTOM_IO_FILENAME, "w", io_open=wrapped_custom_io
+            CUSTOM_IO_PROTOCOL + output_filename, "w", io_open=wrapped_custom_io
         ) as container:
             write_rgb_rotate(container)
 
         # Check that at least 3 files were opened using the custom IO:
-        #   "CUSTOM_IO_FILENAME", init-stream0.m4s and chunk-stream-0x.m4s
+        #   "output_filename", init-stream0.m4s and chunk-stream-0x.m4s
         self.assertGreaterEqual(len(wrapped_custom_io._log), 3)
         self.assertGreaterEqual(len(wrapped_custom_io._method_log), 3)
 
@@ -198,8 +202,62 @@ class TestPythonIO(TestCase):
 
         # Check contents.
         # Note that the dash demuxer doesn't support custom I/O.
-        with av.open(CUSTOM_IO_FILENAME, "r") as container:
+        with av.open(output_filename, "r") as container:
             assert_rgb_rotate(self, container, is_dash=True)
+
+    def test_writing_to_custom_io_image2(self):
+
+        # Custom I/O that opens file and logs calls
+        wrapped_custom_io = CustomIOLogger()
+
+        image = Image.open(fate_png())
+        input_frame = av.VideoFrame.from_image(image)
+
+        frame_count = 10
+        sequence_filename = self.sandboxed("test%d.png")
+        width = 160
+        height = 90
+
+        # Write a PNG image sequence using the custom IO
+        with av.open(
+            sequence_filename, "w", "image2", io_open=wrapped_custom_io
+        ) as output:
+            stream = output.add_stream("png")
+            stream.width = width
+            stream.height = height
+            stream.pix_fmt = "rgb24"
+
+            for frame_i in range(frame_count):
+                for packet in stream.encode(input_frame):
+                    output.mux(packet)
+
+        # Check that "frame_count" files were opened using the custom IO
+        self.assertEqual(len(wrapped_custom_io._log), frame_count)
+        self.assertEqual(len(wrapped_custom_io._method_log), frame_count)
+
+        # Check that all files were written to
+        all_write = all(
+            method_log._filter("write") for method_log in wrapped_custom_io._method_log
+        )
+        self.assertTrue(all_write)
+
+        # Check that all files were closed
+        all_closed = all(
+            method_log._filter("close") for method_log in wrapped_custom_io._method_log
+        )
+        self.assertTrue(all_closed)
+
+        # Check contents.
+        with av.open(sequence_filename, "r", "image2") as container:
+            self.assertEqual(len(container.streams), 1)
+            stream = container.streams[0]
+            self.assertIsInstance(stream, av.video.stream.VideoStream)
+            self.assertEqual(stream.type, "video")
+            self.assertEqual(stream.name, "png")
+            self.assertEqual(stream.duration, frame_count)
+            self.assertEqual(stream.format.name, "rgb24")
+            self.assertEqual(stream.format.width, width)
+            self.assertEqual(stream.format.height, height)
 
     def test_writing_to_file(self):
         path = self.sandboxed("writing.mp4")
