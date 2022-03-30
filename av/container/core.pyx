@@ -72,14 +72,19 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
     try:
         container = <Container>dereference(s).opaque
 
-        file = container.io_open(
-            <str>url if url is not NULL else "",
-            flags,
-            avdict_to_dict(
+        if options is not NULL:
+            options_dict = avdict_to_dict(
                 dereference(<lib.AVDictionary**>options),
                 encoding=container.metadata_encoding,
                 errors=container.metadata_errors
             )
+        else:
+            options_dict = {}
+
+        file = container.io_open(
+            <str>url if url is not NULL else "",
+            flags,
+            options_dict
         )
 
         pyio_file = PyIOFile(
