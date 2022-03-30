@@ -1,4 +1,5 @@
 from io import BytesIO
+from unittest import SkipTest
 
 import av
 
@@ -206,6 +207,9 @@ class TestPythonIO(TestCase):
             assert_rgb_rotate(self, container, is_dash=True)
 
     def test_writing_to_custom_io_image2(self):
+
+        if not Image:
+            raise SkipTest()
 
         # Custom I/O that opens file and logs calls
         wrapped_custom_io = CustomIOLogger()
