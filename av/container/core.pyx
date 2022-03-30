@@ -358,12 +358,26 @@ def open(file, mode=None, format=None, options=None,
     :param timeout: How many seconds to wait for data before giving up, as a float, or a
         :ref:`(open timeout, read timeout) <timeouts>` tuple.
     :type timeout: float or tuple
+    :param callable io_open: Custom I/O callable for opening files/streams.
+        This option is intended for formats that need to open additional
+        file-like objects to ``file`` using custom I/O.
+        The callable signature is ``io_open(url: str, flags: int, options: dict)``, where
+        ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
+        ``options`` is a dictionary of additional options. The callable should return a
+        file-like object.
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
 
         >>> # Open webcam on OS X.
         >>> av.open(format='avfoundation', file='0') # doctest: +SKIP
+
+    For DASH and custom I/O using ``io_open``, add a protocol prefix to the ``file`` to
+    prevent the DASH encoder defaulting to the file protocol and using temporary files.
+    The custom I/O callable can be used to remove the protocol prefix to reveal the actual
+    name for creating the file-like object. E.g.::
+
+        >>> av.open("customprotocol://manifest.mpd", "w", io_open=custom_io) # doctest: +SKIP
 
     .. seealso:: :ref:`garbage_collection`
 
