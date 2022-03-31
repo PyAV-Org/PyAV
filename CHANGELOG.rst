@@ -16,6 +16,13 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v9.1.1
+------
+
+Fixes:
+
+- Update binary wheels to update dependencies on Windows, disable ALSA on Linux.
+
 v9.1.0
 ------
 
