@@ -312,6 +312,7 @@ if not os.path.exists(output_tarball):
             build_arguments=[
                 "--disable-alsa",
                 "--disable-doc",
+                "--disable-mediafoundation",
                 "--enable-fontconfig",
                 "--enable-gmp",
                 "--enable-gnutls",
