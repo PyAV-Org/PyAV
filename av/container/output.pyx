@@ -34,9 +34,13 @@ cdef class OutputContainer(Container):
     def __cinit__(self, *args, **kwargs):
         self.streams = StreamContainer()
         self.metadata = {}
+        with nogil:
+            self.packet_ptr = lib.av_packet_alloc()
 
     def __dealloc__(self):
         close_output(self)
+        with nogil:
+            lib.av_packet_free(&self.packet_ptr)
 
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)
@@ -219,11 +223,10 @@ cdef class OutputContainer(Container):
         packet._rebase_time(stream.time_base)
 
         # Make another reference to the packet, as av_interleaved_write_frame
-        # takes ownership of it.
-        cdef lib.AVPacket *packet_ptr = lib.av_packet_alloc()
-        self.err_check(lib.av_packet_ref(packet_ptr, packet.ptr))
+        # takes ownership of the reference.
+        self.err_check(lib.av_packet_ref(self.packet_ptr, packet.ptr))
 
         cdef int ret
         with nogil:
-            ret = lib.av_interleaved_write_frame(self.ptr, packet_ptr)
+            ret = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
         self.err_check(ret)
