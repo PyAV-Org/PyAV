@@ -213,7 +213,7 @@ class Builder:
             if package.name == "ffmpeg":
                 configure_args += ["--arch=arm64", "--enable-cross-compile"]
             elif package.name == "vpx":
-                configure_args += ["--target=arm64-darwin-gcc"]
+                configure_args += ["--target=arm64-darwin20-gcc"]
             else:
                 configure_args += [
                     "--build=x86_64-apple-darwin",
