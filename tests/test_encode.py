@@ -120,7 +120,7 @@ class TestBasicVideoEncoding(TestCase):
         path = self.sandboxed("video_with_pts.mov")
 
         with av.open(path, "w") as output:
-            stream = output.add_stream("libx264", 24)
+            stream = output.add_stream("h264", 24)
             stream.width = WIDTH
             stream.height = HEIGHT
             stream.pix_fmt = "yuv420p"
