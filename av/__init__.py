@@ -1,10 +1,18 @@
-# Add the native FFMPEG and MinGW libraries to executable path, so that the
-# AV pyd files can find them.
 import os
+import sys
 
-if os.name == "nt":
+# Some Python versions distributed by Conda have a buggy `os.add_dll_directory`
+# which prevents binary wheels from finding the FFmpeg DLLs in the `av.libs`
+# directory. We work around this by adding `av.libs` to the PATH.
+if (
+    os.name == "nt"
+    and sys.version_info[:2] in ((3, 8), (3, 9))
+    and os.path.exists(os.path.join(sys.base_prefix, "conda-meta"))
+):
     os.environ["PATH"] = (
-        os.path.abspath(os.path.dirname(__file__)) + os.pathsep + os.environ["PATH"]
+        os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "av.libs"))
+        + os.pathsep
+        + os.environ["PATH"]
     )
 
 # MUST import the core before anything else in order to initalize the underlying
