@@ -16,6 +16,21 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v9.2.0
+------
+
+Features:
+
+- Update binary wheels to enable libvpx support.
+- Add an `io_open` argument to `av.open` for multi-file custom I/O.
+- Add support for AV_FRAME_DATA_SEI_UNREGISTERED (:issue:`723`).
+- Ship .pxd files to allow other libraries to `cimport av` (:issue:`716`).
+
+Fixes:
+
+- Fix an `ImportError` when using Python 3.8/3.9 via Conda (:issue:`952`).
+- Fix a muxing memory leak which was introduced in v9.1.0 (:issue:`959`).
+
 v9.1.1
 ------
 
