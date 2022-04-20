@@ -222,6 +222,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="openjpeg",
             requires=["cmake"],
+            source_filename="openjpeg-2.4.0.tar.gz",
             source_url="https://github.com/uclouvain/openjpeg/archive/v2.4.0.tar.gz",
             build_system="cmake",
         ),
@@ -247,6 +248,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="vpx",
+            source_filename="vpx-1.11.0.tar.gz",
             source_url="https://github.com/webmproject/libvpx/archive/v1.11.0.tar.gz",
             build_arguments=[
                 "--disable-examples",

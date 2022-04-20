@@ -114,6 +114,7 @@ class Package:
     build_parallel: bool = True
     requires: List[str] = field(default_factory=list)
     source_dir: str = ""
+    source_filename: str = ""
     source_strip_components: int = 1
 
 
@@ -325,7 +326,10 @@ endian = 'little'
         ), "source_strip_components must be 0 or 1"
         path = os.path.join(self.build_dir, package.name)
         patch = os.path.join(self.patch_dir, package.name + ".patch")
-        tarball = os.path.join(self.source_dir, package.source_url.split("/")[-1])
+        tarball = os.path.join(
+            self.source_dir,
+            package.source_filename or package.source_url.split("/")[-1],
+        )
 
         # download tarball
         if not os.path.exists(tarball):
