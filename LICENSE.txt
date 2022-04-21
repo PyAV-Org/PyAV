@@ -26,5 +26,5 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 
 FFmpeg that is redistributed within all PyAV wheels and binaries is licensed
-under GNU General Public License (GPL) version 2 or later. If those binaries
-are used, this license applies to all of PyAV. 
+under their respective license outlined below:
+http://ffmpeg.org/legal.html

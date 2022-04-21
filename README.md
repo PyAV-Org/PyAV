@@ -60,8 +60,8 @@ Licensing
 ----------
 
 PyAV python package is available under [BSD3 license](LICENSE.txt).
-[PyPI][pypi] and [conda-forge][conda-forge] binaries are shipped with FFmpeg
-binaries under GPLv2 or later.
+[PyPI][pypi] binaries are shipped with FFmpeg
+binaries under their respective [license](http://ffmpeg.org/legal.html). 
 
 
 ---
