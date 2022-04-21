@@ -56,6 +56,14 @@ pip install --upgrade -r tests/requirements.txt
 make
 ```
 
+Licensing
+----------
+
+PyAV python package is available under [BSD3 license](LICENSE.txt).
+[PyPI][pypi] and [conda-forge][conda-forge] binaries are shipped with FFmpeg
+binaries under GPLv2 or later.
+
+
 ---
 
 Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
