@@ -10,7 +10,7 @@ import sys
 import tarfile
 import tempfile
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, List
 
 
@@ -138,7 +138,9 @@ class Builder:
 
         with log_group(f"build {package.name}"):
             self._extract(package)
-            if package.build_system == "cmake":
+            if package.name == "x265":
+                self._build_x265(package, for_builder=for_builder)
+            elif package.build_system == "cmake":
                 self._build_with_cmake(package, for_builder=for_builder)
             elif package.build_system == "meson":
                 self._build_with_meson(package, for_builder=for_builder)
@@ -318,6 +320,71 @@ endian = 'little'
             )
             run(["ninja", "--verbose"], env=env)
             run(["ninja", "install"], env=env)
+
+    def _build_x265(self, package: Package, for_builder: bool) -> None:
+        assert package.name == "x265"
+        assert len(package.build_arguments) == 0
+
+        # Build x265 three times:
+        #  1: Build 12 bits static library version
+        #  2: Build 10 bits static library version
+        #  3: Build 8 bits shared library, linking also 10 and 12 bits
+        # This last version will support 8, 10 and 12 bits pixel formats
+        package_path = os.path.join(self.build_dir, package.name)
+
+        # self._build_with_cmake always install, install intermediate
+        # builds in dummy directory
+        dummy_install_path = os.path.join(package_path, "dummy_install_path")
+
+        # For 10/12 bits version, only x86_64 has assembly instructions available
+        flags_high_bits = []
+        platform = get_platform()
+        if not ("x86_64" in platform or "amd64" in platform):
+            flags_high_bits.append("-DENABLE_ASSEMBLY=0")
+            flags_high_bits.append("-DENABLE_ALTIVEC=0")
+
+        x265_12bits = replace(
+            package,
+            build_dir="x265-12bits",
+            build_arguments=[
+                "-DHIGH_BIT_DEPTH=1",
+                "-DMAIN12=1",
+                "-DEXPORT_C_API=0",
+                "-DENABLE_CLI=0",
+                "-DENABLE_SHARED=0",
+                "-DCMAKE_INSTALL_PREFIX=" + dummy_install_path,
+                *flags_high_bits,
+            ],
+        )
+        self._build_with_cmake(package=x265_12bits, for_builder=for_builder)
+
+        x265_10bits = replace(
+            package,
+            build_dir="x265-10bits",
+            build_arguments=[
+                "-DHIGH_BIT_DEPTH=1",
+                "-DEXPORT_C_API=0",
+                "-DENABLE_CLI=0",
+                "-DENABLE_SHARED=0",
+                "-DCMAKE_INSTALL_PREFIX=" + dummy_install_path,
+                *flags_high_bits,
+            ],
+        )
+        self._build_with_cmake(package=x265_10bits, for_builder=for_builder)
+
+        package_path = os.path.join(self.build_dir, package.name)
+        with chdir(os.path.join(package_path, x265_12bits.build_dir)):
+            os.rename("libx265.a", "libx265-12bits.a")
+        with chdir(os.path.join(package_path, x265_10bits.build_dir)):
+            os.rename("libx265.a", "libx265-10bits.a")
+
+        package.build_arguments = [
+            "-DEXTRA_LIB=x265-10bits.a;x265-12bits.a",
+            "-DLINKED_10BIT=1",
+            "-DLINKED_12BIT=1",
+            "-DEXTRA_LINK_FLAGS=-L../x265-10bits -L../x265-12bits",
+        ]
+        self._build_with_cmake(package=package, for_builder=for_builder)
 
     def _extract(self, package: Package) -> None:
         assert package.source_strip_components in (
