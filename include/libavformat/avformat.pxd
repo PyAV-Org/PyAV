@@ -184,6 +184,7 @@ cdef extern from "libavformat/avformat.h" nogil:
 
         int flags
         int64_t max_analyze_duration
+        int64_t start_time_realtime
 
         void *opaque
 

@@ -93,6 +93,18 @@ cdef class InputContainer(Container):
             if self.ptr.start_time != lib.AV_NOPTS_VALUE:
                 return self.ptr.start_time
 
+    property start_time_realtime:
+        """
+        Start time of the RTSP stream, expressed as microseconds since the UNIX epoch.
+
+        This property might not be set by FFmpeg for the first packets.
+
+        :type: int
+        """
+        def __get__(self):
+            if self.ptr.start_time_realtime != lib.AV_NOPTS_VALUE:
+                return self.ptr.start_time_realtime
+
     property duration:
         def __get__(self):
             if self.ptr.duration != lib.AV_NOPTS_VALUE:
