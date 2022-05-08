@@ -204,26 +204,34 @@ class Builder:
             "--libdir=" + self._mangle_path(os.path.join(prefix, "lib")),
             "--prefix=" + self._mangle_path(prefix),
         ]
-        if (
+        darwin_arm64_cross = (
             platform.system() == "Darwin"
             and not for_builder
             and os.environ["ARCHFLAGS"] == "-arch arm64"
-        ):
+        )
+
+        if package.name == "vpx":
+            if darwin_arm64_cross:
+                # darwin20 is the first darwin that supports arm64 macs
+                configure_args += ["--target=arm64-darwin20-gcc"]
+            elif platform.system() == "Darwin":
+                # darwin13 matches the macos 10.9 target used by cibuildwheel:
+                # https://cibuildwheel.readthedocs.io/en/stable/cpp_standards/#macos-and-deployment-target-versions
+                configure_args += ["--target=x86_64-darwin13-gcc"]
+            elif platform.system() == "Windows":
+                configure_args += ["--target=x86_64-win64-gcc"]
+        elif darwin_arm64_cross:
             # AC_FUNC_MALLOC and AC_FUNC_REALLOC fail when cross-compiling
             env["ac_cv_func_malloc_0_nonnull"] = "yes"
             env["ac_cv_func_realloc_0_nonnull"] = "yes"
 
             if package.name == "ffmpeg":
                 configure_args += ["--arch=arm64", "--enable-cross-compile"]
-            elif package.name == "vpx":
-                configure_args += ["--target=arm64-darwin20-gcc"]
             else:
                 configure_args += [
                     "--build=x86_64-apple-darwin",
                     "--host=aarch64-apple-darwin",
                 ]
-        elif platform.system() == "Windows" and package.name == "vpx":
-            configure_args += ["--target=x86_64-win64-gcc"]
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
