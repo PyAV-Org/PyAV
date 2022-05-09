@@ -291,6 +291,17 @@ class TestVideoFrameNdarray(TestCase):
         # check endianness by examining red value of first pixel
         self.assertPixelValue16(frame.planes[0], array[0][0][0], "little")
 
+    def test_ndarray_rgb48le_align(self):
+        array = numpy.random.randint(0, 65536, size=(238, 318, 3), dtype=numpy.uint16)
+        frame = VideoFrame.from_ndarray(array, format="rgb48le")
+        self.assertEqual(frame.width, 318)
+        self.assertEqual(frame.height, 238)
+        self.assertEqual(frame.format.name, "rgb48le")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # check endianness by examining red value of first pixel
+        self.assertPixelValue16(frame.planes[0], array[0][0][0], "little")
+
     def test_ndarray_rgba64be(self):
         array = numpy.random.randint(0, 65536, size=(480, 640, 4), dtype=numpy.uint16)
         frame = VideoFrame.from_ndarray(array, format="rgba64be")
