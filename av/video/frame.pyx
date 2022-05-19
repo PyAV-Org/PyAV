@@ -273,6 +273,18 @@ cdef class VideoFrame(Frame):
             assert frame.width % 2 == 0
             assert frame.height % 2 == 0
             return useful_array(frame.planes[0], 2).reshape(frame.height, frame.width, -1)
+        elif frame.format.name == 'gbrp':
+            array = np.empty((frame.height, frame.width, 3), dtype="uint8")
+            array[:, :, 0] = useful_array(frame.planes[2], 1).reshape(-1, frame.width)
+            array[:, :, 1] = useful_array(frame.planes[0], 1).reshape(-1, frame.width)
+            array[:, :, 2] = useful_array(frame.planes[1], 1).reshape(-1, frame.width)
+            return array
+        elif frame.format.name in ('gbrp10be', 'gbrp12be', 'gbrp14be', 'gbrp16be', 'gbrp10le', 'gbrp12le', 'gbrp14le', 'gbrp16le'):
+            array = np.empty((frame.height, frame.width, 3), dtype="uint16")
+            array[:, :, 0] = useful_array(frame.planes[2], 2, "uint16").reshape(-1, frame.width)
+            array[:, :, 1] = useful_array(frame.planes[0], 2, "uint16").reshape(-1, frame.width)
+            array[:, :, 2] = useful_array(frame.planes[1], 2, "uint16").reshape(-1, frame.width)
+            return byteswap_array(array, frame.format.name.endswith('be'))
         elif frame.format.name in ('rgb24', 'bgr24'):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
@@ -354,6 +366,24 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[0] % 2 == 0)
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
             check_ndarray_shape(array, array.shape[2] == 2)
+        elif format == 'gbrp':
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array[:, :, 1], frame.planes[0], 1)
+            copy_array_to_plane(array[:, :, 2], frame.planes[1], 1)
+            copy_array_to_plane(array[:, :, 0], frame.planes[2], 1)
+            return frame
+        elif format in ('gbrp10be', 'gbrp12be', 'gbrp14be', 'gbrp16be', 'gbrp10le', 'gbrp12le', 'gbrp14le', 'gbrp16le'):
+            check_ndarray(array, 'uint16', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(byteswap_array(array[:, :, 1], format.endswith('be')), frame.planes[0], 2)
+            copy_array_to_plane(byteswap_array(array[:, :, 2], format.endswith('be')), frame.planes[1], 2)
+            copy_array_to_plane(byteswap_array(array[:, :, 0], format.endswith('be')), frame.planes[2], 2)
+            return frame
         elif format in ('rgb24', 'bgr24'):
             check_ndarray(array, 'uint8', 3)
             check_ndarray_shape(array, array.shape[2] == 3)

@@ -207,6 +207,94 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertNdarraysEqual(frame.to_ndarray(), array)
 
+    def test_ndarray_gbrp(self):
+        array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format="gbrp")
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, "gbrp")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp_align(self):
+        array = numpy.random.randint(0, 256, size=(238, 318, 3), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format="gbrp")
+        self.assertEqual(frame.width, 318)
+        self.assertEqual(frame.height, 238)
+        self.assertEqual(frame.format.name, "gbrp")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp10(self):
+        array = numpy.random.randint(0, 1024, size=(480, 640, 3), dtype=numpy.uint16)
+        for format in ["gbrp10be", "gbrp10le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 640)
+            self.assertEqual(frame.height, 480)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp10_align(self):
+        array = numpy.random.randint(0, 1024, size=(238, 318, 3), dtype=numpy.uint16)
+        for format in ["gbrp10be", "gbrp10le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp12(self):
+        array = numpy.random.randint(0, 4096, size=(480, 640, 3), dtype=numpy.uint16)
+        for format in ["gbrp12be", "gbrp12le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 640)
+            self.assertEqual(frame.height, 480)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp12_align(self):
+        array = numpy.random.randint(0, 4096, size=(238, 318, 3), dtype=numpy.uint16)
+        for format in ["gbrp12be", "gbrp12le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp14(self):
+        array = numpy.random.randint(0, 16384, size=(480, 640, 3), dtype=numpy.uint16)
+        for format in ["gbrp14be", "gbrp14le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 640)
+            self.assertEqual(frame.height, 480)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp14_align(self):
+        array = numpy.random.randint(0, 16384, size=(238, 318, 3), dtype=numpy.uint16)
+        for format in ["gbrp14be", "gbrp14le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp16(self):
+        array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype=numpy.uint16)
+        for format in ["gbrp16be", "gbrp16le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 640)
+            self.assertEqual(frame.height, 480)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrp16_align(self):
+        array = numpy.random.randint(0, 65536, size=(238, 318, 3), dtype=numpy.uint16)
+        for format in ["gbrp16be", "gbrp16le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
     def test_ndarray_yuv420p(self):
         array = numpy.random.randint(0, 256, size=(720, 640), dtype=numpy.uint8)
         frame = VideoFrame.from_ndarray(array, format="yuv420p")
