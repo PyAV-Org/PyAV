@@ -310,6 +310,11 @@ cdef class VideoFrame(Frame):
             image = useful_array(frame.planes[0]).reshape(frame.height, frame.width)
             palette = np.frombuffer(frame.planes[1], 'i4').astype('>i4').reshape(-1, 1).view(np.uint8)
             return image, palette
+        elif frame.format.name == 'nv12':
+            return np.hstack((
+                useful_array(frame.planes[0]),
+                useful_array(frame.planes[1], 2)
+            )).reshape(-1, frame.width)
         else:
             raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % frame.format.name)
 
@@ -408,6 +413,17 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[2] == 4)
             frame = VideoFrame(array.shape[1], array.shape[0], format)
             copy_array_to_plane(byteswap_array(array, format == 'rgba64be'), frame.planes[0], 8)
+            return frame
+        elif format == 'nv12':
+            check_ndarray(array, 'uint8', 2)
+            check_ndarray_shape(array, array.shape[0] % 3 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+
+            frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
+            uv_start = frame.width * frame.height
+            flat = array.reshape(-1)
+            copy_array_to_plane(flat[:uv_start], frame.planes[0], 1)
+            copy_array_to_plane(flat[uv_start:], frame.planes[1], 2)
             return frame
         else:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)

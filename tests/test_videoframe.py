@@ -440,6 +440,22 @@ class TestVideoFrameNdarray(TestCase):
         self.assertNdarraysEqual(returned[0], array)
         self.assertNdarraysEqual(returned[1], palette)
 
+    def test_ndarray_nv12(self):
+        array = numpy.random.randint(0, 256, size=(720, 640), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format="nv12")
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, "nv12")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_nv12_align(self):
+        array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format="nv12")
+        self.assertEqual(frame.width, 318)
+        self.assertEqual(frame.height, 238)
+        self.assertEqual(frame.format.name, "nv12")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
 
 class TestVideoFrameTiming(TestCase):
     def test_reformat_pts(self):
