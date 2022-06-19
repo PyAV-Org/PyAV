@@ -148,6 +148,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - {os: windows-latest, python: 3.7, ffmpeg: "4.4"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.3"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.2"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.1"}
@@ -166,17 +167,24 @@ jobs:
         conda config --add channels conda-forge
         conda create -q -n pyav \
           cython \
-          ffmpeg=${{ matrix.config.ffmpeg }} \
           numpy \
           pillow \
           python=${{ matrix.config.python }} \
           setuptools
+          if [[ "${{ matrix.config.ffmpeg }}" == "4.4" ]]; then
+            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/4.4.1-7/ffmpeg-win_amd64.tar.gz
+          else
+            conda install -q -n pyav ffmpeg=${{ matrix.config.ffmpeg }}
+          fi
 
     - name: Build
       shell: bash
       run: |
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
+          if [[ "${{ matrix.config.ffmpeg }}" == "4.4" ]]; then
+            tar -xf ffmpeg.tar.gz -C $CONDA_PREFIX/Library/
+          fi
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library
 
     - name: Test
