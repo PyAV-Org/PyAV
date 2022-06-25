@@ -229,7 +229,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="opus",
             source_url="https://archive.mozilla.org/pub/opus/opus-1.3.1.tar.gz",
-            build_arguments=["--disable-extra-programs"],
+            build_arguments=["--disable-doc", "--disable-extra-programs"],
         ),
         Package(
             name="speex",
