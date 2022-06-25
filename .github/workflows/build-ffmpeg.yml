@@ -37,7 +37,7 @@ jobs:
         run: |
           brew update
           brew install pkg-config
-          brew unlink gettext libidn2 libpng libtiff libunistring unbound
+          brew unlink gettext libidn2 libpng libtiff libunistring little-cms2 unbound
       - uses: msys2/setup-msys2@v2
         if: matrix.os == 'windows-latest'
         with:
