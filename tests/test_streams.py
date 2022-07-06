@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import av
 
 from .common import TestCase, fate_suite
@@ -25,5 +27,7 @@ class TestStreams(TestCase):
 
         self.assertEqual([video], container.streams.get(video=0))
         self.assertEqual([video], container.streams.get(video=(0,)))
+        self.assertEqual(video.rate, Fraction(25, 1))
+        self.assertEqual(video.framerate, Fraction(25, 1))
 
         # TODO: Find something in the fate suite with video, audio, and subtitles.

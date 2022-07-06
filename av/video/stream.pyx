@@ -1,3 +1,6 @@
+from av.utils cimport avrational_to_fraction
+
+
 cdef class VideoStream(Stream):
 
     def __repr__(self):
@@ -10,3 +13,19 @@ cdef class VideoStream(Stream):
             self.codec_context.height,
             id(self),
         )
+
+    property rate:
+        """
+        Returns the average_frame_rate of the stream.
+        :type: :class:`~fractions.Fraction` or ``None``
+        """
+        def __get__(self):
+            return avrational_to_fraction(&self.ptr.avg_frame_rate)
+
+    property framerate:
+        """
+        Returns the average_frame_rate of the stream.
+        :type: :class:`~fractions.Fraction` or ``None``
+        """
+        def __get__(self):
+            return avrational_to_fraction(&self.ptr.avg_frame_rate)
