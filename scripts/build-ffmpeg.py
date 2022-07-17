@@ -21,6 +21,9 @@ if system == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
     output_dir = "/output"
 output_tarball = os.path.join(output_dir, f"ffmpeg-{get_platform()}.tar.gz")
 
+# FFmpeg has native TLS backends for macOS and Windows
+use_gnutls = system == "Linux"
+
 if not os.path.exists(output_tarball):
     builder = Builder(dest_dir=dest_dir)
     builder.create_directories()
@@ -145,33 +148,36 @@ if not os.path.exists(output_tarball):
             # parallel build fails on Windows
             build_parallel=platform.system() != "Windows",
         ),
-        Package(
-            name="nettle",
-            requires=["gmp"],
-            source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.7.3.tar.gz",
-            build_arguments=["--disable-documentation"],
-            # build randomly fails with "*** missing separator.  Stop."
-            build_parallel=False,
-        ),
-        Package(
-            name="gnutls",
-            requires=["nettle", "unistring"],
-            source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7/gnutls-3.7.3.tar.xz",
-            build_arguments=[
-                "--disable-cxx",
-                "--disable-doc",
-                "--disable-guile",
-                "--disable-libdane",
-                "--disable-nls",
-                "--disable-tests",
-                "--disable-tools",
-                "--with-included-libtasn1",
-                "--without-p11-kit",
-            ],
-            # parallel build fails on Windows
-            build_parallel=platform.system() != "Windows",
-        ),
     ]
+
+    if use_gnutls:
+        package_groups[0] += [
+            Package(
+                name="nettle",
+                requires=["gmp"],
+                source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.7.3.tar.gz",
+                build_arguments=["--disable-documentation"],
+                # build randomly fails with "*** missing separator.  Stop."
+                build_parallel=False,
+            ),
+            Package(
+                name="gnutls",
+                requires=["nettle", "unistring"],
+                source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7/gnutls-3.7.3.tar.xz",
+                build_arguments=[
+                    "--disable-cxx",
+                    "--disable-doc",
+                    "--disable-guile",
+                    "--disable-libdane",
+                    "--disable-nls",
+                    "--disable-tests",
+                    "--disable-tools",
+                    "--with-included-libtasn1",
+                    "--without-p11-kit",
+                ],
+            ),
+        ]
+
     package_groups[1] = [
         # codecs
         Package(
@@ -293,7 +299,6 @@ if not os.path.exists(output_tarball):
                 "fontconfig",
                 "freetype",
                 "gmp",
-                "gnutls",
                 "lame",
                 "nasm",
                 "opencore-amr",
@@ -317,7 +322,7 @@ if not os.path.exists(output_tarball):
                 "--disable-mediafoundation",
                 "--enable-fontconfig",
                 "--enable-gmp",
-                "--enable-gnutls",
+                "--enable-gnutls" if use_gnutls else "--disable-gnutls",
                 "--enable-gpl",
                 "--enable-libaom",
                 "--enable-libass",
