@@ -121,7 +121,7 @@ def assert_rgb_rotate(self, input_, is_dash=False):
     self.assertEqual(stream.format.name, "yuv420p")
     self.assertEqual(stream.format.width, WIDTH)
     self.assertEqual(stream.format.height, HEIGHT)
-    self.assertEqual(stream.codec_context.rate, None)
+    self.assertEqual(stream.rate, expected_average_rate)
     self.assertEqual(stream.ticks_per_frame, 1)
 
 
