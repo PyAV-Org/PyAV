@@ -271,6 +271,8 @@ if not os.path.exists(output_tarball):
         Package(
             name="x264",
             source_url="https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2",
+            # parallel build runs out of memory on Windows
+            build_parallel=platform.system() != "Windows",
         ),
         Package(
             name="x265",
