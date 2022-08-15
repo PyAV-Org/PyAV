@@ -67,3 +67,11 @@ class TestErrorBasics(TestCase):
             self.assertEqual(e.errno, av.error.BUFFER_TOO_SMALL.value)
         else:
             self.fail("no exception raised")
+
+    def test_not_supported_audio_codec(self):
+        try:
+            av.open("alsa_device", audio_codec="does_not_exist")
+        except ValueError as e:
+            self.assertEqual(str(e), "Provided audio_codec must be one of the supported audio codecs")
+        else:
+            self.fail("no exception raised")

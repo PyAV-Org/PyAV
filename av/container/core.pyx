@@ -279,9 +279,7 @@ cdef class Container(object):
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = <void*>self
 
-        if audio_codec is None:
-            self.ptr.audio_codec_id = AudioCodecs['NONE']
-        else:
+        if audio_codec is not None:
             self.ptr.audio_codec_id = AudioCodecs[audio_codec]
 
         # Setup Python IO.
@@ -410,8 +408,10 @@ def open(file, mode=None, format=None, options=None,
         ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
         ``options`` is a dictionary of additional options. The callable should return a
         file-like object.
-    :param str audio_codec: Specify audio input codec to be used. For example
-        ``"PCM_S32LE"``. Defaults to ``None``.
+    :param str audio_codec: Specify audio input codec to be used when reading
+        form ALSA or PulseAudio devices. For example ``"PCM_S32LE"`` or
+        ``"PCM_S16BE"``. If not given, the codec is left unconfigured and
+        defaults to FFmpeg default.
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -443,6 +443,12 @@ def open(file, mode=None, format=None, options=None,
     else:
         open_timeout = timeout
         read_timeout = timeout
+
+    if audio_codec is not None:
+        try:
+            AudioCodecs[audio_codec]
+        except KeyError:
+            raise ValueError("Provided audio_codec must be one of the supported audio codecs")
 
     if mode.startswith('r'):
         return InputContainer(
