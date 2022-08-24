@@ -647,3 +647,10 @@ cdef class CodecContext(object):
 
         def __set__(self, value):
             self.ptr.skip_frame = SkipType[value].value
+
+    def update_options(self, *args, **kwargs):
+        opts = {}
+        opts.update(*args, **kwargs)
+        for k, v in opts.items():
+            if lib.av_opt_set(self.ptr, k, v, 1) == 0:
+                self.options[k] = v
