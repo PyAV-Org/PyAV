@@ -285,6 +285,12 @@ cdef class VideoFrame(Frame):
             array[:, :, 1] = useful_array(frame.planes[0], 2, "uint16").reshape(-1, frame.width)
             array[:, :, 2] = useful_array(frame.planes[1], 2, "uint16").reshape(-1, frame.width)
             return byteswap_array(array, frame.format.name.endswith('be'))
+        elif frame.format.name in ('gbrpf32be', 'gbrpf32le'):
+            array = np.empty((frame.height, frame.width, 3), dtype="float32")
+            array[:, :, 0] = useful_array(frame.planes[2], 4, "float32").reshape(-1, frame.width)
+            array[:, :, 1] = useful_array(frame.planes[0], 4, "float32").reshape(-1, frame.width)
+            array[:, :, 2] = useful_array(frame.planes[1], 4, "float32").reshape(-1, frame.width)
+            return byteswap_array(array, frame.format.name.endswith('be'))
         elif frame.format.name in ('rgb24', 'bgr24'):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
@@ -388,6 +394,15 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(byteswap_array(array[:, :, 1], format.endswith('be')), frame.planes[0], 2)
             copy_array_to_plane(byteswap_array(array[:, :, 2], format.endswith('be')), frame.planes[1], 2)
             copy_array_to_plane(byteswap_array(array[:, :, 0], format.endswith('be')), frame.planes[2], 2)
+            return frame
+        elif format in ('gbrpf32be', 'gbrpf32le'):
+            check_ndarray(array, 'float32', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(byteswap_array(array[:, :, 1], format.endswith('be')), frame.planes[0], 4)
+            copy_array_to_plane(byteswap_array(array[:, :, 2], format.endswith('be')), frame.planes[1], 4)
+            copy_array_to_plane(byteswap_array(array[:, :, 0], format.endswith('be')), frame.planes[2], 4)
             return frame
         elif format in ('rgb24', 'bgr24'):
             check_ndarray(array, 'uint8', 3)
