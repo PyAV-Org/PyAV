@@ -14,11 +14,10 @@ The builds are provided for several platforms:
 Features
 --------
 
-Currently FFmpeg 4.4.1 is used with the following features enabled for all platforms:
+Currently FFmpeg 5.1.2 is used with the following features enabled for all platforms:
 
 - fontconfig
 - gmp
-- gnutls
 - libaom
 - libass
 - libbluray
@@ -40,5 +39,10 @@ Currently FFmpeg 4.4.1 is used with the following features enabled for all platf
 - libxvid
 - lzma
 - zlib
+
+The following additional features are also enabled on Linux:
+
+- gnutls
+- libxcb
 
 .. _PyAV: https://github.com/PyAV-Org/PyAV
