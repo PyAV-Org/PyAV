@@ -124,6 +124,9 @@ if not os.path.exists(output_tarball):
             name="freetype",
             requires=["png"],
             source_url="https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz",
+            # At this point we have not built our own harfbuzz and we do NOT want to
+            # pick up the system's harfbuzz.
+            build_arguments=["--with-harfbuzz=no"],
         ),
         Package(
             name="fontconfig",
