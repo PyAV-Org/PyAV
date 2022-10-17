@@ -53,7 +53,7 @@ class TestDecode(TestCase):
                 sample_count += frame.samples
 
         total_samples = (
-            audio_stream.duration * audio_stream.rate.numerator
+            audio_stream.duration * audio_stream.sample_rate.numerator
         ) / audio_stream.time_base.denominator
         self.assertEqual(sample_count, total_samples)
 

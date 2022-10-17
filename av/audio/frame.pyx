@@ -165,14 +165,6 @@ cdef class AudioFrame(Frame):
         def __set__(self, value):
             self.ptr.sample_rate = value
 
-    property rate:
-        """Another name for :attr:`sample_rate`."""
-        def __get__(self):
-            return self.ptr.sample_rate
-
-        def __set__(self, value):
-            self.ptr.sample_rate = value
-
     def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
 

@@ -118,14 +118,6 @@ cdef class VideoCodecContext(CodecContext):
         def __set__(self, value):
             to_avrational(value, &self.ptr.framerate)
 
-    property rate:
-        """Another name for :attr:`framerate`."""
-        def __get__(self):
-            return self.framerate
-
-        def __set__(self, value):
-            self.framerate = value
-
     property gop_size:
         def __get__(self):
             return self.ptr.gop_size

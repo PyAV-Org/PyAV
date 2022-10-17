@@ -58,7 +58,7 @@ class TestAudioProbe(TestCase):
         self.assertEqual(stream.format.name, "fltp")
         self.assertEqual(stream.layout.name, "stereo")
         self.assertEqual(stream.max_bit_rate, None)
-        self.assertEqual(stream.rate, 48000)
+        self.assertEqual(stream.sample_rate, 48000)
 
 
 class TestAudioProbeCorrupt(TestCase):
@@ -116,7 +116,7 @@ class TestAudioProbeCorrupt(TestCase):
         self.assertEqual(stream.format, None)
         self.assertEqual(stream.layout.name, "0 channels")
         self.assertEqual(stream.max_bit_rate, None)
-        self.assertEqual(stream.rate, 0)
+        self.assertEqual(stream.sample_rate, 0)
 
 
 class TestDataProbe(TestCase):

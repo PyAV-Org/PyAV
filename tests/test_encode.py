@@ -121,7 +121,6 @@ def assert_rgb_rotate(self, input_, is_dash=False):
     self.assertEqual(stream.format.name, "yuv420p")
     self.assertEqual(stream.format.width, WIDTH)
     self.assertEqual(stream.format.height, HEIGHT)
-    self.assertEqual(stream.rate, None)
     self.assertEqual(stream.ticks_per_frame, 1)
 
 
@@ -129,13 +128,13 @@ class TestBasicVideoEncoding(TestCase):
     def test_default_options(self):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mpeg4")
+            self.assertEqual(stream.average_rate, Fraction(24, 1))
             self.assertEqual(stream.bit_rate, 1024000)
             self.assertEqual(stream.format.height, 480)
             self.assertEqual(stream.format.name, "yuv420p")
             self.assertEqual(stream.format.width, 640)
             self.assertEqual(stream.height, 480)
             self.assertEqual(stream.pix_fmt, "yuv420p")
-            self.assertEqual(stream.rate, Fraction(24, 1))
             self.assertEqual(stream.ticks_per_frame, 1)
             self.assertEqual(stream.time_base, None)
             self.assertEqual(stream.width, 640)
@@ -185,7 +184,7 @@ class TestBasicAudioEncoding(TestCase):
             stream = output.add_stream("mp2")
             self.assertEqual(stream.bit_rate, 128000)
             self.assertEqual(stream.format.name, "s16")
-            self.assertEqual(stream.rate, 48000)
+            self.assertEqual(stream.sample_rate, 48000)
             self.assertEqual(stream.ticks_per_frame, 1)
             self.assertEqual(stream.time_base, None)
 
@@ -262,7 +261,7 @@ class TestEncodeStreamSemantics(TestCase):
                     # decoder didn't indicate constant frame size
                     frame_size = 1000
                 aframe = AudioFrame("s16", "stereo", samples=frame_size)
-                aframe.rate = 48000
+                aframe.sample_rate = 48000
                 apackets = astream.encode(aframe)
                 if apackets:
                     apacket = apackets[0]

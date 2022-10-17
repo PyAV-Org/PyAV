@@ -94,7 +94,7 @@ cdef class AudioResampler(object):
             if (
                 frame.format.sample_fmt != self.template.format.sample_fmt or
                 frame.layout.layout != self.template.layout.layout or
-                frame.sample_rate != self.template.rate
+                frame.sample_rate != self.template.sample_rate
             ):
                 raise ValueError('Frame does not match AudioResampler setup.')
 
