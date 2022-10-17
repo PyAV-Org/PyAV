@@ -95,23 +95,16 @@ cdef class Stream(object):
         )
 
     def __getattr__(self, name):
-        # avoid an infinite loop for unsupported codecs
-        if self.codec_context is None:
-            return
-
-        try:
+        # Convenience getter for codec context properties.
+        if self.codec_context is not None:
             return getattr(self.codec_context, name)
-        except AttributeError:
-            try:
-                return getattr(self.codec_context.codec, name)
-            except AttributeError:
-                raise AttributeError(name)
 
     def __setattr__(self, name, value):
         if name == "id":
             self._set_id(value)
             return
 
+        # Convenience setter for codec context properties.
         if self.codec_context is not None:
             setattr(self.codec_context, name, value)
 

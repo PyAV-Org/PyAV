@@ -25,6 +25,13 @@ class TestAudioProbe(TestCase):
     def test_stream_probing(self):
         stream = self.file.streams[0]
 
+        # check __repr__
+        self.assertTrue(
+            str(stream).startswith(
+                "<av.AudioStream #0 aac_latm at 48000Hz, stereo, fltp at "
+            )
+        )
+
         # actual stream properties
         self.assertEqual(stream.average_rate, None)
         self.assertEqual(stream.base_rate, None)
@@ -45,20 +52,18 @@ class TestAudioProbe(TestCase):
         self.assertEqual(stream.time_base, Fraction(1, 90000))
         self.assertEqual(stream.type, "audio")
 
-        # codec properties
-        self.assertEqual(stream.name, "aac_latm")
-        self.assertEqual(
-            stream.long_name, "AAC LATM (Advanced Audio Coding LATM syntax)"
-        )
-
         # codec context properties
         self.assertEqual(stream.bit_rate, None)
         self.assertEqual(stream.channels, 2)
+        self.assertEqual(stream.codec.name, "aac_latm")
+        self.assertEqual(
+            stream.codec.long_name, "AAC LATM (Advanced Audio Coding LATM syntax)"
+        )
         self.assertEqual(stream.format.bits, 32)
         self.assertEqual(stream.format.name, "fltp")
         self.assertEqual(stream.layout.name, "stereo")
         self.assertEqual(stream.max_bit_rate, None)
-        self.assertEqual(stream.rate, 48000)
+        self.assertEqual(stream.sample_rate, 48000)
 
 
 class TestAudioProbeCorrupt(TestCase):
@@ -106,17 +111,15 @@ class TestAudioProbeCorrupt(TestCase):
         self.assertEqual(stream.time_base, Fraction(1, 90000))
         self.assertEqual(stream.type, "audio")
 
-        # codec properties
-        self.assertEqual(stream.name, "flac")
-        self.assertEqual(stream.long_name, "FLAC (Free Lossless Audio Codec)")
-
         # codec context properties
         self.assertEqual(stream.bit_rate, None)
+        self.assertEqual(stream.codec.name, "flac")
+        self.assertEqual(stream.codec.long_name, "FLAC (Free Lossless Audio Codec)")
         self.assertEqual(stream.channels, 0)
         self.assertEqual(stream.format, None)
         self.assertEqual(stream.layout.name, "0 channels")
         self.assertEqual(stream.max_bit_rate, None)
-        self.assertEqual(stream.rate, 0)
+        self.assertEqual(stream.sample_rate, 0)
 
 
 class TestDataProbe(TestCase):
@@ -172,6 +175,9 @@ class TestDataProbe(TestCase):
     def test_stream_probing(self):
         stream = self.file.streams[0]
 
+        # check __repr__
+        self.assertTrue(str(stream).startswith("<av.DataStream #0 data/<nocodec> at "))
+
         # actual stream properties
         self.assertEqual(stream.average_rate, None)
         self.assertEqual(stream.base_rate, None)
@@ -194,9 +200,8 @@ class TestDataProbe(TestCase):
         self.assertEqual(stream.time_base, Fraction(1, 90000))
         self.assertEqual(stream.type, "data")
 
-        # codec properties
-        self.assertEqual(stream.name, None)
-        self.assertEqual(stream.long_name, None)
+        # codec context properties
+        self.assertEqual(stream.codec, None)
 
 
 class TestSubtitleProbe(TestCase):
@@ -227,6 +232,11 @@ class TestSubtitleProbe(TestCase):
     def test_stream_probing(self):
         stream = self.file.streams[0]
 
+        # check __repr__
+        self.assertTrue(
+            str(stream).startswith("<av.SubtitleStream #0 subtitle/mov_text at ")
+        )
+
         # actual stream properties
         self.assertEqual(stream.average_rate, None)
         self.assertEqual(stream.duration, 8140)
@@ -247,9 +257,9 @@ class TestSubtitleProbe(TestCase):
         self.assertEqual(stream.time_base, Fraction(1, 1000))
         self.assertEqual(stream.type, "subtitle")
 
-        # codec properties
-        self.assertEqual(stream.name, "mov_text")
-        self.assertEqual(stream.long_name, "3GPP Timed Text subtitle")
+        # codec context properties
+        self.assertEqual(stream.codec.name, "mov_text")
+        self.assertEqual(stream.codec.long_name, "3GPP Timed Text subtitle")
 
 
 class TestVideoProbe(TestCase):
@@ -272,6 +282,11 @@ class TestVideoProbe(TestCase):
     def test_stream_probing(self):
         stream = self.file.streams[0]
 
+        # check __repr__
+        self.assertTrue(
+            str(stream).startswith("<av.VideoStream #0 mpeg2video, yuv420p 720x576 at ")
+        )
+
         # actual stream properties
         self.assertEqual(stream.average_rate, Fraction(25, 1))
         self.assertEqual(stream.duration, 145800)
@@ -285,12 +300,10 @@ class TestVideoProbe(TestCase):
         self.assertEqual(stream.time_base, Fraction(1, 90000))
         self.assertEqual(stream.type, "video")
 
-        # codec properties
-        self.assertEqual(stream.long_name, "MPEG-2 video")
-        self.assertEqual(stream.name, "mpeg2video")
-
         # codec context properties
         self.assertEqual(stream.bit_rate, 3364800)
+        self.assertEqual(stream.codec.long_name, "MPEG-2 video")
+        self.assertEqual(stream.codec.name, "mpeg2video")
         self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
         self.assertEqual(stream.format.name, "yuv420p")
         self.assertFalse(stream.has_b_frames)
@@ -346,12 +359,12 @@ class TestVideoProbeCorrupt(TestCase):
         self.assertEqual(stream.time_base, Fraction(1, 1200000))
         self.assertEqual(stream.type, "video")
 
-        # codec properties
-        self.assertEqual(stream.long_name, "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10")
-        self.assertEqual(stream.name, "h264")
-
         # codec context properties
         self.assertEqual(stream.bit_rate, None)
+        self.assertEqual(
+            stream.codec.long_name, "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"
+        )
+        self.assertEqual(stream.codec.name, "h264")
         self.assertEqual(stream.display_aspect_ratio, None)
         self.assertEqual(stream.format, None)
         self.assertFalse(stream.has_b_frames)
