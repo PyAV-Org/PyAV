@@ -63,16 +63,19 @@ cdef class OutputContainer(Container):
         cdef const lib.AVCodec *codec
         cdef Codec codec_obj
 
+        is_data_template = template is not None and template.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA
+
         if codec_name is not None:
             codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
-        else:
+            codec = codec_obj.ptr
+        elif not is_data_template:
             if not template.codec_context:
                 raise ValueError("template has no codec context")
             codec_obj = template.codec_context.codec
-        codec = codec_obj.ptr
+            codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
-        if not lib.avformat_query_codec(
+        if codec and not lib.avformat_query_codec(
             self.ptr.oformat,
             codec.id,
             lib.FF_COMPLIANCE_NORMAL,
@@ -112,12 +115,16 @@ cdef class OutputContainer(Container):
             codec_context.channels = 2
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
 
+        if is_data_template:
+            stream.codecpar = template.ptr.codecpar
+
         # Some formats want stream headers to be separate
         if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
 
         # Construct the user-land stream
-        cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec)
+
+        cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec) if not is_data_template else None
         cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
 
@@ -144,7 +151,7 @@ cdef class OutputContainer(Container):
         for stream in self.streams:
 
             ctx = stream.codec_context
-            if not ctx.is_open:
+            if ctx and not ctx.is_open:
 
                 for k, v in self.options.items():
                     ctx.options.setdefault(k, v)
