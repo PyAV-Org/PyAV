@@ -295,6 +295,24 @@ class TestVideoFrameNdarray(TestCase):
             self.assertEqual(frame.format.name, format)
             self.assertNdarraysEqual(frame.to_ndarray(), array)
 
+    def test_ndarray_gbrpf32(self):
+        array = numpy.random.random_sample(size=(480, 640, 3)).astype(numpy.float32)
+        for format in ["gbrpf32be", "gbrpf32le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 640)
+            self.assertEqual(frame.height, 480)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_gbrpf32_align(self):
+        array = numpy.random.random_sample(size=(238, 318, 3)).astype(numpy.float32)
+        for format in ["gbrpf32be", "gbrpf32le"]:
+            frame = VideoFrame.from_ndarray(array, format=format)
+            self.assertEqual(frame.width, 318)
+            self.assertEqual(frame.height, 238)
+            self.assertEqual(frame.format.name, format)
+            self.assertNdarraysEqual(frame.to_ndarray(), array)
+
     def test_ndarray_yuv420p(self):
         array = numpy.random.randint(0, 256, size=(720, 640), dtype=numpy.uint8)
         frame = VideoFrame.from_ndarray(array, format="yuv420p")
