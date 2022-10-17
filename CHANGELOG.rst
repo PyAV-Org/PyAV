@@ -16,6 +16,30 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v10.0.0
+-------
+
+Major:
+
+- Add support for FFmpeg 5.0 and 5.1 (:issue:`817`).
+- Drop support for FFmpeg < 4.3.
+- Deprecate `CodecContext.time_base` for decoders (:issue:`966`).
+- Deprecate `VideoStream.framerate` and `VideoStream.rate` (:issue:`1005`).
+- Stop proxying `Codec` from `Stream` instances (:issue:`1037`).
+
+Features:
+
+- Update FFmpeg to 5.1.2 for the binary wheels.
+- Provide binary wheels for Python 3.11 (:issue:`1019`).
+- Add VideoFrame ndarray operations for gbrp formats (:issue:`986`).
+- Add VideoFrame ndarray operations for gbrpf32 formats (:issue:`1028`).
+- Add VideoFrame ndarray operations for nv12 format (:issue:`996`).
+
+Fixes:
+
+- Fix conversion to numpy array for multi-byte formats (:issue:`981`).
+- Safely iterate over filter pads (:issue:`1000`).
+
 v9.2.0
 ------
 
