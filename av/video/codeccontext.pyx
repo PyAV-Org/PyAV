@@ -1,6 +1,7 @@
 from libc.stdint cimport int64_t
 cimport libav as lib
 
+from av import deprecation
 from av.codec.context cimport CodecContext
 from av.error cimport err_check
 from av.frame cimport Frame
@@ -118,13 +119,7 @@ cdef class VideoCodecContext(CodecContext):
         def __set__(self, value):
             to_avrational(value, &self.ptr.framerate)
 
-    property rate:
-        """Another name for :attr:`framerate`."""
-        def __get__(self):
-            return self.framerate
-
-        def __set__(self, value):
-            self.framerate = value
+    rate = deprecation.renamed_attr("framerate")
 
     property gop_size:
         def __get__(self):

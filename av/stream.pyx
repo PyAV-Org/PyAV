@@ -219,7 +219,7 @@ cdef class Stream(object):
         The average frame rate of this video stream.
 
         This is calculated when the file is opened by looking at the first
-        few frames and averaging their rate.
+        few frames and averaging their rate. See :ffmpeg:`AVStream.avg_frame_rate`
 
         :type: :class:`~fractions.Fraction` or ``None``
 

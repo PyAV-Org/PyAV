@@ -5,7 +5,7 @@ cdef class AudioStream(Stream):
             self.__class__.__name__,
             self.index,
             self.name,
-            self.rate,
+            self.sample_rate,
             self.layout.name,
             self.format.name if self.format else None,
             id(self),

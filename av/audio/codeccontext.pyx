@@ -1,5 +1,6 @@
 cimport libav as lib
 
+from av import deprecation
 from av.audio.format cimport AudioFormat, get_audio_format
 from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.audio.layout cimport AudioLayout, get_audio_layout
@@ -75,13 +76,7 @@ cdef class AudioCodecContext(CodecContext):
         def __set__(self, int value):
             self.ptr.sample_rate = value
 
-    property rate:
-        """Another name for :attr:`sample_rate`."""
-        def __get__(self):
-            return self.sample_rate
-
-        def __set__(self, value):
-            self.sample_rate = value
+    rate = deprecation.renamed_attr("sample_rate")
 
     # TODO: Integrate into AudioLayout.
     property channels:

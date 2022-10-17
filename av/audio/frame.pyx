@@ -1,3 +1,4 @@
+from av import deprecation
 from av.audio.format cimport get_audio_format
 from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
@@ -165,13 +166,7 @@ cdef class AudioFrame(Frame):
         def __set__(self, value):
             self.ptr.sample_rate = value
 
-    property rate:
-        """Another name for :attr:`sample_rate`."""
-        def __get__(self):
-            return self.ptr.sample_rate
-
-        def __set__(self, value):
-            self.ptr.sample_rate = value
+    rate = deprecation.renamed_attr("sample_rate")
 
     def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
