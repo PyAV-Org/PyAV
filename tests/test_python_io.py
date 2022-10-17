@@ -256,9 +256,11 @@ class TestPythonIO(TestCase):
             self.assertEqual(len(container.streams), 1)
             stream = container.streams[0]
             self.assertIsInstance(stream, av.video.stream.VideoStream)
-            self.assertEqual(stream.type, "video")
-            self.assertEqual(stream.name, "png")
             self.assertEqual(stream.duration, frame_count)
+            self.assertEqual(stream.type, "video")
+
+            # codec context properties
+            self.assertEqual(stream.codec.name, "png")
             self.assertEqual(stream.format.name, "rgb24")
             self.assertEqual(stream.format.width, width)
             self.assertEqual(stream.format.height, height)
