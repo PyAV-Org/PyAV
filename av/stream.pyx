@@ -1,3 +1,5 @@
+import warnings
+
 from cpython cimport PyWeakref_NewRef
 from libc.stdint cimport int64_t, uint8_t
 from libc.string cimport memcpy
@@ -12,6 +14,8 @@ from av.utils cimport (
     dict_to_avdict,
     to_avrational
 )
+
+from av.deprecation import AVDeprecationWarning
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -95,6 +99,14 @@ cdef class Stream(object):
         )
 
     def __getattr__(self, name):
+        # Deprecate framerate pass-through as it is not always set.
+        # See: https://github.com/PyAV-Org/PyAV/issues/1005
+        if self.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO and name in ("framerate", "rate"):
+            warnings.warn(
+                "VideoStream.%s is deprecated as it is not always set; please use VideoStream.average_rate." % name,
+                AVDeprecationWarning
+            )
+
         # Convenience getter for codec context properties.
         if self.codec_context is not None:
             return getattr(self.codec_context, name)
