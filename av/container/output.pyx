@@ -68,7 +68,9 @@ cdef class OutputContainer(Container):
         if codec_name is not None:
             codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
             codec = codec_obj.ptr
-        elif not is_data_template:
+        elif is_data_template:
+            codec = NULL
+        else:
             if not template.codec_context:
                 raise ValueError("template has no codec context")
             codec_obj = template.codec_context.codec
@@ -89,9 +91,15 @@ cdef class OutputContainer(Container):
 
         # Copy from the template.
         if template is not None:
-            err_check(lib.avcodec_parameters_to_context(codec_context, template.ptr.codecpar))
-            # Reset the codec tag assuming we are remuxing.
-            codec_context.codec_tag = 0
+            if is_data_template:
+                stream.avg_frame_rate = template.ptr.avg_frame_rate
+                stream.time_base = template.ptr.time_base
+                stream.codecpar.codec_id = template.ptr.codecpar.codec_id
+                stream.codecpar.codec_type = template.ptr.codecpar.codec_type
+            else:
+                err_check(lib.avcodec_parameters_to_context(codec_context, template.ptr.codecpar))
+                # Reset the codec tag assuming we are remuxing.
+                codec_context.codec_tag = 0
 
         # Now lets set some more sane video defaults
         elif codec.type == lib.AVMEDIA_TYPE_VIDEO:
@@ -114,9 +122,6 @@ cdef class OutputContainer(Container):
             codec_context.sample_rate = rate or 48000
             codec_context.channels = 2
             codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
-
-        if is_data_template:
-            stream.codecpar = template.ptr.codecpar
 
         # Some formats want stream headers to be separate
         if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:

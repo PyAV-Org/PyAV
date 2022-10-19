@@ -131,12 +131,13 @@ cdef class Stream(object):
             errors=self.container.metadata_errors,
         )
 
-        if not self.ptr.time_base.num:
+        if not self.ptr.time_base.num and self.codec_context:
             self.ptr.time_base = self.codec_context.ptr.time_base
 
         # It prefers if we pass it parameters via this other object.
         # Lets just copy what we want.
-        err_check(lib.avcodec_parameters_from_context(self.ptr.codecpar, self.codec_context.ptr))
+        if self.codec_context:
+            err_check(lib.avcodec_parameters_from_context(self.ptr.codecpar, self.codec_context.ptr))
 
     def encode(self, frame=None):
         """
