@@ -1,6 +1,7 @@
-import av
-import io
 import base64
+import io
+
+import av
 
 from .common import TestCase
 
