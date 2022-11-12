@@ -7,9 +7,9 @@ import shlex
 import subprocess
 import sys
 
+from setuptools import Extension, find_packages, setup
 from Cython.Build import cythonize
 from Cython.Compiler.AutoDocTransforms import EmbedSignature
-from setuptools import Extension, find_packages, setup
 
 
 FFMPEG_LIBRARIES = [
