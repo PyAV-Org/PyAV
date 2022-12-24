@@ -297,6 +297,18 @@ cdef extern from "libavutil/imgutils.h" nogil:
         AVPixelFormat pix_fmt,
         int align
     )
+    cdef int av_image_fill_pointers(
+        uint8_t *pointers[4],
+        AVPixelFormat pix_fmt,
+        int height,
+        uint8_t *ptr,
+        const int linesizes[4]
+    )
+    cdef int av_image_fill_linesizes(
+        int linesizes[4],
+        AVPixelFormat pix_fmt,
+        int width,
+    )
 
 
 cdef extern from "libavutil/log.h" nogil:
