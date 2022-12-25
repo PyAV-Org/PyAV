@@ -126,6 +126,7 @@ class TestBasicVideoEncoding(TestCase):
     def test_default_options(self):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mpeg4")
+            self.assertIn(stream, output.streams.video)
             self.assertEqual(stream.average_rate, Fraction(24, 1))
             self.assertEqual(stream.time_base, None)
 
@@ -152,6 +153,7 @@ class TestBasicVideoEncoding(TestCase):
 
         with av.open(path, "w") as output:
             stream = output.add_stream("libx264", 24)
+            self.assertIn(stream, output.streams.video)
             stream.width = WIDTH
             stream.height = HEIGHT
             stream.pix_fmt = "yuv420p"
@@ -182,6 +184,7 @@ class TestBasicAudioEncoding(TestCase):
     def test_default_options(self):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
+            self.assertIn(stream, output.streams.audio)
             self.assertEqual(stream.time_base, None)
 
             # codec context properties
@@ -203,6 +206,7 @@ class TestBasicAudioEncoding(TestCase):
             sample_fmt = "s16"
 
             stream = output.add_stream("mp2", sample_rate)
+            self.assertIn(stream, output.streams.audio)
 
             ctx = stream.codec_context
             ctx.time_base = sample_rate
@@ -241,11 +245,13 @@ class TestEncodeStreamSemantics(TestCase):
     def test_stream_index(self):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             vstream = output.add_stream("mpeg4", 24)
+            self.assertIn(vstream, output.streams.video)
             vstream.pix_fmt = "yuv420p"
             vstream.width = 320
             vstream.height = 240
 
             astream = output.add_stream("mp2", 48000)
+            self.assertIn(astream, output.streams.audio)
             astream.channels = 2
             astream.format = "s16"
 
@@ -277,6 +283,7 @@ class TestEncodeStreamSemantics(TestCase):
     def test_set_id_and_time_base(self):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
+            self.assertIn(stream, output.streams.audio)
 
             # set id
             self.assertEqual(stream.id, 0)
