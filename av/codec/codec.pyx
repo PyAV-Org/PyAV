@@ -130,6 +130,10 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         """This codec takes the reordered_opaque field from input AVFrames
         and returns it in the corresponding field in AVCodecContext after
         encoding."""),
+    ('ENCODER_FLUSH', 1 << 21,  # lib.AV_CODEC_CAP_ENCODER_FLUSH  # FFmpeg 4.3
+        """This encoder can be flushed using avcodec_flush_buffers(). If this
+        flag is not set, the encoder must be closed and reopened to ensure that
+        no frames remain pending."""),
 ), is_flags=True)
 
 
@@ -328,6 +332,7 @@ cdef class Codec(object):
     hardware = capabilities.flag_property('HARDWARE')
     hybrid = capabilities.flag_property('HYBRID')
     encoder_reordered_opaque = capabilities.flag_property('ENCODER_REORDERED_OPAQUE')
+    encoder_flush = capabilities.flag_property('ENCODER_FLUSH')
 
 
 cdef get_codec_names():
