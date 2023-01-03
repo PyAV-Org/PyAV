@@ -319,4 +319,11 @@ cdef class Stream(object):
 
         :type: str
         """
-        return lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
+        cdef const char *s
+        s = lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
+        # NULL if media_type is unknown (AVMEDIA_TYPE_UNKNOWN)
+        # Without this manual check, a segfault can occur
+        if s == NULL:
+            return None
+        else:
+            return s
