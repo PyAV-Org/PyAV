@@ -1,3 +1,5 @@
+import logging
+
 from av.audio.format cimport get_audio_format
 from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
@@ -9,16 +11,16 @@ cdef object _cinit_bypass_sentinel
 
 
 format_dtypes = {
-    'dbl': 'f8',
-    'dblp': 'f8',
-    'flt': 'f4',
-    'fltp': 'f4',
-    's16': 'i2',
-    's16p': 'i2',
-    's32': 'i4',
-    's32p': 'i4',
-    'u8': 'u1',
-    'u8p': 'u1',
+    'dbl': 'float64',
+    'dblp': 'float64',
+    'flt': 'float32',
+    'fltp': 'float32',
+    's16': 'int16',
+    's16p': 'int16',
+    's32': 'int32',
+    's32p': 'int32',
+    'u8': 'uint8',
+    'u8p': 'uint8',
 }
 
 
@@ -104,21 +106,37 @@ cdef class AudioFrame(Frame):
         )
 
     @staticmethod
-    def from_ndarray(array, format='s16', layout='stereo'):
+    def from_ndarray(array, format=None, layout=None):
         """
         Construct a frame from a numpy array.
+
+        .. note:: The type and number of channels are automatically deduced.
         """
         import numpy as np
 
-        # map avcodec type to numpy type
-        try:
-            dtype = np.dtype(format_dtypes[format])
-        except KeyError:
-            raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
+        if format is not None:
+            logging.warning('deprecated warning : the `format` argument is ignored')
+
+        # map numpy type to avcodec type
+        format = {np_t: av_t for av_t, np_t in format_dtypes.items()}.get(array.dtype.name, None)
+        if format is None:
+            raise ValueError('The numpy array format `%s` is not yet supported' % array.dtype.name)
+        if layout is None:
+            if array.shape[0] == 1:
+                layout = 'mono'
+            elif array.shape[0] == 2:
+                layout = 'stereo'
+            else:
+                raise ValueError('Only 1 or 2 channels are allowed, not %d.' % array.shape[0])
+        else:
+            logging.warning('deprecated warning : the `layout` argument can be deduced from the array shape.')
+
+        # conversion of the shape into an acceptable type
+        array = np.expand_dims(array.ravel(order='F'), 0)
 
         # check input format
         nb_channels = len(AudioLayout(layout).channels)
-        check_ndarray(array, dtype, 2)
+        check_ndarray(array, array.dtype, 2)
         if AudioFormat(format).is_planar:
             check_ndarray_shape(array, array.shape[0] == nb_channels)
             samples = array.shape[1]
