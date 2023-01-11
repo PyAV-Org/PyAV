@@ -593,10 +593,17 @@ cdef class CodecContext(object):
 
     property max_bit_rate:
         def __get__(self):
-            if self.ptr.rc_max_rate > 0:
-                return self.ptr.rc_max_rate
-            else:
-                return None
+            return self.ptr.rc_max_rate if self.ptr.rc_max_rate > 0 else None
+
+        def __set__(self, int value):
+            self.ptr.rc_max_rate = value
+
+    property min_bit_rate:
+        def __get__(self):
+            return self.ptr.rc_min_rate if self.ptr.rc_min_rate > 0 else None
+
+        def __set__(self, int value):
+            self.ptr.rc_min_rate = value
 
     property bit_rate_tolerance:
         def __get__(self):
