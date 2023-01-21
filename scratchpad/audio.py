@@ -13,7 +13,7 @@ def print_data(frame):
         data = bytes(plane)
         print('\tPLANE %d, %d bytes' % (i, len(data)))
         data = data.encode('hex')
-        for i in xrange(0, len(data), 128):
+        for i in range(0, len(data), 128):
             print('\t\t\t%s' % data[i:i + 128])
 
 
