@@ -1,4 +1,5 @@
 import av
+from fractions import Fraction
 
 from .common import TestCase, fate_suite
 
@@ -27,3 +28,21 @@ class TestStreams(TestCase):
         self.assertEqual([video], container.streams.get(video=(0,)))
 
         # TODO: Find something in the fate suite with video, audio, and subtitles.
+
+    def test_stream_properties(self):
+        # Ensure that all stream properties have sensible values even
+        # if writing to the stream hasn't started yet
+        with av.open(self.sandboxed("output.mp4"), "w") as container:
+            stream = container.add_stream('h264')
+            assert stream.id is not None
+            assert stream.profile is None
+            assert stream.index == 0
+            assert stream.time_base is None
+            assert stream.average_rate == Fraction(24, 1)
+            assert stream.base_rate is None
+            assert stream.guessed_rate is None
+            assert stream.start_time is None
+            assert stream.duration is None
+            assert stream.frames == 0
+            assert stream.language is None
+            assert stream.type is None
