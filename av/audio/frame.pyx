@@ -11,16 +11,16 @@ cdef object _cinit_bypass_sentinel
 
 
 format_dtypes = {
-    'dbl': 'float64',
-    'dblp': 'float64',
-    'flt': 'float32',
-    'fltp': 'float32',
-    's16': 'int16',
-    's16p': 'int16',
-    's32': 'int32',
-    's32p': 'int32',
-    'u8': 'uint8',
-    'u8p': 'uint8',
+    'dbl': 'f8', # float64
+    'dblp': 'f8',
+    'flt': 'f4', # float32
+    'fltp': 'f4',
+    's16': 'i2', # int16
+    's16p': 'i2',
+    's32': 'i4', # int32
+    's32p': 'i4',
+    'u8': 'u1', # uint8
+    'u8p': 'u1',
 }
 
 
@@ -118,7 +118,7 @@ cdef class AudioFrame(Frame):
             logging.warning('deprecated warning : the `format` argument is ignored')
 
         # map numpy type to avcodec type
-        format = {np_t: av_t for av_t, np_t in format_dtypes.items()}.get(array.dtype.name, None)
+        format = {np_t: av_t for av_t, np_t in format_dtypes.items()}.get(array.dtype.str[-2:], None)
         if format is None:
             raise ValueError('The numpy array format `%s` is not yet supported' % array.dtype.name)
         if layout is None:
