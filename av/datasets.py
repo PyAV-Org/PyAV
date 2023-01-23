@@ -62,7 +62,7 @@ def cached_download(url, name):
 
     clean_name = os.path.normpath(name)
     if clean_name != name:
-        raise ValueError("{} is not normalized.".format(name))
+        raise ValueError(f"{name} is not normalized.")
 
     for dir_ in iter_data_dirs():
         path = os.path.join(dir_, name)
@@ -72,11 +72,11 @@ def cached_download(url, name):
     dir_ = next(iter_data_dirs(True))
     path = os.path.join(dir_, name)
 
-    log.info("Downloading {} to {}".format(url, path))
+    log.info(f"Downloading {url} to {path}")
 
     response = urlopen(url)
     if response.getcode() != 200:
-        raise ValueError("HTTP {}".format(response.getcode()))
+        raise ValueError(f"HTTP {response.getcode()}")
 
     dir_ = os.path.dirname(path)
     try:

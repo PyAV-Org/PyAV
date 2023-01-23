@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG)
 def format_time(time, time_base):
     if time is None:
         return 'None'
-    return '%.3fs (%s or %s/%s)' % (time_base * time, time_base * time, time_base.numerator * time, time_base.denominator)
+    return '{:.3f}s ({} or {}/{})'.format(time_base * time, time_base * time, time_base.numerator * time, time_base.denominator)
 
 
 arg_parser = argparse.ArgumentParser()
@@ -45,7 +45,7 @@ print('\tformat:', container.format)
 print('\tduration:', float(container.duration) / time_base)
 print('\tmetadata:')
 for k, v in sorted(container.metadata.items()):
-    print('\t\t%s: %r' % (k, v))
+    print('\t\t{}: {!r}'.format(k, v))
 print()
 
 print(len(container.streams), 'stream(s):')
@@ -79,7 +79,7 @@ for i, stream in enumerate(container.streams):
 
     print('\t\tmetadata:')
     for k, v in sorted(stream.metadata.items()):
-        print('\t\t\t%s: %r' % (k, v))
+        print('\t\t\t{}: {!r}'.format(k, v))
 
     print()
 
@@ -145,7 +145,7 @@ for i, packet in enumerate(container.demux(streams)):
                 proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
             try:
                 proc.stdin.write(bytes(frame.planes[0]))
-            except IOError as e:
+            except OSError as e:
                 print(e)
                 exit()
 

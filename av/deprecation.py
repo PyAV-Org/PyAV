@@ -21,7 +21,7 @@ class MethodDeprecationWarning(AVDeprecationWarning):
 warnings.filterwarnings("default", "", AVDeprecationWarning)
 
 
-class renamed_attr(object):
+class renamed_attr:
 
     """Proxy for renamed attributes (or methods) on classes.
     Getting and setting values will be redirected to the provided name,
@@ -68,14 +68,14 @@ class renamed_attr(object):
         setattr(instance, self.new_name, value)
 
 
-class method(object):
+class method:
     def __init__(self, func):
         functools.update_wrapper(self, func, ("__name__", "__doc__"))
         self.func = func
 
     def __get__(self, instance, cls):
         warning = MethodDeprecationWarning(
-            "{}.{} is deprecated.".format(cls.__name__, self.func.__name__)
+            f"{cls.__name__}.{self.func.__name__} is deprecated."
         )
         warnings.warn(warning, stacklevel=2)
         return self.func.__get__(instance, cls)

@@ -39,5 +39,5 @@ auto_time = time.time() - start_time
 container.close()
 
 
-print("Decoded with default threading in {:.2f}s.".format(default_time))
-print("Decoded with auto threading in {:.2f}s.".format(auto_time))
+print(f"Decoded with default threading in {default_time:.2f}s.")
+print(f"Decoded with auto threading in {auto_time:.2f}s.")

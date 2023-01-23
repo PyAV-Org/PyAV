@@ -41,7 +41,7 @@ class FrameGrabber(QtCore.QObject):
     update_frame_range = QtCore.pyqtSignal(object)
 
     def __init__(self, parent=None):
-        super(FrameGrabber, self).__init__(parent)
+        super().__init__(parent)
         self.file = None
         self.stream = None
         self.frame = None
@@ -263,7 +263,7 @@ class FrameGrabber(QtCore.QObject):
 
 class DisplayWidget(QtGui.QLabel):
     def __init__(self, parent=None):
-        super(DisplayWidget, self).__init__(parent)
+        super().__init__(parent)
         #self.setScaledContents(True)
         self.setMinimumSize(1920 / 10, 1080 / 10)
 
@@ -286,7 +286,7 @@ class DisplayWidget(QtGui.QLabel):
         self.pixmap = QtGui.QPixmap.fromImage(img)
 
         #super(DisplayWidget, self).setPixmap(self.pixmap)
-        super(DisplayWidget, self).setPixmap(self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        super().setPixmap(self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def sizeHint(self):
         width = self.width()
@@ -294,7 +294,7 @@ class DisplayWidget(QtGui.QLabel):
 
     def resizeEvent(self, event):
         if self.pixmap:
-            super(DisplayWidget, self).setPixmap(self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            super().setPixmap(self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def sizeHint(self):
         return QtCore.QSize(1920 / 2.5, 1080 / 2.5)
@@ -307,7 +307,7 @@ class VideoPlayerWidget(QtGui.QWidget):
     load_file = QtCore.pyqtSignal(object)
 
     def __init__(self, parent=None):
-        super(VideoPlayerWidget, self).__init__(parent)
+        super().__init__(parent)
         self.display = DisplayWidget()
         self.timeline = QtGui.QScrollBar(Qt.Horizontal)
         self.frame_grabber = FrameGrabber()
@@ -378,7 +378,7 @@ class VideoPlayerWidget(QtGui.QWidget):
             self.timeline.setValue(self.timeline.value() + direction)
 
         else:
-            super(VideoPlayerWidget, self).keyPressEvent(event)
+            super().keyPressEvent(event)
 
     def mousePressEvent(self, event):
         # clear focus of spinbox
@@ -386,7 +386,7 @@ class VideoPlayerWidget(QtGui.QWidget):
         if focused_widget:
             focused_widget.clearFocus()
 
-        super(VideoPlayerWidget, self).mousePressEvent(event)
+        super().mousePressEvent(event)
 
     def dragEnterEvent(self, event):
         event.accept()

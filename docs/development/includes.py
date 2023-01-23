@@ -16,7 +16,7 @@ os.chdir(os.path.abspath(os.path.join(__file__, '..', '..', '..')))
 class Visitor(TreeVisitor):
 
     def __init__(self, state=None):
-        super(Visitor, self).__init__()
+        super().__init__()
         self.state = dict(state or {})
         self.events = []
 
@@ -153,14 +153,14 @@ if not doxygen:
             anchorfile = node.find('anchorfile').text
             anchor = node.find('anchor').text
 
-            url = '%s/%s#%s' % (doxygen_base, anchorfile, anchor)
+            url = '{}/{}#{}'.format(doxygen_base, anchorfile, anchor)
 
             doxygen[name] = {'url': url}
 
             if node.attrib['kind'] == 'function':
                 ret_type = node.find('type').text
                 arglist = node.find('arglist').text
-                sig = '%s %s%s' % (ret_type, name, arglist)
+                sig = '{} {}{}'.format(ret_type, name, arglist)
                 doxygen[name]['sig'] = sig
 
         for struct in root.iter('compound'):
@@ -183,7 +183,7 @@ for path in iter_cython('av'):
     try:
         events = extract(path)
     except Exception as e:
-        print("    %s in %s" % (e.__class__.__name__, path), file=sys.stderr)
+        print("    {} in {}".format(e.__class__.__name__, path), file=sys.stderr)
         print("        %s" % e, file=sys.stderr)
         continue
     for event in events:
@@ -242,7 +242,7 @@ for path in iter_cython('include'):
         elif event['type'] == 'variable':
             struct = event.get('struct')
             if struct:
-                event['_headline'] = '.. c:member:: %s %s' % (event['vartype'], event['name'])
+                event['_headline'] = '.. c:member:: {} {}'.format(event['vartype'], event['name'])
                 event['_sort_key'] = 1.1
             else:
                 event['_headline'] = '.. c:var:: %s' % event['name']
@@ -251,14 +251,14 @@ for path in iter_cython('include'):
         elif event['type'] == 'struct':
             event['_headline'] = '.. c:type:: struct %s' % event['name']
             event['_sort_key'] = 1
-            event['_doxygen_url'] = '%s/struct%s.html' % (doxygen_base, event['name'])
+            event['_doxygen_url'] = '{}/struct{}.html'.format(doxygen_base, event['name'])
 
         else:
             print('Unknown event type %s' % event['type'], file=sys.stderr)
 
         name = event['name']
         if event.get('struct'):
-            name = '%s.%s' % (event['struct'], name)
+            name = '{}.{}'.format(event['struct'], name)
 
         # Doxygen URLs
         event.setdefault('_doxygen_url', doxygen.get(name, {}).get('url'))
@@ -278,13 +278,13 @@ for path in iter_cython('include'):
                 prefix = '.'.join(chunks) + '.' if chunks else ''
 
                 if ref.get('property'):
-                    ref_pairs.append((ref['property'], ':attr:`%s%s`' % (prefix, ref['property'])))
+                    ref_pairs.append((ref['property'], ':attr:`{}{}`'.format(prefix, ref['property'])))
                 elif ref.get('function'):
                     name = ref['function']
                     if name in ('__init__', '__cinit__', '__dealloc__'):
-                        ref_pairs.append((name, ':class:`%s%s <%s>`' % (prefix, name, prefix.rstrip('.'))))
+                        ref_pairs.append((name, ':class:`{}{} <{}>`'.format(prefix, name, prefix.rstrip('.'))))
                     else:
-                        ref_pairs.append((name, ':func:`%s%s`' % (prefix, name)))
+                        ref_pairs.append((name, ':func:`{}{}`'.format(prefix, name)))
                 else:
                     continue
 

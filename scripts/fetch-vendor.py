@@ -36,7 +36,7 @@ args = parser.parse_args()
 logging.basicConfig(level=logging.INFO)
 
 # read config file
-with open(args.config_file, "r") as fp:
+with open(args.config_file) as fp:
     config = json.load(fp)
 
 # create fresh destination directory

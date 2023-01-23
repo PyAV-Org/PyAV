@@ -72,7 +72,7 @@ class WriteOnlyPipe(BytesIO):
 CUSTOM_IO_PROTOCOL = "pyavtest://"
 
 
-class CustomIOLogger(object):
+class CustomIOLogger:
     """Log calls to open a file as well as method calls on the files"""
 
     def __init__(self):
@@ -96,7 +96,7 @@ class CustomIOLogger(object):
         elif (flags & 2) == 2:
             mode = "wb"
         else:
-            raise RuntimeError("Unsupported io open mode {}".format(flags))
+            raise RuntimeError(f"Unsupported io open mode {flags}")
 
         return MethodLogger(open(url, mode))
 

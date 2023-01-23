@@ -14,7 +14,7 @@ __all__ = '''
 '''.strip().split()
 
 
-class ModuleProxy(object):
+class ModuleProxy:
 
     def __init__(self, name, module):
         self.name = name

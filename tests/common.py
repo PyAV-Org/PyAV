@@ -86,7 +86,7 @@ def run_in_sandbox(func):
     return _inner
 
 
-class MethodLogger(object):
+class MethodLogger:
     def __init__(self, obj):
         self._obj = obj
         self._log = []
@@ -142,7 +142,7 @@ class TestCase(_Base):
             msg = ""
             for equal in it:
                 if not equal:
-                    msg += "- arrays differ at index %s; %s %s\n" % (
+                    msg += "- arrays differ at index {}; {} {}\n".format(
                         it.multi_index,
                         a[it.multi_index],
                         b[it.multi_index],
@@ -173,7 +173,7 @@ class TestCase(_Base):
 
         def assertIsNot(self, a, b, msg=None):
             if a is b:
-                self.fail(msg or "both are %r at 0x%x; %r" % (type(a), id(a), a))
+                self.fail(msg or "both are {!r} at 0x{:x}; {!r}".format(type(a), id(a), a))
 
         def assertIsNone(self, x, msg=None):
             if x is not None:
@@ -185,16 +185,16 @@ class TestCase(_Base):
 
         def assertIn(self, a, b, msg=None):
             if a not in b:
-                self.fail(msg or "%r not in %r" % (a, b))
+                self.fail(msg or "{!r} not in {!r}".format(a, b))
 
         def assertNotIn(self, a, b, msg=None):
             if a in b:
-                self.fail(msg or "%r in %r" % (a, b))
+                self.fail(msg or "{!r} in {!r}".format(a, b))
 
         def assertIsInstance(self, instance, types, msg=None):
             if not isinstance(instance, types):
-                self.fail(msg or "not an instance of %r; %r" % (types, instance))
+                self.fail(msg or "not an instance of {!r}; {!r}".format(types, instance))
 
         def assertNotIsInstance(self, instance, types, msg=None):
             if isinstance(instance, types):
-                self.fail(msg or "is an instance of %r; %r" % (types, instance))
+                self.fail(msg or "is an instance of {!r}; {!r}".format(types, instance))

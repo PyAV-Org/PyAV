@@ -14,6 +14,6 @@ with av.open(content) as container:
 
         # We use `frame.pts` as `frame.index` won't make must sense with the `skip_frame`.
         frame.to_image().save(
-            "night-sky.{:04d}.jpg".format(frame.pts),
+            f"night-sky.{frame.pts:04d}.jpg",
             quality=80,
         )

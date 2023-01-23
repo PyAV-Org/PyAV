@@ -57,7 +57,7 @@ for pi, fi, frame in decode_iter():
     bytes_buffered = output.bufferSize() - output.bytesFree()
     us_processed = output.processedUSecs()
     us_buffered = 1000000 * bytes_buffered / (2 * 16 / 8) / 48000
-    print('pts: %.3f, played: %.3f, buffered: %.3f' % (frame.time or 0, us_processed / 1000000.0, us_buffered / 1000000.0))
+    print('pts: {:.3f}, played: {:.3f}, buffered: {:.3f}'.format(frame.time or 0, us_processed / 1000000.0, us_buffered / 1000000.0))
 
 
     data = bytes(frame.planes[0])

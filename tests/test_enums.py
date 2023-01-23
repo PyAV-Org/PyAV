@@ -216,7 +216,7 @@ class TestEnums(TestCase):
         Flags = self.define_foobar(is_flags=True)
         foobar = Flags.FOO | Flags.BAR
 
-        class Class(object):
+        class Class:
             def __init__(self, value):
                 self.value = Flags[value].value
 

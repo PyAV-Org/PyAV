@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # PyAV documentation build configuration file, created by
 # sphinx-quickstart on Fri Dec  7 22:13:16 2012.
@@ -29,7 +28,7 @@ logging.basicConfig()
 
 
 if sphinx.version_info < (1, 8):
-    print("Sphinx {} is too old; we require >= 1.8.".format(sphinx.__version__), file=sys.stderr)
+    print(f"Sphinx {sphinx.__version__} is too old; we require >= 1.8.", file=sys.stderr)
     exit(1)
 
 
@@ -72,8 +71,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'PyAV'
-copyright = u'2017, Mike Boers'
+project = 'PyAV'
+copyright = '2017, Mike Boers'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -350,8 +349,8 @@ class EnumTable(SphinxDirective):
             return row
 
         thead += makerow(
-            '{} Attribute'.format(cls.__name__) if cls else None,
-            '{} Name'.format(enum.__name__),
+            f'{cls.__name__} Attribute' if cls else None,
+            f'{enum.__name__} Name',
             'Flag Value',
             'Meaning in FFmpeg',
         )
@@ -371,7 +370,7 @@ class EnumTable(SphinxDirective):
                     continue
                 attr = None
 
-            value = '0x{:X}'.format(item.value)
+            value = f'0x{item.value:X}'
 
             doc = item.__doc__ or '-'
 
@@ -420,7 +419,7 @@ def doxylink_create_handler(app, file_name, url_base):
             parent = parent_map.get(node)
             parent_name = parent.find('name') if parent else None
             if parent_name is not None:
-                name = '{}.{}'.format(parent_name.text, name)
+                name = f'{parent_name.text}.{name}'
 
         filenode = node.find('filename')
         if filenode is not None:

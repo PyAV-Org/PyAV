@@ -92,7 +92,7 @@ for i, packet in enumerate(container.demux(stream)):
             try:
                 for frame in frames:
                     ffplay.stdin.write(bytes(frame.planes[0]))
-            except IOError as e:
+            except OSError as e:
                 print(e)
                 exit()
 

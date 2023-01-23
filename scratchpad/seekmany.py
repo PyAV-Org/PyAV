@@ -24,8 +24,7 @@ print()
 
 def iter_frames():
     for packet in container.demux(stream):
-        for frame in packet.decode():
-            yield frame
+        yield from packet.decode()
 
 for i in range(steps):
 

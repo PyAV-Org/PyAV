@@ -58,4 +58,4 @@ usage.append(resource.getrusage(resource.RUSAGE_SELF))
 for i in range(len(usage) - 1):
     before = usage[i]
     after = usage[i + 1]
-    print('%s (%s)' % (format_bytes(after.ru_maxrss), format_bytes(after.ru_maxrss - before.ru_maxrss)))
+    print('{} ({})'.format(format_bytes(after.ru_maxrss), format_bytes(after.ru_maxrss - before.ru_maxrss)))

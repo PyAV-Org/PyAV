@@ -1,4 +1,3 @@
-
 import av
 
 
@@ -21,8 +20,8 @@ for code, cls in av.error.classes.items():
 
     rows.append((
         #'{} ({})'.format(enum.tag, code),
-        '``av.{}``'.format(cls.__name__),
-        '``av.error.{}``'.format(enum.name),
+        f'``av.{cls.__name__}``',
+        f'``av.error.{enum.name}``',
         enum.strerror,
     ))
 

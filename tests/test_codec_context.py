@@ -13,8 +13,7 @@ from .common import TestCase, fate_suite
 
 def iter_frames(container, stream):
     for packet in container.demux(stream):
-        for frame in packet.decode():
-            yield frame
+        yield from packet.decode()
 
 
 def iter_raw_frames(path, packet_sizes, ctx):
@@ -26,15 +25,13 @@ def iter_raw_frames(path, packet_sizes, ctx):
             assert read_size == size
             if not read_size:
                 break
-            for frame in ctx.decode(packet):
-                yield frame
+            yield from ctx.decode(packet)
         while True:
             try:
                 frames = ctx.decode(None)
             except EOFError:
                 break
-            for frame in frames:
-                yield frame
+            yield from frames
             if not frames:
                 break
 

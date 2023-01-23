@@ -13,7 +13,7 @@ cc = CodecContext.create('mpeg4', 'r')
 print(cc)
 
 
-fh = open('test.mp4', 'r')
+fh = open('test.mp4')
 
 frame_count = 0
 
