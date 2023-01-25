@@ -83,8 +83,6 @@ class TestAudioFrameConveniences(TestCase):
         layouts = [
             ("dbl", "mono", "f8", (1, 160)),
             ("dbl", "stereo", "f8", (2, 160)),
-            ("dblp", "mono", "f8", (1, 160)),
-            ("dblp", "stereo", "f8", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.ndarray(shape=size, dtype=dtype)
@@ -124,8 +122,6 @@ class TestAudioFrameConveniences(TestCase):
         layouts = [
             ("flt", "mono", "f4", (1, 160)),
             ("flt", "stereo", "f4", (2, 160)),
-            ("fltp", "mono", "f4", (1, 160)),
-            ("fltp", "stereo", "f4", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.ndarray(shape=size, dtype=dtype)
@@ -141,8 +137,6 @@ class TestAudioFrameConveniences(TestCase):
         layouts = [
             ("s16", "mono", "i2", (1, 160)),
             ("s16", "stereo", "i2", (2, 160)),
-            ("s16p", "mono", "i2", (1, 160)),
-            ("s16p", "stereo", "i2", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.random.randint(0, 256, size=size, dtype=dtype)
@@ -162,8 +156,6 @@ class TestAudioFrameConveniences(TestCase):
         layouts = [
             ("s32", "mono", "i4", (1, 160)),
             ("s32", "stereo", "i4", (2, 160)),
-            ("s32p", "mono", "i4", (1, 160)),
-            ("s32p", "stereo", "i4", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.random.randint(0, 256, size=size, dtype=dtype)
@@ -177,8 +169,6 @@ class TestAudioFrameConveniences(TestCase):
         layouts = [
             ("u8", "mono", "u1", (1, 160)),
             ("u8", "stereo", "u1", (2, 160)),
-            ("u8p", "mono", "u1", (1, 160)),
-            ("u8p", "stereo", "u1", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.random.randint(0, 256, size=size, dtype=dtype)

@@ -117,8 +117,11 @@ cdef class AudioFrame(Frame):
         if format is not None:
             logging.warning('deprecated warning : the `format` argument is ignored')
 
-        # map numpy type to avcodec type
-        format = {np_t: av_t for av_t, np_t in format_dtypes.items()}.get(array.dtype.str[-2:], None)
+        # map numpy type to avcodec non planar type
+        format = (
+            {np_t: av_t for av_t, np_t in format_dtypes.items() if not av_t.endswith('p')}
+            .get(array.dtype.str[-2:], None)
+        )
         if format is None:
             raise ValueError('The numpy array format `%s` is not yet supported' % array.dtype.name)
         if layout is None:
@@ -131,7 +134,7 @@ cdef class AudioFrame(Frame):
         else:
             logging.warning('deprecated warning : the `layout` argument can be deduced from the array shape.')
 
-        # conversion of the shape into an acceptable type
+        # conversion of the shape into a non planar type
         array = np.expand_dims(array.ravel(order='F'), 0)
 
         # check input format
