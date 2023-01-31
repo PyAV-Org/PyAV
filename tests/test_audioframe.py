@@ -82,15 +82,13 @@ class TestAudioFrameConveniences(TestCase):
     def test_ndarray_dbl(self):
         layouts = [
             ("dbl", "mono", "f8", (1, 160)),
-            ("dbl", "stereo", "f8", (1, 320)),
-            ("dblp", "mono", "f8", (1, 160)),
-            ("dblp", "stereo", "f8", (2, 160)),
+            ("dbl", "stereo", "f8", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.ndarray(shape=size, dtype=dtype)
             for i in range(size[0]):
                 array[i][:] = numpy.random.rand(size[1])
-            frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
+            frame = AudioFrame.from_ndarray(array)
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
@@ -123,15 +121,13 @@ class TestAudioFrameConveniences(TestCase):
     def test_ndarray_flt(self):
         layouts = [
             ("flt", "mono", "f4", (1, 160)),
-            ("flt", "stereo", "f4", (1, 320)),
-            ("fltp", "mono", "f4", (1, 160)),
-            ("fltp", "stereo", "f4", (2, 160)),
+            ("flt", "stereo", "f4", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.ndarray(shape=size, dtype=dtype)
             for i in range(size[0]):
                 array[i][:] = numpy.random.rand(size[1])
-            frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
+            frame = AudioFrame.from_ndarray(array)
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
@@ -140,13 +136,11 @@ class TestAudioFrameConveniences(TestCase):
     def test_ndarray_s16(self):
         layouts = [
             ("s16", "mono", "i2", (1, 160)),
-            ("s16", "stereo", "i2", (1, 320)),
-            ("s16p", "mono", "i2", (1, 160)),
-            ("s16p", "stereo", "i2", (2, 160)),
+            ("s16", "stereo", "i2", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.random.randint(0, 256, size=size, dtype=dtype)
-            frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
+            frame = AudioFrame.from_ndarray(array)
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
@@ -161,13 +155,11 @@ class TestAudioFrameConveniences(TestCase):
     def test_ndarray_s32(self):
         layouts = [
             ("s32", "mono", "i4", (1, 160)),
-            ("s32", "stereo", "i4", (1, 320)),
-            ("s32p", "mono", "i4", (1, 160)),
-            ("s32p", "stereo", "i4", (2, 160)),
+            ("s32", "stereo", "i4", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.random.randint(0, 256, size=size, dtype=dtype)
-            frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
+            frame = AudioFrame.from_ndarray(array)
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
@@ -176,13 +168,11 @@ class TestAudioFrameConveniences(TestCase):
     def test_ndarray_u8(self):
         layouts = [
             ("u8", "mono", "u1", (1, 160)),
-            ("u8", "stereo", "u1", (1, 320)),
-            ("u8p", "mono", "u1", (1, 160)),
-            ("u8p", "stereo", "u1", (2, 160)),
+            ("u8", "stereo", "u1", (2, 160)),
         ]
         for format, layout, dtype, size in layouts:
             array = numpy.random.randint(0, 256, size=size, dtype=dtype)
-            frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
+            frame = AudioFrame.from_ndarray(array)
             self.assertEqual(frame.format.name, format)
             self.assertEqual(frame.layout.name, layout)
             self.assertEqual(frame.samples, 160)
