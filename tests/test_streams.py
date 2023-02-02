@@ -45,4 +45,4 @@ class TestStreams(TestCase):
             assert stream.duration is None
             assert stream.frames == 0
             assert stream.language is None
-            assert stream.type is None
+            assert stream.type == 'video'
