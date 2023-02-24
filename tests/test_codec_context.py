@@ -388,5 +388,5 @@ class TestEncoding(TestCase):
         # so can really use checksums
         for frame in iter_raw_frames(path, packet_sizes, ctx):
             result_samples += frame.samples
-            self.assertEqual(frame.rate, sample_rate)
+            self.assertEqual(frame.sample_rate, sample_rate)
             self.assertEqual(len(frame.layout.channels), channels)

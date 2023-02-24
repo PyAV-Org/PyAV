@@ -6,7 +6,7 @@ from .common import TestCase, fate_suite
 
 
 def timestamp_to_frame(timestamp, stream):
-    fps = stream.rate
+    fps = stream.average_rate
     time_base = stream.time_base
     start_time = stream.start_time
     frame = (timestamp - start_time) * float(time_base) * float(fps)
@@ -103,7 +103,9 @@ class TestSeek(TestCase):
 
         # set target frame to middle frame
         target_frame = int(total_frame_count / 2.0)
-        target_timestamp = int((target_frame * av.time_base) / video_stream.rate)
+        target_timestamp = int(
+            (target_frame * av.time_base) / video_stream.average_rate
+        )
 
         # should seek to nearest keyframe before target_timestamp
         container.seek(target_timestamp)

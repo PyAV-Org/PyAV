@@ -11,11 +11,10 @@ Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Window
     pip install av
 
 
-Currently FFmpeg 4.4.1 is used with the following features enabled for all platforms:
+Currently FFmpeg 5.1.2 is used with the following features enabled for all platforms:
 
 - fontconfig
 - gmp
-- gnutls
 - libaom
 - libass
 - libbluray
@@ -37,6 +36,11 @@ Currently FFmpeg 4.4.1 is used with the following features enabled for all platf
 - libxvid
 - lzma
 - zlib
+
+The following additional features are also enabled on Linux:
+
+- gnutls
+- libxcb
 
 
 Conda

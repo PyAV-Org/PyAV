@@ -116,6 +116,12 @@ cdef class OutputContainer(Container):
         if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
 
+        # Initialise stream codec parameters to populate the codec type.
+        #
+        # Subsequent changes to the codec context will be applied just before
+        # encoding starts in `start_encoding()`.
+        err_check(lib.avcodec_parameters_from_context(stream.codecpar, codec_context))
+
         # Construct the user-land stream
         cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec)
         cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)

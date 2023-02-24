@@ -23,11 +23,11 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         name: Checkout
 
       - name: Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: 3.7
 
@@ -56,10 +56,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "5.0", extras: true}
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "5.1", extras: true}
+          - {os: ubuntu-latest, python: 3.7, ffmpeg: "5.0"}
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.4"}
           - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.3"}
-          - {os: ubuntu-latest, python: pypy3, ffmpeg: "4.4"}
+          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "4.4"}
           - {os: macos-latest,  python: 3.7, ffmpeg: "4.4"}
 
     env:
@@ -68,11 +69,11 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       name: Checkout
 
     - name: Python ${{ matrix.config.python }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.config.python }}
 
@@ -146,6 +147,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - {os: windows-latest, python: 3.7, ffmpeg: "5.1"}
           - {os: windows-latest, python: 3.7, ffmpeg: "5.0"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.4"}
           - {os: windows-latest, python: 3.7, ffmpeg: "4.3"}
@@ -153,7 +155,7 @@ jobs:
     steps:
 
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Conda
       shell: bash
@@ -167,7 +169,9 @@ jobs:
           pillow \
           python=${{ matrix.config.python }} \
           setuptools
-          if [[ "${{ matrix.config.ffmpeg }}" == "5.0" ]]; then
+          if [[ "${{ matrix.config.ffmpeg }}" == "5.1" ]]; then
+            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.1.2-1/ffmpeg-win_amd64.tar.gz
+          elif [[ "${{ matrix.config.ffmpeg }}" == "5.0" ]]; then
             curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.0.1-1/ffmpeg-win_amd64.tar.gz
           elif [[ "${{ matrix.config.ffmpeg }}" == "4.4" ]]; then
             curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/4.4.1-8/ffmpeg-win_amd64.tar.gz
@@ -195,8 +199,8 @@ jobs:
   package-source:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7
       - name: Build source package
@@ -205,7 +209,7 @@ jobs:
           python scripts/fetch-vendor.py /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/
@@ -229,13 +233,13 @@ jobs:
           - os: windows-latest
             arch: AMD64
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7
       - name: Set up QEMU
         if: matrix.os == 'ubuntu-latest'
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       - name: Install packages
         if: matrix.os == 'macos-latest'
         run: |
@@ -261,7 +265,7 @@ jobs:
           cibuildwheel --output-dir dist
         shell: bash
       - name: Upload wheels
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/
@@ -270,8 +274,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [package-source, package-wheel]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v1
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: dist
           path: dist/
