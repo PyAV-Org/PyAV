@@ -399,7 +399,7 @@ cdef class CodecContext(object):
 
         return packets
 
-    cdef _send_frame_and_recv(self, Frame frame):
+    def _send_frame_and_recv(self, Frame frame):
 
         cdef Packet packet
 
@@ -408,14 +408,10 @@ cdef class CodecContext(object):
             res = lib.avcodec_send_frame(self.ptr, frame.ptr if frame is not None else NULL)
         err_check(res)
 
-        out = []
-        while True:
+        packet = self._recv_packet()
+        while packet:
+            yield packet
             packet = self._recv_packet()
-            if packet:
-                out.append(packet)
-            else:
-                break
-        return out
 
     cdef _send_packet_and_recv(self, Packet packet):
 
@@ -473,9 +469,7 @@ cdef class CodecContext(object):
         if not res:
             return packet
 
-    cpdef encode(self, Frame frame=None):
-        """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
-
+    cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame):
         if self.ptr.codec_type not in [lib.AVMEDIA_TYPE_VIDEO, lib.AVMEDIA_TYPE_AUDIO]:
             raise NotImplementedError('Encoding is only supported for audio and video.')
 
@@ -489,12 +483,22 @@ cdef class CodecContext(object):
             if frame is not None:
                 frame._rebase_time(self.ptr.time_base)
 
+        return frames
+
+    cpdef encode(self, Frame frame=None):
+        """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
         res = []
-        for frame in frames:
+        for frame in self._prepare_and_time_rebase_frames_for_encode(frame):
             for packet in self._send_frame_and_recv(frame):
                 self._setup_encoded_packet(packet)
                 res.append(packet)
         return res
+
+    def encode_lazy(self, Frame frame=None):
+        for frame in self._prepare_and_time_rebase_frames_for_encode(frame):
+            for packet in self._send_frame_and_recv(frame):
+                self._setup_encoded_packet(packet)
+                yield packet
 
     cdef _setup_encoded_packet(self, Packet packet):
         # We coerced the frame's time_base into the CodecContext's during encoding,

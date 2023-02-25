@@ -40,6 +40,7 @@ cdef class CodecContext(object):
     # Used by both transcode APIs to setup user-land objects.
     # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing
     # packets are bogus). It should take all info it needs from the context and/or stream.
+    cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame)
     cdef _prepare_frames_for_encode(self, Frame frame)
     cdef _setup_encoded_packet(self, Packet)
     cdef _setup_decoded_frame(self, Frame, Packet)
@@ -50,7 +51,6 @@ cdef class CodecContext(object):
     # resampling audio to a higher rate but with fixed size frames), and the
     # send/recv buffer may be limited to a single frame. Ergo, we need to flush
     # the buffer as often as possible.
-    cdef _send_frame_and_recv(self, Frame frame)
     cdef _recv_packet(self)
     cdef _send_packet_and_recv(self, Packet packet)
     cdef _recv_frame(self)
