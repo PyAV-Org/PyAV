@@ -25,6 +25,12 @@ pip install av
 
 If you want to use your existing FFmpeg, the source version of PyAV is on [PyPI][pypi] too:
 
+* First, ensure dependencies are installed (assuming Ubuntu):
+```bash
+sudo apt-get install libavdevice-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libavformat-dev libswscale-dev libswresample-dev
+```
+
+Then, install the pyav package:
 ```bash
 pip install av --no-binary av
 ```
