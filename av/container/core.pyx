@@ -365,6 +365,7 @@ def open(file, mode=None, format=None, options=None,
         ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
         ``options`` is a dictionary of additional options. The callable should return a
         file-like object.
+    :rtype: Container
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
