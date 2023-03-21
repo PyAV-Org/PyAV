@@ -157,8 +157,6 @@ Flags = define_enum('Flags', __name__, (
         This flag is mainly intended for testing."""),
     ('SORT_DTS', lib.AVFMT_FLAG_SORT_DTS,
         "Try to interleave outputted packets by dts (using this flag can slow demuxing down)."),
-    ('PRIV_OPT', lib.AVFMT_FLAG_PRIV_OPT,
-        "Enable use of private options by delaying codec open (this could be made default once all code is converted)."),
     ('FAST_SEEK', lib.AVFMT_FLAG_FAST_SEEK,
         "Enable fast, but inaccurate seeks for some formats."),
     ('SHORTEST', lib.AVFMT_FLAG_SHORTEST,
@@ -329,7 +327,6 @@ cdef class Container(object):
     flush_packets = flags.flag_property('FLUSH_PACKETS')
     bit_exact = flags.flag_property('BITEXACT')
     sort_dts = flags.flag_property('SORT_DTS')
-    priv_opt = flags.flag_property('PRIV_OPT')
     fast_seek = flags.flag_property('FAST_SEEK')
     shortest = flags.flag_property('SHORTEST')
     auto_bsf = flags.flag_property('AUTO_BSF')
