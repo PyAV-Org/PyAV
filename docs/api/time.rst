@@ -38,7 +38,7 @@ Attributes that represent time on those objects will be in that object's ``time_
     >>> float(video.duration * video.time_base)
     6.72
 
-:class:`.Packet` has a :attr:`.Packet.pts` ("presentation" time stamp), and :class:`.Frame` has a :attr:`.Frame.pts` and :attr:`.Frame.dts` ("presentation" and "decode" time stamps). Both have a ``time_base`` attribute, but it defaults to the time base of the object that handles them. For packets that is streams. For frames it is streams when decoding, and codec contexts when encoding (which is strange, but it is what it is).
+:class:`.Packet` has a :attr:`.Packet.pts` and :attr:`.Packet.dts` ("presentation" and "decode" time stamps), and :class:`.Frame` has a :attr:`.Frame.pts` ("presentation" time stamp). Both have a ``time_base`` attribute, but it defaults to the time base of the object that handles them. For packets that is streams. For frames it is streams when decoding, and codec contexts when encoding (which is strange, but it is what it is).
 
 In many cases a stream has a time base of ``1 / frame_rate``, and then its frames have incrementing integers for times (0, 1, 2, etc.). Those frames take place at ``pts * time_base`` or ``0 / frame_rate``, ``1 / frame_rate``, ``2 / frame_rate``, etc..
 

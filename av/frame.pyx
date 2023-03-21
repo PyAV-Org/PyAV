@@ -68,7 +68,9 @@ cdef class Frame(object):
 
     property dts:
         """
-        The decoding timestamp in :attr:`time_base` units for this frame.
+        The decoding timestamp copied from the :class:`~av.packet.Packet` that triggered returning this frame in :attr:`time_base` units.
+
+        (if frame threading isn't used) This is also the Presentation time of this frame calculated from only :attr:`.Packet.dts` values without pts values.
 
         :type: int
         """
