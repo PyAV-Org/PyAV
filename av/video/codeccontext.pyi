@@ -26,6 +26,8 @@ class VideoCodecContext(CodecContext):
     color_primaries: int
     color_trc: int
     colorspace: int
+    qmin: int
+    qmax: int
     type: Literal["video"]
 
     def encode(self, frame: VideoFrame | None = None) -> list[Packet]: ...
