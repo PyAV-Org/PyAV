@@ -386,3 +386,66 @@ class TestMaxBFrameEncoding(TestCase):
             file = encode_file_with_max_b_frames(max_b_frames)
             actual_max_b_frames = max_b_frame_run_in_file(file)
             assert actual_max_b_frames <= max_b_frames
+
+
+def encode_frames_with_qminmax(frames: list, shape: tuple, qminmax: tuple) -> int:
+    """
+    Encode a video with the given quantiser limits, and return how many enocded
+    bytes we made in total.
+
+    frames: the frames to encode
+    shape: the (numpy) shape of the video frames
+    qminmax: two integers with 1 <= qmin <= 31 giving the min and max quantiser.
+
+    Returns: total length of the encoded bytes.
+    """
+    file = io.BytesIO()
+    container = av.open(file, mode="w", format="mp4")
+    stream = container.add_stream("h264", rate=30)
+    stream.height, stream.width, _ = shape
+    stream.pix_fmt = "yuv420p"
+    stream.codec_context.gop_size = 15
+    stream.codec_context.qmin, stream.codec_context.qmax = qminmax
+
+    bytes_encoded = 0
+    for frame in frames:
+        for packet in stream.encode(frame):
+            bytes_encoded += packet.size
+
+    for packet in stream.encode():
+        bytes_encoded += packet.size
+
+    container.close()
+
+    return bytes_encoded
+
+
+class TestQminQmaxEncoding(TestCase):
+    def test_qmin_qmax(self) -> None:
+        """
+        Test that we can set the min and max quantisers, and the encoder is reacting
+        correctly to them.
+
+        Can't see a way to get hold of the quantisers in a decoded video, so instead
+        we'll encode the same frames with decreasing quantisers, and check that the
+        file size increases (by a noticeable factor) each time.
+        """
+        # Make a random - but repeatable - 10 frame video sequence.
+        np.random.seed(0)
+        frames = []
+        shape = (480, 640, 3)
+        for _ in range(10):
+            frames.append(
+                av.VideoFrame.from_ndarray(
+                    np.random.randint(0, 256, shape, dtype=np.uint8), format="rgb24"
+                )
+            )
+
+        # Get the size of the encoded output for different quantisers.
+        quantisers = ((31, 31), (15, 15), (1, 1))
+        sizes = [
+            encode_frames_with_qminmax(frames, shape, qminmax) for qminmax in quantisers
+        ]
+
+        factor = 1.3  # insist at least 30% larger each time
+        assert all(small * factor < large for small, large in zip(sizes, sizes[1:]))

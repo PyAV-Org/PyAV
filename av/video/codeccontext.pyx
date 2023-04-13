@@ -278,3 +278,33 @@ cdef class VideoCodecContext(CodecContext):
     @max_b_frames.setter
     def max_b_frames(self, value):
         self.ptr.max_b_frames = value
+
+    @property
+    def qmin(self):
+        """
+        The minimum quantiser value of an encoded stream.
+
+        Wraps :ffmpeg:`AVCodecContext.qmin`.
+
+        :type: int
+        """
+        return self.ptr.qmin
+
+    @qmin.setter
+    def qmin(self, value):
+        self.ptr.qmin = value
+
+    @property
+    def qmax(self):
+        """
+        The maximum quantiser value of an encoded stream.
+
+        Wraps :ffmpeg:`AVCodecContext.qmax`.
+
+        :type: int
+        """
+        return self.ptr.qmax
+
+    @qmax.setter
+    def qmax(self, value):
+        self.ptr.qmax = value
