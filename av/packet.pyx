@@ -193,6 +193,12 @@ cdef class Packet(Buffer):
             if self.ptr.duration != lib.AV_NOPTS_VALUE:
                 return self.ptr.duration
 
+        def __set__(self, v):
+            if v is None:
+                self.ptr.duration = lib.AV_NOPTS_VALUE
+            else:
+                self.ptr.duration = v
+
     property is_keyframe:
         def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
 
