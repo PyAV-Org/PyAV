@@ -32,12 +32,26 @@ class TestAudioFifo(TestCase):
     def test_pts_simple(self):
         fifo = av.AudioFifo()
 
+        # ensure __repr__ does not crash
+        self.assertTrue(
+            str(fifo).startswith(
+                "<av.AudioFifo uninitialized, use fifo.write(frame), at 0x"
+            )
+        )
+
         iframe = av.AudioFrame(samples=1024)
         iframe.pts = 0
         iframe.sample_rate = 48000
         iframe.time_base = "1/48000"
 
         fifo.write(iframe)
+
+        # ensure __repr__ was updated
+        self.assertTrue(
+            str(fifo).startswith(
+                "<av.AudioFifo 1024 samples of 48000hz <av.AudioLayout 'stereo'> <av.AudioFormat s16> at 0x"
+            )
+        )
 
         oframe = fifo.read(512)
         self.assertTrue(oframe is not None)
