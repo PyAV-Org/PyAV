@@ -198,3 +198,12 @@ cdef class Packet(Buffer):
 
     property is_corrupt:
         def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
+
+    property is_discard:
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISCARD)
+
+    property is_trusted:
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_TRUSTED)
+
+    property is_disposable:
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISPOSABLE)
