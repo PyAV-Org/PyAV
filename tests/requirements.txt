@@ -1,5 +1,5 @@
 autopep8
-Cython
+Cython<3.0
 editorconfig
 flake8
 isort

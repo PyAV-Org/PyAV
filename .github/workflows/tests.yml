@@ -164,7 +164,7 @@ jobs:
         conda config --set always_yes true
         conda config --add channels conda-forge
         conda create -q -n pyav \
-          cython \
+          "cython<3.0" \
           numpy \
           pillow \
           python=${{ matrix.config.python }} \
@@ -205,7 +205,7 @@ jobs:
           python-version: 3.7
       - name: Build source package
         run: |
-          pip install cython
+          pip install "cython<3.0"
           python scripts/fetch-vendor.py /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
