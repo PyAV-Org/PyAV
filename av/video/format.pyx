@@ -47,10 +47,14 @@ cdef class VideoFormat(object):
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-        self.components = tuple(
+        # hmaarrfk -- 2023/07/23
+        # Note on tuple([])
+        # Cython 3 seems to have trouble with cdef tuples, so we use a list
+        # it complains about some const identifier not being able to get assigned
+        self.components = tuple([
             VideoFormatComponent(self, i)
             for i in range(self.ptr.nb_components)
-        )
+        ])
 
     def __repr__(self):
         if self.width or self.height:
