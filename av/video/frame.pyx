@@ -6,7 +6,7 @@ from av.enum cimport define_enum
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
 from av.video.format cimport get_pix_fmt, get_video_format
-from av.video.plane cimport VideoPlane
+from av.video.plane cimport VideoPlane, YUVPlanes
 
 
 cdef object _cinit_bypass_sentinel
@@ -291,11 +291,21 @@ cdef class VideoFrame(Frame):
         if frame.format.name in ('yuv420p', 'yuvj420p'):
             assert frame.width % 2 == 0
             assert frame.height % 2 == 0
-            return np.hstack((
-                useful_array(frame.planes[0]),
-                useful_array(frame.planes[1]),
-                useful_array(frame.planes[2])
-            )).reshape(-1, frame.width)
+            # Fast path for the case that the entire YUV data is contiguous
+            if (
+                frame.planes[0].line_size == frame.planes[0].width and
+                frame.planes[1].line_size == frame.planes[1].width and
+                frame.planes[2].line_size == frame.planes[2].width
+            ):
+                yuv_planes = YUVPlanes(frame, 0)
+                return useful_array(yuv_planes).reshape(frame.height * 3 // 2, frame.width)
+            else:
+                # Otherwise, we need to copy the data through the use of np.hstack
+                return np.hstack((
+                    useful_array(frame.planes[0]),
+                    useful_array(frame.planes[1]),
+                    useful_array(frame.planes[2])
+                )).reshape(-1, frame.width)
         elif frame.format.name in ('yuv444p', 'yuvj444p'):
             return np.hstack((
                 useful_array(frame.planes[0]),
