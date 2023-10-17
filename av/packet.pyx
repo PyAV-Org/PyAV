@@ -196,5 +196,17 @@ cdef class Packet(Buffer):
     property is_keyframe:
         def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
 
+        def __set__(self, v):
+            if v:
+                self.ptr.flags |= lib.AV_PKT_FLAG_KEY
+            else:
+                self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
+
     property is_corrupt:
         def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
+
+        def __set__(self, v):
+            if v:
+                self.ptr.flags |= lib.AV_PKT_FLAG_CORRUPT
+            else:
+                self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
