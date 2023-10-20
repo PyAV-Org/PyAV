@@ -77,6 +77,12 @@ cdef class Frame(object):
                 return None
             return self.ptr.pkt_dts
 
+        def __set__(self, value):
+            if value is None:
+                self.ptr.pkt_dts = lib.AV_NOPTS_VALUE
+            else:
+                self.ptr.pkt_dts = value
+
     property pts:
         """
         The presentation timestamp in :attr:`time_base` units for this frame.
