@@ -75,7 +75,8 @@ cdef class AudioResampler(object):
             abuffer = self.graph.add("abuffer",
                                      sample_rate=str(frame.sample_rate),
                                      sample_fmt=AudioFormat(frame.format).name,
-                                     channel_layout=frame.layout.name)
+                                     channel_layout=frame.layout.name,
+                                     time_base=str(frame.time_base))
             aformat = self.graph.add("aformat",
                                      sample_rates=str(self.rate),
                                      sample_fmts=self.format.name,
