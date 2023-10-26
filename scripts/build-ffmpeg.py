@@ -258,8 +258,8 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="vpx",
-            source_filename="vpx-1.11.0.tar.gz",
-            source_url="https://github.com/webmproject/libvpx/archive/v1.11.0.tar.gz",
+            source_filename="vpx-1.13.1.tar.gz",
+            source_url="https://github.com/webmproject/libvpx/archive/v1.13.1.tar.gz",
             build_arguments=[
                 "--disable-examples",
                 "--disable-tools",
