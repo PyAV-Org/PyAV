@@ -4,7 +4,6 @@ cdef extern from "libavutil/error.h" nogil:
     cdef int ENOMEM
     cdef int EAGAIN
 
-
     cdef int AVERROR_BSF_NOT_FOUND
     cdef int AVERROR_BUG
     cdef int AVERROR_BUFFER_TOO_SMALL

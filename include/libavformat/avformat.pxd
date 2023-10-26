@@ -16,7 +16,6 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int AVSEEK_FLAG_ANY
     cdef int AVSEEK_FLAG_FRAME
 
-
     cdef int AVIO_FLAG_WRITE
 
     cdef enum AVMediaType:
@@ -207,10 +206,10 @@ cdef extern from "libavformat/avformat.h" nogil:
     #       .. seealso:: FFmpeg's docs: :ffmpeg:`avformat_open_input`
     #
     cdef int avformat_open_input(
-        AVFormatContext **ctx, # NULL will allocate for you.
+        AVFormatContext **ctx,  # NULL will allocate for you.
         char *filename,
-        AVInputFormat *format, # Can be NULL.
-        AVDictionary **options # Can be NULL.
+        AVInputFormat *format,  # Can be NULL.
+        AVDictionary **options  # Can be NULL.
     )
 
     cdef int avformat_close_input(AVFormatContext **ctx)
@@ -224,7 +223,7 @@ cdef extern from "libavformat/avformat.h" nogil:
     #
     cdef int avformat_write_header(
         AVFormatContext *ctx,
-        AVDictionary **options # Can be NULL
+        AVDictionary **options  # Can be NULL
     )
 
     cdef int av_write_trailer(AVFormatContext *ctx)
@@ -269,7 +268,7 @@ cdef extern from "libavformat/avformat.h" nogil:
 
     cdef int avformat_find_stream_info(
         AVFormatContext *ctx,
-        AVDictionary **options, # Can be NULL.
+        AVDictionary **options,  # Can be NULL.
     )
 
     cdef AVStream* avformat_new_stream(
