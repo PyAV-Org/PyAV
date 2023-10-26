@@ -23,13 +23,6 @@ cdef extern from "libavutil/avutil.h" nogil:
         AV_PICTURE_TYPE_SP
         AV_PICTURE_TYPE_BI
 
-    cdef enum AVPixelFormat:
-        AV_PIX_FMT_NONE
-        AV_PIX_FMT_YUV420P
-        AV_PIX_FMT_RGB24
-        PIX_FMT_RGB24
-        PIX_FMT_RGBA
-
     cdef enum AVRounding:
         AV_ROUND_ZERO
         AV_ROUND_INF

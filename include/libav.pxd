@@ -3,6 +3,7 @@ include "libavutil/channel_layout.pxd"
 include "libavutil/dict.pxd"
 include "libavutil/error.pxd"
 include "libavutil/frame.pxd"
+include "libavutil/pixfmt.pxd"
 include "libavutil/samplefmt.pxd"
 include "libavutil/motion_vector.pxd"
 
