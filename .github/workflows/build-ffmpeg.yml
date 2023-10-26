@@ -28,8 +28,8 @@ jobs:
       run:
         shell: ${{ matrix.shell }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Install packages
@@ -58,7 +58,7 @@ jobs:
           cibuildwheel --output-dir output
           rm -f output/*.whl
       - name: Upload FFmpeg
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: output
           path: output/
@@ -72,12 +72,12 @@ jobs:
     env:
       stage: 1
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       - name: Build FFmpeg dependencies
         run: |
           docker run -v $PWD:/project:rw --workdir=/project quay.io/pypa/manylinux2014_${{ matrix.arch }} bash -exc '
@@ -87,7 +87,7 @@ jobs:
             cp -ar /tmp/vendor /project;
           '
         shell: bash
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: artifacts-${{ matrix.arch }}
           path: vendor
@@ -102,13 +102,13 @@ jobs:
     env:
       stage: 2
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      - uses: actions/download-artifact@v2
+        uses: docker/setup-qemu-action@v3
+      - uses: actions/download-artifact@v3
         with:
           name: artifacts-${{ matrix.arch }}
           path: vendor
@@ -122,7 +122,7 @@ jobs:
             cp -ar /tmp/vendor /project;
           '
         shell: bash
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: artifacts-${{ matrix.arch }}
           path: vendor
@@ -137,13 +137,13 @@ jobs:
     env:
       stage: 3
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      - uses: actions/download-artifact@v2
+        uses: docker/setup-qemu-action@v3
+      - uses: actions/download-artifact@v3
         with:
           name: artifacts-${{ matrix.arch }}
           path: vendor
@@ -162,7 +162,7 @@ jobs:
           rm -f output/*.whl
         shell: bash
       - name: Upload FFmpeg
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: output
           path: output/
