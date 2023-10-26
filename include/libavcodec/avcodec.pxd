@@ -106,15 +106,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_ID_MPEG2VIDEO
         AV_CODEC_ID_MPEG1VIDEO
 
-    cdef enum AVDiscard:
-        AVDISCARD_NONE
-        AVDISCARD_DEFAULT
-        AVDISCARD_NONREF
-        AVDISCARD_BIDIR
-        AVDISCARD_NONINTRA
-        AVDISCARD_NONKEY
-        AVDISCARD_ALL
-
     cdef struct AVCodec:
 
         char *name
