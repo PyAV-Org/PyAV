@@ -100,7 +100,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="gmp",
-            source_url="https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz",
+            source_url="https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz",
             # out-of-tree builds fail on Windows
             build_dir=".",
         ),
