@@ -266,12 +266,6 @@ if not os.path.exists(output_tarball):
             ],
         ),
         Package(
-            name="theora",
-            requires=["vorbis"],
-            source_url="http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.gz",
-            build_arguments=["--disable-examples", "--disable-spec"],
-        ),
-        Package(
             name="x264",
             source_url="https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2",
             # parallel build runs out of memory on Windows
@@ -310,7 +304,6 @@ if not os.path.exists(output_tarball):
                 "openjpeg",
                 "opus",
                 "speex",
-                "theora",
                 "twolame",
                 "vorbis",
                 "vpx",
@@ -324,6 +317,7 @@ if not os.path.exists(output_tarball):
             build_arguments=[
                 "--disable-alsa",
                 "--disable-doc",
+                "--disable-libtheora",
                 "--disable-mediafoundation",
                 "--enable-fontconfig",
                 "--enable-gmp",
@@ -340,7 +334,6 @@ if not os.path.exists(output_tarball):
                 "--enable-libopenjpeg",
                 "--enable-libopus",
                 "--enable-libspeex",
-                "--enable-libtheora",
                 "--enable-libtwolame",
                 "--enable-libvorbis",
                 "--enable-libvpx",

@@ -29,7 +29,6 @@ Currently FFmpeg 5.1.2 is used with the following features enabled for all platf
 - libopenjpeg
 - libopus
 - libspeex
-- libtheora
 - libtwolame
 - libvorbis
 - libvpx
