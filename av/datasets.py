@@ -9,7 +9,6 @@ log = logging.getLogger(__name__)
 
 
 def iter_data_dirs(check_writable=False):
-
     try:
         yield os.environ["PYAV_TESTDATA_DIR"]
     except KeyError:
@@ -45,7 +44,6 @@ def iter_data_dirs(check_writable=False):
 
 
 def cached_download(url, name):
-
     """Download the data at a URL, and cache it under the given name.
 
     The file is stored under `pyav/test` with the given name in the directory
