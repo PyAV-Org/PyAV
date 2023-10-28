@@ -28,7 +28,6 @@ old_embed_signature = EmbedSignature._embed_signature
 
 
 def new_embed_signature(self, sig, doc):
-
     # Strip any `self` parameters from the front.
     sig = re.sub(r"\(self(,\s+)?", "(", sig)
 
@@ -192,7 +191,7 @@ setup(
     url="https://github.com/PyAV-Org/PyAV",
     packages=find_packages(exclude=["build*", "examples*", "scratchpad*", "tests*"]),
     package_data=package_data,
-    python_requires='>=3.7',
+    python_requires=">=3.8",
     zip_safe=False,
     ext_modules=ext_modules,
     test_suite="tests",
@@ -211,11 +210,11 @@ setup(
         "Operating System :: Unix",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Multimedia :: Sound/Audio",
         "Topic :: Multimedia :: Sound/Audio :: Conversion",
