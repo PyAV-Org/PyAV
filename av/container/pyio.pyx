@@ -4,7 +4,7 @@ cimport libav as lib
 from av.error cimport stash_exception
 
 
-ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
+ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) noexcept nogil
 
 
 cdef class PyIOFile(object):
@@ -76,11 +76,11 @@ cdef class PyIOFile(object):
                 lib.av_freep(&self.buffer)
 
 
-cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) nogil:
+cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) noexcept nogil:
     with gil:
         return pyio_read_gil(opaque, buf, buf_size)
 
-cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
+cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size) noexcept:
     cdef PyIOFile self
     cdef bytes res
     try:
@@ -95,11 +95,11 @@ cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size):
         return stash_exception()
 
 
-cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) nogil:
+cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) noexcept nogil:
     with gil:
         return pyio_write_gil(opaque, buf, buf_size)
 
-cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
+cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size) noexcept:
     cdef PyIOFile self
     cdef bytes bytes_to_write
     cdef int bytes_written
@@ -114,7 +114,7 @@ cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size):
         return stash_exception()
 
 
-cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) nogil:
+cdef int64_t pyio_seek(void *opaque, int64_t offset, int whence) noexcept nogil:
     # Seek takes the standard flags, but also a ad-hoc one which means that
     # the library wants to know how large the file is. We are generally
     # allowed to ignore this.

@@ -20,7 +20,7 @@ from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
 
 
-ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
+ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) noexcept nogil
 
 
 cdef object _cinit_sentinel = object()
@@ -29,7 +29,7 @@ cdef object _cinit_sentinel = object()
 # We want to use the monotonic clock if it is available.
 cdef object clock = getattr(time, 'monotonic', time.time)
 
-cdef int interrupt_cb (void *p) nogil:
+cdef int interrupt_cb (void *p) noexcept nogil:
 
     cdef timeout_info info = dereference(<timeout_info*> p)
     if info.timeout < 0:  # timeout < 0 means no timeout
@@ -56,7 +56,7 @@ cdef int pyav_io_open(lib.AVFormatContext *s,
                       lib.AVIOContext **pb,
                       const char *url,
                       int flags,
-                      lib.AVDictionary **options) nogil:
+                      lib.AVDictionary **options) noexcept nogil:
     with gil:
         return pyav_io_open_gil(s, pb, url, flags, options)
 
@@ -65,7 +65,7 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
                           lib.AVIOContext **pb,
                           const char *url,
                           int flags,
-                          lib.AVDictionary **options):
+                          lib.AVDictionary **options) noexcept:
     cdef Container container
     cdef object file
     cdef PyIOFile pyio_file
@@ -104,13 +104,13 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
 
 
 cdef void pyav_io_close(lib.AVFormatContext *s,
-                        lib.AVIOContext *pb) nogil:
+                        lib.AVIOContext *pb) noexcept nogil:
     with gil:
         pyav_io_close_gil(s, pb)
 
 
 cdef void pyav_io_close_gil(lib.AVFormatContext *s,
-                            lib.AVIOContext *pb):
+                            lib.AVIOContext *pb) noexcept:
     cdef Container container
     try:
         container = <Container>dereference(s).opaque

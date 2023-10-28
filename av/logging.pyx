@@ -208,7 +208,7 @@ cdef struct log_context:
     lib.AVClass *class_
     const char *name
 
-cdef const char *log_context_name(void *ptr) nogil:
+cdef const char *log_context_name(void *ptr) noexcept nogil:
     cdef log_context *obj = <log_context*>ptr
     return obj.name
 
@@ -229,7 +229,7 @@ cpdef log(int level, str name, str message):
     free(obj)
 
 
-cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
+cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) noexcept nogil:
 
     cdef bint inited = lib.Py_IsInitialized()
     if not inited and not print_after_shutdown:
