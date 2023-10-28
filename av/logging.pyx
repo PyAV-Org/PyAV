@@ -121,6 +121,15 @@ def restore_default_callback():
     lib.av_log_set_callback(lib.av_log_default_callback)
 
 
+cdef bint enabled = True
+
+
+def set_enabled(value):
+    """Enable or disable all logging."""
+    global enabled
+    enabled = value
+
+
 cdef bint print_after_shutdown = False
 
 
@@ -230,6 +239,8 @@ cpdef log(int level, str name, str message):
 
 
 cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) nogil:
+    if not enabled:
+        return
 
     cdef bint inited = lib.Py_IsInitialized()
     if not inited and not print_after_shutdown:
