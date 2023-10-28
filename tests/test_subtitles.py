@@ -6,7 +6,6 @@ from .common import TestCase, fate_suite
 
 class TestSubtitle(TestCase):
     def test_movtext(self):
-
         path = fate_suite("sub/MovText_capability_tester.mp4")
 
         subs = []
@@ -27,7 +26,6 @@ class TestSubtitle(TestCase):
         self.assertEqual(sub.ass, "0,0,Default,,0,0,0,,- Test 1.\\N- Test 2.")
 
     def test_vobsub(self):
-
         path = fate_suite("sub/vobsub.sub")
 
         subs = []

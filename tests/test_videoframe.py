@@ -492,7 +492,6 @@ class TestVideoFrameReformat(TestCase):
         self.assertIs(frame1, frame2)
 
     def test_reformat_colourspace(self):
-
         # This is allowed.
         frame = VideoFrame(640, 480, "rgb24")
         frame.reformat(src_colorspace=None, dst_colorspace="smpte240")

@@ -5,7 +5,6 @@ from .common import TestCase
 
 class TestDictionary(TestCase):
     def test_basics(self):
-
         d = Dictionary()
         d["key"] = "value"
 

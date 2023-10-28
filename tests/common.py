@@ -3,7 +3,6 @@ import datetime
 import errno
 import functools
 import os
-import sys
 import types
 
 from av.datasets import fate as fate_suite
@@ -86,7 +85,7 @@ def run_in_sandbox(func):
     return _inner
 
 
-class MethodLogger(object):
+class MethodLogger:
     def __init__(self, obj):
         self._obj = obj
         self._log = []
@@ -142,12 +141,12 @@ class TestCase(_Base):
             msg = ""
             for equal in it:
                 if not equal:
-                    msg += "- arrays differ at index %s; %s %s\n" % (
+                    msg += "- arrays differ at index {}; {} {}\n".format(
                         it.multi_index,
                         a[it.multi_index],
                         b[it.multi_index],
                     )
-            self.fail("ndarrays contents differ\n%s" % msg)
+            self.fail(f"ndarrays contents differ\n{msg}")
 
     def assertImagesAlmostEqual(self, a, b, epsilon=0.1, *args):
         self.assertEqual(a.size, b.size, "sizes dont match")
@@ -156,45 +155,40 @@ class TestCase(_Base):
         for i, ax, bx in zip(range(len(a)), a, b):
             diff = sum(abs(ac / 256 - bc / 256) for ac, bc in zip(ax, bx)) / 3
             if diff > epsilon:
-                self.fail(
-                    "images differed by %s at index %d; %s %s" % (diff, i, ax, bx)
-                )
+                self.fail(f"images differed by {diff} at index {i}; {ax} {bx}")
 
-    # Add some of the unittest methods that we love from 2.7.
-    if sys.version_info < (2, 7):
+    def assertIs(self, a, b, msg=None):
+        if a is not b:
+            self.fail(
+                msg
+                or "%r at 0x%x is not %r at 0x%x; %r is not %r"
+                % (type(a), id(a), type(b), id(b), a, b)
+            )
 
-        def assertIs(self, a, b, msg=None):
-            if a is not b:
-                self.fail(
-                    msg
-                    or "%r at 0x%x is not %r at 0x%x; %r is not %r"
-                    % (type(a), id(a), type(b), id(b), a, b)
-                )
+    def assertIsNot(self, a, b, msg=None):
+        if a is b:
+            self.fail(msg or f"both are {type(a)!r} at 0x{id(a):x}; {a!r}")
 
-        def assertIsNot(self, a, b, msg=None):
-            if a is b:
-                self.fail(msg or "both are %r at 0x%x; %r" % (type(a), id(a), a))
+    def assertIsNone(self, x, msg=None):
+        if x is not None:
+            self.fail(msg or f"is not None; {x!r}")
 
-        def assertIsNone(self, x, msg=None):
-            if x is not None:
-                self.fail(msg or "is not None; %r" % x)
+    def assertIsNotNone(self, x, msg=None):
+        if x is None:
+            self.fail(msg or f"is None; {x!r}")
 
-        def assertIsNotNone(self, x, msg=None):
-            if x is None:
-                self.fail(msg or "is None; %r" % x)
+    def assertIn(self, a, b, msg=None):
+        if a not in b:
+            self.fail(msg or f"{a!r} not in {b!r}")
 
-        def assertIn(self, a, b, msg=None):
-            if a not in b:
-                self.fail(msg or "%r not in %r" % (a, b))
+    def assertNotIn(self, a, b, msg=None):
+        if a in b:
+            self.fail(msg or f"{a!r} in {b!r}")
 
-        def assertNotIn(self, a, b, msg=None):
-            if a in b:
-                self.fail(msg or "%r in %r" % (a, b))
+    def assertIsInstance(self, instance, types, msg=None):
+        if not isinstance(instance, types):
+            self.fail(msg or f"not an instance of {types!r}; {instance!r}")
 
-        def assertIsInstance(self, instance, types, msg=None):
-            if not isinstance(instance, types):
-                self.fail(msg or "not an instance of %r; %r" % (types, instance))
-
-        def assertNotIsInstance(self, instance, types, msg=None):
-            if isinstance(instance, types):
-                self.fail(msg or "is an instance of %r; %r" % (types, instance))
+    def assertNotIsInstance(self, instance, types, msg=None):
+        if isinstance(instance, types):
+            self.fail(msg or f"is an instance of {types!r}; {instance!r}")

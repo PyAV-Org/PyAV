@@ -8,11 +8,10 @@ from .common import TestCase, is_windows
 
 class TestErrorBasics(TestCase):
     def test_stringify(self):
-
         for cls in (av.ValueError, av.FileNotFoundError, av.DecoderNotFoundError):
             e = cls(1, "foo")
             self.assertEqual(str(e), "[Errno 1] foo")
-            self.assertEqual(repr(e), "{}(1, 'foo')".format(cls.__name__))
+            self.assertEqual(repr(e), f"{cls.__name__}(1, 'foo')")
             self.assertEqual(
                 traceback.format_exception_only(cls, e)[-1],
                 "{}{}: [Errno 1] foo\n".format(
@@ -24,7 +23,7 @@ class TestErrorBasics(TestCase):
         for cls in (av.ValueError, av.FileNotFoundError, av.DecoderNotFoundError):
             e = cls(1, "foo", "bar.txt")
             self.assertEqual(str(e), "[Errno 1] foo: 'bar.txt'")
-            self.assertEqual(repr(e), "{}(1, 'foo', 'bar.txt')".format(cls.__name__))
+            self.assertEqual(repr(e), f"{cls.__name__}(1, 'foo', 'bar.txt')")
             self.assertEqual(
                 traceback.format_exception_only(cls, e)[-1],
                 "{}{}: [Errno 1] foo: 'bar.txt'\n".format(
@@ -34,7 +33,6 @@ class TestErrorBasics(TestCase):
             )
 
     def test_bases(self):
-
         self.assertTrue(issubclass(av.ValueError, ValueError))
         self.assertTrue(issubclass(av.ValueError, av.FFmpegError))
 

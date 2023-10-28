@@ -88,7 +88,6 @@ class TestSeek(TestCase):
         self.assertTrue(seek_packet_count < middle_packet_count)
 
     def test_decode_half(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         video_stream = next(s for s in container.streams if s.type == "video")
@@ -127,7 +126,6 @@ class TestSeek(TestCase):
         self.assertEqual(frame_count, total_frame_count - target_frame)
 
     def test_stream_seek(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         video_stream = next(s for s in container.streams if s.type == "video")
