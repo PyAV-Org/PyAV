@@ -39,7 +39,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef enum:
         AV_CODEC_CAP_DRAW_HORIZ_BAND
         AV_CODEC_CAP_DR1
-        AV_CODEC_CAP_TRUNCATED
         # AV_CODEC_CAP_HWACCEL
         AV_CODEC_CAP_DELAY
         AV_CODEC_CAP_SMALL_LAST_FRAME
@@ -51,11 +50,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_CAP_FRAME_THREADS
         AV_CODEC_CAP_SLICE_THREADS
         AV_CODEC_CAP_PARAM_CHANGE
-        AV_CODEC_CAP_AUTO_THREADS
+        AV_CODEC_CAP_OTHER_THREADS
         AV_CODEC_CAP_VARIABLE_FRAME_SIZE
         AV_CODEC_CAP_AVOID_PROBING
-        AV_CODEC_CAP_INTRA_ONLY
-        AV_CODEC_CAP_LOSSLESS
         AV_CODEC_CAP_HARDWARE
         AV_CODEC_CAP_HYBRID
         AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
@@ -76,7 +73,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG_LOOP_FILTER
         AV_CODEC_FLAG_GRAY
         AV_CODEC_FLAG_PSNR
-        AV_CODEC_FLAG_TRUNCATED
         AV_CODEC_FLAG_INTERLACED_DCT
         AV_CODEC_FLAG_LOW_DELAY
         AV_CODEC_FLAG_GLOBAL_HEADER
@@ -89,7 +85,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG2_FAST
         AV_CODEC_FLAG2_NO_OUTPUT
         AV_CODEC_FLAG2_LOCAL_HEADER
-        AV_CODEC_FLAG2_DROP_FRAME_TIMECODE
         AV_CODEC_FLAG2_CHUNKS
         AV_CODEC_FLAG2_IGNORE_CROP
         AV_CODEC_FLAG2_SHOW_ALL
@@ -223,9 +218,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int channels
         int frame_size
         int channel_layout
-
-        # Subtitles.
-        int sub_text_format
 
         #: .. todo:: ``get_buffer`` is deprecated for get_buffer2 in newer versions of FFmpeg.
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
