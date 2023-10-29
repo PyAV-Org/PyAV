@@ -56,7 +56,7 @@ See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs t
 Bring your own FFmpeg
 ---------------------
 
-PyAV can also be compiled against your own build of FFmpeg ((version ``4.3`` or higher). You can force installing PyAV from source by running:
+PyAV can also be compiled against your own build of FFmpeg ((version ``5.0`` or higher). You can force installing PyAV from source by running:
 
 .. code-block:: bash
 

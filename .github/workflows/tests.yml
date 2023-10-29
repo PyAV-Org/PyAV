@@ -57,10 +57,8 @@ jobs:
         config:
           - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.1", extras: true}
           - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.0"}
-          - {os: ubuntu-latest, python: 3.8, ffmpeg: "4.4"}
-          - {os: ubuntu-latest, python: 3.8, ffmpeg: "4.3"}
-          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "4.4"}
-          - {os: macos-latest,  python: 3.8, ffmpeg: "4.4"}
+          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "5.0"}
+          - {os: macos-latest,  python: 3.8, ffmpeg: "5.0"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -145,8 +143,6 @@ jobs:
         config:
           - {os: windows-latest, python: 3.8, ffmpeg: "5.1"}
           - {os: windows-latest, python: 3.8, ffmpeg: "5.0"}
-          - {os: windows-latest, python: 3.8, ffmpeg: "4.4"}
-          - {os: windows-latest, python: 3.8, ffmpeg: "4.3"}
 
     steps:
     - name: Checkout
@@ -164,24 +160,20 @@ jobs:
           pillow \
           python=${{ matrix.config.python }} \
           setuptools
-          if [[ "${{ matrix.config.ffmpeg }}" == "5.1" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.1.2-1/ffmpeg-win_amd64.tar.gz
-          elif [[ "${{ matrix.config.ffmpeg }}" == "5.0" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.0.1-1/ffmpeg-win_amd64.tar.gz
-          elif [[ "${{ matrix.config.ffmpeg }}" == "4.4" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/4.4.1-8/ffmpeg-win_amd64.tar.gz
-          else
-            conda install -q -n pyav ffmpeg=${{ matrix.config.ffmpeg }}
-          fi
+        if [[ "${{ matrix.config.ffmpeg }}" == "5.1" ]]; then
+          curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.1.2-1/ffmpeg-win_amd64.tar.gz
+        elif [[ "${{ matrix.config.ffmpeg }}" == "5.0" ]]; then
+          curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.0.1-1/ffmpeg-win_amd64.tar.gz
+        else
+          exit 1
+        fi
 
     - name: Build
       shell: bash
       run: |
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
-        if [[ "${{ matrix.config.ffmpeg }}" != "4.3" ]]; then
-          tar -xf ffmpeg.tar.gz -C $CONDA_PREFIX/Library/
-        fi
+        tar -xf ffmpeg.tar.gz -C $CONDA_PREFIX/Library/
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library
 
     - name: Test
