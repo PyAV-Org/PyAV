@@ -4,6 +4,7 @@ import pkgutil
 import re
 
 import av
+import av.datasets
 
 
 def fix_doctests(suite):
