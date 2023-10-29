@@ -3,6 +3,7 @@ import doctest
 import pkgutil
 import re
 
+from av.datasets import curated
 import av
 
 
@@ -19,7 +20,7 @@ def fix_doctests(suite):
         )
 
         case._dt_test.globs["av"] = av
-        case._dt_test.globs["video_path"] = av.datasets.curated(
+        case._dt_test.globs["video_path"] = curated(
             "pexels/time-lapse-video-of-night-sky-857195.mp4"
         )
 
