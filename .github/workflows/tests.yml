@@ -55,7 +55,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.1", extras: true}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "6.0", extras: true}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.1"}
           - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.0"}
           - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "5.0"}
           - {os: macos-latest,  python: 3.8, ffmpeg: "5.0"}
