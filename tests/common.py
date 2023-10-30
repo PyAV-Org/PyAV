@@ -86,7 +86,7 @@ def run_in_sandbox(func):
     return _inner
 
 
-class MethodLogger(object):
+class MethodLogger:
     def __init__(self, obj):
         self._obj = obj
         self._log = []

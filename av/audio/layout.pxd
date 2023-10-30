@@ -1,7 +1,7 @@
 from libc.stdint cimport uint64_t
 
 
-cdef class AudioLayout(object):
+cdef class AudioLayout:
 
     # The layout for FFMpeg; this is essentially a bitmask of channels.
     cdef uint64_t layout
@@ -17,7 +17,7 @@ cdef class AudioLayout(object):
     cdef _init(self, uint64_t layout)
 
 
-cdef class AudioChannel(object):
+cdef class AudioChannel:
 
     # The channel for FFmpeg.
     cdef uint64_t channel

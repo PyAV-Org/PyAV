@@ -19,7 +19,7 @@ cdef lib.AVPixelFormat get_pix_fmt(const char *name) except lib.AV_PIX_FMT_NONE:
     return pix_fmt
 
 
-cdef class VideoFormat(object):
+cdef class VideoFormat:
     """
 
         >>> format = VideoFormat('rgb24')
@@ -118,7 +118,7 @@ cdef class VideoFormat(object):
         return -((-luma_height) >> self.ptr.log2_chroma_h) if luma_height else 0
 
 
-cdef class VideoFormatComponent(object):
+cdef class VideoFormatComponent:
 
     def __cinit__(self, VideoFormat format, size_t index):
         self.format = format

@@ -21,7 +21,7 @@ cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterC
     return self
 
 
-cdef class FilterContext(object):
+cdef class FilterContext:
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:

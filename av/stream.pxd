@@ -7,7 +7,7 @@ from av.frame cimport Frame
 from av.packet cimport Packet
 
 
-cdef class Stream(object):
+cdef class Stream:
     cdef lib.AVStream *ptr
 
     # Stream attributes.

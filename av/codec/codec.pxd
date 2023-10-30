@@ -1,7 +1,7 @@
 cimport libav as lib
 
 
-cdef class Codec(object):
+cdef class Codec:
 
     cdef const lib.AVCodec *ptr
     cdef const lib.AVCodecDescriptor *desc

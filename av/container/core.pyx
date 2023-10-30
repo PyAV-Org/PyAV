@@ -166,7 +166,7 @@ Flags = define_enum('Flags', __name__, (
 ), is_flags=True)
 
 
-cdef class Container(object):
+cdef class Container:
 
     def __cinit__(self, sentinel, file_, format_name, options,
                   container_options, stream_options,

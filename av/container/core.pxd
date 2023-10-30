@@ -13,7 +13,7 @@ ctypedef struct timeout_info:
     double timeout
 
 
-cdef class Container(object):
+cdef class Container:
 
     cdef readonly bint writeable
     cdef lib.AVFormatContext *ptr

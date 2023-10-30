@@ -11,7 +11,7 @@ def _flatten(input_):
             yield x
 
 
-cdef class StreamContainer(object):
+cdef class StreamContainer:
 
     """
 

@@ -1,7 +1,7 @@
 from cpython.buffer cimport Py_buffer
 
 
-cdef class ByteSource(object):
+cdef class ByteSource:
 
     cdef object owner
 
