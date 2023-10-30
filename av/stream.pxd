@@ -1,4 +1,3 @@
-from libc.stdint cimport int64_t
 cimport libav as lib
 
 from av.codec.context cimport CodecContext

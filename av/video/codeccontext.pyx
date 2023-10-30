@@ -2,7 +2,6 @@ from libc.stdint cimport int64_t
 cimport libav as lib
 
 from av.codec.context cimport CodecContext
-from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational

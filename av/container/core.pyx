@@ -1,6 +1,5 @@
 from cython.operator cimport dereference
 from libc.stdint cimport int64_t
-from libc.stdlib cimport free, malloc
 
 import os
 import time
@@ -18,9 +17,6 @@ from av.utils cimport avdict_to_dict
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
-
-
-ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) noexcept nogil
 
 
 cdef object _cinit_sentinel = object()
@@ -207,7 +203,6 @@ cdef class Container:
 
         cdef bytes name_obj = os.fsencode(self.name)
         cdef char *name = name_obj
-        cdef seek_func_t seek_func = NULL
 
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:

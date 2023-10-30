@@ -3,7 +3,6 @@ cimport libav as lib
 from av.audio.format cimport AudioFormat, get_audio_format
 from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.audio.layout cimport AudioLayout, get_audio_layout
-from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
 

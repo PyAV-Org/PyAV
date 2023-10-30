@@ -9,9 +9,7 @@ integers for names and values respectively.
 
 """
 
-from collections import OrderedDict
 import copyreg
-import sys
 
 
 cdef sentinel = object()

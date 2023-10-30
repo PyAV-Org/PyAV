@@ -32,7 +32,7 @@ API Reference
 
 from __future__ import absolute_import
 
-from libc.stdio cimport fprintf, printf, stderr
+from libc.stdio cimport fprintf, stderr
 from libc.stdlib cimport free, malloc
 cimport libav as lib
 

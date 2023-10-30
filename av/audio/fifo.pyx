@@ -1,6 +1,4 @@
-from av.audio.format cimport get_audio_format
 from av.audio.frame cimport alloc_audio_frame
-from av.audio.layout cimport get_audio_layout
 from av.error cimport err_check
 
 

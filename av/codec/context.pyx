@@ -1,7 +1,7 @@
 import warnings
 
 from libc.errno cimport EAGAIN
-from libc.stdint cimport int64_t, uint8_t
+from libc.stdint cimport uint8_t
 from libc.string cimport memcpy
 cimport libav as lib
 

@@ -79,7 +79,7 @@ cdef class InputContainer(Container):
                 codec_context.pkt_timebase = stream.time_base
                 py_codec_context = wrap_codec_context(codec_context, codec)
             else:
-                # no decoder is available
+                # no decoder is available
                 py_codec_context = None
             self.streams.add_stream(wrap_stream(self, stream, py_codec_context))
 

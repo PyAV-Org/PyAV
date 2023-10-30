@@ -1,4 +1,3 @@
-from fractions import Fraction
 import logging
 import os
 
