@@ -69,7 +69,6 @@ class TestAudioResampler(TestCase):
         self.assertEqual(len(oframes), 0)
 
     def test_pts_assertion_same_rate(self):
-
         resampler = AudioResampler("s16", "mono")
 
         # resample one frame
@@ -115,7 +114,6 @@ class TestAudioResampler(TestCase):
         self.assertEqual(len(oframes), 0)
 
     def test_pts_assertion_new_rate(self):
-
         resampler = AudioResampler("s16", "mono", 44100)
 
         # resample one frame
@@ -144,7 +142,6 @@ class TestAudioResampler(TestCase):
         self.assertEqual(oframe.samples, 16)
 
     def test_pts_missing_time_base(self):
-
         resampler = AudioResampler("s16", "mono", 44100)
 
         # resample one frame

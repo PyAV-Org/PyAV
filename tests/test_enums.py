@@ -22,7 +22,6 @@ class TestEnums(TestCase):
         )
 
     def test_basics(self):
-
         cls = self.define_foobar()
 
         self.assertIsInstance(cls, EnumType)
@@ -36,7 +35,6 @@ class TestEnums(TestCase):
         self.assertNotIsInstance(foo, PickleableFooBar)
 
     def test_access(self):
-
         cls = self.define_foobar()
         foo1 = cls.FOO
         foo2 = cls["FOO"]
@@ -58,7 +56,6 @@ class TestEnums(TestCase):
         self.assertIs(cls.get("not a foo"), None)
 
     def test_casting(self):
-
         cls = self.define_foobar()
         foo = cls.FOO
 
@@ -77,7 +74,6 @@ class TestEnums(TestCase):
         self.assertEqual(list(cls), [cls.FOO, cls.BAR])
 
     def test_equality(self):
-
         cls = self.define_foobar()
         foo = cls.FOO
         bar = cls.BAR
@@ -94,7 +90,6 @@ class TestEnums(TestCase):
         self.assertRaises(TypeError, lambda: foo == ())
 
     def test_as_key(self):
-
         cls = self.define_foobar()
         foo = cls.FOO
 
@@ -104,7 +99,6 @@ class TestEnums(TestCase):
         self.assertIs(d.get(1), None)
 
     def test_pickleable(self):
-
         cls = PickleableFooBar
         foo = cls.FOO
 
@@ -115,7 +109,6 @@ class TestEnums(TestCase):
         self.assertIs(foo, foo2)
 
     def test_create_unknown(self):
-
         cls = self.define_foobar()
         baz = cls.get(3, create=True)
 
@@ -123,7 +116,6 @@ class TestEnums(TestCase):
         self.assertEqual(baz.value, 3)
 
     def test_multiple_names(self):
-
         cls = define_enum(
             "FFooBBar",
             __name__,
@@ -147,7 +139,6 @@ class TestEnums(TestCase):
         self.assertRaises(ValueError, lambda: cls.F == "x")
 
     def test_flag_basics(self):
-
         cls = define_enum(
             "FoobarAllFlags",
             __name__,
@@ -178,7 +169,6 @@ class TestEnums(TestCase):
         self.assertIs(x, cls.FOO)
 
     def test_multi_flags_basics(self):
-
         cls = self.define_foobar(is_flags=True)
 
         foo = cls.FOO
@@ -202,7 +192,6 @@ class TestEnums(TestCase):
         self.assertEqual(list(cls), [foo, bar])
 
     def test_multi_flags_create_missing(self):
-
         cls = self.define_foobar(is_flags=True)
 
         foobar = cls[3]
@@ -212,7 +201,6 @@ class TestEnums(TestCase):
         self.assertRaises(KeyError, lambda: cls[7])  # FOO and BAR and missing flag.
 
     def test_properties(self):
-
         Flags = self.define_foobar(is_flags=True)
         foobar = Flags.FOO | Flags.BAR
 

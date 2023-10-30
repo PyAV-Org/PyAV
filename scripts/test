@@ -19,7 +19,7 @@ istest() {
 }
 
 if istest black; then
-    $PYAV_PYTHON -m black av examples tests
+    $PYAV_PYTHON -m black --check av examples tests
 fi
 
 if istest flake8; then

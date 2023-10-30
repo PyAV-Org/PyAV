@@ -171,7 +171,6 @@ class TestPythonIO(TestCase):
 
     @run_in_sandbox
     def test_writing_to_custom_io_dash(self):
-
         # Custom I/O that opens file and logs calls
         wrapped_custom_io = CustomIOLogger()
 
@@ -207,7 +206,6 @@ class TestPythonIO(TestCase):
             assert_rgb_rotate(self, container, is_dash=True)
 
     def test_writing_to_custom_io_image2(self):
-
         if not Image:
             raise SkipTest()
 
