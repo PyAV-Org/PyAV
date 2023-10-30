@@ -56,7 +56,6 @@ cdef class AudioFrame(Frame):
         # Audio filters need AVFrame.channels to match number of channels from layout.
         self.ptr.channels = self.layout.nb_channels
 
-        cdef size_t buffer_size
         if self.layout.channels and nb_samples:
 
             # Cleanup the old buffer.

@@ -1,7 +1,5 @@
 from av.utils cimport avrational_to_fraction, to_avrational
 
-from fractions import Fraction
-
 from av.sidedata.sidedata import SideDataContainer
 
 

@@ -1,5 +1,3 @@
-cimport libav as lib
-
 from av.audio.frame cimport AudioFrame
 
 

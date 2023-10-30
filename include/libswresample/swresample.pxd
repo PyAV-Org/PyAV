@@ -1,5 +1,6 @@
 from libc.stdint cimport int64_t, uint8_t
 
+
 cdef extern from "libswresample/swresample.h" nogil:
 
     cdef int   swresample_version()

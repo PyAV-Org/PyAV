@@ -5,7 +5,7 @@ from libc.stdint cimport uint8_t
 from av.enum cimport define_enum
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
-from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
+from av.video.format cimport get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
 
 

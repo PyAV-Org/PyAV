@@ -1,9 +1,4 @@
-from libc.stdint cimport (
-    uint8_t, int8_t,
-    uint16_t, int16_t,
-    uint32_t, int32_t,
-    uint64_t, int64_t
-)
+from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t
 
 
 cdef extern from "libavcodec/avcodec.h" nogil:
