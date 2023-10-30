@@ -23,7 +23,6 @@ class TestDeprecations(TestCase):
 
     def test_renamed_attr(self):
         class Example(object):
-
             new_value = "foo"
             old_value = deprecation.renamed_attr("new_value")
 
@@ -35,7 +34,6 @@ class TestDeprecations(TestCase):
         obj = Example()
 
         with warnings.catch_warnings(record=True) as captured:
-
             self.assertEqual(obj.old_value, "foo")
             self.assertIn(
                 "Example.old_value is deprecated", captured[0].message.args[0]

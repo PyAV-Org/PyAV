@@ -12,7 +12,6 @@ container.streams.video[0].thread_type = "AUTO"  # Go faster!
 
 columns = []
 for frame in container.decode(video=0):
-
     print(frame)
     array = frame.to_ndarray(format="rgb24")
 

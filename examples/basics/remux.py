@@ -11,7 +11,6 @@ in_stream = input_.streams.video[0]
 out_stream = output.add_stream(template=in_stream)
 
 for packet in input_.demux(in_stream):
-
     print(packet)
 
     # We need to skip the "flushing" packets that `demux` generates.

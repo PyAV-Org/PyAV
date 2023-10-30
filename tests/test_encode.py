@@ -16,7 +16,6 @@ DURATION = 48
 
 
 def write_rgb_rotate(output):
-
     if not Image:
         raise SkipTest()
 
@@ -29,7 +28,6 @@ def write_rgb_rotate(output):
     stream.pix_fmt = "yuv420p"
 
     for frame_i in range(DURATION):
-
         frame = VideoFrame(WIDTH, HEIGHT, "rgb24")
         image = Image.new(
             "RGB",
@@ -64,7 +62,6 @@ def write_rgb_rotate(output):
 
 
 def assert_rgb_rotate(self, input_, is_dash=False):
-
     # Now inspect it a little.
     self.assertEqual(len(input_.streams), 1)
     if is_dash:
