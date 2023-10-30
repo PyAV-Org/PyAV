@@ -117,10 +117,6 @@ if not os.path.exists(output_tarball):
             build_arguments=["--without-python"],
         ),
         Package(
-            name="unistring",
-            source_url="https://ftp.gnu.org/gnu/libunistring/libunistring-0.9.10.tar.gz",
-        ),
-        Package(
             name="freetype",
             requires=["png"],
             source_url="https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz",
@@ -155,6 +151,10 @@ if not os.path.exists(output_tarball):
 
     if use_gnutls:
         package_groups[0] += [
+            Package(
+                name="unistring",
+                source_url="https://ftp.gnu.org/gnu/libunistring/libunistring-0.9.10.tar.gz",
+            ),
             Package(
                 name="nettle",
                 requires=["gmp"],
