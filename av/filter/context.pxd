@@ -4,7 +4,7 @@ from av.filter.filter cimport Filter
 from av.filter.graph cimport Graph
 
 
-cdef class FilterContext(object):
+cdef class FilterContext:
 
     cdef lib.AVFilterContext *ptr
     cdef readonly Graph graph

@@ -6,7 +6,7 @@ from av.filter.graph cimport Graph
 cdef _cinit_sentinel = object()
 
 
-cdef class FilterLink(object):
+cdef class FilterLink:
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:

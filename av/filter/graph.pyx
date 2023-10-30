@@ -11,7 +11,7 @@ from av.video.format cimport VideoFormat
 from av.video.frame cimport VideoFrame
 
 
-cdef class Graph(object):
+cdef class Graph:
 
     def __cinit__(self):
 

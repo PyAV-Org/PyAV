@@ -1,7 +1,7 @@
 cimport libav as lib
 
 
-cdef class Descriptor(object):
+cdef class Descriptor:
 
     # These are present as:
     # - AVCodecContext.av_class (same as avcodec_get_class())

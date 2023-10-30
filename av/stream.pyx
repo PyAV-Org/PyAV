@@ -53,7 +53,7 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContex
     return py_stream
 
 
-cdef class Stream(object):
+cdef class Stream:
     """
     A single stream of audio, video or subtitles within a :class:`.Container`.
 

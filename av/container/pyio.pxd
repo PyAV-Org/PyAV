@@ -13,7 +13,7 @@ cdef void pyio_close_gil(lib.AVIOContext *pb)
 cdef void pyio_close_custom_gil(lib.AVIOContext *pb)
 
 
-cdef class PyIOFile(object):
+cdef class PyIOFile:
 
     # File-like source.
     cdef readonly object file

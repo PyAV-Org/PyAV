@@ -3,7 +3,7 @@ cimport libav as lib
 from av.filter.context cimport FilterContext
 
 
-cdef class Graph(object):
+cdef class Graph:
 
     cdef lib.AVFilterGraph *ptr
 

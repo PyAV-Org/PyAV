@@ -168,7 +168,7 @@ cpdef get_last_error():
 cdef global_captures = []
 cdef thread_captures = {}
 
-cdef class Capture(object):
+cdef class Capture:
 
     """A context manager for capturing logs.
 

@@ -5,7 +5,7 @@ from fractions import Fraction
 from av.sidedata.sidedata import SideDataContainer
 
 
-cdef class Frame(object):
+cdef class Frame:
     """
     Base class for audio and video frames.
 

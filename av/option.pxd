@@ -1,7 +1,7 @@
 cimport libav as lib
 
 
-cdef class BaseOption(object):
+cdef class BaseOption:
 
     cdef const lib.AVOption *ptr
 

@@ -42,7 +42,7 @@ Colorspace = define_enum('Colorspace', __name__, (
 ))
 
 
-cdef class VideoReformatter(object):
+cdef class VideoReformatter:
 
     """An object for reformatting size and pixel format of :class:`.VideoFrame`.
 

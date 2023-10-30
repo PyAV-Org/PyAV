@@ -70,7 +70,7 @@ cdef class SideData(Buffer):
         return Type.get(self.ptr.type) or self.ptr.type
 
 
-cdef class _SideDataContainer(object):
+cdef class _SideDataContainer:
 
     def __init__(self, Frame frame):
 

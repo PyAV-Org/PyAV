@@ -135,7 +135,7 @@ Flags2 = define_enum('Flags2', __name__, (
 ), is_flags=True)
 
 
-cdef class CodecContext(object):
+cdef class CodecContext:
 
     @staticmethod
     def create(codec, mode=None):

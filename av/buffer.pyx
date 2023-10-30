@@ -5,7 +5,7 @@ from av import deprecation
 from av.bytesource cimport ByteSource, bytesource
 
 
-cdef class Buffer(object):
+cdef class Buffer:
 
     """A base class for PyAV objects which support the buffer protocol, such
     as :class:`.Packet` and :class:`.Plane`.

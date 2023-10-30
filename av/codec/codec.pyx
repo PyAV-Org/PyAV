@@ -138,7 +138,7 @@ class UnknownCodecError(ValueError):
     pass
 
 
-cdef class Codec(object):
+cdef class Codec:
 
     """Codec(name, mode='r')
 
