@@ -41,7 +41,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         if: matrix.os == 'windows-latest'
         with:
-          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-nasm
+          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gperf mingw-w64-x86_64-nasm
           path-type: inherit
       - name: Build FFmpeg
         env:
