@@ -92,6 +92,14 @@ cdef class VideoCodecContext(CodecContext):
             self.ptr.height = value
             self._build_format()
 
+    property bits_per_coded_sample:
+        def __get__(self):
+            return self.ptr.bits_per_coded_sample
+
+        def __set__(self, unsigned int value):
+            self.ptr.bits_per_coded_sample = value
+            self._build_format()
+
     property pix_fmt:
         """
         The pixel format's name.
