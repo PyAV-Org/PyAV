@@ -87,7 +87,7 @@ if not os.path.exists(output_tarball):
         # libraries
         Package(
             name="xz",
-            source_url="https://tukaani.org/xz/xz-5.2.5.tar.bz2",
+            source_url="https://github.com/tukaani-project/xz/releases/download/v5.4.4/xz-5.4.4.tar.xz",
             build_arguments=[
                 "--disable-doc",
                 "--disable-lzma-links",
