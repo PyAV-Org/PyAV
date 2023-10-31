@@ -54,7 +54,8 @@ if not os.path.exists(output_tarball):
         available_tools.update(["gperf", "nasm"])
 
         # print tool locations
-        for tool in ["gcc", "g++", "curl", "ld", "nasm", "pkg-config"]:
+        print("PATH", os.environ["PATH"])
+        for tool in ["gcc", "g++", "curl", "gperf", "ld", "nasm", "pkg-config"]:
             run(["where", tool])
 
     with log_group("install python packages"):
@@ -359,7 +360,7 @@ if not os.path.exists(output_tarball):
     for package in packages:
         builder.build(package)
 
-    if system == "Windows":
+    if system == "Windows" and (build_stage is None or build_stage == 2):
         # fix .lib files being installed in the wrong directory
         for name in [
             "avcodec",

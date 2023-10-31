@@ -172,7 +172,7 @@ class Builder:
             os.environ,
             "PATH",
             os.path.join(self._builder_dest_dir, "bin"),
-            separator=":",
+            separator=";" if platform.system() == "Windows" else ":",
         )
 
     def _build_with_autoconf(self, package: Package, for_builder: bool) -> None:
