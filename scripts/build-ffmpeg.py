@@ -314,7 +314,7 @@ if not os.path.exists(output_tarball):
                 "xvid",
                 "xz",
             ],
-            source_url="https://ffmpeg.org/releases/ffmpeg-5.1.2.tar.xz",
+            source_url="https://ffmpeg.org/releases/ffmpeg-5.1.3.tar.xz",
             build_arguments=[
                 "--disable-alsa",
                 "--disable-doc",
