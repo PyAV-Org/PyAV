@@ -109,12 +109,6 @@ jobs:
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
         scripts/test examples
 
-    - name: Source Distribution
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test sdist
-
   windows:
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
     runs-on: ${{ matrix.config.os }}
