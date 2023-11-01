@@ -37,6 +37,8 @@ cdef class Container:
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
 
+    # Private API.
+    cdef _assert_open(self)
     cdef int err_check(self, int value) except -1
 
     # Timeouts
