@@ -34,8 +34,9 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
-	TESTSUITE=flake8 scripts/test
-	TESTSUITE=isort scripts/test
+	black --check av examples tests
+	flake8 av examples tests
+	isort --check-only --diff av examples tests
 
 test:
 	$(PYTHON) setup.py test

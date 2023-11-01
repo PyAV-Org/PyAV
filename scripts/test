@@ -18,20 +18,6 @@ istest() {
     return $?
 }
 
-if istest black; then
-    $PYAV_PYTHON -m black --check av examples tests
-fi
-
-if istest flake8; then
-    # Settings are in setup.cfg
-    $PYAV_PYTHON -m flake8 av examples tests
-fi
-
-if istest isort; then
-    # More settings in setup.cfg
-    $PYAV_PYTHON -m isort --check-only --diff av examples tests
-fi
-
 if istest main; then
     $PYAV_PYTHON setup.py test
 fi

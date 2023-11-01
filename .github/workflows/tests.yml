@@ -12,41 +12,22 @@ on:
       - '**.txt'
 jobs:
   style:
-    name: "${{ matrix.config.suite }}"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        config:
-          - {suite: black}
-          - {suite: flake8}
-          - {suite: isort}
-
-    env:
-      PYAV_PYTHON: python3
-      PYAV_LIBRARY: ffmpeg-4.3 # doesn't matter
 
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
-      - name: Environment
-        run: env | sort
-
       - name: Packages
-        run: |
-          . scripts/activate.sh
-          # A bit of a hack that we can get away with this.
-          python -m pip install ${{ matrix.config.suite }}
+        run: pip install -r tests/requirements.txt
 
-      - name: "${{ matrix.config.suite }}"
-        run: |
-          . scripts/activate.sh
-          ./scripts/test ${{ matrix.config.suite }}
+      - name: Linters
+        run: make lint
 
   nix:
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
