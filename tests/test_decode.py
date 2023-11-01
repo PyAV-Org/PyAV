@@ -111,3 +111,16 @@ class TestDecode(TestCase):
 
         self.assertEqual(packet_count, 1)
         self.assertEqual(frame_count, 0)
+
+    def test_decode_close_then_use(self):
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        container.close()
+
+        # Check accessing every attribute either works or raises
+        # an `AssertionError`.
+        for attr in dir(container):
+            with self.subTest(attr=attr):
+                try:
+                    getattr(container, attr)
+                except AssertionError:
+                    pass

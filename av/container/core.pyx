@@ -285,6 +285,7 @@ cdef class Container:
         return err_check(value, filename=self.name)
 
     def dumps_format(self):
+        self._assert_open()
         with LogCapture() as logs:
             lib.av_dump_format(self.ptr, 0, "", isinstance(self, OutputContainer))
         return ''.join(log[2] for log in logs)
@@ -298,10 +299,16 @@ cdef class Container:
     cdef start_timeout(self):
         self.interrupt_callback_info.start_time = clock()
 
+    cdef _assert_open(self):
+        if self.ptr == NULL:
+            raise AssertionError("Container is not open")
+
     def _get_flags(self):
+        self._assert_open()
         return self.ptr.flags
 
     def _set_flags(self, value):
+        self._assert_open()
         self.ptr.flags = value
 
     flags = Flags.property(
