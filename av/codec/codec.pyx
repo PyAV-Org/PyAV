@@ -1,7 +1,7 @@
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
 from av.enum cimport define_enum
-from av.utils cimport avrational_to_fraction, flag_in_bitfield
+from av.utils cimport avrational_to_fraction
 from av.video.format cimport get_video_format
 
 
@@ -52,7 +52,6 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         """Codec uses get_buffer() for allocating buffers and supports custom allocators.
         If not set, it might not use get_buffer() at all or use operations that
         assume the buffer was allocated by avcodec_default_get_buffer."""),
-    ('TRUNCATED', lib.AV_CODEC_CAP_TRUNCATED),
     ('HWACCEL', 1 << 4),
     ('DELAY', lib.AV_CODEC_CAP_DELAY,
         """Encoder or decoder requires flushing with NULL input at the end in order to
@@ -102,8 +101,10 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         """Codec supports slice-based (or partition-based) multithreading."""),
     ('PARAM_CHANGE', lib.AV_CODEC_CAP_PARAM_CHANGE,
         """Codec supports changed parameters at any point."""),
-    ('AUTO_THREADS', lib.AV_CODEC_CAP_AUTO_THREADS,
-        """Codec supports avctx->thread_count == 0 (auto)."""),
+    ('AUTO_THREADS', lib.AV_CODEC_CAP_OTHER_THREADS,
+        """Codec supports multithreading through a method other than slice- or
+        frame-level multithreading. Typically this marks wrappers around
+        multithreading-capable external libraries."""),
     ('VARIABLE_FRAME_SIZE', lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE,
         """Audio encoder supports receiving a different number of samples in each call."""),
     ('AVOID_PROBING', lib.AV_CODEC_CAP_AVOID_PROBING,
@@ -114,10 +115,6 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         the stream.
         A decoder marked with this flag should only be used as last resort
         choice for probing."""),
-    ('INTRA_ONLY', lib.AV_CODEC_CAP_INTRA_ONLY,
-        """Codec is intra only."""),
-    ('LOSSLESS', lib.AV_CODEC_CAP_LOSSLESS,
-        """Codec is lossless."""),
     ('HARDWARE', lib.AV_CODEC_CAP_HARDWARE,
         """Codec is backed by a hardware implementation. Typically used to
         identify a non-hwaccel hardware decoder. For information about hwaccels, use
@@ -130,6 +127,10 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         """This codec takes the reordered_opaque field from input AVFrames
         and returns it in the corresponding field in AVCodecContext after
         encoding."""),
+    ('ENCODER_FLUSH', 1 << 21,  # lib.AV_CODEC_CAP_ENCODER_FLUSH  # FFmpeg 4.3
+        """This encoder can be flushed using avcodec_flush_buffers(). If this
+        flag is not set, the encoder must be closed and reopened to ensure that
+        no frames remain pending."""),
 ), is_flags=True)
 
 
@@ -137,7 +138,7 @@ class UnknownCodecError(ValueError):
     pass
 
 
-cdef class Codec(object):
+cdef class Codec:
 
     """Codec(name, mode='r')
 
@@ -308,7 +309,6 @@ cdef class Codec(object):
 
     draw_horiz_band = capabilities.flag_property('DRAW_HORIZ_BAND')
     dr1 = capabilities.flag_property('DR1')
-    truncated = capabilities.flag_property('TRUNCATED')
     hwaccel = capabilities.flag_property('HWACCEL')
     delay = capabilities.flag_property('DELAY')
     small_last_frame = capabilities.flag_property('SMALL_LAST_FRAME')
@@ -328,6 +328,7 @@ cdef class Codec(object):
     hardware = capabilities.flag_property('HARDWARE')
     hybrid = capabilities.flag_property('HYBRID')
     encoder_reordered_opaque = capabilities.flag_property('ENCODER_REORDERED_OPAQUE')
+    encoder_flush = capabilities.flag_property('ENCODER_FLUSH')
 
 
 cdef get_codec_names():

@@ -2,7 +2,6 @@ import argparse
 
 
 def main():
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--codecs", action="store_true")
     parser.add_argument("--version", action="store_true")
@@ -11,7 +10,6 @@ def main():
     # ---
 
     if args.version:
-
         import av
         import av._core
 

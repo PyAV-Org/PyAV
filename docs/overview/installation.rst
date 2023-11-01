@@ -11,11 +11,10 @@ Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Window
     pip install av
 
 
-Currently FFmpeg 4.4.1 is used with the following features enabled for all platforms:
+Currently FFmpeg 5.1.2 is used with the following features enabled for all platforms:
 
 - fontconfig
 - gmp
-- gnutls
 - libaom
 - libass
 - libbluray
@@ -38,6 +37,11 @@ Currently FFmpeg 4.4.1 is used with the following features enabled for all platf
 - lzma
 - zlib
 
+The following additional features are also enabled on Linux:
+
+- gnutls
+- libxcb
+
 
 Conda
 -----
@@ -52,7 +56,7 @@ See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs t
 Bring your own FFmpeg
 ---------------------
 
-PyAV can also be compiled against your own build of FFmpeg ((version ``4.0`` or higher). You can force installing PyAV from source by running:
+PyAV can also be compiled against your own build of FFmpeg ((version ``5.0`` or higher). You can force installing PyAV from source by running:
 
 .. code-block:: bash
 

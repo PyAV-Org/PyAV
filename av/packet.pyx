@@ -112,7 +112,7 @@ cdef class Packet(Buffer):
 
         def __set__(self, Stream stream):
             self._stream = stream
-            self.ptr.stream_index = stream._stream.index
+            self.ptr.stream_index = stream.ptr.index
 
     property time_base:
         """

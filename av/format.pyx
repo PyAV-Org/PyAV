@@ -59,7 +59,7 @@ Flags = define_enum('Flags', __name__, (
 ), is_flags=True)
 
 
-cdef class ContainerFormat(object):
+cdef class ContainerFormat:
 
     """Descriptor of a container format.
 

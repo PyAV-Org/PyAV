@@ -155,7 +155,7 @@ for i, packet in enumerate(container.demux(streams)):
                 data = bytes(plane)
                 print('\t\t\tPLANE %d, %d bytes' % (i, len(data)))
                 data = data.encode('hex')
-                for i in xrange(0, len(data), 128):
+                for i in range(0, len(data), 128):
                     print('\t\t\t%s' % data[i:i + 128])
 
         if args.count and frame_count >= args.count:

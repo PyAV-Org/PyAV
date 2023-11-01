@@ -1,6 +1,5 @@
 from cython.operator cimport dereference
 from libc.stdint cimport int64_t
-from libc.stdlib cimport free, malloc
 
 import os
 import time
@@ -20,16 +19,13 @@ from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
 
 
-ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
-
-
 cdef object _cinit_sentinel = object()
 
 
 # We want to use the monotonic clock if it is available.
 cdef object clock = getattr(time, 'monotonic', time.time)
 
-cdef int interrupt_cb (void *p) nogil:
+cdef int interrupt_cb (void *p) noexcept nogil:
 
     cdef timeout_info info = dereference(<timeout_info*> p)
     if info.timeout < 0:  # timeout < 0 means no timeout
@@ -56,7 +52,7 @@ cdef int pyav_io_open(lib.AVFormatContext *s,
                       lib.AVIOContext **pb,
                       const char *url,
                       int flags,
-                      lib.AVDictionary **options) nogil:
+                      lib.AVDictionary **options) noexcept nogil:
     with gil:
         return pyav_io_open_gil(s, pb, url, flags, options)
 
@@ -65,7 +61,7 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
                           lib.AVIOContext **pb,
                           const char *url,
                           int flags,
-                          lib.AVDictionary **options):
+                          lib.AVDictionary **options) noexcept:
     cdef Container container
     cdef object file
     cdef PyIOFile pyio_file
@@ -104,13 +100,13 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
 
 
 cdef void pyav_io_close(lib.AVFormatContext *s,
-                        lib.AVIOContext *pb) nogil:
+                        lib.AVIOContext *pb) noexcept nogil:
     with gil:
         pyav_io_close_gil(s, pb)
 
 
 cdef void pyav_io_close_gil(lib.AVFormatContext *s,
-                            lib.AVIOContext *pb):
+                            lib.AVIOContext *pb) noexcept:
     cdef Container container
     try:
         container = <Container>dereference(s).opaque
@@ -157,8 +153,6 @@ Flags = define_enum('Flags', __name__, (
         This flag is mainly intended for testing."""),
     ('SORT_DTS', lib.AVFMT_FLAG_SORT_DTS,
         "Try to interleave outputted packets by dts (using this flag can slow demuxing down)."),
-    ('PRIV_OPT', lib.AVFMT_FLAG_PRIV_OPT,
-        "Enable use of private options by delaying codec open (this could be made default once all code is converted)."),
     ('FAST_SEEK', lib.AVFMT_FLAG_FAST_SEEK,
         "Enable fast, but inaccurate seeks for some formats."),
     ('SHORTEST', lib.AVFMT_FLAG_SHORTEST,
@@ -168,7 +162,7 @@ Flags = define_enum('Flags', __name__, (
 ), is_flags=True)
 
 
-cdef class Container(object):
+cdef class Container:
 
     def __cinit__(self, sentinel, file_, format_name, options,
                   container_options, stream_options,
@@ -209,7 +203,6 @@ cdef class Container(object):
 
         cdef bytes name_obj = os.fsencode(self.name)
         cdef char *name = name_obj
-        cdef seek_func_t seek_func = NULL
 
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:
@@ -329,7 +322,6 @@ cdef class Container(object):
     flush_packets = flags.flag_property('FLUSH_PACKETS')
     bit_exact = flags.flag_property('BITEXACT')
     sort_dts = flags.flag_property('SORT_DTS')
-    priv_opt = flags.flag_property('PRIV_OPT')
     fast_seek = flags.flag_property('FAST_SEEK')
     shortest = flags.flag_property('SHORTEST')
     auto_bsf = flags.flag_property('AUTO_BSF')
@@ -365,6 +357,7 @@ def open(file, mode=None, format=None, options=None,
         ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
         ``options`` is a dictionary of additional options. The callable should return a
         file-like object.
+    :rtype: Container
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::

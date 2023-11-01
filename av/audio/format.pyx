@@ -17,7 +17,7 @@ cdef AudioFormat get_audio_format(lib.AVSampleFormat c_format):
     return format
 
 
-cdef class AudioFormat(object):
+cdef class AudioFormat:
 
     """Descriptor of audio formats."""
 

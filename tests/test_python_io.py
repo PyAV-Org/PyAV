@@ -72,7 +72,7 @@ class WriteOnlyPipe(BytesIO):
 CUSTOM_IO_PROTOCOL = "pyavtest://"
 
 
-class CustomIOLogger(object):
+class CustomIOLogger:
     """Log calls to open a file as well as method calls on the files"""
 
     def __init__(self):
@@ -171,7 +171,6 @@ class TestPythonIO(TestCase):
 
     @run_in_sandbox
     def test_writing_to_custom_io_dash(self):
-
         # Custom I/O that opens file and logs calls
         wrapped_custom_io = CustomIOLogger()
 
@@ -207,7 +206,6 @@ class TestPythonIO(TestCase):
             assert_rgb_rotate(self, container, is_dash=True)
 
     def test_writing_to_custom_io_image2(self):
-
         if not Image:
             raise SkipTest()
 
@@ -256,9 +254,11 @@ class TestPythonIO(TestCase):
             self.assertEqual(len(container.streams), 1)
             stream = container.streams[0]
             self.assertIsInstance(stream, av.video.stream.VideoStream)
-            self.assertEqual(stream.type, "video")
-            self.assertEqual(stream.name, "png")
             self.assertEqual(stream.duration, frame_count)
+            self.assertEqual(stream.type, "video")
+
+            # codec context properties
+            self.assertEqual(stream.codec.name, "png")
             self.assertEqual(stream.format.name, "rgb24")
             self.assertEqual(stream.format.width, width)
             self.assertEqual(stream.format.height, height)

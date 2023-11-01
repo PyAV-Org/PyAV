@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import av
 
 from .common import TestCase, fate_suite
@@ -5,7 +7,6 @@ from .common import TestCase, fate_suite
 
 class TestDecode(TestCase):
     def test_decoded_video_frame_count(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = next(s for s in container.streams if s.type == "video")
 
@@ -38,7 +39,6 @@ class TestDecode(TestCase):
         self.assertEqual(frame_count, 0)
 
     def test_decode_audio_sample_count(self):
-
         container = av.open(fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav"))
         audio_stream = next(s for s in container.streams if s.type == "audio")
 
@@ -51,17 +51,15 @@ class TestDecode(TestCase):
                 sample_count += frame.samples
 
         total_samples = (
-            audio_stream.duration * audio_stream.rate.numerator
+            audio_stream.duration * audio_stream.sample_rate.numerator
         ) / audio_stream.time_base.denominator
         self.assertEqual(sample_count, total_samples)
 
     def test_decoded_time_base(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
-        codec_context = stream.codec_context
 
-        self.assertNotEqual(stream.time_base, codec_context.time_base)
+        self.assertEqual(stream.time_base, Fraction(1, 25))
 
         for packet in container.demux(stream):
             for frame in packet.decode():
@@ -70,7 +68,6 @@ class TestDecode(TestCase):
                 return
 
     def test_decoded_motion_vectors(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
         codec_context = stream.codec_context
@@ -87,7 +84,6 @@ class TestDecode(TestCase):
                     return
 
     def test_decoded_motion_vectors_no_flag(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
 

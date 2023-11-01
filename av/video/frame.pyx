@@ -5,7 +5,7 @@ from libc.stdint cimport uint8_t
 from av.enum cimport define_enum
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
-from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
+from av.video.format cimport get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
 
 
@@ -66,10 +66,10 @@ cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1, str dtype='u
     import numpy as np
     cdef size_t total_line_size = abs(plane.line_size)
     cdef size_t useful_line_size = plane.width * bytes_per_pixel
-    arr = np.frombuffer(plane, np.dtype(dtype))
+    arr = np.frombuffer(plane, np.uint8)
     if total_line_size != useful_line_size:
         arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
-    return arr
+    return arr.view(np.dtype(dtype))
 
 
 cdef class VideoFrame(Frame):
@@ -269,10 +269,34 @@ cdef class VideoFrame(Frame):
                 useful_array(frame.planes[1]),
                 useful_array(frame.planes[2])
             )).reshape(-1, frame.width)
+        elif frame.format.name in ('yuv444p', 'yuvj444p'):
+            return np.hstack((
+                useful_array(frame.planes[0]),
+                useful_array(frame.planes[1]),
+                useful_array(frame.planes[2])
+            )).reshape(-1, frame.height, frame.width)
         elif frame.format.name == 'yuyv422':
             assert frame.width % 2 == 0
             assert frame.height % 2 == 0
             return useful_array(frame.planes[0], 2).reshape(frame.height, frame.width, -1)
+        elif frame.format.name == 'gbrp':
+            array = np.empty((frame.height, frame.width, 3), dtype="uint8")
+            array[:, :, 0] = useful_array(frame.planes[2], 1).reshape(-1, frame.width)
+            array[:, :, 1] = useful_array(frame.planes[0], 1).reshape(-1, frame.width)
+            array[:, :, 2] = useful_array(frame.planes[1], 1).reshape(-1, frame.width)
+            return array
+        elif frame.format.name in ('gbrp10be', 'gbrp12be', 'gbrp14be', 'gbrp16be', 'gbrp10le', 'gbrp12le', 'gbrp14le', 'gbrp16le'):
+            array = np.empty((frame.height, frame.width, 3), dtype="uint16")
+            array[:, :, 0] = useful_array(frame.planes[2], 2, "uint16").reshape(-1, frame.width)
+            array[:, :, 1] = useful_array(frame.planes[0], 2, "uint16").reshape(-1, frame.width)
+            array[:, :, 2] = useful_array(frame.planes[1], 2, "uint16").reshape(-1, frame.width)
+            return byteswap_array(array, frame.format.name.endswith('be'))
+        elif frame.format.name in ('gbrpf32be', 'gbrpf32le'):
+            array = np.empty((frame.height, frame.width, 3), dtype="float32")
+            array[:, :, 0] = useful_array(frame.planes[2], 4, "float32").reshape(-1, frame.width)
+            array[:, :, 1] = useful_array(frame.planes[0], 4, "float32").reshape(-1, frame.width)
+            array[:, :, 2] = useful_array(frame.planes[1], 4, "float32").reshape(-1, frame.width)
+            return byteswap_array(array, frame.format.name.endswith('be'))
         elif frame.format.name in ('rgb24', 'bgr24'):
             return useful_array(frame.planes[0], 3).reshape(frame.height, frame.width, -1)
         elif frame.format.name in ('argb', 'rgba', 'abgr', 'bgra'):
@@ -298,6 +322,11 @@ cdef class VideoFrame(Frame):
             image = useful_array(frame.planes[0]).reshape(frame.height, frame.width)
             palette = np.frombuffer(frame.planes[1], 'i4').astype('>i4').reshape(-1, 1).view(np.uint8)
             return image, palette
+        elif frame.format.name == 'nv12':
+            return np.hstack((
+                useful_array(frame.planes[0]),
+                useful_array(frame.planes[1], 2)
+            )).reshape(-1, frame.width)
         else:
             raise ValueError('Conversion to numpy array with format `%s` is not yet supported' % frame.format.name)
 
@@ -349,11 +378,48 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 1)
             copy_array_to_plane(flat[v_start:], frame.planes[2], 1)
             return frame
+        elif format in ('yuv444p', 'yuvj444p'):
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[0] == 3)
+
+            frame = VideoFrame(array.shape[2], array.shape[1], format)
+            array = array.reshape(3, -1)
+            copy_array_to_plane(array[0], frame.planes[0], 1)
+            copy_array_to_plane(array[1], frame.planes[1], 1)
+            copy_array_to_plane(array[2], frame.planes[2], 1)
+            return frame
         elif format == 'yuyv422':
             check_ndarray(array, 'uint8', 3)
             check_ndarray_shape(array, array.shape[0] % 2 == 0)
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
             check_ndarray_shape(array, array.shape[2] == 2)
+        elif format == 'gbrp':
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array[:, :, 1], frame.planes[0], 1)
+            copy_array_to_plane(array[:, :, 2], frame.planes[1], 1)
+            copy_array_to_plane(array[:, :, 0], frame.planes[2], 1)
+            return frame
+        elif format in ('gbrp10be', 'gbrp12be', 'gbrp14be', 'gbrp16be', 'gbrp10le', 'gbrp12le', 'gbrp14le', 'gbrp16le'):
+            check_ndarray(array, 'uint16', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(byteswap_array(array[:, :, 1], format.endswith('be')), frame.planes[0], 2)
+            copy_array_to_plane(byteswap_array(array[:, :, 2], format.endswith('be')), frame.planes[1], 2)
+            copy_array_to_plane(byteswap_array(array[:, :, 0], format.endswith('be')), frame.planes[2], 2)
+            return frame
+        elif format in ('gbrpf32be', 'gbrpf32le'):
+            check_ndarray(array, 'float32', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(byteswap_array(array[:, :, 1], format.endswith('be')), frame.planes[0], 4)
+            copy_array_to_plane(byteswap_array(array[:, :, 2], format.endswith('be')), frame.planes[1], 4)
+            copy_array_to_plane(byteswap_array(array[:, :, 0], format.endswith('be')), frame.planes[2], 4)
+            return frame
         elif format in ('rgb24', 'bgr24'):
             check_ndarray(array, 'uint8', 3)
             check_ndarray_shape(array, array.shape[2] == 3)
@@ -378,6 +444,17 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[2] == 4)
             frame = VideoFrame(array.shape[1], array.shape[0], format)
             copy_array_to_plane(byteswap_array(array, format == 'rgba64be'), frame.planes[0], 8)
+            return frame
+        elif format == 'nv12':
+            check_ndarray(array, 'uint8', 2)
+            check_ndarray_shape(array, array.shape[0] % 3 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+
+            frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
+            uv_start = frame.width * frame.height
+            flat = array.reshape(-1)
+            copy_array_to_plane(flat[:uv_start], frame.planes[0], 1)
+            copy_array_to_plane(flat[uv_start:], frame.planes[1], 2)
             return frame
         else:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)

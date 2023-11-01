@@ -11,7 +11,7 @@ def _flatten(input_):
             yield x
 
 
-cdef class StreamContainer(object):
+cdef class StreamContainer:
 
     """
 
@@ -37,16 +37,16 @@ cdef class StreamContainer(object):
 
     cdef add_stream(self, Stream stream):
 
-        assert stream._stream.index == len(self._streams)
+        assert stream.ptr.index == len(self._streams)
         self._streams.append(stream)
 
-        if stream._codec_context.codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        if stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO:
             self.video = self.video + (stream, )
-        elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_AUDIO:
+        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_AUDIO:
             self.audio = self.audio + (stream, )
-        elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
+        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
             self.subtitles = self.subtitles + (stream, )
-        elif stream._codec_context.codec_type == lib.AVMEDIA_TYPE_DATA:
+        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA:
             self.data = self.data + (stream, )
         else:
             self.other = self.other + (stream, )

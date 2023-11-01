@@ -1,5 +1,7 @@
+import warnings
+
 from libc.errno cimport EAGAIN
-from libc.stdint cimport int64_t, uint8_t
+from libc.stdint cimport uint8_t
 from libc.string cimport memcpy
 cimport libav as lib
 
@@ -11,13 +13,14 @@ from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
 
+from av.deprecation import AVDeprecationWarning
 from av.dictionary import Dictionary
 
 
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -35,7 +38,6 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
-    py_ctx.allocated = allocated
     py_ctx._init(c_ctx, c_codec)
 
     return py_ctx
@@ -94,9 +96,6 @@ Flags = define_enum('Flags', __name__, (
         """Only decode/encode grayscale."""),
     ('PSNR', lib.AV_CODEC_FLAG_PSNR,
         """error[?] variables will be set during encoding."""),
-    ('TRUNCATED', lib.AV_CODEC_FLAG_TRUNCATED,
-        """Input bitstream might be truncated at a random location
-        instead of only at frame boundaries."""),
     ('INTERLACED_DCT', lib.AV_CODEC_FLAG_INTERLACED_DCT,
         """Use interlaced DCT."""),
     ('LOW_DELAY', lib.AV_CODEC_FLAG_LOW_DELAY,
@@ -120,8 +119,6 @@ Flags2 = define_enum('Flags2', __name__, (
         """Skip bitstream encoding."""),
     ('LOCAL_HEADER', lib.AV_CODEC_FLAG2_LOCAL_HEADER,
         """Place global headers at every keyframe instead of in extradata."""),
-    ('DROP_FRAME_TIMECODE', lib.AV_CODEC_FLAG2_DROP_FRAME_TIMECODE,
-        """Timecode is in drop frame format. DEPRECATED!!!!"""),
     ('CHUNKS', lib.AV_CODEC_FLAG2_CHUNKS,
         """Input bitstream might be truncated at a packet boundaries
         instead of only at frame boundaries."""),
@@ -138,13 +135,13 @@ Flags2 = define_enum('Flags2', __name__, (
 ), is_flags=True)
 
 
-cdef class CodecContext(object):
+cdef class CodecContext:
 
     @staticmethod
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
+        return wrap_codec_context(c_ctx, cy_codec.ptr)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -165,10 +162,6 @@ cdef class CodecContext(object):
         # type == 2 -> thread within a frame. This does not change the API.
         self.ptr.thread_count = 0
         self.ptr.thread_type = 2
-
-        # Use "ass" format for subtitles (default as of FFmpeg 5.0), not the
-        # deprecated "ass_with_timings" formats.
-        self.ptr.sub_text_format = 0
 
     def _get_flags(self):
         return self.ptr.flags
@@ -193,7 +186,6 @@ cdef class CodecContext(object):
     loop_filter = flags.flag_property('LOOP_FILTER')
     gray = flags.flag_property('GRAY')
     psnr = flags.flag_property('PSNR')
-    truncated = flags.flag_property('TRUNCATED')
     interlaced_dct = flags.flag_property('INTERLACED_DCT')
     low_delay = flags.flag_property('LOW_DELAY')
     global_header = flags.flag_property('GLOBAL_HEADER')
@@ -217,7 +209,6 @@ cdef class CodecContext(object):
     fast = flags2.flag_property('FAST')
     no_output = flags2.flag_property('NO_OUTPUT')
     local_header = flags2.flag_property('LOCAL_HEADER')
-    drop_frame_timecode = flags2.flag_property('DROP_FRAME_TIMECODE')
     chunks = flags2.flag_property('CHUNKS')
     ignore_crop = flags2.flag_property('IGNORE_CROP')
     show_all = flags2.flag_property('SHOW_ALL')
@@ -282,8 +273,8 @@ cdef class CodecContext(object):
         cdef _Dictionary options = Dictionary()
         options.update(self.options or {})
 
-        # Assert we have a time_base.
-        if not self.ptr.time_base.num:
+        # Assert we have a time_base for encoders.
+        if not self.ptr.time_base.num and self.is_encoder:
             self._set_default_time_base()
 
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
@@ -304,7 +295,7 @@ cdef class CodecContext(object):
     def __dealloc__(self):
         if self.ptr and self.extradata_set:
             lib.av_freep(&self.ptr.extradata)
-        if self.ptr and self.allocated:
+        if self.ptr:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)
         if self.parser:
@@ -551,9 +542,19 @@ cdef class CodecContext(object):
 
     property time_base:
         def __get__(self):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using CodecContext.time_base for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             return avrational_to_fraction(&self.ptr.time_base)
 
         def __set__(self, value):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using CodecContext.time_base for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             to_avrational(value, &self.ptr.time_base)
 
     property codec_tag:

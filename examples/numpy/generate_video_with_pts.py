@@ -43,7 +43,6 @@ block_w2 = int(0.5 * width / total_frames * 0.75)
 block_h2 = int(0.5 * height / 4)
 
 for frame_i in range(total_frames):
-
     # move around the color wheel (hue)
     nice_color = colorsys.hsv_to_rgb(frame_i / total_frames, 1.0, 1.0)
     nice_color = (np.array(nice_color) * 255).astype(np.uint8)

@@ -1,12 +1,12 @@
 from cpython cimport PyBuffer_FillInfo
 
 
-cdef class SubtitleProxy(object):
+cdef class SubtitleProxy:
     def __dealloc__(self):
         lib.avsubtitle_free(&self.struct)
 
 
-cdef class SubtitleSet(object):
+cdef class SubtitleSet:
 
     def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
@@ -63,7 +63,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
         raise ValueError('unknown subtitle type %r' % ptr.type)
 
 
-cdef class Subtitle(object):
+cdef class Subtitle:
 
     def __cinit__(self, SubtitleSet subtitle, int index):
         if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
@@ -131,7 +131,7 @@ cdef class BitmapSubtitle(Subtitle):
         return self.planes[i]
 
 
-cdef class BitmapSubtitlePlane(object):
+cdef class BitmapSubtitlePlane:
 
     def __cinit__(self, BitmapSubtitle subtitle, int index):
 

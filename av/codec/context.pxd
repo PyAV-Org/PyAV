@@ -7,12 +7,9 @@ from av.frame cimport Frame
 from av.packet cimport Packet
 
 
-cdef class CodecContext(object):
+cdef class CodecContext:
 
     cdef lib.AVCodecContext *ptr
-
-    # Whether the AVCodecContext should be de-allocated upon destruction.
-    cdef bint allocated
 
     # Whether AVCodecContext.extradata should be de-allocated upon destruction.
     cdef bint extradata_set
@@ -64,4 +61,4 @@ cdef class CodecContext(object):
     cdef Frame _alloc_next_frame(self)
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*)

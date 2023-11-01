@@ -1,6 +1,7 @@
 from fractions import Fraction
 from unittest import SkipTest
 import os
+import warnings
 
 from av import AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
@@ -79,6 +80,23 @@ class TestCodecContext(TestCase):
         self.assertEqual(ctx.extradata, None)
         self.assertEqual(ctx.extradata_size, 0)
 
+    def test_decoder_timebase(self):
+        ctx = av.codec.Codec("h264", "r").create()
+
+        with warnings.catch_warnings(record=True) as captured:
+            self.assertIsNone(ctx.time_base)
+            self.assertEqual(
+                captured[0].message.args[0],
+                "Using CodecContext.time_base for decoders is deprecated.",
+            )
+
+        with warnings.catch_warnings(record=True) as captured:
+            ctx.time_base = Fraction(1, 25)
+            self.assertEqual(
+                captured[0].message.args[0],
+                "Using CodecContext.time_base for decoders is deprecated.",
+            )
+
     def test_encoder_extradata(self):
         ctx = av.codec.Codec("h264", "w").create()
         self.assertEqual(ctx.extradata, None)
@@ -102,7 +120,6 @@ class TestCodecContext(TestCase):
         self.assertEqual(ctx.pix_fmt, "yuv420p")
 
     def test_parse(self):
-
         # This one parses into a single packet.
         self._assert_parse("mpeg4", fate_suite("h264/interlaced_crop.mp4"))
 
@@ -110,7 +127,6 @@ class TestCodecContext(TestCase):
         self._assert_parse("mpeg2video", fate_suite("mpeg2/mpeg2_field_encoding.ts"))
 
     def _assert_parse(self, codec_name, path):
-
         fh = av.open(path)
         packets = []
         for packet in fh.demux(video=0):
@@ -119,7 +135,6 @@ class TestCodecContext(TestCase):
         full_source = b"".join(bytes(p) for p in packets)
 
         for size in 1024, 8192, 65535:
-
             ctx = Codec(codec_name).create()
             packets = []
 
@@ -144,7 +159,6 @@ class TestEncoding(TestCase):
         self.image_sequence_encode("tiff")
 
     def image_sequence_encode(self, codec_name):
-
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
@@ -162,14 +176,13 @@ class TestEncoding(TestCase):
 
         ctx.width = width
         ctx.height = height
-        ctx.time_base = video_stream.codec_context.time_base
+        ctx.time_base = video_stream.time_base
         ctx.pix_fmt = pix_fmt
         ctx.open()
 
         frame_count = 1
         path_list = []
         for frame in iter_frames(container, video_stream):
-
             new_frame = frame.reformat(width, height, pix_fmt)
             new_packets = ctx.encode(new_frame)
 
@@ -231,7 +244,6 @@ class TestEncoding(TestCase):
         self.video_encoding("dnxhd", options)
 
     def video_encoding(self, codec_name, options={}, codec_tag=None):
-
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
@@ -244,7 +256,7 @@ class TestEncoding(TestCase):
         width = options.pop("width", 640)
         height = options.pop("height", 480)
         max_frames = options.pop("max_frames", 50)
-        time_base = options.pop("time_base", video_stream.codec_context.time_base)
+        time_base = options.pop("time_base", video_stream.time_base)
 
         ctx = codec.create()
         ctx.width = width
@@ -262,9 +274,7 @@ class TestEncoding(TestCase):
         frame_count = 0
 
         with open(path, "wb") as f:
-
             for frame in iter_frames(container, video_stream):
-
                 new_frame = frame.reformat(width, height, pix_fmt)
 
                 # reset the picture type
@@ -304,7 +314,6 @@ class TestEncoding(TestCase):
         self.audio_encoding("mp2")
 
     def audio_encoding(self, codec_name):
-
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
@@ -339,7 +348,6 @@ class TestEncoding(TestCase):
 
         with open(path, "wb") as f:
             for frame in iter_frames(container, audio_stream):
-
                 resampled_frames = resampler.resample(frame)
                 for resampled_frame in resampled_frames:
                     samples += resampled_frame.samples
@@ -353,7 +361,6 @@ class TestEncoding(TestCase):
                 f.write(packet)
 
         ctx = Codec(codec_name, "r").create()
-        ctx.time_base = Fraction(1) / sample_rate
         ctx.sample_rate = sample_rate
         ctx.format = sample_fmt
         ctx.layout = channel_layout
@@ -367,5 +374,5 @@ class TestEncoding(TestCase):
         # so can really use checksums
         for frame in iter_raw_frames(path, packet_sizes, ctx):
             result_samples += frame.samples
-            self.assertEqual(frame.rate, sample_rate)
+            self.assertEqual(frame.sample_rate, sample_rate)
             self.assertEqual(len(frame.layout.channels), channels)

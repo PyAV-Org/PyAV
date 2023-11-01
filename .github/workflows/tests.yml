@@ -1,15 +1,19 @@
 name: tests
-
-on: [push, pull_request]
-
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
 jobs:
-
-
   style:
-
     name: "${{ matrix.config.suite }}"
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         config:
@@ -19,17 +23,16 @@ jobs:
 
     env:
       PYAV_PYTHON: python3
-      PYAV_LIBRARY: ffmpeg-4.0 # doesn't matter
+      PYAV_LIBRARY: ffmpeg-4.3 # doesn't matter
 
     steps:
-
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout
 
       - name: Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Environment
         run: env | sort
@@ -45,36 +48,29 @@ jobs:
           . scripts/activate.sh
           ./scripts/test ${{ matrix.config.suite }}
 
-
   nix:
-
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-
     runs-on: ${{ matrix.config.os }}
-
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.4", extras: true}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.3"}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.2"}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.1"}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.0"}
-          - {os: ubuntu-latest, python: pypy3, ffmpeg: "4.4"}
-          - {os: macos-latest,  python: 3.7, ffmpeg: "4.4"}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "6.0", extras: true}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.1"}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.0"}
+          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "5.0"}
+          - {os: macos-latest,  python: 3.8, ffmpeg: "5.0"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
       PYAV_LIBRARY: ffmpeg-${{ matrix.config.ffmpeg }}
 
     steps:
-
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       name: Checkout
 
     - name: Python ${{ matrix.config.python }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.config.python }}
 
@@ -139,24 +135,19 @@ jobs:
         scripts/test sdist
 
   windows:
-
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-
     runs-on: ${{ matrix.config.os }}
 
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.3"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.2"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.1"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.0"}
+          - {os: windows-latest, python: 3.8, ffmpeg: "5.1"}
+          - {os: windows-latest, python: 3.8, ffmpeg: "5.0"}
 
     steps:
-
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Conda
       shell: bash
@@ -166,17 +157,24 @@ jobs:
         conda config --add channels conda-forge
         conda create -q -n pyav \
           cython \
-          ffmpeg=${{ matrix.config.ffmpeg }} \
           numpy \
           pillow \
           python=${{ matrix.config.python }} \
           setuptools
+        if [[ "${{ matrix.config.ffmpeg }}" == "5.1" ]]; then
+          curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.1.2-1/ffmpeg-win_amd64.tar.gz
+        elif [[ "${{ matrix.config.ffmpeg }}" == "5.0" ]]; then
+          curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.0.1-1/ffmpeg-win_amd64.tar.gz
+        else
+          exit 1
+        fi
 
     - name: Build
       shell: bash
       run: |
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
+        tar -xf ffmpeg.tar.gz -C $CONDA_PREFIX/Library/
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library
 
     - name: Test
@@ -189,17 +187,17 @@ jobs:
   package-source:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Build source package
         run: |
           pip install cython
           python scripts/fetch-vendor.py /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/
@@ -223,13 +221,13 @@ jobs:
           - os: windows-latest
             arch: AMD64
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Set up QEMU
         if: matrix.os == 'ubuntu-latest'
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       - name: Install packages
         if: matrix.os == 'macos-latest'
         run: |
@@ -249,13 +247,13 @@ jobs:
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: numpy
           # skip tests when there are no binary wheels of numpy
-          CIBW_TEST_SKIP: cp37-* pp* *_i686
+          CIBW_TEST_SKIP: pp* *_i686
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
         shell: bash
       - name: Upload wheels
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist/
@@ -264,14 +262,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [package-source, package-wheel]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v1
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v3
         with:
           name: dist
           path: dist/
       - name: Publish to PyPI
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}

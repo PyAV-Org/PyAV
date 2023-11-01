@@ -6,7 +6,7 @@ from .common import TestCase, fate_suite
 
 
 def timestamp_to_frame(timestamp, stream):
-    fps = stream.rate
+    fps = stream.average_rate
     time_base = stream.time_base
     start_time = stream.start_time
     frame = (timestamp - start_time) * float(time_base) * float(fps)
@@ -88,7 +88,6 @@ class TestSeek(TestCase):
         self.assertTrue(seek_packet_count < middle_packet_count)
 
     def test_decode_half(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         video_stream = next(s for s in container.streams if s.type == "video")
@@ -103,7 +102,9 @@ class TestSeek(TestCase):
 
         # set target frame to middle frame
         target_frame = int(total_frame_count / 2.0)
-        target_timestamp = int((target_frame * av.time_base) / video_stream.rate)
+        target_timestamp = int(
+            (target_frame * av.time_base) / video_stream.average_rate
+        )
 
         # should seek to nearest keyframe before target_timestamp
         container.seek(target_timestamp)
@@ -125,7 +126,6 @@ class TestSeek(TestCase):
         self.assertEqual(frame_count, total_frame_count - target_frame)
 
     def test_stream_seek(self):
-
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         video_stream = next(s for s in container.streams if s.type == "video")

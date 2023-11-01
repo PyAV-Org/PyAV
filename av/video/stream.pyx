@@ -6,7 +6,7 @@ cdef class VideoStream(Stream):
             self.index,
             self.name,
             self.format.name if self.format else None,
-            self._codec_context.width,
-            self._codec_context.height,
+            self.codec_context.width,
+            self.codec_context.height,
             id(self),
         )
