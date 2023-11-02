@@ -101,7 +101,7 @@ jobs:
       if: matrix.config.extras
       run: |
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test doctest
+        make -C docs test
 
     - name: Examples
       if: matrix.config.extras

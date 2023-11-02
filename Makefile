@@ -5,7 +5,7 @@ PYAV_PYTHON ?= python
 PYTHON := $(PYAV_PYTHON)
 
 
-.PHONY: default build clean docs fate-suite lint test
+.PHONY: default build clean fate-suite lint test
 
 default: build
 
@@ -18,7 +18,6 @@ clean:
 	- rm -rf build
 	- rm -rf sandbox
 	- rm -rf src
-	- rm -rf tmp
 	- make -C docs clean
 
 fate-suite:
@@ -32,20 +31,3 @@ lint:
 
 test:
 	$(PYTHON) setup.py test
-
-tmp/ffmpeg-git:
-	@ mkdir -p tmp/ffmpeg-git
-	git clone --depth=1 git://source.ffmpeg.org/ffmpeg.git tmp/ffmpeg-git
-
-tmp/Doxyfile: tmp/ffmpeg-git
-	cp tmp/ffmpeg-git/doc/Doxyfile $@
-	echo "GENERATE_TAGFILE = ../tagfile.xml" >> $@
-
-tmp/tagfile.xml: tmp/Doxyfile
-	cd tmp/ffmpeg-git; doxygen ../Doxyfile
-
-docs: tmp/tagfile.xml
-	PYTHONPATH=.. make -C docs html
-
-deploy-docs: docs
-	./docs/upload docs
