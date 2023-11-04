@@ -16,13 +16,15 @@ if len(sys.argv) < 2:
 
 dest_dir = sys.argv[1]
 output_dir = os.path.abspath("output")
-system = platform.system()
-if system == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
+
+plat = platform.system()
+
+if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
     output_dir = "/output"
 output_tarball = os.path.join(output_dir, f"ffmpeg-{get_platform()}.tar.gz")
 
 # FFmpeg has native TLS backends for macOS and Windows
-use_gnutls = system == "Linux"
+use_gnutls = plat == "Linux"
 
 if not os.path.exists(output_tarball):
     builder = Builder(dest_dir=dest_dir)
@@ -36,7 +38,7 @@ if not os.path.exists(output_tarball):
     # install packages
 
     available_tools = set()
-    if system == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
+    if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
         with log_group("install packages"):
             run(
                 [
@@ -50,7 +52,7 @@ if not os.path.exists(output_tarball):
                 ]
             )
         available_tools.update(["gperf"])
-    elif system == "Windows":
+    elif plat == "Windows":
         available_tools.update(["gperf", "nasm"])
 
         # print tool locations
@@ -146,7 +148,7 @@ if not os.path.exists(output_tarball):
                 "--with-glib=no",
             ],
             # parallel build fails on Windows
-            build_parallel=platform.system() != "Windows",
+            build_parallel=plat != "Windows",
         ),
     ]
 
@@ -227,7 +229,7 @@ if not os.path.exists(output_tarball):
             name="opencore-amr",
             source_url="http://deb.debian.org/debian/pool/main/o/opencore-amr/opencore-amr_0.1.5.orig.tar.gz",
             # parallel build hangs on Windows
-            build_parallel=platform.system() != "Windows",
+            build_parallel=plat != "Windows",
         ),
         Package(
             name="openjpeg",
@@ -270,7 +272,7 @@ if not os.path.exists(output_tarball):
             name="x264",
             source_url="https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2",
             # parallel build runs out of memory on Windows
-            build_parallel=platform.system() != "Windows",
+            build_parallel=plat != "Windows",
         ),
         Package(
             name="x265",
@@ -340,9 +342,7 @@ if not os.path.exists(output_tarball):
                 "--enable-libvpx",
                 "--enable-libx264",
                 "--enable-libx265",
-                "--enable-libxcb"
-                if platform.system() == "Linux"
-                else "--disable-libxcb",
+                "--enable-libxcb" if plat == "Linux" else "--disable-libxcb",
                 "--enable-libxml2",
                 "--enable-libxvid",
                 "--enable-lzma",
@@ -360,7 +360,7 @@ if not os.path.exists(output_tarball):
     for package in packages:
         builder.build(package)
 
-    if system == "Windows" and (build_stage is None or build_stage == 2):
+    if plat == "Windows" and (build_stage is None or build_stage == 2):
         # fix .lib files being installed in the wrong directory
         for name in [
             "avcodec",
@@ -394,15 +394,15 @@ if not os.path.exists(output_tarball):
             shutil.copy(os.path.join(mingw_bindir, name), os.path.join(dest_dir, "bin"))
 
     # find libraries
-    if system == "Darwin":
+    if plat == "Darwin":
         libraries = glob.glob(os.path.join(dest_dir, "lib", "*.dylib"))
-    elif system == "Linux":
+    elif plat == "Linux":
         libraries = glob.glob(os.path.join(dest_dir, "lib", "*.so"))
-    elif system == "Windows":
+    elif plat == "Windows":
         libraries = glob.glob(os.path.join(dest_dir, "bin", "*.dll"))
 
     # strip libraries
-    if system == "Darwin":
+    if plat == "Darwin":
         run(["strip", "-S"] + libraries)
         run(["otool", "-L"] + libraries)
     else:
