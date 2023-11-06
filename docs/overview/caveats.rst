@@ -53,5 +53,5 @@ Until we resolve this issue, you should explicitly call :meth:`.Container.close`
 
 
 .. _FFmpeg: https://ffmpeg.org/
-.. _Gitter: https://gitter.im/PyAV-Org
+.. _Gitter: https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im
 .. _GitHub: https://github.com/PyAV-Org/pyav
