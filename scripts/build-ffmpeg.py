@@ -232,6 +232,13 @@ if not os.path.exists(output_tarball):
             build_parallel=plat != "Windows",
         ),
         Package(
+            name="openh264",
+            requires=["meson", "nasm", "ninja"],
+            source_filename="openh264-2.2.0.tar.gz",
+            source_url="https://github.com/cisco/openh264/archive/refs/tags/v2.2.0.tar.gz",
+            build_system="meson"
+        ),
+        Package(
             name="openjpeg",
             requires=["cmake"],
             source_filename="openjpeg-2.4.0.tar.gz",
@@ -304,6 +311,7 @@ if not os.path.exists(output_tarball):
                 "lame",
                 "nasm",
                 "opencore-amr",
+                "openh264",
                 "openjpeg",
                 "opus",
                 "speex",
@@ -334,6 +342,7 @@ if not os.path.exists(output_tarball):
                 "--enable-libmp3lame",
                 "--enable-libopencore-amrnb",
                 "--enable-libopencore-amrwb",
+                "--enable-libopenh264",
                 "--enable-libopenjpeg",
                 "--enable-libopus",
                 "--enable-libspeex",
