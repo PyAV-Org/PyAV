@@ -63,7 +63,7 @@ class FFmpegError(Exception):
 
     .. attribute:: filename
 
-        The filename that was being operated on (if availible).
+        The filename that was being operated on (if available).
 
     .. attribute:: type
 

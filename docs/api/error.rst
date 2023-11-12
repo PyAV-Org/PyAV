@@ -26,7 +26,7 @@ Error Type Enumerations
 -----------------------
 
 We provide :class:`av.error.ErrorType` as an enumeration of the various FFmpeg errors.
-To mimick the stdlib ``errno`` module, all enumeration values are availible in
+To mimick the stdlib ``errno`` module, all enumeration values are available in
 the ``av.error`` module, e.g.::
 
     try:
@@ -64,7 +64,7 @@ exceptions expose the typical ``errno`` and ``strerror`` attributes (even
 ``ValueError`` which doesn't typically), as well as some PyAV extensions such
 as :attr:`FFmpegError.log`.
 
-All of these exceptions are availible on the top-level ``av`` package, e.g.::
+All of these exceptions are available on the top-level ``av`` package, e.g.::
 
     try:
         do_something()

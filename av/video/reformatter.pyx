@@ -22,7 +22,6 @@ Interpolation = define_enum('Interpolation', __name__, (
 ))
 
 Colorspace = define_enum('Colorspace', __name__, (
-
     ('ITU709', lib.SWS_CS_ITU709),
     ('FCC', lib.SWS_CS_FCC),
     ('ITU601', lib.SWS_CS_ITU601),
@@ -41,7 +40,6 @@ Colorspace = define_enum('Colorspace', __name__, (
 
 ))
 
-
 ColorRange = define_enum('ColorRange', __name__, (
     ('UNSPECIFIED', lib.AVCOL_RANGE_UNSPECIFIED, "Unspecified"),
     ('MPEG', lib.AVCOL_RANGE_MPEG, "MPEG (limited) YUV range, 219*2^(n-8)"),
@@ -49,9 +47,7 @@ ColorRange = define_enum('ColorRange', __name__, (
     ('NB', lib.AVCOL_RANGE_NB, "Not part of ABI"),
 ))
 
-
-cdef class VideoReformatter(object):
-
+cdef class VideoReformatter:
     """An object for reformatting size and pixel format of :class:`.VideoFrame`.
 
     It is most efficient to have a reformatter object for each set of parameters

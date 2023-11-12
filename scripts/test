@@ -18,31 +18,8 @@ istest() {
     return $?
 }
 
-if istest flake8; then
-    # Settings are in setup.cfg
-    $PYAV_PYTHON -m flake8 av examples tests
-fi
-
-if istest isort; then
-    # More settings in setup.cfg
-    $PYAV_PYTHON -m isort --check-only --diff av examples tests
-fi
-
 if istest main; then
     $PYAV_PYTHON setup.py test
-fi
-
-if istest sdist; then
-    $PYAV_PYTHON setup.py build_ext
-    $PYAV_PYTHON setup.py sdist
-    if [[ "$TRAVIS_TAG" ]]; then
-        $PYAV_PIP install twine
-        $PYAV_PYTHON -m twine upload --skip-existing dist/*
-    fi
-fi
-
-if istest doctest; then
-    make -C docs test
 fi
 
 if istest examples; then

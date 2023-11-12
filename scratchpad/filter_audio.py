@@ -2,8 +2,6 @@
 Simple audio filtering example ported from C code:
    https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/filter_audio.c
 """
-from __future__ import division, print_function
-
 from fractions import Fraction
 import hashlib
 import sys

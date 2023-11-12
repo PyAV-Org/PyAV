@@ -1,12 +1,11 @@
-from libc.string cimport memcpy
-
-from av.audio.frame cimport AudioFrame, alloc_audio_frame
+from av.audio.frame cimport alloc_audio_frame
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.error cimport err_check
 from av.filter.pad cimport alloc_filter_pads
 from av.frame cimport Frame
-from av.video.frame cimport VideoFrame, alloc_video_frame
+from av.utils cimport avrational_to_fraction
+from av.video.frame cimport alloc_video_frame
 
 
 cdef object _cinit_sentinel = object()
@@ -20,7 +19,7 @@ cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterC
     return self
 
 
-cdef class FilterContext(object):
+cdef class FilterContext:
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
@@ -75,9 +74,17 @@ cdef class FilterContext(object):
         err_check(lib.avfilter_link(self.ptr, output_idx, input_.ptr, input_idx))
 
     def push(self, Frame frame):
+        cdef int res
 
-        if self.filter.name in ('abuffer', 'buffer'):
-            err_check(lib.av_buffersrc_write_frame(self.ptr, frame.ptr))
+        if frame is None:
+            with nogil:
+                res = lib.av_buffersrc_write_frame(self.ptr, NULL)
+            err_check(res)
+            return
+        elif self.filter.name in ('abuffer', 'buffer'):
+            with nogil:
+                res = lib.av_buffersrc_write_frame(self.ptr, frame.ptr)
+            err_check(res)
             return
 
         # Delegate to the input.
@@ -88,8 +95,9 @@ cdef class FilterContext(object):
         self.inputs[0].linked.context.push(frame)
 
     def pull(self):
-
         cdef Frame frame
+        cdef int res
+
         if self.filter.name == 'buffersink':
             frame = alloc_video_frame()
         elif self.filter.name == 'abuffersink':
@@ -104,6 +112,10 @@ cdef class FilterContext(object):
 
         self.graph.configure()
 
-        err_check(lib.av_buffersink_get_frame(self.ptr, frame.ptr))
+        with nogil:
+            res = lib.av_buffersink_get_frame(self.ptr, frame.ptr)
+        err_check(res)
+
         frame._init_user_attributes()
+        frame.time_base = avrational_to_fraction(&self.ptr.inputs[0].time_base)
         return frame

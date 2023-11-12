@@ -1,15 +1,13 @@
-from __future__ import print_function
 import logging
 
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
-logging.basicConfig()
-
-import av
 from av.codec import CodecContext
 from av.video import VideoFrame
-
 from tests.common import fate_suite
+
+
+logging.basicConfig()
 
 
 cc = CodecContext.create('flv', 'w')
@@ -19,8 +17,7 @@ base_img = Image.open(fate_suite('png1/lena-rgb24.png'))
 font = ImageFont.truetype("/System/Library/Fonts/Menlo.ttc", 15)
 
 
-
-fh = open('test.flv', 'w')
+fh = open('test.flv', 'wb')
 
 for i in range(30):
 
@@ -36,7 +33,7 @@ for i in range(30):
     packet = cc.encode(frame)
     print('   ', packet)
 
-    fh.write(str(buffer(packet)))
+    fh.write(bytes(packet))
 
 print('Flushing...')
 
@@ -45,6 +42,6 @@ while True:
     if not packet:
         break
     print('   ', packet)
-    fh.write(str(buffer(packet)))
+    fh.write(bytes(packet))
 
 print('Done!')

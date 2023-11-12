@@ -1,7 +1,7 @@
 cimport libav as lib
 
 
-cdef class ContainerFormat(object):
+cdef class ContainerFormat:
 
     cdef readonly str name
 

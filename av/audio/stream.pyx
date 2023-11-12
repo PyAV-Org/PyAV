@@ -1,4 +1,3 @@
-
 cdef class AudioStream(Stream):
 
     def __repr__(self):
@@ -8,6 +7,6 @@ cdef class AudioStream(Stream):
             self.name,
             self.rate,
             self.layout.name,
-            self.format.name,
+            self.format.name if self.format else None,
             id(self),
         )

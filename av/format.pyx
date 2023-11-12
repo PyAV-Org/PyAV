@@ -59,7 +59,7 @@ Flags = define_enum('Flags', __name__, (
 ), is_flags=True)
 
 
-cdef class ContainerFormat(object):
+cdef class ContainerFormat:
 
     """Descriptor of a container format.
 
@@ -84,7 +84,7 @@ cdef class ContainerFormat(object):
             self.iptr = lib.av_find_input_format(name)
 
         if mode is None or mode == 'w':
-            self.optr = find_output_format(name)
+            self.optr = lib.av_guess_format(name, NULL, NULL)
 
         if not self.iptr and not self.optr:
             raise ValueError('no container format %r' % name)
@@ -170,20 +170,6 @@ cdef class ContainerFormat(object):
     ts_nonstrict = flags.flag_property('TS_NONSTRICT')
     ts_negative = flags.flag_property('TS_NEGATIVE')
     seek_to_pts = flags.flag_property('SEEK_TO_PTS')
-
-
-cdef lib.AVOutputFormat* find_output_format(name):
-    cdef const lib.AVOutputFormat *ptr
-    cdef void *opaque = NULL
-
-    while True:
-        ptr = lib.av_muxer_iterate(&opaque)
-        if not ptr:
-            break
-        if ptr.name == name:
-            return <lib.AVOutputFormat*>ptr
-
-    return NULL
 
 
 cdef get_output_format_names():

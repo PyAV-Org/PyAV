@@ -1,4 +1,4 @@
-from libc.stdint cimport int64_t, uint8_t, uint64_t
+from libc.stdint cimport uint64_t
 
 from fractions import Fraction
 
@@ -60,6 +60,25 @@ cdef object to_avrational(object value, lib.AVRational *input):
 
 # === OTHER ===
 # =============
+
+
+cdef check_ndarray(object array, object dtype, int ndim):
+    """
+    Check a numpy array has the expected data type and number of dimensions.
+    """
+    if array.dtype != dtype:
+        raise ValueError(f"Expected numpy array with dtype `{dtype}` but got `{array.dtype}`")
+    if array.ndim != ndim:
+        raise ValueError(f"Expected numpy array with ndim `{ndim}` but got `{array.ndim}`")
+
+
+cdef check_ndarray_shape(object array, bint ok):
+    """
+    Check a numpy array has the expected shape.
+    """
+    if not ok:
+        raise ValueError(f"Unexpected numpy array shape `{array.shape}`")
+
 
 cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     # Not every flag exists in every version of FFMpeg, so we define them to 0.

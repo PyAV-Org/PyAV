@@ -1,12 +1,9 @@
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
+from collections.abc import MutableMapping
 
 from av.error cimport err_check
 
 
-cdef class _Dictionary(object):
+cdef class _Dictionary:
 
     def __cinit__(self, *args, **kwargs):
         for arg in args:

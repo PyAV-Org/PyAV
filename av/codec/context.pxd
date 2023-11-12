@@ -1,19 +1,18 @@
 from libc.stdint cimport int64_t
-
 cimport libav as lib
 
+from av.bytesource cimport ByteSource
 from av.codec.codec cimport Codec
 from av.frame cimport Frame
 from av.packet cimport Packet
-from av.bytesource cimport ByteSource
 
 
-cdef class CodecContext(object):
+cdef class CodecContext:
 
     cdef lib.AVCodecContext *ptr
 
-    # Whether the AVCodecContext should be de-allocated upon destruction.
-    cdef bint allocated
+    # Whether AVCodecContext.extradata should be de-allocated upon destruction.
+    cdef bint extradata_set
 
     # Used as a signal that this is within a stream, and also for us to access
     # that stream. This is set "manually" by the stream after constructing
@@ -21,9 +20,6 @@ cdef class CodecContext(object):
     cdef int stream_index
 
     cdef lib.AVCodecParserContext *parser
-
-    # To hold a reference to passed extradata.
-    cdef ByteSource extradata_source
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec)
 
@@ -65,4 +61,4 @@ cdef class CodecContext(object):
     cdef Frame _alloc_next_frame(self)
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, bint allocated)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*)

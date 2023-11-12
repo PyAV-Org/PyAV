@@ -18,7 +18,7 @@ cdef class Packet(Buffer):
 
     def __cinit__(self, input=None):
         with nogil:
-            lib.av_init_packet(&self.struct)
+            self.ptr = lib.av_packet_alloc()
 
     def __init__(self, input=None):
 
@@ -35,7 +35,7 @@ cdef class Packet(Buffer):
             size = source.length
 
         if size:
-            err_check(lib.av_new_packet(&self.struct, size))
+            err_check(lib.av_new_packet(self.ptr, size))
 
         if source is not None:
             self.update(source)
@@ -45,7 +45,7 @@ cdef class Packet(Buffer):
 
     def __dealloc__(self):
         with nogil:
-            lib.av_packet_unref(&self.struct)
+            lib.av_packet_free(&self.ptr)
 
     def __repr__(self):
         return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
@@ -53,15 +53,15 @@ cdef class Packet(Buffer):
             self._stream.index if self._stream else 0,
             self.dts,
             self.pts,
-            self.struct.size,
+            self.ptr.size,
             id(self),
         )
 
     # Buffer protocol.
     cdef size_t _buffer_size(self):
-        return self.struct.size
+        return self.ptr.size
     cdef void* _buffer_ptr(self):
-        return self.struct.data
+        return self.ptr.data
 
     cdef _rebase_time(self, lib.AVRational dst):
 
@@ -75,23 +75,7 @@ cdef class Packet(Buffer):
         if self._time_base.num == dst.num and self._time_base.den == dst.den:
             return
 
-        # TODO: Isn't there a function to do this?
-
-        if self.struct.pts != lib.AV_NOPTS_VALUE:
-            self.struct.pts = lib.av_rescale_q(
-                self.struct.pts,
-                self._time_base, dst
-            )
-        if self.struct.dts != lib.AV_NOPTS_VALUE:
-            self.struct.dts = lib.av_rescale_q(
-                self.struct.dts,
-                self._time_base, dst
-            )
-        if self.struct.duration > 0:
-            self.struct.duration = lib.av_rescale_q(
-                self.struct.duration,
-                self._time_base, dst
-            )
+        lib.av_packet_rescale_ts(self.ptr, self._time_base, dst)
 
         self._time_base = dst
 
@@ -117,7 +101,7 @@ cdef class Packet(Buffer):
 
     property stream_index:
         def __get__(self):
-            return self.struct.stream_index
+            return self.ptr.stream_index
 
     property stream:
         """
@@ -128,7 +112,7 @@ cdef class Packet(Buffer):
 
         def __set__(self, Stream stream):
             self._stream = stream
-            self.struct.stream_index = stream._stream.index
+            self.ptr.stream_index = stream.ptr.index
 
     property time_base:
         """
@@ -151,14 +135,14 @@ cdef class Packet(Buffer):
         :type: int
         """
         def __get__(self):
-            if self.struct.pts != lib.AV_NOPTS_VALUE:
-                return self.struct.pts
+            if self.ptr.pts != lib.AV_NOPTS_VALUE:
+                return self.ptr.pts
 
         def __set__(self, v):
             if v is None:
-                self.struct.pts = lib.AV_NOPTS_VALUE
+                self.ptr.pts = lib.AV_NOPTS_VALUE
             else:
-                self.struct.pts = v
+                self.ptr.pts = v
 
     property dts:
         """
@@ -167,14 +151,14 @@ cdef class Packet(Buffer):
         :type: int
         """
         def __get__(self):
-            if self.struct.dts != lib.AV_NOPTS_VALUE:
-                return self.struct.dts
+            if self.ptr.dts != lib.AV_NOPTS_VALUE:
+                return self.ptr.dts
 
         def __set__(self, v):
             if v is None:
-                self.struct.dts = lib.AV_NOPTS_VALUE
+                self.ptr.dts = lib.AV_NOPTS_VALUE
             else:
-                self.struct.dts = v
+                self.ptr.dts = v
 
     property pos:
         """
@@ -185,8 +169,8 @@ cdef class Packet(Buffer):
         :type: int
         """
         def __get__(self):
-            if self.struct.pos != -1:
-                return self.struct.pos
+            if self.ptr.pos != -1:
+                return self.ptr.pos
 
     property size:
         """
@@ -195,7 +179,7 @@ cdef class Packet(Buffer):
         :type: int
         """
         def __get__(self):
-            return self.struct.size
+            return self.ptr.size
 
     property duration:
         """
@@ -206,11 +190,23 @@ cdef class Packet(Buffer):
         :type: int
         """
         def __get__(self):
-            if self.struct.duration != lib.AV_NOPTS_VALUE:
-                return self.struct.duration
+            if self.ptr.duration != lib.AV_NOPTS_VALUE:
+                return self.ptr.duration
 
     property is_keyframe:
-        def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_KEY)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
+
+        def __set__(self, v):
+            if v:
+                self.ptr.flags |= lib.AV_PKT_FLAG_KEY
+            else:
+                self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
 
     property is_corrupt:
-        def __get__(self): return bool(self.struct.flags & lib.AV_PKT_FLAG_CORRUPT)
+        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
+
+        def __set__(self, v):
+            if v:
+                self.ptr.flags |= lib.AV_PKT_FLAG_CORRUPT
+            else:
+                self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)

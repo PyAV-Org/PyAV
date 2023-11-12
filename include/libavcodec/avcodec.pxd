@@ -1,12 +1,15 @@
-from libc.stdint cimport (
-    uint8_t, int8_t,
-    uint16_t, int16_t,
-    uint32_t, int32_t,
-    uint64_t, int64_t
-)
+from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t
 
 
 cdef extern from "libavcodec/avcodec.h" nogil:
+    """
+    // AV_FRAME_DATA_SEI_UNREGISTERED available since version 56.54.100 of libavutil (FFmpeg >= 4.4)
+    #define HAS_AV_FRAME_DATA_SEI_UNREGISTERED  (LIBAVUTIL_VERSION_INT >= 3683940)
+
+    #if !HAS_AV_FRAME_DATA_SEI_UNREGISTERED
+        #define AV_FRAME_DATA_SEI_UNREGISTERED -1
+    #endif
+    """
 
     # custom
     cdef set pyav_get_available_codecs()
@@ -15,6 +18,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef char* avcodec_configuration()
     cdef char* avcodec_license()
 
+    cdef size_t AV_INPUT_BUFFER_PADDING_SIZE
     cdef int64_t AV_NOPTS_VALUE
 
     # AVCodecDescriptor.props
@@ -30,7 +34,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef enum:
         AV_CODEC_CAP_DRAW_HORIZ_BAND
         AV_CODEC_CAP_DR1
-        AV_CODEC_CAP_TRUNCATED
         # AV_CODEC_CAP_HWACCEL
         AV_CODEC_CAP_DELAY
         AV_CODEC_CAP_SMALL_LAST_FRAME
@@ -42,11 +45,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_CAP_FRAME_THREADS
         AV_CODEC_CAP_SLICE_THREADS
         AV_CODEC_CAP_PARAM_CHANGE
-        AV_CODEC_CAP_AUTO_THREADS
+        AV_CODEC_CAP_OTHER_THREADS
         AV_CODEC_CAP_VARIABLE_FRAME_SIZE
         AV_CODEC_CAP_AVOID_PROBING
-        AV_CODEC_CAP_INTRA_ONLY
-        AV_CODEC_CAP_LOSSLESS
         AV_CODEC_CAP_HARDWARE
         AV_CODEC_CAP_HYBRID
         AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
@@ -67,7 +68,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG_LOOP_FILTER
         AV_CODEC_FLAG_GRAY
         AV_CODEC_FLAG_PSNR
-        AV_CODEC_FLAG_TRUNCATED
         AV_CODEC_FLAG_INTERLACED_DCT
         AV_CODEC_FLAG_LOW_DELAY
         AV_CODEC_FLAG_GLOBAL_HEADER
@@ -80,7 +80,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG2_FAST
         AV_CODEC_FLAG2_NO_OUTPUT
         AV_CODEC_FLAG2_LOCAL_HEADER
-        AV_CODEC_FLAG2_DROP_FRAME_TIMECODE
         AV_CODEC_FLAG2_CHUNKS
         AV_CODEC_FLAG2_IGNORE_CROP
         AV_CODEC_FLAG2_SHOW_ALL
@@ -185,6 +184,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         float rc_min_vbv_overflow_use
 
         AVRational framerate
+        AVRational pkt_timebase
         AVRational time_base
         int ticks_per_frame
 
@@ -226,7 +226,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef void avcodec_free_context(AVCodecContext **ctx)
 
     cdef AVClass* avcodec_get_class()
-    cdef int avcodec_copy_context(AVCodecContext *dst, const AVCodecContext *src)
 
     cdef struct AVCodecDescriptor:
         AVCodecID id
@@ -280,6 +279,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_FRAME_DATA_ICC_PROFILE
         AV_FRAME_DATA_QP_TABLE_PROPERTIES
         AV_FRAME_DATA_QP_TABLE_DATA
+        AV_FRAME_DATA_SEI_UNREGISTERED
 
     cdef struct AVFrameSideData:
         AVFrameSideDataType type
@@ -340,8 +340,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int64_t pos
 
-        void (*destruct)(AVPacket*)
-
 
     cdef int avcodec_fill_audio_frame(
         AVFrame *frame,
@@ -354,10 +352,11 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef void avcodec_free_frame(AVFrame **frame)
 
-    cdef void av_init_packet(AVPacket*)
+    cdef AVPacket* av_packet_alloc()
+    cdef void av_packet_free(AVPacket **)
     cdef int av_new_packet(AVPacket*, int)
     cdef int av_packet_ref(AVPacket *dst, const AVPacket *src)
-    cdef void av_packet_unref(AVPacket *pkt)
+    cdef void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb)
 
     cdef enum AVSubtitleType:
         SUBTITLE_NONE
@@ -446,10 +445,18 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
 
     cdef struct AVCodecParameters:
-        pass
+        AVMediaType codec_type
+        AVCodecID codec_id
 
+    cdef int avcodec_parameters_copy(
+        AVCodecParameters *dst,
+        const AVCodecParameters *src
+    )
     cdef int avcodec_parameters_from_context(
         AVCodecParameters *par,
         const AVCodecContext *codec,
     )
-
+    cdef int avcodec_parameters_to_context(
+        AVCodecContext *codec,
+        const AVCodecParameters *par
+    )

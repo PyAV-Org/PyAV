@@ -59,7 +59,7 @@ OptionFlags = define_enum('OptionFlags', __name__, (
     ('FILTERING_PARAM', lib.AV_OPT_FLAG_FILTERING_PARAM),
 ), is_flags=True)
 
-cdef class BaseOption(object):
+cdef class BaseOption:
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:

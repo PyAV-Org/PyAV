@@ -1,6 +1,7 @@
 from libc.stdint cimport int64_t
 from libc.stdlib cimport free, malloc
 
+from av.codec.context cimport CodecContext, wrap_codec_context
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.error cimport err_check
@@ -14,6 +15,7 @@ from av.dictionary import Dictionary
 cdef close_input(InputContainer self):
     if self.input_was_opened:
         with nogil:
+            # This causes `self.ptr` to be set to NULL.
             lib.avformat_close_input(&self.ptr)
         self.input_was_opened = False
 
@@ -22,7 +24,11 @@ cdef class InputContainer(Container):
 
     def __cinit__(self, *args, **kwargs):
 
+        cdef CodecContext py_codec_context
         cdef unsigned int i
+        cdef lib.AVStream *stream
+        cdef lib.AVCodec *codec
+        cdef lib.AVCodecContext *codec_context
 
         # If we have either the global `options`, or a `stream_options`, prepare
         # a mashup of those options for each stream.
@@ -65,7 +71,18 @@ cdef class InputContainer(Container):
 
         self.streams = StreamContainer()
         for i in range(self.ptr.nb_streams):
-            self.streams.add_stream(wrap_stream(self, self.ptr.streams[i]))
+            stream = self.ptr.streams[i]
+            codec = lib.avcodec_find_decoder(stream.codecpar.codec_id)
+            if codec:
+                # allocate and initialise decoder
+                codec_context = lib.avcodec_alloc_context3(codec)
+                err_check(lib.avcodec_parameters_to_context(codec_context, stream.codecpar))
+                codec_context.pkt_timebase = stream.time_base
+                py_codec_context = wrap_codec_context(codec_context, codec)
+            else:
+                # no decoder is available
+                py_codec_context = None
+            self.streams.add_stream(wrap_stream(self, stream, py_codec_context))
 
         self.metadata = avdict_to_dict(self.ptr.metadata, self.metadata_encoding, self.metadata_errors)
 
@@ -73,16 +90,26 @@ cdef class InputContainer(Container):
         close_input(self)
 
     property start_time:
-        def __get__(self): return self.ptr.start_time
+        def __get__(self):
+            self._assert_open()
+            if self.ptr.start_time != lib.AV_NOPTS_VALUE:
+                return self.ptr.start_time
 
     property duration:
-        def __get__(self): return self.ptr.duration
+        def __get__(self):
+            self._assert_open()
+            if self.ptr.duration != lib.AV_NOPTS_VALUE:
+                return self.ptr.duration
 
     property bit_rate:
-        def __get__(self): return self.ptr.bit_rate
+        def __get__(self):
+            self._assert_open()
+            return self.ptr.bit_rate
 
     property size:
-        def __get__(self): return lib.avio_size(self.ptr.pb)
+        def __get__(self):
+            self._assert_open()
+            return lib.avio_size(self.ptr.pb)
 
     def close(self):
         close_input(self)
@@ -103,6 +130,7 @@ cdef class InputContainer(Container):
         .. note:: The last packets are dummy packets that when decoded will flush the buffers.
 
         """
+        self._assert_open()
 
         # For whatever reason, Cython does not like us directly passing kwargs
         # from one method to another. Without kwargs, it ends up passing a
@@ -138,20 +166,20 @@ cdef class InputContainer(Container):
                 try:
                     self.start_timeout()
                     with nogil:
-                        ret = lib.av_read_frame(self.ptr, &packet.struct)
+                        ret = lib.av_read_frame(self.ptr, packet.ptr)
                     self.err_check(ret)
                 except EOFError:
                     break
 
-                if include_stream[packet.struct.stream_index]:
+                if include_stream[packet.ptr.stream_index]:
                     # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
                     # may also appear in av_read_frame().
                     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
                     # TODO: find better way to handle this
-                    if packet.struct.stream_index < len(self.streams):
-                        packet._stream = self.streams[packet.struct.stream_index]
+                    if packet.ptr.stream_index < len(self.streams):
+                        packet._stream = self.streams[packet.ptr.stream_index]
                         # Keep track of this so that remuxing is easier.
-                        packet._time_base = packet._stream._stream.time_base
+                        packet._time_base = packet._stream.ptr.time_base
                         yield packet
 
             # Flush!
@@ -159,7 +187,7 @@ cdef class InputContainer(Container):
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]
-                    packet._time_base = packet._stream._stream.time_base
+                    packet._time_base = packet._stream.ptr.time_base
                     yield packet
 
         finally:
@@ -178,6 +206,7 @@ cdef class InputContainer(Container):
             the arguments.
 
         """
+        self._assert_open()
         id(kwargs)  # Avoid Cython bug; see demux().
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
@@ -214,6 +243,7 @@ cdef class InputContainer(Container):
         .. seealso:: :ffmpeg:`avformat_seek_file` for discussion of the flags.
 
         """
+        self._assert_open()
 
         # We used to take floats here and assume they were in seconds. This
         # was super confusing, so lets go in the complete opposite direction
@@ -250,11 +280,13 @@ cdef class InputContainer(Container):
         self.flush_buffers()
 
     cdef flush_buffers(self):
-        cdef unsigned int i
-        cdef lib.AVStream *stream
+        self._assert_open()
 
-        with nogil:
-            for i in range(self.ptr.nb_streams):
-                stream = self.ptr.streams[i]
-                if stream.codec and stream.codec.codec and stream.codec.codec_id != lib.AV_CODEC_ID_NONE:
-                    lib.avcodec_flush_buffers(stream.codec)
+        cdef Stream stream
+        cdef CodecContext codec_context
+
+        for stream in self.streams:
+            codec_context = stream.codec_context
+            if codec_context and codec_context.is_open:
+                with nogil:
+                    lib.avcodec_flush_buffers(codec_context.ptr)

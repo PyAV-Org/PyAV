@@ -1,5 +1,6 @@
 cimport libav as lib
 
+from av.container.pyio cimport PyIOFile
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
@@ -12,7 +13,7 @@ ctypedef struct timeout_info:
     double timeout
 
 
-cdef class Container(object):
+cdef class Container:
 
     cdef readonly bint writeable
     cdef lib.AVFormatContext *ptr
@@ -21,19 +22,11 @@ cdef class Container(object):
     cdef readonly str metadata_encoding
     cdef readonly str metadata_errors
 
-    # File-like source.
-    cdef readonly object file
-    cdef object fread
-    cdef object fwrite
-    cdef object fseek
-    cdef object ftell
-
-    # Custom IO for above.
-    cdef lib.AVIOContext *iocontext
-    cdef unsigned char *buffer
-    cdef long pos
-    cdef bint pos_is_valid
+    cdef readonly PyIOFile file
+    cdef int buffer_size
     cdef bint input_was_opened
+    cdef readonly object io_open
+    cdef readonly object open_files
 
     cdef readonly ContainerFormat format
 
@@ -44,6 +37,8 @@ cdef class Container(object):
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
 
+    # Private API.
+    cdef _assert_open(self)
     cdef int err_check(self, int value) except -1
 
     # Timeouts

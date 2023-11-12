@@ -1,4 +1,3 @@
-
 from av.stream cimport Stream
 
 

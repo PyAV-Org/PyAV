@@ -3,7 +3,6 @@ cimport libav as lib
 from av.audio.format cimport AudioFormat, get_audio_format
 from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.audio.layout cimport AudioLayout, get_audio_layout
-from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
 
@@ -28,30 +27,22 @@ cdef class AudioCodecContext(CodecContext):
 
         cdef AudioFrame frame = input_frame
 
-        # Resample. A None frame will flush the resampler, and then the fifo (if used).
+        cdef bint allow_var_frame_size = self.ptr.codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
+
         # Note that the resampler will simply return an input frame if there is
         # no resampling to be done. The control flow was just a little easier this way.
         if not self.resampler:
             self.resampler = AudioResampler(
-                self.format,
-                self.layout,
-                self.ptr.sample_rate
+                format=self.format,
+                layout=self.layout,
+                rate=self.ptr.sample_rate,
+                frame_size=None if allow_var_frame_size else self.ptr.frame_size
             )
-        frame = self.resampler.resample(frame)
+        frames = self.resampler.resample(frame)
 
-        cdef bint is_flushing = input_frame is None
-        cdef bint use_fifo = not (self.ptr.codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE)
-
-        if use_fifo:
-            if not self.fifo:
-                self.fifo = AudioFifo()
-            if frame is not None:
-                self.fifo.write(frame)
-            frames = self.fifo.read_many(self.ptr.frame_size, partial=is_flushing)
-            if is_flushing:
-                frames.append(None)
-        else:
-            frames = [frame]
+        # flush if input frame is None
+        if input_frame is None:
+            frames.append(None)
 
         return frames
 

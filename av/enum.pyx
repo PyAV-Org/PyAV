@@ -9,14 +9,7 @@ integers for names and values respectively.
 
 """
 
-from collections import OrderedDict
-import sys
-
-
-try:
-    import copyreg
-except ImportError:
-    import copy_reg as copyreg
+import copyreg
 
 
 cdef sentinel = object()
@@ -140,7 +133,7 @@ def _unpickle(mod_name, cls_name, item_name):
 copyreg.constructor(_unpickle)
 
 
-cdef class EnumItem(object):
+cdef class EnumItem:
 
     """
     Enumerations are when an attribute may only take on a single value at once, and
@@ -327,7 +320,7 @@ cdef class EnumFlag(EnumItem):
         return bool(self.value)
 
 
-cdef class EnumProperty(object):
+cdef class EnumProperty:
 
     cdef object enum
     cdef object fget
@@ -389,6 +382,7 @@ cpdef define_enum(name, module, items, bint is_flags=False):
     else:
         base_cls = EnumItem
 
-    cls = EnumType(name, (base_cls, ), {'__module__': module}, items)
+    # Some items may be None if they correspond to an unsupported FFmpeg feature
+    cls = EnumType(name, (base_cls, ), {'__module__': module}, [i for i in items if i is not None])
 
     return cls

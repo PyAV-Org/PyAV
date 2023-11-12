@@ -3,7 +3,8 @@ cimport libav as lib
 from av.packet cimport Packet
 from av.sidedata.sidedata cimport _SideDataContainer
 
-cdef class Frame(object):
+
+cdef class Frame:
 
     cdef lib.AVFrame *ptr
 

@@ -11,11 +11,6 @@ cd "$PYAV_ROOT"
 $PYAV_PIP install --upgrade -r tests/requirements.txt
 
 
-if [[ "$TRAVIS" && ("$TESTSUITE" == "isort" || "$TESTSUITE" == "flake8") ]]; then
-    echo "We don't need to build dependencies for source linting."
-    exit 0
-fi
-
 # Skip the rest of the build if it already exists.
 if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
     echo "We have a cached build of $PYAV_LIBRARY; skipping re-build."
@@ -49,6 +44,7 @@ echo ./configure
     --enable-debug=3 \
     --enable-gpl \
     --enable-libx264 \
+    --enable-libxml2 \
     --enable-shared \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2

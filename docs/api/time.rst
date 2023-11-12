@@ -29,9 +29,6 @@ Time is expressed as integer multiples of arbitrary units of time called a ``tim
     >>> video.time_base
     Fraction(1, 25)
 
-    >>> video.codec_context.time_base
-    Fraction(1, 50)
-
 Attributes that represent time on those objects will be in that object's ``time_base``:
 
 .. doctest::

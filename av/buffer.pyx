@@ -1,10 +1,11 @@
 from cpython cimport PyBUF_WRITABLE, PyBuffer_FillInfo
 from libc.string cimport memcpy
 
+from av import deprecation
 from av.bytesource cimport ByteSource, bytesource
 
 
-cdef class Buffer(object):
+cdef class Buffer:
 
     """A base class for PyAV objects which support the buffer protocol, such
     as :class:`.Packet` and :class:`.Plane`.
@@ -35,6 +36,7 @@ cdef class Buffer(object):
         """The memory address of the buffer."""
         return <size_t>self._buffer_ptr()
 
+    @deprecation.method
     def to_bytes(self):
         """Return the contents of this buffer as ``bytes``.
 

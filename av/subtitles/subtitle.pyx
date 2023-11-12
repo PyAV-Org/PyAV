@@ -1,12 +1,12 @@
 from cpython cimport PyBuffer_FillInfo
 
 
-cdef class SubtitleProxy(object):
+cdef class SubtitleProxy:
     def __dealloc__(self):
         lib.avsubtitle_free(&self.struct)
 
 
-cdef class SubtitleSet(object):
+cdef class SubtitleSet:
 
     def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
@@ -63,7 +63,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
         raise ValueError('unknown subtitle type %r' % ptr.type)
 
 
-cdef class Subtitle(object):
+cdef class Subtitle:
 
     def __cinit__(self, SubtitleSet subtitle, int index):
         if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
@@ -131,7 +131,7 @@ cdef class BitmapSubtitle(Subtitle):
         return self.planes[i]
 
 
-cdef class BitmapSubtitlePlane(object):
+cdef class BitmapSubtitlePlane:
 
     def __cinit__(self, BitmapSubtitle subtitle, int index):
 
@@ -144,28 +144,6 @@ cdef class BitmapSubtitlePlane(object):
         self.index = index
         self.buffer_size = subtitle.ptr.w * subtitle.ptr.h
         self._buffer = <void*>subtitle.ptr.data[index]
-
-    # PyBuffer_FromMemory(self.ptr.data[i], self.width * self.height)
-
-    # Legacy buffer support. For `buffer` and PIL.
-    # See: http://docs.python.org/2/c-api/typeobj.html#PyBufferProcs
-
-    def __getsegcount__(self, Py_ssize_t *len_out):
-        if len_out != NULL:
-            len_out[0] = <Py_ssize_t>self.buffer_size
-        return 1
-
-    def __getreadbuffer__(self, Py_ssize_t index, void **data):
-        if index:
-            raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = self._buffer
-        return <Py_ssize_t>self.buffer_size
-
-    def __getwritebuffer__(self, Py_ssize_t index, void **data):
-        if index:
-            raise RuntimeError("accessing non-existent buffer segment")
-        data[0] = self._buffer
-        return <Py_ssize_t>self.buffer_size
 
     # New-style buffer support.
 

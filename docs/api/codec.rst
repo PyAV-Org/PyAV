@@ -12,10 +12,10 @@ Descriptors
 
 .. automethod:: Codec.create
 
+.. autoattribute:: Codec.is_decoder
 .. autoattribute:: Codec.is_encoder
-.. autoattribute:: Codec.is_encoder
-..
-    .. autoattribute:: Codec.descriptor
+
+.. autoattribute:: Codec.descriptor
 .. autoattribute:: Codec.name
 .. autoattribute:: Codec.long_name
 .. autoattribute:: Codec.type

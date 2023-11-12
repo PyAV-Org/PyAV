@@ -6,13 +6,23 @@ Caveats
 Authority of Documentation
 --------------------------
 
-FFmpeg is extremely complex, and the PyAV developers have not been successful in making it 100% clear to themselves in all aspects. Our understanding of how it works and how to work with it is via reading the docs, digging through the source, perfoming experiments, and hearing from users where PyAV isn't doing the right thing.
+FFmpeg_ is extremely complex, and the PyAV developers have not been successful in making it 100% clear to themselves in all aspects. Our understanding of how it works and how to work with it is via reading the docs, digging through the source, perfoming experiments, and hearing from users where PyAV isn't doing the right thing.
 
 Only where this documentation is about the mechanics of PyAV can it be considered authoritative. Anywhere that we discuss something that is actually about the underlying FFmpeg libraries comes with the caveat that we can not always be 100% on it.
 
-It is, unfortunately, often on the user the understand and deal with the edge cases. We encourage you to bring them to our attension via GitHub_ so that we can try to make PyAV deal with it, but we can't always make it work.
+It is, unfortunately, often on the user the understand and deal with the edge cases. We encourage you to bring them to our attention via GitHub_ so that we can try to make PyAV deal with it, but we can't always make it work.
 
-.. _GitHub: https://github.com/PyAv-Org/PyAV/issues
+
+Unsupported Features
+--------------------
+
+Our goal is to provide all of the features that make sense for the contexts that PyAV would be used in. If there is something missing, please reach out on Gitter_ or open a feature request on GitHub_ (or even better a pull request). Your request will be more likely to be addressed if you can point to the relevant `FFmpeg API documentation <https://ffmpeg.org/doxygen/trunk/index.html>`__.
+
+There are some features we may elect to not implement because we don't believe they fit the PyAV ethos. The only one that we've encountered so far is hardware decoding. The `FFmpeg man page <https://ffmpeg.org/ffmpeg.html>`__ discusses the drawback of ``-hwaccel``:
+
+    Note that most acceleration methods are intended for playback and will not be faster than software decoding on modern CPUs. Additionally, ``ffmpeg`` will usually need to copy the decoded frames from the GPU memory into the system memory, resulting in further performance loss.
+
+Since PyAV is not expected to be used in a high performance playback loop, we do not find the added code complexity worth the benefits of supporting this feature.
 
 
 Sub-Interpeters
@@ -40,3 +50,8 @@ Until we resolve this issue, you should explicitly call :meth:`.Container.close`
 
     with av.open(path) as fh:
         # Do stuff with it.
+
+
+.. _FFmpeg: https://ffmpeg.org/
+.. _Gitter: https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im
+.. _GitHub: https://github.com/PyAV-Org/pyav

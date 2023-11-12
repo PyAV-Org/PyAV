@@ -1,4 +1,3 @@
-from __future__ import print_function
 """
 Note this example only really works accurately on constant frame rate media.
 """

@@ -64,7 +64,7 @@ cdef dict channel_descriptions = {
 }
 
 
-cdef class AudioLayout(object):
+cdef class AudioLayout:
 
     def __init__(self, layout):
 
@@ -105,7 +105,7 @@ cdef class AudioLayout(object):
             return <str>out
 
 
-cdef class AudioChannel(object):
+cdef class AudioChannel:
 
     def __cinit__(self, AudioLayout layout, int index):
         self.channel = lib.av_channel_layout_extract_channel(layout.layout, index)

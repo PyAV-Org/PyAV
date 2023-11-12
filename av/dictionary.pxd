@@ -1,7 +1,7 @@
 cimport libav as lib
 
 
-cdef class _Dictionary(object):
+cdef class _Dictionary:
 
     cdef lib.AVDictionary *ptr
 

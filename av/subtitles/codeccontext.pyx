@@ -1,7 +1,6 @@
 cimport libav as lib
 
 from av.error cimport err_check
-from av.frame cimport Frame
 from av.packet cimport Packet
 from av.subtitles.subtitle cimport SubtitleProxy, SubtitleSet
 
@@ -16,7 +15,7 @@ cdef class SubtitleCodecContext(CodecContext):
             self.ptr,
             &proxy.struct,
             &got_frame,
-            &packet.struct if packet else NULL))
+            packet.ptr if packet else NULL))
         if got_frame:
             return [SubtitleSet(proxy)]
         else:

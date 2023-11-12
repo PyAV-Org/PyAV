@@ -1,7 +1,4 @@
-try:
-    from collections.abc import Sequence
-except ImportError:
-    from collections import Sequence
+from collections.abc import Sequence
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -56,7 +53,7 @@ class MotionVectors(_MotionVectors, Sequence):
     pass
 
 
-cdef class MotionVector(object):
+cdef class MotionVector:
 
     def __init__(self, sentinel, _MotionVectors parent, int index):
         if sentinel is not _cinit_bypass_sentinel:

@@ -1,22 +1,22 @@
 from av.audio.format cimport get_audio_format
 from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
-from av.deprecation import renamed_attr
 from av.error cimport err_check
+from av.utils cimport check_ndarray, check_ndarray_shape
 
 
 cdef object _cinit_bypass_sentinel
 
 
 format_dtypes = {
-    'dbl': '<f8',
-    'dblp': '<f8',
-    'flt': '<f4',
-    'fltp': '<f4',
-    's16': '<i2',
-    's16p': '<i2',
-    's32': '<i4',
-    's32p': '<i4',
+    'dbl': 'f8',
+    'dblp': 'f8',
+    'flt': 'f4',
+    'fltp': 'f4',
+    's16': 'i2',
+    's16p': 'i2',
+    's32': 'i4',
+    's32p': 'i4',
     'u8': 'u1',
     'u8p': 'u1',
 }
@@ -56,7 +56,6 @@ cdef class AudioFrame(Frame):
         # Audio filters need AVFrame.channels to match number of channels from layout.
         self.ptr.channels = self.layout.nb_channels
 
-        cdef size_t buffer_size
         if self.layout.channels and nb_samples:
 
             # Cleanup the old buffer.
@@ -116,14 +115,14 @@ cdef class AudioFrame(Frame):
         except KeyError:
             raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
 
+        # check input format
         nb_channels = len(AudioLayout(layout).channels)
-        assert array.dtype == dtype
-        assert array.ndim == 2
+        check_ndarray(array, dtype, 2)
         if AudioFormat(format).is_planar:
-            assert array.shape[0] == nb_channels
+            check_ndarray_shape(array, array.shape[0] == nb_channels)
             samples = array.shape[1]
         else:
-            assert array.shape[0] == 1
+            check_ndarray_shape(array, array.shape[0] == 1)
             samples = array.shape[1] // nb_channels
 
         frame = AudioFrame(format=format, layout=layout, samples=samples)
@@ -194,5 +193,3 @@ cdef class AudioFrame(Frame):
 
         # convert and return data
         return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
-
-    to_nd_array = renamed_attr('to_ndarray')

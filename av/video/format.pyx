@@ -8,8 +8,18 @@ cdef VideoFormat get_video_format(lib.AVPixelFormat c_format, unsigned int width
     format._init(c_format, width, height)
     return format
 
+cdef lib.AVPixelFormat get_pix_fmt(const char *name) except lib.AV_PIX_FMT_NONE:
+    """Wrapper for lib.av_get_pix_fmt with error checking."""
 
-cdef class VideoFormat(object):
+    cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name)
+
+    if pix_fmt == lib.AV_PIX_FMT_NONE:
+        raise ValueError('not a pixel format: %r' % name)
+
+    return pix_fmt
+
+
+cdef class VideoFormat:
     """
 
         >>> format = VideoFormat('rgb24')
@@ -29,9 +39,7 @@ cdef class VideoFormat(object):
             self._init(other.pix_fmt, width or other.width, height or other.height)
             return
 
-        cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name)
-        if pix_fmt < 0:
-            raise ValueError('not a pixel format: %r' % name)
+        cdef lib.AVPixelFormat pix_fmt = get_pix_fmt(name)
         self._init(pix_fmt, width, height)
 
     cdef _init(self, lib.AVPixelFormat pix_fmt, unsigned int width, unsigned int height):
@@ -110,7 +118,7 @@ cdef class VideoFormat(object):
         return -((-luma_height) >> self.ptr.log2_chroma_h) if luma_height else 0
 
 
-cdef class VideoFormatComponent(object):
+cdef class VideoFormatComponent:
 
     def __cinit__(self, VideoFormat format, size_t index):
         self.format = format

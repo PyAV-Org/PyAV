@@ -2,11 +2,10 @@ from libc.stdint cimport int64_t
 cimport libav as lib
 
 from av.codec.context cimport CodecContext
-from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
-from av.video.format cimport VideoFormat, get_video_format
+from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 
@@ -93,13 +92,17 @@ cdef class VideoCodecContext(CodecContext):
             self.ptr.height = value
             self._build_format()
 
-    # TODO: Replace with `format`.
     property pix_fmt:
+        """
+        The pixel format's name.
+
+        :type: str
+        """
         def __get__(self):
             return self._format.name
 
         def __set__(self, value):
-            self.ptr.pix_fmt = lib.av_get_pix_fmt(value)
+            self.ptr.pix_fmt = get_pix_fmt(value)
             self._build_format()
 
     property framerate:

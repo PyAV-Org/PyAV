@@ -14,11 +14,163 @@ We are operating with `semantic versioning <http://semver.org>`_.
     <https://blog.github.com/2013-01-22-closing-issues-via-commit-messages/>.
 
     Note that they these tags will not actually close the issue/PR until they
-    are merged into the "default" branch, currently "develop").
+    are merged into the "default" branch.
 
-v8.0.3.dev0
+v11.0.0
+-------
+
+Major:
+
+- Add support for FFmpeg 6.0, drop support for FFmpeg < 5.0.
+- Add support for Python 3.12, drop support for Python < 3.8.
+- Build binary wheels against libvpx 1.13.1 to fix CVE-2023-5217.
+- Build binary wheels against FFmpeg 6.0.
+
+Features:
+
+- Add support for the `ENCODER_FLUSH` encoder flag (:issue:`1067`).
+- Add VideoFrame ndarray operations for yuv444p/yuvj444p formats (:issue:`788`).
+- Add setters for `AVFrame.dts`, `AVPacket.is_keyframe` and `AVPacket.is_corrupt` (:issue:`1179`).
+
+Fixes:
+
+- Fix build using Cython 3 (:issue:`1140`).
+- Populate new streams with codec parameters (:issue:`1044`).
+- Explicitly set `python_requires` to avoid installing on incompatible Python (:issue:`1057`).
+- Make `AudioFifo.__repr__` safe before the first frame (:issue:`1130`).
+- Guard input container members against use after closes (:issue:`1137`).
+
+v10.0.0
+-------
+
+Major:
+
+- Add support for FFmpeg 5.0 and 5.1 (:issue:`817`).
+- Drop support for FFmpeg < 4.3.
+- Deprecate `CodecContext.time_base` for decoders (:issue:`966`).
+- Deprecate `VideoStream.framerate` and `VideoStream.rate` (:issue:`1005`).
+- Stop proxying `Codec` from `Stream` instances (:issue:`1037`).
+
+Features:
+
+- Update FFmpeg to 5.1.2 for the binary wheels.
+- Provide binary wheels for Python 3.11 (:issue:`1019`).
+- Add VideoFrame ndarray operations for gbrp formats (:issue:`986`).
+- Add VideoFrame ndarray operations for gbrpf32 formats (:issue:`1028`).
+- Add VideoFrame ndarray operations for nv12 format (:issue:`996`).
+
+Fixes:
+
+- Fix conversion to numpy array for multi-byte formats (:issue:`981`).
+- Safely iterate over filter pads (:issue:`1000`).
+
+v9.2.0
 ------
 
+Features:
+
+- Update binary wheels to enable libvpx support.
+- Add an `io_open` argument to `av.open` for multi-file custom I/O.
+- Add support for AV_FRAME_DATA_SEI_UNREGISTERED (:issue:`723`).
+- Ship .pxd files to allow other libraries to `cimport av` (:issue:`716`).
+
+Fixes:
+
+- Fix an `ImportError` when using Python 3.8/3.9 via Conda (:issue:`952`).
+- Fix a muxing memory leak which was introduced in v9.1.0 (:issue:`959`).
+
+v9.1.1
+------
+
+Fixes:
+
+- Update binary wheels to update dependencies on Windows, disable ALSA on Linux.
+
+v9.1.0
+------
+
+Features:
+
+- Add VideoFrame ndarray operations for rgb48be, rgb48le, rgb64be, rgb64le pixel formats.
+- Add VideoFrame ndarray operations for gray16be, gray16le pixel formats (:issue:`674`).
+- Make it possible to use av.open() on a pipe (:issue:`738`).
+- Use the "ASS without timings" format when decoding subtitles.
+
+Fixes:
+
+- Update binary wheels to fix security vulnerabilities (:issue:`921`) and enable ALSA on Linux (:issue:`941`).
+- Fix crash when closing an output container an encountering an I/O error (:issue:`613`).
+- Fix crash when probing corrupt raw format files (:issue:`590`).
+- Fix crash when manipulating streams with an unknown codec (:issue:`689`).
+- Remove obsolete KEEP_SIDE_DATA and MP4A_LATM flags which are gone in FFmpeg 5.0.
+- Deprecate `to_bytes()` method of Packet, Plane and SideData, use `bytes(packet)` instead.
+
+v9.0.2
+------
+
+Minor:
+
+- Update FFmpeg to 4.4.1 for the binary wheels.
+- Fix framerate when writing video with FFmpeg 4.4 (:issue:`876`).
+
+v9.0.1
+------
+
+Minor:
+
+- Update binary wheels to fix security vulnerabilities (:issue:`901`).
+
+v9.0.0
+------
+
+Major:
+
+- Re-implement AudioResampler with aformat and buffersink (:issue:`761`).
+  AudioResampler.resample() now returns a list of frames.
+- Remove deprecated methods: AudioFrame.to_nd_array, VideoFrame.to_nd_array and Stream.seek.
+
+Minor:
+
+- Provide binary wheels for macOS/arm64 and Linux/aarch64.
+- Simplify setup.py, require Cython.
+- Update the installation instructions in favor of PyPI.
+- Fix VideoFrame.to_image with height & width (:issue:`878`).
+- Fix setting Stream time_base (:issue:`784`).
+- Replace deprecated av_init_packet with av_packet_alloc (:issue:`872`).
+- Validate pixel format in VideoCodecContext.pix_fmt setter (:issue:`815`).
+- Fix AudioFrame ndarray conversion endianness (:issue:`833`).
+- Improve time_base support with filters (:issue:`765`).
+- Allow flushing filters by sending `None` (:issue:`886`).
+- Avoid unnecessary vsnprintf() calls in log_callback() (:issue:`877`).
+- Make Frame.from_ndarray raise ValueError instead of AssertionError.
+
+v8.1.0
+------
+
+Minor:
+
+- Update FFmpeg to 4.3.2 for the binary wheels.
+- Provide binary wheels for Python 3.10 (:issue:`820`).
+- Stop providing binary wheels for end-of-life Python 3.6.
+- Fix args order in Frame.__repr__ (:issue:`749`).
+- Fix documentation to remove unavailable QUIET log level (:issue:`719`).
+- Expose codec_context.codec_tag (:issue:`741`).
+- Add example for encoding with a custom PTS (:issue:`725`).
+- Use av_packet_rescale_ts in Packet._rebase_time() (:issue:`737`).
+- Do not hardcode errno values in test suite (:issue:`729`).
+- Use av_guess_format for output container format (:issue:`691`).
+- Fix setting CodecContext.extradata (:issue:`658`, :issue:`740`).
+- Fix documentation code block indentation (:issue:`783`).
+- Fix link to Conda installation instructions (:issue:`782`).
+- Export AudioStream from av.audio (:issue:`775`).
+- Fix setting CodecContext.extradata (:issue:`801`).
+
+v8.0.3
+------
+
+Minor:
+
+- Update FFmpeg to 4.3.1 for the binary wheels.
 
 v8.0.2
 ------

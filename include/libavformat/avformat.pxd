@@ -33,7 +33,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         int index
         int id
 
-        AVCodecContext *codec
         AVCodecParameters *codecpar
 
         AVRational time_base
@@ -57,6 +56,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int direct
         int seekable
         int max_packet_size
+        void *opaque
 
     # http://ffmpeg.org/doxygen/trunk/structAVIOInterruptCB.html
     cdef struct AVIOInterruptCB:
@@ -145,10 +145,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVFMT_FLAG_DISCARD_CORRUPT
         AVFMT_FLAG_FLUSH_PACKETS
         AVFMT_FLAG_BITEXACT
-        AVFMT_FLAG_MP4A_LATM
         AVFMT_FLAG_SORT_DTS
-        AVFMT_FLAG_PRIV_OPT
-        AVFMT_FLAG_KEEP_SIDE_DATA  # deprecated; does nothing
         AVFMT_FLAG_FAST_SEEK
         AVFMT_FLAG_SHORTEST
         AVFMT_FLAG_AUTO_BSF
@@ -187,6 +184,19 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
         int64_t max_analyze_duration
 
+        void *opaque
+
+        int (*io_open)(
+            AVFormatContext *s,
+            AVIOContext **pb,
+            const char *url,
+            int flags,
+            AVDictionary **options
+        )
+        void (*io_close)(
+            AVFormatContext *s,
+            AVIOContext *pb
+        )
 
     cdef AVFormatContext* avformat_alloc_context()
 
@@ -250,6 +260,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVCodecID codec_id,
         int std_compliance
     )
+
+    cdef void avio_flush(AVIOContext *s)
 
     cdef int avio_close(AVIOContext *s)
 

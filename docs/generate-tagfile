@@ -1,46 +1,23 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 import subprocess
-import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-l', '--library', default=os.environ.get('PYAV_LIBRARY'))
-parser.add_argument('-o', '--output', default=os.path.abspath(os.path.join(
-    __file__,
-    '..',
-    '_build',
-    'doxygen',
-    'tagfile.xml',
-)))
+parser.add_argument("-l", "--library", required=True)
+parser.add_argument("-o", "--output", required=True)
 args = parser.parse_args()
-
-
-if not args.library:
-    print("Please provide --library or set $PYAV_LIBRARY")
-    exit(1)
-
-library = os.path.abspath(os.path.join(
-    __file__,
-    '..', '..',
-    'vendor',
-    args.library,
-))
-
-if not os.path.exists(library):
-    print("Library does not exist:", library)
-    exit(2)
-
 
 output = os.path.abspath(args.output)
 outdir = os.path.dirname(output)
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
-
-proc = subprocess.Popen(['doxygen', '-'], stdin=subprocess.PIPE, cwd=library)
-proc.communicate('''
+proc = subprocess.Popen(["doxygen", "-"], stdin=subprocess.PIPE, cwd=args.library)
+proc.communicate(
+    """
 
 #@INCLUDE = doc/Doxyfile
 GENERATE_TAGFILE = {}
@@ -49,6 +26,7 @@ GENERATE_LATEX = no
 CASE_SENSE_NAMES = yes
 INPUT = libavcodec libavdevice libavfilter libavformat libavresample libavutil libswresample libswscale
 
-'''.format(output).encode())
-
-
+""".format(
+        output
+    ).encode()
+)

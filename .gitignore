@@ -34,7 +34,6 @@
 # Testing.
 *.spyderproject
 .idea
-/.vagrant
 /sandbox
 /tests/assets
 /tests/samples

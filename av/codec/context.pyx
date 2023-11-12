@@ -1,6 +1,7 @@
+import warnings
+
 from libc.errno cimport EAGAIN
-from libc.stdint cimport int64_t, uint8_t
-from libc.stdlib cimport free, malloc, realloc
+from libc.stdint cimport uint8_t
 from libc.string cimport memcpy
 cimport libav as lib
 
@@ -12,13 +13,14 @@ from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
 
+from av.deprecation import AVDeprecationWarning
 from av.dictionary import Dictionary
 
 
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, bint allocated):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -36,7 +38,6 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
-    py_ctx.allocated = allocated
     py_ctx._init(c_ctx, c_codec)
 
     return py_ctx
@@ -49,7 +50,7 @@ ThreadType = define_enum('ThreadType', __name__, (
     ('SLICE', lib.FF_THREAD_SLICE,
         """Decode more than one part of a single frame at once"""),
     ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME,
-        """Either method."""),
+        """Decode using both FRAME and SLICE methods."""),
 ), is_flags=True)
 
 SkipType = define_enum('SkipType', __name__, (
@@ -95,9 +96,6 @@ Flags = define_enum('Flags', __name__, (
         """Only decode/encode grayscale."""),
     ('PSNR', lib.AV_CODEC_FLAG_PSNR,
         """error[?] variables will be set during encoding."""),
-    ('TRUNCATED', lib.AV_CODEC_FLAG_TRUNCATED,
-        """Input bitstream might be truncated at a random location
-        instead of only at frame boundaries."""),
     ('INTERLACED_DCT', lib.AV_CODEC_FLAG_INTERLACED_DCT,
         """Use interlaced DCT."""),
     ('LOW_DELAY', lib.AV_CODEC_FLAG_LOW_DELAY,
@@ -121,8 +119,6 @@ Flags2 = define_enum('Flags2', __name__, (
         """Skip bitstream encoding."""),
     ('LOCAL_HEADER', lib.AV_CODEC_FLAG2_LOCAL_HEADER,
         """Place global headers at every keyframe instead of in extradata."""),
-    ('DROP_FRAME_TIMECODE', lib.AV_CODEC_FLAG2_DROP_FRAME_TIMECODE,
-        """Timecode is in drop frame format. DEPRECATED!!!!"""),
     ('CHUNKS', lib.AV_CODEC_FLAG2_CHUNKS,
         """Input bitstream might be truncated at a packet boundaries
         instead of only at frame boundaries."""),
@@ -139,13 +135,13 @@ Flags2 = define_enum('Flags2', __name__, (
 ), is_flags=True)
 
 
-cdef class CodecContext(object):
+cdef class CodecContext:
 
     @staticmethod
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        return wrap_codec_context(c_ctx, cy_codec.ptr, True)
+        return wrap_codec_context(c_ctx, cy_codec.ptr)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -190,7 +186,6 @@ cdef class CodecContext(object):
     loop_filter = flags.flag_property('LOOP_FILTER')
     gray = flags.flag_property('GRAY')
     psnr = flags.flag_property('PSNR')
-    truncated = flags.flag_property('TRUNCATED')
     interlaced_dct = flags.flag_property('INTERLACED_DCT')
     low_delay = flags.flag_property('LOW_DELAY')
     global_header = flags.flag_property('GLOBAL_HEADER')
@@ -214,7 +209,6 @@ cdef class CodecContext(object):
     fast = flags2.flag_property('FAST')
     no_output = flags2.flag_property('NO_OUTPUT')
     local_header = flags2.flag_property('LOCAL_HEADER')
-    drop_frame_timecode = flags2.flag_property('DROP_FRAME_TIMECODE')
     chunks = flags2.flag_property('CHUNKS')
     ignore_crop = flags2.flag_property('IGNORE_CROP')
     show_all = flags2.flag_property('SHOW_ALL')
@@ -230,9 +224,20 @@ cdef class CodecContext(object):
                 return None
 
         def __set__(self, data):
-            self.extradata_source = bytesource(data)
-            self.ptr.extradata = self.extradata_source.ptr
-            self.ptr.extradata_size = self.extradata_source.length
+            if not self.is_decoder:
+                raise ValueError("Can only set extradata for decoders.")
+
+            if data is None:
+                lib.av_freep(&self.ptr.extradata)
+                self.ptr.extradata_size = 0
+            else:
+                source = bytesource(data)
+                self.ptr.extradata = <uint8_t*>lib.av_realloc(self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE)
+                if not self.ptr.extradata:
+                    raise MemoryError("Cannot allocate extradata")
+                memcpy(self.ptr.extradata, source.ptr, source.length)
+                self.ptr.extradata_size = source.length
+            self.extradata_set = True
 
     property extradata_size:
         def __get__(self):
@@ -268,8 +273,8 @@ cdef class CodecContext(object):
         cdef _Dictionary options = Dictionary()
         options.update(self.options or {})
 
-        # Assert we have a time_base.
-        if not self.ptr.time_base.num:
+        # Assert we have a time_base for encoders.
+        if not self.ptr.time_base.num and self.is_encoder:
             self._set_default_time_base()
 
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
@@ -288,7 +293,9 @@ cdef class CodecContext(object):
         err_check(lib.avcodec_close(self.ptr))
 
     def __dealloc__(self):
-        if self.ptr and self.allocated:
+        if self.ptr and self.extradata_set:
+            lib.av_freep(&self.ptr.extradata)
+        if self.ptr:
             lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)
         if self.parser:
@@ -315,7 +322,7 @@ cdef class CodecContext(object):
             Anything that can be turned into a :class:`.ByteSource` is fine.
             ``None`` or empty inputs will flush the parser's buffers.
 
-        :return: ``list`` of :class:`.Packet` newly availible.
+        :return: ``list`` of :class:`.Packet` newly available.
 
         """
 
@@ -364,7 +371,7 @@ cdef class CodecContext(object):
                 # ... but this results in corruption.
 
                 packet = Packet(out_size)
-                memcpy(packet.struct.data, out_data, out_size)
+                memcpy(packet.ptr.data, out_data, out_size)
 
                 packets.append(packet)
 
@@ -405,7 +412,7 @@ cdef class CodecContext(object):
 
         cdef int res
         with nogil:
-            res = lib.avcodec_send_packet(self.ptr, &packet.struct if packet is not None else NULL)
+            res = lib.avcodec_send_packet(self.ptr, packet.ptr if packet is not None else NULL)
         err_check(res)
 
         out = []
@@ -447,7 +454,7 @@ cdef class CodecContext(object):
 
         cdef int res
         with nogil:
-            res = lib.avcodec_receive_packet(self.ptr, &packet.struct)
+            res = lib.avcodec_receive_packet(self.ptr, packet.ptr)
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
         err_check(res)
@@ -535,10 +542,32 @@ cdef class CodecContext(object):
 
     property time_base:
         def __get__(self):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using CodecContext.time_base for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             return avrational_to_fraction(&self.ptr.time_base)
 
         def __set__(self, value):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using CodecContext.time_base for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             to_avrational(value, &self.ptr.time_base)
+
+    property codec_tag:
+        def __get__(self):
+            return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
+                encoding="ascii")
+
+        def __set__(self, value):
+            if isinstance(value, str) and len(value) == 4:
+                self.ptr.codec_tag = int.from_bytes(value.encode(encoding="ascii"),
+                                                    byteorder="little", signed=False)
+            else:
+                raise ValueError("Codec tag should be a 4 character string.")
 
     property ticks_per_frame:
         def __get__(self):

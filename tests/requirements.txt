@@ -1,8 +1,9 @@
 autopep8
-Cython
+black
+cython
 editorconfig
 flake8
 isort
 numpy
-Pillow
-sphinx
+pillow
+sphinx < 4.4
