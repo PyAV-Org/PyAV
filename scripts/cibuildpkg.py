@@ -117,6 +117,7 @@ class Package:
     source_dir: str = ""
     source_filename: str = ""
     source_strip_components: int = 1
+    gpl: bool = False
 
 
 class Builder:

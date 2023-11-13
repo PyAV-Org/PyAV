@@ -1,3 +1,4 @@
+import argparse
 import glob
 import os
 import platform
@@ -7,16 +8,22 @@ import sys
 
 from cibuildpkg import Builder, Package, get_platform, log_group, run
 
-if len(sys.argv) < 2:
-    sys.stderr.write("Usage: build-ffmpeg.py <prefix> [stage]\n")
-    sys.stderr.write(
-        "       AArch64 build requires stage and possible values can be 1, 2 or 3\n"
-    )
-    sys.exit(1)
+parser = argparse.ArgumentParser("build-ffmpeg")
+parser.add_argument("destination")
+parser.add_argument(
+    "--stage",
+    default=None,
+    help="AArch64 build requires stage and possible values can be 1, 2 or 3",
+)
+parser.add_argument("--disable-gpl", action="store_true")
+args = parser.parse_args()
 
-dest_dir = sys.argv[1]
+dest_dir = args.destination
+build_stage = None if args.stage is None else int(args.stage) - 1
+disable_gpl = args.disable_gpl
+del args
+
 output_dir = os.path.abspath("output")
-
 plat = platform.system()
 
 if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
@@ -30,13 +37,7 @@ if not os.path.exists(output_tarball):
     builder = Builder(dest_dir=dest_dir)
     builder.create_directories()
 
-    if len(sys.argv) == 3:
-        build_stage = int(sys.argv[2]) - 1
-    else:
-        build_stage = None
-
     # install packages
-
     available_tools = set()
     if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
         with log_group("install packages"):
@@ -83,10 +84,7 @@ if not os.path.exists(output_tarball):
             for_builder=True,
         )
 
-    # build packages
-    package_groups = [[], [], []]
-    package_groups[0] = [
-        # libraries
+    library_group = [
         Package(
             name="xz",
             source_url="https://github.com/tukaani-project/xz/releases/download/v5.4.4/xz-5.4.4.tar.xz",
@@ -153,7 +151,7 @@ if not os.path.exists(output_tarball):
     ]
 
     if use_gnutls:
-        package_groups[0] += [
+        library_group += [
             Package(
                 name="unistring",
                 source_url="https://ftp.gnu.org/gnu/libunistring/libunistring-0.9.10.tar.gz",
@@ -184,8 +182,7 @@ if not os.path.exists(output_tarball):
             ),
         ]
 
-    package_groups[1] = [
-        # codecs
+    codec_group = [
         Package(
             name="aom",
             requires=["cmake"],
@@ -232,13 +229,6 @@ if not os.path.exists(output_tarball):
             build_parallel=plat != "Windows",
         ),
         Package(
-            name="openh264",
-            requires=["meson", "nasm", "ninja"],
-            source_filename="openh264-2.2.0.tar.gz",
-            source_url="https://github.com/cisco/openh264/archive/refs/tags/v2.2.0.tar.gz",
-            build_system="meson"
-        ),
-        Package(
             name="openjpeg",
             requires=["cmake"],
             source_filename="openjpeg-2.4.0.tar.gz",
@@ -280,6 +270,7 @@ if not os.path.exists(output_tarball):
             source_url="https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2",
             # parallel build runs out of memory on Windows
             build_parallel=plat != "Windows",
+            gpl=True,
         ),
         Package(
             name="x265",
@@ -287,6 +278,7 @@ if not os.path.exists(output_tarball):
             source_url="https://bitbucket.org/multicoreware/x265_git/downloads/x265_3.5.tar.gz",
             build_system="cmake",
             source_dir="source",
+            gpl=True,
         ),
         Package(
             name="xvid",
@@ -294,80 +286,79 @@ if not os.path.exists(output_tarball):
             source_url="https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.gz",
             source_dir="build/generic",
             build_dir="build/generic",
-        ),
-    ]
-    package_groups[2] = [
-        # ffmpeg
-        Package(
-            name="ffmpeg",
-            requires=[
-                "aom",
-                "ass",
-                "bluray",
-                "dav1d",
-                "fontconfig",
-                "freetype",
-                "gmp",
-                "lame",
-                "nasm",
-                "opencore-amr",
-                "openh264",
-                "openjpeg",
-                "opus",
-                "speex",
-                "twolame",
-                "vorbis",
-                "vpx",
-                "x264",
-                "x265",
-                "xml2",
-                "xvid",
-                "xz",
-            ],
-            source_url="https://ffmpeg.org/releases/ffmpeg-6.0.tar.xz",
-            build_arguments=[
-                "--disable-alsa",
-                "--disable-doc",
-                "--disable-libtheora",
-                "--disable-mediafoundation",
-                "--enable-fontconfig",
-                "--enable-gmp",
-                "--enable-gnutls" if use_gnutls else "--disable-gnutls",
-                "--enable-gpl",
-                "--enable-libaom",
-                "--enable-libass",
-                "--enable-libbluray",
-                "--enable-libdav1d",
-                "--enable-libfreetype",
-                "--enable-libmp3lame",
-                "--enable-libopencore-amrnb",
-                "--enable-libopencore-amrwb",
-                "--enable-libopenh264",
-                "--enable-libopenjpeg",
-                "--enable-libopus",
-                "--enable-libspeex",
-                "--enable-libtwolame",
-                "--enable-libvorbis",
-                "--enable-libvpx",
-                "--enable-libx264",
-                "--enable-libx265",
-                "--enable-libxcb" if plat == "Linux" else "--disable-libxcb",
-                "--enable-libxml2",
-                "--enable-libxvid",
-                "--enable-lzma",
-                "--enable-version3",
-                "--enable-zlib",
-            ],
+            gpl=True,
         ),
     ]
 
+    openh264 = Package(
+        name="openh264",
+        requires=["meson", "nasm", "ninja"],
+        source_filename="openh264-2.2.0.tar.gz",
+        source_url="https://github.com/cisco/openh264/archive/refs/tags/v2.2.0.tar.gz",
+        build_system="meson",
+    )
+
+    ffmpeg_build_args = [
+        "--disable-alsa",
+        "--disable-doc",
+        "--disable-libtheora",
+        "--disable-mediafoundation",
+        "--enable-fontconfig",
+        "--enable-gmp",
+        "--enable-gnutls" if use_gnutls else "--disable-gnutls",
+        "--enable-libaom",
+        "--enable-libass",
+        "--enable-libbluray",
+        "--enable-libdav1d",
+        "--enable-libfreetype",
+        "--enable-libmp3lame",
+        "--enable-libopencore-amrnb",
+        "--enable-libopencore-amrwb",
+        "--enable-libopenjpeg",
+        "--enable-libopus",
+        "--enable-libspeex",
+        "--enable-libtwolame",
+        "--enable-libvorbis",
+        "--enable-libvpx",
+        "--enable-libxcb" if plat == "Linux" else "--disable-libxcb",
+        "--enable-libxml2",
+        "--enable-lzma",
+        "--enable-zlib",
+        "--enable-version3"
+    ]
+    if disable_gpl:
+        ffmpeg_build_args.extend(["--enable-libopenh264", "--disable-libx264"])
+    else:
+        ffmpeg_build_args.extend(
+            [
+                "--enable-libx264",
+                "--disable-libopenh264",
+                "--enable-libx265",
+                "--enable-libxvid",
+                "--enable-gpl",
+            ]
+        )
+
+    ffmpeg_package = Package(
+        name="ffmpeg",
+        source_url="https://ffmpeg.org/releases/ffmpeg-6.0.tar.xz",
+        build_arguments=ffmpeg_build_args,
+    )
+
+    package_groups = [library_group, codec_group, [ffmpeg_package]]
     if build_stage is not None:
         packages = package_groups[build_stage]
     else:
         packages = [p for p_list in package_groups for p in p_list]
 
     for package in packages:
-        builder.build(package)
+        if disable_gpl and package.gpl:
+            if package.name == "x264":
+                builder.build(openh264)
+            else:
+                pass
+        else:
+            builder.build(package)
 
     if plat == "Windows" and (build_stage is None or build_stage == 2):
         # fix .lib files being installed in the wrong directory
