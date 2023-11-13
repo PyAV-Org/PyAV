@@ -42,7 +42,7 @@ def pull_until_blocked(graph):
     while True:
         try:
             frames.append(graph.pull())
-        except av.utils.AVError as e:
+        except av.AVError as e:
             if e.errno != errno.EAGAIN:
                 raise
             return frames
