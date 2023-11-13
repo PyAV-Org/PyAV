@@ -11,9 +11,6 @@
 /venv
 /venvs
 
-# IDE
-/.idea
-
 # Build products
 *.dll
 *.egg-info
