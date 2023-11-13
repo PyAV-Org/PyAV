@@ -200,23 +200,20 @@ for enum in ErrorType:
 # Mimick the builtin exception types.
 # See https://www.python.org/dev/peps/pep-3151/#new-exception-classes
 # Use the named ones we have, otherwise default to OSError for anything in errno.
-r'''
 
-See this command for the count of POSIX codes used:
-
-    egrep -IR 'AVERROR\(E[A-Z]+\)' vendor/ffmpeg-4.2 |\
-        sed -E 's/.*AVERROR\((E[A-Z]+)\).*/\1/' | \
-        sort | uniq -c
-
-The biggest ones that don't map to PEP 3151 builtins:
-
-    2106 EINVAL -> ValueError
-     649 EIO    -> IOError (if it is distinct from OSError)
-    4080 ENOMEM -> MemoryError
-     340 ENOSYS -> NotImplementedError
-      35 ERANGE -> OverflowError
-
-'''
+# See this command for the count of POSIX codes used:
+#
+#    egrep -IR 'AVERROR\(E[A-Z]+\)' vendor/ffmpeg-4.2 |\
+#        sed -E 's/.*AVERROR\((E[A-Z]+)\).*/\1/' | \
+#        sort | uniq -c
+#
+# The biggest ones that don't map to PEP 3151 builtins:
+#
+#    2106 EINVAL -> ValueError
+#     649 EIO    -> IOError (if it is distinct from OSError)
+#    4080 ENOMEM -> MemoryError
+#     340 ENOSYS -> NotImplementedError
+#      35 ERANGE -> OverflowError
 
 classes = {}
 

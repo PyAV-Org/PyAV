@@ -12,7 +12,7 @@ cdef extern from "libavutil/samplefmt.h" nogil:
         AV_SAMPLE_FMT_S32P
         AV_SAMPLE_FMT_FLTP
         AV_SAMPLE_FMT_DBLP
-        AV_SAMPLE_FMT_NB # Number.
+        AV_SAMPLE_FMT_NB  # Number.
 
     # Find by name.
     cdef AVSampleFormat av_get_sample_fmt(char* name)
@@ -42,7 +42,6 @@ cdef extern from "libavutil/samplefmt.h" nogil:
         AVSampleFormat sample_fmt,
         int align
     )
-
 
     cdef int av_samples_fill_arrays(
         uint8_t **audio_data,
