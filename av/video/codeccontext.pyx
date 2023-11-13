@@ -174,3 +174,15 @@ cdef class VideoCodecContext(CodecContext):
 
         def __set__(self, value):
             self.ptr.color_range = value
+
+    property max_b_frames:
+        """
+	The maximum run of consecutive B frames when encoding a video.
+
+        :type: int
+        """
+        def __get__(self):
+            return self.ptr.max_b_frames
+
+        def __set__(self, value):
+            self.ptr.max_b_frames = value
