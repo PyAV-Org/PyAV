@@ -1,6 +1,7 @@
 from cython.operator cimport dereference
 from libc.stdint cimport int64_t
 
+from pathlib import Path
 import os
 import time
 
@@ -334,10 +335,19 @@ cdef class Container:
     auto_bsf = flags.flag_property('AUTO_BSF')
 
 
-def open(file, mode=None, format=None, options=None,
-         container_options=None, stream_options=None,
-         metadata_encoding='utf-8', metadata_errors='strict',
-         buffer_size=32768, timeout=None, io_open=None):
+def open(
+    file,
+    mode=None,
+    format=None,
+    options=None,
+    container_options=None,
+    stream_options=None,
+    metadata_encoding="utf-8",
+    metadata_errors="strict",
+    buffer_size=32768,
+    timeout=None,
+    io_open=None,
+):
     """open(file, mode='r', **kwargs)
 
     Main entrypoint to opening files/streams.
@@ -385,34 +395,39 @@ def open(file, mode=None, format=None, options=None,
     `FFmpeg website <https://www.ffmpeg.org/ffmpeg-devices.html>`_.
     """
 
+    if not (mode is None or (isinstance(mode, str) and mode == "r" or mode == "w")):
+        raise ValueError(f"mode must be 'r', 'w', or None, got: {mode}")
+
+    if isinstance(file, str):
+        pass
+    elif isinstance(file, Path):
+        file = f"{file}"
+    elif mode is None:
+        mode = getattr(file, "mode", None)
+
     if mode is None:
-        mode = getattr(file, 'mode', None)
-    if mode is None:
-        mode = 'r'
+        mode = "r"
 
     if isinstance(timeout, tuple):
-        open_timeout = timeout[0]
-        read_timeout = timeout[1]
+        if not len(timeout) == 2:
+            raise ValueError("timeout must be `float` or `tuple[float, float]`")
+
+        open_timeout, read_timeout = timeout
     else:
         open_timeout = timeout
         read_timeout = timeout
 
-    if mode.startswith('r'):
-        return InputContainer(
-            _cinit_sentinel, file, format, options,
-            container_options, stream_options,
-            metadata_encoding, metadata_errors,
-            buffer_size, open_timeout, read_timeout,
-            io_open
+    if mode.startswith("r"):
+        return InputContainer(_cinit_sentinel, file, format, options,
+            container_options, stream_options, metadata_encoding, metadata_errors,
+            buffer_size, open_timeout, read_timeout, io_open,
         )
-    if mode.startswith('w'):
-        if stream_options:
-            raise ValueError("Provide stream options via Container.add_stream(..., options={}).")
-        return OutputContainer(
-            _cinit_sentinel, file, format, options,
-            container_options, stream_options,
-            metadata_encoding, metadata_errors,
-            buffer_size, open_timeout, read_timeout,
-            io_open
+
+    if stream_options:
+        raise ValueError(
+            "Provide stream options via Container.add_stream(..., options={})."
         )
-    raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
+    return OutputContainer(_cinit_sentinel, file, format, options,
+        container_options, stream_options, metadata_encoding, metadata_errors,
+        buffer_size, open_timeout, read_timeout, io_open,
+    )
