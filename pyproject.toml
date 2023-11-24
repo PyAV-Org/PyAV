@@ -1,2 +1,12 @@
 [build-system]
 requires = ["setuptools", "wheel", "cython"]
+
+[tool.isort]
+default_section = "THIRDPARTY"
+from_first = true
+known_first_party = ["av"]
+line_length = 88
+lines_after_imports = 2
+multi_line_output = 3
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip = ["av/__init__.py"]
