@@ -56,10 +56,10 @@ def write_rgb_rotate(output):
         )
         frame.planes[0].update(image.tobytes())
 
-        for packet in stream.encode(frame):
+        for packet in stream.encode_lazy(frame):
             output.mux(packet)
 
-    for packet in stream.encode(None):
+    for packet in stream.encode_lazy(None):
         output.mux(packet)
 
 
