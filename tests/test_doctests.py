@@ -4,12 +4,11 @@ import pkgutil
 import re
 
 import av
+import av.datasets
 
 
 def fix_doctests(suite):
-
     for case in suite._tests:
-
         # Add some more flags.
         case._dt_optionflags = (
             (case._dt_optionflags or 0)
@@ -24,14 +23,12 @@ def fix_doctests(suite):
         )
 
         for example in case._dt_test.examples:
-
             # Remove b prefix from strings.
             if example.want.startswith("b'"):
                 example.want = example.want[1:]
 
 
 def register_doctests(mod):
-
     if isinstance(mod, str):
         mod = __import__(mod, fromlist=[""])
 

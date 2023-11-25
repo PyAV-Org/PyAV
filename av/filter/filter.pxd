@@ -3,7 +3,7 @@ cimport libav as lib
 from av.descriptor cimport Descriptor
 
 
-cdef class Filter(object):
+cdef class Filter:
 
     cdef const lib.AVFilter *ptr
 

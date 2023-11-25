@@ -1,75 +1,55 @@
 name: tests
-
-on: [push, pull_request]
-
+on:
+  push:
+    branches: main
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
+  pull_request:
+    branches: main
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
 jobs:
-
-
   style:
-
-    name: "${{ matrix.config.suite }}"
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        config:
-          - {suite: black}
-          - {suite: flake8}
-          - {suite: isort}
-
-    env:
-      PYAV_PYTHON: python3
-      PYAV_LIBRARY: ffmpeg-4.3 # doesn't matter
-
     steps:
-
-      - uses: actions/checkout@v3
-        name: Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
-
-      - name: Environment
-        run: env | sort
+          python-version: 3.8
 
       - name: Packages
-        run: |
-          . scripts/activate.sh
-          # A bit of a hack that we can get away with this.
-          python -m pip install ${{ matrix.config.suite }}
+        run: pip install -r tests/requirements.txt
 
-      - name: "${{ matrix.config.suite }}"
-        run: |
-          . scripts/activate.sh
-          ./scripts/test ${{ matrix.config.suite }}
-
+      - name: Linters
+        run: make lint
 
   nix:
-
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-
     runs-on: ${{ matrix.config.os }}
-
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "5.1", extras: true}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "5.0"}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.4"}
-          - {os: ubuntu-latest, python: 3.7, ffmpeg: "4.3"}
-          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "4.4"}
-          - {os: macos-latest,  python: 3.7, ffmpeg: "4.4"}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "6.0", extras: true}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.1"}
+          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.0"}
+          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "5.0"}
+          - {os: macos-latest,  python: 3.8, ffmpeg: "5.0"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
       PYAV_LIBRARY: ffmpeg-${{ matrix.config.ffmpeg }}
 
     steps:
-
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout
 
     - name: Python ${{ matrix.config.python }}
@@ -123,7 +103,7 @@ jobs:
       if: matrix.config.extras
       run: |
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test doctest
+        make -C docs test
 
     - name: Examples
       if: matrix.config.extras
@@ -131,31 +111,21 @@ jobs:
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
         scripts/test examples
 
-    - name: Source Distribution
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test sdist
-
   windows:
-
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-
     runs-on: ${{ matrix.config.os }}
 
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, python: 3.7, ffmpeg: "5.1"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "5.0"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.4"}
-          - {os: windows-latest, python: 3.7, ffmpeg: "4.3"}
+          - {os: windows-latest, python: 3.8, ffmpeg: "6.0"}
+          - {os: windows-latest, python: 3.8, ffmpeg: "5.1"}
+          - {os: windows-latest, python: 3.8, ffmpeg: "5.0"}
 
     steps:
-
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Conda
       shell: bash
@@ -169,25 +139,14 @@ jobs:
           pillow \
           python=${{ matrix.config.python }} \
           setuptools
-          if [[ "${{ matrix.config.ffmpeg }}" == "5.1" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.1.2-1/ffmpeg-win_amd64.tar.gz
-          elif [[ "${{ matrix.config.ffmpeg }}" == "5.0" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/5.0.1-1/ffmpeg-win_amd64.tar.gz
-          elif [[ "${{ matrix.config.ffmpeg }}" == "4.4" ]]; then
-            curl -L -o ffmpeg.tar.gz https://github.com/PyAV-Org/pyav-ffmpeg/releases/download/4.4.1-8/ffmpeg-win_amd64.tar.gz
-          else
-            conda install -q -n pyav ffmpeg=${{ matrix.config.ffmpeg }}
-          fi
 
     - name: Build
       shell: bash
       run: |
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
-        if [[ "${{ matrix.config.ffmpeg }}" != "4.3" ]]; then
-          tar -xf ffmpeg.tar.gz -C $CONDA_PREFIX/Library/
-        fi
-        python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX/Library
+        python scripts\\fetch-vendor.py --config-file scripts\\ffmpeg-${{ matrix.config.ffmpeg }}.json $CONDA_PREFIX\\Library
+        python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX\\Library
 
     - name: Test
       shell: bash
@@ -199,14 +158,14 @@ jobs:
   package-source:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Build source package
         run: |
           pip install cython
-          python scripts/fetch-vendor.py /tmp/vendor
+          python scripts/fetch-vendor.py --config-file scripts/ffmpeg-6.0.json /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
         uses: actions/upload-artifact@v3
@@ -233,13 +192,13 @@ jobs:
           - os: windows-latest
             arch: AMD64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Set up QEMU
         if: matrix.os == 'ubuntu-latest'
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Install packages
         if: matrix.os == 'macos-latest'
         run: |
@@ -249,8 +208,8 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_ALL_LINUX: yum install -y alsa-lib libxcb
-          CIBW_BEFORE_BUILD: pip install cython && python scripts/fetch-vendor.py /tmp/vendor
-          CIBW_BEFORE_BUILD_WINDOWS: pip install cython && python scripts\fetch-vendor.py C:\cibw\vendor
+          CIBW_BEFORE_BUILD: python scripts/fetch-vendor.py --config-file scripts/ffmpeg-6.0.json /tmp/vendor
+          CIBW_BEFORE_BUILD_WINDOWS: python scripts\fetch-vendor.py --config-file scripts\ffmpeg-6.0.json C:\cibw\vendor
           CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
@@ -259,7 +218,7 @@ jobs:
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: numpy
           # skip tests when there are no binary wheels of numpy
-          CIBW_TEST_SKIP: cp37-* pp* *_i686
+          CIBW_TEST_SKIP: pp* *_i686
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
@@ -274,14 +233,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [package-source, package-wheel]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
         with:
           name: dist
           path: dist/
       - name: Publish to PyPI
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}

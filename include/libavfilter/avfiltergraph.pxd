@@ -11,7 +11,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         int pad_idx
         AVFilterInOut *next
 
-
     cdef AVFilterGraph* avfilter_graph_alloc()
     cdef void avfilter_graph_free(AVFilterGraph **ptr)
 

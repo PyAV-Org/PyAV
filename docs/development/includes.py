@@ -5,7 +5,7 @@ import sys
 
 import xml.etree.ElementTree as etree
 
-from Cython.Compiler.Main import compile_single, CompilationOptions
+from Cython.Compiler.Main import CompilationOptions, Context
 from Cython.Compiler.TreeFragment import parse_from_strings
 from Cython.Compiler.Visitor import TreeVisitor
 from Cython.Compiler import Nodes
@@ -107,9 +107,16 @@ def extract(path, **kwargs):
         c_string_encoding='ascii',
     )
 
-    context = options.create_context()
+    context = Context(
+        options.include_path,
+        options.compiler_directives,
+        options.cplus,
+        options.language_level,
+        options=options,
+    )
 
-    tree = parse_from_strings(name, open(path).read(), context,
+    tree = parse_from_strings(
+        name, open(path).read(), context,
         level='module_pxd' if path.endswith('.pxd') else None,
         **kwargs)
 

@@ -1,7 +1,7 @@
 from av.stream cimport Stream
 
 
-cdef class StreamContainer(object):
+cdef class StreamContainer:
 
     cdef list _streams
 

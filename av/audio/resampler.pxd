@@ -4,7 +4,7 @@ from av.audio.layout cimport AudioLayout
 from av.filter.graph cimport Graph
 
 
-cdef class AudioResampler(object):
+cdef class AudioResampler:
 
     cdef readonly bint is_passthrough
 

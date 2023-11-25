@@ -1,4 +1,3 @@
-from libc.stdint cimport int64_t
 cimport libav as lib
 
 from av.codec.context cimport CodecContext
@@ -7,7 +6,7 @@ from av.frame cimport Frame
 from av.packet cimport Packet
 
 
-cdef class Stream(object):
+cdef class Stream:
     cdef lib.AVStream *ptr
 
     # Stream attributes.

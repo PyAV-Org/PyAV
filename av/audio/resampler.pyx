@@ -7,7 +7,7 @@ import errno
 import av.filter
 
 
-cdef class AudioResampler(object):
+cdef class AudioResampler:
 
     """AudioResampler(format=None, layout=None, rate=None)
 
@@ -106,7 +106,7 @@ cdef class AudioResampler(object):
                 output.append(self.graph.pull())
             except EOFError:
                 break
-            except av.utils.AVError as e:
+            except av.AVError as e:
                 if e.errno != errno.EAGAIN:
                     raise
                 break

@@ -345,6 +345,22 @@ class TestVideoFrameNdarray(TestCase):
         self.assertEqual(frame.format.name, "yuyv422")
         self.assertNdarraysEqual(frame.to_ndarray(), array)
 
+    def test_ndarray_yuv444p(self):
+        array = numpy.random.randint(0, 256, size=(3, 480, 640), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format="yuv444p")
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, "yuv444p")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_ndarray_yuvj444p(self):
+        array = numpy.random.randint(0, 256, size=(3, 480, 640), dtype=numpy.uint8)
+        frame = VideoFrame.from_ndarray(array, format="yuvj444p")
+        self.assertEqual(frame.width, 640)
+        self.assertEqual(frame.height, 480)
+        self.assertEqual(frame.format.name, "yuvj444p")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
     def test_ndarray_yuyv422_align(self):
         array = numpy.random.randint(0, 256, size=(238, 318, 2), dtype=numpy.uint8)
         frame = VideoFrame.from_ndarray(array, format="yuyv422")
@@ -492,7 +508,6 @@ class TestVideoFrameReformat(TestCase):
         self.assertIs(frame1, frame2)
 
     def test_reformat_colourspace(self):
-
         # This is allowed.
         frame = VideoFrame(640, 480, "rgb24")
         frame.reformat(src_colorspace=None, dst_colorspace="smpte240")

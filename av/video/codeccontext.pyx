@@ -2,7 +2,6 @@ from libc.stdint cimport int64_t
 cimport libav as lib
 
 from av.codec.context cimport CodecContext
-from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
@@ -162,3 +161,15 @@ cdef class VideoCodecContext(CodecContext):
     property coded_height:
         def __get__(self):
             return self.ptr.coded_height
+
+    property max_b_frames:
+        """
+	The maximum run of consecutive B frames when encoding a video.
+
+        :type: int
+        """
+        def __get__(self):
+            return self.ptr.max_b_frames
+
+        def __set__(self, value):
+            self.ptr.max_b_frames = value

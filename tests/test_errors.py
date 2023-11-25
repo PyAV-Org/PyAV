@@ -8,7 +8,6 @@ from .common import TestCase, is_windows
 
 class TestErrorBasics(TestCase):
     def test_stringify(self):
-
         for cls in (av.ValueError, av.FileNotFoundError, av.DecoderNotFoundError):
             e = cls(1, "foo")
             self.assertEqual(str(e), "[Errno 1] foo")
@@ -34,7 +33,6 @@ class TestErrorBasics(TestCase):
             )
 
     def test_bases(self):
-
         self.assertTrue(issubclass(av.ValueError, ValueError))
         self.assertTrue(issubclass(av.ValueError, av.FFmpegError))
 

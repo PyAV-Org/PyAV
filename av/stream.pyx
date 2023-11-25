@@ -1,11 +1,7 @@
 import warnings
 
-from cpython cimport PyWeakref_NewRef
-from libc.stdint cimport int64_t, uint8_t
-from libc.string cimport memcpy
 cimport libav as lib
 
-from av.codec.context cimport wrap_codec_context
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport (
@@ -53,7 +49,7 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContex
     return py_stream
 
 
-cdef class Stream(object):
+cdef class Stream:
     """
     A single stream of audio, video or subtitles within a :class:`.Container`.
 
@@ -100,7 +96,7 @@ cdef class Stream(object):
 
     def __getattr__(self, name):
         # Deprecate framerate pass-through as it is not always set.
-        # See: https://github.com/PyAV-Org/PyAV/issues/1005
+        # See: https://github.com/PyAV-Org/PyAV/issues/1005
         if self.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO and name in ("framerate", "rate"):
             warnings.warn(
                 "VideoStream.%s is deprecated as it is not always set; please use VideoStream.average_rate." % name,

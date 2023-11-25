@@ -15,6 +15,7 @@ from av.dictionary import Dictionary
 cdef close_input(InputContainer self):
     if self.input_was_opened:
         with nogil:
+            # This causes `self.ptr` to be set to NULL.
             lib.avformat_close_input(&self.ptr)
         self.input_was_opened = False
 
@@ -79,7 +80,7 @@ cdef class InputContainer(Container):
                 codec_context.pkt_timebase = stream.time_base
                 py_codec_context = wrap_codec_context(codec_context, codec)
             else:
-                # no decoder is available
+                # no decoder is available
                 py_codec_context = None
             self.streams.add_stream(wrap_stream(self, stream, py_codec_context))
 
@@ -90,19 +91,25 @@ cdef class InputContainer(Container):
 
     property start_time:
         def __get__(self):
+            self._assert_open()
             if self.ptr.start_time != lib.AV_NOPTS_VALUE:
                 return self.ptr.start_time
 
     property duration:
         def __get__(self):
+            self._assert_open()
             if self.ptr.duration != lib.AV_NOPTS_VALUE:
                 return self.ptr.duration
 
     property bit_rate:
-        def __get__(self): return self.ptr.bit_rate
+        def __get__(self):
+            self._assert_open()
+            return self.ptr.bit_rate
 
     property size:
-        def __get__(self): return lib.avio_size(self.ptr.pb)
+        def __get__(self):
+            self._assert_open()
+            return lib.avio_size(self.ptr.pb)
 
     def close(self):
         close_input(self)
@@ -123,6 +130,7 @@ cdef class InputContainer(Container):
         .. note:: The last packets are dummy packets that when decoded will flush the buffers.
 
         """
+        self._assert_open()
 
         # For whatever reason, Cython does not like us directly passing kwargs
         # from one method to another. Without kwargs, it ends up passing a
@@ -198,6 +206,7 @@ cdef class InputContainer(Container):
             the arguments.
 
         """
+        self._assert_open()
         id(kwargs)  # Avoid Cython bug; see demux().
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
@@ -234,6 +243,7 @@ cdef class InputContainer(Container):
         .. seealso:: :ffmpeg:`avformat_seek_file` for discussion of the flags.
 
         """
+        self._assert_open()
 
         # We used to take floats here and assume they were in seconds. This
         # was super confusing, so lets go in the complete opposite direction
@@ -270,6 +280,8 @@ cdef class InputContainer(Container):
         self.flush_buffers()
 
     cdef flush_buffers(self):
+        self._assert_open()
+
         cdef Stream stream
         cdef CodecContext codec_context
 

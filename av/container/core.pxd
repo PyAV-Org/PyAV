@@ -13,7 +13,7 @@ ctypedef struct timeout_info:
     double timeout
 
 
-cdef class Container(object):
+cdef class Container:
 
     cdef readonly bint writeable
     cdef lib.AVFormatContext *ptr
@@ -37,6 +37,8 @@ cdef class Container(object):
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
 
+    # Private API.
+    cdef _assert_open(self)
     cdef int err_check(self, int value) except -1
 
     # Timeouts

@@ -1,7 +1,7 @@
 cimport libav as lib
 
 
-cdef class AudioFormat(object):
+cdef class AudioFormat:
 
     cdef lib.AVSampleFormat sample_fmt
 

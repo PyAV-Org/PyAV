@@ -25,13 +25,7 @@ Type = define_enum('Type', __name__, (
     ('SPHERICAL', lib.AV_FRAME_DATA_SPHERICAL),
     ('CONTENT_LIGHT_LEVEL', lib.AV_FRAME_DATA_CONTENT_LIGHT_LEVEL),
     ('ICC_PROFILE', lib.AV_FRAME_DATA_ICC_PROFILE),
-    # SEI_UNREGISTERED available since version 56.54.100 of libavutil (FFmpeg >= 4.4)
     ('SEI_UNREGISTERED', lib.AV_FRAME_DATA_SEI_UNREGISTERED) if lib.AV_FRAME_DATA_SEI_UNREGISTERED != -1 else None,
-
-    # These are deprecated. See https://github.com/PyAV-Org/PyAV/issues/607
-    # ('QP_TABLE_PROPERTIES', lib.AV_FRAME_DATA_QP_TABLE_PROPERTIES),
-    # ('QP_TABLE_DATA', lib.AV_FRAME_DATA_QP_TABLE_DATA),
-
 ))
 
 
@@ -70,7 +64,7 @@ cdef class SideData(Buffer):
         return Type.get(self.ptr.type) or self.ptr.type
 
 
-cdef class _SideDataContainer(object):
+cdef class _SideDataContainer:
 
     def __init__(self, Frame frame):
 

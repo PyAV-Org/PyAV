@@ -1,11 +1,11 @@
 from libc.stdint cimport int64_t, uint8_t
 
+
 cdef extern from "libswresample/swresample.h" nogil:
 
     cdef int   swresample_version()
     cdef char* swresample_configuration()
     cdef char* swresample_license()
-
 
     cdef struct SwrContext:
         pass
@@ -19,7 +19,7 @@ cdef extern from "libswresample/swresample.h" nogil:
         AVSampleFormat in_sample_fmt,
         int in_sample_rate,
         int log_offset,
-        void *log_ctx #logging context, can be NULL
+        void *log_ctx  # logging context, can be NULL
     )
 
     cdef int swr_convert(

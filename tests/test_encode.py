@@ -1,6 +1,9 @@
 from fractions import Fraction
 from unittest import SkipTest
+import io
 import math
+
+import numpy as np
 
 from av import AudioFrame, VideoFrame
 from av.audio.stream import AudioStream
@@ -16,7 +19,6 @@ DURATION = 48
 
 
 def write_rgb_rotate(output):
-
     if not Image:
         raise SkipTest()
 
@@ -29,7 +31,6 @@ def write_rgb_rotate(output):
     stream.pix_fmt = "yuv420p"
 
     for frame_i in range(DURATION):
-
         frame = VideoFrame(WIDTH, HEIGHT, "rgb24")
         image = Image.new(
             "RGB",
@@ -64,7 +65,6 @@ def write_rgb_rotate(output):
 
 
 def assert_rgb_rotate(self, input_, is_dash=False):
-
     # Now inspect it a little.
     self.assertEqual(len(input_.streams), 1)
     if is_dash:
@@ -294,3 +294,84 @@ class TestEncodeStreamSemantics(TestCase):
             self.assertEqual(stream.time_base, None)
             stream.time_base = Fraction(1, 48000)
             self.assertEqual(stream.time_base, Fraction(1, 48000))
+
+
+def encode_file_with_max_b_frames(max_b_frames):
+    """
+    Create an encoded video file (or file-like object) with the given
+    maximum run of B frames.
+
+    max_b_frames: non-negative integer which is the maximum allowed run
+        of consecutive B frames.
+
+    Returns: a file-like object.
+    """
+    # Create a video file that is entirely arbitrary, but with the passed
+    # max_b_frames parameter.
+    file = io.BytesIO()
+    container = av.open(file, mode="w", format="mp4")
+    stream = container.add_stream("h264", rate=30)
+    stream.width = 640
+    stream.height = 480
+    stream.pix_fmt = "yuv420p"
+    stream.codec_context.gop_size = 15
+    stream.codec_context.max_b_frames = max_b_frames
+
+    for i in range(50):
+        array = np.empty((stream.height, stream.width, 3), dtype=np.uint8)
+        # This appears to hit a complexity "sweet spot" that makes the codec
+        # want to use B frames.
+        array[:, :] = (i, 0, 255 - i)
+        frame = av.VideoFrame.from_ndarray(array, format="rgb24")
+        for packet in stream.encode(frame):
+            container.mux(packet)
+
+    for packet in stream.encode():
+        container.mux(packet)
+
+    container.close()
+    file.seek(0)
+
+    return file
+
+
+def max_b_frame_run_in_file(file):
+    """
+    Count the maximum run of B frames in a file (or file-like object).
+
+    file: the file or file-like object in which to count the maximum run
+        of B frames. The file should contain just one video stream.
+
+    Returns: non-negative integer which is the maximum B frame run length.
+    """
+    container = av.open(file)
+    stream = container.streams.video[0]
+
+    max_b_frame_run = 0
+    b_frame_run = 0
+    for packet in container.demux(stream):
+        for frame in packet.decode():
+            if frame.pict_type == av.video.frame.PictureType.B:
+                b_frame_run += 1
+            else:
+                max_b_frame_run = max(max_b_frame_run, b_frame_run)
+                b_frame_run = 0
+
+    # Outside chance that the longest run was at the end of the file.
+    max_b_frame_run = max(max_b_frame_run, b_frame_run)
+
+    container.close()
+
+    return max_b_frame_run
+
+
+class TestMaxBFrameEncoding(TestCase):
+    def test_max_b_frames(self):
+        """
+        Test that we never get longer runs of B frames than we asked for with
+        the max_b_frames property.
+        """
+        for max_b_frames in range(4):
+            file = encode_file_with_max_b_frames(max_b_frames)
+            actual_max_b_frames = max_b_frame_run_in_file(file)
+            self.assertTrue(actual_max_b_frames <= max_b_frames)

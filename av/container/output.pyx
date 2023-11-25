@@ -1,4 +1,3 @@
-from fractions import Fraction
 import logging
 import os
 
@@ -53,6 +52,9 @@ cdef class OutputContainer(Container):
             Examples for video include ``24``, ``23.976``, and
             ``Fraction(30000,1001)``. Examples for audio include ``48000``
             and ``44100``.
+        :param template: Copy codec from another :class:`~av.stream.Stream` instance.
+        :param dict options: Stream options.
+        :param \\**kwargs: Set attributes of the stream.
         :returns: The new :class:`~av.stream.Stream`.
 
         """

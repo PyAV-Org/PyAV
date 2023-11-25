@@ -1,9 +1,4 @@
-from libc.stdint cimport (
-    uint8_t, int8_t,
-    uint16_t, int16_t,
-    uint32_t, int32_t,
-    uint64_t, int64_t
-)
+from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t
 
 
 cdef extern from "libavcodec/avcodec.h" nogil:
@@ -35,11 +30,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_PROP_BITMAP_SUB
         AV_CODEC_PROP_TEXT_SUB
 
-    #AVCodec.capabilities
+    # AVCodec.capabilities
     cdef enum:
         AV_CODEC_CAP_DRAW_HORIZ_BAND
         AV_CODEC_CAP_DR1
-        AV_CODEC_CAP_TRUNCATED
         # AV_CODEC_CAP_HWACCEL
         AV_CODEC_CAP_DELAY
         AV_CODEC_CAP_SMALL_LAST_FRAME
@@ -51,11 +45,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_CAP_FRAME_THREADS
         AV_CODEC_CAP_SLICE_THREADS
         AV_CODEC_CAP_PARAM_CHANGE
-        AV_CODEC_CAP_AUTO_THREADS
+        AV_CODEC_CAP_OTHER_THREADS
         AV_CODEC_CAP_VARIABLE_FRAME_SIZE
         AV_CODEC_CAP_AVOID_PROBING
-        AV_CODEC_CAP_INTRA_ONLY
-        AV_CODEC_CAP_LOSSLESS
         AV_CODEC_CAP_HARDWARE
         AV_CODEC_CAP_HYBRID
         AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
@@ -76,7 +68,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG_LOOP_FILTER
         AV_CODEC_FLAG_GRAY
         AV_CODEC_FLAG_PSNR
-        AV_CODEC_FLAG_TRUNCATED
         AV_CODEC_FLAG_INTERLACED_DCT
         AV_CODEC_FLAG_LOW_DELAY
         AV_CODEC_FLAG_GLOBAL_HEADER
@@ -89,7 +80,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG2_FAST
         AV_CODEC_FLAG2_NO_OUTPUT
         AV_CODEC_FLAG2_LOCAL_HEADER
-        AV_CODEC_FLAG2_DROP_FRAME_TIMECODE
         AV_CODEC_FLAG2_CHUNKS
         AV_CODEC_FLAG2_IGNORE_CROP
         AV_CODEC_FLAG2_SHOW_ALL
@@ -144,7 +134,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         AVClass *priv_class
 
-
     cdef int av_codec_is_encoder(AVCodec*)
     cdef int av_codec_is_decoder(AVCodec*)
 
@@ -156,7 +145,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         char **mime_types
 
     AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
-
 
     cdef struct AVCodecContext:
 
@@ -216,7 +204,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         AVPixelFormat pix_fmt
         AVRational sample_aspect_ratio
-        int gop_size # The number of pictures in a group of pictures, or 0 for intra_only.
+        int gop_size  # The number of pictures in a group of pictures, or 0 for intra_only.
         int max_b_frames
         int has_b_frames
 
@@ -226,9 +214,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int channels
         int frame_size
         int channel_layout
-
-        # Subtitles.
-        int sub_text_format
 
         #: .. todo:: ``get_buffer`` is deprecated for get_buffer2 in newer versions of FFmpeg.
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
@@ -304,15 +289,15 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
     cdef struct AVFrame:
-        uint8_t *data[4];
-        int linesize[4];
+        uint8_t *data[4]
+        int linesize[4]
         uint8_t **extended_data
 
-        int format # Should be AVPixelFormat or AVSampleFormat
-        int key_frame # 0 or 1.
+        int format  # Should be AVPixelFormat or AVSampleFormat
+        int key_frame  # 0 or 1.
         AVPictureType pict_type
 
-        int interlaced_frame # 0 or 1.
+        int interlaced_frame  # 0 or 1.
 
         int width
         int height
@@ -320,10 +305,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int nb_side_data
         AVFrameSideData **side_data
 
-        int nb_samples # Audio samples
-        int sample_rate # Audio Sample rate
-        int channels # Number of audio channels
-        int channel_layout # Audio channel_layout
+        int nb_samples  # Audio samples
+        int sample_rate  # Audio Sample rate
+        int channels  # Number of audio channels
+        int channel_layout  # Audio channel_layout
 
         int64_t pts
         int64_t pkt_dts
@@ -335,7 +320,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDictionary *metadata
         int flags
         int decode_error_flags
-
 
     cdef AVFrame* avcodec_alloc_frame()
 
@@ -352,7 +336,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int duration
 
         int64_t pos
-
 
     cdef int avcodec_fill_audio_frame(
         AVFrame *frame,
@@ -383,8 +366,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int w
         int h
         int nb_colors
-        uint8_t *data[4];
-        int linesize[4];
+        uint8_t *data[4]
+        int linesize[4]
         AVSubtitleType type
         char *text
         char *ass
@@ -418,7 +401,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
 
-     # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
+    # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
     cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
     cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
 
@@ -455,7 +438,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int keyframe
     )
     cdef void av_parser_close(AVCodecParserContext *s)
-
 
     cdef struct AVCodecParameters:
         AVMediaType codec_type

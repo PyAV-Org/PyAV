@@ -6,7 +6,7 @@ from cpython.buffer cimport (
 )
 
 
-cdef class ByteSource(object):
+cdef class ByteSource:
 
     def __cinit__(self, owner):
         self.owner = owner

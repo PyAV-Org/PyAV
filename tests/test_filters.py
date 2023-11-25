@@ -42,7 +42,7 @@ def pull_until_blocked(graph):
     while True:
         try:
             frames.append(graph.pull())
-        except av.utils.AVError as e:
+        except av.AVError as e:
             if e.errno != errno.EAGAIN:
                 raise
             return frames
@@ -50,7 +50,6 @@ def pull_until_blocked(graph):
 
 class TestFilters(TestCase):
     def test_filter_descriptor(self):
-
         f = Filter("testsrc")
         self.assertEqual(f.name, "testsrc")
         self.assertEqual(f.description, "Generate test pattern.")
@@ -62,7 +61,6 @@ class TestFilters(TestCase):
         self.assertEqual(f.outputs[0].type, "video")
 
     def test_dynamic_filter_descriptor(self):
-
         f = Filter("split")
         self.assertFalse(f.dynamic_inputs)
         self.assertEqual(len(f.inputs), 1)
@@ -70,7 +68,6 @@ class TestFilters(TestCase):
         self.assertEqual(len(f.outputs), 0)
 
     def test_generator_graph(self):
-
         graph = Graph()
         src = graph.add("testsrc")
         lutrgb = graph.add(
@@ -93,7 +90,6 @@ class TestFilters(TestCase):
             frame.to_image().save(self.sandboxed("mandelbrot2.png"))
 
     def test_auto_find_sink(self):
-
         graph = Graph()
         src = graph.add("testsrc")
         src.link_to(graph.add("buffersink"))
@@ -105,7 +101,6 @@ class TestFilters(TestCase):
             frame.to_image().save(self.sandboxed("mandelbrot3.png"))
 
     def test_delegate_sink(self):
-
         graph = Graph()
         src = graph.add("testsrc")
         src.link_to(graph.add("buffersink"))
@@ -117,7 +112,6 @@ class TestFilters(TestCase):
             frame.to_image().save(self.sandboxed("mandelbrot4.png"))
 
     def test_haldclut_graph(self):
-
         raise SkipTest()
 
         graph = Graph()

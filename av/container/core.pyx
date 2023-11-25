@@ -1,7 +1,7 @@
 from cython.operator cimport dereference
 from libc.stdint cimport int64_t
-from libc.stdlib cimport free, malloc
 
+from pathlib import Path
 import os
 import time
 
@@ -20,16 +20,13 @@ from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
 
 
-ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) nogil
-
-
 cdef object _cinit_sentinel = object()
 
 
 # We want to use the monotonic clock if it is available.
 cdef object clock = getattr(time, 'monotonic', time.time)
 
-cdef int interrupt_cb (void *p) nogil:
+cdef int interrupt_cb (void *p) noexcept nogil:
 
     cdef timeout_info info = dereference(<timeout_info*> p)
     if info.timeout < 0:  # timeout < 0 means no timeout
@@ -56,7 +53,7 @@ cdef int pyav_io_open(lib.AVFormatContext *s,
                       lib.AVIOContext **pb,
                       const char *url,
                       int flags,
-                      lib.AVDictionary **options) nogil:
+                      lib.AVDictionary **options) noexcept nogil:
     with gil:
         return pyav_io_open_gil(s, pb, url, flags, options)
 
@@ -65,7 +62,7 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
                           lib.AVIOContext **pb,
                           const char *url,
                           int flags,
-                          lib.AVDictionary **options):
+                          lib.AVDictionary **options) noexcept:
     cdef Container container
     cdef object file
     cdef PyIOFile pyio_file
@@ -104,13 +101,13 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
 
 
 cdef void pyav_io_close(lib.AVFormatContext *s,
-                        lib.AVIOContext *pb) nogil:
+                        lib.AVIOContext *pb) noexcept nogil:
     with gil:
         pyav_io_close_gil(s, pb)
 
 
 cdef void pyav_io_close_gil(lib.AVFormatContext *s,
-                            lib.AVIOContext *pb):
+                            lib.AVIOContext *pb) noexcept:
     cdef Container container
     try:
         container = <Container>dereference(s).opaque
@@ -157,8 +154,6 @@ Flags = define_enum('Flags', __name__, (
         This flag is mainly intended for testing."""),
     ('SORT_DTS', lib.AVFMT_FLAG_SORT_DTS,
         "Try to interleave outputted packets by dts (using this flag can slow demuxing down)."),
-    ('PRIV_OPT', lib.AVFMT_FLAG_PRIV_OPT,
-        "Enable use of private options by delaying codec open (this could be made default once all code is converted)."),
     ('FAST_SEEK', lib.AVFMT_FLAG_FAST_SEEK,
         "Enable fast, but inaccurate seeks for some formats."),
     ('SHORTEST', lib.AVFMT_FLAG_SHORTEST,
@@ -168,7 +163,7 @@ Flags = define_enum('Flags', __name__, (
 ), is_flags=True)
 
 
-cdef class Container(object):
+cdef class Container:
 
     def __cinit__(self, sentinel, file_, format_name, options,
                   container_options, stream_options,
@@ -209,7 +204,6 @@ cdef class Container(object):
 
         cdef bytes name_obj = os.fsencode(self.name)
         cdef char *name = name_obj
-        cdef seek_func_t seek_func = NULL
 
         cdef lib.AVOutputFormat *ofmt
         if self.writeable:
@@ -292,6 +286,7 @@ cdef class Container(object):
         return err_check(value, filename=self.name)
 
     def dumps_format(self):
+        self._assert_open()
         with LogCapture() as logs:
             lib.av_dump_format(self.ptr, 0, "", isinstance(self, OutputContainer))
         return ''.join(log[2] for log in logs)
@@ -305,10 +300,16 @@ cdef class Container(object):
     cdef start_timeout(self):
         self.interrupt_callback_info.start_time = clock()
 
+    cdef _assert_open(self):
+        if self.ptr == NULL:
+            raise AssertionError("Container is not open")
+
     def _get_flags(self):
+        self._assert_open()
         return self.ptr.flags
 
     def _set_flags(self, value):
+        self._assert_open()
         self.ptr.flags = value
 
     flags = Flags.property(
@@ -329,16 +330,24 @@ cdef class Container(object):
     flush_packets = flags.flag_property('FLUSH_PACKETS')
     bit_exact = flags.flag_property('BITEXACT')
     sort_dts = flags.flag_property('SORT_DTS')
-    priv_opt = flags.flag_property('PRIV_OPT')
     fast_seek = flags.flag_property('FAST_SEEK')
     shortest = flags.flag_property('SHORTEST')
     auto_bsf = flags.flag_property('AUTO_BSF')
 
 
-def open(file, mode=None, format=None, options=None,
-         container_options=None, stream_options=None,
-         metadata_encoding='utf-8', metadata_errors='strict',
-         buffer_size=32768, timeout=None, io_open=None):
+def open(
+    file,
+    mode=None,
+    format=None,
+    options=None,
+    container_options=None,
+    stream_options=None,
+    metadata_encoding="utf-8",
+    metadata_errors="strict",
+    buffer_size=32768,
+    timeout=None,
+    io_open=None,
+):
     """open(file, mode='r', **kwargs)
 
     Main entrypoint to opening files/streams.
@@ -365,6 +374,7 @@ def open(file, mode=None, format=None, options=None,
         ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
         ``options`` is a dictionary of additional options. The callable should return a
         file-like object.
+    :rtype: Container
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
@@ -385,34 +395,39 @@ def open(file, mode=None, format=None, options=None,
     `FFmpeg website <https://www.ffmpeg.org/ffmpeg-devices.html>`_.
     """
 
+    if not (mode is None or (isinstance(mode, str) and mode == "r" or mode == "w")):
+        raise ValueError(f"mode must be 'r', 'w', or None, got: {mode}")
+
+    if isinstance(file, str):
+        pass
+    elif isinstance(file, Path):
+        file = f"{file}"
+    elif mode is None:
+        mode = getattr(file, "mode", None)
+
     if mode is None:
-        mode = getattr(file, 'mode', None)
-    if mode is None:
-        mode = 'r'
+        mode = "r"
 
     if isinstance(timeout, tuple):
-        open_timeout = timeout[0]
-        read_timeout = timeout[1]
+        if not len(timeout) == 2:
+            raise ValueError("timeout must be `float` or `tuple[float, float]`")
+
+        open_timeout, read_timeout = timeout
     else:
         open_timeout = timeout
         read_timeout = timeout
 
-    if mode.startswith('r'):
-        return InputContainer(
-            _cinit_sentinel, file, format, options,
-            container_options, stream_options,
-            metadata_encoding, metadata_errors,
-            buffer_size, open_timeout, read_timeout,
-            io_open
+    if mode.startswith("r"):
+        return InputContainer(_cinit_sentinel, file, format, options,
+            container_options, stream_options, metadata_encoding, metadata_errors,
+            buffer_size, open_timeout, read_timeout, io_open,
         )
-    if mode.startswith('w'):
-        if stream_options:
-            raise ValueError("Provide stream options via Container.add_stream(..., options={}).")
-        return OutputContainer(
-            _cinit_sentinel, file, format, options,
-            container_options, stream_options,
-            metadata_encoding, metadata_errors,
-            buffer_size, open_timeout, read_timeout,
-            io_open
+
+    if stream_options:
+        raise ValueError(
+            "Provide stream options via Container.add_stream(..., options={})."
         )
-    raise ValueError("mode must be 'r' or 'w'; got %r" % mode)
+    return OutputContainer(_cinit_sentinel, file, format, options,
+        container_options, stream_options, metadata_encoding, metadata_errors,
+        buffer_size, open_timeout, read_timeout, io_open,
+    )

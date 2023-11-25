@@ -4,7 +4,7 @@ from av.filter.link cimport wrap_filter_link
 cdef object _cinit_sentinel = object()
 
 
-cdef class FilterPad(object):
+cdef class FilterPad:
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:

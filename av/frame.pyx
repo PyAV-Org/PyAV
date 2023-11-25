@@ -1,11 +1,9 @@
 from av.utils cimport avrational_to_fraction, to_avrational
 
-from fractions import Fraction
-
 from av.sidedata.sidedata import SideDataContainer
 
 
-cdef class Frame(object):
+cdef class Frame:
     """
     Base class for audio and video frames.
 
@@ -68,7 +66,9 @@ cdef class Frame(object):
 
     property dts:
         """
-        The decoding timestamp in :attr:`time_base` units for this frame.
+        The decoding timestamp copied from the :class:`~av.packet.Packet` that triggered returning this frame in :attr:`time_base` units.
+
+        (if frame threading isn't used) This is also the Presentation time of this frame calculated from only :attr:`.Packet.dts` values without pts values.
 
         :type: int
         """
@@ -76,6 +76,12 @@ cdef class Frame(object):
             if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
                 return None
             return self.ptr.pkt_dts
+
+        def __set__(self, value):
+            if value is None:
+                self.ptr.pkt_dts = lib.AV_NOPTS_VALUE
+            else:
+                self.ptr.pkt_dts = value
 
     property pts:
         """

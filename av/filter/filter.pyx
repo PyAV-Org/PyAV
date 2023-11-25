@@ -21,7 +21,7 @@ cpdef enum FilterFlags:
     SUPPORT_TIMELINE_INTERNAL = lib.AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL
 
 
-cdef class Filter(object):
+cdef class Filter:
 
     def __cinit__(self, name):
         if name is _cinit_sentinel:

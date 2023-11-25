@@ -3,19 +3,19 @@ cimport libav as lib
 from av.packet cimport Packet
 
 
-cdef class SubtitleProxy(object):
+cdef class SubtitleProxy:
 
     cdef lib.AVSubtitle struct
 
 
-cdef class SubtitleSet(object):
+cdef class SubtitleSet:
 
     cdef readonly Packet packet
     cdef SubtitleProxy proxy
     cdef readonly tuple rects
 
 
-cdef class Subtitle(object):
+cdef class Subtitle:
 
     cdef SubtitleProxy proxy
     cdef lib.AVSubtitleRect *ptr
@@ -31,7 +31,7 @@ cdef class BitmapSubtitle(Subtitle):
 
     cdef readonly planes
 
-cdef class BitmapSubtitlePlane(object):
+cdef class BitmapSubtitlePlane:
 
     cdef readonly BitmapSubtitle subtitle
     cdef readonly int index

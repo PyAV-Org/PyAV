@@ -7,7 +7,7 @@ from av.frame cimport Frame
 from av.packet cimport Packet
 
 
-cdef class CodecContext(object):
+cdef class CodecContext:
 
     cdef lib.AVCodecContext *ptr
 

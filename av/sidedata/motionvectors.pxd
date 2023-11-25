@@ -10,7 +10,7 @@ cdef class _MotionVectors(SideData):
     cdef int _len
 
 
-cdef class MotionVector(object):
+cdef class MotionVector:
 
     cdef _MotionVectors parent
     cdef lib.AVMotionVector *ptr

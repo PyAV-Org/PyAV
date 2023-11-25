@@ -22,7 +22,6 @@ class TestLogging(TestCase):
         )
 
     def test_threaded_captures(self):
-
         with av.logging.Capture(local=True) as logs:
             do_log("main")
             thread = threading.Thread(target=do_log, args=("thread",))
@@ -32,7 +31,6 @@ class TestLogging(TestCase):
         self.assertIn((av.logging.INFO, "test", "main"), logs)
 
     def test_global_captures(self):
-
         with av.logging.Capture(local=False) as logs:
             do_log("main")
             thread = threading.Thread(target=do_log, args=("thread",))
@@ -43,7 +41,6 @@ class TestLogging(TestCase):
         self.assertIn((av.logging.INFO, "test", "thread"), logs)
 
     def test_repeats(self):
-
         with av.logging.Capture() as logs:
             do_log("foo")
             do_log("foo")
@@ -66,7 +63,6 @@ class TestLogging(TestCase):
         )
 
     def test_error(self):
-
         log = (av.logging.ERROR, "test", "This is a test.")
         av.logging.log(*log)
         try:
