@@ -190,6 +190,32 @@ cdef class VideoFrame(Frame):
     def pict_type(self, value):
         self.ptr.pict_type = PictureType[value].value
 
+    @property
+    def colorspace(self):
+        """Colorspace of frame.
+
+        Wraps :ffmpeg:`AVFrame.colorspace`.
+
+        """
+        return self.ptr.colorspace
+
+    @colorspace.setter
+    def colorspace(self, value):
+        self.ptr.colorspace = value
+
+    @property
+    def color_range(self):
+        """Color range of frame.
+
+        Wraps :ffmpeg:`AVFrame.color_range`.
+
+        """
+        return self.ptr.color_range
+
+    @color_range.setter
+    def color_range(self, value):
+        self.ptr.color_range = value
+
     def reformat(self, *args, **kwargs):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None)
 

@@ -162,6 +162,19 @@ cdef class VideoCodecContext(CodecContext):
         def __get__(self):
             return self.ptr.coded_height
 
+    @property
+    def color_range(self):
+        """
+        Color range of context.
+
+        Wraps :ffmpeg:`AVFrame.color_range`.
+        """
+        def __get__(self):
+            return self.ptr.color_range
+
+        def __set__(self, value):
+            self.ptr.color_range = value
+
     property max_b_frames:
         """
 	The maximum run of consecutive B frames when encoding a video.
