@@ -72,10 +72,14 @@ cdef class AudioResampler:
             # handle resampling with aformat filter
             # (similar to configure_output_audio_filter from ffmpeg)
             self.graph = av.filter.Graph()
+            extra_args = {}
+            if frame.time_base is not None:
+                extra_args["time_base"] = str(frame.time_base)
             abuffer = self.graph.add("abuffer",
                                      sample_rate=str(frame.sample_rate),
                                      sample_fmt=AudioFormat(frame.format).name,
-                                     channel_layout=frame.layout.name)
+                                     channel_layout=frame.layout.name,
+                                     **extra_args)
             aformat = self.graph.add("aformat",
                                      sample_rates=str(self.rate),
                                      sample_fmts=self.format.name,
