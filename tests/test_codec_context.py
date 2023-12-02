@@ -317,6 +317,8 @@ class TestEncoding(TestCase):
     def test_encoding_mp2(self):
         self.audio_encoding("mp2")
 
+    maxDiff = None
+
     def audio_encoding(self, codec_name):
         try:
             codec = Codec(codec_name, "w")
@@ -350,17 +352,123 @@ class TestEncoding(TestCase):
         samples = 0
         packet_sizes = []
 
+        pts_expected = [
+            0,
+            1098,
+            2212,
+            3327,
+            4441,
+            5556,
+            6670,
+            7785,
+            8900,
+            10014,
+            11129,
+            12243,
+            13358,
+            14472,
+            15587,
+            16701,
+            17816,
+            18931,
+            20045,
+            21160,
+            22274,
+            23389,
+            24503,
+            25618,
+            26732,
+            27847,
+            28962,
+            30076,
+            31191,
+            32305,
+            33420,
+            34534,
+            35649,
+            36763,
+            37878,
+            38993,
+            40107,
+            41222,
+            42336,
+            43451,
+            44565,
+            45680,
+            46795,
+            47909,
+            49024,
+            50138,
+            51253,
+            52367,
+            53482,
+            54596,
+            55711,
+            56826,
+            57940,
+            59055,
+            60169,
+            61284,
+            62398,
+            63513,
+            64627,
+            65742,
+            66857,
+            67971,
+            69086,
+            70200,
+            71315,
+            72429,
+            73544,
+            74658,
+            75773,
+            76888,
+            78002,
+            79117,
+            80231,
+            81346,
+            82460,
+            83575,
+            84689,
+            85804,
+            86919,
+            88033,
+            89148,
+            90262,
+            91377,
+            92491,
+            93606,
+            94720,
+            95835,
+            96950,
+            98064,
+            99179,
+            100293,
+            101408,
+        ]
+        if codec_name == "aac":
+            pts_expected_encoded = list((-1024 + n * 1024 for n in range(101)))
+        elif codec_name == "mp2":
+            pts_expected_encoded = list((-481 + n * 1152 for n in range(89)))
+        else:
+            pts_expected_encoded = pts_expected.copy()
         with open(path, "wb") as f:
             for frame in iter_frames(container, audio_stream):
                 resampled_frames = resampler.resample(frame)
                 for resampled_frame in resampled_frames:
+                    self.assertEqual(resampled_frame.pts, pts_expected.pop(0))
+                    self.assertEqual(resampled_frame.time_base, Fraction(1, 48000))
                     samples += resampled_frame.samples
 
                     for packet in ctx.encode(resampled_frame):
+                        self.assertEqual(packet.pts, pts_expected_encoded.pop(0))
+                        self.assertEqual(packet.time_base, Fraction(1, 48000))
                         packet_sizes.append(packet.size)
                         f.write(packet)
 
             for packet in ctx.encode(None):
+                self.assertEqual(packet.pts, pts_expected_encoded.pop(0))
+                self.assertEqual(packet.time_base, Fraction(1, 48000))
                 packet_sizes.append(packet.size)
                 f.write(packet)
 
