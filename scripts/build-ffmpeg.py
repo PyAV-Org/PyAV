@@ -237,7 +237,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="opus",
-            source_url="https://archive.mozilla.org/pub/opus/opus-1.3.1.tar.gz",
+            source_url="https://github.com/xiph/opus/releases/download/v1.4/opus-1.4.tar.gz",
             build_arguments=["--disable-doc", "--disable-extra-programs"],
         ),
         Package(
