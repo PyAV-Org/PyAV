@@ -11,7 +11,7 @@ Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Window
     pip install av
 
 
-Currently FFmpeg 5.1.3 is used with the following features enabled for all platforms:
+Currently FFmpeg 6.0 is used with the following features enabled for all platforms:
 
 - fontconfig
 - gmp
@@ -77,10 +77,10 @@ and a few other tools in general:
 - Python's development headers
 
 
-Mac OS X
-^^^^^^^^
+MacOS
+^^^^^
 
-On **Mac OS X**, Homebrew_ saves the day::
+On **MacOS**, Homebrew_ saves the day::
 
     brew install ffmpeg pkg-config
 
@@ -115,7 +115,7 @@ Building from the latest source
 ::
 
     # Get PyAV from GitHub.
-    git clone git@github.com:PyAV-Org/PyAV.git
+    git clone https://github.com/PyAV-Org/PyAV.git
     cd PyAV
 
     # Prep a virtualenv.
@@ -129,11 +129,8 @@ Building from the latest source
 
     # Build PyAV.
     make
-    # or
-    python setup.py build_ext --inplace
 
-
-On **Mac OS X** you may have issues with regards to Python expecting gcc but finding clang. Try to export the following before installation::
+On **MacOS** you may have issues with regards to Python expecting gcc but finding clang. Try to export the following before installation::
 
     export ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
 
