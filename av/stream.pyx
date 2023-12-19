@@ -187,7 +187,7 @@ cdef class Stream:
         """
         Get DISPLAYMATRIX SideDate from  a lib.AVStream object.
 
-        :return: ``tuple`` of (number_of_side_date, side_data dict) .
+        :return: ``tuple`` of (number_of_side_data, side_data dict) .
         """
         nb_side_data = stream.nb_side_data
         side_data = {}
