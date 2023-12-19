@@ -87,14 +87,7 @@ cdef class Stream:
         if self.codec_context:
             self.codec_context.stream_index = stream.index
 
-        self.nb_side_data = stream.nb_side_data
-        self.side_data = {}
-        
-        if self.nb_side_data:
-            # Loop over side data to fill up the side_data attribute
-            for i in range(self.nb_side_data):
-                if SideData.get(stream.side_data[i].type) == 'DISPLAYMATRIX':
-                    self.side_data['DISPLAYMATRIX'] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
+        self.nb_side_data, self.side_data = self._get_side_data(stream)
         
         self.metadata = avdict_to_dict(
             stream.metadata,
@@ -189,6 +182,23 @@ cdef class Stream:
             raise RuntimeError("Stream.decode requires a valid CodecContext")
 
         return self.codec_context.decode(packet)
+
+    cdef _get_side_data(self, lib.AVStream *stream):
+        """
+        Get DISPLAYMATRIX SideDate from  a lib.AVStream object.
+
+        :return: ``tuple`` of (number_of_side_date, side_data dict) .
+        """
+        nb_side_data = stream.nb_side_data
+        side_data = {}
+        
+        if nb_side_data:
+            # Loop over side data to fill up the side_data attribute
+            for i in range(nb_side_data):
+                if SideData.get(stream.side_data[i].type) == 'DISPLAYMATRIX':
+                    side_data['DISPLAYMATRIX'] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
+
+        return nb_side_data, side_data
 
     property id:
         """
