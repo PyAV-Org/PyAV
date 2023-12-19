@@ -1,6 +1,6 @@
 import warnings
 
-from libc.stdint cimport int64_t, uint8_t, int32_t
+from libc.stdint cimport int32_t
 cimport libav as lib
 
 from av.enum cimport define_enum
