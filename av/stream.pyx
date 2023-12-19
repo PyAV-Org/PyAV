@@ -1,7 +1,9 @@
 import warnings
 
+from libc.stdint cimport int64_t, uint8_t, int32_t
 cimport libav as lib
 
+from av.enum cimport define_enum
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport (
@@ -16,6 +18,12 @@ from av.deprecation import AVDeprecationWarning
 
 cdef object _cinit_bypass_sentinel = object()
 
+SideData = define_enum('SideData', __name__, (
+    ('DISPLAYMATRIX', lib.AV_PKT_DATA_DISPLAYMATRIX 	,
+        """Display Matrix"""),
+    # If necessary more can be added from 
+    # https://ffmpeg.org/doxygen/trunk/group__lavc__packet.html#ga9a80bfcacc586b483a973272800edb97
+))
 
 cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContext codec_context):
     """Build an av.Stream for an existing AVStream.
@@ -79,6 +87,16 @@ cdef class Stream:
         if self.codec_context:
             self.codec_context.stream_index = stream.index
 
+        self.nb_side_data = stream.nb_side_data
+        self.side_data = {}
+        
+        if self.nb_side_data:
+            for i in range(self.nb_side_data):
+                # Get side_data that we know how to get
+                if SideData.get(stream.side_data[i].type) == 'DISPLAYMATRIX':
+                    # Use dumpsidedata maybe here I guess : https://www.ffmpeg.org/doxygen/trunk/dump_8c_source.html#l00430
+                    self.side_data['DISPLAYMATRIX'] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
+        
         self.metadata = avdict_to_dict(
             stream.metadata,
             encoding=self.container.metadata_encoding,
@@ -102,6 +120,12 @@ cdef class Stream:
                 "VideoStream.%s is deprecated as it is not always set; please use VideoStream.average_rate." % name,
                 AVDeprecationWarning
             )
+
+
+        if name == 'side_data':
+            return self.side_data
+        elif name == 'nb_side_data':
+            return self.nb_side_data
 
         # Convenience getter for codec context properties.
         if self.codec_context is not None:

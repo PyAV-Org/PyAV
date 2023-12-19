@@ -24,3 +24,16 @@ class TestStreams(TestCase):
         self.assertEqual([video], container.streams.get(video=(0,)))
 
         # TODO: Find something in the fate suite with video, audio, and subtitles.
+
+    def test_noside_data(self):
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        video = container.streams.video[0]
+
+        self.assertEqual(video.nb_side_data, 0)
+
+    def test_side_data(self):
+        container = av.open(fate_suite("mov/displaymatrix.mov"))
+        video = container.streams.video[0]
+
+        self.assertEqual(video.nb_side_data, 1)
+        self.assertEqual(video.side_data["DISPLAYMATRIX"], -90.0)
