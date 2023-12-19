@@ -91,10 +91,9 @@ cdef class Stream:
         self.side_data = {}
         
         if self.nb_side_data:
+            # Loop over side data to fill up the side_data attribute
             for i in range(self.nb_side_data):
-                # Get side_data that we know how to get
                 if SideData.get(stream.side_data[i].type) == 'DISPLAYMATRIX':
-                    # Use dumpsidedata maybe here I guess : https://www.ffmpeg.org/doxygen/trunk/dump_8c_source.html#l00430
                     self.side_data['DISPLAYMATRIX'] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
         
         self.metadata = avdict_to_dict(
