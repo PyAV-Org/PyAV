@@ -184,16 +184,14 @@ cdef class Stream:
 
     cdef _get_side_data(self, lib.AVStream *stream):
         # Get DISPLAYMATRIX SideDate from a lib.AVStream object.
-        # Returns: tuple[number_of_side_data, dict]
+        # Returns: tuple[int, dict[str, Any]]
 
         nb_side_data = stream.nb_side_data
         side_data = {}
         
-        if nb_side_data:
-            # Loop over side data to fill up the side_data attribute
-            for i in range(nb_side_data):
-                if SideData.get(stream.side_data[i].type) == "DISPLAYMATRIX":
-                    side_data["DISPLAYMATRIX"] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
+        for i in range(nb_side_data):
+            if SideData.get(stream.side_data[i].type) == "DISPLAYMATRIX":
+                side_data["DISPLAYMATRIX"] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
 
         return nb_side_data, side_data
 
