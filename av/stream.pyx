@@ -18,11 +18,11 @@ from av.deprecation import AVDeprecationWarning
 
 cdef object _cinit_bypass_sentinel = object()
 
-SideData = define_enum('SideData', __name__, (
-    ('DISPLAYMATRIX', lib.AV_PKT_DATA_DISPLAYMATRIX 	,
-        """Display Matrix"""),
-    # If necessary more can be added from 
-    # https://ffmpeg.org/doxygen/trunk/group__lavc__packet.html#ga9a80bfcacc586b483a973272800edb97
+
+# If necessary more can be added from
+# https://ffmpeg.org/doxygen/trunk/group__lavc__packet.html#ga9a80bfcacc586b483a973272800edb97
+SideData = define_enum("SideData", __name__, (
+    ("DISPLAYMATRIX", lib.AV_PKT_DATA_DISPLAYMATRIX, "Display Matrix"),
 ))
 
 cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContext codec_context):
@@ -113,10 +113,9 @@ cdef class Stream:
                 AVDeprecationWarning
             )
 
-
-        if name == 'side_data':
+        if name == "side_data":
             return self.side_data
-        elif name == 'nb_side_data':
+        elif name == "nb_side_data":
             return self.nb_side_data
 
         # Convenience getter for codec context properties.
@@ -184,19 +183,17 @@ cdef class Stream:
         return self.codec_context.decode(packet)
 
     cdef _get_side_data(self, lib.AVStream *stream):
-        """
-        Get DISPLAYMATRIX SideDate from  a lib.AVStream object.
+        # Get DISPLAYMATRIX SideDate from a lib.AVStream object.
+        # Returns: tuple[number_of_side_data, dict]
 
-        :return: ``tuple`` of (number_of_side_data, side_data dict) .
-        """
         nb_side_data = stream.nb_side_data
         side_data = {}
         
         if nb_side_data:
             # Loop over side data to fill up the side_data attribute
             for i in range(nb_side_data):
-                if SideData.get(stream.side_data[i].type) == 'DISPLAYMATRIX':
-                    side_data['DISPLAYMATRIX'] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
+                if SideData.get(stream.side_data[i].type) == "DISPLAYMATRIX":
+                    side_data["DISPLAYMATRIX"] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
 
         return nb_side_data, side_data
 
