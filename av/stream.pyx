@@ -190,7 +190,8 @@ cdef class Stream:
         side_data = {}
         
         for i in range(nb_side_data):
-            if SideData.get(stream.side_data[i].type) == "DISPLAYMATRIX":
+            # Based on: https://www.ffmpeg.org/doxygen/trunk/dump_8c_source.html#l00430
+            if stream.side_data[i].type == lib.AV_PKT_DATA_DISPLAYMATRIX:
                 side_data["DISPLAYMATRIX"] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
 
         return nb_side_data, side_data
