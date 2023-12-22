@@ -303,6 +303,7 @@ if not os.path.exists(output_tarball):
         "--disable-doc",
         "--disable-libtheora",
         "--disable-mediafoundation",
+        "--disable-videotoolbox",
         "--enable-fontconfig",
         "--enable-gmp",
         "--enable-gnutls" if use_gnutls else "--disable-gnutls",
@@ -341,7 +342,7 @@ if not os.path.exists(output_tarball):
 
     ffmpeg_package = Package(
         name="ffmpeg",
-        source_url="https://ffmpeg.org/releases/ffmpeg-6.0.tar.xz",
+        source_url="https://ffmpeg.org/releases/ffmpeg-6.1.tar.xz",
         build_arguments=ffmpeg_build_args,
     )
 
