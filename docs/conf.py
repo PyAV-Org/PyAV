@@ -72,8 +72,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'PyAV'
-copyright = u'2017, Mike Boers'
+project = 'PyAV'
+copyright = '2023, The PyAV Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

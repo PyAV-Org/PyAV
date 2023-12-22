@@ -65,7 +65,7 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [conda-badge]: https://img.shields.io/conda/vn/conda-forge/av.svg?colorB=CCB39A
 [conda]: https://anaconda.org/conda-forge/av
 [docs-badge]: https://img.shields.io/badge/docs-on%20pyav.org-blue.svg
-[docs]: http://pyav.org/docs
+[docs]: https://pyav.basswood-io.com
 [gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
 [gitter]: https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
@@ -75,6 +75,6 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [github-tests]: https://github.com/PyAV-Org/PyAV/actions?workflow=tests
 [github]: https://github.com/PyAV-Org/PyAV
 
-[ffmpeg]: http://ffmpeg.org/
+[ffmpeg]: https://ffmpeg.org/
 [conda-forge]: https://conda-forge.github.io/
 [conda-install]: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
