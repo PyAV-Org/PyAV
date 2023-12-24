@@ -381,24 +381,24 @@ cdef class VideoFrame(Frame):
         return frame
 
     @staticmethod
-    def from_numpy_buffer(array, format='rgb24'):
-        if format in ["rgb24", "bgr24"]:
+    def from_numpy_buffer(array, format="rgb24"):
+        if format in ("rgb24", "bgr24"):
             check_ndarray(array, 'uint8', 3)
             check_ndarray_shape(array, array.shape[2] == 3)
             height, width = array.shape[:2]
-        elif format in ('gray', 'gray8', 'rgb8', 'bgr8'):
-            check_ndarray(array, 'uint8', 2)
+        elif format in ("gray", "gray8", "rgb8", "bgr8"):
+            check_ndarray(array, "uint8", 2)
             height, width = array.shape[:2]
-        elif format in ["yuv420p", "yuvj420p", "nv12"]:
-            check_ndarray(array, 'uint8', 2)
+        elif format in ("yuv420p", "yuvj420p", "nv12"):
+            check_ndarray(array, "uint8", 2)
             check_ndarray_shape(array, array.shape[0] % 3 == 0)
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
             height, width = array.shape[:2]
             height = height // 6 * 4
         else:
-            raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
+            raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
 
-        if not array.flags['C_CONTIGUOUS']:
+        if not array.flags["C_CONTIGUOUS"]:
             raise ValueError("provided array must be C_CONTIGUOUS")
 
         frame = alloc_video_frame()
