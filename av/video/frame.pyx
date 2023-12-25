@@ -6,7 +6,7 @@ from av.enum cimport define_enum
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
 from av.video.format cimport get_pix_fmt, get_video_format
-from av.video.plane cimport VideoPlane
+from av.video.plane cimport VideoPlane, YUVPlanes
 
 
 cdef object _cinit_bypass_sentinel
@@ -118,6 +118,8 @@ cdef class VideoFrame(Frame):
         # The `self._buffer` member is only set if *we* allocated the buffer in `_init`,
         # as opposed to a buffer allocated by a decoder.
         lib.av_freep(&self._buffer)
+        # Let go of the reference from the numpy buffers if we made one
+        self._np_buffer = None
 
     def __repr__(self):
         return '<av.%s #%d, pts=%s %s %dx%d at 0x%x>' % (
@@ -150,7 +152,6 @@ cdef class VideoFrame(Frame):
         cdef int plane_count = 0
         while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:
             plane_count += 1
-
         return tuple([VideoPlane(self, i) for i in range(plane_count)])
 
     property width:
@@ -290,11 +291,21 @@ cdef class VideoFrame(Frame):
         if frame.format.name in ('yuv420p', 'yuvj420p'):
             assert frame.width % 2 == 0
             assert frame.height % 2 == 0
-            return np.hstack((
-                useful_array(frame.planes[0]),
-                useful_array(frame.planes[1]),
-                useful_array(frame.planes[2])
-            )).reshape(-1, frame.width)
+            # Fast path for the case that the entire YUV data is contiguous
+            if (
+                frame.planes[0].line_size == frame.planes[0].width and
+                frame.planes[1].line_size == frame.planes[1].width and
+                frame.planes[2].line_size == frame.planes[2].width
+            ):
+                yuv_planes = YUVPlanes(frame, 0)
+                return useful_array(yuv_planes).reshape(frame.height * 3 // 2, frame.width)
+            else:
+                # Otherwise, we need to copy the data through the use of np.hstack
+                return np.hstack((
+                    useful_array(frame.planes[0]),
+                    useful_array(frame.planes[1]),
+                    useful_array(frame.planes[2])
+                )).reshape(-1, frame.width)
         elif frame.format.name in ('yuv444p', 'yuvj444p'):
             return np.hstack((
                 useful_array(frame.planes[0]),
@@ -368,6 +379,86 @@ cdef class VideoFrame(Frame):
         copy_array_to_plane(img, frame.planes[0], 3)
 
         return frame
+
+    @staticmethod
+    def from_numpy_buffer(array, format="rgb24"):
+        if format in ("rgb24", "bgr24"):
+            check_ndarray(array, 'uint8', 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+            height, width = array.shape[:2]
+        elif format in ("gray", "gray8", "rgb8", "bgr8"):
+            check_ndarray(array, "uint8", 2)
+            height, width = array.shape[:2]
+        elif format in ("yuv420p", "yuvj420p", "nv12"):
+            check_ndarray(array, "uint8", 2)
+            check_ndarray_shape(array, array.shape[0] % 3 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+            height, width = array.shape[:2]
+            height = height // 6 * 4
+        else:
+            raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
+
+        if not array.flags["C_CONTIGUOUS"]:
+            raise ValueError("provided array must be C_CONTIGUOUS")
+
+        frame = alloc_video_frame()
+        frame._image_fill_pointers_numpy(array, width, height, format)
+        return frame
+
+    def _image_fill_pointers_numpy(self, buffer, width, height, format):
+        cdef lib.AVPixelFormat c_format
+        cdef uint8_t * c_ptr
+        cdef size_t c_data
+
+        # If you want to use the numpy notation
+        # then you need to include the following two lines at the top of the file
+        #      cimport numpy as cnp
+        #      cnp.import_array()
+        # And add the numpy include directories to the setup.py files
+        # hint np.get_include()
+        # cdef cnp.ndarray[
+        #     dtype=cnp.uint8_t, ndim=1,
+        #     negative_indices=False, mode='c'] c_buffer
+        # c_buffer = buffer.reshape(-1)
+        # c_ptr = &c_buffer[0]
+        # c_ptr = <uint8_t*> (<void*>(buffer.ctypes.data))
+
+        # Using buffer.ctypes.data helps avoid any kind of
+        # usage of the c-api from numpy, which avoid the need to add numpy
+        # as a compile time dependency
+        # Without this double cast, you get an error that looks like
+        #     c_ptr = <uint8_t*> (buffer.ctypes.data)
+        # TypeError: expected bytes, int found
+        c_data = buffer.ctypes.data
+        c_ptr = <uint8_t*> (c_data)
+        c_format = get_pix_fmt(format)
+        lib.av_freep(&self._buffer)
+
+        # Hold on to a reference for the numpy buffer
+        # so that it doesn't get accidentally garbage collected
+        self._np_buffer = buffer
+        self.ptr.format = c_format
+        self.ptr.width = width
+        self.ptr.height = height
+        res = lib.av_image_fill_linesizes(
+            self.ptr.linesize,
+            <lib.AVPixelFormat>self.ptr.format,
+            width,
+        )
+        if res:
+          err_check(res)
+
+        res = lib.av_image_fill_pointers(
+            self.ptr.data,
+            <lib.AVPixelFormat>self.ptr.format,
+            self.ptr.height,
+            c_ptr,
+            self.ptr.linesize,
+        )
+
+        if res:
+            err_check(res)
+        self._init_user_attributes()
 
     @staticmethod
     def from_ndarray(array, format='rgb24'):

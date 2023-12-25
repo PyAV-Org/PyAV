@@ -491,6 +491,104 @@ class TestVideoFrameNdarray(TestCase):
         self.assertNdarraysEqual(frame.to_ndarray(), array)
 
 
+class TestVideoFrameNumpyBuffer(TestCase):
+    def test_shares_memory_gray(self):
+        array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        frame = VideoFrame.from_numpy_buffer(array, "gray")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_gray8(self):
+        array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        frame = VideoFrame.from_numpy_buffer(array, "gray8")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_rgb8(self):
+        array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        frame = VideoFrame.from_numpy_buffer(array, "rgb8")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_bgr8(self):
+        array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        frame = VideoFrame.from_numpy_buffer(array, "bgr8")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_rgb24(self):
+        array = numpy.random.randint(0, 256, size=(357, 318, 3), dtype=numpy.uint8)
+        frame = VideoFrame.from_numpy_buffer(array, "rgb24")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=(357, 318, 3), dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_yuv420p(self):
+        array = numpy.random.randint(
+            0, 256, size=(512 * 6 // 4, 256), dtype=numpy.uint8
+        )
+        frame = VideoFrame.from_numpy_buffer(array, "yuv420p")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=array.shape, dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_yuvj420p(self):
+        array = numpy.random.randint(
+            0, 256, size=(512 * 6 // 4, 256), dtype=numpy.uint8
+        )
+        frame = VideoFrame.from_numpy_buffer(array, "yuvj420p")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=array.shape, dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_nv12(self):
+        array = numpy.random.randint(
+            0, 256, size=(512 * 6 // 4, 256), dtype=numpy.uint8
+        )
+        frame = VideoFrame.from_numpy_buffer(array, "nv12")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=array.shape, dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+    def test_shares_memory_bgr24(self):
+        array = numpy.random.randint(0, 256, size=(357, 318, 3), dtype=numpy.uint8)
+        frame = VideoFrame.from_numpy_buffer(array, "bgr24")
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+        # overwrite the array, the contents thereof
+        array[...] = numpy.random.randint(0, 256, size=(357, 318, 3), dtype=numpy.uint8)
+        # Make sure the frame reflects that
+        self.assertNdarraysEqual(frame.to_ndarray(), array)
+
+
 class TestVideoFrameTiming(TestCase):
     def test_reformat_pts(self):
         frame = VideoFrame(640, 480, "rgb24")

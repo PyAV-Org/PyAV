@@ -2,11 +2,9 @@ from av.video.frame cimport VideoFrame
 
 
 cdef class VideoPlane(Plane):
-
     def __cinit__(self, VideoFrame frame, int index):
-
         # The palette plane has no associated component or linesize; set fields manually
-        if frame.format.name == 'pal8' and index == 1:
+        if frame.format.name == "pal8" and index == 1:
             self.width = 256
             self.height = 1
             self.buffer_size = 256 * 4
@@ -19,7 +17,7 @@ cdef class VideoPlane(Plane):
                 self.height = component.height
                 break
         else:
-            raise RuntimeError('could not find plane %d of %r' % (index, frame.format))
+            raise RuntimeError("could not find plane %d of %r" % (index, frame.format))
 
         # Sometimes, linesize is negative (and that is meaningful). We are only
         # insisting that the buffer size be based on the extent of linesize, and
@@ -37,3 +35,20 @@ cdef class VideoPlane(Plane):
         """
         def __get__(self):
             return self.frame.ptr.linesize[self.index]
+
+
+cdef class YUVPlanes(VideoPlane):
+    def __cinit__(self, VideoFrame frame, int index):
+        if index != 0:
+            raise RuntimeError("YUVPlanes only supports index 0")
+        if frame.format.name not in ("yuvj420p", "yuv420p"):
+            raise RuntimeError("YUVPlane only supports yuv420p and yuvj420p")
+        if frame.ptr.linesize[0] < 0:
+            raise RuntimeError("YUVPlane only supports positive linesize")
+        self.width = frame.width
+        self.height = frame.height * 3 // 2
+        self.buffer_size = self.height *  abs(self.frame.ptr.linesize[0])
+        self.frame = frame
+
+    cdef void* _buffer_ptr(self):
+        return self.frame.ptr.extended_data[self.index]
