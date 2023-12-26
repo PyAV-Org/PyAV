@@ -100,7 +100,7 @@ cdef class AudioResampler:
                 frame.layout.layout != self.template.layout.layout or
                 frame.sample_rate != self.template.rate
             ):
-                raise ValueError('Frame does not match AudioResampler setup.')
+                raise ValueError("Frame does not match AudioResampler setup.")
 
         self.graph.push(frame)
 

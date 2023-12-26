@@ -24,7 +24,7 @@ cdef object _cinit_sentinel = object()
 
 
 # We want to use the monotonic clock if it is available.
-cdef object clock = getattr(time, 'monotonic', time.time)
+cdef object clock = getattr(time, "monotonic", time.time)
 
 cdef int interrupt_cb (void *p) noexcept nogil:
 
@@ -124,41 +124,41 @@ cdef void pyav_io_close_gil(lib.AVFormatContext *s,
         stash_exception()
 
 
-Flags = define_enum('Flags', __name__, (
-    ('GENPTS', lib.AVFMT_FLAG_GENPTS,
+Flags = define_enum("Flags", __name__, (
+    ("GENPTS", lib.AVFMT_FLAG_GENPTS,
         "Generate missing pts even if it requires parsing future frames."),
-    ('IGNIDX', lib.AVFMT_FLAG_IGNIDX,
+    ("IGNIDX", lib.AVFMT_FLAG_IGNIDX,
         "Ignore index."),
-    ('NONBLOCK', lib.AVFMT_FLAG_NONBLOCK,
+    ("NONBLOCK", lib.AVFMT_FLAG_NONBLOCK,
         "Do not block when reading packets from input."),
-    ('IGNDTS', lib.AVFMT_FLAG_IGNDTS,
+    ("IGNDTS", lib.AVFMT_FLAG_IGNDTS,
         "Ignore DTS on frames that contain both DTS & PTS."),
-    ('NOFILLIN', lib.AVFMT_FLAG_NOFILLIN,
+    ("NOFILLIN", lib.AVFMT_FLAG_NOFILLIN,
         "Do not infer any values from other values, just return what is stored in the container."),
-    ('NOPARSE', lib.AVFMT_FLAG_NOPARSE,
+    ("NOPARSE", lib.AVFMT_FLAG_NOPARSE,
         """Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fillin code works on frames and no parsing -> no frames.
 
         Also seeking to frames can not work if parsing to find frame boundaries has been disabled."""),
-    ('NOBUFFER', lib.AVFMT_FLAG_NOBUFFER,
+    ("NOBUFFER", lib.AVFMT_FLAG_NOBUFFER,
         "Do not buffer frames when possible."),
-    ('CUSTOM_IO', lib.AVFMT_FLAG_CUSTOM_IO,
+    ("CUSTOM_IO", lib.AVFMT_FLAG_CUSTOM_IO,
         "The caller has supplied a custom AVIOContext, don't avio_close() it."),
-    ('DISCARD_CORRUPT', lib.AVFMT_FLAG_DISCARD_CORRUPT,
+    ("DISCARD_CORRUPT", lib.AVFMT_FLAG_DISCARD_CORRUPT,
         "Discard frames marked corrupted."),
-    ('FLUSH_PACKETS', lib.AVFMT_FLAG_FLUSH_PACKETS,
+    ("FLUSH_PACKETS", lib.AVFMT_FLAG_FLUSH_PACKETS,
         "Flush the AVIOContext every packet."),
-    ('BITEXACT', lib.AVFMT_FLAG_BITEXACT,
+    ("BITEXACT", lib.AVFMT_FLAG_BITEXACT,
         """When muxing, try to avoid writing any random/volatile data to the output.
 
         This includes any random IDs, real-time timestamps/dates, muxer version, etc.
         This flag is mainly intended for testing."""),
-    ('SORT_DTS', lib.AVFMT_FLAG_SORT_DTS,
+    ("SORT_DTS", lib.AVFMT_FLAG_SORT_DTS,
         "Try to interleave outputted packets by dts (using this flag can slow demuxing down)."),
-    ('FAST_SEEK', lib.AVFMT_FLAG_FAST_SEEK,
+    ("FAST_SEEK", lib.AVFMT_FLAG_FAST_SEEK,
         "Enable fast, but inaccurate seeks for some formats."),
-    ('SHORTEST', lib.AVFMT_FLAG_SHORTEST,
+    ("SHORTEST", lib.AVFMT_FLAG_SHORTEST,
         "Stop muxing when the shortest stream stops."),
-    ('AUTO_BSF', lib.AVFMT_FLAG_AUTO_BSF,
+    ("AUTO_BSF", lib.AVFMT_FLAG_AUTO_BSF,
         "Add bitstream filters as requested by the muxer."),
 ), is_flags=True)
 
@@ -172,16 +172,16 @@ cdef class Container:
                   io_open):
 
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('cannot construct base Container')
+            raise RuntimeError("cannot construct base Container")
 
         self.writeable = isinstance(self, OutputContainer)
         if not self.writeable and not isinstance(self, InputContainer):
-            raise RuntimeError('Container cannot be directly extended.')
+            raise RuntimeError("Container cannot be directly extended.")
 
         if isinstance(file_, str):
             self.name = file_
         else:
-            self.name = str(getattr(file_, 'name', '<none>'))
+            self.name = str(getattr(file_, "name", "<none>"))
 
         self.options = dict(options or ())
         self.container_options = dict(container_options or ())
@@ -280,7 +280,7 @@ cdef class Container:
         self.close()
 
     def __repr__(self):
-        return '<av.%s %r>' % (self.__class__.__name__, self.file or self.name)
+        return "<av.%s %r>" % (self.__class__.__name__, self.file or self.name)
 
     cdef int err_check(self, int value) except -1:
         return err_check(value, filename=self.name)
@@ -289,7 +289,7 @@ cdef class Container:
         self._assert_open()
         with LogCapture() as logs:
             lib.av_dump_format(self.ptr, 0, "", isinstance(self, OutputContainer))
-        return ''.join(log[2] for log in logs)
+        return "".join(log[2] for log in logs)
 
     cdef set_timeout(self, timeout):
         if timeout is None:
@@ -318,21 +318,21 @@ cdef class Container:
         """Flags property of :class:`.Flags`"""
     )
 
-    gen_pts = flags.flag_property('GENPTS')
-    ign_idx = flags.flag_property('IGNIDX')
-    non_block = flags.flag_property('NONBLOCK')
-    ign_dts = flags.flag_property('IGNDTS')
-    no_fill_in = flags.flag_property('NOFILLIN')
-    no_parse = flags.flag_property('NOPARSE')
-    no_buffer = flags.flag_property('NOBUFFER')
-    custom_io = flags.flag_property('CUSTOM_IO')
-    discard_corrupt = flags.flag_property('DISCARD_CORRUPT')
-    flush_packets = flags.flag_property('FLUSH_PACKETS')
-    bit_exact = flags.flag_property('BITEXACT')
-    sort_dts = flags.flag_property('SORT_DTS')
-    fast_seek = flags.flag_property('FAST_SEEK')
-    shortest = flags.flag_property('SHORTEST')
-    auto_bsf = flags.flag_property('AUTO_BSF')
+    gen_pts = flags.flag_property("GENPTS")
+    ign_idx = flags.flag_property("IGNIDX")
+    non_block = flags.flag_property("NONBLOCK")
+    ign_dts = flags.flag_property("IGNDTS")
+    no_fill_in = flags.flag_property("NOFILLIN")
+    no_parse = flags.flag_property("NOPARSE")
+    no_buffer = flags.flag_property("NOBUFFER")
+    custom_io = flags.flag_property("CUSTOM_IO")
+    discard_corrupt = flags.flag_property("DISCARD_CORRUPT")
+    flush_packets = flags.flag_property("FLUSH_PACKETS")
+    bit_exact = flags.flag_property("BITEXACT")
+    sort_dts = flags.flag_property("SORT_DTS")
+    fast_seek = flags.flag_property("FAST_SEEK")
+    shortest = flags.flag_property("SHORTEST")
+    auto_bsf = flags.flag_property("AUTO_BSF")
 
 
 def open(

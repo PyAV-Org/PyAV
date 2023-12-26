@@ -21,7 +21,7 @@ cdef class Frame:
             lib.av_frame_free(&self.ptr)
 
     def __repr__(self):
-        return 'av.%s #%d pts=%s at 0x%x>' % (
+        return "av.%s #%d pts=%s at 0x%x>" % (
             self.__class__.__name__,
             self.index,
             self.pts,
@@ -47,7 +47,7 @@ cdef class Frame:
     cdef _rebase_time(self, lib.AVRational dst):
 
         if not dst.num:
-            raise ValueError('Cannot rebase to zero time.')
+            raise ValueError("Cannot rebase to zero time.")
 
         if not self._time_base.num:
             self._time_base = dst

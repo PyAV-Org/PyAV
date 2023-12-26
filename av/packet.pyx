@@ -48,7 +48,7 @@ cdef class Packet(Buffer):
             lib.av_packet_free(&self.ptr)
 
     def __repr__(self):
-        return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
+        return "<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>" % (
             self.__class__.__name__,
             self._stream.index if self._stream else 0,
             self.dts,
@@ -66,7 +66,7 @@ cdef class Packet(Buffer):
     cdef _rebase_time(self, lib.AVRational dst):
 
         if not dst.num:
-            raise ValueError('Cannot rebase to zero time.')
+            raise ValueError("Cannot rebase to zero time.")
 
         if not self._time_base.num:
             self._time_base = dst

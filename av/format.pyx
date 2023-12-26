@@ -8,7 +8,7 @@ cdef object _cinit_bypass_sentinel = object()
 
 cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutputFormat* optr):
     if not iptr and not optr:
-        raise ValueError('needs input format or output format')
+        raise ValueError("needs input format or output format")
     cdef ContainerFormat format = ContainerFormat.__new__(ContainerFormat, _cinit_bypass_sentinel)
     format.iptr = iptr
     format.optr = optr
@@ -16,46 +16,36 @@ cdef ContainerFormat build_container_format(lib.AVInputFormat* iptr, lib.AVOutpu
     return format
 
 
-Flags = define_enum('Flags', __name__, (
-    ('NOFILE', lib.AVFMT_NOFILE),
-    ('NEEDNUMBER', lib.AVFMT_NEEDNUMBER,
-        """Needs '%d' in filename."""),
-    ('SHOW_IDS', lib.AVFMT_SHOW_IDS,
-        """Show format stream IDs numbers."""),
-    ('GLOBALHEADER', lib.AVFMT_GLOBALHEADER,
-        """Format wants global header."""),
-    ('NOTIMESTAMPS', lib.AVFMT_NOTIMESTAMPS,
-        """Format does not need / have any timestamps."""),
-    ('GENERIC_INDEX', lib.AVFMT_GENERIC_INDEX,
-        """Use generic index building code."""),
-    ('TS_DISCONT', lib.AVFMT_TS_DISCONT,
+Flags = define_enum("Flags", __name__, (
+    ("NOFILE", lib.AVFMT_NOFILE),
+    ("NEEDNUMBER", lib.AVFMT_NEEDNUMBER, "Needs '%d' in filename."),
+    ("SHOW_IDS", lib.AVFMT_SHOW_IDS, "Show format stream IDs numbers."),
+    ("GLOBALHEADER", lib.AVFMT_GLOBALHEADER, "Format wants global header."),
+    ("NOTIMESTAMPS", lib.AVFMT_NOTIMESTAMPS, "Format does not need / have any timestamps."),
+    ("GENERIC_INDEX", lib.AVFMT_GENERIC_INDEX, "Use generic index building code."),
+    ("TS_DISCONT", lib.AVFMT_TS_DISCONT,
         """Format allows timestamp discontinuities.
         Note, muxers always require valid (monotone) timestamps"""),
-    ('VARIABLE_FPS', lib.AVFMT_VARIABLE_FPS,
-        """Format allows variable fps."""),
-    ('NODIMENSIONS', lib.AVFMT_NODIMENSIONS,
-        """Format does not need width/height"""),
-    ('NOSTREAMS', lib.AVFMT_NOSTREAMS,
-        """Format does not require any streams"""),
-    ('NOBINSEARCH', lib.AVFMT_NOBINSEARCH,
-        """Format does not allow to fall back on binary search via read_timestamp"""),
-    ('NOGENSEARCH', lib.AVFMT_NOGENSEARCH,
-        """Format does not allow to fall back on generic search"""),
-    ('NO_BYTE_SEEK', lib.AVFMT_NO_BYTE_SEEK,
-        """Format does not allow seeking by bytes"""),
-    ('ALLOW_FLUSH', lib.AVFMT_ALLOW_FLUSH,
+    ("VARIABLE_FPS", lib.AVFMT_VARIABLE_FPS, "Format allows variable fps."),
+    ("NODIMENSIONS", lib.AVFMT_NODIMENSIONS, "Format does not need width/height"),
+    ("NOSTREAMS", lib.AVFMT_NOSTREAMS, "Format does not require any streams"),
+    ("NOBINSEARCH", lib.AVFMT_NOBINSEARCH,
+        "Format does not allow to fall back on binary search via read_timestamp"),
+    ("NOGENSEARCH", lib.AVFMT_NOGENSEARCH,
+        "Format does not allow to fall back on generic search"),
+    ("NO_BYTE_SEEK", lib.AVFMT_NO_BYTE_SEEK, "Format does not allow seeking by bytes"),
+    ("ALLOW_FLUSH", lib.AVFMT_ALLOW_FLUSH,
         """Format allows flushing. If not set, the muxer will not receive a NULL
         packet in the write_packet function."""),
-    ('TS_NONSTRICT', lib.AVFMT_TS_NONSTRICT,
+    ("TS_NONSTRICT", lib.AVFMT_TS_NONSTRICT,
         """Format does not require strictly increasing timestamps, but they must
         still be monotonic."""),
-    ('TS_NEGATIVE', lib.AVFMT_TS_NEGATIVE,
+    ("TS_NEGATIVE", lib.AVFMT_TS_NEGATIVE,
         """Format allows muxing negative timestamps. If not set the timestamp
         will be shifted in av_write_frame and av_interleaved_write_frame so they
         start from 0. The user or muxer can override this through
         AVFormatContext.avoid_negative_ts"""),
-    ('SEEK_TO_PTS', lib.AVFMT_SEEK_TO_PTS,
-        """Seeking is based on PTS"""),
+    ("SEEK_TO_PTS", lib.AVFMT_SEEK_TO_PTS, "Seeking is based on PTS"),
 ), is_flags=True)
 
 
@@ -80,17 +70,17 @@ cdef class ContainerFormat:
         self.name = name
 
         # Searches comma-seperated names.
-        if mode is None or mode == 'r':
+        if mode is None or mode == "r":
             self.iptr = lib.av_find_input_format(name)
 
-        if mode is None or mode == 'w':
+        if mode is None or mode == "w":
             self.optr = lib.av_guess_format(name, NULL, NULL)
 
         if not self.iptr and not self.optr:
-            raise ValueError('no container format %r' % name)
+            raise ValueError("no container format %r" % name)
 
     def __repr__(self):
-        return '<av.%s %r>' % (self.__class__.__name__, self.name)
+        return "<av.%s %r>" % (self.__class__.__name__, self.name)
 
     property descriptor:
         def __get__(self):
@@ -141,9 +131,9 @@ cdef class ContainerFormat:
         def __get__(self):
             cdef set exts = set()
             if self.iptr and self.iptr.extensions:
-                exts.update(self.iptr.extensions.split(','))
+                exts.update(self.iptr.extensions.split(","))
             if self.optr and self.optr.extensions:
-                exts.update(self.optr.extensions.split(','))
+                exts.update(self.optr.extensions.split(","))
             return exts
 
     @Flags.property
@@ -153,23 +143,23 @@ cdef class ContainerFormat:
             (self.optr.flags if self.optr else 0)
         )
 
-    no_file = flags.flag_property('NOFILE')
-    need_number = flags.flag_property('NEEDNUMBER')
-    show_ids = flags.flag_property('SHOW_IDS')
-    global_header = flags.flag_property('GLOBALHEADER')
-    no_timestamps = flags.flag_property('NOTIMESTAMPS')
-    generic_index = flags.flag_property('GENERIC_INDEX')
-    ts_discont = flags.flag_property('TS_DISCONT')
-    variable_fps = flags.flag_property('VARIABLE_FPS')
-    no_dimensions = flags.flag_property('NODIMENSIONS')
-    no_streams = flags.flag_property('NOSTREAMS')
-    no_bin_search = flags.flag_property('NOBINSEARCH')
-    no_gen_search = flags.flag_property('NOGENSEARCH')
-    no_byte_seek = flags.flag_property('NO_BYTE_SEEK')
-    allow_flush = flags.flag_property('ALLOW_FLUSH')
-    ts_nonstrict = flags.flag_property('TS_NONSTRICT')
-    ts_negative = flags.flag_property('TS_NEGATIVE')
-    seek_to_pts = flags.flag_property('SEEK_TO_PTS')
+    no_file = flags.flag_property("NOFILE")
+    need_number = flags.flag_property("NEEDNUMBER")
+    show_ids = flags.flag_property("SHOW_IDS")
+    global_header = flags.flag_property("GLOBALHEADER")
+    no_timestamps = flags.flag_property("NOTIMESTAMPS")
+    generic_index = flags.flag_property("GENERIC_INDEX")
+    ts_discont = flags.flag_property("TS_DISCONT")
+    variable_fps = flags.flag_property("VARIABLE_FPS")
+    no_dimensions = flags.flag_property("NODIMENSIONS")
+    no_streams = flags.flag_property("NOSTREAMS")
+    no_bin_search = flags.flag_property("NOBINSEARCH")
+    no_gen_search = flags.flag_property("NOGENSEARCH")
+    no_byte_seek = flags.flag_property("NO_BYTE_SEEK")
+    allow_flush = flags.flag_property("ALLOW_FLUSH")
+    ts_nonstrict = flags.flag_property("TS_NONSTRICT")
+    ts_negative = flags.flag_property("TS_NEGATIVE")
+    seek_to_pts = flags.flag_property("SEEK_TO_PTS")
 
 
 cdef get_output_format_names():

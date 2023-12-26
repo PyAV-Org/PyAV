@@ -8,12 +8,12 @@ cdef class FilterPad:
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('cannot construct FilterPad')
+            raise RuntimeError("cannot construct FilterPad")
 
     def __repr__(self):
-        return '<av.FilterPad %s.%s[%d]: %s (%s)>' % (
+        return "<av.FilterPad %s.%s[%d]: %s (%s)>" % (
             self.filter.name,
-            'inputs' if self.is_input else 'outputs',
+            "inputs" if self.is_input else "outputs",
             self.index,
             self.name,
             self.type,
@@ -43,9 +43,9 @@ cdef class FilterContextPad(FilterPad):
 
     def __repr__(self):
 
-        return '<av.FilterContextPad %s.%s[%d] of %s: %s (%s)>' % (
+        return "<av.FilterContextPad %s.%s[%d] of %s: %s (%s)>" % (
             self.filter.name,
-            'inputs' if self.is_input else 'outputs',
+            "inputs" if self.is_input else "outputs",
             self.index,
             self.context.name,
             self.name,

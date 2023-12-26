@@ -15,26 +15,26 @@ cdef Option wrap_option(tuple choices, const lib.AVOption *ptr):
     return obj
 
 
-OptionType = define_enum('OptionType', __name__, (
-    ('FLAGS', lib.AV_OPT_TYPE_FLAGS),
-    ('INT', lib.AV_OPT_TYPE_INT),
-    ('INT64', lib.AV_OPT_TYPE_INT64),
-    ('DOUBLE', lib.AV_OPT_TYPE_DOUBLE),
-    ('FLOAT', lib.AV_OPT_TYPE_FLOAT),
-    ('STRING', lib.AV_OPT_TYPE_STRING),
-    ('RATIONAL', lib.AV_OPT_TYPE_RATIONAL),
-    ('BINARY', lib.AV_OPT_TYPE_BINARY),
-    ('DICT', lib.AV_OPT_TYPE_DICT),
-    # ('UINT64', lib.AV_OPT_TYPE_UINT64), # Added recently, and not yet used AFAICT.
-    ('CONST', lib.AV_OPT_TYPE_CONST),
-    ('IMAGE_SIZE', lib.AV_OPT_TYPE_IMAGE_SIZE),
-    ('PIXEL_FMT', lib.AV_OPT_TYPE_PIXEL_FMT),
-    ('SAMPLE_FMT', lib.AV_OPT_TYPE_SAMPLE_FMT),
-    ('VIDEO_RATE', lib.AV_OPT_TYPE_VIDEO_RATE),
-    ('DURATION', lib.AV_OPT_TYPE_DURATION),
-    ('COLOR', lib.AV_OPT_TYPE_COLOR),
-    ('CHANNEL_LAYOUT', lib.AV_OPT_TYPE_CHANNEL_LAYOUT),
-    ('BOOL', lib.AV_OPT_TYPE_BOOL),
+OptionType = define_enum("OptionType", __name__, (
+    ("FLAGS", lib.AV_OPT_TYPE_FLAGS),
+    ("INT", lib.AV_OPT_TYPE_INT),
+    ("INT64", lib.AV_OPT_TYPE_INT64),
+    ("DOUBLE", lib.AV_OPT_TYPE_DOUBLE),
+    ("FLOAT", lib.AV_OPT_TYPE_FLOAT),
+    ("STRING", lib.AV_OPT_TYPE_STRING),
+    ("RATIONAL", lib.AV_OPT_TYPE_RATIONAL),
+    ("BINARY", lib.AV_OPT_TYPE_BINARY),
+    ("DICT", lib.AV_OPT_TYPE_DICT),
+    # ("UINT64", lib.AV_OPT_TYPE_UINT64), # Added recently, and not yet used AFAICT.
+    ("CONST", lib.AV_OPT_TYPE_CONST),
+    ("IMAGE_SIZE", lib.AV_OPT_TYPE_IMAGE_SIZE),
+    ("PIXEL_FMT", lib.AV_OPT_TYPE_PIXEL_FMT),
+    ("SAMPLE_FMT", lib.AV_OPT_TYPE_SAMPLE_FMT),
+    ("VIDEO_RATE", lib.AV_OPT_TYPE_VIDEO_RATE),
+    ("DURATION", lib.AV_OPT_TYPE_DURATION),
+    ("COLOR", lib.AV_OPT_TYPE_COLOR),
+    ("CHANNEL_LAYOUT", lib.AV_OPT_TYPE_CHANNEL_LAYOUT),
+    ("BOOL", lib.AV_OPT_TYPE_BOOL),
 ))
 
 cdef tuple _INT_TYPES = (
@@ -48,22 +48,21 @@ cdef tuple _INT_TYPES = (
     lib.AV_OPT_TYPE_BOOL,
 )
 
-OptionFlags = define_enum('OptionFlags', __name__, (
-    ('ENCODING_PARAM', lib.AV_OPT_FLAG_ENCODING_PARAM),
-    ('DECODING_PARAM', lib.AV_OPT_FLAG_DECODING_PARAM),
-    ('AUDIO_PARAM', lib.AV_OPT_FLAG_AUDIO_PARAM),
-    ('VIDEO_PARAM', lib.AV_OPT_FLAG_VIDEO_PARAM),
-    ('SUBTITLE_PARAM', lib.AV_OPT_FLAG_SUBTITLE_PARAM),
-    ('EXPORT', lib.AV_OPT_FLAG_EXPORT),
-    ('READONLY', lib.AV_OPT_FLAG_READONLY),
-    ('FILTERING_PARAM', lib.AV_OPT_FLAG_FILTERING_PARAM),
+OptionFlags = define_enum("OptionFlags", __name__, (
+    ("ENCODING_PARAM", lib.AV_OPT_FLAG_ENCODING_PARAM),
+    ("DECODING_PARAM", lib.AV_OPT_FLAG_DECODING_PARAM),
+    ("AUDIO_PARAM", lib.AV_OPT_FLAG_AUDIO_PARAM),
+    ("VIDEO_PARAM", lib.AV_OPT_FLAG_VIDEO_PARAM),
+    ("SUBTITLE_PARAM", lib.AV_OPT_FLAG_SUBTITLE_PARAM),
+    ("EXPORT", lib.AV_OPT_FLAG_EXPORT),
+    ("READONLY", lib.AV_OPT_FLAG_READONLY),
+    ("FILTERING_PARAM", lib.AV_OPT_FLAG_FILTERING_PARAM),
 ), is_flags=True)
 
 cdef class BaseOption:
-
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('Cannot construct av.%s' % self.__class__.__name__)
+            raise RuntimeError(f"Cannot construct av.{self.__class__.__name__}")
 
     property name:
         def __get__(self):
@@ -71,7 +70,7 @@ cdef class BaseOption:
 
     property help:
         def __get__(self):
-            return self.ptr.help if self.ptr.help != NULL else ''
+            return self.ptr.help if self.ptr.help != NULL else ""
 
     property flags:
         def __get__(self):
@@ -105,7 +104,6 @@ cdef class BaseOption:
 
 
 cdef class Option(BaseOption):
-
     property type:
         def __get__(self):
             return OptionType._get(self.ptr.type, create=True)
@@ -128,7 +126,7 @@ cdef class Option(BaseOption):
             if self.ptr.type in (lib.AV_OPT_TYPE_STRING, lib.AV_OPT_TYPE_BINARY,
                                  lib.AV_OPT_TYPE_IMAGE_SIZE, lib.AV_OPT_TYPE_VIDEO_RATE,
                                  lib.AV_OPT_TYPE_COLOR):
-                return self.ptr.default_val.str if self.ptr.default_val.str != NULL else ''
+                return self.ptr.default_val.str if self.ptr.default_val.str != NULL else ""
 
     def _norm_range(self, value):
         if self.ptr.type in _INT_TYPES:
@@ -144,7 +142,7 @@ cdef class Option(BaseOption):
             return self._norm_range(self.ptr.max)
 
     def __repr__(self):
-        return '<av.%s %s (%s at *0x%x) at 0x%x>' % (
+        return "<av.%s %s (%s at *0x%x) at 0x%x>" % (
             self.__class__.__name__,
             self.name,
             self.type,
@@ -173,4 +171,4 @@ cdef class OptionChoice(BaseOption):
             return self.ptr.default_val.i64
 
     def __repr__(self):
-        return '<av.%s %s at 0x%x>' % (self.__class__.__name__, self.name, id(self))
+        return "<av.%s %s at 0x%x>" % (self.__class__.__name__, self.name, id(self))

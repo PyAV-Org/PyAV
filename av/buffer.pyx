@@ -23,7 +23,7 @@ cdef class Buffer:
 
     def __getbuffer__(self, Py_buffer *view, int flags):
         if flags & PyBUF_WRITABLE and not self._buffer_writable():
-            raise ValueError('buffer is not writable')
+            raise ValueError("buffer is not writable")
         PyBuffer_FillInfo(view, self, self._buffer_ptr(), self._buffer_size(), 0, flags)
 
     @property
@@ -58,9 +58,9 @@ cdef class Buffer:
 
         """
         if not self._buffer_writable():
-            raise ValueError('buffer is not writable')
+            raise ValueError("buffer is not writable")
         cdef ByteSource source = bytesource(input)
         cdef size_t size = self._buffer_size()
         if source.length != size:
-            raise ValueError('got %d bytes; need %d bytes' % (source.length, size))
+            raise ValueError("got %d bytes; need %d bytes" % (source.length, size))
         memcpy(self._buffer_ptr(), source.ptr, size)

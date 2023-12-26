@@ -14,7 +14,7 @@ cdef class _MotionVectors(SideData):
         self._len = self.ptr.size // sizeof(lib.AVMotionVector)
 
     def __repr__(self):
-        return f'<av.sidedata.MotionVectors {self.ptr.size} bytes of {len(self)} vectors at 0x{<unsigned int>self.ptr.data:0x}'
+        return f"<av.sidedata.MotionVectors {self.ptr.size} bytes of {len(self)} vectors at 0x{<unsigned int>self.ptr.data:0x}"
 
     def __getitem__(self, int index):
 
@@ -35,17 +35,17 @@ cdef class _MotionVectors(SideData):
     def to_ndarray(self):
         import numpy as np
         return np.frombuffer(self, dtype=np.dtype([
-            ('source', 'int32'),
-            ('w', 'uint8'),
-            ('h', 'uint8'),
-            ('src_x', 'int16'),
-            ('src_y', 'int16'),
-            ('dst_x', 'int16'),
-            ('dst_y', 'int16'),
-            ('flags', 'uint64'),
-            ('motion_x', 'int32'),
-            ('motion_y', 'int32'),
-            ('motion_scale', 'uint16'),
+            ("source", "int32"),
+            ("w", "uint8"),
+            ("h", "uint8"),
+            ("src_x", "int16"),
+            ("src_y", "int16"),
+            ("dst_x", "int16"),
+            ("dst_y", "int16"),
+            ("flags", "uint64"),
+            ("motion_x", "int32"),
+            ("motion_y", "int32"),
+            ("motion_scale", "uint16"),
         ], align=True))
 
 
@@ -57,13 +57,13 @@ cdef class MotionVector:
 
     def __init__(self, sentinel, _MotionVectors parent, int index):
         if sentinel is not _cinit_bypass_sentinel:
-            raise RuntimeError('cannot manually instatiate MotionVector')
+            raise RuntimeError("cannot manually instatiate MotionVector")
         self.parent = parent
         cdef lib.AVMotionVector *base = <lib.AVMotionVector*>parent.ptr.data
         self.ptr = base + index
 
     def __repr__(self):
-        return f'<av.sidedata.MotionVector {self.w}x{self.h} from {self.src_x},{self.src_y} to {self.dst_x},{self.dst_y}>'
+        return f"<av.sidedata.MotionVector {self.w}x{self.h} from {self.src_x},{self.src_y} to {self.dst_x},{self.dst_y}>"
 
     @property
     def source(self):

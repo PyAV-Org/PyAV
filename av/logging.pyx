@@ -82,8 +82,8 @@ cpdef adapt_level(int level):
 cdef int level_threshold = lib.AV_LOG_VERBOSE
 
 # ... but lets limit ourselves to WARNING (assuming nobody already did this).
-if 'libav' not in logging.Logger.manager.loggerDict:
-    logging.getLogger('libav').setLevel(logging.WARNING)
+if "libav" not in logging.Logger.manager.loggerDict:
+    logging.getLogger("libav").setLevel(logging.WARNING)
 
 
 def get_level():
@@ -278,8 +278,8 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
     global last_log
     global last_error
 
-    name = <str>c_name if c_name is not NULL else ''
-    message = (<bytes>c_message).decode('utf8', 'backslashreplace')
+    name = <str>c_name if c_name is not NULL else ""
+    message = (<bytes>c_message).decode("utf8", "backslashreplace")
     log = (level, name, message)
 
     # We have to filter it ourselves, but we will still process it in general so
@@ -339,7 +339,7 @@ cdef log_callback_emit(log):
 
     py_level = adapt_level(lib_level)
 
-    logger_name = 'libav.' + name if name else 'libav.generic'
+    logger_name = "libav." + name if name else "libav.generic"
     logger = logging.getLogger(logger_name)
     logger.log(py_level, message.strip())
 
@@ -347,5 +347,5 @@ cdef log_callback_emit(log):
 # Start the magic!
 # We allow the user to fully disable the logging system as it will not play
 # nicely with subinterpreters due to FFmpeg-created threads.
-if os.environ.get('PYAV_LOGGING') != 'off':
+if os.environ.get("PYAV_LOGGING") != "off":
     lib.av_log_set_callback(log_callback)

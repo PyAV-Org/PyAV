@@ -40,7 +40,7 @@ cdef class _Dictionary:
             yield element.key
 
     def __repr__(self):
-        return 'av.Dictionary(%r)' % dict(self)
+        return "av.Dictionary(%r)" % dict(self)
 
     cpdef _Dictionary copy(self):
         cdef _Dictionary other = Dictionary()

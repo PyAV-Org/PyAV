@@ -33,7 +33,7 @@ cdef class Graph:
         count = self._name_counts.get(name, 0)
         self._name_counts[name] = count + 1
         if count:
-            return '%s_%s' % (name, count)
+            return "%s_%s" % (name, count)
         else:
             return name
 
@@ -45,7 +45,7 @@ cdef class Graph:
         #     for ctx in self._context_by_ptr.itervalues():
         #         for in_ in ctx.inputs:
         #             if not in_.link:
-        #                 if in_.type == 'video':
+        #                 if in_.type == "video":
         #                     pass
 
         err_check(lib.avfilter_graph_config(self.ptr, NULL))
@@ -84,7 +84,7 @@ cdef class Graph:
         else:
             raise TypeError("filter must be a string or Filter")
 
-        cdef str name = self._get_unique_name(kwargs.pop('name', None) or cy_filter.name)
+        cdef str name = self._get_unique_name(kwargs.pop("name", None) or cy_filter.name)
 
         cdef lib.AVFilterContext *ptr = lib.avfilter_graph_alloc_filter(self.ptr, cy_filter.ptr, name)
         if not ptr:
@@ -136,24 +136,24 @@ cdef class Graph:
                 time_base = template.time_base
 
         if width is None:
-            raise ValueError('missing width')
+            raise ValueError("missing width")
         if height is None:
-            raise ValueError('missing height')
+            raise ValueError("missing height")
         if format is None:
-            raise ValueError('missing format')
+            raise ValueError("missing format")
         if time_base is None:
-            warnings.warn('missing time_base. Guessing 1/1000 time base. '
-                          'This is deprecated and may be removed in future releases.',
+            warnings.warn("missing time_base. Guessing 1/1000 time base. "
+                          "This is deprecated and may be removed in future releases.",
                           DeprecationWarning)
             time_base = Fraction(1, 1000)
 
         return self.add(
-            'buffer',
+            "buffer",
             name=name,
-            video_size=f'{width}x{height}',
+            video_size=f"{width}x{height}",
             pix_fmt=str(int(VideoFormat(format))),
             time_base=str(time_base),
-            pixel_aspect='1/1',
+            pixel_aspect="1/1",
         )
 
     def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None, time_base=None):
@@ -174,11 +174,11 @@ cdef class Graph:
                 time_base = template.time_base
 
         if sample_rate is None:
-            raise ValueError('missing sample_rate')
+            raise ValueError("missing sample_rate")
         if format is None:
-            raise ValueError('missing format')
+            raise ValueError("missing format")
         if layout is None and channels is None:
-            raise ValueError('missing layout or channels')
+            raise ValueError("missing layout or channels")
         if time_base is None:
             time_base = Fraction(1, sample_rate)
 
@@ -188,35 +188,35 @@ cdef class Graph:
             time_base=str(time_base),
         )
         if layout:
-            kwargs['channel_layout'] = AudioLayout(layout).name
+            kwargs["channel_layout"] = AudioLayout(layout).name
         if channels:
-            kwargs['channels'] = str(channels)
+            kwargs["channels"] = str(channels)
 
-        return self.add('abuffer', name=name, **kwargs)
+        return self.add("abuffer", name=name, **kwargs)
 
     def push(self, frame):
 
         if frame is None:
-            contexts = self._context_by_type.get('buffer', []) + self._context_by_type.get('abuffer', [])
+            contexts = self._context_by_type.get("buffer", []) + self._context_by_type.get("abuffer", [])
         elif isinstance(frame, VideoFrame):
-            contexts = self._context_by_type.get('buffer', [])
+            contexts = self._context_by_type.get("buffer", [])
         elif isinstance(frame, AudioFrame):
-            contexts = self._context_by_type.get('abuffer', [])
+            contexts = self._context_by_type.get("abuffer", [])
         else:
-            raise ValueError('can only AudioFrame, VideoFrame or None; got %s' % type(frame))
+            raise ValueError("can only AudioFrame, VideoFrame or None; got %s" % type(frame))
 
         if len(contexts) != 1:
-            raise ValueError('can only auto-push with single buffer; found %s' % len(contexts))
+            raise ValueError("can only auto-push with single buffer; found %s" % len(contexts))
 
         contexts[0].push(frame)
 
     def pull(self):
 
-        vsinks = self._context_by_type.get('buffersink', [])
-        asinks = self._context_by_type.get('abuffersink', [])
+        vsinks = self._context_by_type.get("buffersink", [])
+        asinks = self._context_by_type.get("abuffersink", [])
 
         nsinks = len(vsinks) + len(asinks)
         if nsinks != 1:
-            raise ValueError('can only auto-pull with single sink; found %s' % nsinks)
+            raise ValueError("can only auto-pull with single sink; found %s" % nsinks)
 
         return (vsinks or asinks)[0].pull()

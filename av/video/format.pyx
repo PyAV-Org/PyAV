@@ -14,7 +14,7 @@ cdef lib.AVPixelFormat get_pix_fmt(const char *name) except lib.AV_PIX_FMT_NONE:
     cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name)
 
     if pix_fmt == lib.AV_PIX_FMT_NONE:
-        raise ValueError('not a pixel format: %r' % name)
+        raise ValueError("not a pixel format: %r" % name)
 
     return pix_fmt
 
@@ -29,7 +29,6 @@ cdef class VideoFormat:
     """
 
     def __cinit__(self, name, width=0, height=0):
-
         if name is _cinit_bypass_sentinel:
             return
 
@@ -54,9 +53,9 @@ cdef class VideoFormat:
 
     def __repr__(self):
         if self.width or self.height:
-            return '<av.%s %s, %dx%d>' % (self.__class__.__name__, self.name, self.width, self.height)
+            return "<av.%s %s, %dx%d>" % (self.__class__.__name__, self.name, self.width, self.height)
         else:
-            return '<av.%s %s>' % (self.__class__.__name__, self.name)
+            return "<av.%s %s>" % (self.__class__.__name__, self.name)
 
     def __int__(self):
         return int(self.pix_fmt)

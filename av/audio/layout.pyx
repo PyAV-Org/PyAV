@@ -34,31 +34,31 @@ default_layouts[16] = 0xFFFF
 
 
 cdef dict channel_descriptions = {
-    'FL': 'front left',
-    'FR': 'front right',
-    'FC': 'front center',
-    'LFE': 'low frequency',
-    'BL': 'back left',
-    'BR': 'back right',
-    'FLC': 'front left-of-center',
-    'FRC': 'front right-of-center',
-    'BC': 'back center',
-    'SL': 'side left',
-    'SR': 'side right',
-    'TC': 'top center',
-    'TFL': 'top front left',
-    'TFC': 'top front center',
-    'TFR': 'top front right',
-    'TBL': 'top back left',
-    'TBC': 'top back center',
-    'TBR': 'top back right',
-    'DL': 'downmix left',
-    'DR': 'downmix right',
-    'WL': 'wide left',
-    'WR': 'wide right',
-    'SDL': 'surround direct left',
-    'SDR': 'surround direct right',
-    'LFE2': 'low frequency 2',
+    "FL": "front left",
+    "FR": "front right",
+    "FC": "front center",
+    "LFE": "low frequency",
+    "BL": "back left",
+    "BR": "back right",
+    "FLC": "front left-of-center",
+    "FRC": "front right-of-center",
+    "BC": "back center",
+    "SL": "side left",
+    "SR": "side right",
+    "TC": "top center",
+    "TFL": "top front left",
+    "TFC": "top front center",
+    "TFR": "top front right",
+    "TBL": "top back left",
+    "TBC": "top back center",
+    "TBR": "top back right",
+    "DL": "downmix left",
+    "DR": "downmix right",
+    "WL": "wide left",
+    "WR": "wide right",
+    "SDL": "surround direct left",
+    "SDR": "surround direct right",
+    "LFE2": "low frequency 2",
 }
 
 
@@ -72,17 +72,17 @@ cdef class AudioLayout:
         cdef uint64_t c_layout
         if isinstance(layout, int):
             if layout < 0 or layout > 8:
-                raise ValueError('no layout with %d channels' % layout)
+                raise ValueError("no layout with %d channels" % layout)
             c_layout = default_layouts[layout]
         elif isinstance(layout, str):
             c_layout = lib.av_get_channel_layout(layout)
         elif isinstance(layout, AudioLayout):
             c_layout = layout.layout
         else:
-            raise TypeError('layout must be str or int')
+            raise TypeError("layout must be str or int")
 
         if not c_layout:
-            raise ValueError('invalid channel layout %r' % layout)
+            raise ValueError("invalid channel layout %r" % layout)
 
         self._init(c_layout)
 
@@ -92,7 +92,7 @@ cdef class AudioLayout:
         self.channels = tuple(AudioChannel(self, i) for i in range(self.nb_channels))
 
     def __repr__(self):
-        return '<av.%s %r>' % (self.__class__.__name__, self.name)
+        return "<av.%s %r>" % (self.__class__.__name__, self.name)
 
     property name:
         """The canonical name of the audio layout."""
@@ -109,7 +109,7 @@ cdef class AudioChannel:
         self.channel = lib.av_channel_layout_extract_channel(layout.layout, index)
 
     def __repr__(self):
-        return '<av.%s %r (%s)>' % (self.__class__.__name__, self.name, self.description)
+        return "<av.%s %r (%s)>" % (self.__class__.__name__, self.name, self.description)
 
     property name:
         """The canonical name of the audio channel."""
