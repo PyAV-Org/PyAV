@@ -15,14 +15,14 @@ cdef class PyIOFile:
 
         cdef seek_func_t seek_func = NULL
 
-        readable = getattr(self.file, 'readable', None)
-        writable = getattr(self.file, 'writable', None)
-        seekable = getattr(self.file, 'seekable', None)
-        self.fread = getattr(self.file, 'read', None)
-        self.fwrite = getattr(self.file, 'write', None)
-        self.fseek = getattr(self.file, 'seek', None)
-        self.ftell = getattr(self.file, 'tell', None)
-        self.fclose = getattr(self.file, 'close', None)
+        readable = getattr(self.file, "readable", None)
+        writable = getattr(self.file, "writable", None)
+        seekable = getattr(self.file, "seekable", None)
+        self.fread = getattr(self.file, "read", None)
+        self.fwrite = getattr(self.file, "write", None)
+        self.fseek = getattr(self.file, "seek", None)
+        self.ftell = getattr(self.file, "tell", None)
+        self.fclose = getattr(self.file, "close", None)
 
         # To be seekable the file object must have `seek` and `tell` methods.
         # If it also has a `seekable` method, it must return True.

@@ -10,7 +10,7 @@ cdef class FilterLink:
 
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('cannot instantiate FilterLink')
+            raise RuntimeError("cannot instantiate FilterLink")
 
     property input:
         def __get__(self):
@@ -22,7 +22,7 @@ cdef class FilterLink:
                 if self.ptr == cctx.outputs[i]:
                     break
             else:
-                raise RuntimeError('could not find link in context')
+                raise RuntimeError("could not find link in context")
             ctx = self.graph._context_by_ptr[<long>cctx]
             self._input = ctx.outputs[i]
             return self._input
@@ -37,11 +37,11 @@ cdef class FilterLink:
                 if self.ptr == cctx.inputs[i]:
                     break
             else:
-                raise RuntimeError('could not find link in context')
+                raise RuntimeError("could not find link in context")
             try:
                 ctx = self.graph._context_by_ptr[<long>cctx]
             except KeyError:
-                raise RuntimeError('could not find context in graph', (cctx.name, cctx.filter.name))
+                raise RuntimeError("could not find context in graph", (cctx.name, cctx.filter.name))
             self._output = ctx.inputs[i]
             return self._output
 

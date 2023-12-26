@@ -8,24 +8,24 @@ from av.sidedata.motionvectors import MotionVectors
 cdef object _cinit_bypass_sentinel = object()
 
 
-Type = define_enum('Type', __name__, (
-    ('PANSCAN', lib.AV_FRAME_DATA_PANSCAN),
-    ('A53_CC', lib.AV_FRAME_DATA_A53_CC),
-    ('STEREO3D', lib.AV_FRAME_DATA_STEREO3D),
-    ('MATRIXENCODING', lib.AV_FRAME_DATA_MATRIXENCODING),
-    ('DOWNMIX_INFO', lib.AV_FRAME_DATA_DOWNMIX_INFO),
-    ('REPLAYGAIN', lib.AV_FRAME_DATA_REPLAYGAIN),
-    ('DISPLAYMATRIX', lib.AV_FRAME_DATA_DISPLAYMATRIX),
-    ('AFD', lib.AV_FRAME_DATA_AFD),
-    ('MOTION_VECTORS', lib.AV_FRAME_DATA_MOTION_VECTORS),
-    ('SKIP_SAMPLES', lib.AV_FRAME_DATA_SKIP_SAMPLES),
-    ('AUDIO_SERVICE_TYPE', lib.AV_FRAME_DATA_AUDIO_SERVICE_TYPE),
-    ('MASTERING_DISPLAY_METADATA', lib.AV_FRAME_DATA_MASTERING_DISPLAY_METADATA),
-    ('GOP_TIMECODE', lib.AV_FRAME_DATA_GOP_TIMECODE),
-    ('SPHERICAL', lib.AV_FRAME_DATA_SPHERICAL),
-    ('CONTENT_LIGHT_LEVEL', lib.AV_FRAME_DATA_CONTENT_LIGHT_LEVEL),
-    ('ICC_PROFILE', lib.AV_FRAME_DATA_ICC_PROFILE),
-    ('SEI_UNREGISTERED', lib.AV_FRAME_DATA_SEI_UNREGISTERED) if lib.AV_FRAME_DATA_SEI_UNREGISTERED != -1 else None,
+Type = define_enum("Type", __name__, (
+    ("PANSCAN", lib.AV_FRAME_DATA_PANSCAN),
+    ("A53_CC", lib.AV_FRAME_DATA_A53_CC),
+    ("STEREO3D", lib.AV_FRAME_DATA_STEREO3D),
+    ("MATRIXENCODING", lib.AV_FRAME_DATA_MATRIXENCODING),
+    ("DOWNMIX_INFO", lib.AV_FRAME_DATA_DOWNMIX_INFO),
+    ("REPLAYGAIN", lib.AV_FRAME_DATA_REPLAYGAIN),
+    ("DISPLAYMATRIX", lib.AV_FRAME_DATA_DISPLAYMATRIX),
+    ("AFD", lib.AV_FRAME_DATA_AFD),
+    ("MOTION_VECTORS", lib.AV_FRAME_DATA_MOTION_VECTORS),
+    ("SKIP_SAMPLES", lib.AV_FRAME_DATA_SKIP_SAMPLES),
+    ("AUDIO_SERVICE_TYPE", lib.AV_FRAME_DATA_AUDIO_SERVICE_TYPE),
+    ("MASTERING_DISPLAY_METADATA", lib.AV_FRAME_DATA_MASTERING_DISPLAY_METADATA),
+    ("GOP_TIMECODE", lib.AV_FRAME_DATA_GOP_TIMECODE),
+    ("SPHERICAL", lib.AV_FRAME_DATA_SPHERICAL),
+    ("CONTENT_LIGHT_LEVEL", lib.AV_FRAME_DATA_CONTENT_LIGHT_LEVEL),
+    ("ICC_PROFILE", lib.AV_FRAME_DATA_ICC_PROFILE),
+    ("SEI_UNREGISTERED", lib.AV_FRAME_DATA_SEI_UNREGISTERED) if lib.AV_FRAME_DATA_SEI_UNREGISTERED != -1 else None,
 ))
 
 
@@ -42,7 +42,7 @@ cdef class SideData(Buffer):
 
     def __init__(self, sentinel, Frame frame, int index):
         if sentinel is not _cinit_bypass_sentinel:
-            raise RuntimeError('cannot manually instatiate SideData')
+            raise RuntimeError("cannot manually instatiate SideData")
         self.frame = frame
         self.ptr = frame.ptr.side_data[index]
         self.metadata = wrap_dictionary(self.ptr.metadata)
@@ -57,7 +57,7 @@ cdef class SideData(Buffer):
         return False
 
     def __repr__(self):
-        return f'<av.sidedata.{self.__class__.__name__} {self.ptr.size} bytes of {self.type} at 0x{<unsigned int>self.ptr.data:0x}>'
+        return f"<av.sidedata.{self.__class__.__name__} {self.ptr.size} bytes of {self.type} at 0x{<unsigned int>self.ptr.data:0x}>"
 
     @property
     def type(self):

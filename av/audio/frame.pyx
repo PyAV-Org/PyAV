@@ -9,16 +9,16 @@ cdef object _cinit_bypass_sentinel
 
 
 format_dtypes = {
-    'dbl': 'f8',
-    'dblp': 'f8',
-    'flt': 'f4',
-    'fltp': 'f4',
-    's16': 'i2',
-    's16p': 'i2',
-    's32': 'i4',
-    's32p': 'i4',
-    'u8': 'u1',
-    'u8p': 'u1',
+    "dbl": "f8",
+    "dblp": "f8",
+    "flt": "f4",
+    "fltp": "f4",
+    "s16": "i2",
+    "s16p": "i2",
+    "s32": "i4",
+    "s32p": "i4",
+    "u8": "u1",
+    "u8p": "u1",
 }
 
 
@@ -36,7 +36,7 @@ cdef class AudioFrame(Frame):
 
     """A frame of audio."""
 
-    def __cinit__(self, format='s16', layout='stereo', samples=0, align=1):
+    def __cinit__(self, format="s16", layout="stereo", samples=0, align=1):
         if format is _cinit_bypass_sentinel:
             return
 
@@ -91,7 +91,7 @@ cdef class AudioFrame(Frame):
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
 
     def __repr__(self):
-        return '<av.%s %d, pts=%s, %d samples at %dHz, %s, %s at 0x%x>' % (
+        return "<av.%s %d, pts=%s, %d samples at %dHz, %s, %s at 0x%x>" % (
             self.__class__.__name__,
             self.index,
             self.pts,
@@ -103,7 +103,7 @@ cdef class AudioFrame(Frame):
         )
 
     @staticmethod
-    def from_ndarray(array, format='s16', layout='stereo'):
+    def from_ndarray(array, format="s16", layout="stereo"):
         """
         Construct a frame from a numpy array.
         """
@@ -113,7 +113,7 @@ cdef class AudioFrame(Frame):
         try:
             dtype = np.dtype(format_dtypes[format])
         except KeyError:
-            raise ValueError('Conversion from numpy array with format `%s` is not yet supported' % format)
+            raise ValueError("Conversion from numpy array with format `%s` is not yet supported" % format)
 
         # check input format
         nb_channels = len(AudioLayout(layout).channels)

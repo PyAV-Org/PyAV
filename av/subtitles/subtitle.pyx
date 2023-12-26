@@ -14,7 +14,7 @@ cdef class SubtitleSet:
         self.rects = tuple(build_subtitle(self, i) for i in range(self.proxy.struct.num_rects))
 
     def __repr__(self):
-        return '<%s.%s at 0x%x>' % (
+        return "<%s.%s at 0x%x>" % (
             self.__class__.__module__,
             self.__class__.__name__,
             id(self),
@@ -48,7 +48,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
     """
 
     if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
-        raise ValueError('subtitle rect index out of range')
+        raise ValueError("subtitle rect index out of range")
     cdef lib.AVSubtitleRect *ptr = subtitle.proxy.struct.rects[index]
 
     if ptr.type == lib.SUBTITLE_NONE:
@@ -60,30 +60,30 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
     elif ptr.type == lib.SUBTITLE_ASS:
         return AssSubtitle(subtitle, index)
     else:
-        raise ValueError('unknown subtitle type %r' % ptr.type)
+        raise ValueError("unknown subtitle type %r" % ptr.type)
 
 
 cdef class Subtitle:
 
     def __cinit__(self, SubtitleSet subtitle, int index):
         if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
-            raise ValueError('subtitle rect index out of range')
+            raise ValueError("subtitle rect index out of range")
         self.proxy = subtitle.proxy
         self.ptr = self.proxy.struct.rects[index]
 
         if self.ptr.type == lib.SUBTITLE_NONE:
-            self.type = b'none'
+            self.type = b"none"
         elif self.ptr.type == lib.SUBTITLE_BITMAP:
-            self.type = b'bitmap'
+            self.type = b"bitmap"
         elif self.ptr.type == lib.SUBTITLE_TEXT:
-            self.type = b'text'
+            self.type = b"text"
         elif self.ptr.type == lib.SUBTITLE_ASS:
-            self.type = b'ass'
+            self.type = b"ass"
         else:
-            raise ValueError('unknown subtitle type %r' % self.ptr.type)
+            raise ValueError("unknown subtitle type %r" % self.ptr.type)
 
     def __repr__(self):
-        return '<%s.%s at 0x%x>' % (
+        return "<%s.%s at 0x%x>" % (
             self.__class__.__module__,
             self.__class__.__name__,
             id(self),
@@ -100,7 +100,7 @@ cdef class BitmapSubtitle(Subtitle):
         )
 
     def __repr__(self):
-        return '<%s.%s %dx%d at %d,%d; at 0x%x>' % (
+        return "<%s.%s %dx%d at %d,%d; at 0x%x>" % (
             self.__class__.__module__,
             self.__class__.__name__,
             self.width,
@@ -136,9 +136,9 @@ cdef class BitmapSubtitlePlane:
     def __cinit__(self, BitmapSubtitle subtitle, int index):
 
         if index >= 4:
-            raise ValueError('BitmapSubtitles have only 4 planes')
+            raise ValueError("BitmapSubtitles have only 4 planes")
         if not subtitle.ptr.linesize[index]:
-            raise ValueError('plane does not exist')
+            raise ValueError("plane does not exist")
 
         self.subtitle = subtitle
         self.index = index
@@ -154,7 +154,7 @@ cdef class BitmapSubtitlePlane:
 cdef class TextSubtitle(Subtitle):
 
     def __repr__(self):
-        return '<%s.%s %r at 0x%x>' % (
+        return "<%s.%s %r at 0x%x>" % (
             self.__class__.__module__,
             self.__class__.__name__,
             self.text,
@@ -168,7 +168,7 @@ cdef class TextSubtitle(Subtitle):
 cdef class AssSubtitle(Subtitle):
 
     def __repr__(self):
-        return '<%s.%s %r at 0x%x>' % (
+        return "<%s.%s %r at 0x%x>" % (
             self.__class__.__module__,
             self.__class__.__name__,
             self.ass,

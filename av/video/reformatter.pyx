@@ -7,44 +7,44 @@ from av.video.format cimport VideoFormat
 from av.video.frame cimport alloc_video_frame
 
 
-Interpolation = define_enum('Interpolation', __name__, (
-    ('FAST_BILINEAR', lib.SWS_FAST_BILINEAR, "Fast bilinear"),
-    ('BILINEAR', lib.SWS_BILINEAR, "Bilinear"),
-    ('BICUBIC', lib.SWS_BICUBIC, "Bicubic"),
-    ('X', lib.SWS_X, "Experimental"),
-    ('POINT', lib.SWS_POINT, "Nearest neighbor / point"),
-    ('AREA', lib.SWS_AREA, "Area averaging"),
-    ('BICUBLIN', lib.SWS_BICUBLIN, "Luma bicubic / chroma bilinear"),
-    ('GAUSS', lib.SWS_GAUSS, "Gaussian"),
-    ('SINC', lib.SWS_SINC, "Sinc"),
-    ('LANCZOS', lib.SWS_LANCZOS, "Lanczos"),
-    ('SPLINE', lib.SWS_SPLINE, "Bicubic spline"),
+Interpolation = define_enum("Interpolation", __name__, (
+    ("FAST_BILINEAR", lib.SWS_FAST_BILINEAR, "Fast bilinear"),
+    ("BILINEAR", lib.SWS_BILINEAR, "Bilinear"),
+    ("BICUBIC", lib.SWS_BICUBIC, "Bicubic"),
+    ("X", lib.SWS_X, "Experimental"),
+    ("POINT", lib.SWS_POINT, "Nearest neighbor / point"),
+    ("AREA", lib.SWS_AREA, "Area averaging"),
+    ("BICUBLIN", lib.SWS_BICUBLIN, "Luma bicubic / chroma bilinear"),
+    ("GAUSS", lib.SWS_GAUSS, "Gaussian"),
+    ("SINC", lib.SWS_SINC, "Sinc"),
+    ("LANCZOS", lib.SWS_LANCZOS, "Lanczos"),
+    ("SPLINE", lib.SWS_SPLINE, "Bicubic spline"),
 ))
 
-Colorspace = define_enum('Colorspace', __name__, (
-    ('ITU709', lib.SWS_CS_ITU709),
-    ('FCC', lib.SWS_CS_FCC),
-    ('ITU601', lib.SWS_CS_ITU601),
-    ('ITU624', lib.SWS_CS_ITU624),
-    ('SMPTE170M', lib.SWS_CS_SMPTE170M),
-    ('SMPTE240M', lib.SWS_CS_SMPTE240M),
-    ('DEFAULT', lib.SWS_CS_DEFAULT),
+Colorspace = define_enum("Colorspace", __name__, (
+    ("ITU709", lib.SWS_CS_ITU709),
+    ("FCC", lib.SWS_CS_FCC),
+    ("ITU601", lib.SWS_CS_ITU601),
+    ("ITU624", lib.SWS_CS_ITU624),
+    ("SMPTE170M", lib.SWS_CS_SMPTE170M),
+    ("SMPTE240M", lib.SWS_CS_SMPTE240M),
+    ("DEFAULT", lib.SWS_CS_DEFAULT),
 
     # Lowercase for b/c.
-    ('itu709', lib.SWS_CS_ITU709),
-    ('fcc', lib.SWS_CS_FCC),
-    ('itu601', lib.SWS_CS_ITU601),
-    ('itu624', lib.SWS_CS_SMPTE170M),
-    ('smpte240', lib.SWS_CS_SMPTE240M),
-    ('default', lib.SWS_CS_DEFAULT),
+    ("itu709", lib.SWS_CS_ITU709),
+    ("fcc", lib.SWS_CS_FCC),
+    ("itu601", lib.SWS_CS_ITU601),
+    ("itu624", lib.SWS_CS_SMPTE170M),
+    ("smpte240", lib.SWS_CS_SMPTE240M),
+    ("default", lib.SWS_CS_DEFAULT),
 
 ))
 
-ColorRange = define_enum('ColorRange', __name__, (
-    ('UNSPECIFIED', lib.AVCOL_RANGE_UNSPECIFIED, "Unspecified"),
-    ('MPEG', lib.AVCOL_RANGE_MPEG, "MPEG (limited) YUV range, 219*2^(n-8)"),
-    ('JPEG', lib.AVCOL_RANGE_JPEG, "JPEG (full) YUV range, 2^n-1"),
-    ('NB', lib.AVCOL_RANGE_NB, "Not part of ABI"),
+ColorRange = define_enum("ColorRange", __name__, (
+    ("UNSPECIFIED", lib.AVCOL_RANGE_UNSPECIFIED, "Unspecified"),
+    ("MPEG", lib.AVCOL_RANGE_MPEG, "MPEG (limited) YUV range, 219*2^(n-8)"),
+    ("JPEG", lib.AVCOL_RANGE_JPEG, "JPEG (full) YUV range, 2^n-1"),
+    ("NB", lib.AVCOL_RANGE_NB, "Not part of ABI"),
 ))
 
 cdef class VideoReformatter:

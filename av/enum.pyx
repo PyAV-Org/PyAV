@@ -85,7 +85,7 @@ class EnumType(type):
         if not create:
             return
 
-        return self._create('{}_{}'.format(self.__name__.upper(), value), value, by_value_only=True)
+        return self._create("{}_{}".format(self.__name__.upper(), value), value, by_value_only=True)
 
     def _get_multi_flags(self, long value):
 
@@ -106,7 +106,7 @@ class EnumType(type):
         if to_find:
             raise KeyError(value)
 
-        name = '|'.join(f.name for f in flags)
+        name = "|".join(f.name for f in flags)
         cdef EnumFlag combo = self._create(name, value, by_value_only=True)
         combo.flags = tuple(flags)
 
@@ -125,7 +125,7 @@ class EnumType(type):
 
 
 def _unpickle(mod_name, cls_name, item_name):
-    mod = __import__(mod_name, fromlist=['.'])
+    mod = __import__(mod_name, fromlist=["."])
     cls = getattr(mod, cls_name)
     return cls[item_name]
 
@@ -190,7 +190,7 @@ cdef class EnumItem:
         self._hash = hash_
 
     def __repr__(self):
-        return '<{}.{}:{}(0x{:x})>'.format(
+        return "<{}.{}:{}(0x{:x})>".format(
             self.__class__.__module__,
             self.__class__.__name__,
             self.name,
@@ -383,6 +383,6 @@ cpdef define_enum(name, module, items, bint is_flags=False):
         base_cls = EnumItem
 
     # Some items may be None if they correspond to an unsupported FFmpeg feature
-    cls = EnumType(name, (base_cls, ), {'__module__': module}, [i for i in items if i is not None])
+    cls = EnumType(name, (base_cls, ), {"__module__": module}, [i for i in items if i is not None])
 
     return cls
