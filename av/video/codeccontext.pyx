@@ -126,9 +126,6 @@ cdef class VideoCodecContext(CodecContext):
             self.framerate = value
 
     property gop_size:
-        def __get__(self):
-            return self.ptr.gop_size
-
         def __set__(self, int value):
             self.ptr.gop_size = value
 
