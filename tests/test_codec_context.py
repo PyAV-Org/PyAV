@@ -80,6 +80,16 @@ class TestCodecContext(TestCase):
         self.assertEqual(ctx.extradata, None)
         self.assertEqual(ctx.extradata_size, 0)
 
+    def test_decoder_gop_size(self):
+        ctx = av.codec.Codec("h264", "r").create()
+
+        with warnings.catch_warnings(record=True) as captured:
+            self.assertIsInstance(ctx.gop_size, int)
+            self.assertEqual(
+                captured[0].message.args[0],
+                "Using VideoCodecContext.gop_size for decoders is deprecated.",
+            )
+
     def test_decoder_timebase(self):
         ctx = av.codec.Codec("h264", "r").create()
 
