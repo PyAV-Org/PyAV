@@ -1,3 +1,5 @@
+import warnings
+
 from libc.stdint cimport int64_t
 cimport libav as lib
 
@@ -8,6 +10,8 @@ from av.utils cimport avrational_to_fraction, to_avrational
 from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
+
+from av.deprecation import AVDeprecationWarning
 
 
 cdef class VideoCodecContext(CodecContext):
@@ -126,10 +130,21 @@ cdef class VideoCodecContext(CodecContext):
             self.framerate = value
 
     property gop_size:
+        """This only makes sense for encoders."""
         def __get__(self):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using VideoCodecContext.gop_size for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             return self.ptr.gop_size
 
         def __set__(self, int value):
+            if self.is_decoder:
+                warnings.warn(
+                    "Using VideoCodecContext.gop_size for decoders is deprecated.",
+                    AVDeprecationWarning
+                )
             self.ptr.gop_size = value
 
     property sample_aspect_ratio:
