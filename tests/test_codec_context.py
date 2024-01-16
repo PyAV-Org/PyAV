@@ -267,6 +267,7 @@ class TestEncoding(TestCase):
         height = options.pop("height", 480)
         max_frames = options.pop("max_frames", 50)
         time_base = options.pop("time_base", video_stream.time_base)
+        gop_size = options.pop("gop_size", 20)
 
         ctx = codec.create()
         ctx.width = width
@@ -274,6 +275,7 @@ class TestEncoding(TestCase):
         ctx.time_base = time_base
         ctx.framerate = 1 / ctx.time_base
         ctx.pix_fmt = pix_fmt
+        ctx.gop_size = gop_size
         ctx.options = options  # TODO
         if codec_tag:
             ctx.codec_tag = codec_tag
@@ -309,14 +311,33 @@ class TestEncoding(TestCase):
         ctx = av.Codec(dec_codec_name, "r").create()
         ctx.open()
 
+        keyframe_indices = []
         decoded_frame_count = 0
         for frame in iter_raw_frames(path, packet_sizes, ctx):
             decoded_frame_count += 1
             self.assertEqual(frame.width, width)
             self.assertEqual(frame.height, height)
             self.assertEqual(frame.format.name, pix_fmt)
+            if frame.key_frame:
+                keyframe_indices.append(frame.index)
 
         self.assertEqual(frame_count, decoded_frame_count)
+
+        self.assertIsInstance(
+            all(keyframe_index for keyframe_index in keyframe_indices), int
+        )
+        decoded_gop_sizes = [
+            j - i for i, j in zip(keyframe_indices[:-1], keyframe_indices[1:])
+        ]
+        if codec_name in ("dvvideo", "dnxhd") and all(
+            i == 1 for i in decoded_gop_sizes
+        ):
+            raise SkipTest()
+        for i in decoded_gop_sizes:
+            self.assertEqual(i, gop_size)
+
+        final_gop_size = decoded_frame_count - max(keyframe_indices)
+        self.assertLessEqual(final_gop_size, gop_size)
 
     def test_encoding_pcm_s24le(self):
         self.audio_encoding("pcm_s24le")
