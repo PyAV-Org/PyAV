@@ -130,7 +130,11 @@ cdef class VideoCodecContext(CodecContext):
             self.framerate = value
 
     property gop_size:
-        """This only makes sense for encoders."""
+        """
+        Sets the number of frames between keyframes. Used only for encoding.
+        
+        :type: int
+        """
         def __get__(self):
             if self.is_decoder:
                 warnings.warn(
