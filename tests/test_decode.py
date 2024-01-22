@@ -124,3 +124,22 @@ class TestDecode(TestCase):
                     getattr(container, attr)
                 except AssertionError:
                     pass
+
+    def test_decode_frame_indices(self):
+        for thread_type in ("NONE", "AUTO"):
+            for thread_count in range(4):
+                for skip_type in ("NONE", "NONKEY"):
+                    frame_list = []
+                    compare_list = []
+                    frame_count = 0
+                    with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+                        stream = container.streams.video[0]
+                        stream.thread_type = thread_type
+                        stream.thread_count = thread_count
+                        stream.codec_context.skip_frame = skip_type
+                        for packet in container.demux(stream):
+                            for frame in packet.decode():
+                                frame_list.append(frame.index)
+                                compare_list.append(frame_count)
+                                frame_count += 1
+                    self.assertEqual(frame_list, compare_list)

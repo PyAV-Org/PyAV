@@ -513,23 +513,33 @@ cdef class CodecContext:
 
         self.open(strict=False)
 
-        res = []
+        frame_list = []
         for frame in self._send_packet_and_recv(packet):
             if isinstance(frame, Frame):
                 self._setup_decoded_frame(frame, packet)
-            res.append(frame)
-        return res
+            frame_list.append(frame)
+        if packet and packet.stream and packet.stream.type != "subtitle":
+            self._correct_frame_indices(frame_list)
+        return frame_list
+
+    cdef _correct_frame_indices(self, frame_list):
+        """
+        All frames in the list returned by '_send_packet_and_recv' will have the same index.
+        This will set the correct indices.
+        """
+        cdef Frame frame
+        correction = len(frame_list)
+        for frame in frame_list:
+            frame.index = self.ptr.frame_number - correction
+            correction -= 1
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
-
         # Propagate our manual times.
         # While decoding, frame times are in stream time_base, which PyAV
         # is carrying around.
         # TODO: Somehow get this from the stream so we can not pass the
         # packet here (because flushing packets are bogus).
         frame._time_base = packet._time_base
-
-        frame.index = self.ptr.frame_number - 1
 
     property name:
         def __get__(self):

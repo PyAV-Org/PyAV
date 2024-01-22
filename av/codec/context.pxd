@@ -43,6 +43,7 @@ cdef class CodecContext:
     cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame)
     cdef _prepare_frames_for_encode(self, Frame frame)
     cdef _setup_encoded_packet(self, Packet)
+    cdef _correct_frame_indices(self, frame_list)
     cdef _setup_decoded_frame(self, Frame, Packet)
 
     # Implemented by base for the generic send/recv API.
