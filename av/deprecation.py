@@ -22,7 +22,6 @@ warnings.filterwarnings("default", "", AVDeprecationWarning)
 
 
 class renamed_attr:
-
     """Proxy for renamed attributes (or methods) on classes.
     Getting and setting values will be redirected to the provided name,
     and warnings will be issues every time.
