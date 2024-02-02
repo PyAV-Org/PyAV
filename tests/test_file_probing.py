@@ -1,4 +1,5 @@
 from fractions import Fraction
+import warnings
 
 import av
 
@@ -318,6 +319,20 @@ class TestVideoProbe(TestCase):
         # confirm.
         self.assertIn(stream.coded_width, (720, 0))
         self.assertIn(stream.coded_height, (576, 0))
+
+        # Deprecated properties.
+        with warnings.catch_warnings(record=True) as captured:
+            stream.framerate
+            self.assertEqual(
+                captured[0].message.args[0],
+                "VideoStream.framerate is deprecated as it is not always set; please use VideoStream.average_rate.",
+            )
+        with warnings.catch_warnings(record=True) as captured:
+            stream.rate
+            self.assertEqual(
+                captured[0].message.args[0],
+                "VideoStream.rate is deprecated as it is not always set; please use VideoStream.average_rate.",
+            )
 
 
 class TestVideoProbeCorrupt(TestCase):
