@@ -44,6 +44,12 @@ class TestCodecContext(TestCase):
         ctx = Codec("png", "w").create()
         self.assertEqual(ctx.skip_frame.name, "DEFAULT")
 
+    def test_codec_delay(self):
+        with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
+            self.assertEqual(container.streams.audio[0].codec_context.delay, 312)
+        with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+            self.assertEqual(container.streams.video[0].codec_context.delay, 0)
+
     def test_codec_tag(self):
         ctx = Codec("mpeg4", "w").create()
         self.assertEqual(ctx.codec_tag, "\x00\x00\x00\x00")
