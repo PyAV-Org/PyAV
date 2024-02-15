@@ -12,9 +12,7 @@ from av.video.frame cimport VideoFrame
 
 
 cdef class Graph:
-
     def __cinit__(self):
-
         self.ptr = lib.avfilter_graph_alloc()
         self.configured = False
         self._name_counts = {}
@@ -33,7 +31,7 @@ cdef class Graph:
         count = self._name_counts.get(name, 0)
         self._name_counts[name] = count + 1
         if count:
-            return "%s_%s" % (name, count)
+            return f"{name}_{count}"
         else:
             return name
 
@@ -41,41 +39,14 @@ cdef class Graph:
         if self.configured and not force:
             return
 
-        # if auto_buffer:
-        #     for ctx in self._context_by_ptr.itervalues():
-        #         for in_ in ctx.inputs:
-        #             if not in_.link:
-        #                 if in_.type == "video":
-        #                     pass
-
         err_check(lib.avfilter_graph_config(self.ptr, NULL))
         self.configured = True
 
         # We get auto-inserted stuff here.
         self._auto_register()
 
-    # def parse_string(self, str filter_str):
-        # err_check(lib.avfilter_graph_parse2(self.ptr, filter_str, &self.inputs, &self.outputs))
-        #
-        # cdef lib.AVFilterInOut *input_
-        # while input_ != NULL:
-        #     print 'in ', input_.pad_idx, (input_.name if input_.name != NULL else ''), input_.filter_ctx.name, input_.filter_ctx.filter.name
-        #     input_ = input_.next
-        #
-        # cdef lib.AVFilterInOut *output
-        # while output != NULL:
-        #     print 'out', output.pad_idx, (output.name if output.name != NULL else ''), output.filter_ctx.name, output.filter_ctx.filter.name
-        #     output = output.next
-
-    # NOTE: Only FFmpeg supports this.
-    # def dump(self):
-    #     cdef char *buf = lib.avfilter_graph_dump(self.ptr, "")
-    #     cdef str ret = buf
-    #     lib.av_free(buf)
-    #     return ret
 
     def add(self, filter, args=None, **kwargs):
-
         cdef Filter cy_filter
         if isinstance(filter, str):
             cy_filter = Filter(filter)
@@ -124,7 +95,6 @@ cdef class Graph:
         self._nb_filters_seen = self.ptr.nb_filters
 
     def add_buffer(self, template=None, width=None, height=None, format=None, name=None, time_base=None):
-
         if template is not None:
             if width is None:
                 width = template.width
@@ -195,7 +165,6 @@ cdef class Graph:
         return self.add("abuffer", name=name, **kwargs)
 
     def push(self, frame):
-
         if frame is None:
             contexts = self._context_by_type.get("buffer", []) + self._context_by_type.get("abuffer", [])
         elif isinstance(frame, VideoFrame):
@@ -211,7 +180,6 @@ cdef class Graph:
         contexts[0].push(frame)
 
     def pull(self):
-
         vsinks = self._context_by_type.get("buffersink", [])
         asinks = self._context_by_type.get("abuffersink", [])
 
