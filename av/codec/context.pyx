@@ -640,3 +640,13 @@ cdef class CodecContext:
 
         def __set__(self, value):
             self.ptr.skip_frame = SkipType[value].value
+
+    property delay:
+        """Codec delay.
+
+        Wraps :ffmpeg:`AVCodecContext.delay`.
+
+        """
+
+        def __get__(self):
+            return self.ptr.delay
