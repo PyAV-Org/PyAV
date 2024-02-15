@@ -31,7 +31,7 @@ cdef class Graph:
         count = self._name_counts.get(name, 0)
         self._name_counts[name] = count + 1
         if count:
-            return f"{name}_{count}"
+            return "%s_%s" % (name, count)
         else:
             return name
 
