@@ -6,4 +6,4 @@ flake8
 isort
 numpy
 pillow
-sphinx < 4.4
+sphinx==5.1.0
