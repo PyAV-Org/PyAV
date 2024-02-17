@@ -4,6 +4,10 @@ from av.audio.plane cimport AudioPlane
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
 
+import warnings
+
+from av.deprecation import AVDeprecationWarning
+
 
 cdef object _cinit_bypass_sentinel
 
@@ -193,3 +197,12 @@ cdef class AudioFrame(Frame):
 
         # convert and return data
         return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
+
+    def __getattribute__(self, attribute):
+        "This method should be deleted when `frame.index` is removed."
+        if attribute == 'index':
+            warnings.warn(
+                "Using `frame.index` is deprecated.",
+                AVDeprecationWarning
+            )
+        return Frame.__getattribute__(self, attribute)
