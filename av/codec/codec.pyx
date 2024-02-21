@@ -352,7 +352,8 @@ codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 def dump_codecs():
     """Print information about available codecs."""
 
-    print """Codecs:
+    print(
+        """Codecs:
  D..... = Decoding supported
  .E.... = Encoding supported
  ..V... = Video codec
@@ -362,9 +363,9 @@ def dump_codecs():
  ....L. = Lossy compression
  .....S = Lossless compression
  ------"""
+    )
 
     for name in sorted(codecs_available):
-
         try:
             e_codec = Codec(name, "w")
         except ValueError:
@@ -379,15 +380,18 @@ def dump_codecs():
         codec = e_codec or d_codec
 
         try:
-            print " %s%s%s%s%s%s %-18s %s" % (
-                ".D"[bool(d_codec)],
-                ".E"[bool(e_codec)],
-                codec.type[0].upper(),
-                ".I"[codec.intra_only],
-                ".L"[codec.lossy],
-                ".S"[codec.lossless],
-                codec.name,
-                codec.long_name
+            print(
+                " %s%s%s%s%s%s %-18s %s"
+                % (
+                    ".D"[bool(d_codec)],
+                    ".E"[bool(e_codec)],
+                    codec.type[0].upper(),
+                    ".I"[codec.intra_only],
+                    ".L"[codec.lossy],
+                    ".S"[codec.lossless],
+                    codec.name,
+                    codec.long_name,
+                )
             )
         except Exception as e:
-            print "...... %-18s ERROR: %s" % (codec.name, e)
+            print(f"...... {codec.name:<18} ERROR: {e}")

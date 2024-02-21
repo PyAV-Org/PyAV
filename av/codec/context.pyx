@@ -151,7 +151,6 @@ cdef class CodecContext:
         self.stream_index = -1  # This is set by the container immediately.
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
-
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError("Wrapping CodecContext with mismatched codec.")
@@ -256,7 +255,6 @@ cdef class CodecContext:
             return lib.av_codec_is_decoder(self.ptr.codec)
 
     cpdef open(self, bint strict=True):
-
         if lib.avcodec_is_open(self.ptr):
             if strict:
                 raise ValueError("CodecContext is already open.")
@@ -302,12 +300,9 @@ cdef class CodecContext:
             lib.av_parser_close(self.parser)
 
     def __repr__(self):
-        return "<av.%s %s/%s at 0x%x>" % (
-            self.__class__.__name__,
-            self.type or "<notype>",
-            self.name or "<nocodec>",
-            id(self),
-        )
+        _type = self.type or "<notype>"
+        name = self.name or "<nocodec>"
+        return f"<av.{self.__class__.__name__} {_type}/{name} at 0x{id(self):x}>"
 
     def parse(self, raw_input=None):
         """Split up a byte stream into list of :class:`.Packet`.
@@ -329,7 +324,7 @@ cdef class CodecContext:
         if not self.parser:
             self.parser = lib.av_parser_init(self.codec.ptr.id)
             if not self.parser:
-                raise ValueError("No parser for %s" % self.codec.name)
+                raise ValueError(f"No parser for {self.codec.name}")
 
         cdef ByteSource source = bytesource(raw_input, allow_none=True)
 
@@ -344,7 +339,6 @@ cdef class CodecContext:
         packets = []
 
         while True:
-
             with nogil:
                 consumed = lib.av_parser_parse2(
                     self.parser,
@@ -357,7 +351,6 @@ cdef class CodecContext:
             err_check(consumed)
 
             if out_size:
-
                 # We copy the data immediately, as we have yet to figure out
                 # the expected lifetime of the buffer we get back. All of the
                 # examples decode it immediately.
@@ -389,7 +382,6 @@ cdef class CodecContext:
         return packets
 
     def _send_frame_and_recv(self, Frame frame):
-
         cdef Packet packet
 
         cdef int res
@@ -403,7 +395,6 @@ cdef class CodecContext:
             packet = self._recv_packet()
 
     cdef _send_packet_and_recv(self, Packet packet):
-
         cdef Frame frame
 
         cdef int res
@@ -427,7 +418,6 @@ cdef class CodecContext:
         raise NotImplementedError("Base CodecContext cannot decode.")
 
     cdef _recv_frame(self):
-
         if not self._next_frame:
             self._next_frame = self._alloc_next_frame()
         cdef Frame frame = self._next_frame
@@ -445,7 +435,6 @@ cdef class CodecContext:
             return frame
 
     cdef _recv_packet(self):
-
         cdef Packet packet = Packet()
 
         cdef int res

@@ -578,7 +578,7 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(flat[uv_start:], frame.planes[1], 2)
             return frame
         else:
-            raise ValueError("Conversion from numpy array with format `%s` is not yet supported" % format)
+            raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
 
         frame = VideoFrame(array.shape[1], array.shape[0], format)
         copy_array_to_plane(array, frame.planes[0], 1 if array.ndim == 2 else array.shape[2])
@@ -586,10 +586,8 @@ cdef class VideoFrame(Frame):
         return frame
 
     def __getattribute__(self, attribute):
-        "This method should be deleted when `frame.index` is removed."
-        if attribute == 'index':
-            warnings.warn(
-                "Using `frame.index` is deprecated.",
-                AVDeprecationWarning
-            )
+        # This method should be deleted when `frame.index` is removed
+        if attribute == "index":
+            warnings.warn("Using `frame.index` is deprecated.", AVDeprecationWarning)
+
         return Frame.__getattribute__(self, attribute)

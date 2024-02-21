@@ -95,7 +95,6 @@ cdef class StreamContainer:
         selection = []
 
         for x in _flatten((args, kwargs)):
-
             if x is None:
                 pass
 

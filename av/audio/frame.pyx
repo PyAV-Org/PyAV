@@ -37,7 +37,6 @@ cdef AudioFrame alloc_audio_frame():
 
 
 cdef class AudioFrame(Frame):
-
     """A frame of audio."""
 
     def __cinit__(self, format="s16", layout="stereo", samples=0, align=1):
@@ -61,7 +60,6 @@ cdef class AudioFrame(Frame):
         self.ptr.channels = self.layout.nb_channels
 
         if self.layout.channels and nb_samples:
-
             # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
 
@@ -95,15 +93,9 @@ cdef class AudioFrame(Frame):
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
 
     def __repr__(self):
-        return "<av.%s %d, pts=%s, %d samples at %dHz, %s, %s at 0x%x>" % (
-            self.__class__.__name__,
-            self.index,
-            self.pts,
-            self.samples,
-            self.rate,
-            self.layout.name,
-            self.format.name,
-            id(self),
+        return (
+           f"<av.{self.__class__.__name__} {self.index} pts={self.pts}, {self.samples} "
+           f"samples at {self.rate}Hz, {self.layout.name}, {self.format.name} at 0x{id(self):x}"
         )
 
     @staticmethod
@@ -117,7 +109,9 @@ cdef class AudioFrame(Frame):
         try:
             dtype = np.dtype(format_dtypes[format])
         except KeyError:
-            raise ValueError("Conversion from numpy array with format `%s` is not yet supported" % format)
+            raise ValueError(
+                f"Conversion from numpy array with format `{format}` is not yet supported"
+            )
 
         # check input format
         nb_channels = len(AudioLayout(layout).channels)
@@ -184,25 +178,21 @@ cdef class AudioFrame(Frame):
         """
         import numpy as np
 
-        # map avcodec type to numpy type
         try:
             dtype = np.dtype(format_dtypes[self.format.name])
         except KeyError:
-            raise ValueError("Conversion from {!r} format to numpy array is not supported.".format(self.format.name))
+            raise ValueError(f"Conversion from {self.format.name!r} format to numpy array is not supported.")
 
         if self.format.is_planar:
             count = self.samples
         else:
             count = self.samples * len(self.layout.channels)
 
-        # convert and return data
         return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
 
     def __getattribute__(self, attribute):
-        "This method should be deleted when `frame.index` is removed."
-        if attribute == 'index':
-            warnings.warn(
-                "Using `frame.index` is deprecated.",
-                AVDeprecationWarning
-            )
+        # This method should be deleted when `frame.index` is removed
+        if attribute == "index":
+            warnings.warn("Using `frame.index` is deprecated.", AVDeprecationWarning)
+
         return Frame.__getattribute__(self, attribute)

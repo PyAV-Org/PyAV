@@ -142,18 +142,16 @@ cdef class Option(BaseOption):
             return self._norm_range(self.ptr.max)
 
     def __repr__(self):
-        return "<av.%s %s (%s at *0x%x) at 0x%x>" % (
-            self.__class__.__name__,
-            self.name,
-            self.type,
-            self.offset,
-            id(self),
+        return (
+            f"<av.{self.__class__.__name__} {self.name}"
+            f" ({self.type} at *0x{self.offset:x}) at 0x{id(self):x}>"
         )
 
 
 cdef OptionChoice wrap_option_choice(const lib.AVOption *ptr, bint is_default):
     if ptr == NULL:
         return None
+
     cdef OptionChoice obj = OptionChoice(_cinit_sentinel)
     obj.ptr = ptr
     obj.is_default = is_default
@@ -171,4 +169,4 @@ cdef class OptionChoice(BaseOption):
             return self.ptr.default_val.i64
 
     def __repr__(self):
-        return "<av.%s %s at 0x%x>" % (self.__class__.__name__, self.name, id(self))
+        return f"<av.{self.__class__.__name__} {self.name} at 0x{id(self):x}>"

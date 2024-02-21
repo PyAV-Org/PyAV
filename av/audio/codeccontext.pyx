@@ -8,7 +8,6 @@ from av.packet cimport Packet
 
 
 cdef class AudioCodecContext(CodecContext):
-
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)
 

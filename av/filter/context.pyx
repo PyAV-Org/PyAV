@@ -20,17 +20,18 @@ cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterC
 
 
 cdef class FilterContext:
-
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("cannot construct FilterContext")
 
     def __repr__(self):
-        return "<av.FilterContext %s of %r at 0x%x>" % (
-            (repr(self.ptr.name) if self.ptr.name != NULL else "<NULL>") if self.ptr != NULL else "None",
-            self.filter.ptr.name if self.filter and self.filter.ptr != NULL else None,
-            id(self),
-        )
+        if self.ptr != NULL:
+            name = repr(self.ptr.name) if self.ptr.name != NULL else "<NULL>"
+        else:
+            name = "None"
+
+        parent = self.filter.ptr.name if self.filter and self.filter.ptr != NULL else None
+        return f"<av.FilterContext {name} of {parent!r} at 0x{id(self):x}>"
 
     property name:
         def __get__(self):
@@ -50,7 +51,6 @@ cdef class FilterContext:
             return self._outputs
 
     def init(self, args=None, **kwargs):
-
         if self.inited:
             raise ValueError("already inited")
         if args and kwargs:
@@ -68,7 +68,7 @@ cdef class FilterContext:
 
         self.inited = True
         if dict_:
-            raise ValueError("unused config: %s" % ", ".join(sorted(dict_)))
+            raise ValueError(f"unused config: {', '.join(sorted(dict_))}")
 
     def link_to(self, FilterContext input_, int output_idx=0, int input_idx=0):
         err_check(lib.avfilter_link(self.ptr, output_idx, input_.ptr, input_idx))
@@ -89,7 +89,9 @@ cdef class FilterContext:
 
         # Delegate to the input.
         if len(self.inputs) != 1:
-            raise ValueError("cannot delegate push without single input; found %d" % len(self.inputs))
+            raise ValueError(
+                f"cannot delegate push without single input; found {len(self.inputs)}"
+            )
         if not self.inputs[0].link:
             raise ValueError("cannot delegate push without linked input")
         self.inputs[0].linked.context.push(frame)
@@ -105,7 +107,9 @@ cdef class FilterContext:
         else:
             # Delegate to the output.
             if len(self.outputs) != 1:
-                raise ValueError("cannot delegate pull without single output; found %d" % len(self.outputs))
+                raise ValueError(
+                    f"cannot delegate pull without single output; found {len(self.outputs)}"
+                )
             if not self.outputs[0].link:
                 raise ValueError("cannot delegate pull without linked output")
             return self.outputs[0].linked.context.pull()

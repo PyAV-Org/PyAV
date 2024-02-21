@@ -21,7 +21,6 @@ cdef class Packet(Buffer):
             self.ptr = lib.av_packet_alloc()
 
     def __init__(self, input=None):
-
         cdef size_t size = 0
         cdef ByteSource source = None
 
@@ -48,13 +47,10 @@ cdef class Packet(Buffer):
             lib.av_packet_free(&self.ptr)
 
     def __repr__(self):
-        return "<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>" % (
-            self.__class__.__name__,
-            self._stream.index if self._stream else 0,
-            self.dts,
-            self.pts,
-            self.ptr.size,
-            id(self),
+        stream = self._stream.index if self._stream else 0
+        return (
+            f"<av.{self.__class__.__name__} of #{stream}, dts={self.dts},"
+            f" pts={self.pts}; {self.ptr.size} bytes at 0x{id(self):x}>"
         )
 
     # Buffer protocol.
@@ -64,7 +60,6 @@ cdef class Packet(Buffer):
         return self.ptr.data
 
     cdef _rebase_time(self, lib.AVRational dst):
-
         if not dst.num:
             raise ValueError("Cannot rebase to zero time.")
 

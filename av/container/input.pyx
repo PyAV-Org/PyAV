@@ -21,9 +21,7 @@ cdef close_input(InputContainer self):
 
 
 cdef class InputContainer(Container):
-
     def __cinit__(self, *args, **kwargs):
-
         cdef CodecContext py_codec_context
         cdef unsigned int i
         cdef lib.AVStream *stream
@@ -151,17 +149,15 @@ cdef class InputContainer(Container):
 
         self.set_timeout(self.read_timeout)
         try:
-
             for i in range(self.ptr.nb_streams):
                 include_stream[i] = False
             for stream in streams:
                 i = stream.index
                 if i >= self.ptr.nb_streams:
-                    raise ValueError("stream index %d out of range" % i)
+                    raise ValueError(f"stream index {i} out of range")
                 include_stream[i] = True
 
             while True:
-
                 packet = Packet()
                 try:
                     self.start_timeout()

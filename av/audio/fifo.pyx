@@ -3,23 +3,18 @@ from av.error cimport err_check
 
 
 cdef class AudioFifo:
-
     """A simple audio sample FIFO (First In First Out) buffer."""
 
     def __repr__(self):
         try:
-            result = "<av.%s %s samples of %dhz %s %s at 0x%x>" % (
-                self.__class__.__name__,
-                self.samples,
-                self.sample_rate,
-                self.layout,
-                self.format,
-                id(self),
+            result = (
+                f"<av.{self.__class__.__name__} {self.samples} samples of "
+                f"{self.sample_rate}hz {self.layout} {self.format} at 0x{id(self):x}>"
             )
         except AttributeError:
-            result = "<av.%s uninitialized, use fifo.write(frame), at 0x%x>" % (
-                self.__class__.__name__,
-                id(self),
+            result = (
+                f"<av.{self.__class__.__name__} uninitialized, use fifo.write(frame),"
+                f" at 0x{id(self):x}>"
             )
         return result
 
@@ -90,7 +85,9 @@ cdef class AudioFifo:
         if self.pts_per_sample and frame.ptr.pts != lib.AV_NOPTS_VALUE:
             expected_pts = <int64_t>(self.pts_per_sample * self.samples_written)
             if frame.ptr.pts != expected_pts:
-                raise ValueError("Frame.pts (%d) != expected (%d); fix or set to None." % (frame.ptr.pts, expected_pts))
+                raise ValueError(
+                    "Frame.pts (%d) != expected (%d); fix or set to None." % (frame.ptr.pts, expected_pts)
+                )
 
         err_check(lib.av_audio_fifo_write(
             self.ptr,
@@ -173,6 +170,7 @@ cdef class AudioFifo:
                 frames.append(frame)
             else:
                 break
+
         return frames
 
     property format:

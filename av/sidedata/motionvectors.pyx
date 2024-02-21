@@ -7,7 +7,6 @@ cdef object _cinit_bypass_sentinel = object()
 # Cython doesn't let us inherit from the abstract Sequence, so we will subclass
 # it later.
 cdef class _MotionVectors(SideData):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._vectors = {}
@@ -54,7 +53,6 @@ class MotionVectors(_MotionVectors, Sequence):
 
 
 cdef class MotionVector:
-
     def __init__(self, sentinel, _MotionVectors parent, int index):
         if sentinel is not _cinit_bypass_sentinel:
             raise RuntimeError("cannot manually instatiate MotionVector")
