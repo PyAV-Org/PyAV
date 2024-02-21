@@ -7,13 +7,11 @@ def main():
     parser.add_argument("--version", action="store_true")
     args = parser.parse_args()
 
-    # ---
-
     if args.version:
         import av
         import av._core
 
-        print("PyAV v" + av.__version__)
+        print(f"PyAV v{av.__version__}")
 
         by_config = {}
         for libname, config in sorted(av._core.library_meta.items()):
@@ -22,14 +20,13 @@ def main():
                 by_config.setdefault(
                     (config["configuration"], config["license"]), []
                 ).append((libname, config))
+
         for (config, license), libs in sorted(by_config.items()):
             print("library configuration:", config)
             print("library license:", license)
             for libname, config in libs:
                 version = config["version"]
-                print(
-                    "%-13s %3d.%3d.%3d" % (libname, version[0], version[1], version[2])
-                )
+                print(f"{libname:<13} {version[0]:3d}.{version[1]:3d}.{version[2]:3d}")
 
     if args.codecs:
         from av.codec.codec import dump_codecs

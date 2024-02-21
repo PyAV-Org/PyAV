@@ -169,7 +169,6 @@ cdef global_captures = []
 cdef thread_captures = {}
 
 cdef class Capture:
-
     """A context manager for capturing logs.
 
     :param bool local: Should logs from all threads be captured, or just one
@@ -188,7 +187,6 @@ cdef class Capture:
     cdef list captures
 
     def __init__(self, bint local=True):
-
         self.logs = []
 
         if local:
@@ -259,7 +257,6 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         return
 
     with gil:
-
         try:
             log_callback_gil(level, name, message)
 
@@ -272,7 +269,6 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
 
 
 cdef log_callback_gil(int level, const char *c_name, const char *c_message):
-
     global error_count
     global skip_count
     global last_log
@@ -294,9 +290,7 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
     cdef object repeat_log = None
 
     with skip_lock:
-
         if is_interesting:
-
             is_repeated = skip_repeated and last_log == log
 
             if is_repeated:
@@ -329,7 +323,6 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
 
 
 cdef log_callback_emit(log):
-
     lib_level, name, message = log
 
     captures = thread_captures.get(get_ident()) or global_captures

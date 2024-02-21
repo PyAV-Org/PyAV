@@ -63,16 +63,15 @@ cdef dict channel_descriptions = {
 
 
 cdef class AudioLayout:
-
     def __init__(self, layout):
-
         if layout is _cinit_bypass_sentinel:
             return
 
         cdef uint64_t c_layout
         if isinstance(layout, int):
             if layout < 0 or layout > 8:
-                raise ValueError("no layout with %d channels" % layout)
+                raise ValueError(f"no layout with {layout} channels")
+
             c_layout = default_layouts[layout]
         elif isinstance(layout, str):
             c_layout = lib.av_get_channel_layout(layout)
@@ -82,7 +81,7 @@ cdef class AudioLayout:
             raise TypeError("layout must be str or int")
 
         if not c_layout:
-            raise ValueError("invalid channel layout %r" % layout)
+            raise ValueError(f"invalid channel layout: {layout}")
 
         self._init(c_layout)
 
@@ -92,7 +91,7 @@ cdef class AudioLayout:
         self.channels = tuple(AudioChannel(self, i) for i in range(self.nb_channels))
 
     def __repr__(self):
-        return "<av.%s %r>" % (self.__class__.__name__, self.name)
+        return f"<av.{self.__class__.__name__} {self.name!r}>"
 
     property name:
         """The canonical name of the audio layout."""
@@ -104,12 +103,11 @@ cdef class AudioLayout:
 
 
 cdef class AudioChannel:
-
     def __cinit__(self, AudioLayout layout, int index):
         self.channel = lib.av_channel_layout_extract_channel(layout.layout, index)
 
     def __repr__(self):
-        return "<av.%s %r (%s)>" % (self.__class__.__name__, self.name, self.description)
+        return f"<av.{self.__class__.__name__} {self.name!r} ({self.description})>"
 
     property name:
         """The canonical name of the audio channel."""

@@ -50,7 +50,6 @@ cpdef tag_to_code(bytes tag):
 
 
 class FFmpegError(Exception):
-
     """Exception class for errors from within FFmpeg.
 
     .. attribute:: errno
@@ -187,7 +186,6 @@ ErrorType.tag = property(lambda self: code_to_tag(self.value))
 
 
 for enum in ErrorType:
-
     # Mimick the errno module.
     globals()[enum.name] = enum
     if enum.value == c_PYAV_STASHED_ERROR:
@@ -285,7 +283,6 @@ cdef object _local = local()
 cdef int _err_count = 0
 
 cdef int stash_exception(exc_info=None):
-
     global _err_count
 
     existing = getattr(_local, "exc_info", None)
@@ -338,16 +335,13 @@ class UndefinedError(FFmpegError):
 
 
 cpdef make_error(int res, filename=None, log=None):
-
     cdef int code = -res
     cdef bytes py_buffer
     cdef char *c_buffer
 
     if code == c_PYAV_STASHED_ERROR:
         message = PYAV_STASHED_ERROR_message
-
     else:
-
         # Jump through some hoops due to Python 2 in same codebase.
         py_buffer = b"\0" * lib.AV_ERROR_MAX_STRING_SIZE
         c_buffer = py_buffer

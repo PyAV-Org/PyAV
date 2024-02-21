@@ -77,7 +77,7 @@ cdef class Stream:
     def __cinit__(self, name):
         if name is _cinit_bypass_sentinel:
             return
-        raise RuntimeError('cannot manually instantiate Stream')
+        raise RuntimeError("cannot manually instantiate Stream")
 
     cdef _init(self, Container container, lib.AVStream *stream, CodecContext codec_context):
         self.container = container
@@ -96,12 +96,9 @@ cdef class Stream:
         )
 
     def __repr__(self):
-        return '<av.%s #%d %s/%s at 0x%x>' % (
-            self.__class__.__name__,
-            self.index,
-            self.type or '<notype>',
-            self.name or '<nocodec>',
-            id(self),
+        return (
+            f"<av.{self.__class__.__name__} #{self.index} {self.type or '<notype>'}/"
+            f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
         )
 
     def __getattr__(self, name):
@@ -109,7 +106,7 @@ cdef class Stream:
         # See: https://github.com/PyAV-Org/PyAV/issues/1005
         if self.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO and name in ("framerate", "rate"):
             warnings.warn(
-                "VideoStream.%s is deprecated as it is not always set; please use VideoStream.average_rate." % name,
+                f"VideoStream.{name} is deprecated as it is not always set; please use VideoStream.average_rate.",
                 AVDeprecationWarning
             )
 

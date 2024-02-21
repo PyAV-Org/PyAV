@@ -30,7 +30,6 @@ Type = define_enum("Type", __name__, (
 
 
 cdef SideData wrap_side_data(Frame frame, int index):
-
     cdef lib.AVFrameSideDataType type_ = frame.ptr.side_data[index].type
     if type_ == lib.AV_FRAME_DATA_MOTION_VECTORS:
         return MotionVectors(_cinit_bypass_sentinel, frame, index)
@@ -39,7 +38,6 @@ cdef SideData wrap_side_data(Frame frame, int index):
 
 
 cdef class SideData(Buffer):
-
     def __init__(self, sentinel, Frame frame, int index):
         if sentinel is not _cinit_bypass_sentinel:
             raise RuntimeError("cannot manually instatiate SideData")
@@ -65,9 +63,7 @@ cdef class SideData(Buffer):
 
 
 cdef class _SideDataContainer:
-
     def __init__(self, Frame frame):
-
         self.frame = frame
         self._by_index = []
         self._by_type = {}
@@ -86,7 +82,6 @@ cdef class _SideDataContainer:
         return iter(self._by_index)
 
     def __getitem__(self, key):
-
         if isinstance(key, int):
             return self._by_index[key]
 

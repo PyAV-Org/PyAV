@@ -8,9 +8,7 @@ ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) noexce
 
 
 cdef class PyIOFile:
-
     def __cinit__(self, file, buffer_size, writeable=None):
-
         self.file = file
 
         cdef seek_func_t seek_func = NULL

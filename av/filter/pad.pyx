@@ -5,19 +5,15 @@ cdef object _cinit_sentinel = object()
 
 
 cdef class FilterPad:
-
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("cannot construct FilterPad")
 
     def __repr__(self):
-        return "<av.FilterPad %s.%s[%d]: %s (%s)>" % (
-            self.filter.name,
-            "inputs" if self.is_input else "outputs",
-            self.index,
-            self.name,
-            self.type,
-        )
+        _filter = self.filter.name
+        _io = "inputs" if self.is_input else "outputs"
+
+        return f"<av.FilterPad {_filter}.{_io}[{self.index}]: {self.name} ({self.type})>"
 
     property is_output:
         def __get__(self):
@@ -40,17 +36,12 @@ cdef class FilterPad:
 
 
 cdef class FilterContextPad(FilterPad):
-
     def __repr__(self):
+        _filter = self.filter.name
+        _io = "inputs" if self.is_input else "outputs"
+        context = self.context.name
 
-        return "<av.FilterContextPad %s.%s[%d] of %s: %s (%s)>" % (
-            self.filter.name,
-            "inputs" if self.is_input else "outputs",
-            self.index,
-            self.context.name,
-            self.name,
-            self.type,
-        )
+        return f"<av.FilterContextPad {_filter}.{_io}[{self.index}] of {context}: {self.name} ({self.type})>"
 
     property link:
         def __get__(self):
@@ -71,7 +62,6 @@ cdef class FilterContextPad(FilterPad):
 
 
 cdef tuple alloc_filter_pads(Filter filter, const lib.AVFilterPad *ptr, bint is_input, FilterContext context=None):
-
     if not ptr:
         return ()
 

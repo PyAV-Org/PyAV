@@ -60,7 +60,6 @@ cdef class ContainerFormat:
     """
 
     def __cinit__(self, name, mode=None):
-
         if name is _cinit_bypass_sentinel:
             return
 
@@ -77,10 +76,10 @@ cdef class ContainerFormat:
             self.optr = lib.av_guess_format(name, NULL, NULL)
 
         if not self.iptr and not self.optr:
-            raise ValueError("no container format %r" % name)
+            raise ValueError(f"no container format {name!r}")
 
     def __repr__(self):
-        return "<av.%s %r>" % (self.__class__.__name__, self.name)
+        return f"<av.{self.__class__.__name__} {self.name!r}>"
 
     property descriptor:
         def __get__(self):

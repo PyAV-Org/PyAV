@@ -280,7 +280,7 @@ cdef class Container:
         self.close()
 
     def __repr__(self):
-        return "<av.%s %r>" % (self.__class__.__name__, self.file or self.name)
+        return f"<av.{self.__class__.__name__} {self.file or self.name!r}>"
 
     cdef int err_check(self, int value) except -1:
         return err_check(value, filename=self.name)

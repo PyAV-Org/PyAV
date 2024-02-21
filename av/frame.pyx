@@ -21,12 +21,7 @@ cdef class Frame:
             lib.av_frame_free(&self.ptr)
 
     def __repr__(self):
-        return "av.%s #%d pts=%s at 0x%x>" % (
-            self.__class__.__name__,
-            self.index,
-            self.pts,
-            id(self),
-        )
+        return f"av.{self.__class__.__name__} #{self.index} pts={self.pts} at 0x{id(self):x}>"
 
     cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
         """Mimic another frame."""
@@ -45,7 +40,6 @@ cdef class Frame:
         pass  # Dummy to match the API of the others.
 
     cdef _rebase_time(self, lib.AVRational dst):
-
         if not dst.num:
             raise ValueError("Cannot rebase to zero time.")
 
@@ -57,10 +51,7 @@ cdef class Frame:
             return
 
         if self.ptr.pts != lib.AV_NOPTS_VALUE:
-            self.ptr.pts = lib.av_rescale_q(
-                self.ptr.pts,
-                self._time_base, dst
-            )
+            self.ptr.pts = lib.av_rescale_q(self.ptr.pts, self._time_base, dst)
 
         self._time_base = dst
 
@@ -135,7 +126,8 @@ cdef class Frame:
 
         :type: bool
         """
-        def __get__(self): return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
+        def __get__(self):
+            return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
 
     @property
     def side_data(self):

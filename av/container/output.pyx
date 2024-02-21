@@ -30,7 +30,6 @@ cdef close_output(OutputContainer self):
 
 
 cdef class OutputContainer(Container):
-
     def __cinit__(self, *args, **kwargs):
         self.streams = StreamContainer()
         self.metadata = {}
@@ -74,12 +73,10 @@ cdef class OutputContainer(Container):
         codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
-        if not lib.avformat_query_codec(
-            self.ptr.oformat,
-            codec.id,
-            lib.FF_COMPLIANCE_NORMAL,
-        ):
-            raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
+        if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
+            raise ValueError(
+                f"{self.format.name!r} format does not support {codec_name!r} codec"
+            )
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
         lib.avformat_new_stream(self.ptr, codec)

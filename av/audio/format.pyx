@@ -18,11 +18,9 @@ cdef AudioFormat get_audio_format(lib.AVSampleFormat c_format):
 
 
 cdef class AudioFormat:
-
     """Descriptor of audio formats."""
 
     def __cinit__(self, name):
-
         if name is _cinit_bypass_sentinel:
             return
 
@@ -33,7 +31,7 @@ cdef class AudioFormat:
             sample_fmt = lib.av_get_sample_fmt(name)
 
         if sample_fmt < 0:
-            raise ValueError("Not a sample format: %r" % name)
+            raise ValueError(f"Not a sample format: {name!r}")
 
         self._init(sample_fmt)
 
@@ -41,7 +39,7 @@ cdef class AudioFormat:
         self.sample_fmt = sample_fmt
 
     def __repr__(self):
-        return "<av.AudioFormat %s>" % (self.name)
+        return f"<av.AudioFormat {self.name}>"
 
     property name:
         """Canonical name of the sample format.
@@ -128,7 +126,6 @@ cdef class AudioFormat:
 
         """
         def __get__(self):
-
             if self.is_planar:
                 raise ValueError("no planar container formats")
 

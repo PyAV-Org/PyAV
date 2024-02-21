@@ -14,13 +14,13 @@ cdef Descriptor wrap_avclass(const lib.AVClass *ptr):
 
 
 cdef class Descriptor:
-
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("Cannot construct av.Descriptor")
 
     property name:
-        def __get__(self): return self.ptr.class_name if self.ptr.class_name else None
+        def __get__(self):
+            return self.ptr.class_name if self.ptr.class_name else None
 
     property options:
         def __get__(self):
@@ -56,4 +56,4 @@ cdef class Descriptor:
             return self._options
 
     def __repr__(self):
-        return "<%s %s at 0x%x>" % (self.__class__.__name__, self.name, id(self))
+        return f"<{self.__class__.__name__} {self.name} at 0x{id(self):x}>"
