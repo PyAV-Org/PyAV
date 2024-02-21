@@ -193,15 +193,15 @@ cdef class Stream:
 
         return nb_side_data, side_data
 
-    property id:
+    @property
+    def id(self):
         """
         The format-specific ID of this stream.
 
         :type: int
 
         """
-        def __get__(self):
-            return self.ptr.id
+        return self.ptr.id
 
     cdef _set_id(self, value):
         """
@@ -212,35 +212,37 @@ cdef class Stream:
         else:
             self.ptr.id = value
 
-    property profile:
+    @property
+    def profile(self):
         """
         The profile of this stream.
 
         :type: str
         """
-        def __get__(self):
-            if self.codec_context:
-                return self.codec_context.profile
-            else:
-                return None
+        if self.codec_context:
+            return self.codec_context.profile
+        else:
+            return None
 
-    property index:
+    @property
+    def index(self):
         """
         The index of this stream in its :class:`.Container`.
 
         :type: int
         """
-        def __get__(self): return self.ptr.index
+        return self.ptr.index
 
-    property time_base:
+
+    @property
+    def time_base(self):
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
         :type: :class:`~fractions.Fraction` or ``None``
 
         """
-        def __get__(self):
-            return avrational_to_fraction(&self.ptr.time_base)
+        return avrational_to_fraction(&self.ptr.time_base)
 
     cdef _set_time_base(self, value):
         """
@@ -248,7 +250,8 @@ cdef class Stream:
         """
         to_avrational(value, &self.ptr.time_base)
 
-    property average_rate:
+    @property
+    def average_rate(self):
         """
         The average frame rate of this video stream.
 
@@ -259,10 +262,10 @@ cdef class Stream:
 
 
         """
-        def __get__(self):
-            return avrational_to_fraction(&self.ptr.avg_frame_rate)
+        return avrational_to_fraction(&self.ptr.avg_frame_rate)
 
-    property base_rate:
+    @property
+    def base_rate(self):
         """
         The base frame rate of this stream.
 
@@ -273,10 +276,10 @@ cdef class Stream:
         :type: :class:`~fractions.Fraction` or ``None``
 
         """
-        def __get__(self):
-            return avrational_to_fraction(&self.ptr.r_frame_rate)
+        return avrational_to_fraction(&self.ptr.r_frame_rate)
 
-    property guessed_rate:
+    @property
+    def guessed_rate(self):
         """The guessed frame rate of this stream.
 
         This is a wrapper around :ffmpeg:`av_guess_frame_rate`, and uses multiple
@@ -285,34 +288,34 @@ cdef class Stream:
         :type: :class:`~fractions.Fraction` or ``None``
 
         """
-        def __get__(self):
-            # The two NULL arguments aren't used in FFmpeg >= 4.0
-            cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self.ptr, NULL)
-            return avrational_to_fraction(&val)
+        # The two NULL arguments aren't used in FFmpeg >= 4.0
+        cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self.ptr, NULL)
+        return avrational_to_fraction(&val)
 
-    property start_time:
+    @property
+    def start_time(self):
         """
         The presentation timestamp in :attr:`time_base` units of the first
         frame in this stream.
 
         :type: :class:`int` or ``None``
         """
-        def __get__(self):
-            if self.ptr.start_time != lib.AV_NOPTS_VALUE:
-                return self.ptr.start_time
+        if self.ptr.start_time != lib.AV_NOPTS_VALUE:
+            return self.ptr.start_time
 
-    property duration:
+    @property
+    def duration(self):
         """
         The duration of this stream in :attr:`time_base` units.
 
         :type: :class:`int` or ``None``
 
         """
-        def __get__(self):
-            if self.ptr.duration != lib.AV_NOPTS_VALUE:
-                return self.ptr.duration
+        if self.ptr.duration != lib.AV_NOPTS_VALUE:
+            return self.ptr.duration
 
-    property frames:
+    @property
+    def frames(self):
         """
         The number of frames this stream contains.
 
@@ -320,17 +323,16 @@ cdef class Stream:
 
         :type: :class:`int`
         """
-        def __get__(self):
-            return self.ptr.nb_frames
+        return self.ptr.nb_frames
 
-    property language:
+    @property
+    def language(self):
         """
         The language of the stream.
 
         :type: :class:`str` or ``None``
         """
-        def __get__(self):
-            return self.metadata.get('language')
+        return self.metadata.get('language')
 
     @property
     def type(self):

@@ -94,34 +94,37 @@ cdef class Packet(Buffer):
         res = self._stream.decode(self)
         return res[0] if res else None
 
-    property stream_index:
-        def __get__(self):
-            return self.ptr.stream_index
+    @property
+    def stream_index(self):
+        return self.ptr.stream_index
 
-    property stream:
+    @property
+    def stream(self):
         """
         The :class:`Stream` this packet was demuxed from.
         """
-        def __get__(self):
-            return self._stream
+        return self._stream
 
-        def __set__(self, Stream stream):
-            self._stream = stream
-            self.ptr.stream_index = stream.ptr.index
+    @stream.setter
+    def stream(self, Stream stream):
+        self._stream = stream
+        self.ptr.stream_index = stream.ptr.index
 
-    property time_base:
+    @property
+    def time_base(self):
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
         :type: fractions.Fraction
         """
-        def __get__(self):
-            return avrational_to_fraction(&self._time_base)
+        return avrational_to_fraction(&self._time_base)
 
-        def __set__(self, value):
-            to_avrational(value, &self._time_base)
+    @time_base.setter
+    def time_base(self, value):
+        to_avrational(value, &self._time_base)
 
-    property pts:
+    @property
+    def pts(self):
         """
         The presentation timestamp in :attr:`time_base` units for this packet.
 
@@ -129,33 +132,35 @@ cdef class Packet(Buffer):
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.pts != lib.AV_NOPTS_VALUE:
-                return self.ptr.pts
+        if self.ptr.pts != lib.AV_NOPTS_VALUE:
+            return self.ptr.pts
 
-        def __set__(self, v):
-            if v is None:
-                self.ptr.pts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.pts = v
+    @pts.setter
+    def pts(self, v):
+        if v is None:
+            self.ptr.pts = lib.AV_NOPTS_VALUE
+        else:
+            self.ptr.pts = v
 
-    property dts:
+    @property
+    def dts(self):
         """
         The decoding timestamp in :attr:`time_base` units for this packet.
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.dts != lib.AV_NOPTS_VALUE:
-                return self.ptr.dts
+        if self.ptr.dts != lib.AV_NOPTS_VALUE:
+            return self.ptr.dts
 
-        def __set__(self, v):
-            if v is None:
-                self.ptr.dts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.dts = v
+    @dts.setter
+    def dts(self, v):
+        if v is None:
+            self.ptr.dts = lib.AV_NOPTS_VALUE
+        else:
+            self.ptr.dts = v
 
-    property pos:
+    @property
+    def pos(self):
         """
         The byte position of this packet within the :class:`.Stream`.
 
@@ -163,20 +168,20 @@ cdef class Packet(Buffer):
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.pos != -1:
-                return self.ptr.pos
+        if self.ptr.pos != -1:
+            return self.ptr.pos
 
-    property size:
+    @property
+    def size(self):
         """
         The size in bytes of this packet's data.
 
         :type: int
         """
-        def __get__(self):
-            return self.ptr.size
+        return self.ptr.size
 
-    property duration:
+    @property
+    def duration(self):
         """
         The duration in :attr:`time_base` units for this packet.
 
@@ -184,24 +189,26 @@ cdef class Packet(Buffer):
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.duration != lib.AV_NOPTS_VALUE:
-                return self.ptr.duration
+        if self.ptr.duration != lib.AV_NOPTS_VALUE:
+            return self.ptr.duration
 
-    property is_keyframe:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
+    @property
+    def is_keyframe(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
 
-        def __set__(self, v):
-            if v:
-                self.ptr.flags |= lib.AV_PKT_FLAG_KEY
-            else:
-                self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
+    @is_keyframe.setter
+    def is_keyframe(self, v):
+        if v:
+            self.ptr.flags |= lib.AV_PKT_FLAG_KEY
+        else:
+            self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
 
-    property is_corrupt:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
+    @property
+    def is_corrupt(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
 
-        def __set__(self, v):
-            if v:
-                self.ptr.flags |= lib.AV_PKT_FLAG_CORRUPT
-            else:
-                self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
+    @is_corrupt.setter
+    def is_corrupt(self, v):
+        if v:
+            self.ptr.flags |= lib.AV_PKT_FLAG_CORRUPT
+        else:
+            self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
