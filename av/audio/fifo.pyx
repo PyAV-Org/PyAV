@@ -173,19 +173,19 @@ cdef class AudioFifo:
 
         return frames
 
-    property format:
+    @property
+    def format(self):
         """The :class:`.AudioFormat` of this FIFO."""
-        def __get__(self):
-            return self.template.format
-    property layout:
+        return self.template.format
+    @property
+    def layout(self):
         """The :class:`.AudioLayout` of this FIFO."""
-        def __get__(self):
-            return self.template.layout
-    property sample_rate:
-        def __get__(self):
-            return self.template.sample_rate
+        return self.template.layout
+    @property
+    def sample_rate(self):
+        return self.template.sample_rate
 
-    property samples:
+    @property
+    def samples(self):
         """Number of audio samples (per channel) in the buffer."""
-        def __get__(self):
-            return lib.av_audio_fifo_size(self.ptr) if self.ptr else 0
+        return lib.av_audio_fifo_size(self.ptr) if self.ptr else 0

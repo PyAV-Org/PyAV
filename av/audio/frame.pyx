@@ -141,34 +141,36 @@ cdef class AudioFrame(Frame):
 
         return tuple([AudioPlane(self, i) for i in range(plane_count)])
 
-    property samples:
+    @property
+    def samples(self):
         """
         Number of audio samples (per channel).
 
         :type: int
         """
-        def __get__(self):
-            return self.ptr.nb_samples
+        return self.ptr.nb_samples
 
-    property sample_rate:
+    @property
+    def sample_rate(self):
         """
         Sample rate of the audio data, in samples per second.
 
         :type: int
         """
-        def __get__(self):
-            return self.ptr.sample_rate
+        return self.ptr.sample_rate
 
-        def __set__(self, value):
-            self.ptr.sample_rate = value
+    @sample_rate.setter
+    def sample_rate(self, value):
+        self.ptr.sample_rate = value
 
-    property rate:
+    @property
+    def rate(self):
         """Another name for :attr:`sample_rate`."""
-        def __get__(self):
-            return self.ptr.sample_rate
+        return self.ptr.sample_rate
 
-        def __set__(self, value):
-            self.ptr.sample_rate = value
+    @rate.setter
+    def rate(self, value):
+        self.ptr.sample_rate = value
 
     def to_ndarray(self, **kwargs):
         """Get a numpy array of this frame.
