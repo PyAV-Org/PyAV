@@ -31,61 +31,61 @@ cdef class Filter:
         if not self.ptr:
             raise ValueError(f"no filter {name}")
 
-    property descriptor:
-        def __get__(self):
-            if self._descriptor is None:
-                self._descriptor = wrap_avclass(self.ptr.priv_class)
-            return self._descriptor
+    @property
+    def descriptor(self):
+        if self._descriptor is None:
+            self._descriptor = wrap_avclass(self.ptr.priv_class)
+        return self._descriptor
 
-    property options:
-        def __get__(self):
-            if self.descriptor is None:
-                return
-            return self.descriptor.options
+    @property
+    def options(self):
+        if self.descriptor is None:
+            return
+        return self.descriptor.options
 
-    property name:
-        def __get__(self):
-            return self.ptr.name
+    @property
+    def name(self):
+        return self.ptr.name
 
-    property description:
-        def __get__(self):
-            return self.ptr.description
+    @property
+    def description(self):
+        return self.ptr.description
 
-    property flags:
-        def __get__(self):
-            return self.ptr.flags
+    @property
+    def flags(self):
+        return self.ptr.flags
 
-    property dynamic_inputs:
-        def __get__(self):
-            return bool(self.ptr.flags & lib.AVFILTER_FLAG_DYNAMIC_INPUTS)
+    @property
+    def dynamic_inputs(self):
+        return bool(self.ptr.flags & lib.AVFILTER_FLAG_DYNAMIC_INPUTS)
 
-    property dynamic_outputs:
-        def __get__(self):
-            return bool(self.ptr.flags & lib.AVFILTER_FLAG_DYNAMIC_OUTPUTS)
+    @property
+    def dynamic_outputs(self):
+        return bool(self.ptr.flags & lib.AVFILTER_FLAG_DYNAMIC_OUTPUTS)
 
-    property timeline_support:
-        def __get__(self):
-            return bool(self.ptr.flags & lib.AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC)
+    @property
+    def timeline_support(self):
+        return bool(self.ptr.flags & lib.AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC)
 
-    property slice_threads:
-        def __get__(self):
-            return bool(self.ptr.flags & lib.AVFILTER_FLAG_SLICE_THREADS)
+    @property
+    def slice_threads(self):
+        return bool(self.ptr.flags & lib.AVFILTER_FLAG_SLICE_THREADS)
 
-    property command_support:
-        def __get__(self):
-            return self.ptr.process_command != NULL
+    @property
+    def command_support(self):
+        return self.ptr.process_command != NULL
 
-    property inputs:
-        def __get__(self):
-            if self._inputs is None:
-                self._inputs = alloc_filter_pads(self, self.ptr.inputs, True)
-            return self._inputs
+    @property
+    def inputs(self):
+        if self._inputs is None:
+            self._inputs = alloc_filter_pads(self, self.ptr.inputs, True)
+        return self._inputs
 
-    property outputs:
-        def __get__(self):
-            if self._outputs is None:
-                self._outputs = alloc_filter_pads(self, self.ptr.outputs, False)
-            return self._outputs
+    @property
+    def outputs(self):
+        if self._outputs is None:
+            self._outputs = alloc_filter_pads(self, self.ptr.outputs, False)
+        return self._outputs
 
 
 cdef get_filter_names():

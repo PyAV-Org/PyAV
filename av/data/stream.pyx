@@ -15,9 +15,9 @@ cdef class DataStream(Stream):
     def decode(self, packet=None, count=0):
         return []
 
-    property name:
-        def __get__(self):
-            cdef const lib.AVCodecDescriptor *desc = lib.avcodec_descriptor_get(self.ptr.codecpar.codec_id)
-            if desc == NULL:
-                return None
-            return desc.name
+    @property
+    def name(self):
+        cdef const lib.AVCodecDescriptor *desc = lib.avcodec_descriptor_get(self.ptr.codecpar.codec_id)
+        if desc == NULL:
+            return None
+        return desc.name

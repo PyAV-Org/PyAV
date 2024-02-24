@@ -20,14 +20,14 @@ cdef class SubtitleSet:
             id(self),
         )
 
-    property format:
-        def __get__(self): return self.proxy.struct.format
-    property start_display_time:
-        def __get__(self): return self.proxy.struct.start_display_time
-    property end_display_time:
-        def __get__(self): return self.proxy.struct.end_display_time
-    property pts:
-        def __get__(self): return self.proxy.struct.pts
+    @property
+    def format(self): return self.proxy.struct.format
+    @property
+    def start_display_time(self): return self.proxy.struct.start_display_time
+    @property
+    def end_display_time(self): return self.proxy.struct.end_display_time
+    @property
+    def pts(self): return self.proxy.struct.pts
 
     def __len__(self):
         return len(self.rects)
@@ -110,16 +110,16 @@ cdef class BitmapSubtitle(Subtitle):
             id(self),
         )
 
-    property x:
-        def __get__(self): return self.ptr.x
-    property y:
-        def __get__(self): return self.ptr.y
-    property width:
-        def __get__(self): return self.ptr.w
-    property height:
-        def __get__(self): return self.ptr.h
-    property nb_colors:
-        def __get__(self): return self.ptr.nb_colors
+    @property
+    def x(self): return self.ptr.x
+    @property
+    def y(self): return self.ptr.y
+    @property
+    def width(self): return self.ptr.w
+    @property
+    def height(self): return self.ptr.h
+    @property
+    def nb_colors(self): return self.ptr.nb_colors
 
     def __len__(self):
         return len(self.planes)
@@ -161,8 +161,8 @@ cdef class TextSubtitle(Subtitle):
             id(self),
         )
 
-    property text:
-        def __get__(self): return self.ptr.text
+    @property
+    def text(self): return self.ptr.text
 
 
 cdef class AssSubtitle(Subtitle):
@@ -175,5 +175,5 @@ cdef class AssSubtitle(Subtitle):
             id(self),
         )
 
-    property ass:
-        def __get__(self): return self.ptr.ass
+    @property
+    def ass(self): return self.ptr.ass
