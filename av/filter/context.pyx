@@ -33,22 +33,22 @@ cdef class FilterContext:
         parent = self.filter.ptr.name if self.filter and self.filter.ptr != NULL else None
         return f"<av.FilterContext {name} of {parent!r} at 0x{id(self):x}>"
 
-    property name:
-        def __get__(self):
-            if self.ptr.name != NULL:
-                return self.ptr.name
+    @property
+    def name(self):
+        if self.ptr.name != NULL:
+            return self.ptr.name
 
-    property inputs:
-        def __get__(self):
-            if self._inputs is None:
-                self._inputs = alloc_filter_pads(self.filter, self.ptr.input_pads, True, self)
-            return self._inputs
+    @property
+    def inputs(self):
+        if self._inputs is None:
+            self._inputs = alloc_filter_pads(self.filter, self.ptr.input_pads, True, self)
+        return self._inputs
 
-    property outputs:
-        def __get__(self):
-            if self._outputs is None:
-                self._outputs = alloc_filter_pads(self.filter, self.ptr.output_pads, False, self)
-            return self._outputs
+    @property
+    def outputs(self):
+        if self._outputs is None:
+            self._outputs = alloc_filter_pads(self.filter, self.ptr.output_pads, False, self)
+        return self._outputs
 
     def init(self, args=None, **kwargs):
         if self.inited:
