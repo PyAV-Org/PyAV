@@ -11,7 +11,7 @@ class TestColorSpace(TestCase):
         )
         stream = container.streams.video[0]
 
-        self.assertEqual(stream.color_range, None)
+        self.assertEqual(stream.codec_context.color_range, 2)
 
         for packet in container.demux(stream):
             for frame in packet.decode():

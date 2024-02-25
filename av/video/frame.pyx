@@ -158,29 +158,37 @@ cdef class VideoFrame(Frame):
             plane_count += 1
         return tuple([VideoPlane(self, i) for i in range(plane_count)])
 
-    property width:
+    @property
+    def width(self):
         """Width of the image, in pixels."""
-        def __get__(self): return self.ptr.width
+        return self.ptr.width
 
-    property height:
+
+    @property
+    def height(self):
         """Height of the image, in pixels."""
-        def __get__(self): return self.ptr.height
+        return self.ptr.height
 
-    property key_frame:
+
+    @property
+    def key_frame(self):
         """Is this frame a key frame?
 
         Wraps :ffmpeg:`AVFrame.key_frame`.
 
         """
-        def __get__(self): return self.ptr.key_frame
+        return self.ptr.key_frame
 
-    property interlaced_frame:
+
+    @property
+    def interlaced_frame(self):
         """Is this frame an interlaced or progressive?
 
         Wraps :ffmpeg:`AVFrame.interlaced_frame`.
 
         """
-        def __get__(self): return self.ptr.interlaced_frame
+        return self.ptr.interlaced_frame
+
 
     @property
     def pict_type(self):

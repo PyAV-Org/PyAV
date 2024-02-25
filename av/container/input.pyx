@@ -87,27 +87,27 @@ cdef class InputContainer(Container):
     def __dealloc__(self):
         close_input(self)
 
-    property start_time:
-        def __get__(self):
-            self._assert_open()
-            if self.ptr.start_time != lib.AV_NOPTS_VALUE:
-                return self.ptr.start_time
+    @property
+    def start_time(self):
+        self._assert_open()
+        if self.ptr.start_time != lib.AV_NOPTS_VALUE:
+            return self.ptr.start_time
 
-    property duration:
-        def __get__(self):
-            self._assert_open()
-            if self.ptr.duration != lib.AV_NOPTS_VALUE:
-                return self.ptr.duration
+    @property
+    def duration(self):
+        self._assert_open()
+        if self.ptr.duration != lib.AV_NOPTS_VALUE:
+            return self.ptr.duration
 
-    property bit_rate:
-        def __get__(self):
-            self._assert_open()
-            return self.ptr.bit_rate
+    @property
+    def bit_rate(self):
+        self._assert_open()
+        return self.ptr.bit_rate
 
-    property size:
-        def __get__(self):
-            self._assert_open()
-            return lib.avio_size(self.ptr.pb)
+    @property
+    def size(self):
+        self._assert_open()
+        return lib.avio_size(self.ptr.pb)
 
     def close(self):
         close_input(self)

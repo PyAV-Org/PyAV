@@ -27,14 +27,14 @@ cdef class VideoPlane(Plane):
     cdef size_t _buffer_size(self):
         return self.buffer_size
 
-    property line_size:
+    @property
+    def line_size(self):
         """
         Bytes per horizontal line in this plane.
 
         :type: int
         """
-        def __get__(self):
-            return self.frame.ptr.linesize[self.index]
+        return self.frame.ptr.linesize[self.index]
 
 
 cdef class YUVPlanes(VideoPlane):

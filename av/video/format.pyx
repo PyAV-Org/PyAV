@@ -60,39 +60,50 @@ cdef class VideoFormat:
     def __int__(self):
         return int(self.pix_fmt)
 
-    property name:
+    @property
+    def name(self):
         """Canonical name of the pixel format."""
-        def __get__(self):
-            return <str>self.ptr.name
+        return <str>self.ptr.name
 
-    property bits_per_pixel:
-        def __get__(self): return lib.av_get_bits_per_pixel(self.ptr)
+    @property
+    def bits_per_pixel(self):
+        return lib.av_get_bits_per_pixel(self.ptr)
 
-    property padded_bits_per_pixel:
-        def __get__(self): return lib.av_get_padded_bits_per_pixel(self.ptr)
+    @property
+    def padded_bits_per_pixel(self): return lib.av_get_padded_bits_per_pixel(self.ptr)
 
-    property is_big_endian:
+    @property
+    def is_big_endian(self):
         """Pixel format is big-endian."""
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BE)
+        return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BE)
 
-    property has_palette:
+
+    @property
+    def has_palette(self):
         """Pixel format has a palette in data[1], values are indexes in this palette."""
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PAL)
+        return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PAL)
 
-    property is_bit_stream:
+
+    @property
+    def is_bit_stream(self):
         """All values of a component are bit-wise packed end to end."""
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BITSTREAM)
+        return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BITSTREAM)
+
 
     # Skipping PIX_FMT_HWACCEL
     # """Pixel format is an HW accelerated format."""
 
-    property is_planar:
+    @property
+    def is_planar(self):
         """At least one pixel component is not in the first data plane."""
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PLANAR)
+        return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PLANAR)
 
-    property is_rgb:
+
+    @property
+    def is_rgb(self):
         """The pixel format contains RGB-like data (as opposed to YUV/grayscale)."""
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_RGB)
+        return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_RGB)
+
 
     cpdef chroma_width(self, int luma_width=0):
         """chroma_width(luma_width=0)
@@ -124,53 +135,53 @@ cdef class VideoFormatComponent:
         self.index = index
         self.ptr = &format.ptr.comp[index]
 
-    property plane:
+    @property
+    def plane(self):
         """The index of the plane which contains this component."""
-        def __get__(self):
-            return self.ptr.plane
+        return self.ptr.plane
 
-    property bits:
+    @property
+    def bits(self):
         """Number of bits in the component."""
-        def __get__(self):
-            return self.ptr.depth
+        return self.ptr.depth
 
-    property is_alpha:
+    @property
+    def is_alpha(self):
         """Is this component an alpha channel?"""
-        def __get__(self):
-            return ((self.index == 1 and self.format.ptr.nb_components == 2) or
-                    (self.index == 3 and self.format.ptr.nb_components == 4))
+        return ((self.index == 1 and self.format.ptr.nb_components == 2) or
+                (self.index == 3 and self.format.ptr.nb_components == 4))
 
-    property is_luma:
+    @property
+    def is_luma(self):
         """Is this compoment a luma channel?"""
-        def __get__(self):
-            return self.index == 0 and (
-                self.format.ptr.nb_components == 1 or
-                self.format.ptr.nb_components == 2 or
-                not self.format.is_rgb
-            )
+        return self.index == 0 and (
+            self.format.ptr.nb_components == 1 or
+            self.format.ptr.nb_components == 2 or
+            not self.format.is_rgb
+        )
 
-    property is_chroma:
+    @property
+    def is_chroma(self):
         """Is this component a chroma channel?"""
-        def __get__(self):
-            return (self.index == 1 or self.index == 2) and (self.format.ptr.log2_chroma_w or self.format.ptr.log2_chroma_h)
+        return (self.index == 1 or self.index == 2) and (self.format.ptr.log2_chroma_w or self.format.ptr.log2_chroma_h)
 
-    property width:
+    @property
+    def width(self):
         """The width of this component's plane.
 
         Requires the parent :class:`VideoFormat` to have a width.
 
         """
-        def __get__(self):
-            return self.format.chroma_width() if self.is_chroma else self.format.width
+        return self.format.chroma_width() if self.is_chroma else self.format.width
 
-    property height:
+    @property
+    def height(self):
         """The height of this component's plane.
 
         Requires the parent :class:`VideoFormat` to have a height.
 
         """
-        def __get__(self):
-            return self.format.chroma_height() if self.is_chroma else self.format.height
+        return self.format.chroma_height() if self.is_chroma else self.format.height
 
 
 names = set()
