@@ -29,6 +29,8 @@ If you want to use your existing FFmpeg, the source version of PyAV is on [PyPI]
 pip install av --no-binary av
 ```
 
+Installing from source is not supported on Windows.
+
 Alternative installation methods
 --------------------------------
 
@@ -40,10 +42,10 @@ conda install av -c conda-forge
 
 See the [Conda install][conda-install] docs to get started with (mini)Conda.
 
-And if you want to build from the absolute source (for development or testing):
+And if you want to build from the absolute source (POSIX only):
 
 ```bash
-git clone git@github.com:PyAV-Org/PyAV
+git clone https://github.com/PyAV-Org/PyAV.git
 cd PyAV
 source scripts/activate.sh
 
@@ -54,6 +56,7 @@ pip install --upgrade -r tests/requirements.txt
 
 # Build PyAV.
 make
+pip install .
 ```
 
 ---
