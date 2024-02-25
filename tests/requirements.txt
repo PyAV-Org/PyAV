@@ -1,7 +1,6 @@
 autopep8
 black
 cython
-editorconfig
 flake8
 isort
 numpy
