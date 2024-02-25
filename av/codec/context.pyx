@@ -215,44 +215,45 @@ cdef class CodecContext:
     skip_manual = flags2.flag_property("SKIP_MANUAL")
     ro_flush_noop = flags2.flag_property("RO_FLUSH_NOOP")
 
-    property extradata:
-        def __get__(self):
-            if self.ptr.extradata_size > 0:
-                return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
-            else:
-                return None
+    @property
+    def extradata(self):
+        if self.ptr.extradata_size > 0:
+            return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
+        else:
+            return None
 
-        def __set__(self, data):
-            if not self.is_decoder:
-                raise ValueError("Can only set extradata for decoders.")
+    @extradata.setter
+    def extradata(self, data):
+        if not self.is_decoder:
+            raise ValueError("Can only set extradata for decoders.")
 
-            if data is None:
-                lib.av_freep(&self.ptr.extradata)
-                self.ptr.extradata_size = 0
-            else:
-                source = bytesource(data)
-                self.ptr.extradata = <uint8_t*>lib.av_realloc(self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE)
-                if not self.ptr.extradata:
-                    raise MemoryError("Cannot allocate extradata")
-                memcpy(self.ptr.extradata, source.ptr, source.length)
-                self.ptr.extradata_size = source.length
-            self.extradata_set = True
+        if data is None:
+            lib.av_freep(&self.ptr.extradata)
+            self.ptr.extradata_size = 0
+        else:
+            source = bytesource(data)
+            self.ptr.extradata = <uint8_t*>lib.av_realloc(self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE)
+            if not self.ptr.extradata:
+                raise MemoryError("Cannot allocate extradata")
+            memcpy(self.ptr.extradata, source.ptr, source.length)
+            self.ptr.extradata_size = source.length
+        self.extradata_set = True
 
-    property extradata_size:
-        def __get__(self):
-            return self.ptr.extradata_size
+    @property
+    def extradata_size(self):
+        return self.ptr.extradata_size
 
-    property is_open:
-        def __get__(self):
-            return lib.avcodec_is_open(self.ptr)
+    @property
+    def is_open(self):
+        return lib.avcodec_is_open(self.ptr)
 
-    property is_encoder:
-        def __get__(self):
-            return lib.av_codec_is_encoder(self.ptr.codec)
+    @property
+    def is_encoder(self):
+        return lib.av_codec_is_encoder(self.ptr.codec)
 
-    property is_decoder:
-        def __get__(self):
-            return lib.av_codec_is_decoder(self.ptr.codec)
+    @property
+    def is_decoder(self):
+        return lib.av_codec_is_decoder(self.ptr.codec)
 
     cpdef open(self, bint strict=True):
         if lib.avcodec_is_open(self.ptr):
@@ -521,122 +522,125 @@ cdef class CodecContext:
 
         frame.index = self.ptr.frame_number - 1
 
-    property name:
-        def __get__(self):
-            return self.codec.name
+    @property
+    def name(self):
+        return self.codec.name
 
-    property type:
-        def __get__(self):
-            return self.codec.type
+    @property
+    def type(self):
+        return self.codec.type
 
-    property profile:
-        def __get__(self):
-            if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
-                return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
+    @property
+    def profile(self):
+        if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
+            return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
 
-    property time_base:
-        def __get__(self):
-            if self.is_decoder:
-                warnings.warn(
-                    "Using CodecContext.time_base for decoders is deprecated.",
-                    AVDeprecationWarning
-                )
-            return avrational_to_fraction(&self.ptr.time_base)
+    @property
+    def time_base(self):
+        if self.is_decoder:
+            warnings.warn(
+                "Using CodecContext.time_base for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        return avrational_to_fraction(&self.ptr.time_base)
 
-        def __set__(self, value):
-            if self.is_decoder:
-                warnings.warn(
-                    "Using CodecContext.time_base for decoders is deprecated.",
-                    AVDeprecationWarning
-                )
-            to_avrational(value, &self.ptr.time_base)
+    @time_base.setter
+    def time_base(self, value):
+        if self.is_decoder:
+            warnings.warn(
+                "Using CodecContext.time_base for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        to_avrational(value, &self.ptr.time_base)
 
-    property codec_tag:
-        def __get__(self):
-            return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
-                encoding="ascii")
+    @property
+    def codec_tag(self):
+        return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
+            encoding="ascii")
 
-        def __set__(self, value):
-            if isinstance(value, str) and len(value) == 4:
-                self.ptr.codec_tag = int.from_bytes(value.encode(encoding="ascii"),
-                                                    byteorder="little", signed=False)
-            else:
-                raise ValueError("Codec tag should be a 4 character string.")
+    @codec_tag.setter
+    def codec_tag(self, value):
+        if isinstance(value, str) and len(value) == 4:
+            self.ptr.codec_tag = int.from_bytes(value.encode(encoding="ascii"),
+                                                byteorder="little", signed=False)
+        else:
+            raise ValueError("Codec tag should be a 4 character string.")
 
-    property ticks_per_frame:
-        def __get__(self):
-            return self.ptr.ticks_per_frame
+    @property
+    def ticks_per_frame(self):
+        return self.ptr.ticks_per_frame
 
-    property bit_rate:
-        def __get__(self):
-            return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
+    @property
+    def bit_rate(self):
+        return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
 
-        def __set__(self, int value):
-            self.ptr.bit_rate = value
+    @bit_rate.setter
+    def bit_rate(self, int value):
+        self.ptr.bit_rate = value
 
-    property max_bit_rate:
-        def __get__(self):
-            if self.ptr.rc_max_rate > 0:
-                return self.ptr.rc_max_rate
-            else:
-                return None
+    @property
+    def max_bit_rate(self):
+        if self.ptr.rc_max_rate > 0:
+            return self.ptr.rc_max_rate
+        else:
+            return None
 
-    property bit_rate_tolerance:
-        def __get__(self):
-            self.ptr.bit_rate_tolerance
+    @property
+    def bit_rate_tolerance(self):
+        self.ptr.bit_rate_tolerance
 
-        def __set__(self, int value):
-            self.ptr.bit_rate_tolerance = value
+    @bit_rate_tolerance.setter
+    def bit_rate_tolerance(self, int value):
+        self.ptr.bit_rate_tolerance = value
 
-    property thread_count:
+    @property
+    def thread_count(self):
         """How many threads to use; 0 means auto.
 
         Wraps :ffmpeg:`AVCodecContext.thread_count`.
 
         """
+        return self.ptr.thread_count
 
-        def __get__(self):
-            return self.ptr.thread_count
+    @thread_count.setter
+    def thread_count(self, int value):
+        if lib.avcodec_is_open(self.ptr):
+            raise RuntimeError("Cannot change thread_count after codec is open.")
+        self.ptr.thread_count = value
 
-        def __set__(self, int value):
-            if lib.avcodec_is_open(self.ptr):
-                raise RuntimeError("Cannot change thread_count after codec is open.")
-            self.ptr.thread_count = value
-
-    property thread_type:
+    @property
+    def thread_type(self):
         """One of :class:`.ThreadType`.
 
         Wraps :ffmpeg:`AVCodecContext.thread_type`.
 
         """
+        return ThreadType.get(self.ptr.thread_type, create=True)
 
-        def __get__(self):
-            return ThreadType.get(self.ptr.thread_type, create=True)
+    @thread_type.setter
+    def thread_type(self, value):
+        if lib.avcodec_is_open(self.ptr):
+            raise RuntimeError("Cannot change thread_type after codec is open.")
+        self.ptr.thread_type = ThreadType[value].value
 
-        def __set__(self, value):
-            if lib.avcodec_is_open(self.ptr):
-                raise RuntimeError("Cannot change thread_type after codec is open.")
-            self.ptr.thread_type = ThreadType[value].value
-
-    property skip_frame:
+    @property
+    def skip_frame(self):
         """One of :class:`.SkipType`.
 
         Wraps ffmpeg:`AVCodecContext.skip_frame`.
 
         """
+        return SkipType._get(self.ptr.skip_frame, create=True)
 
-        def __get__(self):
-            return SkipType._get(self.ptr.skip_frame, create=True)
+    @skip_frame.setter
+    def skip_frame(self, value):
+        self.ptr.skip_frame = SkipType[value].value
 
-        def __set__(self, value):
-            self.ptr.skip_frame = SkipType[value].value
-
-    property delay:
+    @property
+    def delay(self):
         """Codec delay.
 
         Wraps :ffmpeg:`AVCodecContext.delay`.
 
         """
-
-        def __get__(self):
-            return self.ptr.delay
+        return self.ptr.delay

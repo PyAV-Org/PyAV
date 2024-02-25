@@ -70,116 +70,124 @@ cdef class VideoCodecContext(CodecContext):
     cdef _build_format(self):
         self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
 
-    property format:
-        def __get__(self):
-            return self._format
+    @property
+    def format(self):
+        return self._format
 
-        def __set__(self, VideoFormat format):
-            self.ptr.pix_fmt = format.pix_fmt
-            self.ptr.width = format.width
-            self.ptr.height = format.height
-            self._build_format()  # Kinda wasteful.
+    @format.setter
+    def format(self, VideoFormat format):
+        self.ptr.pix_fmt = format.pix_fmt
+        self.ptr.width = format.width
+        self.ptr.height = format.height
+        self._build_format()  # Kinda wasteful.
 
-    property width:
-        def __get__(self):
-            return self.ptr.width
+    @property
+    def width(self):
+        return self.ptr.width
 
-        def __set__(self, unsigned int value):
-            self.ptr.width = value
-            self._build_format()
+    @width.setter
+    def width(self, unsigned int value):
+        self.ptr.width = value
+        self._build_format()
 
-    property height:
-        def __get__(self):
-            return self.ptr.height
+    @property
+    def height(self):
+        return self.ptr.height
 
-        def __set__(self, unsigned int value):
-            self.ptr.height = value
-            self._build_format()
+    @height.setter
+    def height(self, unsigned int value):
+        self.ptr.height = value
+        self._build_format()
 
-    property pix_fmt:
+    @property
+    def pix_fmt(self):
         """
         The pixel format's name.
 
         :type: str
         """
-        def __get__(self):
-            return self._format.name
+        return self._format.name
 
-        def __set__(self, value):
-            self.ptr.pix_fmt = get_pix_fmt(value)
-            self._build_format()
+    @pix_fmt.setter
+    def pix_fmt(self, value):
+        self.ptr.pix_fmt = get_pix_fmt(value)
+        self._build_format()
 
-    property framerate:
+    @property
+    def framerate(self):
         """
         The frame rate, in frames per second.
 
         :type: fractions.Fraction
         """
-        def __get__(self):
-            return avrational_to_fraction(&self.ptr.framerate)
+        return avrational_to_fraction(&self.ptr.framerate)
 
-        def __set__(self, value):
-            to_avrational(value, &self.ptr.framerate)
+    @framerate.setter
+    def framerate(self, value):
+        to_avrational(value, &self.ptr.framerate)
 
-    property rate:
+    @property
+    def rate(self):
         """Another name for :attr:`framerate`."""
-        def __get__(self):
-            return self.framerate
+        return self.framerate
 
-        def __set__(self, value):
-            self.framerate = value
+    @rate.setter
+    def rate(self, value):
+        self.framerate = value
 
-    property gop_size:
+    @property
+    def gop_size(self):
         """
         Sets the number of frames between keyframes. Used only for encoding.
         
         :type: int
         """
-        def __get__(self):
-            if self.is_decoder:
-                warnings.warn(
-                    "Using VideoCodecContext.gop_size for decoders is deprecated.",
-                    AVDeprecationWarning
-                )
-            return self.ptr.gop_size
+        if self.is_decoder:
+            warnings.warn(
+                "Using VideoCodecContext.gop_size for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        return self.ptr.gop_size
 
-        def __set__(self, int value):
-            if self.is_decoder:
-                warnings.warn(
-                    "Using VideoCodecContext.gop_size for decoders is deprecated.",
-                    AVDeprecationWarning
-                )
-            self.ptr.gop_size = value
+    @gop_size.setter
+    def gop_size(self, int value):
+        if self.is_decoder:
+            warnings.warn(
+                "Using VideoCodecContext.gop_size for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        self.ptr.gop_size = value
 
-    property sample_aspect_ratio:
-        def __get__(self):
-            return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
+    @property
+    def sample_aspect_ratio(self):
+        return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
 
-        def __set__(self, value):
-            to_avrational(value, &self.ptr.sample_aspect_ratio)
+    @sample_aspect_ratio.setter
+    def sample_aspect_ratio(self, value):
+        to_avrational(value, &self.ptr.sample_aspect_ratio)
 
-    property display_aspect_ratio:
-        def __get__(self):
-            cdef lib.AVRational dar
+    @property
+    def display_aspect_ratio(self):
+        cdef lib.AVRational dar
 
-            lib.av_reduce(
-                &dar.num, &dar.den,
-                self.ptr.width * self.ptr.sample_aspect_ratio.num,
-                self.ptr.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
+        lib.av_reduce(
+            &dar.num, &dar.den,
+            self.ptr.width * self.ptr.sample_aspect_ratio.num,
+            self.ptr.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
 
-            return avrational_to_fraction(&dar)
+        return avrational_to_fraction(&dar)
 
-    property has_b_frames:
-        def __get__(self):
-            return bool(self.ptr.has_b_frames)
+    @property
+    def has_b_frames(self):
+        return bool(self.ptr.has_b_frames)
 
-    property coded_width:
-        def __get__(self):
-            return self.ptr.coded_width
+    @property
+    def coded_width(self):
+        return self.ptr.coded_width
 
-    property coded_height:
-        def __get__(self):
-            return self.ptr.coded_height
+    @property
+    def coded_height(self):
+        return self.ptr.coded_height
 
     @property
     def color_range(self):
@@ -188,20 +196,21 @@ cdef class VideoCodecContext(CodecContext):
 
         Wraps :ffmpeg:`AVFrame.color_range`.
         """
-        def __get__(self):
-            return self.ptr.color_range
+        return self.ptr.color_range
 
-        def __set__(self, value):
-            self.ptr.color_range = value
+    @color_range.setter
+    def color_range(self, value):
+        self.ptr.color_range = value
 
-    property max_b_frames:
+    @property
+    def max_b_frames(self):
         """
-	The maximum run of consecutive B frames when encoding a video.
+        The maximum run of consecutive B frames when encoding a video.
 
         :type: int
         """
-        def __get__(self):
-            return self.ptr.max_b_frames
+        return self.ptr.max_b_frames
 
-        def __set__(self, value):
-            self.ptr.max_b_frames = value
+    @max_b_frames.setter
+    def max_b_frames(self, value):
+        self.ptr.max_b_frames = value

@@ -209,17 +209,17 @@ cdef class Codec:
         from .context import CodecContext
         return CodecContext.create(self)
 
-    property is_decoder:
-        def __get__(self):
-            return not self.is_encoder
+    @property
+    def is_decoder(self):
+        return not self.is_encoder
 
-    property descriptor:
-        def __get__(self): return wrap_avclass(self.ptr.priv_class)
+    @property
+    def descriptor(self): return wrap_avclass(self.ptr.priv_class)
 
-    property name:
-        def __get__(self): return self.ptr.name or ""
-    property long_name:
-        def __get__(self): return self.ptr.long_name or ""
+    @property
+    def name(self): return self.ptr.name or ""
+    @property
+    def long_name(self): return self.ptr.long_name or ""
 
     @property
     def type(self):
@@ -231,8 +231,8 @@ cdef class Codec:
         """
         return lib.av_get_media_type_string(self.ptr.type)
 
-    property id:
-        def __get__(self): return self.ptr.id
+    @property
+    def id(self): return self.ptr.id
 
     @property
     def frame_rates(self):
