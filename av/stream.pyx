@@ -1,7 +1,7 @@
 import warnings
 
-from libc.stdint cimport int32_t
 cimport libav as lib
+from libc.stdint cimport int32_t
 
 from av.enum cimport define_enum
 from av.error cimport err_check
@@ -10,7 +10,7 @@ from av.utils cimport (
     avdict_to_dict,
     avrational_to_fraction,
     dict_to_avdict,
-    to_avrational
+    to_avrational,
 )
 
 from av.deprecation import AVDeprecationWarning

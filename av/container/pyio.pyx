@@ -1,8 +1,7 @@
-from libc.string cimport memcpy
 cimport libav as lib
+from libc.string cimport memcpy
 
 from av.error cimport stash_exception
-
 
 ctypedef int64_t (*seek_func_t)(void *opaque, int64_t offset, int whence) noexcept nogil
 

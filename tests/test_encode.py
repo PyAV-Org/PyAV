@@ -1,17 +1,16 @@
-from fractions import Fraction
-from unittest import SkipTest
 import io
 import math
+from fractions import Fraction
+from unittest import SkipTest
 
 import numpy as np
 
+import av
 from av import AudioFrame, VideoFrame
 from av.audio.stream import AudioStream
 from av.video.stream import VideoStream
-import av
 
 from .common import Image, TestCase, fate_suite
-
 
 WIDTH = 320
 HEIGHT = 240

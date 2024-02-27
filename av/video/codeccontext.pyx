@@ -1,7 +1,7 @@
 import warnings
 
-from libc.stdint cimport int64_t
 cimport libav as lib
+from libc.stdint cimport int64_t
 
 from av.codec.context cimport CodecContext
 from av.frame cimport Frame

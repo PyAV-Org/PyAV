@@ -5,7 +5,6 @@ from av.codec.codec import UnknownCodecError
 
 from .common import TestCase
 
-
 # some older ffmpeg versions have no native opus encoder
 try:
     opus_c = Codec("opus", "w")

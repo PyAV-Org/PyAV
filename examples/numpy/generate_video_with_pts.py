@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-from fractions import Fraction
 import colorsys
+from fractions import Fraction
 
 import numpy as np
 
 import av
-
 
 (width, height) = (640, 360)
 total_frames = 20

@@ -2,7 +2,7 @@ from cpython.buffer cimport (
     PyBUF_SIMPLE,
     PyBuffer_Release,
     PyObject_CheckBuffer,
-    PyObject_GetBuffer
+    PyObject_GetBuffer,
 )
 
 

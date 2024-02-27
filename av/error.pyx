@@ -2,14 +2,13 @@ cimport libav as lib
 
 from av.logging cimport get_last_error
 
-from threading import local
 import errno
 import os
 import sys
 import traceback
+from threading import local
 
 from av.enum import define_enum
-
 
 # Will get extended with all of the exceptions.
 __all__ = [

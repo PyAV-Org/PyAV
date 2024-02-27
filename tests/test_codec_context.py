@@ -1,12 +1,12 @@
-from fractions import Fraction
-from unittest import SkipTest
 import os
 import warnings
+from fractions import Fraction
+from unittest import SkipTest
 
+import av
 from av import AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
 from av.video.frame import PictureType
-import av
 
 from .common import TestCase, fate_suite
 

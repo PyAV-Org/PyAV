@@ -1,5 +1,5 @@
-from fractions import Fraction
 import warnings
+from fractions import Fraction
 
 import av
 
