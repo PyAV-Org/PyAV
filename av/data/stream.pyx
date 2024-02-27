@@ -3,11 +3,10 @@ cimport libav as lib
 
 cdef class DataStream(Stream):
     def __repr__(self):
-        cls_name = self.__class__.__name__
-        _type = self.type or "<notype>"
-        name = self.name or "<nocodec>"
-
-        return f"<av.{cls_name} #{self.index} {_type}/{name} at 0x{id(self):x}>"
+        return (
+            f"<av.{self.__class__.__name__} #{self.index} {self.type or '<notype>'}/"
+            f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
+        )
 
     def encode(self, frame=None):
         return []

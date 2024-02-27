@@ -17,7 +17,7 @@ cdef class VideoPlane(Plane):
                 self.height = component.height
                 break
         else:
-            raise RuntimeError("could not find plane %d of %r" % (index, frame.format))
+            raise RuntimeError(f"could not find plane {index} of {frame.format!r}")
 
         # Sometimes, linesize is negative (and that is meaningful). We are only
         # insisting that the buffer size be based on the extent of linesize, and

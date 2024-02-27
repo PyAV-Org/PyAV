@@ -7,18 +7,13 @@ cdef class SubtitleProxy:
 
 
 cdef class SubtitleSet:
-
     def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
         cdef int i
         self.rects = tuple(build_subtitle(self, i) for i in range(self.proxy.struct.num_rects))
 
     def __repr__(self):
-        return "<%s.%s at 0x%x>" % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            id(self),
-        )
+        return f"<{self.__class__.__module__}.{self.__class__.__name__} at 0x{id(self):x}>"
 
     @property
     def format(self): return self.proxy.struct.format
@@ -64,7 +59,6 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 
 
 cdef class Subtitle:
-
     def __cinit__(self, SubtitleSet subtitle, int index):
         if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
             raise ValueError("subtitle rect index out of range")
@@ -80,18 +74,13 @@ cdef class Subtitle:
         elif self.ptr.type == lib.SUBTITLE_ASS:
             self.type = b"ass"
         else:
-            raise ValueError("unknown subtitle type %r" % self.ptr.type)
+            raise ValueError(f"unknown subtitle type {self.ptr.type!r}")
 
     def __repr__(self):
-        return "<%s.%s at 0x%x>" % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            id(self),
-        )
+        return f"<{self.__class__.__module__}.{self.__class__.__name__} at 0x{id(self):x}>"
 
 
 cdef class BitmapSubtitle(Subtitle):
-
     def __cinit__(self, SubtitleSet subtitle, int index):
         self.planes = tuple(
             BitmapSubtitlePlane(self, i)
@@ -100,14 +89,9 @@ cdef class BitmapSubtitle(Subtitle):
         )
 
     def __repr__(self):
-        return "<%s.%s %dx%d at %d,%d; at 0x%x>" % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.width,
-            self.height,
-            self.x,
-            self.y,
-            id(self),
+        return (
+            f"<{self.__class__.__module__}.{self.__class__.__name__} "
+            f"{self.width}x{self.height} at {self.x},{self.y}; at 0x{id(self):x}>"
         )
 
     @property
@@ -132,9 +116,7 @@ cdef class BitmapSubtitle(Subtitle):
 
 
 cdef class BitmapSubtitlePlane:
-
     def __cinit__(self, BitmapSubtitle subtitle, int index):
-
         if index >= 4:
             raise ValueError("BitmapSubtitles have only 4 planes")
         if not subtitle.ptr.linesize[index]:
@@ -146,34 +128,29 @@ cdef class BitmapSubtitlePlane:
         self._buffer = <void*>subtitle.ptr.data[index]
 
     # New-style buffer support.
-
     def __getbuffer__(self, Py_buffer *view, int flags):
         PyBuffer_FillInfo(view, self, self._buffer, self.buffer_size, 0, flags)
 
 
 cdef class TextSubtitle(Subtitle):
-
     def __repr__(self):
-        return "<%s.%s %r at 0x%x>" % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.text,
-            id(self),
+        return (
+            f"<{self.__class__.__module__}.{self.__class__.__name__} "
+            f"{self.text!r} at 0x{id(self):x}>"
         )
 
     @property
-    def text(self): return self.ptr.text
+    def text(self):
+        return self.ptr.text
 
 
 cdef class AssSubtitle(Subtitle):
-
     def __repr__(self):
-        return "<%s.%s %r at 0x%x>" % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.ass,
-            id(self),
+        return (
+            f"<{self.__class__.__module__}.{self.__class__.__name__} "
+            f"{self.ass!r} at 0x{id(self):x}>"
         )
 
     @property
-    def ass(self): return self.ptr.ass
+    def ass(self):
+        return self.ptr.ass

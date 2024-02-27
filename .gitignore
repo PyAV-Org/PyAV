@@ -30,6 +30,7 @@
 /ipch
 /msvc-projects
 /src
+/docs/_ffmpeg
 
 # Testing.
 *.spyderproject

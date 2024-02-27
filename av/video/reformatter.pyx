@@ -150,12 +150,8 @@ cdef class VideoReformatter:
         cdef int brightness, contrast, saturation
         cdef int ret
 
-        if (
-            src_colorspace != dst_colorspace or
-            src_color_range != dst_color_range
-        ):
+        if src_colorspace != dst_colorspace or src_color_range != dst_color_range:
             with nogil:
-
                 # Casts for const-ness, because Cython isn't expressive enough.
                 ret = lib.sws_getColorspaceDetails(
                     self.ptr,
@@ -171,7 +167,6 @@ cdef class VideoReformatter:
             err_check(ret)
 
             with nogil:
-
                 # Grab the coefficients for the requested transforms.
                 # The inv_table brings us to linear, and `tbl` to the new space.
                 if src_colorspace != lib.SWS_CS_DEFAULT:
