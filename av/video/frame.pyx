@@ -77,9 +77,7 @@ cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1, str dtype="u
 
 
 cdef class VideoFrame(Frame):
-
     def __cinit__(self, width=0, height=0, format="yuv420p"):
-
         if width is _cinit_bypass_sentinel:
             return
 
@@ -88,7 +86,6 @@ cdef class VideoFrame(Frame):
         self._init(c_format, width, height)
 
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height):
-
         cdef int res = 0
 
         with nogil:
@@ -126,14 +123,9 @@ cdef class VideoFrame(Frame):
         self._np_buffer = None
 
     def __repr__(self):
-        return "<av.%s #%d, pts=%s %s %dx%d at 0x%x>" % (
-            self.__class__.__name__,
-            self.index,
-            self.pts,
-            self.format.name,
-            self.width,
-            self.height,
-            id(self),
+        return (
+            f"<av.{self.__class__.__name__} #{self.index}, pts={self.pts} "
+            f"{self.format.name} {self.width}x{self.height} at 0x{id(self):x}>"
         )
 
     @property
@@ -367,7 +359,9 @@ cdef class VideoFrame(Frame):
                 useful_array(frame.planes[1], 2)
             )).reshape(-1, frame.width)
         else:
-            raise ValueError("Conversion to numpy array with format `%s` is not yet supported" % frame.format.name)
+            raise ValueError(
+                f"Conversion to numpy array with format `{frame.format.name}` is not yet supported"
+            )
 
     @staticmethod
     def from_image(img):

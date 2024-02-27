@@ -4,6 +4,7 @@ cdef object _cinit_bypass_sentinel = object()
 cdef VideoFormat get_video_format(lib.AVPixelFormat c_format, unsigned int width, unsigned int height):
     if c_format == lib.AV_PIX_FMT_NONE:
         return None
+
     cdef VideoFormat format = VideoFormat.__new__(VideoFormat, _cinit_bypass_sentinel)
     format._init(c_format, width, height)
     return format
@@ -53,9 +54,9 @@ cdef class VideoFormat:
 
     def __repr__(self):
         if self.width or self.height:
-            return "<av.%s %s, %dx%d>" % (self.__class__.__name__, self.name, self.width, self.height)
+            return f"<av.{self.__class__.__name__} {self.name}, {self.width}x{self.height}>"
         else:
-            return "<av.%s %s>" % (self.__class__.__name__, self.name)
+            return f"<av.{self.__class__.__name__} {self.name}>"
 
     def __int__(self):
         return int(self.pix_fmt)
@@ -129,7 +130,6 @@ cdef class VideoFormat:
 
 
 cdef class VideoFormatComponent:
-
     def __cinit__(self, VideoFormat format, size_t index):
         self.format = format
         self.index = index

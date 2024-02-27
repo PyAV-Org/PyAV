@@ -15,7 +15,6 @@ from av.deprecation import AVDeprecationWarning
 
 
 cdef class VideoCodecContext(CodecContext):
-
     def __cinit__(self, *args, **kwargs):
         self.last_w = 0
         self.last_h = 0
@@ -30,7 +29,6 @@ cdef class VideoCodecContext(CodecContext):
         self.ptr.time_base.den = self.ptr.framerate.num or lib.AV_TIME_BASE
 
     cdef _prepare_frames_for_encode(self, Frame input):
-
         if not input:
             return [None]
 
