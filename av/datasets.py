@@ -1,9 +1,8 @@
-from urllib.request import urlopen
 import errno
 import logging
 import os
 import sys
-
+from urllib.request import urlopen
 
 log = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
-from av.video.reformatter import ColorRange, Colorspace
 import av
+from av.video.reformatter import ColorRange, Colorspace
 
 from .common import TestCase, fate_suite
 

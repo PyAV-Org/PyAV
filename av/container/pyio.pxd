@@ -1,5 +1,5 @@
-from libc.stdint cimport int64_t, uint8_t
 cimport libav as lib
+from libc.stdint cimport int64_t, uint8_t
 
 
 cdef int pyio_read(void *opaque, uint8_t *buf, int buf_size) noexcept nogil

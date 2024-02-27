@@ -1,9 +1,9 @@
 from cython.operator cimport dereference
 from libc.stdint cimport int64_t
 
-from pathlib import Path
 import os
 import time
+from pathlib import Path
 
 cimport libav as lib
 

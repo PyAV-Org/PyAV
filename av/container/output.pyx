@@ -12,7 +12,6 @@ from av.utils cimport dict_to_avdict, to_avrational
 
 from av.dictionary import Dictionary
 
-
 log = logging.getLogger(__name__)
 
 

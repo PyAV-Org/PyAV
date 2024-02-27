@@ -32,15 +32,14 @@ API Reference
 
 from __future__ import absolute_import
 
+cimport libav as lib
 from libc.stdio cimport fprintf, stderr
 from libc.stdlib cimport free, malloc
-cimport libav as lib
 
-from threading import Lock, get_ident
 import logging
 import os
 import sys
-
+from threading import Lock, get_ident
 
 # Library levels.
 # QUIET  = lib.AV_LOG_QUIET # -8; not really a level.

@@ -1,9 +1,9 @@
 import warnings
 
+cimport libav as lib
 from libc.errno cimport EAGAIN
 from libc.stdint cimport uint8_t
 from libc.string cimport memcpy
-cimport libav as lib
 
 from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec

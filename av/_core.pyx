@@ -1,6 +1,5 @@
 cimport libav as lib
 
-
 # Initialise libraries.
 lib.avformat_network_init()
 lib.avdevice_register_all()

@@ -1,11 +1,10 @@
-from libc.stdint cimport uint8_t
 cimport libav as lib
+from libc.stdint cimport uint8_t
 
 from av.enum cimport define_enum
 from av.error cimport err_check
 from av.video.format cimport VideoFormat
 from av.video.frame cimport alloc_video_frame
-
 
 Interpolation = define_enum("Interpolation", __name__, (
     ("FAST_BILINEAR", lib.SWS_FAST_BILINEAR, "Fast bilinear"),
