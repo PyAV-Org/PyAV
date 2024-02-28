@@ -1,4 +1,7 @@
 from fractions import Fraction
+from typing import Iterator
+
+from av.subtitles.subtitle import SubtitleSet
 
 from .stream import Stream
 
@@ -14,4 +17,5 @@ class Packet:
     is_keyframe: bool
     is_corrupt: bool
 
-    def __init__(self, input: int | None = None): ...
+    def __init__(self, input: int | None = None) -> None: ...
+    def decode(self) -> Iterator[SubtitleSet]: ...
