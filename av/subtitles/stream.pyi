@@ -1,0 +1,3 @@
+from av.stream import Stream
+
+class SubtitleStream(Stream): ...
