@@ -244,8 +244,9 @@ cdef class InputContainer(Container):
         # We used to take floats here and assume they were in seconds. This
         # was super confusing, so lets go in the complete opposite direction
         # and reject non-ints.
-        if not isinstance(offset, (int, long)):
+        if not isinstance(offset, int):
             raise TypeError("Container.seek only accepts integer offset.", type(offset))
+
         cdef int64_t c_offset = offset
 
         cdef int flags = 0
