@@ -1,15 +1,25 @@
 from fractions import Fraction
 from typing import Literal
 
+from .codec import CodecContext
+from .container import Container
 from .enum import EnumItem
+from .frame import Frame
+from .packet import Packet
 
 class SideData(EnumItem):
     DISPLAYMATRIX: int
 
 class Stream:
     name: str | None
+    thread_type: Literal["NONE", "FRAME", "SLICE", "AUTO"]
+
+    container: Container
+    codec_context: CodecContext
+    metadata: dict[str, str]
     id: int
     profile: str
+    nb_side_data: int
     side_data: dict[str, str]
     index: int
     time_base: Fraction | None
@@ -22,5 +32,5 @@ class Stream:
     language: str | None
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
 
-    def encode(self, frame=None): ...
-    def decode(self, packet=None): ...
+    def encode(self, frame: Frame | None = None) -> list[Packet]: ...
+    def decode(self, packet: Packet | None = None) -> list[Frame]: ...
