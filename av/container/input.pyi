@@ -1,23 +1,25 @@
-from typing import Iterator, Literal, overload
+from typing import Any, Iterator, Literal, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
 from av.packet import Packet
+from av.stream import Stream
 from av.subtitles.stream import SubtitleStream
 from av.subtitles.subtitle import SubtitleSet
 from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
 
 from .core import Container
-from .streams import Stream
 
 class InputContainer(Container):
+    start_time: int
+    duration: int | None
     bit_rate: int
     size: int
 
     def __enter__(self) -> InputContainer: ...
     def close(self) -> None: ...
-    def demux(self, *args, **kwargs) -> Iterator[Packet]: ...
+    def demux(self, *args: Any, **kwargs: Any) -> Iterator[Packet]: ...
     @overload
     def decode(self, *args: VideoStream) -> Iterator[VideoFrame]: ...
     @overload
@@ -26,7 +28,7 @@ class InputContainer(Container):
     def decode(self, *args: SubtitleStream) -> Iterator[SubtitleSet]: ...
     @overload
     def decode(
-        self, *args, **kwargs
+        self, *args: Any, **kwargs: Any
     ) -> Iterator[VideoFrame | AudioFrame | SubtitleSet]: ...
     def seek(
         self,
@@ -39,3 +41,4 @@ class InputContainer(Container):
         unsupported_frame_offset: bool = False,
         unsupported_byte_offset: bool = False,
     ) -> None: ...
+    def flush_buffers(self) -> None: ...

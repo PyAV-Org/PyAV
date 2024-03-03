@@ -1,10 +1,30 @@
 from numbers import Real
 from pathlib import Path
-from typing import Any, Iterator, Literal, overload
+from types import TracebackType
+from typing import Any, Callable, Type, Literal, overload
+
+from av.enum import EnumFlag
 
 from .input import InputContainer
 from .output import OutputContainer
 from .streams import StreamContainer
+
+class Flags(EnumFlag):
+    GENPTS: int
+    IGNIDX: int
+    NONBLOCK: int
+    IGNDTS: int
+    NOFILLIN: int
+    NOPARSE: int
+    NOBUFFER: int
+    CUSTOM_IO: int
+    DISCARD_CORRUPT: int
+    FLUSH_PACKETS: int
+    BITEXACT: int
+    SORT_DTS: int
+    FAST_SEEK: int
+    SHORTEST: int
+    AUTO_BSF: int
 
 class Container:
     writeable: bool
@@ -21,13 +41,17 @@ class Container:
     container_options: dict[str, str]
     stream_options: list[str]
     streams: StreamContainer
-    duration: int | None
     metadata: dict[str, str]
     open_timeout: Real | None
     read_timeout: Real | None
 
     def __enter__(self) -> Container: ...
-    def __exit__(self, exc_type, exc_val, exc_tb): ...
+    def __exit__(
+        self,
+        exc_type: Type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool: ...
     def err_check(self, value: int) -> int: ...
     def set_timeout(self, timeout: Real | None) -> None: ...
     def start_timeout(self) -> None: ...
@@ -43,8 +67,8 @@ def open(
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,
-    timeout=Real | None | tuple[Real | None, Real | None],
-    io_open=None,
+    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    io_open: Callable[..., Any] | None = None,
 ) -> InputContainer: ...
 @overload
 def open(
@@ -57,8 +81,8 @@ def open(
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,
-    timeout=Real | None | tuple[Real | None, Real | None],
-    io_open=None,
+    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    io_open: Callable[..., Any] | None = None,
 ) -> InputContainer: ...
 @overload
 def open(
@@ -71,8 +95,8 @@ def open(
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,
-    timeout=Real | None | tuple[Real | None, Real | None],
-    io_open=None,
+    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    io_open: Callable[..., Any] | None = None,
 ) -> OutputContainer: ...
 @overload
 def open(
@@ -85,6 +109,6 @@ def open(
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,
-    timeout=Real | None | tuple[Real | None, Real | None],
-    io_open=None,
+    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    io_open: Callable[..., Any] | None = None,
 ) -> InputContainer | OutputContainer: ...
