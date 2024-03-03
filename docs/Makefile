@@ -38,5 +38,5 @@ open:
 	open _build/html/index.html
 
 upload:
-	rsync -avxP --delete _build/html/ root@basswood-io.com:/var/www/pyav
+	rsync -avxP --delete _build/html/ root@basswood-io.com:/var/www/pyav/docs/develop
 
