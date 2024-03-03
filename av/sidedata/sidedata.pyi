@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
-from av.enum import EnumItem
 from av.buffer import Buffer
+from av.enum import EnumItem
 from av.frame import Frame
 
 class Type(EnumItem):
