@@ -332,8 +332,13 @@ def doxylink_create_handler(app, file_name, url_base):
 
         url = get_url(name)
         if not url:
-            print("ERROR: Could not find", name)
-            exit(1)
+            if name == "AVFrame.color_primaries":
+                url = "structAVFrame.html#a59a3f830494f2ed1133103a1bc9481e7"
+            elif name == "AVFrame.color_trc":
+                url = "structAVFrame.html#ab09abb126e3922bc1d010cf044087939"
+            else:
+                print("ERROR: Could not find", name)
+                exit(1)
 
         node = addnodes.literal_strong(title, title)
         if url:
