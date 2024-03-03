@@ -180,7 +180,7 @@ cdef class Stream:
         return self.codec_context.decode(packet)
 
     cdef _get_side_data(self, lib.AVStream *stream):
-        # Get DISPLAYMATRIX SideDate from a lib.AVStream object.
+        # Get DISPLAYMATRIX SideData from a lib.AVStream object.
         # Returns: tuple[int, dict[str, Any]]
 
         nb_side_data = stream.nb_side_data
