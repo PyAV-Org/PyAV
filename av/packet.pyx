@@ -4,8 +4,6 @@ from av.bytesource cimport bytesource
 from av.error cimport err_check
 from av.utils cimport avrational_to_fraction, to_avrational
 
-from av import deprecation
-
 
 cdef class Packet(Buffer):
 
@@ -80,19 +78,6 @@ cdef class Packet(Buffer):
         :class:`.AudioFrame`, :class:`.VideoFrame` or :class:`.SubtitleSet`.
         """
         return self._stream.decode(self)
-
-    @deprecation.method
-    def decode_one(self):
-        """
-        Send the packet's data to the decoder and return the first decoded frame.
-
-        Returns ``None`` if there is no frame.
-
-        .. warning:: This method is deprecated, as it silently discards any
-                     other frames which were decoded.
-        """
-        res = self._stream.decode(self)
-        return res[0] if res else None
 
     @property
     def stream_index(self):
