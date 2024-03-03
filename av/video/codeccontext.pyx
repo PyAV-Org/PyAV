@@ -177,28 +177,84 @@ cdef class VideoCodecContext(CodecContext):
 
     @property
     def has_b_frames(self):
+        """
+        :type: bool
+        """
         return bool(self.ptr.has_b_frames)
 
     @property
     def coded_width(self):
+        """
+        :type: int
+        """
         return self.ptr.coded_width
 
     @property
     def coded_height(self):
+        """
+        :type: int
+        """
         return self.ptr.coded_height
 
     @property
     def color_range(self):
         """
-        Color range of context.
+        Describes the signal range of the colorspace.
 
         Wraps :ffmpeg:`AVFrame.color_range`.
+
+        :type: int
         """
         return self.ptr.color_range
 
     @color_range.setter
     def color_range(self, value):
         self.ptr.color_range = value
+
+    @property
+    def color_primaries(self):
+        """
+        Describes the RGB/XYZ matrix of the colorspace.
+
+        Wraps :ffmpeg:`AVFrame.color_primaries`.
+
+        :type: int
+        """
+        return self.ptr.color_primaries
+
+    @color_primaries.setter
+    def color_primaries(self, value):
+        self.ptr.color_primaries = value
+
+    @property
+    def color_trc(self):
+        """
+        Describes the linearization function (a.k.a. transformation characteristics) of the colorspace.
+
+        Wraps :ffmpeg:`AVFrame.color_trc`.
+
+        :type: int
+        """
+        return self.ptr.color_trc
+
+    @color_trc.setter
+    def color_trc(self, value):
+        self.ptr.color_trc = value
+
+    @property
+    def colorspace(self):
+        """
+        Describes the YUV/RGB transformation matrix of the colorspace.
+
+        Wraps :ffmpeg:`AVFrame.colorspace`.
+
+        :type: int
+        """
+        return self.ptr.colorspace
+
+    @colorspace.setter
+    def colorspace(self, value):
+        self.ptr.colorspace = value
 
     @property
     def max_b_frames(self):
