@@ -20,6 +20,10 @@ class VideoCodecContext(CodecContext):
     coded_width: int
     coded_height: int
     color_range: int
+    color_primaries: int
+    color_trc: int
+    colorspace: int
+
     type: Literal["video"]
     def encode(self, frame: VideoFrame | None = None) -> list[Packet]: ...
     def encode_lazy(self, frame: VideoFrame | None = None) -> Iterator[Packet]: ...
