@@ -1,13 +1,21 @@
+from av.descriptor import Descriptor
+from av.option import Option
+
+from .pad import FilterPad
+
 class Filter:
     name: str
     description: str
-    options: tuple | None
+
+    descriptor: Descriptor
+    options: tuple[Option, ...] | None
+    flags: int
     dynamic_inputs: bool
     dynamic_outputs: bool
     timeline_support: bool
     slice_threads: bool
     command_support: bool
-    inputs: tuple
-    outputs: tuple
+    inputs: tuple[FilterPad, ...]
+    outputs: tuple[FilterPad, ...]
 
 filters_available: set[str]

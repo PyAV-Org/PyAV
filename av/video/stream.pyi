@@ -4,16 +4,16 @@ from typing import Any
 from av.packet import Packet
 from av.stream import Stream
 
-from .codeccontext import VideoCodecContext
+from .format import VideoFormat
 from .frame import VideoFrame
 
 class VideoStream(Stream):
-    name: str
     width: int
     height: int
+    format: VideoFormat
     pix_fmt: str | None
     sample_aspect_ratio: Fraction | None
-    codec_context: VideoCodecContext
+    type = "video"
 
     # from codec context
     bit_rate: int | None

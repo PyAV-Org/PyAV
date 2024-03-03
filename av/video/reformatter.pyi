@@ -1,6 +1,5 @@
 from av.enum import EnumItem
 
-from .format import VideoFormat
 from .frame import VideoFrame
 
 class Interpolation(EnumItem):
@@ -44,8 +43,8 @@ class VideoReformatter:
         width: int | None = None,
         height: int | None = None,
         format: str | None = None,
-        src_colorspace=None,
-        dst_colorspace=None,
+        src_colorspace: Colorspace | None = None,
+        dst_colorspace: Colorspace | None = None,
         interpolation: int | str | None = None,
         src_color_range: int | str | None = None,
         dst_color_range: int | str | None = None,
