@@ -8,7 +8,7 @@ from av.frame import Frame
 
 from .format import VideoFormat
 from .plane import VideoPlane
-from .reformatter import Colorspace, ColorRange
+from .reformatter import ColorRange, Colorspace
 
 _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.uint8]],
