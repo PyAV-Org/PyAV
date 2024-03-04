@@ -1,4 +1,4 @@
-from typing import Literal, Sequence, overload, Any, Iterable
+from typing import Any, Iterable, Literal, Sequence, overload
 
 class EnumType(type):
     def __init__(
