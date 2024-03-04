@@ -1,8 +1,8 @@
 from av.filter.graph import Graph
 
 from .format import AudioFormat
-from .layout import AudioLayout
 from .frame import AudioFrame
+from .layout import AudioLayout
 
 class AudioResampler:
     rate: int
