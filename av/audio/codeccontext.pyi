@@ -1,3 +1,5 @@
+from typing import Literal
+
 from av.codec.context import CodecContext
 
 from .format import AudioFormat
@@ -11,4 +13,4 @@ class AudioCodecContext(CodecContext):
     channel_layout: int
     layout: AudioLayout
     format: AudioFormat
-    type = "audio"
+    type: Literal["audio"]
