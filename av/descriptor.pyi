@@ -1,4 +1,4 @@
-from av.option import Option
+from .option import Option
 
 class Descriptor:
     name: str
