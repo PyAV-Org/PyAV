@@ -1,8 +1,9 @@
-from typing import Any, Iterator, Literal
+from typing import Any, Literal
 
 from av.enum import EnumFlag, EnumItem
-from av.frame import Frame
 from av.packet import Packet
+
+from .codec import Codec
 
 class ThreadType(EnumFlag):
     NONE: int
@@ -71,7 +72,9 @@ class CodecContext:
     def open(self, strict: bool = True) -> None: ...
     def close(self, strict: bool = True) -> None: ...
     @staticmethod
-    def create(codec, mode=None) -> CodecContext: ...
+    def create(
+        codec: str | Codec, mode: Literal["r", "w"] | None = None
+    ) -> CodecContext: ...
     def parse(
         self, raw_input: bytes | bytearray | memoryview | None = None
     ) -> list[Packet]: ...

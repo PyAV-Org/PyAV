@@ -2,8 +2,11 @@ from fractions import Fraction
 from typing import Literal
 
 from av.audio.format import AudioFormat
+from av.descriptor import Descriptor
 from av.enum import EnumFlag
 from av.video.format import VideoFormat
+
+from .context import CodecContext
 
 class Properties(EnumFlag):
     NONE: int
@@ -41,15 +44,20 @@ class UnknownCodecError(ValueError): ...
 
 class Codec:
     is_decoder: bool
+    descriptor: Descriptor
     name: str
     long_name: str
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
+    id: int
     frame_rates: list[Fraction] | None
     audio_rates: list[int] | None
     video_formats: list[VideoFormat] | None
     audio_formats: list[AudioFormat] | None
+    properties: Properties
+    capabilities: Capabilities
 
-    def __init__(self, name: str, mode: Literal["r", "w"]): ...
+    def __init__(self, name: str, mode: Literal["r", "w"]) -> None: ...
+    def create(self) -> CodecContext: ...
 
 class codec_descriptor:
     name: str
