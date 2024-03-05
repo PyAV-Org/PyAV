@@ -10,10 +10,10 @@ class OutputContainer(Container):
     def __enter__(self) -> OutputContainer: ...
     def add_stream(
         self,
-        codec_name: str,
-        rate: Fraction | int | float,
-        template: Stream,
-        options: dict[str, str],
+        codec_name: str | None = None,
+        rate: Fraction | int | float | None = None,
+        template: Stream | None = None,
+        options: dict[str, str] | None = None,
     ) -> Stream: ...
     def start_encoding(self) -> None: ...
     def close(self) -> None: ...
