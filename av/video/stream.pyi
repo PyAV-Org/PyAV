@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any
+from typing import Any, Literal
 
 from av.packet import Packet
 from av.stream import Stream
@@ -13,7 +13,7 @@ class VideoStream(Stream):
     format: VideoFormat
     pix_fmt: str | None
     sample_aspect_ratio: Fraction | None
-    type = "video"
+    type: Literal["video"]
 
     # from codec context
     bit_rate: int | None
