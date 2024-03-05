@@ -165,20 +165,6 @@ cdef class Stream:
             packet.ptr.stream_index = self.ptr.index
         return packets
 
-    def decode(self, packet=None):
-        """
-        Decode a :class:`.Packet` and return a list of :class:`.AudioFrame`
-        or :class:`.VideoFrame`.
-
-        :return: :class:`list` of :class:`.Frame` subclasses.
-
-        .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.decode`.
-        """
-        if self.codec_context is None:
-            raise RuntimeError("Stream.decode requires a valid CodecContext")
-
-        return self.codec_context.decode(packet)
-
     cdef _get_side_data(self, lib.AVStream *stream):
         # Get DISPLAYMATRIX SideData from a lib.AVStream object.
         # Returns: tuple[int, dict[str, Any]]
