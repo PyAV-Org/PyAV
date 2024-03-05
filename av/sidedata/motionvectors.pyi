@@ -4,15 +4,12 @@ import numpy as np
 
 from .sidedata import SideData
 
-class _MotionVector(SideData):
+class MotionVectors(SideData, Sequence[Any]):
     def __getitem__(self, index: int) -> MotionVector: ...
     def __len__(self) -> int: ...
     def to_ndarray(self) -> np.ndarray[Any, Any]: ...
 
-class MotionVectors(_MotionVector, Sequence[Any]): ...
-
 class MotionVector:
-    parent: _MotionVector
     source: int
     w: int
     h: int

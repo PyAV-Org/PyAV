@@ -27,7 +27,5 @@ class SideData(Buffer):
     type: Type
     DISPLAYMATRIX: int
 
-class _SideDataContainer:
+class SideDataContainer(Mapping[str, int]):
     frame: Frame
-
-class SideDataContainer(_SideDataContainer, Mapping[str, int]): ...
