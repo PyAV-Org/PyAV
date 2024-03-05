@@ -1,6 +1,6 @@
 import logging
 from threading import Lock
-from typing import Callable
+from typing import Any, Callable
 
 PANIC: int
 FATAL: int
@@ -29,7 +29,10 @@ class Capture:
     def __init__(self, local: bool = True) -> None: ...
     def __enter__(self) -> list[tuple[int, str, str]]: ...
     def __exit__(
-        self, type_: type | None, value: Exception | None, traceback: Callable | None
+        self,
+        type_: type | None,
+        value: Exception | None,
+        traceback: Callable[..., Any] | None,
     ) -> None: ...
 
 level_threshold: int
@@ -40,4 +43,4 @@ last_log: tuple[int, str, str] | None
 skip_count: int
 last_error: tuple[int, str, str] | None
 global_captures: list[list[tuple[int, str, str]]]
-thread_captures: dict
+thread_captures: dict[int, list[tuple[int, str, str]]]
