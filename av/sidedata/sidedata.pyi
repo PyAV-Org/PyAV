@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from typing import Iterator, Sequence, overload
 
 from av.buffer import Buffer
 from av.enum import EnumItem
@@ -27,5 +28,13 @@ class SideData(Buffer):
     type: Type
     DISPLAYMATRIX: int
 
-class SideDataContainer(Mapping[str, int]):
+class SideDataContainer(Mapping):
     frame: Frame
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[SideData]: ...
+    @overload
+    def __getitem__(self, key: int) -> SideData: ...
+    @overload
+    def __getitem__(self, key: slice) -> Sequence[SideData]: ...
+    @overload
+    def __getitem__(self, key: int | slice) -> SideData | Sequence[SideData]: ...

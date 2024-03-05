@@ -12,5 +12,5 @@ class AudioStream(Stream):
     format: AudioFormat
     codec_context: AudioCodecContext
 
-    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...
+    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...  # type: ignore[override]
     def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
