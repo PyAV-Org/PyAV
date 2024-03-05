@@ -36,8 +36,8 @@ class VideoFrame(Frame):
     key_frame: bool
     interlaced_frame: bool
     pict_type: int
-    colorspace: Colorspace
-    color_range: ColorRange
+    colorspace: int
+    color_range: int
 
     def __init__(
         self, width: int = 0, height: int = 0, format: str = "yuv420p"
