@@ -28,6 +28,8 @@ class PictureType(EnumItem):
 
 class VideoFrame(Frame):
     format: VideoFormat
+    pts: int
+    time: float
     planes: tuple[VideoPlane, ...]
     width: int
     height: int
