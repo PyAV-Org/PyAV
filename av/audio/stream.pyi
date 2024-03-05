@@ -8,9 +8,9 @@ from .format import AudioFormat
 from .frame import AudioFrame
 
 class AudioStream(Stream):
+    type: Literal["audio"]
     format: AudioFormat
     codec_context: AudioCodecContext
-    type: Literal["audio"]
 
     def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...
     def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
