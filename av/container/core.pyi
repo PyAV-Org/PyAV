@@ -1,7 +1,7 @@
 from numbers import Real
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Type, Literal, overload
+from typing import Any, Callable, Literal, Type, overload
 
 from av.enum import EnumFlag
 
