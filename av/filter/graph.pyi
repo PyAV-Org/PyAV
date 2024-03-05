@@ -1,4 +1,5 @@
 from fractions import Fraction
+from typing import Any
 
 from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
@@ -10,8 +11,6 @@ from av.video.stream import VideoStream
 
 from .context import FilterContext
 from .filter import Filter
-
-from typing import Any
 
 class Graph:
     configured: bool
