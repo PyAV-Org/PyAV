@@ -24,5 +24,5 @@ class VideoStream(Stream):
     thread_count: int
     thread_type: Any
 
-    def encode(self, frame: VideoFrame | None = None) -> list[Packet]: ...
+    def encode(self, frame: VideoFrame | None = None) -> list[Packet]: ...  # type: ignore[override]
     def decode(self, packet: Packet | None = None) -> list[VideoFrame]: ...
