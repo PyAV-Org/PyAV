@@ -2,9 +2,9 @@ from typing import Iterator, overload
 
 from av.audio.stream import AudioStream
 from av.data.stream import DataStream
-from av.video.stream import VideoStream
 from av.stream import Stream
 from av.subtitles.stream import SubtitleStream
+from av.video.stream import VideoStream
 
 class StreamContainer:
     video: tuple[VideoStream, ...]
