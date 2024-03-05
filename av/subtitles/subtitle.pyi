@@ -1,6 +1,4 @@
-from typing import Any, Iterator, Literal
-
-from .stream import SubtitleStream
+from typing import Iterator, Literal
 
 class SubtitleSet:
     format: int
@@ -13,15 +11,15 @@ class SubtitleSet:
     def __getitem__(self, i: int) -> Subtitle: ...
 
 class Subtitle:
-    type: Literal["none", "bitmap", "text", "ass"]
+    type: Literal[b"none", b"bitmap", b"text", b"ass"]
 
 class BitmapSubtitle(Subtitle):
-    type: Literal["bitmap"]
+    type: Literal[b"bitmap"]
     x: int
     y: int
     width: int
     height: int
-    nb_colors: Any
+    nb_colors: int
     planes: tuple[BitmapSubtitlePlane, ...]
 
 class BitmapSubtitlePlane:
@@ -30,9 +28,9 @@ class BitmapSubtitlePlane:
     buffer_size: int
 
 class TextSubtitle(Subtitle):
-    type: Literal["text"]
+    type: Literal[b"text"]
     text: str
 
 class AssSubtitle(Subtitle):
-    type: Literal["text"]
+    type: Literal[b"ass"]
     ass: str
