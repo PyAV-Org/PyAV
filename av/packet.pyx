@@ -189,7 +189,8 @@ cdef class Packet(Buffer):
             self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
 
     @property
-    def is_corrupt(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
+    def is_corrupt(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
 
     @is_corrupt.setter
     def is_corrupt(self, v):
@@ -197,3 +198,16 @@ cdef class Packet(Buffer):
             self.ptr.flags |= lib.AV_PKT_FLAG_CORRUPT
         else:
             self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
+
+    @property
+    def is_discard(self): 
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISCARD)
+
+    @property
+    def is_trusted(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_TRUSTED)
+
+    @property
+    def is_disposable(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISPOSABLE)
+
