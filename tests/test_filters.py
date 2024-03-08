@@ -1,13 +1,13 @@
+import errno
 from fractions import Fraction
 from unittest import SkipTest
-import errno
 
 import numpy as np
 
+import av
 from av import AudioFrame, VideoFrame
 from av.audio.frame import format_dtypes
 from av.filter import Filter, Graph
-import av
 
 from .common import Image, TestCase, fate_suite
 

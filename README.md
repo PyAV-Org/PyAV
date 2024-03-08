@@ -29,6 +29,8 @@ If you want to use your existing FFmpeg, the source version of PyAV is on [PyPI]
 pip install av --no-binary av
 ```
 
+Installing from source is not supported on Windows.
+
 Alternative installation methods
 --------------------------------
 
@@ -40,10 +42,10 @@ conda install av -c conda-forge
 
 See the [Conda install][conda-install] docs to get started with (mini)Conda.
 
-And if you want to build from the absolute source (for development or testing):
+And if you want to build from the absolute source (POSIX only):
 
 ```bash
-git clone git@github.com:PyAV-Org/PyAV
+git clone https://github.com/PyAV-Org/PyAV.git
 cd PyAV
 source scripts/activate.sh
 
@@ -54,6 +56,7 @@ pip install --upgrade -r tests/requirements.txt
 
 # Build PyAV.
 make
+pip install .
 ```
 
 ---
@@ -65,7 +68,7 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [conda-badge]: https://img.shields.io/conda/vn/conda-forge/av.svg?colorB=CCB39A
 [conda]: https://anaconda.org/conda-forge/av
 [docs-badge]: https://img.shields.io/badge/docs-on%20pyav.org-blue.svg
-[docs]: http://pyav.org/docs
+[docs]: https://pyav.basswood-io.com
 [gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
 [gitter]: https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
@@ -75,6 +78,6 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [github-tests]: https://github.com/PyAV-Org/PyAV/actions?workflow=tests
 [github]: https://github.com/PyAV-Org/PyAV
 
-[ffmpeg]: http://ffmpeg.org/
+[ffmpeg]: https://ffmpeg.org/
 [conda-forge]: https://conda-forge.github.io/
 [conda-install]: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html

@@ -3,7 +3,6 @@ import time
 import av
 import av.datasets
 
-
 print("Decoding with default (slice) threading...")
 
 container = av.open(

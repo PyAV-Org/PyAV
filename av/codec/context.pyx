@@ -1,9 +1,9 @@
 import warnings
 
+cimport libav as lib
 from libc.errno cimport EAGAIN
 from libc.stdint cimport uint8_t
 from libc.string cimport memcpy
-cimport libav as lib
 
 from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec
@@ -43,94 +43,94 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     return py_ctx
 
 
-ThreadType = define_enum('ThreadType', __name__, (
-    ('NONE', 0),
-    ('FRAME', lib.FF_THREAD_FRAME,
+ThreadType = define_enum("ThreadType", __name__, (
+    ("NONE", 0),
+    ("FRAME", lib.FF_THREAD_FRAME,
         """Decode more than one frame at once"""),
-    ('SLICE', lib.FF_THREAD_SLICE,
+    ("SLICE", lib.FF_THREAD_SLICE,
         """Decode more than one part of a single frame at once"""),
-    ('AUTO', lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME,
+    ("AUTO", lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME,
         """Decode using both FRAME and SLICE methods."""),
 ), is_flags=True)
 
-SkipType = define_enum('SkipType', __name__, (
-    ('NONE', lib.AVDISCARD_NONE,
+SkipType = define_enum("SkipType", __name__, (
+    ("NONE", lib.AVDISCARD_NONE,
         """Discard nothing"""),
-    ('DEFAULT', lib.AVDISCARD_DEFAULT,
+    ("DEFAULT", lib.AVDISCARD_DEFAULT,
         """Discard useless packets like 0 size packets in AVI"""),
-    ('NONREF', lib.AVDISCARD_NONREF,
+    ("NONREF", lib.AVDISCARD_NONREF,
         """Discard all non reference"""),
-    ('BIDIR', lib.AVDISCARD_BIDIR,
+    ("BIDIR", lib.AVDISCARD_BIDIR,
         """Discard all bidirectional frames"""),
-    ('NONINTRA', lib.AVDISCARD_NONINTRA,
+    ("NONINTRA", lib.AVDISCARD_NONINTRA,
         """Discard all non intra frames"""),
-    ('NONKEY', lib.AVDISCARD_NONKEY,
+    ("NONKEY", lib.AVDISCARD_NONKEY,
         """Discard all frames except keyframes"""),
-    ('ALL', lib.AVDISCARD_ALL,
+    ("ALL", lib.AVDISCARD_ALL,
         """Discard all"""),
 ))
 
-Flags = define_enum('Flags', __name__, (
-    ('NONE', 0),
-    ('UNALIGNED', lib.AV_CODEC_FLAG_UNALIGNED,
+Flags = define_enum("Flags", __name__, (
+    ("NONE", 0),
+    ("UNALIGNED", lib.AV_CODEC_FLAG_UNALIGNED,
         """Allow decoders to produce frames with data planes that are not aligned
         to CPU requirements (e.g. due to cropping)."""),
-    ('QSCALE', lib.AV_CODEC_FLAG_QSCALE,
+    ("QSCALE", lib.AV_CODEC_FLAG_QSCALE,
         """Use fixed qscale."""),
-    ('4MV', lib.AV_CODEC_FLAG_4MV,
+    ("4MV", lib.AV_CODEC_FLAG_4MV,
         """4 MV per MB allowed / advanced prediction for H.263."""),
-    ('OUTPUT_CORRUPT', lib.AV_CODEC_FLAG_OUTPUT_CORRUPT,
+    ("OUTPUT_CORRUPT", lib.AV_CODEC_FLAG_OUTPUT_CORRUPT,
         """Output even those frames that might be corrupted."""),
-    ('QPEL', lib.AV_CODEC_FLAG_QPEL,
+    ("QPEL", lib.AV_CODEC_FLAG_QPEL,
         """Use qpel MC."""),
-    ('DROPCHANGED', 1 << 5,
+    ("DROPCHANGED", 1 << 5,
         """Don't output frames whose parameters differ from first
         decoded frame in stream."""),
-    ('PASS1', lib.AV_CODEC_FLAG_PASS1,
+    ("PASS1", lib.AV_CODEC_FLAG_PASS1,
         """Use internal 2pass ratecontrol in first pass mode."""),
-    ('PASS2', lib.AV_CODEC_FLAG_PASS2,
+    ("PASS2", lib.AV_CODEC_FLAG_PASS2,
         """Use internal 2pass ratecontrol in second pass mode."""),
-    ('LOOP_FILTER', lib.AV_CODEC_FLAG_LOOP_FILTER,
+    ("LOOP_FILTER", lib.AV_CODEC_FLAG_LOOP_FILTER,
         """loop filter."""),
-    ('GRAY', lib.AV_CODEC_FLAG_GRAY,
+    ("GRAY", lib.AV_CODEC_FLAG_GRAY,
         """Only decode/encode grayscale."""),
-    ('PSNR', lib.AV_CODEC_FLAG_PSNR,
+    ("PSNR", lib.AV_CODEC_FLAG_PSNR,
         """error[?] variables will be set during encoding."""),
-    ('INTERLACED_DCT', lib.AV_CODEC_FLAG_INTERLACED_DCT,
+    ("INTERLACED_DCT", lib.AV_CODEC_FLAG_INTERLACED_DCT,
         """Use interlaced DCT."""),
-    ('LOW_DELAY', lib.AV_CODEC_FLAG_LOW_DELAY,
+    ("LOW_DELAY", lib.AV_CODEC_FLAG_LOW_DELAY,
         """Force low delay."""),
-    ('GLOBAL_HEADER', lib.AV_CODEC_FLAG_GLOBAL_HEADER,
+    ("GLOBAL_HEADER", lib.AV_CODEC_FLAG_GLOBAL_HEADER,
         """Place global headers in extradata instead of every keyframe."""),
-    ('BITEXACT', lib.AV_CODEC_FLAG_BITEXACT,
+    ("BITEXACT", lib.AV_CODEC_FLAG_BITEXACT,
         """Use only bitexact stuff (except (I)DCT)."""),
-    ('AC_PRED', lib.AV_CODEC_FLAG_AC_PRED,
+    ("AC_PRED", lib.AV_CODEC_FLAG_AC_PRED,
         """H.263 advanced intra coding / MPEG-4 AC prediction"""),
-    ('INTERLACED_ME', lib.AV_CODEC_FLAG_INTERLACED_ME,
+    ("INTERLACED_ME", lib.AV_CODEC_FLAG_INTERLACED_ME,
         """Interlaced motion estimation"""),
-    ('CLOSED_GOP', lib.AV_CODEC_FLAG_CLOSED_GOP),
+    ("CLOSED_GOP", lib.AV_CODEC_FLAG_CLOSED_GOP),
 ), is_flags=True)
 
-Flags2 = define_enum('Flags2', __name__, (
-    ('NONE', 0),
-    ('FAST', lib.AV_CODEC_FLAG2_FAST,
+Flags2 = define_enum("Flags2", __name__, (
+    ("NONE", 0),
+    ("FAST", lib.AV_CODEC_FLAG2_FAST,
         """Allow non spec compliant speedup tricks."""),
-    ('NO_OUTPUT', lib.AV_CODEC_FLAG2_NO_OUTPUT,
+    ("NO_OUTPUT", lib.AV_CODEC_FLAG2_NO_OUTPUT,
         """Skip bitstream encoding."""),
-    ('LOCAL_HEADER', lib.AV_CODEC_FLAG2_LOCAL_HEADER,
+    ("LOCAL_HEADER", lib.AV_CODEC_FLAG2_LOCAL_HEADER,
         """Place global headers at every keyframe instead of in extradata."""),
-    ('CHUNKS', lib.AV_CODEC_FLAG2_CHUNKS,
+    ("CHUNKS", lib.AV_CODEC_FLAG2_CHUNKS,
         """Input bitstream might be truncated at a packet boundaries
         instead of only at frame boundaries."""),
-    ('IGNORE_CROP', lib.AV_CODEC_FLAG2_IGNORE_CROP,
+    ("IGNORE_CROP", lib.AV_CODEC_FLAG2_IGNORE_CROP,
         """Discard cropping information from SPS."""),
-    ('SHOW_ALL', lib.AV_CODEC_FLAG2_SHOW_ALL,
+    ("SHOW_ALL", lib.AV_CODEC_FLAG2_SHOW_ALL,
         """Show all frames before the first keyframe"""),
-    ('EXPORT_MVS', lib.AV_CODEC_FLAG2_EXPORT_MVS,
+    ("EXPORT_MVS", lib.AV_CODEC_FLAG2_EXPORT_MVS,
         """Export motion vectors through frame side data"""),
-    ('SKIP_MANUAL', lib.AV_CODEC_FLAG2_SKIP_MANUAL,
+    ("SKIP_MANUAL", lib.AV_CODEC_FLAG2_SKIP_MANUAL,
         """Do not skip samples and export skip information as frame side data"""),
-    ('RO_FLUSH_NOOP', lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP,
+    ("RO_FLUSH_NOOP", lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP,
         """Do not reset ASS ReadOrder field on flush (subtitles decoding)"""),
 ), is_flags=True)
 
@@ -145,16 +145,15 @@ cdef class CodecContext:
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
-            raise RuntimeError('Cannot instantiate CodecContext')
+            raise RuntimeError("Cannot instantiate CodecContext")
 
         self.options = {}
         self.stream_index = -1  # This is set by the container immediately.
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
-
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
-            raise RuntimeError('Wrapping CodecContext with mismatched codec.')
+            raise RuntimeError("Wrapping CodecContext with mismatched codec.")
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
 
         # Set reasonable threading defaults.
@@ -175,24 +174,24 @@ cdef class CodecContext:
         """Flag property of :class:`.Flags`."""
     )
 
-    unaligned = flags.flag_property('UNALIGNED')
-    qscale = flags.flag_property('QSCALE')
-    four_mv = flags.flag_property('4MV')
-    output_corrupt = flags.flag_property('OUTPUT_CORRUPT')
-    qpel = flags.flag_property('QPEL')
-    drop_changed = flags.flag_property('DROPCHANGED')
-    pass1 = flags.flag_property('PASS1')
-    pass2 = flags.flag_property('PASS2')
-    loop_filter = flags.flag_property('LOOP_FILTER')
-    gray = flags.flag_property('GRAY')
-    psnr = flags.flag_property('PSNR')
-    interlaced_dct = flags.flag_property('INTERLACED_DCT')
-    low_delay = flags.flag_property('LOW_DELAY')
-    global_header = flags.flag_property('GLOBAL_HEADER')
-    bitexact = flags.flag_property('BITEXACT')
-    ac_pred = flags.flag_property('AC_PRED')
-    interlaced_me = flags.flag_property('INTERLACED_ME')
-    closed_gop = flags.flag_property('CLOSED_GOP')
+    unaligned = flags.flag_property("UNALIGNED")
+    qscale = flags.flag_property("QSCALE")
+    four_mv = flags.flag_property("4MV")
+    output_corrupt = flags.flag_property("OUTPUT_CORRUPT")
+    qpel = flags.flag_property("QPEL")
+    drop_changed = flags.flag_property("DROPCHANGED")
+    pass1 = flags.flag_property("PASS1")
+    pass2 = flags.flag_property("PASS2")
+    loop_filter = flags.flag_property("LOOP_FILTER")
+    gray = flags.flag_property("GRAY")
+    psnr = flags.flag_property("PSNR")
+    interlaced_dct = flags.flag_property("INTERLACED_DCT")
+    low_delay = flags.flag_property("LOW_DELAY")
+    global_header = flags.flag_property("GLOBAL_HEADER")
+    bitexact = flags.flag_property("BITEXACT")
+    ac_pred = flags.flag_property("AC_PRED")
+    interlaced_me = flags.flag_property("INTERLACED_ME")
+    closed_gop = flags.flag_property("CLOSED_GOP")
 
     def _get_flags2(self):
         return self.ptr.flags2
@@ -206,60 +205,60 @@ cdef class CodecContext:
         """Flag property of :class:`.Flags2`."""
     )
 
-    fast = flags2.flag_property('FAST')
-    no_output = flags2.flag_property('NO_OUTPUT')
-    local_header = flags2.flag_property('LOCAL_HEADER')
-    chunks = flags2.flag_property('CHUNKS')
-    ignore_crop = flags2.flag_property('IGNORE_CROP')
-    show_all = flags2.flag_property('SHOW_ALL')
-    export_mvs = flags2.flag_property('EXPORT_MVS')
-    skip_manual = flags2.flag_property('SKIP_MANUAL')
-    ro_flush_noop = flags2.flag_property('RO_FLUSH_NOOP')
+    fast = flags2.flag_property("FAST")
+    no_output = flags2.flag_property("NO_OUTPUT")
+    local_header = flags2.flag_property("LOCAL_HEADER")
+    chunks = flags2.flag_property("CHUNKS")
+    ignore_crop = flags2.flag_property("IGNORE_CROP")
+    show_all = flags2.flag_property("SHOW_ALL")
+    export_mvs = flags2.flag_property("EXPORT_MVS")
+    skip_manual = flags2.flag_property("SKIP_MANUAL")
+    ro_flush_noop = flags2.flag_property("RO_FLUSH_NOOP")
 
-    property extradata:
-        def __get__(self):
-            if self.ptr.extradata_size > 0:
-                return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
-            else:
-                return None
+    @property
+    def extradata(self):
+        if self.ptr.extradata_size > 0:
+            return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
+        else:
+            return None
 
-        def __set__(self, data):
-            if not self.is_decoder:
-                raise ValueError("Can only set extradata for decoders.")
+    @extradata.setter
+    def extradata(self, data):
+        if not self.is_decoder:
+            raise ValueError("Can only set extradata for decoders.")
 
-            if data is None:
-                lib.av_freep(&self.ptr.extradata)
-                self.ptr.extradata_size = 0
-            else:
-                source = bytesource(data)
-                self.ptr.extradata = <uint8_t*>lib.av_realloc(self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE)
-                if not self.ptr.extradata:
-                    raise MemoryError("Cannot allocate extradata")
-                memcpy(self.ptr.extradata, source.ptr, source.length)
-                self.ptr.extradata_size = source.length
-            self.extradata_set = True
+        if data is None:
+            lib.av_freep(&self.ptr.extradata)
+            self.ptr.extradata_size = 0
+        else:
+            source = bytesource(data)
+            self.ptr.extradata = <uint8_t*>lib.av_realloc(self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE)
+            if not self.ptr.extradata:
+                raise MemoryError("Cannot allocate extradata")
+            memcpy(self.ptr.extradata, source.ptr, source.length)
+            self.ptr.extradata_size = source.length
+        self.extradata_set = True
 
-    property extradata_size:
-        def __get__(self):
-            return self.ptr.extradata_size
+    @property
+    def extradata_size(self):
+        return self.ptr.extradata_size
 
-    property is_open:
-        def __get__(self):
-            return lib.avcodec_is_open(self.ptr)
+    @property
+    def is_open(self):
+        return lib.avcodec_is_open(self.ptr)
 
-    property is_encoder:
-        def __get__(self):
-            return lib.av_codec_is_encoder(self.ptr.codec)
+    @property
+    def is_encoder(self):
+        return lib.av_codec_is_encoder(self.ptr.codec)
 
-    property is_decoder:
-        def __get__(self):
-            return lib.av_codec_is_decoder(self.ptr.codec)
+    @property
+    def is_decoder(self):
+        return lib.av_codec_is_decoder(self.ptr.codec)
 
     cpdef open(self, bint strict=True):
-
         if lib.avcodec_is_open(self.ptr):
             if strict:
-                raise ValueError('CodecContext is already open.')
+                raise ValueError("CodecContext is already open.")
             return
 
         # We might pass partial frames.
@@ -288,7 +287,7 @@ cdef class CodecContext:
     cpdef close(self, bint strict=True):
         if not lib.avcodec_is_open(self.ptr):
             if strict:
-                raise ValueError('CodecContext is already closed.')
+                raise ValueError("CodecContext is already closed.")
             return
         err_check(lib.avcodec_close(self.ptr))
 
@@ -302,12 +301,9 @@ cdef class CodecContext:
             lib.av_parser_close(self.parser)
 
     def __repr__(self):
-        return '<av.%s %s/%s at 0x%x>' % (
-            self.__class__.__name__,
-            self.type or '<notype>',
-            self.name or '<nocodec>',
-            id(self),
-        )
+        _type = self.type or "<notype>"
+        name = self.name or "<nocodec>"
+        return f"<av.{self.__class__.__name__} {_type}/{name} at 0x{id(self):x}>"
 
     def parse(self, raw_input=None):
         """Split up a byte stream into list of :class:`.Packet`.
@@ -329,7 +325,7 @@ cdef class CodecContext:
         if not self.parser:
             self.parser = lib.av_parser_init(self.codec.ptr.id)
             if not self.parser:
-                raise ValueError('No parser for %s' % self.codec.name)
+                raise ValueError(f"No parser for {self.codec.name}")
 
         cdef ByteSource source = bytesource(raw_input, allow_none=True)
 
@@ -344,7 +340,6 @@ cdef class CodecContext:
         packets = []
 
         while True:
-
             with nogil:
                 consumed = lib.av_parser_parse2(
                     self.parser,
@@ -357,7 +352,6 @@ cdef class CodecContext:
             err_check(consumed)
 
             if out_size:
-
                 # We copy the data immediately, as we have yet to figure out
                 # the expected lifetime of the buffer we get back. All of the
                 # examples decode it immediately.
@@ -388,8 +382,7 @@ cdef class CodecContext:
 
         return packets
 
-    cdef _send_frame_and_recv(self, Frame frame):
-
+    def _send_frame_and_recv(self, Frame frame):
         cdef Packet packet
 
         cdef int res
@@ -397,17 +390,12 @@ cdef class CodecContext:
             res = lib.avcodec_send_frame(self.ptr, frame.ptr if frame is not None else NULL)
         err_check(res)
 
-        out = []
-        while True:
+        packet = self._recv_packet()
+        while packet:
+            yield packet
             packet = self._recv_packet()
-            if packet:
-                out.append(packet)
-            else:
-                break
-        return out
 
     cdef _send_packet_and_recv(self, Packet packet):
-
         cdef Frame frame
 
         cdef int res
@@ -428,10 +416,9 @@ cdef class CodecContext:
         return [frame]
 
     cdef Frame _alloc_next_frame(self):
-        raise NotImplementedError('Base CodecContext cannot decode.')
+        raise NotImplementedError("Base CodecContext cannot decode.")
 
     cdef _recv_frame(self):
-
         if not self._next_frame:
             self._next_frame = self._alloc_next_frame()
         cdef Frame frame = self._next_frame
@@ -449,7 +436,6 @@ cdef class CodecContext:
             return frame
 
     cdef _recv_packet(self):
-
         cdef Packet packet = Packet()
 
         cdef int res
@@ -462,11 +448,9 @@ cdef class CodecContext:
         if not res:
             return packet
 
-    cpdef encode(self, Frame frame=None):
-        """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
-
+    cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame):
         if self.ptr.codec_type not in [lib.AVMEDIA_TYPE_VIDEO, lib.AVMEDIA_TYPE_AUDIO]:
-            raise NotImplementedError('Encoding is only supported for audio and video.')
+            raise NotImplementedError("Encoding is only supported for audio and video.")
 
         self.open(strict=False)
 
@@ -478,12 +462,22 @@ cdef class CodecContext:
             if frame is not None:
                 frame._rebase_time(self.ptr.time_base)
 
+        return frames
+
+    cpdef encode(self, Frame frame=None):
+        """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
         res = []
-        for frame in frames:
+        for frame in self._prepare_and_time_rebase_frames_for_encode(frame):
             for packet in self._send_frame_and_recv(frame):
                 self._setup_encoded_packet(packet)
                 res.append(packet)
         return res
+
+    def encode_lazy(self, Frame frame=None):
+        for frame in self._prepare_and_time_rebase_frames_for_encode(frame):
+            for packet in self._send_frame_and_recv(frame):
+                self._setup_encoded_packet(packet)
+                yield packet
 
     cdef _setup_encoded_packet(self, Packet packet):
         # We coerced the frame's time_base into the CodecContext's during encoding,
@@ -505,7 +499,7 @@ cdef class CodecContext:
         """
 
         if not self.codec.ptr:
-            raise ValueError('cannot decode unknown codec')
+            raise ValueError("cannot decode unknown codec")
 
         self.open(strict=False)
 
@@ -523,116 +517,130 @@ cdef class CodecContext:
         # is carrying around.
         # TODO: Somehow get this from the stream so we can not pass the
         # packet here (because flushing packets are bogus).
-        frame._time_base = packet._time_base
+        if packet is not None:
+            frame._time_base = packet._time_base
 
         frame.index = self.ptr.frame_number - 1
 
-    property name:
-        def __get__(self):
-            return self.codec.name
+    @property
+    def name(self):
+        return self.codec.name
 
-    property type:
-        def __get__(self):
-            return self.codec.type
+    @property
+    def type(self):
+        return self.codec.type
 
-    property profile:
-        def __get__(self):
-            if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
-                return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
+    @property
+    def profile(self):
+        if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
+            return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
 
-    property time_base:
-        def __get__(self):
-            if self.is_decoder:
-                warnings.warn(
-                    "Using CodecContext.time_base for decoders is deprecated.",
-                    AVDeprecationWarning
-                )
-            return avrational_to_fraction(&self.ptr.time_base)
+    @property
+    def time_base(self):
+        if self.is_decoder:
+            warnings.warn(
+                "Using CodecContext.time_base for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        return avrational_to_fraction(&self.ptr.time_base)
 
-        def __set__(self, value):
-            if self.is_decoder:
-                warnings.warn(
-                    "Using CodecContext.time_base for decoders is deprecated.",
-                    AVDeprecationWarning
-                )
-            to_avrational(value, &self.ptr.time_base)
+    @time_base.setter
+    def time_base(self, value):
+        if self.is_decoder:
+            warnings.warn(
+                "Using CodecContext.time_base for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        to_avrational(value, &self.ptr.time_base)
 
-    property codec_tag:
-        def __get__(self):
-            return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
-                encoding="ascii")
+    @property
+    def codec_tag(self):
+        return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
+            encoding="ascii")
 
-        def __set__(self, value):
-            if isinstance(value, str) and len(value) == 4:
-                self.ptr.codec_tag = int.from_bytes(value.encode(encoding="ascii"),
-                                                    byteorder="little", signed=False)
-            else:
-                raise ValueError("Codec tag should be a 4 character string.")
+    @codec_tag.setter
+    def codec_tag(self, value):
+        if isinstance(value, str) and len(value) == 4:
+            self.ptr.codec_tag = int.from_bytes(value.encode(encoding="ascii"),
+                                                byteorder="little", signed=False)
+        else:
+            raise ValueError("Codec tag should be a 4 character string.")
 
-    property ticks_per_frame:
-        def __get__(self):
-            return self.ptr.ticks_per_frame
+    @property
+    def ticks_per_frame(self):
+        return self.ptr.ticks_per_frame
 
-    property bit_rate:
-        def __get__(self):
-            return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
+    @property
+    def bit_rate(self):
+        return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
 
-        def __set__(self, int value):
-            self.ptr.bit_rate = value
+    @bit_rate.setter
+    def bit_rate(self, int value):
+        self.ptr.bit_rate = value
 
-    property max_bit_rate:
-        def __get__(self):
-            if self.ptr.rc_max_rate > 0:
-                return self.ptr.rc_max_rate
-            else:
-                return None
+    @property
+    def max_bit_rate(self):
+        if self.ptr.rc_max_rate > 0:
+            return self.ptr.rc_max_rate
+        else:
+            return None
 
-    property bit_rate_tolerance:
-        def __get__(self):
-            self.ptr.bit_rate_tolerance
+    @property
+    def bit_rate_tolerance(self):
+        self.ptr.bit_rate_tolerance
 
-        def __set__(self, int value):
-            self.ptr.bit_rate_tolerance = value
+    @bit_rate_tolerance.setter
+    def bit_rate_tolerance(self, int value):
+        self.ptr.bit_rate_tolerance = value
 
-    property thread_count:
+    @property
+    def thread_count(self):
         """How many threads to use; 0 means auto.
 
         Wraps :ffmpeg:`AVCodecContext.thread_count`.
 
         """
+        return self.ptr.thread_count
 
-        def __get__(self):
-            return self.ptr.thread_count
+    @thread_count.setter
+    def thread_count(self, int value):
+        if lib.avcodec_is_open(self.ptr):
+            raise RuntimeError("Cannot change thread_count after codec is open.")
+        self.ptr.thread_count = value
 
-        def __set__(self, int value):
-            if lib.avcodec_is_open(self.ptr):
-                raise RuntimeError("Cannot change thread_count after codec is open.")
-            self.ptr.thread_count = value
-
-    property thread_type:
+    @property
+    def thread_type(self):
         """One of :class:`.ThreadType`.
 
         Wraps :ffmpeg:`AVCodecContext.thread_type`.
 
         """
+        return ThreadType.get(self.ptr.thread_type, create=True)
 
-        def __get__(self):
-            return ThreadType.get(self.ptr.thread_type, create=True)
+    @thread_type.setter
+    def thread_type(self, value):
+        if lib.avcodec_is_open(self.ptr):
+            raise RuntimeError("Cannot change thread_type after codec is open.")
+        self.ptr.thread_type = ThreadType[value].value
 
-        def __set__(self, value):
-            if lib.avcodec_is_open(self.ptr):
-                raise RuntimeError("Cannot change thread_type after codec is open.")
-            self.ptr.thread_type = ThreadType[value].value
-
-    property skip_frame:
+    @property
+    def skip_frame(self):
         """One of :class:`.SkipType`.
 
         Wraps ffmpeg:`AVCodecContext.skip_frame`.
 
         """
+        return SkipType._get(self.ptr.skip_frame, create=True)
 
-        def __get__(self):
-            return SkipType._get(self.ptr.skip_frame, create=True)
+    @skip_frame.setter
+    def skip_frame(self, value):
+        self.ptr.skip_frame = SkipType[value].value
 
-        def __set__(self, value):
-            self.ptr.skip_frame = SkipType[value].value
+    @property
+    def delay(self):
+        """Codec delay.
+
+        Wraps :ffmpeg:`AVCodecContext.delay`.
+
+        """
+        return self.ptr.delay

@@ -4,7 +4,6 @@ import subprocess
 import av
 import av.datasets
 
-
 # We want an H.264 stream in the Annex B byte-stream format.
 # We haven't exposed bitstream filters yet, so we're gonna use the `ffmpeg` CLI.
 h264_path = "night-sky.h264"

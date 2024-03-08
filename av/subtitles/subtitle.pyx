@@ -7,27 +7,22 @@ cdef class SubtitleProxy:
 
 
 cdef class SubtitleSet:
-
     def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
         cdef int i
         self.rects = tuple(build_subtitle(self, i) for i in range(self.proxy.struct.num_rects))
 
     def __repr__(self):
-        return '<%s.%s at 0x%x>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            id(self),
-        )
+        return f"<{self.__class__.__module__}.{self.__class__.__name__} at 0x{id(self):x}>"
 
-    property format:
-        def __get__(self): return self.proxy.struct.format
-    property start_display_time:
-        def __get__(self): return self.proxy.struct.start_display_time
-    property end_display_time:
-        def __get__(self): return self.proxy.struct.end_display_time
-    property pts:
-        def __get__(self): return self.proxy.struct.pts
+    @property
+    def format(self): return self.proxy.struct.format
+    @property
+    def start_display_time(self): return self.proxy.struct.start_display_time
+    @property
+    def end_display_time(self): return self.proxy.struct.end_display_time
+    @property
+    def pts(self): return self.proxy.struct.pts
 
     def __len__(self):
         return len(self.rects)
@@ -48,7 +43,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
     """
 
     if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
-        raise ValueError('subtitle rect index out of range')
+        raise ValueError("subtitle rect index out of range")
     cdef lib.AVSubtitleRect *ptr = subtitle.proxy.struct.rects[index]
 
     if ptr.type == lib.SUBTITLE_NONE:
@@ -60,38 +55,32 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
     elif ptr.type == lib.SUBTITLE_ASS:
         return AssSubtitle(subtitle, index)
     else:
-        raise ValueError('unknown subtitle type %r' % ptr.type)
+        raise ValueError("unknown subtitle type %r" % ptr.type)
 
 
 cdef class Subtitle:
-
     def __cinit__(self, SubtitleSet subtitle, int index):
         if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
-            raise ValueError('subtitle rect index out of range')
+            raise ValueError("subtitle rect index out of range")
         self.proxy = subtitle.proxy
         self.ptr = self.proxy.struct.rects[index]
 
         if self.ptr.type == lib.SUBTITLE_NONE:
-            self.type = b'none'
+            self.type = b"none"
         elif self.ptr.type == lib.SUBTITLE_BITMAP:
-            self.type = b'bitmap'
+            self.type = b"bitmap"
         elif self.ptr.type == lib.SUBTITLE_TEXT:
-            self.type = b'text'
+            self.type = b"text"
         elif self.ptr.type == lib.SUBTITLE_ASS:
-            self.type = b'ass'
+            self.type = b"ass"
         else:
-            raise ValueError('unknown subtitle type %r' % self.ptr.type)
+            raise ValueError(f"unknown subtitle type {self.ptr.type!r}")
 
     def __repr__(self):
-        return '<%s.%s at 0x%x>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            id(self),
-        )
+        return f"<{self.__class__.__module__}.{self.__class__.__name__} at 0x{id(self):x}>"
 
 
 cdef class BitmapSubtitle(Subtitle):
-
     def __cinit__(self, SubtitleSet subtitle, int index):
         self.planes = tuple(
             BitmapSubtitlePlane(self, i)
@@ -100,26 +89,21 @@ cdef class BitmapSubtitle(Subtitle):
         )
 
     def __repr__(self):
-        return '<%s.%s %dx%d at %d,%d; at 0x%x>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.width,
-            self.height,
-            self.x,
-            self.y,
-            id(self),
+        return (
+            f"<{self.__class__.__module__}.{self.__class__.__name__} "
+            f"{self.width}x{self.height} at {self.x},{self.y}; at 0x{id(self):x}>"
         )
 
-    property x:
-        def __get__(self): return self.ptr.x
-    property y:
-        def __get__(self): return self.ptr.y
-    property width:
-        def __get__(self): return self.ptr.w
-    property height:
-        def __get__(self): return self.ptr.h
-    property nb_colors:
-        def __get__(self): return self.ptr.nb_colors
+    @property
+    def x(self): return self.ptr.x
+    @property
+    def y(self): return self.ptr.y
+    @property
+    def width(self): return self.ptr.w
+    @property
+    def height(self): return self.ptr.h
+    @property
+    def nb_colors(self): return self.ptr.nb_colors
 
     def __len__(self):
         return len(self.planes)
@@ -132,13 +116,11 @@ cdef class BitmapSubtitle(Subtitle):
 
 
 cdef class BitmapSubtitlePlane:
-
     def __cinit__(self, BitmapSubtitle subtitle, int index):
-
         if index >= 4:
-            raise ValueError('BitmapSubtitles have only 4 planes')
+            raise ValueError("BitmapSubtitles have only 4 planes")
         if not subtitle.ptr.linesize[index]:
-            raise ValueError('plane does not exist')
+            raise ValueError("plane does not exist")
 
         self.subtitle = subtitle
         self.index = index
@@ -146,34 +128,29 @@ cdef class BitmapSubtitlePlane:
         self._buffer = <void*>subtitle.ptr.data[index]
 
     # New-style buffer support.
-
     def __getbuffer__(self, Py_buffer *view, int flags):
         PyBuffer_FillInfo(view, self, self._buffer, self.buffer_size, 0, flags)
 
 
 cdef class TextSubtitle(Subtitle):
-
     def __repr__(self):
-        return '<%s.%s %r at 0x%x>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.text,
-            id(self),
+        return (
+            f"<{self.__class__.__module__}.{self.__class__.__name__} "
+            f"{self.text!r} at 0x{id(self):x}>"
         )
 
-    property text:
-        def __get__(self): return self.ptr.text
+    @property
+    def text(self):
+        return self.ptr.text
 
 
 cdef class AssSubtitle(Subtitle):
-
     def __repr__(self):
-        return '<%s.%s %r at 0x%x>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self.ass,
-            id(self),
+        return (
+            f"<{self.__class__.__module__}.{self.__class__.__name__} "
+            f"{self.ass!r} at 0x{id(self):x}>"
         )
 
-    property ass:
-        def __get__(self): return self.ptr.ass
+    @property
+    def ass(self):
+        return self.ptr.ass

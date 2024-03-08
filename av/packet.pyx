@@ -4,8 +4,6 @@ from av.bytesource cimport bytesource
 from av.error cimport err_check
 from av.utils cimport avrational_to_fraction, to_avrational
 
-from av import deprecation
-
 
 cdef class Packet(Buffer):
 
@@ -21,7 +19,6 @@ cdef class Packet(Buffer):
             self.ptr = lib.av_packet_alloc()
 
     def __init__(self, input=None):
-
         cdef size_t size = 0
         cdef ByteSource source = None
 
@@ -48,13 +45,10 @@ cdef class Packet(Buffer):
             lib.av_packet_free(&self.ptr)
 
     def __repr__(self):
-        return '<av.%s of #%d, dts=%s, pts=%s; %s bytes at 0x%x>' % (
-            self.__class__.__name__,
-            self._stream.index if self._stream else 0,
-            self.dts,
-            self.pts,
-            self.ptr.size,
-            id(self),
+        stream = self._stream.index if self._stream else 0
+        return (
+            f"<av.{self.__class__.__name__} of #{stream}, dts={self.dts},"
+            f" pts={self.pts}; {self.ptr.size} bytes at 0x{id(self):x}>"
         )
 
     # Buffer protocol.
@@ -64,9 +58,8 @@ cdef class Packet(Buffer):
         return self.ptr.data
 
     cdef _rebase_time(self, lib.AVRational dst):
-
         if not dst.num:
-            raise ValueError('Cannot rebase to zero time.')
+            raise ValueError("Cannot rebase to zero time.")
 
         if not self._time_base.num:
             self._time_base = dst
@@ -86,47 +79,37 @@ cdef class Packet(Buffer):
         """
         return self._stream.decode(self)
 
-    @deprecation.method
-    def decode_one(self):
-        """
-        Send the packet's data to the decoder and return the first decoded frame.
+    @property
+    def stream_index(self):
+        return self.ptr.stream_index
 
-        Returns ``None`` if there is no frame.
-
-        .. warning:: This method is deprecated, as it silently discards any
-                     other frames which were decoded.
-        """
-        res = self._stream.decode(self)
-        return res[0] if res else None
-
-    property stream_index:
-        def __get__(self):
-            return self.ptr.stream_index
-
-    property stream:
+    @property
+    def stream(self):
         """
         The :class:`Stream` this packet was demuxed from.
         """
-        def __get__(self):
-            return self._stream
+        return self._stream
 
-        def __set__(self, Stream stream):
-            self._stream = stream
-            self.ptr.stream_index = stream.ptr.index
+    @stream.setter
+    def stream(self, Stream stream):
+        self._stream = stream
+        self.ptr.stream_index = stream.ptr.index
 
-    property time_base:
+    @property
+    def time_base(self):
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
         :type: fractions.Fraction
         """
-        def __get__(self):
-            return avrational_to_fraction(&self._time_base)
+        return avrational_to_fraction(&self._time_base)
 
-        def __set__(self, value):
-            to_avrational(value, &self._time_base)
+    @time_base.setter
+    def time_base(self, value):
+        to_avrational(value, &self._time_base)
 
-    property pts:
+    @property
+    def pts(self):
         """
         The presentation timestamp in :attr:`time_base` units for this packet.
 
@@ -134,33 +117,35 @@ cdef class Packet(Buffer):
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.pts != lib.AV_NOPTS_VALUE:
-                return self.ptr.pts
+        if self.ptr.pts != lib.AV_NOPTS_VALUE:
+            return self.ptr.pts
 
-        def __set__(self, v):
-            if v is None:
-                self.ptr.pts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.pts = v
+    @pts.setter
+    def pts(self, v):
+        if v is None:
+            self.ptr.pts = lib.AV_NOPTS_VALUE
+        else:
+            self.ptr.pts = v
 
-    property dts:
+    @property
+    def dts(self):
         """
         The decoding timestamp in :attr:`time_base` units for this packet.
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.dts != lib.AV_NOPTS_VALUE:
-                return self.ptr.dts
+        if self.ptr.dts != lib.AV_NOPTS_VALUE:
+            return self.ptr.dts
 
-        def __set__(self, v):
-            if v is None:
-                self.ptr.dts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.dts = v
+    @dts.setter
+    def dts(self, v):
+        if v is None:
+            self.ptr.dts = lib.AV_NOPTS_VALUE
+        else:
+            self.ptr.dts = v
 
-    property pos:
+    @property
+    def pos(self):
         """
         The byte position of this packet within the :class:`.Stream`.
 
@@ -168,20 +153,20 @@ cdef class Packet(Buffer):
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.pos != -1:
-                return self.ptr.pos
+        if self.ptr.pos != -1:
+            return self.ptr.pos
 
-    property size:
+    @property
+    def size(self):
         """
         The size in bytes of this packet's data.
 
         :type: int
         """
-        def __get__(self):
-            return self.ptr.size
+        return self.ptr.size
 
-    property duration:
+    @property
+    def duration(self):
         """
         The duration in :attr:`time_base` units for this packet.
 
@@ -189,9 +174,8 @@ cdef class Packet(Buffer):
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.duration != lib.AV_NOPTS_VALUE:
-                return self.ptr.duration
+        if self.ptr.duration != lib.AV_NOPTS_VALUE:
+            return self.ptr.duration
 
     @property
     def is_keyframe(self):
@@ -205,7 +189,8 @@ cdef class Packet(Buffer):
             self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
 
     @property
-    def is_corrupt(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
+    def is_corrupt(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
 
     @is_corrupt.setter
     def is_corrupt(self, v):
@@ -215,10 +200,14 @@ cdef class Packet(Buffer):
             self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
 
     @property
-    def is_discard(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISCARD)
+    def is_discard(self): 
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISCARD)
 
     @property
-    def is_trusted(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_TRUSTED)
+    def is_trusted(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_TRUSTED)
 
     @property
-    def is_disposable(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISPOSABLE)
+    def is_disposable(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISPOSABLE)
+

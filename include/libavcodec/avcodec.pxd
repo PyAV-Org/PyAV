@@ -207,6 +207,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int gop_size  # The number of pictures in a group of pictures, or 0 for intra_only.
         int max_b_frames
         int has_b_frames
+        AVColorRange color_range
+        AVColorPrimaries color_primaries
+        AVColorTransferCharacteristic color_trc
+        AVColorSpace colorspace
 
         # Audio.
         AVSampleFormat sample_fmt
@@ -259,6 +263,46 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef int avcodec_close(AVCodecContext *ctx)
 
     cdef int AV_NUM_DATA_POINTERS
+
+    cdef enum AVPacketSideDataType:
+        AV_PKT_DATA_PALETTE
+        AV_PKT_DATA_NEW_EXTRADATA
+        AV_PKT_DATA_PARAM_CHANGE
+        AV_PKT_DATA_H263_MB_INFO
+        AV_PKT_DATA_REPLAYGAIN
+        AV_PKT_DATA_DISPLAYMATRIX
+        AV_PKT_DATA_STEREO3D
+        AV_PKT_DATA_AUDIO_SERVICE_TYPE
+        AV_PKT_DATA_QUALITY_STATS
+        AV_PKT_DATA_FALLBACK_TRACK
+        AV_PKT_DATA_CPB_PROPERTIES
+        AV_PKT_DATA_SKIP_SAMPLES
+        AV_PKT_DATA_JP_DUALMONO
+        AV_PKT_DATA_STRINGS_METADATA
+        AV_PKT_DATA_SUBTITLE_POSITION
+        AV_PKT_DATA_MATROSKA_BLOCKADDITIONAL
+        AV_PKT_DATA_WEBVTT_IDENTIFIER
+        AV_PKT_DATA_WEBVTT_SETTINGS
+        AV_PKT_DATA_METADATA_UPDATE
+        AV_PKT_DATA_MPEGTS_STREAM_ID
+        AV_PKT_DATA_MASTERING_DISPLAY_METADATA
+        AV_PKT_DATA_SPHERICAL
+        AV_PKT_DATA_CONTENT_LIGHT_LEVEL
+        AV_PKT_DATA_A53_CC
+        AV_PKT_DATA_ENCRYPTION_INIT_INFO
+        AV_PKT_DATA_ENCRYPTION_INFO
+        AV_PKT_DATA_AFD
+        AV_PKT_DATA_PRFT
+        AV_PKT_DATA_ICC_PROFILE
+        AV_PKT_DATA_DOVI_CONF
+        AV_PKT_DATA_S12M_TIMECODE
+        AV_PKT_DATA_DYNAMIC_HDR10_PLUS
+        AV_PKT_DATA_NB
+
+    cdef struct AVPacketSideData:
+        uint8_t *data;
+        size_t size;
+        AVPacketSideDataType type;
 
     cdef enum AVFrameSideDataType:
         AV_FRAME_DATA_PANSCAN
@@ -320,6 +364,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDictionary *metadata
         int flags
         int decode_error_flags
+        AVColorRange color_range
+        AVColorPrimaries color_primaries
+        AVColorTransferCharacteristic color_trc
+        AVColorSpace colorspace
 
     cdef AVFrame* avcodec_alloc_frame()
 

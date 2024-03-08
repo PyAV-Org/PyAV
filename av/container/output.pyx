@@ -12,7 +12,6 @@ from av.utils cimport dict_to_avdict, to_avrational
 
 from av.dictionary import Dictionary
 
-
 log = logging.getLogger(__name__)
 
 
@@ -30,7 +29,6 @@ cdef close_output(OutputContainer self):
 
 
 cdef class OutputContainer(Container):
-
     def __cinit__(self, *args, **kwargs):
         self.streams = StreamContainer()
         self.metadata = {}
@@ -60,13 +58,13 @@ cdef class OutputContainer(Container):
         """
 
         if (codec_name is None and template is None) or (codec_name is not None and template is not None):
-            raise ValueError('needs one of codec_name or template')
+            raise ValueError("needs one of codec_name or template")
 
         cdef const lib.AVCodec *codec
         cdef Codec codec_obj
 
         if codec_name is not None:
-            codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, 'w')
+            codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, "w")
         else:
             if not template.codec_context:
                 raise ValueError("template has no codec context")
@@ -74,12 +72,10 @@ cdef class OutputContainer(Container):
         codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
-        if not lib.avformat_query_codec(
-            self.ptr.oformat,
-            codec.id,
-            lib.FF_COMPLIANCE_NORMAL,
-        ):
-            raise ValueError("%r format does not support %r codec" % (self.format.name, codec_name))
+        if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
+            raise ValueError(
+                f"{self.format.name!r} format does not support {codec_name!r} codec"
+            )
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
         lib.avformat_new_stream(self.ptr, codec)
@@ -192,7 +188,7 @@ cdef class OutputContainer(Container):
         # ... and warn if any weren't used.
         unused_options = {k: v for k, v in self.options.items() if k not in used_options}
         if unused_options:
-            log.warning('Some options were not used: %s' % unused_options)
+            log.warning("Some options were not used: %s" % unused_options)
 
         self._started = True
 
@@ -218,7 +214,7 @@ cdef class OutputContainer(Container):
 
         # Assert the packet is in stream time.
         if packet.ptr.stream_index < 0 or <unsigned int>packet.ptr.stream_index >= self.ptr.nb_streams:
-            raise ValueError('Bad Packet stream_index.')
+            raise ValueError("Bad Packet stream_index.")
         cdef lib.AVStream *stream = self.ptr.streams[packet.ptr.stream_index]
         packet._rebase_time(stream.time_base)
 

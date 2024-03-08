@@ -21,12 +21,7 @@ cdef class Frame:
             lib.av_frame_free(&self.ptr)
 
     def __repr__(self):
-        return 'av.%s #%d pts=%s at 0x%x>' % (
-            self.__class__.__name__,
-            self.index,
-            self.pts,
-            id(self),
-        )
+        return f"av.{self.__class__.__name__} #{self.index} pts={self.pts} at 0x{id(self):x}>"
 
     cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
         """Mimic another frame."""
@@ -45,9 +40,8 @@ cdef class Frame:
         pass  # Dummy to match the API of the others.
 
     cdef _rebase_time(self, lib.AVRational dst):
-
         if not dst.num:
-            raise ValueError('Cannot rebase to zero time.')
+            raise ValueError("Cannot rebase to zero time.")
 
         if not self._time_base.num:
             self._time_base = dst
@@ -57,14 +51,12 @@ cdef class Frame:
             return
 
         if self.ptr.pts != lib.AV_NOPTS_VALUE:
-            self.ptr.pts = lib.av_rescale_q(
-                self.ptr.pts,
-                self._time_base, dst
-            )
+            self.ptr.pts = lib.av_rescale_q(self.ptr.pts, self._time_base, dst)
 
         self._time_base = dst
 
-    property dts:
+    @property
+    def dts(self):
         """
         The decoding timestamp copied from the :class:`~av.packet.Packet` that triggered returning this frame in :attr:`time_base` units.
 
@@ -72,18 +64,19 @@ cdef class Frame:
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
-                return None
-            return self.ptr.pkt_dts
+        if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
+            return None
+        return self.ptr.pkt_dts
 
-        def __set__(self, value):
-            if value is None:
-                self.ptr.pkt_dts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.pkt_dts = value
+    @dts.setter
+    def dts(self, value):
+        if value is None:
+            self.ptr.pkt_dts = lib.AV_NOPTS_VALUE
+        else:
+            self.ptr.pkt_dts = value
 
-    property pts:
+    @property
+    def pts(self):
         """
         The presentation timestamp in :attr:`time_base` units for this frame.
 
@@ -91,18 +84,19 @@ cdef class Frame:
 
         :type: int
         """
-        def __get__(self):
-            if self.ptr.pts == lib.AV_NOPTS_VALUE:
-                return None
-            return self.ptr.pts
+        if self.ptr.pts == lib.AV_NOPTS_VALUE:
+            return None
+        return self.ptr.pts
 
-        def __set__(self, value):
-            if value is None:
-                self.ptr.pts = lib.AV_NOPTS_VALUE
-            else:
-                self.ptr.pts = value
+    @pts.setter
+    def pts(self, value):
+        if value is None:
+            self.ptr.pts = lib.AV_NOPTS_VALUE
+        else:
+            self.ptr.pts = value
 
-    property time:
+    @property
+    def time(self):
         """
         The presentation time in seconds for this frame.
 
@@ -110,32 +104,33 @@ cdef class Frame:
 
         :type: float
         """
-        def __get__(self):
-            if self.ptr.pts == lib.AV_NOPTS_VALUE:
-                return None
-            else:
-                return float(self.ptr.pts) * self._time_base.num / self._time_base.den
+        if self.ptr.pts == lib.AV_NOPTS_VALUE:
+            return None
+        else:
+            return float(self.ptr.pts) * self._time_base.num / self._time_base.den
 
-    property time_base:
+    @property
+    def time_base(self):
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
         :type: fractions.Fraction
         """
-        def __get__(self):
-            if self._time_base.num:
-                return avrational_to_fraction(&self._time_base)
+        if self._time_base.num:
+            return avrational_to_fraction(&self._time_base)
 
-        def __set__(self, value):
-            to_avrational(value, &self._time_base)
+    @time_base.setter
+    def time_base(self, value):
+        to_avrational(value, &self._time_base)
 
-    property is_corrupt:
+    @property
+    def is_corrupt(self):
         """
         Is this frame corrupt?
 
         :type: bool
         """
-        def __get__(self): return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
+        return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
 
     @property
     def side_data(self):

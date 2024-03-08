@@ -4,7 +4,6 @@ from av.enum import EnumType, define_enum
 
 from .common import TestCase
 
-
 # This must be at the top-level.
 PickleableFooBar = define_enum("PickleableFooBar", __name__, [("FOO", 1)])
 

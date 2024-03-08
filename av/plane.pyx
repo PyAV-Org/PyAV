@@ -11,11 +11,9 @@ cdef class Plane(Buffer):
         self.index = index
 
     def __repr__(self):
-        return '<av.%s %d bytes; buffer_ptr=0x%x; at 0x%x>' % (
-            self.__class__.__name__,
-            self.buffer_size,
-            self.buffer_ptr,
-            id(self),
+        return (
+            f"<av.{self.__class__.__name__} {self.buffer_size} bytes; "
+            f"buffer_ptr=0x{self.buffer_ptr:x}; at 0x{id(self):x}>"
         )
 
     cdef void* _buffer_ptr(self):

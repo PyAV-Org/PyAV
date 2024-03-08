@@ -6,7 +6,6 @@ from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
 from av.stream cimport Stream
 
-
 # Interrupt callback information, times are in seconds.
 ctypedef struct timeout_info:
     double start_time

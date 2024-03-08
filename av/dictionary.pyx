@@ -4,7 +4,6 @@ from av.error cimport err_check
 
 
 cdef class _Dictionary:
-
     def __cinit__(self, *args, **kwargs):
         for arg in args:
             self.update(arg)
@@ -40,7 +39,7 @@ cdef class _Dictionary:
             yield element.key
 
     def __repr__(self):
-        return 'av.Dictionary(%r)' % dict(self)
+        return f"av.Dictionary({dict(self)!r})"
 
     cpdef _Dictionary copy(self):
         cdef _Dictionary other = Dictionary()
