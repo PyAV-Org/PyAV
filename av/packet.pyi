@@ -16,6 +16,9 @@ class Packet:
     duration: int | None
     is_keyframe: bool
     is_corrupt: bool
+    is_discard: bool
+    is_trusted: bool
+    is_disposable: bool
 
     def __init__(self, input: int | None = None) -> None: ...
     def decode(self) -> Iterator[SubtitleSet]: ...
