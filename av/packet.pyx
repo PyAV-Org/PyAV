@@ -193,29 +193,32 @@ cdef class Packet(Buffer):
             if self.ptr.duration != lib.AV_NOPTS_VALUE:
                 return self.ptr.duration
 
-    property is_keyframe:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
+    @property
+    def is_keyframe(self):
+        return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
 
-        def __set__(self, v):
-            if v:
-                self.ptr.flags |= lib.AV_PKT_FLAG_KEY
-            else:
-                self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
+    @is_keyframe.setter
+    def is_keyframe(self, v):
+        if v:
+            self.ptr.flags |= lib.AV_PKT_FLAG_KEY
+        else:
+            self.ptr.flags &= ~(lib.AV_PKT_FLAG_KEY)
 
-    property is_corrupt:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
-        
-        def __set__(self, v):
-            if v:
-                self.ptr.flags |= lib.AV_PKT_FLAG_CORRUPT
-            else:
-                self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
+    @property
+    def is_corrupt(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_CORRUPT)
 
-    property is_discard:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISCARD)
+    @is_corrupt.setter
+    def is_corrupt(self, v):
+        if v:
+            self.ptr.flags |= lib.AV_PKT_FLAG_CORRUPT
+        else:
+            self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
 
-    property is_trusted:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_TRUSTED)
+    @property
+    def is_discard(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISCARD)
 
-    property is_disposable:
-        def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISPOSABLE)
+    @property
+    def is_trusted(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_TRUSTED)
+
+    @property
+    def is_disposable(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISPOSABLE)
