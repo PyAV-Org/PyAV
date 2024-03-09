@@ -65,14 +65,6 @@ Basics
 .. autoattribute:: Stream.index
 
 
-Transcoding
-~~~~~~~~~~~
-
-.. automethod:: Stream.encode
-
-.. automethod:: Stream.decode
-
-
 Timing
 ~~~~~~
 
@@ -85,27 +77,6 @@ Timing
 .. autoattribute:: Stream.duration
 
 .. autoattribute:: Stream.frames
-
-
-.. _frame_rates:
-
-Frame Rates
-...........
-
-
-These attributes are different ways of calculating frame rates.
-
-Since containers don't need to explicitly identify a frame rate, nor
-even have a static frame rate, these attributes are not guaranteed to be accurate.
-You must experiment with them with your media to see which ones work for you for your purposes.
-
-Whenever possible, we advise that you use raw timing instead of frame rates.
-
-.. autoattribute:: Stream.average_rate
-
-.. autoattribute:: Stream.base_rate
-
-.. autoattribute:: Stream.guessed_rate
 
 
 Others

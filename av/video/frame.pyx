@@ -464,9 +464,7 @@ cdef class VideoFrame(Frame):
         .. note:: For formats which expect an array of ``uint16``, the samples
         must be in the system's native byte order.
 
-        .. note:: for ``pal8``, an ``(image, palette)`` pair must be passed.
-        `palette` must have shape (256, 4) and is given in ARGB format
-        (PyAV will swap bytes if needed).
+        .. note:: for ``pal8``, an ``(image, palette)`` pair must be passed. `palette` must have shape (256, 4) and is given in ARGB format (PyAV will swap bytes if needed).
         """
         if format == "pal8":
             array, palette = array
