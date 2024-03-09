@@ -31,5 +31,3 @@ class Stream:
     frames: int
     language: str | None
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
-
-    def encode(self, frame: Frame | None = None) -> list[Packet]: ...
