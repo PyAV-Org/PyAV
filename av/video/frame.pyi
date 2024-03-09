@@ -8,7 +8,6 @@ from av.frame import Frame
 
 from .format import VideoFormat
 from .plane import VideoPlane
-from .reformatter import ColorRange, Colorspace
 
 _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.uint8]],
@@ -47,8 +46,8 @@ class VideoFrame(Frame):
         width: int | None = None,
         height: int | None = None,
         format: str | None = None,
-        src_colorspace: Colorspace | None = None,
-        dst_colorspace: Colorspace | None = None,
+        src_colorspace: int | None = None,
+        dst_colorspace: int | None = None,
         interpolation: int | str | None = None,
         src_color_range: int | str | None = None,
         dst_color_range: int | str | None = None,
