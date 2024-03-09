@@ -1,5 +1,7 @@
 from av.packet cimport Packet
 
+from .frame cimport AudioFrame
+
 
 cdef class AudioStream(Stream):
     def __repr__(self):
@@ -9,7 +11,7 @@ cdef class AudioStream(Stream):
             f" {self.layout.name}, {form} at 0x{id(self):x}>"
         )
 
-    def encode(self, frame=None):
+    cpdef encode(self, AudioFrame frame=None):
         """
         Encode an :class:`.AudioFrame` and return a list of :class:`.Packet`.
 
@@ -26,7 +28,7 @@ cdef class AudioStream(Stream):
 
         return packets
 
-    def decode(self, packet=None):
+    cpdef decode(self, Packet packet=None):
         """
         Decode a :class:`.Packet` and return a list of :class:`.AudioFrame`.
         :return: :class:`list` of :class:`.AudioFrame`
