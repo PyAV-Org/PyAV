@@ -1,5 +1,5 @@
 from av.packet cimport Packet
-
+from .frame cimport VideoFrame
 
 cdef class VideoStream(Stream):
     def __repr__(self):
@@ -9,7 +9,7 @@ cdef class VideoStream(Stream):
             f"{self.codec_context.height} at 0x{id(self):x}>"
         )
 
-    def encode(self, frame=None):
+    cpdef encode(self, VideoFrame frame=None):
         """
         Encode an :class:`.VideoFrame` and return a list of :class:`.Packet`.
 
@@ -27,7 +27,7 @@ cdef class VideoStream(Stream):
         return packets
 
 
-    def decode(self, packet=None):
+    cpdef decode(self, Packet packet=None):
         """
         Decode a :class:`.Packet` and return a list of :class:`.VideoFrame`.
         :return: :class:`list` of :class:`.Frame` subclasses.
