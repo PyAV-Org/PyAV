@@ -1,5 +1,5 @@
-from libc.stdint cimport uint8_t, uint64_t
 cimport libav as lib
+from libc.stdint cimport uint8_t, uint64_t
 
 from av.audio.format cimport AudioFormat
 from av.audio.layout cimport AudioLayout

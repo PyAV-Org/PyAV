@@ -111,3 +111,48 @@ class TestDecode(TestCase):
 
         self.assertEqual(packet_count, 1)
         self.assertEqual(frame_count, 0)
+
+    def test_decode_close_then_use(self):
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        container.close()
+
+        # Check accessing every attribute either works or raises
+        # an `AssertionError`.
+        for attr in dir(container):
+            with self.subTest(attr=attr):
+                try:
+                    getattr(container, attr)
+                except AssertionError:
+                    pass
+
+    def test_flush_decoded_video_frame_count(self):
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        video_stream = next(s for s in container.streams if s.type == "video")
+
+        self.assertIs(video_stream, container.streams.video[0])
+
+        # Decode the first GOP, which requires a flush to get all frames
+        have_keyframe = False
+        input_count = 0
+        output_count = 0
+
+        for packet in container.demux(video_stream):
+            if packet.is_keyframe:
+                if have_keyframe:
+                    break
+                have_keyframe = True
+
+            input_count += 1
+
+            for frame in video_stream.decode(packet):
+                output_count += 1
+
+        # Check the test works as expected and requires a flush
+        self.assertLess(output_count, input_count)
+
+        for frame in video_stream.decode(None):
+            # The Frame._time_base is not set by PyAV
+            self.assertIsNone(frame.time_base)
+            output_count += 1
+
+        self.assertEqual(output_count, input_count)

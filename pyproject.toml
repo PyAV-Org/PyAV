@@ -1,2 +1,7 @@
 [build-system]
-requires = ["setuptools", "wheel", "cython"]
+requires = ["setuptools", "cython"]
+
+[tool.isort]
+profile = "black"
+known_first_party = ["av"]
+skip = ["av/__init__.py"]

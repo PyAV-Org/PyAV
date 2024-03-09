@@ -6,7 +6,6 @@ from av.dictionary cimport _Dictionary
 from av.format cimport ContainerFormat
 from av.stream cimport Stream
 
-
 # Interrupt callback information, times are in seconds.
 ctypedef struct timeout_info:
     double start_time
@@ -37,6 +36,8 @@ cdef class Container:
     cdef readonly StreamContainer streams
     cdef readonly dict metadata
 
+    # Private API.
+    cdef _assert_open(self)
     cdef int err_check(self, int value) except -1
 
     # Timeouts

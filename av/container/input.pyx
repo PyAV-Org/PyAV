@@ -15,14 +15,13 @@ from av.dictionary import Dictionary
 cdef close_input(InputContainer self):
     if self.input_was_opened:
         with nogil:
+            # This causes `self.ptr` to be set to NULL.
             lib.avformat_close_input(&self.ptr)
         self.input_was_opened = False
 
 
 cdef class InputContainer(Container):
-
     def __cinit__(self, *args, **kwargs):
-
         cdef CodecContext py_codec_context
         cdef unsigned int i
         cdef lib.AVStream *stream
@@ -88,21 +87,27 @@ cdef class InputContainer(Container):
     def __dealloc__(self):
         close_input(self)
 
-    property start_time:
-        def __get__(self):
-            if self.ptr.start_time != lib.AV_NOPTS_VALUE:
-                return self.ptr.start_time
+    @property
+    def start_time(self):
+        self._assert_open()
+        if self.ptr.start_time != lib.AV_NOPTS_VALUE:
+            return self.ptr.start_time
 
-    property duration:
-        def __get__(self):
-            if self.ptr.duration != lib.AV_NOPTS_VALUE:
-                return self.ptr.duration
+    @property
+    def duration(self):
+        self._assert_open()
+        if self.ptr.duration != lib.AV_NOPTS_VALUE:
+            return self.ptr.duration
 
-    property bit_rate:
-        def __get__(self): return self.ptr.bit_rate
+    @property
+    def bit_rate(self):
+        self._assert_open()
+        return self.ptr.bit_rate
 
-    property size:
-        def __get__(self): return lib.avio_size(self.ptr.pb)
+    @property
+    def size(self):
+        self._assert_open()
+        return lib.avio_size(self.ptr.pb)
 
     def close(self):
         close_input(self)
@@ -123,6 +128,7 @@ cdef class InputContainer(Container):
         .. note:: The last packets are dummy packets that when decoded will flush the buffers.
 
         """
+        self._assert_open()
 
         # For whatever reason, Cython does not like us directly passing kwargs
         # from one method to another. Without kwargs, it ends up passing a
@@ -143,17 +149,15 @@ cdef class InputContainer(Container):
 
         self.set_timeout(self.read_timeout)
         try:
-
             for i in range(self.ptr.nb_streams):
                 include_stream[i] = False
             for stream in streams:
                 i = stream.index
                 if i >= self.ptr.nb_streams:
-                    raise ValueError('stream index %d out of range' % i)
+                    raise ValueError(f"stream index {i} out of range")
                 include_stream[i] = True
 
             while True:
-
                 packet = Packet()
                 try:
                     self.start_timeout()
@@ -198,12 +202,13 @@ cdef class InputContainer(Container):
             the arguments.
 
         """
+        self._assert_open()
         id(kwargs)  # Avoid Cython bug; see demux().
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, offset, *, str whence='time', bint backward=True,
+    def seek(self, offset, *, str whence="time", bint backward=True,
              bint any_frame=False, Stream stream=None,
              bint unsupported_frame_offset=False,
              bint unsupported_byte_offset=False):
@@ -234,21 +239,23 @@ cdef class InputContainer(Container):
         .. seealso:: :ffmpeg:`avformat_seek_file` for discussion of the flags.
 
         """
+        self._assert_open()
 
         # We used to take floats here and assume they were in seconds. This
         # was super confusing, so lets go in the complete opposite direction
         # and reject non-ints.
-        if not isinstance(offset, (int, long)):
-            raise TypeError('Container.seek only accepts integer offset.', type(offset))
+        if not isinstance(offset, int):
+            raise TypeError("Container.seek only accepts integer offset.", type(offset))
+
         cdef int64_t c_offset = offset
 
         cdef int flags = 0
         cdef int ret
 
         # We used to support whence in 'time', 'frame', and 'byte', but later
-        # realized that FFmpged doens't implement the frame or byte ones.
+        # realized that FFmpeg doens't implement the frame or byte ones.
         # We don't even document this anymore, but do allow 'time' to pass through.
-        if whence != 'time':
+        if whence != "time":
             raise ValueError("whence != 'time' is no longer supported")
 
         if backward:
@@ -270,6 +277,8 @@ cdef class InputContainer(Container):
         self.flush_buffers()
 
     cdef flush_buffers(self):
+        self._assert_open()
+
         cdef Stream stream
         cdef CodecContext codec_context
 

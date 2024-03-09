@@ -1,12 +1,12 @@
-from fractions import Fraction
-from unittest import SkipTest
 import os
 import warnings
+from fractions import Fraction
+from unittest import SkipTest
 
+import av
 from av import AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
 from av.video.frame import PictureType
-import av
 
 from .common import TestCase, fate_suite
 
@@ -44,6 +44,12 @@ class TestCodecContext(TestCase):
         ctx = Codec("png", "w").create()
         self.assertEqual(ctx.skip_frame.name, "DEFAULT")
 
+    def test_codec_delay(self):
+        with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
+            self.assertEqual(container.streams.audio[0].codec_context.delay, 312)
+        with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+            self.assertEqual(container.streams.video[0].codec_context.delay, 0)
+
     def test_codec_tag(self):
         ctx = Codec("mpeg4", "w").create()
         self.assertEqual(ctx.codec_tag, "\x00\x00\x00\x00")
@@ -79,6 +85,27 @@ class TestCodecContext(TestCase):
         ctx.extradata = None
         self.assertEqual(ctx.extradata, None)
         self.assertEqual(ctx.extradata_size, 0)
+
+    def test_decoder_gop_size(self):
+        ctx = av.codec.Codec("h264", "r").create()
+
+        with warnings.catch_warnings(record=True) as captured:
+            self.assertIsInstance(ctx.gop_size, int)
+            self.assertEqual(
+                captured[0].message.args[0],
+                "Using VideoCodecContext.gop_size for decoders is deprecated.",
+            )
+
+    def test_frame_index(self):
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams[0]
+        for frame in container.decode(stream):
+            with warnings.catch_warnings(record=True) as captured:
+                self.assertIsInstance(frame.index, int)
+                self.assertEqual(
+                    captured[0].message.args[0],
+                    "Using `frame.index` is deprecated.",
+                )
 
     def test_decoder_timebase(self):
         ctx = av.codec.Codec("h264", "r").create()
@@ -257,6 +284,7 @@ class TestEncoding(TestCase):
         height = options.pop("height", 480)
         max_frames = options.pop("max_frames", 50)
         time_base = options.pop("time_base", video_stream.time_base)
+        gop_size = options.pop("gop_size", 20)
 
         ctx = codec.create()
         ctx.width = width
@@ -264,6 +292,7 @@ class TestEncoding(TestCase):
         ctx.time_base = time_base
         ctx.framerate = 1 / ctx.time_base
         ctx.pix_fmt = pix_fmt
+        ctx.gop_size = gop_size
         ctx.options = options  # TODO
         if codec_tag:
             ctx.codec_tag = codec_tag
@@ -299,14 +328,33 @@ class TestEncoding(TestCase):
         ctx = av.Codec(dec_codec_name, "r").create()
         ctx.open()
 
+        keyframe_indices = []
         decoded_frame_count = 0
         for frame in iter_raw_frames(path, packet_sizes, ctx):
             decoded_frame_count += 1
             self.assertEqual(frame.width, width)
             self.assertEqual(frame.height, height)
             self.assertEqual(frame.format.name, pix_fmt)
+            if frame.key_frame:
+                keyframe_indices.append(decoded_frame_count)
 
         self.assertEqual(frame_count, decoded_frame_count)
+
+        self.assertIsInstance(
+            all(keyframe_index for keyframe_index in keyframe_indices), int
+        )
+        decoded_gop_sizes = [
+            j - i for i, j in zip(keyframe_indices[:-1], keyframe_indices[1:])
+        ]
+        if codec_name in ("dvvideo", "dnxhd") and all(
+            i == 1 for i in decoded_gop_sizes
+        ):
+            raise SkipTest()
+        for i in decoded_gop_sizes:
+            self.assertEqual(i, gop_size)
+
+        final_gop_size = decoded_frame_count - max(keyframe_indices)
+        self.assertLessEqual(final_gop_size, gop_size)
 
     def test_encoding_pcm_s24le(self):
         self.audio_encoding("pcm_s24le")
@@ -316,6 +364,8 @@ class TestEncoding(TestCase):
 
     def test_encoding_mp2(self):
         self.audio_encoding("mp2")
+
+    maxDiff = None
 
     def audio_encoding(self, codec_name):
         try:
@@ -350,17 +400,123 @@ class TestEncoding(TestCase):
         samples = 0
         packet_sizes = []
 
+        pts_expected = [
+            0,
+            1098,
+            2212,
+            3327,
+            4441,
+            5556,
+            6670,
+            7785,
+            8900,
+            10014,
+            11129,
+            12243,
+            13358,
+            14472,
+            15587,
+            16701,
+            17816,
+            18931,
+            20045,
+            21160,
+            22274,
+            23389,
+            24503,
+            25618,
+            26732,
+            27847,
+            28962,
+            30076,
+            31191,
+            32305,
+            33420,
+            34534,
+            35649,
+            36763,
+            37878,
+            38993,
+            40107,
+            41222,
+            42336,
+            43451,
+            44565,
+            45680,
+            46795,
+            47909,
+            49024,
+            50138,
+            51253,
+            52367,
+            53482,
+            54596,
+            55711,
+            56826,
+            57940,
+            59055,
+            60169,
+            61284,
+            62398,
+            63513,
+            64627,
+            65742,
+            66857,
+            67971,
+            69086,
+            70200,
+            71315,
+            72429,
+            73544,
+            74658,
+            75773,
+            76888,
+            78002,
+            79117,
+            80231,
+            81346,
+            82460,
+            83575,
+            84689,
+            85804,
+            86919,
+            88033,
+            89148,
+            90262,
+            91377,
+            92491,
+            93606,
+            94720,
+            95835,
+            96950,
+            98064,
+            99179,
+            100293,
+            101408,
+        ]
+        if codec_name == "aac":
+            pts_expected_encoded = list((-1024 + n * 1024 for n in range(101)))
+        elif codec_name == "mp2":
+            pts_expected_encoded = list((-481 + n * 1152 for n in range(89)))
+        else:
+            pts_expected_encoded = pts_expected.copy()
         with open(path, "wb") as f:
             for frame in iter_frames(container, audio_stream):
                 resampled_frames = resampler.resample(frame)
                 for resampled_frame in resampled_frames:
+                    self.assertEqual(resampled_frame.pts, pts_expected.pop(0))
+                    self.assertEqual(resampled_frame.time_base, Fraction(1, 48000))
                     samples += resampled_frame.samples
 
                     for packet in ctx.encode(resampled_frame):
+                        self.assertEqual(packet.pts, pts_expected_encoded.pop(0))
+                        self.assertEqual(packet.time_base, Fraction(1, 48000))
                         packet_sizes.append(packet.size)
                         f.write(packet)
 
             for packet in ctx.encode(None):
+                self.assertEqual(packet.pts, pts_expected_encoded.pop(0))
+                self.assertEqual(packet.time_base, Fraction(1, 48000))
                 packet_sizes.append(packet.size)
                 f.write(packet)
 

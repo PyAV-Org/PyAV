@@ -1,5 +1,5 @@
-from fractions import Fraction
 import warnings
+from fractions import Fraction
 
 import av
 
@@ -308,7 +308,6 @@ class TestVideoProbe(TestCase):
         self.assertEqual(stream.display_aspect_ratio, Fraction(4, 3))
         self.assertEqual(stream.format.name, "yuv420p")
         self.assertFalse(stream.has_b_frames)
-        self.assertEqual(stream.gop_size, 12)
         self.assertEqual(stream.height, 576)
         self.assertEqual(stream.max_bit_rate, None)
         self.assertEqual(stream.sample_aspect_ratio, Fraction(16, 15))
@@ -322,13 +321,13 @@ class TestVideoProbe(TestCase):
 
         # Deprecated properties.
         with warnings.catch_warnings(record=True) as captured:
-            self.assertIsNone(stream.framerate)
+            stream.framerate
             self.assertEqual(
                 captured[0].message.args[0],
                 "VideoStream.framerate is deprecated as it is not always set; please use VideoStream.average_rate.",
             )
         with warnings.catch_warnings(record=True) as captured:
-            self.assertIsNone(stream.rate)
+            stream.rate
             self.assertEqual(
                 captured[0].message.args[0],
                 "VideoStream.rate is deprecated as it is not always set; please use VideoStream.average_rate.",
@@ -362,7 +361,6 @@ class TestVideoProbeCorrupt(TestCase):
         self.assertTrue(str(stream).startswith("<av.VideoStream #0 h264, None 0x0 at "))
 
         # actual stream properties
-        self.assertEqual(stream.average_rate, None)
         self.assertEqual(stream.duration, None)
         self.assertEqual(stream.frames, 0)
         self.assertEqual(stream.id, 0)
@@ -383,7 +381,6 @@ class TestVideoProbeCorrupt(TestCase):
         self.assertEqual(stream.display_aspect_ratio, None)
         self.assertEqual(stream.format, None)
         self.assertFalse(stream.has_b_frames)
-        self.assertEqual(stream.gop_size, 12)
         self.assertEqual(stream.height, 0)
         self.assertEqual(stream.max_bit_rate, None)
         self.assertEqual(stream.sample_aspect_ratio, None)

@@ -3,18 +3,20 @@ from av.error cimport err_check
 
 
 cdef class AudioFifo:
-
     """A simple audio sample FIFO (First In First Out) buffer."""
 
     def __repr__(self):
-        return '<av.%s %s samples of %dhz %s %s at 0x%x>' % (
-            self.__class__.__name__,
-            self.samples,
-            self.sample_rate,
-            self.layout,
-            self.format,
-            id(self),
-        )
+        try:
+            result = (
+                f"<av.{self.__class__.__name__} {self.samples} samples of "
+                f"{self.sample_rate}hz {self.layout} {self.format} at 0x{id(self):x}>"
+            )
+        except AttributeError:
+            result = (
+                f"<av.{self.__class__.__name__} uninitialized, use fifo.write(frame),"
+                f" at 0x{id(self):x}>"
+            )
+        return result
 
     def __dealloc__(self):
         if self.ptr:
@@ -37,7 +39,7 @@ cdef class AudioFifo:
         """
 
         if frame is None:
-            raise TypeError('AudioFifo must be given an AudioFrame.')
+            raise TypeError("AudioFifo must be given an AudioFrame.")
 
         if not frame.ptr.nb_samples:
             return
@@ -64,7 +66,7 @@ cdef class AudioFifo:
             )
 
             if not self.ptr:
-                raise RuntimeError('Could not allocate AVAudioFifo.')
+                raise RuntimeError("Could not allocate AVAudioFifo.")
 
         # Make sure nothing changed.
         elif (
@@ -76,14 +78,16 @@ cdef class AudioFifo:
                 frame._time_base.den != self.template._time_base.den
             ))
         ):
-            raise ValueError('Frame does not match AudioFifo parameters.')
+            raise ValueError("Frame does not match AudioFifo parameters.")
 
         # Assert that the PTS are what we expect.
         cdef int64_t expected_pts
         if self.pts_per_sample and frame.ptr.pts != lib.AV_NOPTS_VALUE:
             expected_pts = <int64_t>(self.pts_per_sample * self.samples_written)
             if frame.ptr.pts != expected_pts:
-                raise ValueError('Frame.pts (%d) != expected (%d); fix or set to None.' % (frame.ptr.pts, expected_pts))
+                raise ValueError(
+                    "Frame.pts (%d) != expected (%d); fix or set to None." % (frame.ptr.pts, expected_pts)
+                )
 
         err_check(lib.av_audio_fifo_write(
             self.ptr,
@@ -166,21 +170,22 @@ cdef class AudioFifo:
                 frames.append(frame)
             else:
                 break
+
         return frames
 
-    property format:
+    @property
+    def format(self):
         """The :class:`.AudioFormat` of this FIFO."""
-        def __get__(self):
-            return self.template.format
-    property layout:
+        return self.template.format
+    @property
+    def layout(self):
         """The :class:`.AudioLayout` of this FIFO."""
-        def __get__(self):
-            return self.template.layout
-    property sample_rate:
-        def __get__(self):
-            return self.template.sample_rate
+        return self.template.layout
+    @property
+    def sample_rate(self):
+        return self.template.sample_rate
 
-    property samples:
+    @property
+    def samples(self):
         """Number of audio samples (per channel) in the buffer."""
-        def __get__(self):
-            return lib.av_audio_fifo_size(self.ptr) if self.ptr else 0
+        return lib.av_audio_fifo_size(self.ptr) if self.ptr else 0

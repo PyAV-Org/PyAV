@@ -1,5 +1,5 @@
-from libc.stdint cimport uint8_t
 cimport libav as lib
+from libc.stdint cimport uint8_t
 
 from av.frame cimport Frame
 from av.video.format cimport VideoFormat
@@ -11,6 +11,7 @@ cdef class VideoFrame(Frame):
     # This is the buffer that is used to back everything in the AVFrame.
     # We don't ever actually access it directly.
     cdef uint8_t *_buffer
+    cdef object _np_buffer
 
     cdef VideoReformatter reformatter
 

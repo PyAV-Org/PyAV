@@ -16,6 +16,30 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v11.0.0
+-------
+
+Major:
+
+- Add support for FFmpeg 6.0, drop support for FFmpeg < 5.0.
+- Add support for Python 3.12, drop support for Python < 3.8.
+- Build binary wheels against libvpx 1.13.1 to fix CVE-2023-5217.
+- Build binary wheels against FFmpeg 6.0.
+
+Features:
+
+- Add support for the `ENCODER_FLUSH` encoder flag (:issue:`1067`).
+- Add VideoFrame ndarray operations for yuv444p/yuvj444p formats (:issue:`788`).
+- Add setters for `AVFrame.dts`, `AVPacket.is_keyframe` and `AVPacket.is_corrupt` (:issue:`1179`).
+
+Fixes:
+
+- Fix build using Cython 3 (:issue:`1140`).
+- Populate new streams with codec parameters (:issue:`1044`).
+- Explicitly set `python_requires` to avoid installing on incompatible Python (:issue:`1057`).
+- Make `AudioFifo.__repr__` safe before the first frame (:issue:`1130`).
+- Guard input container members against use after closes (:issue:`1137`).
+
 v10.0.0
 -------
 

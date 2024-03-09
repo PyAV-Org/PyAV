@@ -1,5 +1,7 @@
-from libc.stdint cimport int64_t
+import warnings
+
 cimport libav as lib
+from libc.stdint cimport int64_t
 
 from av.codec.context cimport CodecContext
 from av.frame cimport Frame
@@ -9,9 +11,10 @@ from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 
+from av.deprecation import AVDeprecationWarning
+
 
 cdef class VideoCodecContext(CodecContext):
-
     def __cinit__(self, *args, **kwargs):
         self.last_w = 0
         self.last_h = 0
@@ -26,7 +29,6 @@ cdef class VideoCodecContext(CodecContext):
         self.ptr.time_base.den = self.ptr.framerate.num or lib.AV_TIME_BASE
 
     cdef _prepare_frames_for_encode(self, Frame input):
-
         if not input:
             return [None]
 
@@ -66,106 +68,218 @@ cdef class VideoCodecContext(CodecContext):
     cdef _build_format(self):
         self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
 
-    property format:
-        def __get__(self):
-            return self._format
+    @property
+    def format(self):
+        return self._format
 
-        def __set__(self, VideoFormat format):
-            self.ptr.pix_fmt = format.pix_fmt
-            self.ptr.width = format.width
-            self.ptr.height = format.height
-            self._build_format()  # Kinda wasteful.
+    @format.setter
+    def format(self, VideoFormat format):
+        self.ptr.pix_fmt = format.pix_fmt
+        self.ptr.width = format.width
+        self.ptr.height = format.height
+        self._build_format()  # Kinda wasteful.
 
-    property width:
-        def __get__(self):
-            return self.ptr.width
+    @property
+    def width(self):
+        return self.ptr.width
 
-        def __set__(self, unsigned int value):
-            self.ptr.width = value
-            self._build_format()
+    @width.setter
+    def width(self, unsigned int value):
+        self.ptr.width = value
+        self._build_format()
 
-    property height:
-        def __get__(self):
-            return self.ptr.height
+    @property
+    def height(self):
+        return self.ptr.height
 
-        def __set__(self, unsigned int value):
-            self.ptr.height = value
-            self._build_format()
+    @height.setter
+    def height(self, unsigned int value):
+        self.ptr.height = value
+        self._build_format()
 
-    property bits_per_coded_sample:
-        def __get__(self):
-            return self.ptr.bits_per_coded_sample
+    @property
+    def bits_per_coded_sample(self):
+        """
+        The number of bits per sample in the codedwords, basically the bitrate per sample. 
+        It is mandatory for this to be set for some formats to decode them.
+        
+        :type: int
+        """
+        return self.ptr.bits_per_coded_sample
+      
+    @bits_per_coded_sample.setter
+    def bits_per_coded_sample(self, int value):
+        self.ptr.bits_per_coded_sample = value
+        self._build_format()
 
-        def __set__(self, unsigned int value):
-            self.ptr.bits_per_coded_sample = value
-            self._build_format()
-
-    property pix_fmt:
+    @property
+    def pix_fmt(self):
         """
         The pixel format's name.
 
         :type: str
         """
-        def __get__(self):
-            return self._format.name
+        return self._format.name
 
-        def __set__(self, value):
-            self.ptr.pix_fmt = get_pix_fmt(value)
-            self._build_format()
+    @pix_fmt.setter
+    def pix_fmt(self, value):
+        self.ptr.pix_fmt = get_pix_fmt(value)
+        self._build_format()
 
-    property framerate:
+    @property
+    def framerate(self):
         """
         The frame rate, in frames per second.
 
         :type: fractions.Fraction
         """
-        def __get__(self):
-            return avrational_to_fraction(&self.ptr.framerate)
+        return avrational_to_fraction(&self.ptr.framerate)
 
-        def __set__(self, value):
-            to_avrational(value, &self.ptr.framerate)
+    @framerate.setter
+    def framerate(self, value):
+        to_avrational(value, &self.ptr.framerate)
 
-    property rate:
+    @property
+    def rate(self):
         """Another name for :attr:`framerate`."""
-        def __get__(self):
-            return self.framerate
+        return self.framerate
 
-        def __set__(self, value):
-            self.framerate = value
+    @rate.setter
+    def rate(self, value):
+        self.framerate = value
 
-    property gop_size:
-        def __get__(self):
-            return self.ptr.gop_size
+    @property
+    def gop_size(self):
+        """
+        Sets the number of frames between keyframes. Used only for encoding.
+        
+        :type: int
+        """
+        if self.is_decoder:
+            warnings.warn(
+                "Using VideoCodecContext.gop_size for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        return self.ptr.gop_size
 
-        def __set__(self, int value):
-            self.ptr.gop_size = value
+    @gop_size.setter
+    def gop_size(self, int value):
+        if self.is_decoder:
+            warnings.warn(
+                "Using VideoCodecContext.gop_size for decoders is deprecated.",
+                AVDeprecationWarning
+            )
+        self.ptr.gop_size = value
 
-    property sample_aspect_ratio:
-        def __get__(self):
-            return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
+    @property
+    def sample_aspect_ratio(self):
+        return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
 
-        def __set__(self, value):
-            to_avrational(value, &self.ptr.sample_aspect_ratio)
+    @sample_aspect_ratio.setter
+    def sample_aspect_ratio(self, value):
+        to_avrational(value, &self.ptr.sample_aspect_ratio)
 
-    property display_aspect_ratio:
-        def __get__(self):
-            cdef lib.AVRational dar
+    @property
+    def display_aspect_ratio(self):
+        cdef lib.AVRational dar
 
-            lib.av_reduce(
-                &dar.num, &dar.den,
-                self.ptr.width * self.ptr.sample_aspect_ratio.num,
-                self.ptr.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
+        lib.av_reduce(
+            &dar.num, &dar.den,
+            self.ptr.width * self.ptr.sample_aspect_ratio.num,
+            self.ptr.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
 
-            return avrational_to_fraction(&dar)
+        return avrational_to_fraction(&dar)
 
-    property has_b_frames:
-        def __get__(self):
-            return bool(self.ptr.has_b_frames)
+    @property
+    def has_b_frames(self):
+        """
+        :type: bool
+        """
+        return bool(self.ptr.has_b_frames)
 
-    property coded_width:
-        def __get__(self):
-            return self.ptr.coded_width
+    @property
+    def coded_width(self):
+        """
+        :type: int
+        """
+        return self.ptr.coded_width
 
-    property coded_height:
-        def __get__(self):
-            return self.ptr.coded_height
+    @property
+    def coded_height(self):
+        """
+        :type: int
+        """
+        return self.ptr.coded_height
+
+    @property
+    def color_range(self):
+        """
+        Describes the signal range of the colorspace.
+
+        Wraps :ffmpeg:`AVFrame.color_range`.
+
+        :type: int
+        """
+        return self.ptr.color_range
+
+    @color_range.setter
+    def color_range(self, value):
+        self.ptr.color_range = value
+
+    @property
+    def color_primaries(self):
+        """
+        Describes the RGB/XYZ matrix of the colorspace.
+
+        Wraps :ffmpeg:`AVFrame.color_primaries`.
+
+        :type: int
+        """
+        return self.ptr.color_primaries
+
+    @color_primaries.setter
+    def color_primaries(self, value):
+        self.ptr.color_primaries = value
+
+    @property
+    def color_trc(self):
+        """
+        Describes the linearization function (a.k.a. transformation characteristics) of the colorspace.
+
+        Wraps :ffmpeg:`AVFrame.color_trc`.
+
+        :type: int
+        """
+        return self.ptr.color_trc
+
+    @color_trc.setter
+    def color_trc(self, value):
+        self.ptr.color_trc = value
+
+    @property
+    def colorspace(self):
+        """
+        Describes the YUV/RGB transformation matrix of the colorspace.
+
+        Wraps :ffmpeg:`AVFrame.colorspace`.
+
+        :type: int
+        """
+        return self.ptr.colorspace
+
+    @colorspace.setter
+    def colorspace(self, value):
+        self.ptr.colorspace = value
+
+    @property
+    def max_b_frames(self):
+        """
+        The maximum run of consecutive B frames when encoding a video.
+
+        :type: int
+        """
+        return self.ptr.max_b_frames
+
+    @max_b_frames.setter
+    def max_b_frames(self, value):
+        self.ptr.max_b_frames = value

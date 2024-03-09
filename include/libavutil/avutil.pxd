@@ -1,8 +1,11 @@
-from libc.stdint cimport int64_t, uint8_t, uint64_t
+from libc.stdint cimport int64_t, uint8_t, uint64_t, int32_t
 
 
 cdef extern from "libavutil/mathematics.h" nogil:
     pass
+
+cdef extern from "libavutil/display.h" nogil:
+    cdef double av_display_rotation_get(const int32_t matrix[9])
 
 cdef extern from "libavutil/rational.h" nogil:
     cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
@@ -39,6 +42,68 @@ cdef extern from "libavutil/avutil.h" nogil:
         # This is nice, but only in FFMpeg:
         # AV_ROUND_PASS_MINMAX
 
+    cdef enum AVColorSpace:
+        AVCOL_SPC_RGB
+        AVCOL_SPC_BT709
+        AVCOL_SPC_UNSPECIFIED
+        AVCOL_SPC_RESERVED
+        AVCOL_SPC_FCC
+        AVCOL_SPC_BT470BG
+        AVCOL_SPC_SMPTE170M
+        AVCOL_SPC_SMPTE240M
+        AVCOL_SPC_YCOCG
+        AVCOL_SPC_BT2020_NCL
+        AVCOL_SPC_BT2020_CL
+        AVCOL_SPC_NB
+
+    cdef enum AVColorRange:
+        AVCOL_RANGE_UNSPECIFIED
+        AVCOL_RANGE_MPEG
+        AVCOL_RANGE_JPEG
+        AVCOL_RANGE_NB
+
+    cdef enum AVColorPrimaries:
+        AVCOL_PRI_RESERVED0
+        AVCOL_PRI_BT709
+        AVCOL_PRI_UNSPECIFIED
+        AVCOL_PRI_RESERVED
+        AVCOL_PRI_BT470M
+        AVCOL_PRI_BT470BG
+        AVCOL_PRI_SMPTE170M
+        AVCOL_PRI_SMPTE240M
+        AVCOL_PRI_FILM
+        AVCOL_PRI_BT2020
+        AVCOL_PRI_SMPTE428
+        AVCOL_PRI_SMPTEST428_1
+        AVCOL_PRI_SMPTE431
+        AVCOL_PRI_SMPTE432
+        AVCOL_PRI_EBU3213
+        AVCOL_PRI_JEDEC_P22
+        AVCOL_PRI_NB
+
+    cdef enum AVColorTransferCharacteristic:
+        AVCOL_TRC_RESERVED0
+        AVCOL_TRC_BT709
+        AVCOL_TRC_UNSPECIFIED
+        AVCOL_TRC_RESERVED
+        AVCOL_TRC_GAMMA22
+        AVCOL_TRC_GAMMA28
+        AVCOL_TRC_SMPTE170M
+        AVCOL_TRC_SMPTE240M
+        AVCOL_TRC_LINEAR
+        AVCOL_TRC_LOG
+        AVCOL_TRC_LOG_SQRT
+        AVCOL_TRC_IEC61966_2_4
+        AVCOL_TRC_BT1361_ECG
+        AVCOL_TRC_IEC61966_2_1
+        AVCOL_TRC_BT2020_10
+        AVCOL_TRC_BT2020_12
+        AVCOL_TRC_SMPTE2084
+        AVCOL_TRC_SMPTEST2084
+        AVCOL_TRC_SMPTE428
+        AVCOL_TRC_SMPTEST428_1
+        AVCOL_TRC_ARIB_STD_B67
+        AVCOL_TRC_NB
 
     cdef double M_PI
 
@@ -67,9 +132,9 @@ cdef extern from "libavutil/avutil.h" nogil:
 
     # Rescales from one time base to another
     cdef int64_t av_rescale_q(
-        int64_t a, # time stamp
-        AVRational bq, # source time base
-        AVRational cq  # target time base
+        int64_t a,  # time stamp
+        AVRational bq,  # source time base
+        AVRational cq   # target time base
     )
 
     # Rescale a 64-bit integer with specified rounding.
@@ -78,14 +143,14 @@ cdef extern from "libavutil/avutil.h" nogil:
         int64_t a,
         int64_t b,
         int64_t c,
-        int r # should be AVRounding, but then we can't use bitwise logic.
+        int r  # should be AVRounding, but then we can't use bitwise logic.
     )
 
     cdef int64_t av_rescale_q_rnd(
         int64_t a,
         AVRational bq,
         AVRational cq,
-        int r # should be AVRounding, but then we can't use bitwise logic.
+        int r  # should be AVRounding, but then we can't use bitwise logic.
     )
 
     cdef int64_t av_rescale(
@@ -146,7 +211,6 @@ cdef extern from "libavutil/pixdesc.h" nogil:
     int av_get_padded_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
 
 
-
 cdef extern from "libavutil/channel_layout.h" nogil:
 
     # Layouts.
@@ -164,8 +228,6 @@ cdef extern from "libavutil/channel_layout.h" nogil:
     cdef uint64_t av_channel_layout_extract_channel(uint64_t layout, int index)
     cdef char* av_get_channel_name(uint64_t channel)
     cdef char* av_get_channel_description(uint64_t channel)
-
-
 
 
 cdef extern from "libavutil/audio_fifo.h" nogil:
@@ -277,6 +339,18 @@ cdef extern from "libavutil/imgutils.h" nogil:
         int height,
         AVPixelFormat pix_fmt,
         int align
+    )
+    cdef int av_image_fill_pointers(
+        uint8_t *pointers[4],
+        AVPixelFormat pix_fmt,
+        int height,
+        uint8_t *ptr,
+        const int linesizes[4]
+    )
+    cdef int av_image_fill_linesizes(
+        int linesizes[4],
+        AVPixelFormat pix_fmt,
+        int width,
     )
 
 

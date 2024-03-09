@@ -30,7 +30,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_PROP_BITMAP_SUB
         AV_CODEC_PROP_TEXT_SUB
 
-    #AVCodec.capabilities
+    # AVCodec.capabilities
     cdef enum:
         AV_CODEC_CAP_DRAW_HORIZ_BAND
         AV_CODEC_CAP_DR1
@@ -90,6 +90,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef enum:
         AV_PKT_FLAG_KEY
         AV_PKT_FLAG_CORRUPT
+        AV_PKT_FLAG_DISCARD
+        AV_PKT_FLAG_TRUSTED
+        AV_PKT_FLAG_DISPOSABLE
 
     cdef enum:
         AV_FRAME_FLAG_CORRUPT
@@ -131,7 +134,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         AVClass *priv_class
 
-
     cdef int av_codec_is_encoder(AVCodec*)
     cdef int av_codec_is_decoder(AVCodec*)
 
@@ -143,7 +145,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         char **mime_types
 
     AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
-
 
     cdef struct AVCodecContext:
 
@@ -205,9 +206,13 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         AVPixelFormat pix_fmt
         AVRational sample_aspect_ratio
-        int gop_size # The number of pictures in a group of pictures, or 0 for intra_only.
+        int gop_size  # The number of pictures in a group of pictures, or 0 for intra_only.
         int max_b_frames
         int has_b_frames
+        AVColorRange color_range
+        AVColorPrimaries color_primaries
+        AVColorTransferCharacteristic color_trc
+        AVColorSpace colorspace
 
         # Audio.
         AVSampleFormat sample_fmt
@@ -261,6 +266,46 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef int AV_NUM_DATA_POINTERS
 
+    cdef enum AVPacketSideDataType:
+        AV_PKT_DATA_PALETTE
+        AV_PKT_DATA_NEW_EXTRADATA
+        AV_PKT_DATA_PARAM_CHANGE
+        AV_PKT_DATA_H263_MB_INFO
+        AV_PKT_DATA_REPLAYGAIN
+        AV_PKT_DATA_DISPLAYMATRIX
+        AV_PKT_DATA_STEREO3D
+        AV_PKT_DATA_AUDIO_SERVICE_TYPE
+        AV_PKT_DATA_QUALITY_STATS
+        AV_PKT_DATA_FALLBACK_TRACK
+        AV_PKT_DATA_CPB_PROPERTIES
+        AV_PKT_DATA_SKIP_SAMPLES
+        AV_PKT_DATA_JP_DUALMONO
+        AV_PKT_DATA_STRINGS_METADATA
+        AV_PKT_DATA_SUBTITLE_POSITION
+        AV_PKT_DATA_MATROSKA_BLOCKADDITIONAL
+        AV_PKT_DATA_WEBVTT_IDENTIFIER
+        AV_PKT_DATA_WEBVTT_SETTINGS
+        AV_PKT_DATA_METADATA_UPDATE
+        AV_PKT_DATA_MPEGTS_STREAM_ID
+        AV_PKT_DATA_MASTERING_DISPLAY_METADATA
+        AV_PKT_DATA_SPHERICAL
+        AV_PKT_DATA_CONTENT_LIGHT_LEVEL
+        AV_PKT_DATA_A53_CC
+        AV_PKT_DATA_ENCRYPTION_INIT_INFO
+        AV_PKT_DATA_ENCRYPTION_INFO
+        AV_PKT_DATA_AFD
+        AV_PKT_DATA_PRFT
+        AV_PKT_DATA_ICC_PROFILE
+        AV_PKT_DATA_DOVI_CONF
+        AV_PKT_DATA_S12M_TIMECODE
+        AV_PKT_DATA_DYNAMIC_HDR10_PLUS
+        AV_PKT_DATA_NB
+
+    cdef struct AVPacketSideData:
+        uint8_t *data;
+        size_t size;
+        AVPacketSideDataType type;
+
     cdef enum AVFrameSideDataType:
         AV_FRAME_DATA_PANSCAN
         AV_FRAME_DATA_A53_CC
@@ -290,15 +335,15 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
     cdef struct AVFrame:
-        uint8_t *data[4];
-        int linesize[4];
+        uint8_t *data[4]
+        int linesize[4]
         uint8_t **extended_data
 
-        int format # Should be AVPixelFormat or AVSampleFormat
-        int key_frame # 0 or 1.
+        int format  # Should be AVPixelFormat or AVSampleFormat
+        int key_frame  # 0 or 1.
         AVPictureType pict_type
 
-        int interlaced_frame # 0 or 1.
+        int interlaced_frame  # 0 or 1.
 
         int width
         int height
@@ -306,10 +351,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int nb_side_data
         AVFrameSideData **side_data
 
-        int nb_samples # Audio samples
-        int sample_rate # Audio Sample rate
-        int channels # Number of audio channels
-        int channel_layout # Audio channel_layout
+        int nb_samples  # Audio samples
+        int sample_rate  # Audio Sample rate
+        int channels  # Number of audio channels
+        int channel_layout  # Audio channel_layout
 
         int64_t pts
         int64_t pkt_dts
@@ -321,7 +366,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDictionary *metadata
         int flags
         int decode_error_flags
-
+        AVColorRange color_range
+        AVColorPrimaries color_primaries
+        AVColorTransferCharacteristic color_trc
+        AVColorSpace colorspace
 
     cdef AVFrame* avcodec_alloc_frame()
 
@@ -338,7 +386,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int duration
 
         int64_t pos
-
 
     cdef int avcodec_fill_audio_frame(
         AVFrame *frame,
@@ -369,8 +416,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int w
         int h
         int nb_colors
-        uint8_t *data[4];
-        int linesize[4];
+        uint8_t *data[4]
+        int linesize[4]
         AVSubtitleType type
         char *text
         char *ass
@@ -404,7 +451,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
 
-     # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
+    # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
     cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
     cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
 
@@ -441,7 +488,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int keyframe
     )
     cdef void av_parser_close(AVCodecParserContext *s)
-
 
     cdef struct AVCodecParameters:
         AVMediaType codec_type

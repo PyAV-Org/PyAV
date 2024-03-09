@@ -22,7 +22,6 @@ warnings.filterwarnings("default", "", AVDeprecationWarning)
 
 
 class renamed_attr:
-
     """Proxy for renamed attributes (or methods) on classes.
     Getting and setting values will be redirected to the provided name,
     and warnings will be issues every time.
@@ -75,7 +74,7 @@ class method:
 
     def __get__(self, instance, cls):
         warning = MethodDeprecationWarning(
-            "{}.{} is deprecated.".format(cls.__name__, self.func.__name__)
+            f"{cls.__name__}.{self.func.__name__} is deprecated."
         )
         warnings.warn(warning, stacklevel=2)
         return self.func.__get__(instance, cls)

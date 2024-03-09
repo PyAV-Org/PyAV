@@ -1,14 +1,16 @@
+import io
+import math
 from fractions import Fraction
 from unittest import SkipTest
-import math
 
+import numpy as np
+
+import av
 from av import AudioFrame, VideoFrame
 from av.audio.stream import AudioStream
 from av.video.stream import VideoStream
-import av
 
 from .common import Image, TestCase, fate_suite
-
 
 WIDTH = 320
 HEIGHT = 240
@@ -54,10 +56,10 @@ def write_rgb_rotate(output):
         )
         frame.planes[0].update(image.tobytes())
 
-        for packet in stream.encode(frame):
+        for packet in stream.encode_lazy(frame):
             output.mux(packet)
 
-    for packet in stream.encode(None):
+    for packet in stream.encode_lazy(None):
         output.mux(packet)
 
 
@@ -277,6 +279,37 @@ class TestEncodeStreamSemantics(TestCase):
             self.assertIs(apacket.stream, astream)
             self.assertEqual(apacket.stream_index, 1)
 
+    def test_stream_audio_resample(self):
+        with av.open(self.sandboxed("output.mov"), "w") as output:
+            vstream = output.add_stream("mpeg4", 24)
+            vstream.pix_fmt = "yuv420p"
+            vstream.width = 320
+            vstream.height = 240
+
+            astream = output.add_stream("aac", sample_rate=8000, layout="mono")
+            frame_size = 512
+
+            pts_expected = [-1024, 0, 512, 1024, 1536, 2048, 2560]
+            pts = 0
+            for i in range(15):
+                aframe = AudioFrame("s16", "mono", samples=frame_size)
+                aframe.sample_rate = 8000
+                aframe.time_base = Fraction(1, 1000)
+                aframe.pts = pts
+                aframe.dts = pts
+                pts += 32
+                apackets = astream.encode(aframe)
+                if apackets:
+                    apacket = apackets[0]
+                    self.assertEqual(apacket.pts, pts_expected.pop(0))
+                    self.assertEqual(apacket.time_base, Fraction(1, 8000))
+
+            apackets = astream.encode(None)
+            if apackets:
+                apacket = apackets[0]
+                self.assertEqual(apacket.pts, pts_expected.pop(0))
+                self.assertEqual(apacket.time_base, Fraction(1, 8000))
+
     def test_set_id_and_time_base(self):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
@@ -291,3 +324,84 @@ class TestEncodeStreamSemantics(TestCase):
             self.assertEqual(stream.time_base, None)
             stream.time_base = Fraction(1, 48000)
             self.assertEqual(stream.time_base, Fraction(1, 48000))
+
+
+def encode_file_with_max_b_frames(max_b_frames):
+    """
+    Create an encoded video file (or file-like object) with the given
+    maximum run of B frames.
+
+    max_b_frames: non-negative integer which is the maximum allowed run
+        of consecutive B frames.
+
+    Returns: a file-like object.
+    """
+    # Create a video file that is entirely arbitrary, but with the passed
+    # max_b_frames parameter.
+    file = io.BytesIO()
+    container = av.open(file, mode="w", format="mp4")
+    stream = container.add_stream("h264", rate=30)
+    stream.width = 640
+    stream.height = 480
+    stream.pix_fmt = "yuv420p"
+    stream.codec_context.gop_size = 15
+    stream.codec_context.max_b_frames = max_b_frames
+
+    for i in range(50):
+        array = np.empty((stream.height, stream.width, 3), dtype=np.uint8)
+        # This appears to hit a complexity "sweet spot" that makes the codec
+        # want to use B frames.
+        array[:, :] = (i, 0, 255 - i)
+        frame = av.VideoFrame.from_ndarray(array, format="rgb24")
+        for packet in stream.encode(frame):
+            container.mux(packet)
+
+    for packet in stream.encode():
+        container.mux(packet)
+
+    container.close()
+    file.seek(0)
+
+    return file
+
+
+def max_b_frame_run_in_file(file):
+    """
+    Count the maximum run of B frames in a file (or file-like object).
+
+    file: the file or file-like object in which to count the maximum run
+        of B frames. The file should contain just one video stream.
+
+    Returns: non-negative integer which is the maximum B frame run length.
+    """
+    container = av.open(file)
+    stream = container.streams.video[0]
+
+    max_b_frame_run = 0
+    b_frame_run = 0
+    for packet in container.demux(stream):
+        for frame in packet.decode():
+            if frame.pict_type == av.video.frame.PictureType.B:
+                b_frame_run += 1
+            else:
+                max_b_frame_run = max(max_b_frame_run, b_frame_run)
+                b_frame_run = 0
+
+    # Outside chance that the longest run was at the end of the file.
+    max_b_frame_run = max(max_b_frame_run, b_frame_run)
+
+    container.close()
+
+    return max_b_frame_run
+
+
+class TestMaxBFrameEncoding(TestCase):
+    def test_max_b_frames(self):
+        """
+        Test that we never get longer runs of B frames than we asked for with
+        the max_b_frames property.
+        """
+        for max_b_frames in range(4):
+            file = encode_file_with_max_b_frames(max_b_frames)
+            actual_max_b_frames = max_b_frame_run_in_file(file)
+            self.assertTrue(actual_max_b_frames <= max_b_frames)

@@ -1,5 +1,5 @@
-from libc.stdint cimport uint64_t
 cimport libav as lib
+from libc.stdint cimport uint64_t
 
 
 cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding, str errors)

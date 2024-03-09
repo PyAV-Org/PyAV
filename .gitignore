@@ -30,11 +30,11 @@
 /ipch
 /msvc-projects
 /src
+/docs/_ffmpeg
 
 # Testing.
 *.spyderproject
 .idea
-/.vagrant
 /sandbox
 /tests/assets
 /tests/samples

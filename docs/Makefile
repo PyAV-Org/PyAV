@@ -2,6 +2,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 BUILDDIR      = _build
+FFMPEGDIR     = _ffmpeg
 
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 
@@ -12,7 +13,8 @@ default: html
 
 TAGFILE := _build/doxygen/tagfile.xml
 $(TAGFILE) :
-	./generate-tagfile -o $(TAGFILE)
+	git clone --depth=1 git://source.ffmpeg.org/ffmpeg.git $(FFMPEGDIR)
+	./generate-tagfile --library $(FFMPEGDIR) -o $(TAGFILE)
 
 
 TEMPLATES := $(wildcard api/*.py development/*.py)
@@ -24,7 +26,7 @@ _build/rst/%.rst: %.py $(TAGFILE) $(shell find ../include ../av -name '*.pyx' -o
 
 
 clean:
-	- rm -rf $(BUILDDIR)/*
+	rm -rf $(BUILDDIR) $(FFMPEGDIR)
 
 html: $(RENDERED) $(TAGFILE)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -36,5 +38,5 @@ open:
 	open _build/html/index.html
 
 upload:
-	rsync -avxP --delete _build/html/ pyav.org:/srv/pyav.org/www/httpdocs/docs/develop/
+	rsync -avxP --delete _build/html/ root@basswood-io.com:/var/www/pyav/docs/develop
 

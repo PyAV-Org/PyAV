@@ -45,7 +45,7 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef AVFilter* avfilter_get_by_name(const char *name)
     cdef const AVFilter* av_filter_iterate(void **opaque)
 
-    cdef struct AVFilterLink # Defined later.
+    cdef struct AVFilterLink  # Defined later.
 
     cdef struct AVFilterContext:
 

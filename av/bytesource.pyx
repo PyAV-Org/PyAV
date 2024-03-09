@@ -2,12 +2,11 @@ from cpython.buffer cimport (
     PyBUF_SIMPLE,
     PyBuffer_Release,
     PyObject_CheckBuffer,
-    PyObject_GetBuffer
+    PyObject_GetBuffer,
 )
 
 
 cdef class ByteSource:
-
     def __cinit__(self, owner):
         self.owner = owner
 
@@ -28,7 +27,7 @@ cdef class ByteSource:
                 self.length = self.view.len
                 return
 
-        raise TypeError('expected bytes, bytearray or memoryview')
+        raise TypeError("expected bytes, bytearray or memoryview")
 
     def __dealloc__(self):
         if self.has_view:

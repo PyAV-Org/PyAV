@@ -39,11 +39,10 @@ logging.basicConfig(level=logging.INFO)
 with open(args.config_file, "r") as fp:
     config = json.load(fp)
 
-# create fresh destination directory
+# ensure destination directory exists
 logging.info("Creating directory %s" % args.destination_dir)
-if os.path.exists(args.destination_dir):
-    shutil.rmtree(args.destination_dir)
-os.makedirs(args.destination_dir)
+if not os.path.exists(args.destination_dir):
+    os.makedirs(args.destination_dir)
 
 for url_template in config["urls"]:
     tarball_url = url_template.replace("{platform}", get_platform())

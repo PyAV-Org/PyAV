@@ -6,7 +6,6 @@ cimport libav as lib
 
 from av.error cimport err_check
 
-
 # === DICTIONARIES ===
 # ====================
 
@@ -30,8 +29,14 @@ cdef dict avdict_to_dict(lib.AVDictionary *input, str encoding, str errors):
 cdef dict_to_avdict(lib.AVDictionary **dst, dict src, str encoding, str errors):
     lib.av_dict_free(dst)
     for key, value in src.items():
-        err_check(lib.av_dict_set(dst, _encode(key, encoding, errors),
-                                  _encode(value, encoding, errors), 0))
+        err_check(
+            lib.av_dict_set(
+                dst,
+                _encode(key, encoding, errors),
+                _encode(value, encoding, errors),
+                0
+            )
+        )
 
 
 # === FRACTIONS ===
@@ -43,7 +48,6 @@ cdef object avrational_to_fraction(const lib.AVRational *input):
 
 
 cdef object to_avrational(object value, lib.AVRational *input):
-
     if value is None:
         input.num = 0
         input.den = 1

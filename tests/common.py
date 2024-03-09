@@ -1,12 +1,11 @@
-from unittest import TestCase as _Base
 import datetime
 import errno
 import functools
 import os
 import types
+from unittest import TestCase as _Base
 
 from av.datasets import fate as fate_suite
-
 
 try:
     import PIL.Image as Image

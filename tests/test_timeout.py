@@ -1,12 +1,11 @@
-from http.server import BaseHTTPRequestHandler
-from socketserver import TCPServer
 import threading
 import time
+from http.server import BaseHTTPRequestHandler
+from socketserver import TCPServer
 
 import av
 
 from .common import TestCase, fate_suite
-
 
 PORT = 8002
 CONTENT = open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb").read()

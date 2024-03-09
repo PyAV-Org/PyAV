@@ -6,7 +6,6 @@ from av.subtitles.subtitle cimport SubtitleProxy, SubtitleSet
 
 
 cdef class SubtitleCodecContext(CodecContext):
-
     cdef _send_packet_and_recv(self, Packet packet):
         cdef SubtitleProxy proxy = SubtitleProxy()
 

@@ -8,7 +8,6 @@ from av.packet cimport Packet
 
 
 cdef class AudioCodecContext(CodecContext):
-
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)
 
@@ -54,69 +53,76 @@ cdef class AudioCodecContext(CodecContext):
         cdef AudioFrame aframe = frame
         aframe._init_user_attributes()
 
-    property frame_size:
+    @property
+    def frame_size(self):
         """
         Number of samples per channel in an audio frame.
 
         :type: int
         """
-        def __get__(self): return self.ptr.frame_size
+        return self.ptr.frame_size
 
-    property sample_rate:
+
+    @property
+    def sample_rate(self):
         """
         Sample rate of the audio data, in samples per second.
 
         :type: int
         """
-        def __get__(self):
-            return self.ptr.sample_rate
+        return self.ptr.sample_rate
 
-        def __set__(self, int value):
-            self.ptr.sample_rate = value
+    @sample_rate.setter
+    def sample_rate(self, int value):
+        self.ptr.sample_rate = value
 
-    property rate:
+    @property
+    def rate(self):
         """Another name for :attr:`sample_rate`."""
-        def __get__(self):
-            return self.sample_rate
+        return self.sample_rate
 
-        def __set__(self, value):
-            self.sample_rate = value
+    @rate.setter
+    def rate(self, value):
+        self.sample_rate = value
 
     # TODO: Integrate into AudioLayout.
-    property channels:
-        def __get__(self):
-            return self.ptr.channels
+    @property
+    def channels(self):
+        return self.ptr.channels
 
-        def __set__(self, value):
-            self.ptr.channels = value
-            self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
-    property channel_layout:
-        def __get__(self):
-            return self.ptr.channel_layout
+    @channels.setter
+    def channels(self, value):
+        self.ptr.channels = value
+        self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
+    @property
+    def channel_layout(self):
+        return self.ptr.channel_layout
 
-    property layout:
+    @property
+    def layout(self):
         """
         The audio channel layout.
 
         :type: AudioLayout
         """
-        def __get__(self):
-            return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
+        return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
 
-        def __set__(self, value):
-            cdef AudioLayout layout = AudioLayout(value)
-            self.ptr.channel_layout = layout.layout
-            self.ptr.channels = layout.nb_channels
+    @layout.setter
+    def layout(self, value):
+        cdef AudioLayout layout = AudioLayout(value)
+        self.ptr.channel_layout = layout.layout
+        self.ptr.channels = layout.nb_channels
 
-    property format:
+    @property
+    def format(self):
         """
         The audio sample format.
 
         :type: AudioFormat
         """
-        def __get__(self):
-            return get_audio_format(self.ptr.sample_fmt)
+        return get_audio_format(self.ptr.sample_fmt)
 
-        def __set__(self, value):
-            cdef AudioFormat format = AudioFormat(value)
-            self.ptr.sample_fmt = format.sample_fmt
+    @format.setter
+    def format(self, value):
+        cdef AudioFormat format = AudioFormat(value)
+        self.ptr.sample_fmt = format.sample_fmt
