@@ -18,7 +18,7 @@ cdef class VideoStream(Stream):
         """
         Encode an :class:`.VideoFrame` and return a list of :class:`.Packet`.
 
-        :return: :class:`list` of :class:`.Packet`.
+        :rtype: list[Packet]
 
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode`.
         """
@@ -35,7 +35,9 @@ cdef class VideoStream(Stream):
     cpdef decode(self, Packet packet=None):
         """
         Decode a :class:`.Packet` and return a list of :class:`.VideoFrame`.
-        :return: :class:`list` of :class:`.Frame` subclasses.
+
+        :rtype: list[VideoFrame]
+
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
 

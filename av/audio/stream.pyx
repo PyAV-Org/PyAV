@@ -15,7 +15,7 @@ cdef class AudioStream(Stream):
         """
         Encode an :class:`.AudioFrame` and return a list of :class:`.Packet`.
 
-        :return: :class:`list` of :class:`.Packet`.
+        :rtype: list[Packet]
 
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode`.
         """
@@ -31,7 +31,9 @@ cdef class AudioStream(Stream):
     cpdef decode(self, Packet packet=None):
         """
         Decode a :class:`.Packet` and return a list of :class:`.AudioFrame`.
-        :return: :class:`list` of :class:`.AudioFrame`
+
+        :rtype: list[AudioFrame]
+
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
 
