@@ -146,25 +146,6 @@ cdef class Stream:
         # Lets just copy what we want.
         err_check(lib.avcodec_parameters_from_context(self.ptr.codecpar, self.codec_context.ptr))
 
-    def encode(self, frame=None):
-        """
-        Encode an :class:`.AudioFrame` or :class:`.VideoFrame` and return a list
-        of :class:`.Packet`.
-
-        :return: :class:`list` of :class:`.Packet`.
-
-        .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode`.
-        """
-        if self.codec_context is None:
-            raise RuntimeError("Stream.encode requires a valid CodecContext")
-
-        packets = self.codec_context.encode(frame)
-        cdef Packet packet
-        for packet in packets:
-            packet._stream = self
-            packet.ptr.stream_index = self.ptr.index
-        return packets
-
     cdef _get_side_data(self, lib.AVStream *stream):
         # Get DISPLAYMATRIX SideData from a lib.AVStream object.
         # Returns: tuple[int, dict[str, Any]]
