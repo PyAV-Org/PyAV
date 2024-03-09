@@ -1,6 +1,7 @@
-from av.stream cimport Stream
-from .frame cimport VideoFrame
 from av.packet cimport Packet
+from av.stream cimport Stream
+
+from .frame cimport VideoFrame
 
 
 cdef class VideoStream(Stream):

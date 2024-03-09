@@ -34,20 +34,12 @@ class TestAudioProbe(TestCase):
         )
 
         # actual stream properties
-        self.assertEqual(stream.average_rate, None)
-        self.assertEqual(stream.base_rate, None)
-        self.assertEqual(stream.guessed_rate, None)
         self.assertEqual(stream.duration, 554880)
         self.assertEqual(stream.frames, 0)
         self.assertEqual(stream.id, 256)
         self.assertEqual(stream.index, 0)
         self.assertEqual(stream.language, "eng")
-        self.assertEqual(
-            stream.metadata,
-            {
-                "language": "eng",
-            },
-        )
+        self.assertEqual(stream.metadata, {"language": "eng"})
         self.assertEqual(stream.profile, "LC")
         self.assertEqual(stream.start_time, 126000)
         self.assertEqual(stream.time_base, Fraction(1, 90000))
@@ -98,9 +90,6 @@ class TestAudioProbeCorrupt(TestCase):
         )
 
         # actual stream properties
-        self.assertEqual(stream.average_rate, None)
-        self.assertEqual(stream.base_rate, None)
-        self.assertEqual(stream.guessed_rate, None)
         self.assertEqual(stream.duration, None)
         self.assertEqual(stream.frames, 0)
         self.assertEqual(stream.id, 0)
@@ -239,7 +228,6 @@ class TestSubtitleProbe(TestCase):
         )
 
         # actual stream properties
-        self.assertEqual(stream.average_rate, None)
         self.assertEqual(stream.duration, 8140)
         self.assertEqual(stream.frames, 6)
         self.assertEqual(stream.id, 1)
