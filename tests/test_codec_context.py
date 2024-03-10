@@ -174,6 +174,38 @@ class TestCodecContext(TestCase):
             self.assertEqual(len(parsed_source), len(full_source))
             self.assertEqual(full_source, parsed_source)
 
+    def test_bits_per_coded_sample(self):
+        with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:
+            stream = container.streams.video[0]
+            stream.codec_context.bits_per_coded_sample = 32
+
+            for packet in container.demux(stream):
+                for frame in packet.decode():
+                    pass
+                self.assertEqual(packet.stream.codec_context.bits_per_coded_sample, 32)
+
+        with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:
+            stream = container.streams.video[0]
+            stream.codec_context.bits_per_coded_sample = 31
+
+            with self.assertRaises(av.error.InvalidDataError):
+                for packet in container.demux(stream):
+                    for frame in packet.decode():
+                        pass
+                    self.assertEqual(
+                        packet.stream.codec_context.bits_per_coded_sample, 31
+                    )
+
+        with av.open(self.sandboxed("output.mov"), "w") as output:
+            stream = output.add_stream("qtrle")
+
+            with warnings.catch_warnings(record=True) as captured:
+                stream.codec_context.bits_per_coded_sample = 32
+                self.assertEqual(
+                    captured[0].message.args[0],
+                    "Setting VideoCodecContext.bits_per_coded_sample for encoders is deprecated.",
+                )
+
 
 class TestEncoding(TestCase):
     def test_encoding_png(self):

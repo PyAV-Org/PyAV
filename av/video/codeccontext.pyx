@@ -100,8 +100,12 @@ cdef class VideoCodecContext(CodecContext):
     @property
     def bits_per_coded_sample(self):
         """
-        The number of bits per sample in the codedwords, basically the bitrate per sample. 
-        It is mandatory for this to be set for some formats to decode them.
+        bits per sample/pixel from the demuxer (needed for huffyuv).
+
+            encoding: Set by libavcodec.
+            decoding: Set by user.
+
+         Wraps :ffmpeg:`AVCodecContext::bits_per_coded_sample`
         
         :type: int
         """
@@ -109,6 +113,11 @@ cdef class VideoCodecContext(CodecContext):
       
     @bits_per_coded_sample.setter
     def bits_per_coded_sample(self, int value):
+        if self.is_encoder:
+            warnings.warn(
+                "Setting VideoCodecContext.bits_per_coded_sample for encoders is deprecated.",
+                AVDeprecationWarning
+            )
         self.ptr.bits_per_coded_sample = value
         self._build_format()
 
