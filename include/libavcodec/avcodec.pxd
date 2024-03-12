@@ -171,6 +171,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int bit_rate_tolerance
         int mb_decision
 
+        int bits_per_coded_sample
+
         int global_quality
         int compression_level
 

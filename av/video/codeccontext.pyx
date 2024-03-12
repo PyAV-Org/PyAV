@@ -98,6 +98,26 @@ cdef class VideoCodecContext(CodecContext):
         self._build_format()
 
     @property
+    def bits_per_coded_sample(self):
+        """
+        The number of bits per sample in the codedwords, basically the bitrate per sample. 
+        It is mandatory for this to be set for some formats to decode them.
+
+        Wraps :ffmpeg:`AVCodecContext::bits_per_coded_sample`
+        
+        :type: int
+        """
+        return self.ptr.bits_per_coded_sample
+      
+    @bits_per_coded_sample.setter
+    def bits_per_coded_sample(self, int value):
+        if self.is_encoder:
+            raise ValueError("Not supported for encoders")
+
+        self.ptr.bits_per_coded_sample = value
+        self._build_format()
+
+    @property
     def pix_fmt(self):
         """
         The pixel format's name.
