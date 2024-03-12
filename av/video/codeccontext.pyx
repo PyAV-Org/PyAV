@@ -100,10 +100,9 @@ cdef class VideoCodecContext(CodecContext):
     @property
     def bits_per_coded_sample(self):
         """
-        The number of bits per sample in the codedwords, basically the bitrate per sample. 
-        It is mandatory for this to be set for some formats to decode them.
+        The number of bits per sample in the codedwords. It's mandatory for this to be set for some formats to decode properly.
 
-        Wraps :ffmpeg:`AVCodecContext::bits_per_coded_sample`
+        Wraps :ffmpeg:`AVCodecContext.bits_per_coded_sample`.
         
         :type: int
         """
