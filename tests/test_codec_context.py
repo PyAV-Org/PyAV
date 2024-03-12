@@ -146,6 +146,31 @@ class TestCodecContext(TestCase):
         self.assertEqual(str(cm.exception), "not a pixel format: '__unknown_pix_fmt'")
         self.assertEqual(ctx.pix_fmt, "yuv420p")
 
+    def test_bits_per_coded_sample(self):
+        with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:
+            stream = container.streams.video[0]
+            stream.bits_per_coded_sample = 32
+
+            for packet in container.demux(stream):
+                for frame in packet.decode():
+                    pass
+                self.assertEqual(packet.stream.bits_per_coded_sample, 32)
+
+        with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:
+            stream = container.streams.video[0]
+            stream.bits_per_coded_sample = 31
+
+            with self.assertRaises(av.error.InvalidDataError):
+                for packet in container.demux(stream):
+                    for frame in packet.decode():
+                        pass
+
+        with av.open(self.sandboxed("output.mov"), "w") as output:
+            stream = output.add_stream("qtrle")
+
+            with self.assertRaises(ValueError):
+                stream.codec_context.bits_per_coded_sample = 32
+
     def test_parse(self):
         # This one parses into a single packet.
         self._assert_parse("mpeg4", fate_suite("h264/interlaced_crop.mp4"))
