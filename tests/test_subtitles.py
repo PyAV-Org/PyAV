@@ -24,7 +24,7 @@ class TestSubtitle(TestCase):
         sub = subset[0]
         self.assertIsInstance(sub, AssSubtitle)
         self.assertEqual(sub.type, b"ass")
-        self.assertEqual(sub.ass, "0,0,Default,,0,0,0,,- Test 1.\\N- Test 2.")
+        self.assertEqual(sub.ass, b"0,0,Default,,0,0,0,,- Test 1.\\N- Test 2.")
 
     def test_vobsub(self):
         path = fate_suite("sub/vobsub.sub")

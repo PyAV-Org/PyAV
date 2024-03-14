@@ -1,6 +1,10 @@
 from cpython cimport PyBuffer_FillInfo
 
 
+cdef extern from "Python.h":
+    bytes PyBytes_FromString(char*)
+
+
 cdef class SubtitleProxy:
     def __dealloc__(self):
         lib.avsubtitle_free(&self.struct)
@@ -153,4 +157,6 @@ cdef class AssSubtitle(Subtitle):
 
     @property
     def ass(self):
-        return self.ptr.ass
+        if self.ptr.ass is not NULL:
+            return PyBytes_FromString(self.ptr.ass)
+        return b""
