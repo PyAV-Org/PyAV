@@ -269,7 +269,7 @@ class TestEncoding(TestCase):
                 self.assertEqual(frame.format.name, pix_fmt)
 
     def test_encoding_h264(self):
-        self.video_encoding("libx264", {"crf": "19"})
+        self.video_encoding("h264", {"crf": "19"})
 
     def test_encoding_mpeg4(self):
         self.video_encoding("mpeg4")
