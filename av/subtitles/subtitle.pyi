@@ -33,4 +33,4 @@ class TextSubtitle(Subtitle):
 
 class AssSubtitle(Subtitle):
     type: Literal[b"ass"]
-    ass: str
+    ass: bytes
