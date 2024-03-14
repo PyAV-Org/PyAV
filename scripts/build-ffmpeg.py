@@ -154,12 +154,12 @@ if not os.path.exists(output_tarball):
         library_group += [
             Package(
                 name="unistring",
-                source_url="https://ftp.gnu.org/gnu/libunistring/libunistring-0.9.10.tar.gz",
+                source_url="https://ftp.gnu.org/gnu/libunistring/libunistring-1.2.tar.gz",
             ),
             Package(
                 name="nettle",
                 requires=["gmp"],
-                source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.7.3.tar.gz",
+                source_url="https://ftp.gnu.org/gnu/nettle/nettle-3.9.1.tar.gz",
                 build_arguments=["--disable-documentation"],
                 # build randomly fails with "*** missing separator.  Stop."
                 build_parallel=False,
@@ -167,7 +167,7 @@ if not os.path.exists(output_tarball):
             Package(
                 name="gnutls",
                 requires=["nettle", "unistring"],
-                source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7/gnutls-3.7.3.tar.xz",
+                source_url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-3.8.1.tar.xz",
                 build_arguments=[
                     "--disable-cxx",
                     "--disable-doc",
@@ -205,13 +205,13 @@ if not os.path.exists(output_tarball):
         Package(
             name="bluray",
             requires=["fontconfig"],
-            source_url="https://download.videolan.org/pub/videolan/libbluray/1.1.2/libbluray-1.1.2.tar.bz2",
+            source_url="https://download.videolan.org/pub/videolan/libbluray/1.3.4/libbluray-1.3.4.tar.bz2",
             build_arguments=["--disable-bdjava-jar"],
         ),
         Package(
             name="dav1d",
             requires=["meson", "nasm", "ninja"],
-            source_url="https://code.videolan.org/videolan/dav1d/-/archive/0.9.2/dav1d-0.9.2.tar.bz2",
+            source_url="https://code.videolan.org/videolan/dav1d/-/archive/1.4.0/dav1d-1.4.0.tar.bz2",
             build_system="meson",
         ),
         Package(
@@ -231,8 +231,8 @@ if not os.path.exists(output_tarball):
         Package(
             name="openjpeg",
             requires=["cmake"],
-            source_filename="openjpeg-2.4.0.tar.gz",
-            source_url="https://github.com/uclouvain/openjpeg/archive/v2.4.0.tar.gz",
+            source_filename="openjpeg-2.5.2.tar.gz",
+            source_url="https://github.com/uclouvain/openjpeg/archive/v2.5.2.tar.gz",
             build_system="cmake",
         ),
         Package(
@@ -242,7 +242,7 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="speex",
-            source_url="http://downloads.xiph.org/releases/speex/speex-1.2.0.tar.gz",
+            source_url="http://downloads.xiph.org/releases/speex/speex-1.2.1.tar.gz",
             build_arguments=["--disable-binaries"],
         ),
         Package(
@@ -257,8 +257,8 @@ if not os.path.exists(output_tarball):
         ),
         Package(
             name="vpx",
-            source_filename="vpx-1.13.1.tar.gz",
-            source_url="https://github.com/webmproject/libvpx/archive/v1.13.1.tar.gz",
+            source_filename="vpx-1.14.0.tar.gz",
+            source_url="https://github.com/webmproject/libvpx/archive/v1.14.0.tar.gz",
             build_arguments=[
                 "--disable-examples",
                 "--disable-tools",
@@ -293,8 +293,8 @@ if not os.path.exists(output_tarball):
     openh264 = Package(
         name="openh264",
         requires=["meson", "nasm", "ninja"],
-        source_filename="openh264-2.2.0.tar.gz",
-        source_url="https://github.com/cisco/openh264/archive/refs/tags/v2.2.0.tar.gz",
+        source_filename="openh264-2.4.1.tar.gz",
+        source_url="https://github.com/cisco/openh264/archive/refs/tags/v2.4.1.tar.gz",
         build_system="meson",
     )
 
