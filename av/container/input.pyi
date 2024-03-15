@@ -1,4 +1,4 @@
-from typing import Any, Iterator, Literal, overload
+from typing import Any, Iterator, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
@@ -34,7 +34,6 @@ class InputContainer(Container):
         self,
         offset: int,
         *,
-        whence: Literal["time"] = "time",
         backward: bool = True,
         any_frame: bool = False,
         stream: Stream | VideoStream | AudioStream | None = None,

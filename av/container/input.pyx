@@ -208,10 +208,10 @@ cdef class InputContainer(Container):
             for frame in packet.decode():
                 yield frame
 
-    def seek(self, offset, *, str whence="time", bint backward=True,
-             bint any_frame=False, Stream stream=None,
-             bint unsupported_frame_offset=False,
-             bint unsupported_byte_offset=False):
+    def seek(
+        self, offset, *, bint backward=True, bint any_frame=False, Stream stream=None,
+        bint unsupported_frame_offset=False, bint unsupported_byte_offset=False
+    ):
         """seek(offset, *, backward=True, any_frame=False, stream=None)
 
         Seek to a (key)frame nearsest to the given timestamp.
@@ -251,12 +251,6 @@ cdef class InputContainer(Container):
 
         cdef int flags = 0
         cdef int ret
-
-        # We used to support whence in 'time', 'frame', and 'byte', but later
-        # realized that FFmpeg doens't implement the frame or byte ones.
-        # We don't even document this anymore, but do allow 'time' to pass through.
-        if whence != "time":
-            raise ValueError("whence != 'time' is no longer supported")
 
         if backward:
             flags |= lib.AVSEEK_FLAG_BACKWARD
