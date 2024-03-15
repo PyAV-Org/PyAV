@@ -16,6 +16,37 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v12.0.0
+-------
+
+Major:
+
+- Add type hints.
+- Update FFmpeg to 6.1.1 for the binary wheels.
+- Update libraries for the binary wheels (notably dav1d to 1.4.1).
+- Deprecate VideoCodecContext.gop_size for decoders by @JoeSchiff in (:issue:`1256`).
+- Deprecate frame.index by @JoeSchiff in (:issue:`1218`).
+
+Features:
+
+- Allow using pathlib.Path for av.open by @WyattBlue in (:issue:`1231`).
+- Add `max_b_frames` property to CodecContext by @davidplowman in (:issue:`1119`).
+- Add `encode_lazy` method to CodecContext by @rawler in (:issue:`1092`).
+- Add `color_range` to CodecContext/Frame by @johanjeppsson in (:issue:`686`).
+- Set `time_base` for AudioResampler by @daveisfera in (:issue:`1209`).
+- Add support for ffmpeg's AVCodecContext::delay by @JoeSchiff in (:issue:`1279`).
+- Add `color_primaries`, `color_trc`, `colorspace` to VideoStream by @WyattBlue in (:issue:`1304`).
+- Add `bits_per_coded_sample` to VideoCodecContext by @rvanlaar in (:issue:`1203`).
+- AssSubtitle.ass now returns as bytes by @WyattBlue in (:issue:`1333`).
+- Expose DISPLAYMATRIX side data by @hyenal in (:issue:`1249`).
+
+Fixes:
+
+- Convert deprecated Cython extension class properties to decorator syntax by @JoeSchiff
+- Check None packet when setting time_base after decode by @philipnbbc in (:issue:`1281`).
+- Remove deprecated `Buffer.to_bytes` by @WyattBlue in (:issue:`1286`).
+- Remove deprecated `Packet.decode_one` by @WyattBlue in (:issue:`1301`).
+
 v11.0.0
 -------
 
