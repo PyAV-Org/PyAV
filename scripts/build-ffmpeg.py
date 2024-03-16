@@ -211,7 +211,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="dav1d",
             requires=["meson", "nasm", "ninja"],
-            source_url="https://code.videolan.org/videolan/dav1d/-/archive/1.4.0/dav1d-1.4.0.tar.bz2",
+            source_url="https://code.videolan.org/videolan/dav1d/-/archive/1.4.1/dav1d-1.4.1.tar.bz2",
             build_system="meson",
         ),
         Package(
