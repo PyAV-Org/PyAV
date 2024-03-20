@@ -1,5 +1,7 @@
 name: tests
 on:
+  release:
+    types: [created]
   push:
     branches: main
     paths-ignore:
