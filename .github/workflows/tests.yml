@@ -17,7 +17,6 @@ on:
 jobs:
   style:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,7 +24,7 @@ jobs:
       - name: Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Packages
         run: pip install -r tests/requirements.txt
@@ -40,12 +39,12 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: 3.8, ffmpeg: "6.1", extras: true}
-          - {os: ubuntu-latest, python: 3.8, ffmpeg: "6.0"}
-          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.1"}
-          - {os: ubuntu-latest, python: 3.8, ffmpeg: "5.0"}
+          - {os: ubuntu-latest, python: 3.9, ffmpeg: "6.1", extras: true}
+          - {os: ubuntu-latest, python: 3.9, ffmpeg: "6.0"}
+          - {os: ubuntu-latest, python: 3.9, ffmpeg: "5.1"}
+          - {os: ubuntu-latest, python: 3.9, ffmpeg: "5.0"}
           - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "6.1"}
-          - {os: macos-latest,  python: 3.8, ffmpeg: "6.1"}
+          - {os: macos-latest,  python: 3.9, ffmpeg: "6.1"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -121,10 +120,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, python: 3.8, ffmpeg: "6.1"}
-          - {os: windows-latest, python: 3.8, ffmpeg: "6.0"}
-          - {os: windows-latest, python: 3.8, ffmpeg: "5.1"}
-          - {os: windows-latest, python: 3.8, ffmpeg: "5.0"}
+          - {os: windows-latest, python: 3.9, ffmpeg: "6.1"}
+          - {os: windows-latest, python: 3.9, ffmpeg: "6.0"}
+          - {os: windows-latest, python: 3.9, ffmpeg: "5.1"}
+          - {os: windows-latest, python: 3.9, ffmpeg: "5.0"}
 
     steps:
     - name: Checkout
@@ -164,7 +163,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Build source package
         run: |
           pip install cython
@@ -198,7 +197,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Set up QEMU
         if: matrix.os == 'ubuntu-latest'
         uses: docker/setup-qemu-action@v3
