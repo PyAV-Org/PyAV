@@ -1,7 +1,7 @@
 PyAV
 ====
 
-[![GitHub Test Status][github-tests-badge]][github-tests] \
+[![GitHub Test Status][github-tests-badge]][github-tests]
 [![Gitter Chat][gitter-badge]][gitter] [![Documentation][docs-badge]][docs] \
 [![Python Package Index][pypi-badge]][pypi] [![Conda Forge][conda-badge]][conda]
 
@@ -67,7 +67,7 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 
 [conda-badge]: https://img.shields.io/conda/vn/conda-forge/av.svg?colorB=CCB39A
 [conda]: https://anaconda.org/conda-forge/av
-[docs-badge]: https://img.shields.io/badge/docs-on%20pyav.basswood-io.com-blue.svg
+[docs-badge]: https://img.shields.io/badge/docs-on%20pyav.basswood--io.com-blue.svg
 [docs]: https://pyav.basswood-io.com
 [gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
 [gitter]: https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im
