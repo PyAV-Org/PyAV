@@ -8,6 +8,9 @@ cdef class DataStream(Stream):
             f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
         )
 
+    def __getattr__(self, name):
+        return getattr(self.codec_context, name)
+
     def encode(self, frame=None):
         return []
 

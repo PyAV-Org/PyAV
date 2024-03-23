@@ -14,6 +14,12 @@ cdef class VideoStream(Stream):
             f"{self.codec_context.height} at 0x{id(self):x}>"
         )
 
+    def __getattr__(self, name):
+        if name in ("framerate", "rate"):
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+        return getattr(self.codec_context, name)
+
     cpdef encode(self, VideoFrame frame=None):
         """
         Encode an :class:`.VideoFrame` and return a list of :class:`.Packet`.

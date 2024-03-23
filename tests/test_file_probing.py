@@ -1,4 +1,3 @@
-import warnings
 from fractions import Fraction
 
 import av
@@ -169,9 +168,6 @@ class TestDataProbe(TestCase):
         self.assertTrue(str(stream).startswith("<av.DataStream #0 data/<nocodec> at "))
 
         # actual stream properties
-        self.assertEqual(stream.average_rate, None)
-        self.assertEqual(stream.base_rate, None)
-        self.assertEqual(stream.guessed_rate, None)
         self.assertEqual(stream.duration, 37537)
         self.assertEqual(stream.frames, 0)
         self.assertEqual(stream.id, 1)
@@ -189,9 +185,7 @@ class TestDataProbe(TestCase):
         self.assertEqual(stream.start_time, 0)
         self.assertEqual(stream.time_base, Fraction(1, 90000))
         self.assertEqual(stream.type, "data")
-
-        # codec context properties
-        self.assertEqual(stream.codec, None)
+        self.assertEqual(hasattr(stream, "codec"), False)
 
 
 class TestSubtitleProbe(TestCase):
@@ -307,19 +301,8 @@ class TestVideoProbe(TestCase):
         self.assertIn(stream.coded_width, (720, 0))
         self.assertIn(stream.coded_height, (576, 0))
 
-        # Deprecated properties.
-        with warnings.catch_warnings(record=True) as captured:
-            stream.framerate
-            self.assertEqual(
-                captured[0].message.args[0],
-                "VideoStream.framerate is deprecated as it is not always set; please use VideoStream.average_rate.",
-            )
-        with warnings.catch_warnings(record=True) as captured:
-            stream.rate
-            self.assertEqual(
-                captured[0].message.args[0],
-                "VideoStream.rate is deprecated as it is not always set; please use VideoStream.average_rate.",
-            )
+        self.assertEqual(hasattr(stream, "framerate"), False)
+        self.assertEqual(hasattr(stream, "rate"), False)
 
 
 class TestVideoProbeCorrupt(TestCase):

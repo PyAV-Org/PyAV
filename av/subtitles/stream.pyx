@@ -1,2 +1,3 @@
 cdef class SubtitleStream(Stream):
-    pass
+    def __getattr__(self, name):
+        return getattr(self.codec_context, name)
