@@ -110,11 +110,6 @@ cdef class Stream:
                 AVDeprecationWarning
             )
 
-        if name == "side_data":
-            return self.side_data
-        elif name == "nb_side_data":
-            return self.nb_side_data
-
         # Convenience getter for codec context properties.
         if self.codec_context is not None:
             return getattr(self.codec_context, name)
