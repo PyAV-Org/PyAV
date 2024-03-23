@@ -11,6 +11,9 @@ cdef class AudioStream(Stream):
             f" {self.layout.name}, {form} at 0x{id(self):x}>"
         )
 
+    def __getattr__(self, name):
+        return getattr(self.codec_context, name)
+
     cpdef encode(self, AudioFrame frame=None):
         """
         Encode an :class:`.AudioFrame` and return a list of :class:`.Packet`.

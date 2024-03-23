@@ -101,19 +101,6 @@ cdef class Stream:
             f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
         )
 
-    def __getattr__(self, name):
-        # Deprecate framerate pass-through as it is not always set.
-        # See: https://github.com/PyAV-Org/PyAV/issues/1005
-        if self.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO and name in ("framerate", "rate"):
-            warnings.warn(
-                f"VideoStream.{name} is deprecated as it is not always set; please use VideoStream.average_rate.",
-                AVDeprecationWarning
-            )
-
-        # Convenience getter for codec context properties.
-        if self.codec_context is not None:
-            return getattr(self.codec_context, name)
-
     def __setattr__(self, name, value):
         if name == "id":
             self._set_id(value)
