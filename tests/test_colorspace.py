@@ -5,7 +5,7 @@ from .common import TestCase, fate_suite
 
 
 class TestColorSpace(TestCase):
-    def test_penguin_joke(self):
+    def test_penguin_joke(self) -> None:
         container = av.open(
             fate_suite("amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv")
         )
@@ -26,7 +26,7 @@ class TestColorSpace(TestCase):
                 self.assertEqual(frame.colorspace, Colorspace.ITU601)
                 return
 
-    def test_sky_timelapse(self):
+    def test_sky_timelapse(self) -> None:
         container = av.open(
             av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4")
         )

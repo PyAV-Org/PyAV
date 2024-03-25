@@ -1,6 +1,7 @@
 import io
 import math
 from fractions import Fraction
+from typing import cast
 from unittest import SkipTest
 
 import numpy as np
@@ -10,21 +11,23 @@ from av import AudioFrame, VideoFrame
 from av.audio.stream import AudioStream
 from av.video.stream import VideoStream
 
-from .common import Image, TestCase, fate_suite
+from .common import TestCase, fate_suite, has_pillow
 
 WIDTH = 320
 HEIGHT = 240
 DURATION = 48
 
 
-def write_rgb_rotate(output):
-    if not Image:
-        raise SkipTest()
+def write_rgb_rotate(output: av.container.OutputContainer) -> None:
+    if not has_pillow:
+        raise SkipTest("Don't have Pillow")
+
+    import PIL.Image as Image
 
     output.metadata["title"] = "container"
     output.metadata["key"] = "value"
 
-    stream = output.add_stream("mpeg4", 24)
+    stream = cast(VideoStream, output.add_stream("mpeg4", 24))
     stream.width = WIDTH
     stream.height = HEIGHT
     stream.pix_fmt = "yuv420p"

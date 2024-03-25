@@ -3,7 +3,14 @@ from unittest import SkipTest
 
 import av
 
-from .common import Image, MethodLogger, TestCase, fate_png, fate_suite, run_in_sandbox
+from .common import (
+    MethodLogger,
+    TestCase,
+    fate_png,
+    fate_suite,
+    has_pillow,
+    run_in_sandbox,
+)
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
 
@@ -206,8 +213,10 @@ class TestPythonIO(TestCase):
             assert_rgb_rotate(self, container, is_dash=True)
 
     def test_writing_to_custom_io_image2(self):
-        if not Image:
+        if not has_pillow:
             raise SkipTest()
+
+        import PIL.Image as Image
 
         # Custom I/O that opens file and logs calls
         wrapped_custom_io = CustomIOLogger()
@@ -263,7 +272,7 @@ class TestPythonIO(TestCase):
             self.assertEqual(stream.format.width, width)
             self.assertEqual(stream.format.height, height)
 
-    def test_writing_to_file(self):
+    def test_writing_to_file(self) -> None:
         path = self.sandboxed("writing.mp4")
 
         with open(path, "wb") as fh:
@@ -273,7 +282,7 @@ class TestPythonIO(TestCase):
         with av.open(path) as container:
             assert_rgb_rotate(self, container)
 
-    def test_writing_to_pipe_readonly(self):
+    def test_writing_to_pipe_readonly(self) -> None:
         buf = ReadOnlyPipe()
         with self.assertRaises(ValueError) as cm:
             self.write(buf)
@@ -291,10 +300,10 @@ class TestPythonIO(TestCase):
             str(cm.exception),
         )
 
-    def read(self, fh, seekable=True):
+    def read(self, fh, seekable: bool = True) -> None:
         wrapped = MethodLogger(fh)
 
-        with av.open(wrapped) as container:
+        with av.open(wrapped, "r") as container:
             self.assertEqual(container.format.name, "mpegts")
             self.assertEqual(
                 container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)"

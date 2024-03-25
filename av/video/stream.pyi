@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any, Literal
+from typing import Any, Iterator, Literal
 
 from av.packet import Packet
 from av.stream import Stream
@@ -36,4 +36,5 @@ class VideoStream(Stream):
     type: Literal["video"]
 
     def encode(self, frame: VideoFrame | None = None) -> list[Packet]: ...
+    def encode_lazy(self, frame: VideoFrame | None = None) -> Iterator[Packet]: ...
     def decode(self, packet: Packet | None = None) -> list[VideoFrame]: ...

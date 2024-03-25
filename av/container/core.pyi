@@ -4,6 +4,7 @@ from types import TracebackType
 from typing import Any, Callable, Literal, Type, overload
 
 from av.enum import EnumFlag
+from av.format import ContainerFormat
 
 from .input import InputContainer
 from .output import OutputContainer
@@ -36,7 +37,7 @@ class Container:
     input_was_opened: bool
     io_open: Any
     open_files: Any
-    format: str | None
+    format: ContainerFormat
     options: dict[str, str]
     container_options: dict[str, str]
     stream_options: list[str]

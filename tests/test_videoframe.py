@@ -4,7 +4,7 @@ import numpy
 
 from av import VideoFrame
 
-from .common import Image, TestCase, fate_png
+from .common import TestCase, fate_png, has_pillow
 
 
 class TestVideoFrameConstructors(TestCase):
@@ -90,10 +90,12 @@ class TestVideoFrameBuffers(TestCase):
 
 class TestVideoFrameImage(TestCase):
     def setUp(self):
-        if not Image:
+        if not has_pillow:
             raise SkipTest()
 
     def test_roundtrip(self):
+        import PIL.Image as Image
+
         image = Image.open(fate_png())
         frame = VideoFrame.from_image(image)
         img = frame.to_image()

@@ -10,15 +10,7 @@ PickleableFooBar = define_enum("PickleableFooBar", __name__, [("FOO", 1)])
 
 class TestEnums(TestCase):
     def define_foobar(self, **kwargs):
-        return define_enum(
-            "Foobar",
-            __name__,
-            (
-                ("FOO", 1),
-                ("BAR", 2),
-            ),
-            **kwargs
-        )
+        return define_enum("Foobar", __name__, (("FOO", 1), ("BAR", 2)), **kwargs)
 
     def test_basics(self):
         cls = self.define_foobar()
