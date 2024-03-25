@@ -4,18 +4,9 @@ cimport libav as lib
 cdef class DataStream(Stream):
     def __repr__(self):
         return (
-            f"<av.{self.__class__.__name__} #{self.index} {self.type or '<notype>'}/"
+            f"<av.{self.__class__.__name__} #{self.index} data/"
             f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
         )
-
-    def __getattr__(self, name):
-        return getattr(self.codec_context, name)
-
-    def encode(self, frame=None):
-        return []
-
-    def decode(self, packet=None, count=0):
-        return []
 
     @property
     def name(self):
