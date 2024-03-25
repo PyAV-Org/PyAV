@@ -4,6 +4,8 @@ import numpy as np
 
 from av.frame import Frame
 
+from .format import AudioFormat
+from .layout import AudioLayout
 from .plane import AudioPlane
 
 format_dtypes: dict[str, str]
@@ -20,6 +22,8 @@ class AudioFrame(Frame):
     samples: int
     sample_rate: int
     rate: int
+    format: AudioFormat
+    layout: AudioLayout
 
     def __init__(
         self,
