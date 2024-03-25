@@ -1,8 +1,8 @@
-autopep8
-black
 cython
-flake8
-isort
 numpy
 pillow
+black
+isort
+flake8
+flake8-pyproject
 sphinx==5.1.0
