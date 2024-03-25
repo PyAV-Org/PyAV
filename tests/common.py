@@ -8,17 +8,18 @@ from unittest import TestCase as _Base
 from av.datasets import fate as fate_suite
 
 try:
-    import PIL.Image as Image
-    import PIL.ImageFilter as ImageFilter
+    import PIL  # noqa
+
+    has_pillow = True
 except ImportError:
-    Image = ImageFilter = None
+    has_pillow = False
 
 
 is_windows = os.name == "nt"
 skip_tests = frozenset(os.environ.get("PYAV_SKIP_TESTS", "").split(","))
 
 
-def makedirs(path):
+def makedirs(path: str) -> None:
     try:
         os.makedirs(path)
     except OSError as e:
@@ -29,23 +30,21 @@ def makedirs(path):
 _start_time = datetime.datetime.now()
 
 
-def _sandbox(timed=False):
+def _sandbox(timed: bool = False) -> str:
     root = os.path.abspath(os.path.join(__file__, "..", "..", "sandbox"))
 
-    sandbox = (
-        os.path.join(
-            root,
-            _start_time.strftime("%Y%m%d-%H%M%S"),
-        )
-        if timed
-        else root
-    )
+    if timed:
+        sandbox = os.path.join(root, _start_time.strftime("%Y%m%d-%H%M%S"))
+    else:
+        sandbox = root
+
     if not os.path.exists(sandbox):
         os.makedirs(sandbox)
+
     return sandbox
 
 
-def asset(*args):
+def asset(*args: str) -> str:
     adir = os.path.dirname(__file__)
     return os.path.abspath(os.path.join(adir, "assets", *args))
 
@@ -148,6 +147,8 @@ class TestCase(_Base):
             self.fail("ndarrays contents differ\n%s" % msg)
 
     def assertImagesAlmostEqual(self, a, b, epsilon=0.1, *args):
+        import PIL.ImageFilter as ImageFilter
+
         self.assertEqual(a.size, b.size, "sizes dont match")
         a = a.filter(ImageFilter.BLUR).getdata()
         b = b.filter(ImageFilter.BLUR).getdata()

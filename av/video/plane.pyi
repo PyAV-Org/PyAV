@@ -1,6 +1,8 @@
+from av.plane import Plane
+
 from .frame import VideoFrame
 
-class VideoPlane:
+class VideoPlane(Plane):
     line_size: int
     width: int
     height: int

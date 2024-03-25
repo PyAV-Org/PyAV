@@ -22,9 +22,10 @@ class Flags(EnumFlag):
     SEEK_TO_PTS: int
 
 class ContainerFormat:
+    name: str
+    long_name: str
     is_input: bool
     is_output: bool
-    long_name: str
 
     # flags
     no_file: int

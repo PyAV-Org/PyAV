@@ -1,6 +1,5 @@
 import errno
 from fractions import Fraction
-from unittest import SkipTest
 
 import numpy as np
 
@@ -9,7 +8,7 @@ from av import AudioFrame, VideoFrame
 from av.audio.frame import format_dtypes
 from av.filter import Filter, Graph
 
-from .common import Image, TestCase, fate_suite
+from .common import TestCase, has_pillow
 
 
 def generate_audio_frame(
@@ -86,7 +85,7 @@ class TestFilters(TestCase):
         frame = sink.pull()
         self.assertIsInstance(frame, VideoFrame)
 
-        if Image:
+        if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot2.png"))
 
     def test_auto_find_sink(self):
@@ -97,7 +96,7 @@ class TestFilters(TestCase):
 
         frame = graph.pull()
 
-        if Image:
+        if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot3.png"))
 
     def test_delegate_sink(self):
@@ -108,42 +107,8 @@ class TestFilters(TestCase):
 
         frame = src.pull()
 
-        if Image:
+        if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot4.png"))
-
-    def test_haldclut_graph(self):
-        raise SkipTest()
-
-        graph = Graph()
-
-        img = Image.open(fate_suite("png1/lena-rgb24.png"))
-        frame = VideoFrame.from_image(img)
-        img_source = graph.add_buffer(frame)
-
-        hald_img = Image.open("hald_7.png")
-        hald_frame = VideoFrame.from_image(hald_img)
-        hald_source = graph.add_buffer(hald_frame)
-
-        hald_filter = graph.add("haldclut")
-
-        sink = graph.add("buffersink")
-
-        img_source.link(0, hald_filter, 0)
-        hald_source.link(0, hald_filter, 1)
-        hald_filter.link(0, sink, 0)
-        graph.config()
-
-        self.assertIs(img_source.outputs[0].linked_to, hald_filter.inputs[0])
-        self.assertIs(hald_source.outputs[0].linked_to, hald_filter.inputs[1])
-        self.assertIs(hald_filter.outputs[0].linked_to, sink.inputs[0])
-
-        hald_source.push(hald_frame)
-
-        img_source.push(frame)
-
-        frame = sink.pull()
-        self.assertIsInstance(frame, VideoFrame)
-        frame.to_image().save(self.sandboxed("filtered.png"))
 
     def test_audio_buffer_sink(self):
         graph = Graph()
