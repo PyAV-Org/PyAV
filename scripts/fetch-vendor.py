@@ -3,7 +3,6 @@ import logging
 import json
 import os
 import platform
-import shutil
 import struct
 import subprocess
 
@@ -35,12 +34,11 @@ parser.add_argument("--config-file", default=os.path.splitext(__file__)[0] + ".j
 args = parser.parse_args()
 logging.basicConfig(level=logging.INFO)
 
-# read config file
-with open(args.config_file, "r") as fp:
+with open(args.config_file) as fp:
     config = json.load(fp)
 
 # ensure destination directory exists
-logging.info("Creating directory %s" % args.destination_dir)
+logging.info(f"Creating directory {args.destination_dir}")
 if not os.path.exists(args.destination_dir):
     os.makedirs(args.destination_dir)
 
@@ -51,7 +49,7 @@ for url_template in config["urls"]:
     tarball_name = tarball_url.split("/")[-1]
     tarball_file = os.path.join(args.cache_dir, tarball_name)
     if not os.path.exists(tarball_file):
-        logging.info("Downloading %s" % tarball_url)
+        logging.info(f"Downloading {tarball_url}")
         if not os.path.exists(args.cache_dir):
             os.mkdir(args.cache_dir)
         subprocess.check_call(
@@ -59,5 +57,5 @@ for url_template in config["urls"]:
         )
 
     # extract tarball
-    logging.info("Extracting %s" % tarball_name)
+    logging.info(f"Extracting {tarball_name}")
     subprocess.check_call(["tar", "-C", args.destination_dir, "-xf", tarball_file])
