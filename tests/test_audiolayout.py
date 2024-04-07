@@ -8,7 +8,7 @@ class TestAudioLayout(TestCase):
         layout = AudioLayout("stereo")
         self._test_stereo(layout)
 
-    def test_2channel_properties(self):
+    def test_2channel_properties(self) -> None:
         layout = AudioLayout(2)
         self._test_stereo(layout)
 
