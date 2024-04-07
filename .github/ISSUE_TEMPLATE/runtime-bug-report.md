@@ -51,23 +51,15 @@ Traceback:
 ```
 {{ Complete output of `python setup.py config --verbose`. }}
 ```
-- FFmpeg:
-```
-{{ Complete output of `ffmpeg -version` }}
-```
-
 
 ## Research
 
 I have done the following:
 
-- [ ] Checked the [PyAV documentation](https://pyav.org/docs)
+- [ ] Checked the [PyAV documentation](https://pyav.basswood-io.com)
 - [ ] Searched on [Google](https://www.google.com/search?q=pyav+how+do+I+foo)
 - [ ] Searched on [Stack Overflow](https://stackoverflow.com/search?q=pyav)
 - [ ] Looked through [old GitHub issues](https://github.com/PyAV-Org/PyAV/issues?&q=is%3Aissue)
-- [ ] Asked on [PyAV Gitter](https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im)
-- [ ] ... and waited 72 hours for a response.
-
 
 ## Additional context
 
