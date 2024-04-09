@@ -1,6 +1,5 @@
-from libc.errno cimport EAGAIN
-
 cimport libav as lib
+from libc.errno cimport EAGAIN
 
 from av.error cimport err_check
 from av.packet cimport Packet
