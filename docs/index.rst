@@ -21,6 +21,7 @@ Currently we provide:
 - ``libavcodec``:
   :class:`.Codec`,
   :class:`.CodecContext`,
+  :class:`.BitStreamFilterContext`,
   audio/video :class:`frames <.Frame>`,
   :class:`data planes <.Plane>`,
   :class:`subtitles <.Subtitle>`;

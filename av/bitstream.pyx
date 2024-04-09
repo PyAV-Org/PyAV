@@ -7,7 +7,11 @@ from av.stream cimport Stream
 
 
 cdef class BitStreamFilterContext:
+    """
+    Initializes a bitstream filter: a way to directly modify packet data.
 
+    Wraps :ffmpeg:`AVBSFContext`
+    """
     def __cinit__(self, filter_description, Stream stream=None):
         cdef int res
         cdef char *filter_str = filter_description
@@ -15,6 +19,7 @@ cdef class BitStreamFilterContext:
         with nogil:
             res = lib.av_bsf_list_parse_str(filter_str, &self.ptr)
         err_check(res)
+
         if stream is not None:
             with nogil:
                 res = lib.avcodec_parameters_copy(self.ptr.par_in, stream.ptr.codecpar)
@@ -22,6 +27,7 @@ cdef class BitStreamFilterContext:
             with nogil:
                 res = lib.avcodec_parameters_copy(self.ptr.par_out, stream.ptr.codecpar)
             err_check(res)
+
         with nogil:
             res = lib.av_bsf_init(self.ptr)
         err_check(res)
@@ -30,35 +36,34 @@ cdef class BitStreamFilterContext:
         if self.ptr:
             lib.av_bsf_free(&self.ptr)
 
-    def _send(self, Packet packet=None):
+    cpdef filter(self, Packet packet=None):
+        """
+        Processes a packet based on the filter_description set during initialization.
+        Multiple packets may be created.
+
+        :type: list[Packet]
+        """
         cdef int res
+        cdef Packet new_packet
+
         with nogil:
             res = lib.av_bsf_send_packet(self.ptr, packet.ptr if packet is not None else NULL)
         err_check(res)
 
-    def _recv(self):
-        cdef Packet packet = Packet()
-
-        cdef int res
-        with nogil:
-            res = lib.av_bsf_receive_packet(self.ptr, packet.ptr)
-        if res == -EAGAIN or res == lib.AVERROR_EOF:
-            return
-        err_check(res)
-
-        if not res:
-            return packet
-
-    cpdef filter(self, Packet packet=None):
-        self._send(packet)
-
         output = []
         while True:
-            packet = self._recv()
-            if packet:
-                output.append(packet)
-            else:
+            new_packet = Packet()
+            with nogil:
+                res = lib.av_bsf_receive_packet(self.ptr, new_packet.ptr)
+
+            if res == -EAGAIN or res == lib.AVERROR_EOF:
                 return output
+
+            err_check(res)
+            if res:
+                return output
+
+            output.append(new_packet)
 
 
 cdef get_filter_names():
@@ -71,6 +76,7 @@ cdef get_filter_names():
             names.add(ptr.name)
         else:
             break
+
     return names
 
 bitstream_filters_available = get_filter_names()

@@ -1,11 +1,11 @@
 from fractions import Fraction
-from typing import Iterator
+from typing import Buffer, Iterator
 
 from av.subtitles.subtitle import SubtitleSet
 
 from .stream import Stream
 
-class Packet:
+class Packet(Buffer):
     stream: Stream
     stream_index: int
     time_base: Fraction
@@ -20,5 +20,5 @@ class Packet:
     is_trusted: bool
     is_disposable: bool
 
-    def __init__(self, input: int | None = None) -> None: ...
+    def __init__(self, input: int | bytes | None = None) -> None: ...
     def decode(self) -> Iterator[SubtitleSet]: ...

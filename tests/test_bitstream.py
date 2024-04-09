@@ -6,14 +6,13 @@ from .common import TestCase, fate_suite
 
 
 class TestBitStreamFilters(TestCase):
-
-    def test_filters_availible(self):
+    def test_filters_availible(self) -> None:
         self.assertIn("h264_mp4toannexb", bitstream_filters_available)
 
-    def test_filter_chomp(self):
+    def test_filter_chomp(self) -> None:
         ctx = BitStreamFilterContext("chomp")
 
-        src_packets = [Packet(b"\x0012345\0\0\0"), None]
+        src_packets: tuple[Packet, None] = (Packet(b"\x0012345\0\0\0"), None)
         self.assertEqual(bytes(src_packets[0]), b"\x0012345\0\0\0")
 
         result_packets = []
@@ -23,8 +22,11 @@ class TestBitStreamFilters(TestCase):
         self.assertEqual(len(result_packets), 1)
         self.assertEqual(bytes(result_packets[0]), b"\x0012345")
 
-    def test_filter_setts(self):
+    def test_filter_setts(self) -> None:
         ctx = BitStreamFilterContext("setts=pts=N")
+
+        ctx2 = BitStreamFilterContext(b"setts=pts=N")
+        del ctx2
 
         p1 = Packet(b"\0")
         p1.pts = 42
@@ -32,7 +34,7 @@ class TestBitStreamFilters(TestCase):
         p2.pts = 50
         src_packets = [p1, p2, None]
 
-        result_packets = []
+        result_packets: list[Packet] = []
         for p in src_packets:
             result_packets.extend(ctx.filter(p))
 
@@ -40,8 +42,8 @@ class TestBitStreamFilters(TestCase):
         self.assertEqual(result_packets[0].pts, 0)
         self.assertEqual(result_packets[1].pts, 1)
 
-    def test_filter_h264_mp4toannexb(self):
-        def is_annexb(packet):
+    def test_filter_h264_mp4toannexb(self) -> None:
+        def is_annexb(packet: Packet) -> bool:
             data = bytes(packet)
             return data[:3] == b"\0\0\x01" or data[:4] == b"\0\0\0\x01"
 
