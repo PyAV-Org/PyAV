@@ -7,6 +7,7 @@ include "libavutil/samplefmt.pxd"
 include "libavutil/motion_vector.pxd"
 
 include "libavcodec/avcodec.pxd"
+include "libavcodec/bsf.pxd"
 include "libavdevice/avdevice.pxd"
 include "libavformat/avformat.pxd"
 include "libswresample/swresample.pxd"
