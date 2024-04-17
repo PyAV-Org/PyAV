@@ -5,6 +5,11 @@ from av.bitstream import BitStreamFilterContext, bitstream_filters_available
 from .common import TestCase, fate_suite
 
 
+def is_annexb(packet: Packet) -> bool:
+    data = bytes(packet)
+    return data[:3] == b"\0\0\x01" or data[:4] == b"\0\0\0\x01"
+
+
 class TestBitStreamFilters(TestCase):
     def test_filters_availible(self) -> None:
         self.assertIn("h264_mp4toannexb", bitstream_filters_available)
@@ -43,10 +48,6 @@ class TestBitStreamFilters(TestCase):
         self.assertEqual(result_packets[1].pts, 1)
 
     def test_filter_h264_mp4toannexb(self) -> None:
-        def is_annexb(packet: Packet) -> bool:
-            data = bytes(packet)
-            return data[:3] == b"\0\0\x01" or data[:4] == b"\0\0\0\x01"
-
         with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
             stream = container.streams.video[0]
             ctx = BitStreamFilterContext("h264_mp4toannexb", stream)
@@ -60,3 +61,38 @@ class TestBitStreamFilters(TestCase):
 
             for p in res_packets:
                 self.assertTrue(is_annexb(p))
+
+    def test_filter_output_parameters(self) -> None:
+        with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
+            stream = container.streams.video[0]
+
+            self.assertFalse(is_annexb(stream.codec_context.extradata))
+            ctx = BitStreamFilterContext("h264_mp4toannexb", stream)
+            self.assertFalse(is_annexb(stream.codec_context.extradata))
+            del ctx
+
+            _ = BitStreamFilterContext("h264_mp4toannexb", stream, out_stream=stream)
+            self.assertTrue(is_annexb(stream.codec_context.extradata))
+
+    def test_filter_flush(self) -> None:
+        with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
+            stream = container.streams.video[0]
+            ctx = BitStreamFilterContext("h264_mp4toannexb", stream)
+
+            res_packets = []
+            for p in container.demux(stream):
+                res_packets.extend(ctx.filter(p))
+            self.assertEqual(len(res_packets), stream.frames)
+
+            container.seek(0)
+            # Without flushing, we expect to get an error: "A non-NULL packet sent after an EOF."
+            with self.assertRaises(ValueError):
+                for p in container.demux(stream):
+                    ctx.filter(p)
+
+            ctx.flush()
+            container.seek(0)
+            for p in container.demux(stream):
+                res_packets.extend(ctx.filter(p))
+
+            self.assertEqual(len(res_packets), stream.frames * 2)

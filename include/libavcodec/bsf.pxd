@@ -34,3 +34,7 @@ cdef extern from "libavcodec/bsf.h" nogil:
         AVBSFContext *ctx,
         AVPacket *pkt
     )
+
+    cdef void av_bsf_flush(
+        AVBSFContext *ctx
+    )
