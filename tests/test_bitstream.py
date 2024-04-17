@@ -71,7 +71,7 @@ class TestBitStreamFilters(TestCase):
             self.assertFalse(is_annexb(stream.codec_context.extradata))
             del ctx
 
-            ctx = BitStreamFilterContext("h264_mp4toannexb", stream, out_stream=stream)
+            _ = BitStreamFilterContext("h264_mp4toannexb", stream, out_stream=stream)
             self.assertTrue(is_annexb(stream.codec_context.extradata))
 
     def test_filter_flush(self) -> None:
