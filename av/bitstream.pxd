@@ -8,3 +8,4 @@ cdef class BitStreamFilterContext:
     cdef const lib.AVBSFContext *ptr
 
     cpdef filter(self, Packet packet=?)
+    cpdef flush(self)

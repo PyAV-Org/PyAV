@@ -11,8 +11,11 @@ cdef class BitStreamFilterContext:
     Initializes a bitstream filter: a way to directly modify packet data.
 
     Wraps :ffmpeg:`AVBSFContext`
+
+    :param Stream in_stream: A stream that defines the input codec for the bitfilter.
+    :param Stream out_stream: A stream whose codec is overwritten using the output parameters from the bitfilter.
     """
-    def __cinit__(self, filter_description, Stream stream=None):
+    def __cinit__(self, filter_description, Stream in_stream=None, Stream out_stream=None):
         cdef int res
         cdef char *filter_str = filter_description
 
@@ -20,17 +23,20 @@ cdef class BitStreamFilterContext:
             res = lib.av_bsf_list_parse_str(filter_str, &self.ptr)
         err_check(res)
 
-        if stream is not None:
+        if in_stream is not None:
             with nogil:
-                res = lib.avcodec_parameters_copy(self.ptr.par_in, stream.ptr.codecpar)
-            err_check(res)
-            with nogil:
-                res = lib.avcodec_parameters_copy(self.ptr.par_out, stream.ptr.codecpar)
+                res = lib.avcodec_parameters_copy(self.ptr.par_in, in_stream.ptr.codecpar)
             err_check(res)
 
         with nogil:
             res = lib.av_bsf_init(self.ptr)
         err_check(res)
+
+        if out_stream is not None:
+            with nogil:
+                res = lib.avcodec_parameters_copy(out_stream.ptr.codecpar, self.ptr.par_out)
+            err_check(res)
+            lib.avcodec_parameters_to_context(out_stream.codec_context.ptr, out_stream.ptr.codecpar)
 
     def __dealloc__(self):
         if self.ptr:
@@ -65,6 +71,13 @@ cdef class BitStreamFilterContext:
 
             output.append(new_packet)
 
+    cpdef flush(self):
+        """
+        Reset the internal state of the filter.
+        Should be called e.g. when seeking.
+        Can be used to make the filter usable again after draining it with EOF marker packet.
+        """
+        lib.av_bsf_flush(self.ptr)
 
 cdef get_filter_names():
     names = set()
