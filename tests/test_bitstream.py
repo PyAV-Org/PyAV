@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import av
 from av import Packet
 from av.bitstream import BitStreamFilterContext, bitstream_filters_available
@@ -5,7 +7,10 @@ from av.bitstream import BitStreamFilterContext, bitstream_filters_available
 from .common import TestCase, fate_suite
 
 
-def is_annexb(packet: Packet) -> bool:
+def is_annexb(packet: Packet | bytes | None) -> bool:
+    if packet is None:
+        return False
+
     data = bytes(packet)
     return data[:3] == b"\0\0\x01" or data[:4] == b"\0\0\0\x01"
 
