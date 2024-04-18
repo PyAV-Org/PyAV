@@ -10,8 +10,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         #define AV_FRAME_DATA_SEI_UNREGISTERED -1
     #endif
     """
-
-    # custom
     cdef set pyav_get_available_codecs()
 
     cdef int   avcodec_version()
@@ -326,6 +324,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_FRAME_DATA_QP_TABLE_PROPERTIES
         AV_FRAME_DATA_QP_TABLE_DATA
         AV_FRAME_DATA_SEI_UNREGISTERED
+        AV_FRAME_DATA_S12M_TIMECODE
 
     cdef struct AVFrameSideData:
         AVFrameSideDataType type

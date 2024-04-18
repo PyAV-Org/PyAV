@@ -23,6 +23,7 @@ class Type(EnumItem):
     CONTENT_LIGHT_LEVEL: int
     ICC_PROFILE: int
     SEI_UNREGISTERED: int
+    S12M_TIMECODE: int
 
 class SideData(Buffer):
     type: Type
