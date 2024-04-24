@@ -37,6 +37,8 @@ cdef class CodecContext:
     cpdef encode(self, Frame frame=?)
     cpdef decode(self, Packet packet=?)
 
+    cpdef flush_buffers(self)
+
     # Used by both transcode APIs to setup user-land objects.
     # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing
     # packets are bogus). It should take all info it needs from the context and/or stream.

@@ -1,6 +1,7 @@
 from typing import Any, Literal
 
 from av.enum import EnumFlag, EnumItem
+from av.frame import Frame
 from av.packet import Packet
 
 from .codec import Codec
@@ -78,3 +79,6 @@ class CodecContext:
     def parse(
         self, raw_input: bytes | bytearray | memoryview | None = None
     ) -> list[Packet]: ...
+    def encode(self, frame: Frame | None) -> list[Packet]: ...
+    def decode(self, packet: Packet | None) -> list[Frame]: ...
+    def flush_buffers(self) -> None: ...
