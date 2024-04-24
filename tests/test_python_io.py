@@ -292,6 +292,8 @@ class TestPythonIO(TestCase):
         )
 
     def test_writing_to_pipe_writeonly(self):
+        av.logging.set_level(av.logging.VERBOSE)
+
         buf = WriteOnlyPipe()
         with self.assertRaises(ValueError) as cm:
             self.write(buf)
@@ -299,6 +301,8 @@ class TestPythonIO(TestCase):
             "[mp4] muxer does not support non seekable output",
             str(cm.exception),
         )
+
+        av.logging.set_level(None)
 
     def read(self, fh, seekable: bool = True) -> None:
         wrapped = MethodLogger(fh)

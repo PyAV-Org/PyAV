@@ -22,6 +22,7 @@ class TestColorSpace(TestCase):
 
         for packet in container.demux(stream):
             for frame in packet.decode():
+                assert isinstance(frame, av.VideoFrame)
                 self.assertEqual(frame.color_range, ColorRange.JPEG)  # a.k.a "pc"
                 self.assertEqual(frame.colorspace, Colorspace.ITU601)
                 return
