@@ -49,7 +49,6 @@ import sys
 from threading import Lock, get_ident
 
 # Library levels.
-# QUIET  = lib.AV_LOG_QUIET # -8; not really a level.
 PANIC = lib.AV_LOG_PANIC  # 0
 FATAL = lib.AV_LOG_FATAL  # 8
 ERROR = lib.AV_LOG_ERROR
@@ -110,8 +109,12 @@ def set_level(level):
     """
     global level_threshold
 
-    if level is None or type(level) is int:
+    if level is None:
         level_threshold = level
+        lib.av_log_set_callback(nolog_callback)
+    elif type(level) is int:
+        level_threshold = level
+        lib.av_log_set_callback(log_callback)
     else:
         raise ValueError("level must be: int | None")
 
@@ -288,8 +291,6 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
         return
 
     with gil:
-        if level_threshold is None:
-            return
         if level > level_threshold and level != lib.AV_LOG_ERROR:
             return
 
@@ -314,4 +315,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
             lib.PyErr_Display(exc, type_, tb)
 
 
-lib.av_log_set_callback(log_callback)
+cdef void nolog_callback(void *ptr, int level, const char *format, lib.va_list args) noexcept nogil:
+    pass
+
+lib.av_log_set_callback(nolog_callback)
