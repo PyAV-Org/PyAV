@@ -278,6 +278,5 @@ cdef class InputContainer(Container):
 
         for stream in self.streams:
             codec_context = stream.codec_context
-            if codec_context and codec_context.is_open:
-                with nogil:
-                    lib.avcodec_flush_buffers(codec_context.ptr)
+            if codec_context:
+                codec_context.flush_buffers()

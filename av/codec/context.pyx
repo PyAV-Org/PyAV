@@ -510,6 +510,17 @@ cdef class CodecContext:
             res.append(frame)
         return res
 
+    cpdef flush_buffers(self):
+        """Reset the internal codec state and discard all internal buffers.
+
+        Should be called before you start decoding from a new position e.g.
+        when seeking or when switching to a different stream.
+
+        """
+        if self.is_open:
+            with nogil:
+                lib.avcodec_flush_buffers(self.ptr)
+
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
 
         # Propagate our manual times.
