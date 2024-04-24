@@ -1,5 +1,3 @@
-import logging
-from threading import Lock
 from typing import Any, Callable
 
 PANIC: int
@@ -32,12 +30,3 @@ class Capture:
         value: Exception | None,
         traceback: Callable[..., Any] | None,
     ) -> None: ...
-
-level_threshold: int
-skip_repeated: bool
-skip_lock: Lock
-last_log: tuple[int, str, str] | None
-skip_count: int
-last_error: tuple[int, str, str] | None
-global_captures: list[list[tuple[int, str, str]]]
-thread_captures: dict[int, list[tuple[int, str, str]]]
