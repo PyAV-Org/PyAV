@@ -1,6 +1,21 @@
 """
-FFmpeg has a logging system that it uses extensively. PyAV hooks into that system
-to translate FFmpeg logs into Python's
+FFmpeg has a logging system that it uses extensively. It's very noisy so PyAV turns it
+off by default. This, unfortunately has the effect of making raised errors having less
+detailed messages. It's therefore recommended to use VERBOSE when developing.
+
+.. _enable_logging:
+
+Enabling Logging
+~~~~~~~~~~~~~~~~~
+
+You can hook the logging system with Python by setting the log level::
+
+    import av
+
+    av.logging.set_level(av.logging.VERBOSE)
+
+
+PyAV hooks into that system to translate FFmpeg logs into Python's
 `logging system <https://docs.python.org/3/library/logging.html#logging.basicConfig>`_.
 
 If you are not already using Python's logging system, you can initialize it
@@ -10,19 +25,12 @@ quickly with::
     logging.basicConfig()
 
 
-.. _disable_logging:
+Note that handling logs with Python sometimes doesn't play nice multi-threads workflows.
+An alternative is :func:`restore_default_callback`.
 
-Disabling Logging
-~~~~~~~~~~~~~~~~~
-
-You can disable hooking the logging system with an environment variable::
-
-    export PYAV_LOGGING=off
-
-or at runtime with :func:`restore_default_callback`.
-
-This will leave (or restore) the FFmpeg logging system, which prints to the terminal.
-This may also result in raised errors having less detailed messages.
+This will restores FFmpeg's logging default system, which prints to the terminal.
+Like with setting the log level to ``None``, this may also result in raised errors
+having less detailed messages.
 
 
 API Reference
@@ -37,7 +45,6 @@ from libc.stdio cimport fprintf, stderr
 from libc.stdlib cimport free, malloc
 
 import logging
-import os
 import sys
 from threading import Lock, get_ident
 
@@ -72,13 +79,10 @@ cpdef adapt_level(int level):
     elif level <= lib.AV_LOG_DEBUG:
         return 5  # Lower than any logging constant.
     else:  # lib.AV_LOG_TRACE
-        return 1  # ... yeah.
+        return 1
 
 
-# While we start with the level quite low, Python defaults to INFO, and so
-# they will not show. The logging system can add significant overhead, so
-# be wary of dropping this lower.
-cdef int level_threshold = lib.AV_LOG_VERBOSE
+cdef object level_threshold = None
 
 # ... but lets limit ourselves to WARNING (assuming nobody already did this).
 if "libav" not in logging.Logger.manager.loggerDict:
@@ -86,52 +90,35 @@ if "libav" not in logging.Logger.manager.loggerDict:
 
 
 def get_level():
-    """Return current FFmpeg logging threshold. See :func:`set_level`."""
+    """Returns the current log level. See :func:`set_level`."""
     return level_threshold
 
 
-def set_level(int level):
+def set_level(level):
     """set_level(level)
 
-    Sets logging threshold when converting from FFmpeg's logging system
-    to Python's. It is recommended to use the constants available in this
-    module to set the level: ``PANIC``, ``FATAL``, ``ERROR``,
-    ``WARNING``, ``INFO``, ``VERBOSE``, and ``DEBUG``.
+    Sets PyAV's log level. It can be set to constants available in this
+    module: ``PANIC``, ``FATAL``, ``ERROR``, ``WARNING``, ``INFO``,
+    ``VERBOSE``, ``DEBUG``, or ``None`` (the default).
 
-    While less efficient, it is generally preferable to modify logging
-    with Python's :mod:`logging`, e.g.::
+    PyAV defaults to totally ignoring all ffmpeg logs. This has the side effect of
+    making certain Exceptions have no messages. It's therefore recommended to use:
 
-        logging.getLogger('libav').setLevel(logging.ERROR)
+         av.logging.set_level(av.logging.VERBOSE)
 
-    PyAV defaults to translating everything except ``AV_LOG_DEBUG``, so this
-    function is only nessesary to use if you want to see those messages as well.
-    ``AV_LOG_DEBUG`` will be translated to a level 5 message, which is lower
-    than any builtin Python logging level, so you must lower that as well::
-
-        logging.getLogger().setLevel(5)
-
+    When developing your application.
     """
     global level_threshold
-    level_threshold = level
+
+    if level is None or type(level) is int:
+        level_threshold = level
+    else:
+        raise ValueError("level must be: int | None")
 
 
 def restore_default_callback():
     """Revert back to FFmpeg's log callback, which prints to the terminal."""
     lib.av_log_set_callback(lib.av_log_default_callback)
-
-
-cdef bint print_after_shutdown = False
-
-
-def get_print_after_shutdown():
-    """Will logging continue to ``stderr`` after Python shutdown?"""
-    return print_after_shutdown
-
-
-def set_print_after_shutdown(v):
-    """Set if logging should continue to ``stderr`` after Python shutdown."""
-    global print_after_shutdown
-    print_after_shutdown = bool(v)
 
 
 cdef bint skip_repeated = True
@@ -226,47 +213,6 @@ cpdef log(int level, str name, str message):
     free(obj)
 
 
-cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) noexcept nogil:
-
-    cdef bint inited = lib.Py_IsInitialized()
-    if not inited and not print_after_shutdown:
-        return
-
-    # Fast path: avoid logging overhead. This should match the
-    # log_callback_gil() checks that result in ignoring the message.
-    with gil:
-        if level > level_threshold and level != lib.AV_LOG_ERROR:
-            return
-
-    # Format the message.
-    cdef char message[1024]
-    lib.vsnprintf(message, 1023, format, args)
-
-    # Get the name.
-    cdef const char *name = NULL
-    cdef lib.AVClass *cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
-    if cls and cls.item_name:
-        # I'm not 100% on this, but this should be static, and so
-        # it doesn't matter if the AVClass that returned it vanishes or not.
-        name = cls.item_name(ptr)
-
-    if not inited:
-        fprintf(stderr, "av.logging (after shutdown): %s[%d]: %s\n",
-                name, level, message)
-        return
-
-    with gil:
-        try:
-            log_callback_gil(level, name, message)
-
-        except Exception as e:
-            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s\n",
-                    name, level, message)
-            # For some reason lib.PyErr_PrintEx(0) won't work.
-            exc, type_, tb = sys.exc_info()
-            lib.PyErr_Display(exc, type_, tb)
-
-
 cdef log_callback_gil(int level, const char *c_name, const char *c_message):
     global error_count
     global skip_count
@@ -336,8 +282,36 @@ cdef log_callback_emit(log):
     logger.log(py_level, message.strip())
 
 
-# Start the magic!
-# We allow the user to fully disable the logging system as it will not play
-# nicely with subinterpreters due to FFmpeg-created threads.
-if os.environ.get("PYAV_LOGGING") != "off":
-    lib.av_log_set_callback(log_callback)
+cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) noexcept nogil:
+    cdef bint inited = lib.Py_IsInitialized()
+    if not inited:
+        return
+
+    with gil:
+        if level_threshold is None:
+            return
+        if level > level_threshold and level != lib.AV_LOG_ERROR:
+            return
+
+    # Format the message.
+    cdef char message[1024]
+    lib.vsnprintf(message, 1023, format, args)
+
+    # Get the name.
+    cdef const char *name = NULL
+    cdef lib.AVClass *cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
+    if cls and cls.item_name:
+        name = cls.item_name(ptr)
+
+    with gil:
+        try:
+            log_callback_gil(level, name, message)
+        except Exception as e:
+            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s\n",
+                    name, level, message)
+            # For some reason lib.PyErr_PrintEx(0) won't work.
+            exc, type_, tb = sys.exc_info()
+            lib.PyErr_Display(exc, type_, tb)
+
+
+lib.av_log_set_callback(log_callback)

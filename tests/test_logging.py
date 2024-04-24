@@ -22,6 +22,8 @@ class TestLogging(TestCase):
         )
 
     def test_threaded_captures(self):
+        av.logging.set_level(av.logging.VERBOSE)
+
         with av.logging.Capture(local=True) as logs:
             do_log("main")
             thread = threading.Thread(target=do_log, args=("thread",))
@@ -29,8 +31,11 @@ class TestLogging(TestCase):
             thread.join()
 
         self.assertIn((av.logging.INFO, "test", "main"), logs)
+        av.logging.set_level(None)
 
     def test_global_captures(self):
+        av.logging.set_level(av.logging.VERBOSE)
+
         with av.logging.Capture(local=False) as logs:
             do_log("main")
             thread = threading.Thread(target=do_log, args=("thread",))
@@ -39,8 +44,11 @@ class TestLogging(TestCase):
 
         self.assertIn((av.logging.INFO, "test", "main"), logs)
         self.assertIn((av.logging.INFO, "test", "thread"), logs)
+        av.logging.set_level(None)
 
     def test_repeats(self):
+        av.logging.set_level(av.logging.VERBOSE)
+
         with av.logging.Capture() as logs:
             do_log("foo")
             do_log("foo")
@@ -62,7 +70,11 @@ class TestLogging(TestCase):
             ],
         )
 
+        av.logging.set_level(None)
+
     def test_error(self):
+        av.logging.set_level(av.logging.VERBOSE)
+
         log = (av.logging.ERROR, "test", "This is a test.")
         av.logging.log(*log)
         try:
@@ -71,3 +83,5 @@ class TestLogging(TestCase):
             self.assertEqual(e.log, log)
         else:
             self.fail()
+
+        av.logging.set_level(None)

@@ -53,6 +53,7 @@ Basic Demo
 
     import av
 
+    av.logging.set_level(av.logging.VERBOSE)
     container = av.open(path_to_video)
 
     for index, frame in enumerate(container.decode(video=0)):
