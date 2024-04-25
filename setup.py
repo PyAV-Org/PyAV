@@ -194,8 +194,7 @@ setup(
     license="BSD",
     project_urls={
         "Bug Reports": "https://github.com/PyAV-Org/PyAV/issues",
-        "Documentation": "https://pyav.org/docs",
-        "Feedstock": "https://github.com/conda-forge/av-feedstock",
+        "Documentation": "https://pyav.basswood-io.com",
         "Download": "https://pypi.org/project/av",
     },
     author="Mike Boers",
