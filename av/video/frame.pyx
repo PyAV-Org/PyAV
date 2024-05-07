@@ -293,22 +293,26 @@ cdef class VideoFrame(Frame):
         import numpy as np
 
         if frame.format.name in ("yuv420p", "yuvj420p"):
+            bytes_per_pixel = 1
             assert frame.width % 2 == 0
             assert frame.height % 2 == 0
+            y_plane, u_plane, v_plane = frame.planes[:3]
             # Fast path for the case that the entire YUV data is contiguous
             if (
-                frame.planes[0].line_size == frame.planes[0].width and
-                frame.planes[1].line_size == frame.planes[1].width and
-                frame.planes[2].line_size == frame.planes[2].width
+                y_plane.line_size == y_plane.width and
+                u_plane.line_size == u_plane.width and
+                v_plane.line_size == v_plane.width and
+                y_plane.buffer_ptr + y_plane.buffer_size * bytes_per_pixel == u_plane.buffer_ptr and
+                u_plane.buffer_ptr + u_plane.buffer_size * bytes_per_pixel == v_plane.buffer_ptr
             ):
                 yuv_planes = YUVPlanes(frame, 0)
                 return useful_array(yuv_planes).reshape(frame.height * 3 // 2, frame.width)
             else:
                 # Otherwise, we need to copy the data through the use of np.hstack
                 return np.hstack((
-                    useful_array(frame.planes[0]),
-                    useful_array(frame.planes[1]),
-                    useful_array(frame.planes[2])
+                    useful_array(frame.planes[0], bytes_per_pixel=bytes_per_pixel),
+                    useful_array(frame.planes[1], bytes_per_pixel=bytes_per_pixel),
+                    useful_array(frame.planes[2], bytes_per_pixel=bytes_per_pixel)
                 )).reshape(-1, frame.width)
         elif frame.format.name in ("yuv444p", "yuvj444p"):
             return np.hstack((
