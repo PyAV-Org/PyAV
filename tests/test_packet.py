@@ -39,3 +39,11 @@ class TestProperties(TestCase):
                     self.assertTrue(packet.is_disposable)
                 else:
                     self.assertFalse(packet.is_disposable)
+
+    def test_set_duration(self):
+        with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+            for packet in container.demux():
+                old_duration = packet.duration
+                packet.duration += 10
+
+                self.assertEqual(packet.duration, old_duration + 10)
