@@ -1,6 +1,5 @@
 from collections.abc import Buffer
 from fractions import Fraction
-from typing import Iterator
 
 from av.subtitles.subtitle import SubtitleSet
 
@@ -22,5 +21,5 @@ class Packet(Buffer):
     is_disposable: bool
 
     def __init__(self, input: int | bytes | None = None) -> None: ...
-    def decode(self) -> Iterator[SubtitleSet]: ...
+    def decode(self) -> list[SubtitleSet]: ...
     def __buffer__(self, arg1) -> memoryview: ...

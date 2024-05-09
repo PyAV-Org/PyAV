@@ -145,7 +145,9 @@ cdef class TextSubtitle(Subtitle):
 
     @property
     def text(self):
-        return self.ptr.text
+        if self.ptr.text is not NULL:
+            return PyBytes_FromString(self.ptr.text)
+        return b""
 
 
 cdef class AssSubtitle(Subtitle):
