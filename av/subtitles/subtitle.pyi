@@ -5,6 +5,7 @@ class SubtitleSet:
     start_display_time: int
     end_display_time: int
     pts: int
+    rects: tuple[Subtitle]
 
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[Subtitle]: ...
@@ -29,7 +30,7 @@ class BitmapSubtitlePlane:
 
 class TextSubtitle(Subtitle):
     type: Literal[b"text"]
-    text: str
+    text: bytes
 
 class AssSubtitle(Subtitle):
     type: Literal[b"ass"]
