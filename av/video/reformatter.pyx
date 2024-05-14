@@ -87,8 +87,8 @@ cdef class VideoReformatter:
         cdef int c_src_colorspace = (Colorspace[src_colorspace].value if src_colorspace is not None else frame.colorspace)
         cdef int c_dst_colorspace = (Colorspace[dst_colorspace].value if dst_colorspace is not None else frame.colorspace)
         cdef int c_interpolation = (Interpolation[interpolation] if interpolation is not None else Interpolation.BILINEAR).value
-        cdef int c_src_color_range = (ColorRange[src_color_range].value if src_color_range is not None else frame.color_range)
-        cdef int c_dst_color_range = (ColorRange[dst_color_range].value if dst_color_range is not None else frame.color_range)
+        cdef int c_src_color_range = (ColorRange[src_color_range].value if src_color_range is not None else 0)
+        cdef int c_dst_color_range = (ColorRange[dst_color_range].value if dst_color_range is not None else 0)
 
         return self._reformat(
             frame,
