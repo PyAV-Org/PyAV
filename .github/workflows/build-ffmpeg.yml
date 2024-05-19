@@ -7,10 +7,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-14
             arch: arm64
             shell: bash
-          - os: macos-latest
+          - os: macos-13
             arch: x86_64
             shell: bash
           - os: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: 3.8
       - name: Install packages
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
         run: |
           brew update
           brew install pkg-config

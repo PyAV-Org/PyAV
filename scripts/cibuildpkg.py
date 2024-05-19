@@ -28,9 +28,6 @@ def get_platform() -> str:
     if system == "Linux":
         return f"manylinux_{machine}"
     elif system == "Darwin":
-        # cibuildwheel sets ARCHFLAGS:
-        # https://github.com/pypa/cibuildwheel/blob/5255155bc57eb6224354356df648dc42e31a0028/cibuildwheel/macos.py#L207-L220
-        machine = os.environ["ARCHFLAGS"].split()[1]
         return f"macosx_{machine}"
     elif system == "Windows":
         if struct.calcsize("P") * 8 == 64:
@@ -206,34 +203,18 @@ class Builder:
             "--libdir=" + self._mangle_path(os.path.join(prefix, "lib")),
             "--prefix=" + self._mangle_path(prefix),
         ]
-        darwin_arm64_cross = (
-            platform.system() == "Darwin"
-            and not for_builder
-            and os.environ["ARCHFLAGS"] == "-arch arm64"
-        )
 
         if package.name == "vpx":
-            if darwin_arm64_cross:
-                # darwin20 is the first darwin that supports arm64 macs
-                configure_args += ["--target=arm64-darwin20-gcc"]
-            elif platform.system() == "Darwin":
-                # darwin13 matches the macos 10.9 target used by cibuildwheel:
-                # https://cibuildwheel.readthedocs.io/en/stable/cpp_standards/#macos-and-deployment-target-versions
-                configure_args += ["--target=x86_64-darwin13-gcc"]
+            if platform.system() == "Darwin":
+                if platform.machine() == "arm64":
+                    # darwin20 is the first darwin that supports arm64 macs
+                    configure_args += ["--target=arm64-darwin20-gcc"]
+                elif platform.machine() == "x86_64":
+                    # darwin13 matches the macos 10.9 target used by cibuildwheel:
+                    # https://cibuildwheel.readthedocs.io/en/stable/cpp_standards/#macos-and-deployment-target-versions
+                    configure_args += ["--target=x86_64-darwin13-gcc"]
             elif platform.system() == "Windows":
                 configure_args += ["--target=x86_64-win64-gcc"]
-        elif darwin_arm64_cross:
-            # AC_FUNC_MALLOC and AC_FUNC_REALLOC fail when cross-compiling
-            env["ac_cv_func_malloc_0_nonnull"] = "yes"
-            env["ac_cv_func_realloc_0_nonnull"] = "yes"
-
-            if package.name == "ffmpeg":
-                configure_args += ["--arch=arm64", "--enable-cross-compile"]
-            else:
-                configure_args += [
-                    "--build=x86_64-apple-darwin",
-                    "--host=aarch64-apple-darwin",
-                ]
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
@@ -269,12 +250,6 @@ class Builder:
         ]
         if platform.system() == "Darwin":
             cmake_args.append("-DCMAKE_INSTALL_NAME_DIR=" + os.path.join(prefix, "lib"))
-            if not for_builder and os.environ["ARCHFLAGS"] == "-arch arm64":
-                cmake_args += [
-                    "-DCMAKE_OSX_ARCHITECTURES=arm64",
-                    "-DCMAKE_SYSTEM_NAME=Darwin",
-                    "-DCMAKE_SYSTEM_PROCESSOR=arm64",
-                ]
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
@@ -300,26 +275,6 @@ class Builder:
         env = self._environment(for_builder=for_builder)
         prefix = self._prefix(for_builder=for_builder)
         meson_args = ["--libdir=lib", "--prefix=" + prefix]
-        if (
-            platform.system() == "Darwin"
-            and not for_builder
-            and os.environ["ARCHFLAGS"] == "-arch arm64"
-        ):
-            cross_file = os.path.join(package_path, "meson.cross")
-            with open(cross_file, "w") as fp:
-                fp.write(
-                    """[binaries]
-c = 'cc'
-cpp = 'c++'
-
-[host_machine]
-system = 'darwin'
-cpu_family = 'aarch64'
-cpu = 'aarch64'
-endian = 'little'
-"""
-                )
-            meson_args.append("--cross-file=" + cross_file)
 
         # build package
         os.makedirs(package_build_path, exist_ok=True)
@@ -454,8 +409,6 @@ endian = 'little'
 
         if platform.system() == "Darwin" and not for_builder:
             arch_flags = os.environ["ARCHFLAGS"]
-            if arch_flags == "-arch arm64":
-                prepend_env(env, "ASFLAGS", arch_flags)
             for var in ["CFLAGS", "CXXFLAGS", "LDFLAGS"]:
                 prepend_env(env, var, arch_flags)
 
