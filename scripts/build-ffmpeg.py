@@ -128,7 +128,7 @@ if not os.path.exists(output_tarball):
         Package(
             name="fontconfig",
             requires=["freetype", "xml2"],
-            source_url="https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.13.1.tar.bz2",
+            source_url="https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz",
             build_arguments=["--disable-nls", "--enable-libxml2"],
         ),
         Package(
