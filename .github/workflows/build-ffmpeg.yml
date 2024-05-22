@@ -27,11 +27,11 @@ jobs:
         shell: ${{ matrix.shell }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.8
       - name: Install packages
-        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
         run: |
           brew update
           brew install pkg-config
@@ -56,22 +56,23 @@ jobs:
           cibuildwheel --output-dir output
           rm -f output/*.whl
       - name: Upload FFmpeg
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: output
+          name: output-${{ matrix.os }}-${{ matrix.arch }}
           path: output/
 
   build-qemu-stage-1:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         arch: [aarch64, ppc64le]
+        os: [ubuntu-latest]
     env:
       stage: 1
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.8
       - name: Set up QEMU
@@ -85,30 +86,31 @@ jobs:
             cp -ar /tmp/vendor /project;
           '
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: artifacts-${{ matrix.arch }}
+          name: stage-1-${{ matrix.os }}-${{ matrix.arch }}
           path: vendor
 
   build-qemu-stage-2:
     needs: build-qemu-stage-1
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         arch: [aarch64, ppc64le]
+        os: [ubuntu-latest]
     env:
       stage: 2
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.8
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: artifacts-${{ matrix.arch }}
+          name: stage-1-${{ matrix.os }}-${{ matrix.arch }}
           path: vendor
       - name: Build FFmpeg dependencies
         run: |
@@ -120,30 +122,31 @@ jobs:
             cp -ar /tmp/vendor /project;
           '
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: artifacts-${{ matrix.arch }}
+          name: stage-2-${{ matrix.os }}-${{ matrix.arch }}
           path: vendor
 
   build-qemu-stage-3:
     needs: build-qemu-stage-2
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         arch: [aarch64, ppc64le]
+        os: [ubuntu-latest]
     env:
       stage: 3
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.8
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: artifacts-${{ matrix.arch }}
+          name: stage-2-${{ matrix.os }}-${{ matrix.arch }}
           path: vendor
       - name: Build FFmpeg
         env:
@@ -160,7 +163,7 @@ jobs:
           rm -f output/*.whl
         shell: bash
       - name: Upload FFmpeg
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: output
+          name: output-${{ matrix.os }}-${{ matrix.arch }}
           path: output/
