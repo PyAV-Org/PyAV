@@ -4,7 +4,6 @@ import os
 import platform
 import shutil
 import subprocess
-import sys
 
 from cibuildpkg import Builder, Package, get_platform, log_group, run
 
@@ -325,8 +324,10 @@ if not os.path.exists(output_tarball):
         "--enable-libxml2",
         "--enable-lzma",
         "--enable-zlib",
-        "--enable-version3"
+        "--enable-version3",
     ]
+    if plat == "Darwin":
+        ffmpeg_build_args.append("--extra-ldflags=-Wl,-ld_classic")
     if disable_gpl:
         ffmpeg_build_args.extend(["--enable-libopenh264", "--disable-libx264"])
     else:
