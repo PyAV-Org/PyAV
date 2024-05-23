@@ -265,6 +265,12 @@ if not os.path.exists(output_tarball):
             ],
         ),
         Package(
+            name="webp",
+            source_filename="webp-1.4.0.tar.gz",
+            source_url="https://github.com/webmproject/libwebp/archive/refs/tags/v1.4.0.tar.gz",
+            build_system="cmake",
+        ),
+        Package(
             name="x264",
             source_url="https://code.videolan.org/videolan/x264/-/archive/master/x264-master.tar.bz2",
             # parallel build runs out of memory on Windows
@@ -320,6 +326,7 @@ if not os.path.exists(output_tarball):
         "--enable-libtwolame",
         "--enable-libvorbis",
         "--enable-libvpx",
+        "--enable-libwebp",
         "--enable-libxcb" if plat == "Linux" else "--disable-libxcb",
         "--enable-libxml2",
         "--enable-lzma",
