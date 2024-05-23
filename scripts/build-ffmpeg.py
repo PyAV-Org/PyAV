@@ -269,6 +269,17 @@ if not os.path.exists(output_tarball):
             source_filename="webp-1.4.0.tar.gz",
             source_url="https://github.com/webmproject/libwebp/archive/refs/tags/v1.4.0.tar.gz",
             build_system="cmake",
+            build_arguments=[
+                "-DWEBP_BUILD_ANIM_UTILS=OFF",
+                "-DWEBP_BUILD_CWEBP=OFF",
+                "-DWEBP_BUILD_DWEBP=OFF",
+                "-DWEBP_BUILD_GIF2WEBP=OFF",
+                "-DWEBP_BUILD_IMG2WEBP=OFF",
+                "-DWEBP_BUILD_VWEBP=OFF",
+                "-DWEBP_BUILD_WEBPINFO=OFF",
+                "-DWEBP_BUILD_WEBPMUX=OFF",
+                "-DWEBP_BUILD_BUILD_EXTRAS=OFF",
+            ],
         ),
         Package(
             name="x264",
