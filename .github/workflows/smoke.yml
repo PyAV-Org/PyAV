@@ -37,10 +37,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: "3.9", ffmpeg: "6.1", extras: true}
-          - {os: ubuntu-latest, python: "3.9", ffmpeg: "6.0"}
+          - {os: ubuntu-latest, python: "3.8", ffmpeg: "6.1", extras: true}
+          - {os: ubuntu-latest, python: "3.8", ffmpeg: "6.0"}
           - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "6.1"}
-          - {os: macos-12,  python: "3.9", ffmpeg: "6.1"}
+          - {os: macos-12,  python: "3.8", ffmpeg: "6.1"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -116,8 +116,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, python: 3.9, ffmpeg: "6.1"}
-          - {os: windows-latest, python: 3.9, ffmpeg: "6.0"}
+          - {os: windows-latest, python: "3.8", ffmpeg: "6.1"}
+          - {os: windows-latest, python: "3.8", ffmpeg: "6.0"}
 
     steps:
     - name: Checkout
