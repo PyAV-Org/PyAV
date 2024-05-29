@@ -171,7 +171,7 @@ class Builder:
             os.environ,
             "PATH",
             os.path.join(self._builder_dest_dir, "bin"),
-            separator=";" if platform.system() == "Windows" else ":",
+            separator=os.pathsep,
         )
 
     def _build_with_autoconf(self, package: Package, for_builder: bool) -> None:
@@ -416,11 +416,10 @@ class Builder:
 
     def _mangle_path(self, path: str) -> str:
         if platform.system() == "Windows":
-            return (
-                path.replace(os.path.sep, "/").replace("C:", "/c").replace("D:", "/d")
-            )
-        else:
-            return path
+            path = path.replace(os.path.sep, "/")
+            if path[1] == ':':
+                path = f"/{path[0].lower()}{path[2:]}"
+        return path
 
     def _prefix(self, *, for_builder: bool) -> str:
         if for_builder:
