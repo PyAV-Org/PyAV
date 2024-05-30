@@ -26,6 +26,7 @@ email_map = {
     'tcaswell@bnl.gov': 'tcaswell@gmail.com',
     'xxr3376@gmail.com': 'xxr@megvii.com',
     'dallan@pha.jhu.edu': 'daniel.b.allan@gmail.com',
+    '61652821+laggykiller@users.noreply.github.com': 'chaudominic2@gmail.com',
 
 }
 
@@ -55,6 +56,8 @@ github_map = {
     'vidartf@gmail.com': 'vidartf',
     'willpatera@gmail.com': 'willpatera',
     'xxr@megvii.com': 'xxr3376',
+    'chaudominic2@gmail.com': 'laggykiller',
+    'wyattblue@auto-editor.com': 'WyattBlue',
 }
 
 

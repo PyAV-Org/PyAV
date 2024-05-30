@@ -16,6 +16,28 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+
+v12.1.0
+-------
+
+Features:
+
+- Build binary wheels with webp support.
+- Allow disabling logs, disable logs by default.
+- Add bitstream filters by @skeskinen in (:issue:`1375`) (:issue:`1379`).
+- Expose CodecContext flush_buffers by @skeskinen in (:issue:`1382`).
+
+Fixes:
+
+- Fix type stubs, add missing type stubs.
+- Add S12M_TIMECODE by @WyattBlue in (:issue:`1381`).
+- Subtitle.text now returns bytes by @WyattBlue in (:issue:`13981).
+- Allow packet.duration to be writable by @WyattBlue in (:issue:`1399`).
+- Remove deprecated `VideoStream.frame_rate` by @WyattBlue in (:issue:`1351`).
+- Build with Arm for PyPy now by @WyattBlue in (:issue:`1395`).
+- Fix #1378 by @WyattBlue in (:issue:`1400`).
+- setup.py: use PKG_CONFIG env var to get the pkg-config to use by @Artturin in (:issue:`1387`).
+
 v12.0.0
 -------
 
