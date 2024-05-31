@@ -5,7 +5,7 @@ from av.packet cimport Packet
 
 cdef class BitStreamFilterContext:
 
-    cdef const lib.AVBSFContext *ptr
+    cdef lib.AVBSFContext *ptr
 
     cpdef filter(self, Packet packet=?)
     cpdef flush(self)
