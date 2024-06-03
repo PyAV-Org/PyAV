@@ -116,6 +116,9 @@ class Package:
     source_strip_components: int = 1
     gpl: bool = False
 
+    def __lt__(self, other):
+        return self.name < other.name
+
 
 class Builder:
     def __init__(self, dest_dir: str) -> None:
