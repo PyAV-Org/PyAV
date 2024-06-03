@@ -1,5 +1,19 @@
 name: build-ffmpeg
-on: [push, pull_request]
+on:
+  push:
+    branches: main
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
+  pull_request:
+    branches: main
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
+  release:
+    types: [published]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
