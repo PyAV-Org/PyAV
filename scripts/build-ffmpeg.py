@@ -5,8 +5,7 @@ import platform
 import shutil
 import subprocess
 
-from cibuildpkg import Builder, Package, get_platform, log_group, run
-
+from cibuildpkg import Builder, Package, fetch, get_platform, log_group, run
 
 plat = platform.system()
 
@@ -247,6 +246,35 @@ ffmpeg_package = Package(
 )
 
 
+def download_tars(use_gnutls, stage):
+    # Try to download all tars at the start.
+    # If there is an curl error, do nothing, then try again in `main()`
+
+    local_libs = library_group
+    if use_gnutls:
+        local_libs += gnutls_group
+
+    if stage is None:
+        the_packages = local_libs + codec_group
+    elif stage == 0:
+        the_packages = local_libs
+    elif stage == 1:
+        the_packages = codec_group
+    else:
+        the_packages = []
+
+    for package in the_packages:
+        tarball = os.path.join(
+            os.path.abspath("source"),
+            package.source_filename or package.source_url.split("/")[-1],
+        )
+        if not os.path.exists(tarball):
+            try:
+                fetch(package.source_url, tarball)
+            except subprocess.CalledProcessError:
+                pass
+
+
 def main():
     global library_group
 
@@ -274,174 +302,178 @@ def main():
         output_dir = "/output"
     output_tarball = os.path.join(output_dir, f"ffmpeg-{get_platform()}.tar.gz")
 
+    if os.path.exists(output_tarball):
+        return
 
-    if not os.path.exists(output_tarball):
-        builder = Builder(dest_dir=dest_dir)
-        builder.create_directories()
+    builder = Builder(dest_dir=dest_dir)
+    builder.create_directories()
 
-        # install packages
-        available_tools = set()
-        if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
-            with log_group("install packages"):
-                run(
-                    [
-                        "yum",
-                        "-y",
-                        "install",
-                        "gperf",
-                        "libuuid-devel",
-                        "libxcb-devel",
-                        "zlib-devel",
-                    ]
-                )
-            available_tools.update(["gperf"])
-        elif plat == "Windows":
-            available_tools.update(["gperf", "nasm"])
+    download_tars(use_gnutls, build_stage)
 
-            # print tool locations
-            print("PATH", os.environ["PATH"])
-            for tool in ["gcc", "g++", "curl", "gperf", "ld", "nasm", "pkg-config"]:
-                run(["where", tool])
-
-        with log_group("install python packages"):
-            run(["pip", "install", "cmake", "meson", "ninja"])
-
-        # build tools
-
-        if "gperf" not in available_tools:
-            builder.build(
-                Package(
-                    name="gperf",
-                    source_url="http://ftp.gnu.org/pub/gnu/gperf/gperf-3.1.tar.gz",
-                ),
-                for_builder=True,
-            )
-
-        if "nasm" not in available_tools:
-            builder.build(
-                Package(
-                    name="nasm",
-                    source_url="https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2",
-                ),
-                for_builder=True,
-            )
-
-        ffmpeg_package.build_arguments = [
-            "--disable-alsa",
-            "--disable-doc",
-            "--disable-libtheora",
-            "--disable-mediafoundation",
-            "--disable-videotoolbox",
-            "--enable-fontconfig",
-            "--enable-gmp",
-            "--enable-gnutls" if use_gnutls else "--disable-gnutls",
-            "--enable-libaom",
-            "--enable-libass",
-            "--enable-libbluray",
-            "--enable-libdav1d",
-            "--enable-libfreetype",
-            "--enable-libmp3lame",
-            "--enable-libopencore-amrnb",
-            "--enable-libopencore-amrwb",
-            "--enable-libopenjpeg",
-            "--enable-libopus",
-            "--enable-libspeex",
-            "--enable-libtwolame",
-            "--enable-libvorbis",
-            "--enable-libvpx",
-            "--enable-libwebp",
-            "--enable-libxcb" if plat == "Linux" else "--disable-libxcb",
-            "--enable-libxml2",
-            "--enable-lzma",
-            "--enable-zlib",
-            "--enable-version3",
-        ]
-        if plat == "Darwin":
-            ffmpeg_package.build_arguments.append("--extra-ldflags=-Wl,-ld_classic")
-
-        if disable_gpl:
-            ffmpeg_package.build_arguments.extend(["--enable-libopenh264", "--disable-libx264"])
-        else:
-            ffmpeg_package.build_arguments.extend(
+    # install packages
+    available_tools = set()
+    if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
+        with log_group("install packages"):
+            run(
                 [
-                    "--enable-libx264",
-                    "--disable-libopenh264",
-                    "--enable-libx265",
-                    "--enable-libxvid",
-                    "--enable-gpl",
+                    "yum",
+                    "-y",
+                    "install",
+                    "gperf",
+                    "libuuid-devel",
+                    "libxcb-devel",
+                    "zlib-devel",
                 ]
             )
+        available_tools.update(["gperf"])
+    elif plat == "Windows":
+        available_tools.update(["gperf", "nasm"])
 
-        if use_gnutls:
-            library_group += gnutls_group
+        # print tool locations
+        print("PATH", os.environ["PATH"])
+        for tool in ["gcc", "g++", "curl", "gperf", "ld", "nasm", "pkg-config"]:
+            run(["where", tool])
 
-        package_groups = [library_group, codec_group, [ffmpeg_package]]
-        if build_stage is not None:
-            packages = package_groups[build_stage]
-        else:
-            packages = [p for p_list in package_groups for p in p_list]
+    with log_group("install python packages"):
+        run(["pip", "install", "cmake", "meson", "ninja"])
 
-        for package in packages:
-            if disable_gpl and package.gpl:
-                if package.name == "x264":
-                    builder.build(openh264)
-                else:
-                    pass
+    # build tools
+    if "gperf" not in available_tools:
+        builder.build(
+            Package(
+                name="gperf",
+                source_url="http://ftp.gnu.org/pub/gnu/gperf/gperf-3.1.tar.gz",
+            ),
+            for_builder=True,
+        )
+
+    if "nasm" not in available_tools:
+        builder.build(
+            Package(
+                name="nasm",
+                source_url="https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2",
+            ),
+            for_builder=True,
+        )
+
+    ffmpeg_package.build_arguments = [
+        "--disable-alsa",
+        "--disable-doc",
+        "--disable-libtheora",
+        "--disable-mediafoundation",
+        "--disable-videotoolbox",
+        "--enable-fontconfig",
+        "--enable-gmp",
+        "--enable-gnutls" if use_gnutls else "--disable-gnutls",
+        "--enable-libaom",
+        "--enable-libass",
+        "--enable-libbluray",
+        "--enable-libdav1d",
+        "--enable-libfreetype",
+        "--enable-libmp3lame",
+        "--enable-libopencore-amrnb",
+        "--enable-libopencore-amrwb",
+        "--enable-libopenjpeg",
+        "--enable-libopus",
+        "--enable-libspeex",
+        "--enable-libtwolame",
+        "--enable-libvorbis",
+        "--enable-libvpx",
+        "--enable-libwebp",
+        "--enable-libxcb" if plat == "Linux" else "--disable-libxcb",
+        "--enable-libxml2",
+        "--enable-lzma",
+        "--enable-zlib",
+        "--enable-version3",
+    ]
+    if plat == "Darwin":
+        ffmpeg_package.build_arguments.append("--extra-ldflags=-Wl,-ld_classic")
+
+    if disable_gpl:
+        ffmpeg_package.build_arguments.extend(
+            ["--enable-libopenh264", "--disable-libx264"]
+        )
+    else:
+        ffmpeg_package.build_arguments.extend(
+            [
+                "--enable-libx264",
+                "--disable-libopenh264",
+                "--enable-libx265",
+                "--enable-libxvid",
+                "--enable-gpl",
+            ]
+        )
+
+    if use_gnutls:
+        library_group += gnutls_group
+
+    package_groups = [library_group, codec_group, [ffmpeg_package]]
+    if build_stage is not None:
+        packages = package_groups[build_stage]
+    else:
+        packages = [p for p_list in package_groups for p in p_list]
+
+    for package in packages:
+        if disable_gpl and package.gpl:
+            if package.name == "x264":
+                builder.build(openh264)
             else:
-                builder.build(package)
-
-        if plat == "Windows" and (build_stage is None or build_stage == 2):
-            # fix .lib files being installed in the wrong directory
-            for name in [
-                "avcodec",
-                "avdevice",
-                "avfilter",
-                "avformat",
-                "avutil",
-                "postproc",
-                "swresample",
-                "swscale",
-            ]:
-                shutil.move(
-                    os.path.join(dest_dir, "bin", name + ".lib"),
-                    os.path.join(dest_dir, "lib"),
-                )
-
-            # copy some libraries provided by mingw
-            mingw_bindir = os.path.dirname(
-                subprocess.run(["where", "gcc"], check=True, stdout=subprocess.PIPE)
-                .stdout.decode()
-                .splitlines()[0]
-                .strip()
-            )
-            for name in [
-                "libgcc_s_seh-1.dll",
-                "libiconv-2.dll",
-                "libstdc++-6.dll",
-                "libwinpthread-1.dll",
-                "zlib1.dll",
-            ]:
-                shutil.copy(os.path.join(mingw_bindir, name), os.path.join(dest_dir, "bin"))
-
-        # find libraries
-        if plat == "Darwin":
-            libraries = glob.glob(os.path.join(dest_dir, "lib", "*.dylib"))
-        elif plat == "Linux":
-            libraries = glob.glob(os.path.join(dest_dir, "lib", "*.so"))
-        elif plat == "Windows":
-            libraries = glob.glob(os.path.join(dest_dir, "bin", "*.dll"))
-
-        # strip libraries
-        if plat == "Darwin":
-            run(["strip", "-S"] + libraries)
-            run(["otool", "-L"] + libraries)
+                pass
         else:
-            run(["strip", "-s"] + libraries)
+            builder.build(package)
 
-        # build output tarball
-        if build_stage is None or build_stage == 2:
-            os.makedirs(output_dir, exist_ok=True)
-            run(["tar", "czvf", output_tarball, "-C", dest_dir, "bin", "include", "lib"])
+    if plat == "Windows" and (build_stage is None or build_stage == 2):
+        # fix .lib files being installed in the wrong directory
+        for name in (
+            "avcodec",
+            "avdevice",
+            "avfilter",
+            "avformat",
+            "avutil",
+            "postproc",
+            "swresample",
+            "swscale",
+        ):
+            shutil.move(
+                os.path.join(dest_dir, "bin", name + ".lib"),
+                os.path.join(dest_dir, "lib"),
+            )
+
+        # copy some libraries provided by mingw
+        mingw_bindir = os.path.dirname(
+            subprocess.run(["where", "gcc"], check=True, stdout=subprocess.PIPE)
+            .stdout.decode()
+            .splitlines()[0]
+            .strip()
+        )
+        for name in (
+            "libgcc_s_seh-1.dll",
+            "libiconv-2.dll",
+            "libstdc++-6.dll",
+            "libwinpthread-1.dll",
+            "zlib1.dll",
+        ):
+            shutil.copy(os.path.join(mingw_bindir, name), os.path.join(dest_dir, "bin"))
+
+    # find libraries
+    if plat == "Darwin":
+        libraries = glob.glob(os.path.join(dest_dir, "lib", "*.dylib"))
+    elif plat == "Linux":
+        libraries = glob.glob(os.path.join(dest_dir, "lib", "*.so"))
+    elif plat == "Windows":
+        libraries = glob.glob(os.path.join(dest_dir, "bin", "*.dll"))
+
+    # strip libraries
+    if plat == "Darwin":
+        run(["strip", "-S"] + libraries)
+        run(["otool", "-L"] + libraries)
+    else:
+        run(["strip", "-s"] + libraries)
+
+    # build output tarball
+    if build_stage is None or build_stage == 2:
+        os.makedirs(output_dir, exist_ok=True)
+        run(["tar", "czvf", output_tarball, "-C", dest_dir, "bin", "include", "lib"])
 
 
 if __name__ == "__main__":
