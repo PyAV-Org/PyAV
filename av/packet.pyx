@@ -25,7 +25,7 @@ cdef class Packet(Buffer):
         if input is None:
             return
 
-        if isinstance(input, (int, long)):
+        if isinstance(input, int):
             size = input
         else:
             source = bytesource(input)
