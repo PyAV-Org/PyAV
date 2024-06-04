@@ -30,7 +30,7 @@ The two main features that are able to cause lockups are:
 
 1. Python IO (passing a file-like object to ``av.open``). While this is in theory possible, so far it seems like the callbacks are made in the calling thread, and so are safe.
 
-2. Logging. As soon as you en/decode with threads you are highly likely to get log messages issues from threads started by FFmpeg, and you will get lockups. See :ref:`disable_logging`.
+2. Logging. If you have logging enabled (disabled by default), those log messages could cause lockups when using threads.
 
 
 .. _garbage_collection:
