@@ -97,6 +97,7 @@ Transcoding
 .. automethod:: CodecContext.parse
 .. automethod:: CodecContext.encode
 .. automethod:: CodecContext.decode
+.. automethod:: CodecContext.flush_buffers
 
 
 Flags
