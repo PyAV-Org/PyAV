@@ -111,7 +111,7 @@ cdef class VideoStream(Stream):
 
         lib.av_reduce(
             &dar.num, &dar.den,
-            self.format.width * self.ptr.sample_aspect_ratio.num,
-            self.format.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
+            self.format.width * self.sample_aspect_ratio.num,
+            self.format.height * self.sample_aspect_ratio.den, 1024*1024)
 
         return avrational_to_fraction(&dar)
