@@ -14,6 +14,8 @@ class VideoStream(Stream):
     bit_rate_tolerance: int
     thread_count: int
     thread_type: Any
+    sample_aspect_ratio: Fraction | None
+    display_aspect_ratio: Fraction | None
     codec_context: VideoCodecContext
     # from codec context
     format: VideoFormat
@@ -24,8 +26,6 @@ class VideoStream(Stream):
     framerate: Fraction
     rate: Fraction
     gop_size: int
-    sample_aspect_ratio: Fraction | None
-    display_aspect_ratio: Fraction | None
     has_b_frames: bool
     coded_width: int
     coded_height: int

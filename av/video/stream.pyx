@@ -86,3 +86,32 @@ cdef class VideoStream(Stream):
         # The two NULL arguments aren't used in FFmpeg >= 4.0
         cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self.ptr, NULL)
         return avrational_to_fraction(&val)
+
+    @property
+    def sample_aspect_ratio(self):
+        """The guessed sample aspect ratio (SAR) of this stream.
+
+        This is a wrapper around :ffmpeg:`av_guess_sample_aspect_ratio`, and uses multiple
+        heuristics to decide what is "the" sample aspect ratio.
+
+        :type: :class:`~fractions.Fraction` or ``None``
+        """
+        cdef lib.AVRational sar = lib.av_guess_sample_aspect_ratio(self.container.ptr, self.ptr, NULL)
+        return avrational_to_fraction(&sar)
+    
+    @property
+    def display_aspect_ratio(self):
+        """The guessed display aspect ratio (DAR) of this stream.
+
+        This is calculated from :meth:`.VideoStream.guessed_sample_aspect_ratio`.
+
+        :type: :class:`~fractions.Fraction` or ``None``
+        """
+        cdef lib.AVRational dar
+
+        lib.av_reduce(
+            &dar.num, &dar.den,
+            self.format.width * self.ptr.sample_aspect_ratio.num,
+            self.format.height * self.ptr.sample_aspect_ratio.den, 1024*1024)
+
+        return avrational_to_fraction(&dar)
