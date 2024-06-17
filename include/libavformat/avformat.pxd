@@ -325,6 +325,12 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVFrame *frame
     )
 
+    cdef AVRational av_guess_sample_aspect_ratio(
+        AVFormatContext *ctx,
+        AVStream *stream,
+        AVFrame *frame
+    )
+
     cdef const AVInputFormat* av_demuxer_iterate(void **opaque)
     cdef const AVOutputFormat* av_muxer_iterate(void **opaque)
 
