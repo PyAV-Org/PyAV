@@ -1,3 +1,4 @@
+from av.error cimport err_check
 from av.utils cimport avrational_to_fraction, to_avrational
 
 from av.sidedata.sidedata import SideDataContainer
@@ -137,3 +138,13 @@ cdef class Frame:
         if self._side_data is None:
             self._side_data = SideDataContainer(self)
         return self._side_data
+
+    def make_writable(self):
+        """
+        Ensures that the frame data is writable. Copy the data to new buffer if it is not.
+        This is a wrapper around :ffmpeg:`av_frame_make_writable`.
+        """
+        cdef int ret
+
+        ret = lib.av_frame_make_writable(self.ptr)
+        err_check(ret)
