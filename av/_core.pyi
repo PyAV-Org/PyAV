@@ -7,3 +7,5 @@ class _Meta(TypedDict):
 
 library_meta: dict[str, _Meta]
 library_versions: dict[str, tuple[int, int, int]]
+
+time_base: int

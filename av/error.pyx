@@ -250,8 +250,6 @@ _extend_builtin("ValueError", (errno.EINVAL, ))
 _extend_builtin("MemoryError", (errno.ENOMEM, ))
 _extend_builtin("NotImplementedError", (errno.ENOSYS, ))
 _extend_builtin("OverflowError", (errno.ERANGE, ))
-if IOError is not OSError:
-    _extend_builtin("IOError", (errno.EIO, ))
 
 # The rest of them (for now)
 _extend_builtin("OSError", [code for code in errno.errorcode if code not in classes])
