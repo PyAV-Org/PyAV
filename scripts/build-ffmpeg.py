@@ -361,7 +361,6 @@ def main():
         "--disable-doc",
         "--disable-libtheora",
         "--disable-mediafoundation",
-        "--disable-videotoolbox",
         "--enable-fontconfig",
         "--enable-gmp",
         "--enable-gnutls" if use_gnutls else "--disable-gnutls",
@@ -386,9 +385,6 @@ def main():
         "--enable-zlib",
         "--enable-version3",
     ]
-    if plat == "Darwin":
-        ffmpeg_package.build_arguments.append("--extra-ldflags=-Wl,-ld_classic")
-
     if disable_gpl:
         ffmpeg_package.build_arguments.extend(
             ["--enable-libopenh264", "--disable-libx264"]
@@ -403,6 +399,11 @@ def main():
                 "--enable-gpl",
             ]
         )
+    if plat == "Darwin":
+        ffmpeg_package.build_arguments.extend(
+            ["--enable-videotoolbox", "--extra-ldflags=-Wl,-ld_classic"]
+        )
+
 
     if use_gnutls:
         library_group += gnutls_group

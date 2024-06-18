@@ -44,6 +44,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.9"
+      - name: Set deployment target
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.13" >> $GITHUB_ENV
       - name: Install packages
         if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
         run: |
