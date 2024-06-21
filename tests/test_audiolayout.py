@@ -4,13 +4,18 @@ from .common import TestCase
 
 
 class TestAudioLayout(TestCase):
-    def test_stereo_properties(self):
+    def test_stereo_from_str(self):
         layout = AudioLayout("stereo")
         self._test_stereo(layout)
 
-    def test_2channel_properties(self) -> None:
+    def test_stereo_from_int(self):
         layout = AudioLayout(2)
         self._test_stereo(layout)
+
+    def test_stereo_from_layout(self):
+        layout = AudioLayout("stereo")
+        layout2 = AudioLayout(layout)
+        self._test_stereo(layout2)
 
     def test_channel_counts(self):
         self.assertRaises(ValueError, AudioLayout, -1)
