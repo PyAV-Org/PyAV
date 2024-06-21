@@ -1,7 +1,7 @@
+from fractions import Fraction
 from typing import Any, Literal
 
 from av.enum import EnumFlag, EnumItem
-from av.frame import Frame
 from av.packet import Packet
 
 from .codec import Codec
@@ -60,8 +60,10 @@ class CodecContext:
     is_encoder: bool
     is_decoder: bool
     name: str
+    options: dict[str, str]
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
     profile: str | None
+    time_base: Fraction
     codec_tag: str
     bit_rate: int | None
     max_bit_rate: int | None
