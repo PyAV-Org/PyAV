@@ -1,4 +1,9 @@
+# When Python 3.12 becomes our lowest supported version, we could make this
+# class inherit `collections.abc.Buffer`.
+
 class Buffer:
     buffer_size: int
     buffer_ptr: int
     def update(self, input: bytes) -> None: ...
+    def __buffer__(self, flags: int) -> memoryview: ...
+    def __bytes__(self) -> bytes: ...
