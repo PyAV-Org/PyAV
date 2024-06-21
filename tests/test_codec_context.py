@@ -4,7 +4,7 @@ from fractions import Fraction
 from unittest import SkipTest
 
 import av
-from av import AudioResampler, Codec, Packet
+from av import AudioLayout, AudioResampler, Codec, Packet
 from av.codec.codec import UnknownCodecError
 from av.video.frame import PictureType
 
@@ -393,6 +393,12 @@ class TestEncoding(TestCase):
     maxDiff = None
 
     def audio_encoding(self, codec_name):
+        self._audio_encoding(codec_name=codec_name, channel_layout="stereo")
+        self._audio_encoding(
+            codec_name=codec_name, channel_layout=AudioLayout("stereo")
+        )
+
+    def _audio_encoding(self, *, codec_name, channel_layout):
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
@@ -404,14 +410,12 @@ class TestEncoding(TestCase):
 
         sample_fmt = ctx.codec.audio_formats[-1].name
         sample_rate = 48000
-        channel_layout = "stereo"
         channels = 2
 
         ctx.time_base = Fraction(1) / sample_rate
         ctx.sample_rate = sample_rate
         ctx.format = sample_fmt
         ctx.layout = channel_layout
-        ctx.channels = channels
 
         ctx.open()
 
@@ -549,7 +553,6 @@ class TestEncoding(TestCase):
         ctx.sample_rate = sample_rate
         ctx.format = sample_fmt
         ctx.layout = channel_layout
-        ctx.channels = channels
         ctx.open()
 
         result_samples = 0

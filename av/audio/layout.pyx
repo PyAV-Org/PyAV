@@ -76,7 +76,7 @@ cdef class AudioLayout:
         elif isinstance(layout, str):
             c_layout = lib.av_get_channel_layout(layout)
         elif isinstance(layout, AudioLayout):
-            c_layout = layout.layout
+            c_layout = (<AudioLayout>layout).layout
         else:
             raise TypeError("layout must be str or int")
 
