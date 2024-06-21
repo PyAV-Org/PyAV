@@ -45,7 +45,7 @@ cdef class AudioFormat:
     def name(self):
         """Canonical name of the sample format.
 
-        >>> SampleFormat('s16p').name
+        >>> AudioFormat('s16p').name
         's16p'
 
         """
@@ -55,7 +55,7 @@ cdef class AudioFormat:
     def bytes(self):
         """Number of bytes per sample.
 
-        >>> SampleFormat('s16p').bytes
+        >>> AudioFormat('s16p').bytes
         2
 
         """
@@ -65,7 +65,7 @@ cdef class AudioFormat:
     def bits(self):
         """Number of bits per sample.
 
-        >>> SampleFormat('s16p').bits
+        >>> AudioFormat('s16p').bits
         16
 
         """
@@ -95,8 +95,7 @@ cdef class AudioFormat:
 
         Is itself when planar:
 
-        >>> from av import AudioFormat as Format
-        >>> fmt = Format('s16p')
+        >>> fmt = AudioFormat('s16p')
         >>> fmt.planar is fmt
         True
 
@@ -111,7 +110,7 @@ cdef class AudioFormat:
 
         Is itself when packed:
 
-        >>> fmt = Format('s16')
+        >>> fmt = AudioFormat('s16')
         >>> fmt.packed is fmt
         True
 
