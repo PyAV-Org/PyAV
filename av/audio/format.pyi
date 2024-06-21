@@ -7,3 +7,5 @@ class AudioFormat:
     planar: AudioFormat
     packed: AudioFormat
     container_name: str
+
+    def __init__(self, name: str | AudioFormat) -> None: ...
