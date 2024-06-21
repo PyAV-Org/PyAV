@@ -1,8 +1,8 @@
-from collections.abc import Buffer
 from fractions import Fraction
 
 from av.subtitles.subtitle import SubtitleSet
 
+from .buffer import Buffer
 from .stream import Stream
 
 class Packet(Buffer):
@@ -22,4 +22,3 @@ class Packet(Buffer):
 
     def __init__(self, input: int | bytes | None = None) -> None: ...
     def decode(self) -> list[SubtitleSet]: ...
-    def __buffer__(self, arg1) -> memoryview: ...
