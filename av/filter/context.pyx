@@ -1,3 +1,5 @@
+import weakref
+
 from av.audio.frame cimport alloc_audio_frame
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
@@ -13,7 +15,7 @@ cdef object _cinit_sentinel = object()
 
 cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterContext *ptr):
     cdef FilterContext self = FilterContext(_cinit_sentinel)
-    self.graph = graph
+    self.graph = weakref.ref(graph)
     self.filter = filter
     self.ptr = ptr
     return self
@@ -114,7 +116,10 @@ cdef class FilterContext:
                 raise ValueError("cannot delegate pull without linked output")
             return self.outputs[0].linked.context.pull()
 
-        self.graph.configure()
+        if (gr := self.graph()):
+            gr.configure()
+        else:
+            raise RuntimeError("graph is dead")
 
         with nogil:
             res = lib.av_buffersink_get_frame(self.ptr, frame.ptr)

@@ -7,7 +7,7 @@ from av.filter.graph cimport Graph
 cdef class FilterContext:
 
     cdef lib.AVFilterContext *ptr
-    cdef readonly Graph graph
+    cdef readonly object graph
     cdef readonly Filter filter
 
     cdef object _inputs
