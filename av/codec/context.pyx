@@ -638,7 +638,7 @@ cdef class CodecContext:
     def skip_frame(self):
         """One of :class:`.SkipType`.
 
-        Wraps ffmpeg:`AVCodecContext.skip_frame`.
+        Wraps :ffmpeg:`AVCodecContext.skip_frame`.
 
         """
         return SkipType._get(self.ptr.skip_frame, create=True)

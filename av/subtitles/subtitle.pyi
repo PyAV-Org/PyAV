@@ -11,8 +11,7 @@ class SubtitleSet:
     def __iter__(self) -> Iterator[Subtitle]: ...
     def __getitem__(self, i: int) -> Subtitle: ...
 
-class Subtitle:
-    type: Literal[b"none", b"bitmap", b"text", b"ass"]
+class Subtitle: ...
 
 class BitmapSubtitle(Subtitle):
     type: Literal[b"bitmap"]
