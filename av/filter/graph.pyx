@@ -174,11 +174,15 @@ cdef class Graph:
         else:
             raise ValueError(f"can only AudioFrame, VideoFrame or None; got {type(frame)}")
 
-        if len(contexts) != 1:
-            raise ValueError(f"can only auto-push with single buffer; found {len(contexts)}")
+        for ctx in contexts:
+            ctx.push(frame)
 
-        contexts[0].push(frame)
+    def vpush(self, VideoFrame frame):
+        for ctx in self._context_by_type.get("buffer", []):
+            ctx.push(frame)
 
+
+    # TODO: Test complex filter graphs, add `at: int = 0` arg to pull() and vpull().
     def pull(self):
         vsinks = self._context_by_type.get("buffersink", [])
         asinks = self._context_by_type.get("abuffersink", [])
@@ -188,3 +192,11 @@ cdef class Graph:
             raise ValueError(f"can only auto-pull with single sink; found {nsinks}")
 
         return (vsinks or asinks)[0].pull()
+
+    def vpull(self):
+        vsinks = self._context_by_type.get("buffersink", [])
+        nsinks = len(vsinks)
+        if nsinks != 1:
+            raise ValueError(f"can only auto-pull with single sink; found {nsinks}")
+
+        return vsinks[0].pull()

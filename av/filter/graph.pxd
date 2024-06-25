@@ -4,7 +4,6 @@ from av.filter.context cimport FilterContext
 
 
 cdef class Graph:
-
     cdef lib.AVFilterGraph *ptr
 
     cdef readonly bint configured
