@@ -204,7 +204,7 @@ class TestFilters(TestCase):
 
         for frame in input_container.decode():
             self.assertEqual(frame.time_base, Fraction(1, 30))
-            graph.push(frame)
+            graph.vpush(frame)
             filtered_frames = pull_until_blocked(graph)
 
             if frame.pts == 0:
@@ -220,7 +220,7 @@ class TestFilters(TestCase):
                 self.assertEqual(filtered_frames[1].pts, (frame.pts - 1) * 2 + 1)
                 self.assertEqual(filtered_frames[1].time_base, Fraction(1, 60))
 
-    def test_EOF(self):
+    def test_EOF(self) -> None:
         input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
         video_stream = input_container.streams.video[0]
 
@@ -233,12 +233,12 @@ class TestFilters(TestCase):
         graph.configure()
 
         for frame in input_container.decode(video=0):
-            graph.push(frame)
+            graph.vpush(frame)
 
-        graph.push(None)
+        graph.vpush(None)
 
         # if we do not push None, we get a BlockingIOError
-        palette_frame = graph.pull()
+        palette_frame = graph.vpull()
 
         self.assertIsInstance(palette_frame, av.VideoFrame)
         self.assertEqual(palette_frame.width, 16)
