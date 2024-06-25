@@ -11,6 +11,9 @@ cdef class SubtitleProxy:
 
 
 cdef class SubtitleSet:
+    """
+    A :class:`SubtitleSet` can contain many :class:`Subtitle` objects.
+    """
     def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
         cdef int i
@@ -50,9 +53,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
         raise ValueError("subtitle rect index out of range")
     cdef lib.AVSubtitleRect *ptr = subtitle.proxy.struct.rects[index]
 
-    if ptr.type == lib.SUBTITLE_NONE:
-        return Subtitle(subtitle, index)
-    elif ptr.type == lib.SUBTITLE_BITMAP:
+    if ptr.type == lib.SUBTITLE_BITMAP:
         return BitmapSubtitle(subtitle, index)
     elif ptr.type == lib.SUBTITLE_TEXT:
         return TextSubtitle(subtitle, index)
@@ -63,6 +64,10 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 
 
 cdef class Subtitle:
+    """
+    An abstract base class for each concrete type of subtitle.
+    Wraps :ffmpeg:`AVSubtitleRect`
+    """
     def __cinit__(self, SubtitleSet subtitle, int index):
         if index < 0 or <unsigned int>index >= subtitle.proxy.struct.num_rects:
             raise ValueError("subtitle rect index out of range")
