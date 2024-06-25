@@ -1,14 +1,11 @@
 cimport libav as lib
 
-from av.packet cimport Packet
-
 
 cdef class SubtitleProxy:
     cdef lib.AVSubtitle struct
 
 
 cdef class SubtitleSet:
-    cdef readonly Packet packet
     cdef SubtitleProxy proxy
     cdef readonly tuple rects
 
