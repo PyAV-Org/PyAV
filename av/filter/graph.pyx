@@ -178,6 +178,7 @@ cdef class Graph:
             ctx.push(frame)
 
     def vpush(self, VideoFrame frame):
+        """Like `push`, but only for VideoFrames."""
         for ctx in self._context_by_type.get("buffer", []):
             ctx.push(frame)
 
@@ -194,6 +195,7 @@ cdef class Graph:
         return (vsinks or asinks)[0].pull()
 
     def vpull(self):
+        """Like `pull`, but only for VideoFrames."""
         vsinks = self._context_by_type.get("buffersink", [])
         nsinks = len(vsinks)
         if nsinks != 1:
