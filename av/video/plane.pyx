@@ -35,3 +35,20 @@ cdef class VideoPlane(Plane):
         :type: int
         """
         return self.frame.ptr.linesize[self.index]
+
+
+cdef class YUVPlanes(VideoPlane):
+    def __cinit__(self, VideoFrame frame, int index):
+        if index != 0:
+            raise RuntimeError("YUVPlanes only supports index 0")
+        if frame.format.name not in ['yuvj420p', 'yuv420p']:
+            raise RuntimeError("YUVPlane only supports yuv420p and yuvj420p")
+        if frame.ptr.linesize[0] < 0:
+            raise RuntimeError("YUVPlane only supports positive linesize")
+        self.width = frame.width
+        self.height = frame.height * 3 // 2
+        self.buffer_size = self.height *  abs(self.frame.ptr.linesize[0])
+        self.frame = frame
+
+    cdef void* _buffer_ptr(self):
+        return self.frame.ptr.extended_data[self.index]
