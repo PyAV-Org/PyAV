@@ -16,6 +16,19 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v12.2.0
+-------
+
+Features:
+
+- Add a `make_writable` method to `Frame` instances (:issue:`1414`).
+- Use `av_guess_sample_aspect_ratio` to report sample and display aspect ratios.
+
+Fixes:
+
+- Fix a crash when assigning an `AudioLayout` to `AudioCodecContext.layout` (:issue:`1434`).
+- Remove a circular reference which caused `AudioSampler` to occupy memory until garbage collected (:issue:`1429`).
+- Fix more type stubs, remove incorrect `__init__.pyi`.
 
 v12.1.0
 -------
