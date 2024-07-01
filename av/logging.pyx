@@ -120,16 +120,14 @@ def set_level(level):
 
 
 def set_libav_level(level):
-    """set_libav_level(level)
-    
-    Sets libAV's log level. It can be set to constants available in this
+    """Sets libAV's log level. It can be set to constants available in this
     module: ``PANIC``, ``FATAL``, ``ERROR``, ``WARNING``, ``INFO``,
     ``VERBOSE``, ``DEBUG``.
 
     If PyAV logging is not enabled, setting the level of ffpmeg will change
     the logs printed to terminal.
-    
-    lib.av_log_set_level(level);
+    """
+    lib.av_log_set_level(level)
 
 
 def restore_default_callback():
