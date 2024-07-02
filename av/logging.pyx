@@ -119,6 +119,17 @@ def set_level(level):
         raise ValueError("level must be: int | None")
 
 
+def set_libav_level(level):
+    """Set libav's log level.  It can be set to constants available in this
+    module: ``PANIC``, ``FATAL``, ``ERROR``, ``WARNING``, ``INFO``,
+    ``VERBOSE``, ``DEBUG``.
+
+    When PyAV logging is disabled, setting this will change the level of
+    the logs printed to the terminal.
+    """
+    lib.av_log_set_level(level)
+
+
 def restore_default_callback():
     """Revert back to FFmpeg's log callback, which prints to the terminal."""
     lib.av_log_set_callback(lib.av_log_default_callback)
