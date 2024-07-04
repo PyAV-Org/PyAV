@@ -124,7 +124,7 @@ codec_group = [
     Package(
         name="ass",
         requires=["fontconfig", "freetype", "fribidi", "harfbuzz", "nasm", "png"],
-        source_url="https://github.com/libass/libass/releases/download/0.15.2/libass-0.15.2.tar.gz",
+        source_url="https://github.com/libass/libass/releases/download/0.17.3/libass-0.17.3.tar.gz",
     ),
     Package(
         name="bluray",
