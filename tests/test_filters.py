@@ -128,14 +128,9 @@ class TestFilters(TestCase):
             if e.errno != errno.EAGAIN:
                 raise
 
-    @staticmethod
-    def link_nodes(*nodes):
-        for c, n in zip(nodes, nodes[1:]):
-            c.link_to(n)
-
     def test_audio_buffer_resample(self):
         graph = Graph()
-        self.link_nodes(
+        graph.link_nodes(
             graph.add_abuffer(
                 format="fltp",
                 sample_rate=48000,
@@ -146,8 +141,7 @@ class TestFilters(TestCase):
                 "aformat", "sample_fmts=s16:sample_rates=44100:channel_layouts=stereo"
             ),
             graph.add("abuffersink"),
-        )
-        graph.configure()
+        ).configure()
 
         graph.push(
             generate_audio_frame(
@@ -161,7 +155,7 @@ class TestFilters(TestCase):
 
     def test_audio_buffer_volume_filter(self):
         graph = Graph()
-        self.link_nodes(
+        graph.link_nodes(
             graph.add_abuffer(
                 format="fltp",
                 sample_rate=48000,
@@ -170,8 +164,7 @@ class TestFilters(TestCase):
             ),
             graph.add("volume", volume="0.5"),
             graph.add("abuffersink"),
-        )
-        graph.configure()
+        ).configure()
 
         input_frame = generate_audio_frame(
             0, input_format="fltp", layout="stereo", sample_rate=48000
