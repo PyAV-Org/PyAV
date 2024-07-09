@@ -45,6 +45,13 @@ cdef class Graph:
         # We get auto-inserted stuff here.
         self._auto_register()
 
+    def link_nodes(self, *nodes):
+        """
+        Links nodes together for simple filter graphs.
+        """
+        for c, n in zip(nodes, nodes[1:]):
+            c.link_to(n)
+        return self
 
     def add(self, filter, args=None, **kwargs):
         cdef Filter cy_filter
@@ -68,7 +75,7 @@ cdef class Graph:
 
         # There might have been automatic contexts added (e.g. resamplers,
         # fifos, and scalers). It is more likely to see them after the graph
-        # is configured, but we wan't to be safe.
+        # is configured, but we want to be safe.
         self._auto_register()
 
         return ctx
