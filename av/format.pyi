@@ -1,5 +1,7 @@
 __all__ = ("ContainerFormat", "formats_available")
 
+from typing import Literal
+
 from .enum import EnumFlag
 
 class Flags(EnumFlag):
@@ -22,10 +24,12 @@ class Flags(EnumFlag):
     SEEK_TO_PTS: int
 
 class ContainerFormat:
+    def __init__(self, name: str, mode: Literal["r", "w"] | None = None) -> None: ...
     name: str
     long_name: str
     is_input: bool
     is_output: bool
+    extensions: set[str]
 
     # flags
     no_file: int
