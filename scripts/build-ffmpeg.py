@@ -360,7 +360,7 @@ def main():
         "--disable-alsa",
         "--disable-doc",
         "--disable-libtheora",
-        "--disable-mediafoundation",
+        "--enable-mediafoundation" if plat == "Windows" else "--disable-mediafoundation",
         "--enable-fontconfig",
         "--enable-gmp",
         "--enable-gnutls" if use_gnutls else "--disable-gnutls",
