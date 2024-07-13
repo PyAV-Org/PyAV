@@ -92,18 +92,6 @@ cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     return bool(bitfield & flag)
 
 
-def get_include() -> str:
-    """
-    Returns the path to the `include` folder to be used when building extensions to av.
-    """
-    # Installed package
-    include_path = os.path.join(os.path.dirname(__file__), 'include')
-    if os.path.exists(include_path):
-        return include_path
-    # Running from source directory
-    return os.path.join(os.path.dirname(__file__), os.pardir, 'include')
-
-
 # === BACKWARDS COMPAT ===
 
 from .error import FFmpegError as AVError
