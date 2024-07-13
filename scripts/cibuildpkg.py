@@ -99,7 +99,11 @@ def prepend_env(env, name, new, separator=" "):
 
 def run(cmd, env=None):
     log_print(f"- Running: {cmd}")
-    subprocess.run(cmd, check=True, env=env)
+    try:
+        subprocess.run(cmd, check=True, env=env, stderr=subprocess.PIPE, text=True)
+    except subprocess.CalledProcessError as e:
+        print(f"stderr: {e.stderr}")
+        raise e
 
 
 @dataclass
