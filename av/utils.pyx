@@ -1,5 +1,6 @@
 from libc.stdint cimport uint64_t
 
+import os
 from fractions import Fraction
 
 cimport libav as lib
@@ -89,6 +90,18 @@ cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     if not flag:
         return None
     return bool(bitfield & flag)
+
+
+def get_include() -> str:
+    """
+    Returns the path to the `include` folder to be used when building extensions to av.
+    """
+    # Installed package
+    include_path = os.path.join(os.path.dirname(__file__), 'include')
+    if os.path.exists(include_path):
+        return include_path
+    # Running from source directory
+    return os.path.join(os.path.dirname(__file__), os.pardir, 'include')
 
 
 # === BACKWARDS COMPAT ===
