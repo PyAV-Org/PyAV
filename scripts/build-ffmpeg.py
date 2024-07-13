@@ -435,10 +435,11 @@ def main():
             "swresample",
             "swscale",
         ):
-            shutil.move(
-                os.path.join(dest_dir, "bin", name + ".lib"),
-                os.path.join(dest_dir, "lib"),
-            )
+            if os.path.exists(os.path.join(dest_dir, "bin", name + ".lib")):
+                shutil.move(
+                    os.path.join(dest_dir, "bin", name + ".lib"),
+                    os.path.join(dest_dir, "lib"),
+                )
 
         # copy some libraries provided by mingw
         mingw_bindir = os.path.dirname(
