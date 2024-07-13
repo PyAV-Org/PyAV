@@ -53,6 +53,9 @@ jobs:
         run: |
           brew update
           brew install pkg-config
+      - name: Set deployment target
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.13" >> $GITHUB_ENV
       - name: Build wheels
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
