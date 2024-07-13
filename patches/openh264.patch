@@ -1,0 +1,65 @@
+diff --git a/codec/common/meson.build b/codec/common/meson.build
+index 4033da05..d254da3d 100644
+--- a/codec/common/meson.build
++++ b/codec/common/meson.build
+@@ -69,8 +69,6 @@ elif cpu_family in ['loongarch32', 'loongarch64']
+     'loongarch/satd_sad_lasx.c',
+   ]
+   cpp_sources += asm_sources
+-else
+-  error('Unsupported cpu_family @0@'.format(cpu_family))
+ endif
+ 
+ libcommon = static_library('common', cpp_sources, objs_asm,
+diff --git a/codec/decoder/meson.build b/codec/decoder/meson.build
+index cb984f7d..d22c1213 100644
+--- a/codec/decoder/meson.build
++++ b/codec/decoder/meson.build
+@@ -54,8 +54,6 @@ elif cpu_family in ['loongarch32', 'loongarch64']
+     'core/loongarch/mb_aux_lsx.c',
+   ]
+   cpp_sources += asm_sources
+-else
+-  error('Unsupported cpu family @0@'.format(cpu_family))
+ endif
+ 
+ libdecoder = static_library('decoder', cpp_sources, objs_asm,
+diff --git a/codec/encoder/meson.build b/codec/encoder/meson.build
+index c2880941..27c5776c 100644
+--- a/codec/encoder/meson.build
++++ b/codec/encoder/meson.build
+@@ -83,8 +83,6 @@ elif cpu_family in ['loongarch32', 'loongarch64']
+     'core/loongarch/sample_lasx.c',
+   ]
+   cpp_sources += asm_sources
+-else
+-  error('Unsupported cpu family @0@'.format(cpu_family))
+ endif
+ 
+ libencoder = static_library('encoder', cpp_sources, objs_asm,
+diff --git a/codec/processing/meson.build b/codec/processing/meson.build
+index 482e72c6..bf5539ce 100644
+--- a/codec/processing/meson.build
++++ b/codec/processing/meson.build
+@@ -56,8 +56,6 @@ elif cpu_family in ['loongarch32', 'loongarch64']
+     'src/loongarch/vaa_lasx.c',
+   ]
+   cpp_sources += asm_sources
+-else
+-  error('Unsupported cpu family @0@'.format(cpu_family))
+ endif
+ 
+ libprocessing = static_library('processing', cpp_sources, objs_asm,
+diff --git a/meson.build b/meson.build
+index 4f4376f0..739c7631 100644
+--- a/meson.build
++++ b/meson.build
+@@ -96,8 +96,6 @@ if ['linux', 'android', 'ios', 'darwin'].contains(system)
+     add_project_arguments('-mlsx', '-DHAVE_LSX', '-mlasx', '-DHAVE_LASX', language: 'c')
+     add_project_arguments('-DHAVE_LSX', '-DHAVE_LASX', language: 'cpp')
+     casm_inc = include_directories(join_paths('codec', 'common', 'loongarch'))
+-  else
+-    error('FIXME: unhandled CPU family @0@ for @1@'.format(cpu_family, system))
+   endif
+ 
+   if ['ios', 'darwin', 'android'].contains(system)
