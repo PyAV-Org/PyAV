@@ -1,6 +1,5 @@
 from libc.stdint cimport uint64_t
 
-import os
 from fractions import Fraction
 
 cimport libav as lib
