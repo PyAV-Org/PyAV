@@ -221,14 +221,6 @@ codec_group = [
         source_dir="source",
         gpl=True,
     ),
-    Package(
-        name="xvid",
-        requires=["nasm"],
-        source_url="https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.gz",
-        source_dir="build/generic",
-        build_dir="build/generic",
-        gpl=True,
-    ),
 ]
 
 openh264 = Package(
@@ -395,7 +387,6 @@ def main():
                 "--enable-libx264",
                 "--disable-libopenh264",
                 "--enable-libx265",
-                "--enable-libxvid",
                 "--enable-gpl",
             ]
         )
