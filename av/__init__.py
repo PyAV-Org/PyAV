@@ -48,8 +48,8 @@ def get_include() -> str:
     Returns the path to the `include` folder to be used when building extensions to av.
     """
     # Installed package
-    include_path = os.path.join(os.path.dirname(__file__), 'include')
+    include_path = os.path.join(os.path.dirname(__file__), "include")
     if os.path.exists(include_path):
         return include_path
     # Running from source directory
-    return os.path.join(os.path.dirname(__file__), os.pardir, 'include')
+    return os.path.join(os.path.dirname(__file__), os.pardir, "include")

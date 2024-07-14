@@ -185,7 +185,10 @@ package_data = {
 }
 
 # Add include/ headers to av.include
-package_dir = {".".join(["av", *pckg.parts]): str(pckg) for pckg in pathlib.Path("include").glob("**/")}
+package_dir = {
+    ".".join(["av", *pckg.parts]): str(pckg)
+    for pckg in pathlib.Path("include").glob("**/")
+}
 package_data.update({pckg: ["*.pxd"] for pckg in package_dir})
 
 
@@ -207,7 +210,10 @@ setup(
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
     url="https://github.com/PyAV-Org/PyAV",
-    packages=find_packages(exclude=["build*", "examples*", "scratchpad*", "tests*", "include*"]) + list(package_dir.keys()),
+    packages=find_packages(
+        exclude=["build*", "examples*", "scratchpad*", "tests*", "include*"]
+    )
+    + list(package_dir.keys()),
     package_dir=package_dir,
     package_data=package_data,
     python_requires=">=3.8",
