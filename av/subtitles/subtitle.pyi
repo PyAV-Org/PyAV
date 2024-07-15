@@ -27,10 +27,11 @@ class BitmapSubtitlePlane:
     index: int
     buffer_size: int
 
-class TextSubtitle(Subtitle):
-    type: Literal[b"text"]
-    text: bytes
-
 class AssSubtitle(Subtitle):
-    type: Literal[b"ass"]
-    ass: bytes
+    type: Literal[b"ass", b"text"]
+    @property
+    def ass(self) -> bytes: ...
+    @property
+    def dialogue(self) -> bytes: ...
+    @property
+    def text(self) -> bytes: ...
