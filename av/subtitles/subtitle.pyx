@@ -55,9 +55,7 @@ cdef Subtitle build_subtitle(SubtitleSet subtitle, int index):
 
     if ptr.type == lib.SUBTITLE_BITMAP:
         return BitmapSubtitle(subtitle, index)
-    elif ptr.type == lib.SUBTITLE_TEXT:
-        return TextSubtitle(subtitle, index)
-    elif ptr.type == lib.SUBTITLE_ASS:
+    elif ptr.type == lib.SUBTITLE_ASS or ptr.type == lib.SUBTITLE_TEXT:
         return AssSubtitle(subtitle, index)
     else:
         raise ValueError("unknown subtitle type %r" % ptr.type)
@@ -141,7 +139,10 @@ cdef class BitmapSubtitlePlane:
         PyBuffer_FillInfo(view, self, self._buffer, self.buffer_size, 0, flags)
 
 
-cdef class TextSubtitle(Subtitle):
+cdef class AssSubtitle(Subtitle):
+    """
+    Represents an ASS/Text subtitle format, as opposed to a bitmap Subtitle format.
+    """
     def __repr__(self):
         return (
             f"<{self.__class__.__module__}.{self.__class__.__name__} "
@@ -149,21 +150,55 @@ cdef class TextSubtitle(Subtitle):
         )
 
     @property
-    def text(self):
-        if self.ptr.text is not NULL:
-            return PyBytes_FromString(self.ptr.text)
-        return b""
-
-
-cdef class AssSubtitle(Subtitle):
-    def __repr__(self):
-        return (
-            f"<{self.__class__.__module__}.{self.__class__.__name__} "
-            f"{self.ass!r} at 0x{id(self):x}>"
-        )
-
-    @property
     def ass(self):
+        """
+        Returns the subtitle in the ASS/SSA format. Used by the vast majority of subtitle formats.
+        """
         if self.ptr.ass is not NULL:
             return PyBytes_FromString(self.ptr.ass)
+        return b""
+
+    @property
+    def dialogue(self):
+        """
+        Extract the dialogue from the ass format. Strip comments.
+        """
+        comma_count = 0
+        i = 0
+        cdef bytes ass_text = self.ass
+        cdef bytes result = b""
+
+        while comma_count < 8 and i < len(ass_text):
+            if bytes([ass_text[i]]) == b",":
+                comma_count += 1
+            i += 1
+
+        state = False
+        while i < len(ass_text):
+            char = bytes([ass_text[i]])
+            next_char = b"" if i + 1 >= len(ass_text) else bytes([ass_text[i + 1]])
+
+            if char == b"\\" and next_char == b"N":
+                result += b"\n"
+                i += 2
+                continue
+
+            if not state:
+                if char == b"{" and next_char != b"\\":
+                    state = True
+                else:
+                    result += char
+            elif char == b"}":
+                state = False
+            i += 1
+
+        return result
+
+    @property
+    def text(self):
+        """
+        Rarely used attribute. You're probably looking for dialogue.
+        """
+        if self.ptr.text is not NULL:
+            return PyBytes_FromString(self.ptr.text)
         return b""
