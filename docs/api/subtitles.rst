@@ -15,14 +15,11 @@ Subtitles
     .. autoclass:: Subtitle
         :members:
 
+    .. autoclass:: AssSubtitle
+        :members:
+
     .. autoclass:: BitmapSubtitle
         :members:
 
     .. autoclass:: BitmapSubtitlePlane
-        :members:
-
-    .. autoclass:: TextSubtitle
-        :members:
-
-    .. autoclass:: AssSubtitle
         :members:
