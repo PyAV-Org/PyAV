@@ -46,8 +46,6 @@ library_group = [
         name="freetype",
         requires=["png"],
         source_url="https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz",
-        # At this point we have not built our own harfbuzz and we do NOT want to
-        # pick up the system's harfbuzz.
         build_arguments=["--with-harfbuzz=no"],
     ),
     Package(
@@ -55,23 +53,6 @@ library_group = [
         requires=["freetype", "xml2"],
         source_url="https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz",
         build_arguments=["--disable-nls", "--enable-libxml2"],
-    ),
-    Package(
-        name="fribidi",
-        source_url="https://github.com/fribidi/fribidi/releases/download/v1.0.11/fribidi-1.0.11.tar.xz",
-    ),
-    Package(
-        name="harfbuzz",
-        requires=["freetype"],
-        source_url="https://github.com/harfbuzz/harfbuzz/releases/download/4.1.0/harfbuzz-4.1.0.tar.xz",
-        build_arguments=[
-            "--with-cairo=no",
-            "--with-chafa=no",
-            "--with-freetype=yes",
-            "--with-glib=no",
-        ],
-        # parallel build fails on Windows
-        build_parallel=plat != "Windows",
     ),
 ]
 
@@ -120,11 +101,6 @@ codec_group = [
             "-DENABLE_TOOLS=0",
         ],
         build_parallel=False,
-    ),
-    Package(
-        name="ass",
-        requires=["fontconfig", "freetype", "fribidi", "harfbuzz", "nasm", "png"],
-        source_url="https://github.com/libass/libass/releases/download/0.17.3/libass-0.17.3.tar.gz",
     ),
     Package(
         name="bluray",
@@ -357,7 +333,6 @@ def main():
         "--enable-gmp",
         "--enable-gnutls" if use_gnutls else "--disable-gnutls",
         "--enable-libaom",
-        "--enable-libass",
         "--enable-libbluray",
         "--enable-libdav1d",
         "--enable-libfreetype",
@@ -394,7 +369,6 @@ def main():
         ffmpeg_package.build_arguments.extend(
             ["--enable-videotoolbox", "--extra-ldflags=-Wl,-ld_classic"]
         )
-
 
     if use_gnutls:
         library_group += gnutls_group
