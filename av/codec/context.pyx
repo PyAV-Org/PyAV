@@ -25,7 +25,6 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
 
     cdef CodecContext py_ctx
 
-    # TODO: This.
     if c_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
         from av.video.codeccontext import VideoCodecContext
         py_ctx = VideoCodecContext(_cinit_sentinel)
@@ -45,69 +44,46 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
 
 ThreadType = define_enum("ThreadType", __name__, (
     ("NONE", 0),
-    ("FRAME", lib.FF_THREAD_FRAME,
-        """Decode more than one frame at once"""),
-    ("SLICE", lib.FF_THREAD_SLICE,
-        """Decode more than one part of a single frame at once"""),
-    ("AUTO", lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME,
-        """Decode using both FRAME and SLICE methods."""),
+    ("FRAME", lib.FF_THREAD_FRAME, "Decode more than one frame at once"),
+    ("SLICE", lib.FF_THREAD_SLICE, "Decode more than one part of a single frame at once"),
+    ("AUTO", lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME, "Decode using both FRAME and SLICE methods."),
 ), is_flags=True)
 
 SkipType = define_enum("SkipType", __name__, (
-    ("NONE", lib.AVDISCARD_NONE,
-        """Discard nothing"""),
-    ("DEFAULT", lib.AVDISCARD_DEFAULT,
-        """Discard useless packets like 0 size packets in AVI"""),
-    ("NONREF", lib.AVDISCARD_NONREF,
-        """Discard all non reference"""),
-    ("BIDIR", lib.AVDISCARD_BIDIR,
-        """Discard all bidirectional frames"""),
-    ("NONINTRA", lib.AVDISCARD_NONINTRA,
-        """Discard all non intra frames"""),
-    ("NONKEY", lib.AVDISCARD_NONKEY,
-        """Discard all frames except keyframes"""),
-    ("ALL", lib.AVDISCARD_ALL,
-        """Discard all"""),
+    ("NONE", lib.AVDISCARD_NONE, "Discard nothing"),
+    ("DEFAULT", lib.AVDISCARD_DEFAULT, "Discard useless packets like 0 size packets in AVI"),
+    ("NONREF", lib.AVDISCARD_NONREF, "Discard all non reference"),
+    ("BIDIR", lib.AVDISCARD_BIDIR, "Discard all bidirectional frames"),
+    ("NONINTRA", lib.AVDISCARD_NONINTRA, "Discard all non intra frames"),
+    ("NONKEY", lib.AVDISCARD_NONKEY, "Discard all frames except keyframes"),
+    ("ALL", lib.AVDISCARD_ALL, "Discard all"),
 ))
 
 Flags = define_enum("Flags", __name__, (
     ("NONE", 0),
     ("UNALIGNED", lib.AV_CODEC_FLAG_UNALIGNED,
-        """Allow decoders to produce frames with data planes that are not aligned
-        to CPU requirements (e.g. due to cropping)."""),
-    ("QSCALE", lib.AV_CODEC_FLAG_QSCALE,
-        """Use fixed qscale."""),
-    ("4MV", lib.AV_CODEC_FLAG_4MV,
-        """4 MV per MB allowed / advanced prediction for H.263."""),
-    ("OUTPUT_CORRUPT", lib.AV_CODEC_FLAG_OUTPUT_CORRUPT,
-        """Output even those frames that might be corrupted."""),
-    ("QPEL", lib.AV_CODEC_FLAG_QPEL,
-        """Use qpel MC."""),
+        "Allow decoders to produce frames with data planes that are not aligned to CPU requirements (e.g. due to cropping)."
+    ),
+    ("QSCALE", lib.AV_CODEC_FLAG_QSCALE, "Use fixed qscale."),
+    ("4MV", lib.AV_CODEC_FLAG_4MV, "4 MV per MB allowed / advanced prediction for H.263."),
+    ("OUTPUT_CORRUPT", lib.AV_CODEC_FLAG_OUTPUT_CORRUPT, "Output even those frames that might be corrupted."),
+    ("QPEL", lib.AV_CODEC_FLAG_QPEL, "Use qpel MC."),
     ("DROPCHANGED", 1 << 5,
-        """Don't output frames whose parameters differ from first
-        decoded frame in stream."""),
-    ("PASS1", lib.AV_CODEC_FLAG_PASS1,
-        """Use internal 2pass ratecontrol in first pass mode."""),
-    ("PASS2", lib.AV_CODEC_FLAG_PASS2,
-        """Use internal 2pass ratecontrol in second pass mode."""),
-    ("LOOP_FILTER", lib.AV_CODEC_FLAG_LOOP_FILTER,
-        """loop filter."""),
-    ("GRAY", lib.AV_CODEC_FLAG_GRAY,
-        """Only decode/encode grayscale."""),
-    ("PSNR", lib.AV_CODEC_FLAG_PSNR,
-        """error[?] variables will be set during encoding."""),
-    ("INTERLACED_DCT", lib.AV_CODEC_FLAG_INTERLACED_DCT,
-        """Use interlaced DCT."""),
-    ("LOW_DELAY", lib.AV_CODEC_FLAG_LOW_DELAY,
-        """Force low delay."""),
+        "Don't output frames whose parameters differ from first decoded frame in stream."
+    ),
+    ("PASS1", lib.AV_CODEC_FLAG_PASS1, "Use internal 2pass ratecontrol in first pass mode."),
+    ("PASS2", lib.AV_CODEC_FLAG_PASS2, "Use internal 2pass ratecontrol in second pass mode."),
+    ("LOOP_FILTER", lib.AV_CODEC_FLAG_LOOP_FILTER, "loop filter."),
+    ("GRAY", lib.AV_CODEC_FLAG_GRAY, "Only decode/encode grayscale."),
+    ("PSNR", lib.AV_CODEC_FLAG_PSNR, "error[?] variables will be set during encoding."),
+    ("INTERLACED_DCT", lib.AV_CODEC_FLAG_INTERLACED_DCT, "Use interlaced DCT."),
+    ("LOW_DELAY", lib.AV_CODEC_FLAG_LOW_DELAY, "Force low delay."),
     ("GLOBAL_HEADER", lib.AV_CODEC_FLAG_GLOBAL_HEADER,
-        """Place global headers in extradata instead of every keyframe."""),
-    ("BITEXACT", lib.AV_CODEC_FLAG_BITEXACT,
-        """Use only bitexact stuff (except (I)DCT)."""),
-    ("AC_PRED", lib.AV_CODEC_FLAG_AC_PRED,
-        """H.263 advanced intra coding / MPEG-4 AC prediction"""),
-    ("INTERLACED_ME", lib.AV_CODEC_FLAG_INTERLACED_ME,
-        """Interlaced motion estimation"""),
+        "Place global headers in extradata instead of every keyframe."
+    ),
+    ("BITEXACT", lib.AV_CODEC_FLAG_BITEXACT, "Use only bitexact stuff (except (I)DCT)."),
+    ("AC_PRED", lib.AV_CODEC_FLAG_AC_PRED, "H.263 advanced intra coding / MPEG-4 AC prediction"),
+    ("INTERLACED_ME", lib.AV_CODEC_FLAG_INTERLACED_ME, "Interlaced motion estimation"),
     ("CLOSED_GOP", lib.AV_CODEC_FLAG_CLOSED_GOP),
 ), is_flags=True)
 
@@ -168,11 +144,7 @@ cdef class CodecContext:
     def _set_flags(self, value):
         self.ptr.flags = value
 
-    flags = Flags.property(
-        _get_flags,
-        _set_flags,
-        """Flag property of :class:`.Flags`."""
-    )
+    flags = Flags.property(_get_flags, _set_flags, "Flag property of :class:`.Flags`.")
 
     unaligned = flags.flag_property("UNALIGNED")
     qscale = flags.flag_property("QSCALE")
@@ -199,12 +171,7 @@ cdef class CodecContext:
     def _set_flags2(self, value):
         self.ptr.flags2 = value
 
-    flags2 = Flags2.property(
-        _get_flags2,
-        _set_flags2,
-        """Flag property of :class:`.Flags2`."""
-    )
-
+    flags2 = Flags2.property(_get_flags2, _set_flags2, "Flag property of :class:`.Flags2`.")
     fast = flags2.flag_property("FAST")
     no_output = flags2.flag_property("NO_OUTPUT")
     local_header = flags2.flag_property("LOCAL_HEADER")
@@ -261,14 +228,6 @@ cdef class CodecContext:
                 raise ValueError("CodecContext is already open.")
             return
 
-        # We might pass partial frames.
-        # TODO: What is this for?! This is causing problems with raw decoding
-        # as the internal parser doesn't seem to see a frame until it sees
-        # the next one.
-        # if self.codec.ptr.capabilities & lib.CODEC_CAP_TRUNCATED:
-        #     self.ptr.flags |= lib.CODEC_FLAG_TRUNCATED
-
-        # TODO: Do this better.
         cdef _Dictionary options = Dictionary()
         options.update(self.options or {})
 
@@ -377,7 +336,6 @@ cdef class CodecContext:
             in_size -= consumed
 
             if not in_size:
-                # Aaaand now we're done.
                 break
 
         return packets
