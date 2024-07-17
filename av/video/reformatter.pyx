@@ -76,9 +76,9 @@ cdef class VideoReformatter:
         :type  dst_colorspace: :class:`Colorspace` or ``str``
         :param interpolation: The interpolation method to use, or ``None`` for ``BILINEAR``.
         :type  interpolation: :class:`Interpolation` or ``str``
-        :param src_color_range: Current color range, or ``None`` for the frame color range.
+        :param src_color_range: Current color range, or ``None`` for the ``UNSPECIFIED``.
         :type  src_color_range: :class:`color range` or ``str``
-        :param dst_color_range: Desired color range, or ``None`` for the frame color range.
+        :param dst_color_range: Desired color range, or ``None`` for the ``UNSPECIFIED``.
         :type  dst_color_range: :class:`color range` or ``str``
 
         """
