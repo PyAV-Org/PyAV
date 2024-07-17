@@ -18,14 +18,11 @@ Currently FFmpeg 6.1.1 is built with the following packages enabled for all plat
 
 - fontconfig 2.15.0
 - freetype 2.10.1
-- fribidi 1.0.11
 - gmp 6.3.0
-- harfbuzz 4.1.0
 - png 1.6.37
 - xml2 2.9.13
 - xz 5.4.4
 - aom 3.2.0
-- ass 0.15.2
 - bluray 1.3.4
 - dav1d 1.4.1
 - lame 3.100
@@ -40,7 +37,6 @@ Currently FFmpeg 6.1.1 is built with the following packages enabled for all plat
 - webp 1.4.0
 - x264 master
 - x265 3.5
-- xvid 1.3.7
 
 The following additional packages are also enabled on Linux:
 
