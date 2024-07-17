@@ -124,8 +124,8 @@ cdef class VideoFrame(Frame):
 
     def __repr__(self):
         return (
-            f"<av.{self.__class__.__name__} #{self.index}, pts={self.pts} "
-            f"{self.format.name} {self.width}x{self.height} at 0x{id(self):x}>"
+            f"<av.{self.__class__.__name__}, pts={self.pts} {self.format.name} "
+            f"{self.width}x{self.height} at 0x{id(self):x}>"
         )
 
     @property
