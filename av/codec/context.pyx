@@ -480,7 +480,6 @@ cdef class CodecContext:
                 lib.avcodec_flush_buffers(self.ptr)
 
     cdef _setup_decoded_frame(self, Frame frame, Packet packet):
-
         # Propagate our manual times.
         # While decoding, frame times are in stream time_base, which PyAV
         # is carrying around.
@@ -488,8 +487,6 @@ cdef class CodecContext:
         # packet here (because flushing packets are bogus).
         if packet is not None:
             frame._time_base = packet._time_base
-
-        frame.index = self.ptr.frame_number - 1
 
     @property
     def name(self):

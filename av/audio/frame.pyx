@@ -94,7 +94,7 @@ cdef class AudioFrame(Frame):
 
     def __repr__(self):
         return (
-           f"<av.{self.__class__.__name__} {self.index} pts={self.pts}, {self.samples} "
+           f"<av.{self.__class__.__name__} pts={self.pts}, {self.samples} "
            f"samples at {self.rate}Hz, {self.layout.name}, {self.format.name} at 0x{id(self):x}"
         )
 
@@ -191,10 +191,3 @@ cdef class AudioFrame(Frame):
             count = self.samples * len(self.layout.channels)
 
         return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
-
-    def __getattribute__(self, attribute):
-        # This method should be deleted when `frame.index` is removed
-        if attribute == "index":
-            warnings.warn("Using `frame.index` is deprecated.", AVDeprecationWarning)
-
-        return Frame.__getattribute__(self, attribute)

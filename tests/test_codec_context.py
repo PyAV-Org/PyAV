@@ -96,17 +96,6 @@ class TestCodecContext(TestCase):
                 "Using VideoCodecContext.gop_size for decoders is deprecated.",
             )
 
-    def test_frame_index(self):
-        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
-        stream = container.streams[0]
-        for frame in container.decode(stream):
-            with warnings.catch_warnings(record=True) as captured:
-                self.assertIsInstance(frame.index, int)
-                self.assertEqual(
-                    captured[0].message.args[0],
-                    "Using `frame.index` is deprecated.",
-                )
-
     def test_decoder_timebase(self):
         ctx = av.codec.Codec("h264", "r").create()
 
