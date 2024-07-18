@@ -58,3 +58,15 @@ class TestSubtitle(TestCase):
         bms = sub.planes
         self.assertEqual(len(bms), 1)
         self.assertEqual(len(memoryview(bms[0])), 4800)
+
+    def test_subtitle_flush(self) -> None:
+        path = fate_suite("sub/MovText_capability_tester.mp4")
+
+        subs = []
+        with av.open(path) as container:
+            stream = container.streams.subtitles[0]
+            for packet in container.demux(stream):
+                subs.extend(stream.decode(packet))
+                subs.extend(stream.decode())
+
+        self.assertEqual(len(subs), 3)
