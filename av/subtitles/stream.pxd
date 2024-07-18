@@ -1,5 +1,6 @@
+from av.packet cimport Packet
 from av.stream cimport Stream
 
 
 cdef class SubtitleStream(Stream):
-    pass
+    cpdef decode(self, Packet packet=?)
