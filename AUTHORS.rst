@@ -24,11 +24,12 @@ All contributors (by number of commits):
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
 - Dan Allan <daniel.b.allan@gmail.com>; `@danielballan <https://github.com/danielballan>`_
 - Dave Johansen <davejohansen@gmail.com>
+- Moonsik Park <moonsik.park@estsoft.com>
+- Santtu Keskinen <santtu.keskinen@gmail.com>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
 - Alireza Davoudi <davoudialireza@gmail.com>; `@adavoudi <https://github.com/adavoudi>`_
 - Jonathan Drolet <jonathan.drolet@riedel.net>
 - Moritz Kassner <moritzkassner@gmail.com>; `@mkassner <https://github.com/mkassner>`_
-- Santtu Keskinen <santtu.keskinen@gmail.com>
 - Thomas A Caswell <tcaswell@gmail.com>; `@tacaswell <https://github.com/tacaswell>`_
 - Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>; `@rawler <https://github.com/rawler>`_
 - Wel C. van der <wel@Physics.LeidenUniv.nl>
@@ -43,6 +44,7 @@ All contributors (by number of commits):
 * Karl Litterfeldt <kalle.litterfeldt@gmail.com>; `@litterfeldt <https://github.com/litterfeldt>`_
 * Martin Larralde <martin.larralde@ens-cachan.fr>
 * Simon-Martin Schröder <martin.schroeder@nerdluecht.de>
+* Matteo Destro <matteo.est@gmail.com>
 * mephi42 <mephi42@gmail.com>
 * Miles Kaufmann <mkfmnn@gmail.com>
 * Pablo Prietz <pablo@prietz.org>
@@ -61,6 +63,7 @@ All contributors (by number of commits):
 * Maxime Desroches <desroches.maxime@gmail.com>
 * egao1980 <egao1980@gmail.com>
 * Eric Kalosa-Kenyon <ekalosak@gmail.com>
+* elxy <elxy@outlook.com>
 * Gemfield <gemfield@civilnet.cn>
 * Jonathan Martin <homerunisgood@hotmail.com>
 * Johan Jeppsson Karlin <johjep@gmail.com>

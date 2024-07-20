@@ -16,6 +16,26 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+
+v12.3.0
+-------
+
+Features:
+
+- Support libav's `av_log_set_level` by @materight in (:issue:`1448`).
+- Add Graph.link_nodes by @WyattBlue in (:issue:`1449`).
+- Add default codec properties by @WyattBlue in (:issue:`1450`).
+- Use ffmpeg 6.1.1-5 by @WyattBlue in (:issue:`1462`).
+- Add text and dialogue property to AssSubtitle, remove TextSubtitle by @WyattBlue in (:issue:`1456`).
+
+Fixes:
+
+- Include libav headers in final distribution by @materight in (:issue:`1455`).
+- Fix segfault when calling subtitle_stream.decode() by @WyattBlue in (:issue:`1460`).
+- flushing subtitle decoder requires a new uninitialized packet by @moonsikpark in (:issue:`1461`).
+- Set default color range for VideoReformatter.format() by @elxy in (:issue:`1458`).
+- Resampler: format, layout accepts `str` `int` too by @WyattBlue in (:issue:`1446`).
+
 v12.2.0
 -------
 
@@ -44,7 +64,7 @@ Fixes:
 
 - Fix type stubs, add missing type stubs.
 - Add S12M_TIMECODE by @WyattBlue in (:issue:`1381`).
-- Subtitle.text now returns bytes by @WyattBlue in (:issue:`13981).
+- Subtitle.text now returns bytes by @WyattBlue in (:issue:`1398`).
 - Allow packet.duration to be writable by @WyattBlue in (:issue:`1399`).
 - Remove deprecated `VideoStream.frame_rate` by @WyattBlue in (:issue:`1351`).
 - Build with Arm for PyPy now by @WyattBlue in (:issue:`1395`).
