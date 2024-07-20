@@ -9,6 +9,7 @@ class TestContainerFormats(TestCase):
             self.assertNotEqual(container.default_video_codec, "none")
             self.assertNotEqual(container.default_audio_codec, "none")
             self.assertEqual(container.default_subtitle_codec, "ass")
+            self.assertIn("ass", container.supported_codecs)
 
         fmt = ContainerFormat("matroska")
         self.assertTrue(fmt.is_input)
@@ -23,6 +24,7 @@ class TestContainerFormats(TestCase):
             self.assertNotEqual(container.default_video_codec, "none")
             self.assertNotEqual(container.default_audio_codec, "none")
             self.assertEqual(container.default_subtitle_codec, "none")
+            self.assertIn("h264", container.supported_codecs)
 
         fmt = ContainerFormat("mov")
         self.assertTrue(fmt.is_input)
@@ -37,6 +39,7 @@ class TestContainerFormats(TestCase):
             self.assertEqual(container.default_video_codec, "gif")
             self.assertEqual(container.default_audio_codec, "none")
             self.assertEqual(container.default_subtitle_codec, "none")
+            self.assertIn("gif", container.supported_codecs)
 
     def test_stream_segment(self) -> None:
         # This format goes by two names, check both.
