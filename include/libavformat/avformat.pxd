@@ -115,6 +115,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         # const AVCodecTag* const *codec_tag
         const AVClass *priv_class
 
+    int avformat_query_codec(const AVOutputFormat *oformat, AVCodecID codec_id, int std_compliance)
+
     # AVInputFormat.flags and AVOutputFormat.flags
     cdef enum:
         AVFMT_NOFILE

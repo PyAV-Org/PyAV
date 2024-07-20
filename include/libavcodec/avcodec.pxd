@@ -1,15 +1,14 @@
 from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t
 
+cdef extern from "libavcodec/codec.h":
+    struct AVCodecTag:
+        pass
+
+cdef extern from "libavcodec/codec_id.h":
+    AVCodecID av_codec_get_id(const AVCodecTag *const *tags, uint32_t tag)
+
 
 cdef extern from "libavcodec/avcodec.h" nogil:
-    """
-    // AV_FRAME_DATA_SEI_UNREGISTERED available since version 56.54.100 of libavutil (FFmpeg >= 4.4)
-    #define HAS_AV_FRAME_DATA_SEI_UNREGISTERED  (LIBAVUTIL_VERSION_INT >= 3683940)
-
-    #if !HAS_AV_FRAME_DATA_SEI_UNREGISTERED
-        #define AV_FRAME_DATA_SEI_UNREGISTERED -1
-    #endif
-    """
     cdef set pyav_get_available_codecs()
 
     cdef int   avcodec_version()

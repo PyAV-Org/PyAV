@@ -195,6 +195,26 @@ cdef class OutputContainer(Container):
         self._started = True
 
     @property
+    def supported_codecs(self):
+        """
+        Returns a set of all codecs this format supports.
+        """
+        result = set()
+        cdef const lib.AVCodec *codec = NULL
+        cdef void *opaque = NULL
+
+        while True:
+            codec = lib.av_codec_iterate(&opaque)
+            if codec == NULL:
+                break
+
+            if lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL) == 1:
+                result.add(codec.name)
+
+        return result
+
+
+    @property
     def default_video_codec(self):
         """
         Returns the default video codec this container recommends.
