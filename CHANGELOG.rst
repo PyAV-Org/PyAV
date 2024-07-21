@@ -25,7 +25,8 @@ Features:
 - Support libav's `av_log_set_level` by @materight in (:issue:`1448`).
 - Add Graph.link_nodes by @WyattBlue in (:issue:`1449`).
 - Add default codec properties by @WyattBlue in (:issue:`1450`).
-- Use ffmpeg 6.1.1-5 by @WyattBlue in (:issue:`1462`).
+- Remove the xvid and ass packages in ffmpeg binaries because they were unused by @WyattBlue in (:issue:`1462`).
+- Add supported_codecs property to OutputContainer by @WyattBlue in (:issue:`1465`).
 - Add text and dialogue property to AssSubtitle, remove TextSubtitle by @WyattBlue in (:issue:`1456`).
 
 Fixes:
