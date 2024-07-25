@@ -19,6 +19,7 @@ cdef extern from "libavutil/channel_layout.h":
         AV_CHAN_NONE = -1
         AV_CHAN_FRONT_LEFT
         AV_CHAN_FRONT_RIGHT
+        AV_CHAN_FRONT_CENTER
         # ... other channel enum values ...
 
     ctypedef struct AVChannelCustom:

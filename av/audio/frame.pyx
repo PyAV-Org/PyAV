@@ -4,10 +4,6 @@ from av.audio.plane cimport AudioPlane
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
 
-import warnings
-
-from av.deprecation import AVDeprecationWarning
-
 
 cdef object _cinit_bypass_sentinel
 
@@ -48,7 +44,6 @@ cdef class AudioFrame(Frame):
         self._init(cy_format.sample_fmt, cy_layout.layout, samples, align)
 
     cdef _init(self, lib.AVSampleFormat format, lib.AVChannelLayout layout, unsigned int nb_samples, unsigned int align):
-
         self.ptr.nb_samples = nb_samples
         self.ptr.format = <int>format
         self.ptr.ch_layout = layout
@@ -56,14 +51,14 @@ cdef class AudioFrame(Frame):
         # Sometimes this is called twice. Oh well.
         self._init_user_attributes()
 
-        if self.layout.channels and nb_samples:
+        if self.layout.nb_channels != 0 and nb_samples:
             # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
 
             # Get a new one.
             self._buffer_size = err_check(lib.av_samples_get_buffer_size(
                 NULL,
-                len(self.layout.channels),
+                self.layout.nb_channels,
                 nb_samples,
                 format,
                 align
@@ -75,7 +70,7 @@ cdef class AudioFrame(Frame):
             # Connect the data pointers to the buffer.
             err_check(lib.avcodec_fill_audio_frame(
                 self.ptr,
-                len(self.layout.channels),
+                self.layout.nb_channels,
                 <lib.AVSampleFormat>self.ptr.format,
                 self._buffer,
                 self._buffer_size,
@@ -95,35 +90,35 @@ cdef class AudioFrame(Frame):
            f"samples at {self.rate}Hz, {self.layout.name}, {self.format.name} at 0x{id(self):x}"
         )
 
-    # @staticmethod
-    # def from_ndarray(array, format="s16", layout="stereo"):
-    #     """
-    #     Construct a frame from a numpy array.
-    #     """
-    #     import numpy as np
+    @staticmethod
+    def from_ndarray(array, format="s16", layout="stereo"):
+        """
+        Construct a frame from a numpy array.
+        """
+        import numpy as np
 
-    #     # map avcodec type to numpy type
-    #     try:
-    #         dtype = np.dtype(format_dtypes[format])
-    #     except KeyError:
-    #         raise ValueError(
-    #             f"Conversion from numpy array with format `{format}` is not yet supported"
-    #         )
+        # map avcodec type to numpy type
+        try:
+            dtype = np.dtype(format_dtypes[format])
+        except KeyError:
+            raise ValueError(
+                f"Conversion from numpy array with format `{format}` is not yet supported"
+            )
 
-    #     # check input format
-    #     nb_channels = len(AudioLayout(layout).channels)
-    #     check_ndarray(array, dtype, 2)
-    #     if AudioFormat(format).is_planar:
-    #         check_ndarray_shape(array, array.shape[0] == nb_channels)
-    #         samples = array.shape[1]
-    #     else:
-    #         check_ndarray_shape(array, array.shape[0] == 1)
-    #         samples = array.shape[1] // nb_channels
+        # check input format
+        nb_channels = AudioLayout(layout).nb_channels
+        check_ndarray(array, dtype, 2)
+        if AudioFormat(format).is_planar:
+            check_ndarray_shape(array, array.shape[0] == nb_channels)
+            samples = array.shape[1]
+        else:
+            check_ndarray_shape(array, array.shape[0] == 1)
+            samples = array.shape[1] // nb_channels
 
-    #     frame = AudioFrame(format=format, layout=layout, samples=samples)
-    #     for i, plane in enumerate(frame.planes):
-    #         plane.update(array[i, :])
-    #     return frame
+        frame = AudioFrame(format=format, layout=layout, samples=samples)
+        for i, plane in enumerate(frame.planes):
+            plane.update(array[i, :])
+        return frame
 
     @property
     def planes(self):
