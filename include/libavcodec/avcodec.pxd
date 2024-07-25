@@ -36,6 +36,7 @@ cdef extern from "libavutil/channel_layout.h":
         #     AVChannelCustom *map
         void *opaque
 
+    int av_channel_layout_default(AVChannelLayout *ch_layout, int nb_channels)
     int av_channel_layout_from_mask(AVChannelLayout *channel_layout, uint64_t mask)
     int av_channel_layout_from_string(AVChannelLayout *channel_layout, const char *str)
     void av_channel_layout_uninit(AVChannelLayout *channel_layout)

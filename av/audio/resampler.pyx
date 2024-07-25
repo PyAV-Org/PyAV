@@ -23,8 +23,9 @@ cdef class AudioResampler:
     def __cinit__(self, format=None, layout=None, rate=None, frame_size=None):
         if format is not None:
             self.format = format if isinstance(format, AudioFormat) else AudioFormat(format)
+
         if layout is not None:
-            self.layout = layout if isinstance(layout, AudioLayout) else AudioLayout(layout)
+            self.layout = AudioLayout(layout)
         self.rate = int(rate) if rate else 0
 
         self.frame_size = int(frame_size) if frame_size else 0
@@ -62,7 +63,7 @@ cdef class AudioResampler:
             # Check if we can passthrough or if there is actually work to do.
             if (
                 frame.format.sample_fmt == self.format.sample_fmt and
-                # TODO: frame.layout.layout == self.layout.layout and
+                frame.layout == self.layout and
                 frame.sample_rate == self.rate and
                 self.frame_size == 0
             ):
@@ -79,14 +80,14 @@ cdef class AudioResampler:
                 "abuffer",
                 sample_rate=str(frame.sample_rate),
                 sample_fmt=AudioFormat(frame.format).name,
-                # channel_layout=frame.layout.name,
+                channel_layout=frame.layout.name,
                 **extra_args,
             )
             aformat = self.graph.add(
                 "aformat",
                 sample_rates=str(self.rate),
                 sample_fmts=self.format.name,
-                # channel_layouts=str(self.layout.layout),
+                channel_layouts=self.layout.name,
             )
             abuffersink = self.graph.add("abuffersink")
             abuffer.link_to(aformat)
@@ -97,17 +98,12 @@ cdef class AudioResampler:
                 lib.av_buffersink_set_frame_size((<FilterContext>abuffersink).ptr, self.frame_size)
 
         elif frame is not None:
-            pass
-            # TODO: write a ch_layout comparer.
-
-            # Assert the settings are the same on consecutive frames.
-
-            # if (
-            #     frame.format.sample_fmt != self.template.format.sample_fmt or
-            #     frame.layout.layout != self.template.layout.layout or
-            #     frame.sample_rate != self.template.rate
-            # ):
-            #     raise ValueError("Frame does not match AudioResampler setup.")
+            if (
+                frame.format.sample_fmt != self.template.format.sample_fmt or
+                frame.layout != self.template.layout or
+                frame.sample_rate != self.template.rate
+            ):
+                raise ValueError("Frame does not match AudioResampler setup.")
 
         self.graph.push(frame)
 

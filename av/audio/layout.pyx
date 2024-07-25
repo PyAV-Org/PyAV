@@ -22,7 +22,7 @@ cdef class AudioLayout:
         elif isinstance(layout, AudioLayout):
             c_layout = (<AudioLayout>layout).layout
         else:
-            raise TypeError("layout must be of type: string | av.AudioLayout")
+            raise TypeError(f"layout must be of type: string | av.AudioLayout, got {type(layout)}")
 
         self._init(c_layout)
 
@@ -31,6 +31,9 @@ cdef class AudioLayout:
 
     def __repr__(self):
         return f"<av.{self.__class__.__name__} {self.name!r}>"
+
+    def __eq__(self, other):
+        return isinstance(other, AudioLayout) and self.name == other.name and self.nb_channels == other.nb_channels
 
     @property
     def nb_channels(self):
