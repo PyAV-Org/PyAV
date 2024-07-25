@@ -198,7 +198,7 @@ cdef extern from "libavformat/avformat.h" nogil:
             int flags,
             AVDictionary **options
         )
-        void (*io_close)(
+        int (*io_close2)(
             AVFormatContext *s,
             AVIOContext *pb
         )

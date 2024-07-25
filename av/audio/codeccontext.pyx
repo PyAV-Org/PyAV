@@ -11,13 +11,6 @@ cdef class AudioCodecContext(CodecContext):
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)
 
-        # Sometimes there isn't a layout set, but there are a number of
-        # channels. Assume it is the default layout.
-        # TODO: Put this behind `not bare_metal`.
-        # TODO: Do this more efficiently.
-        if self.ptr.channels and not self.ptr.channel_layout:
-            self.ptr.channel_layout = get_audio_layout(self.ptr.channels, 0).layout
-
     cdef _set_default_time_base(self):
         self.ptr.time_base.num = 1
         self.ptr.time_base.den = self.ptr.sample_rate
@@ -85,33 +78,33 @@ cdef class AudioCodecContext(CodecContext):
     def rate(self, value):
         self.sample_rate = value
 
-    # TODO: Integrate into AudioLayout.
-    @property
-    def channels(self):
-        return self.ptr.channels
+    # # TODO: Integrate into AudioLayout.
+    # @property
+    # def channels(self):
+    #     return self.ptr.channels
 
-    @channels.setter
-    def channels(self, value):
-        self.ptr.channels = value
-        self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
-    @property
-    def channel_layout(self):
-        return self.ptr.channel_layout
+    # @channels.setter
+    # def channels(self, value):
+    #     self.ptr.channels = value
+    #     self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
+    # @property
+    # def channel_layout(self):
+    #     return self.ptr.channel_layout
 
-    @property
-    def layout(self):
-        """
-        The audio channel layout.
+    # @property
+    # def layout(self):
+    #     """
+    #     The audio channel layout.
 
-        :type: AudioLayout
-        """
-        return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
+    #     :type: AudioLayout
+    #     """
+    #     return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
 
-    @layout.setter
-    def layout(self, value):
-        cdef AudioLayout layout = AudioLayout(value)
-        self.ptr.channel_layout = layout.layout
-        self.ptr.channels = layout.nb_channels
+    # @layout.setter
+    # def layout(self, value):
+    #     cdef AudioLayout layout = AudioLayout(value)
+    #     self.ptr.channel_layout = layout.layout
+    #     self.ptr.channels = layout.nb_channels
 
     @property
     def format(self):

@@ -100,29 +100,29 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
         return stash_exception()
 
 
-cdef void pyav_io_close(lib.AVFormatContext *s,
-                        lib.AVIOContext *pb) noexcept nogil:
+cdef int pyav_io_close(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept nogil:
     with gil:
-        pyav_io_close_gil(s, pb)
+        return pyav_io_close_gil(s, pb)
 
-
-cdef void pyav_io_close_gil(lib.AVFormatContext *s,
-                            lib.AVIOContext *pb) noexcept:
+cdef int pyav_io_close_gil(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept:
     cdef Container container
+    cdef int result = 0
     try:
         container = <Container>dereference(s).opaque
 
         if container.open_files is not None and <int64_t>pb.opaque in container.open_files:
-            pyio_close_custom_gil(pb)
+            result = pyio_close_custom_gil(pb)
 
             # Remove it from the container so that it can be deallocated
             del container.open_files[<int64_t>pb.opaque]
         else:
-            pyio_close_gil(pb)
+            result = pyio_close_gil(pb)
 
     except Exception as e:
         stash_exception()
+        result = lib.AVERROR_UNKNOWN  # Or another appropriate error code
 
+    return result
 
 Flags = define_enum("Flags", __name__, (
     ("GENPTS", lib.AVFMT_FLAG_GENPTS,
@@ -242,7 +242,7 @@ cdef class Container:
 
         if io_open is not None:
             self.ptr.io_open = pyav_io_open
-            self.ptr.io_close = pyav_io_close
+            self.ptr.io_close2 = pyav_io_close
             self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt

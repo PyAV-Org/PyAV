@@ -8,6 +8,40 @@ cdef extern from "libavcodec/codec_id.h":
     AVCodecID av_codec_get_id(const AVCodecTag *const *tags, uint32_t tag)
 
 
+cdef extern from "libavutil/channel_layout.h":
+    ctypedef enum AVChannelOrder:
+        AV_CHANNEL_ORDER_UNSPEC
+        AV_CHANNEL_ORDER_NATIVE
+        AV_CHANNEL_ORDER_CUSTOM
+        AV_CHANNEL_ORDER_AMBISONIC
+
+    ctypedef enum AVChannel:
+        AV_CHAN_NONE = -1
+        AV_CHAN_FRONT_LEFT
+        AV_CHAN_FRONT_RIGHT
+        # ... other channel enum values ...
+
+    ctypedef struct AVChannelCustom:
+        AVChannel id
+        char name[16]
+        void *opaque
+
+    ctypedef struct AVChannelLayout:
+        AVChannelOrder order
+        int nb_channels
+        uint64_t mask
+        # union:
+        #     uint64_t mask
+        #     AVChannelCustom *map
+        void *opaque
+
+    int av_channel_layout_from_mask(AVChannelLayout *channel_layout, uint64_t mask)
+    int av_channel_layout_from_string(AVChannelLayout *channel_layout, const char *str)
+    void av_channel_layout_uninit(AVChannelLayout *channel_layout)
+    int av_channel_layout_copy(AVChannelLayout *dst, const AVChannelLayout *src)
+    int av_channel_layout_describe(const AVChannelLayout *channel_layout, char *buf, size_t buf_size)
+
+
 cdef extern from "libavcodec/avcodec.h" nogil:
     cdef set pyav_get_available_codecs()
 
@@ -116,7 +150,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDISCARD_ALL
 
     cdef struct AVCodec:
-
         char *name
         char *long_name
         AVMediaType type
@@ -144,7 +177,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
 
     cdef struct AVCodecContext:
-
         AVClass *av_class
 
         AVMediaType codec_type
@@ -154,7 +186,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int flags
         int flags2
-
         int thread_count
         int thread_type
 
@@ -164,12 +195,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVFrame* coded_frame
 
         int bit_rate
-
         int bit_rate_tolerance
         int mb_decision
 
         int bits_per_coded_sample
-
         int global_quality
         int compression_level
 
@@ -184,7 +213,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVRational framerate
         AVRational pkt_timebase
         AVRational time_base
-        int ticks_per_frame
 
         int extradata_size
         uint8_t *extradata
@@ -212,9 +240,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         # Audio.
         AVSampleFormat sample_fmt
         int sample_rate
-        int channels
+        AVChannelLayout ch_layout
         int frame_size
-        int channel_layout
 
         #: .. todo:: ``get_buffer`` is deprecated for get_buffer2 in newer versions of FFmpeg.
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
@@ -349,8 +376,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int nb_samples  # Audio samples
         int sample_rate  # Audio Sample rate
-        int channels  # Number of audio channels
-        int channel_layout  # Audio channel_layout
+        AVChannelLayout ch_layout
 
         int64_t pts
         int64_t pkt_dts

@@ -121,7 +121,6 @@ def assert_rgb_rotate(self, input_, is_dash=False):
     self.assertEqual(stream.format.name, "yuv420p")
     self.assertEqual(stream.format.width, WIDTH)
     self.assertEqual(stream.format.height, HEIGHT)
-    self.assertEqual(stream.ticks_per_frame, 1)
 
 
 class TestBasicVideoEncoding(TestCase):
@@ -139,7 +138,6 @@ class TestBasicVideoEncoding(TestCase):
             self.assertEqual(stream.format.width, 640)
             self.assertEqual(stream.height, 480)
             self.assertEqual(stream.pix_fmt, "yuv420p")
-            self.assertEqual(stream.ticks_per_frame, 1)
             self.assertEqual(stream.width, 640)
 
     def test_encoding(self):
@@ -193,7 +191,6 @@ class TestBasicAudioEncoding(TestCase):
             self.assertEqual(stream.bit_rate, 128000)
             self.assertEqual(stream.format.name, "s16")
             self.assertEqual(stream.sample_rate, 48000)
-            self.assertEqual(stream.ticks_per_frame, 1)
 
     def test_transcode(self):
         path = self.sandboxed("audio_transcode.mov")

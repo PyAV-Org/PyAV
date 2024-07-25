@@ -97,7 +97,6 @@ cdef class OutputContainer(Container):
             codec_context.height = 480
             codec_context.bit_rate = 1024000
             codec_context.bit_rate_tolerance = 128000
-            codec_context.ticks_per_frame = 1
             to_avrational(rate or 24, &codec_context.framerate)
 
             stream.avg_frame_rate = codec_context.framerate
@@ -109,8 +108,8 @@ cdef class OutputContainer(Container):
             codec_context.bit_rate = 128000
             codec_context.bit_rate_tolerance = 32000
             codec_context.sample_rate = rate or 48000
-            codec_context.channels = 2
-            codec_context.channel_layout = lib.AV_CH_LAYOUT_STEREO
+            # TODO:
+            # codec_context.ch_layout = $stereo
 
         # Some formats want stream headers to be separate
         if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:

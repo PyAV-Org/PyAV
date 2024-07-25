@@ -33,8 +33,7 @@ cdef class Frame:
             self.ptr.format = source.ptr.format
             self.ptr.width = source.ptr.width
             self.ptr.height = source.ptr.height
-            self.ptr.channel_layout = source.ptr.channel_layout
-            self.ptr.channels = source.ptr.channels
+            self.ptr.ch_layout = source.ptr.ch_layout
 
     cdef _init_user_attributes(self):
         pass  # Dummy to match the API of the others.

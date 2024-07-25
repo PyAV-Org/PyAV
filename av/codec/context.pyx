@@ -533,10 +533,6 @@ cdef class CodecContext:
             raise ValueError("Codec tag should be a 4 character string.")
 
     @property
-    def ticks_per_frame(self):
-        return self.ptr.ticks_per_frame
-
-    @property
     def bit_rate(self):
         return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
 

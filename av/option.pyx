@@ -25,7 +25,7 @@ OptionType = define_enum("OptionType", __name__, (
     ("RATIONAL", lib.AV_OPT_TYPE_RATIONAL),
     ("BINARY", lib.AV_OPT_TYPE_BINARY),
     ("DICT", lib.AV_OPT_TYPE_DICT),
-    # ("UINT64", lib.AV_OPT_TYPE_UINT64), # Added recently, and not yet used AFAICT.
+    ("UINT64", lib.AV_OPT_TYPE_UINT64),
     ("CONST", lib.AV_OPT_TYPE_CONST),
     ("IMAGE_SIZE", lib.AV_OPT_TYPE_IMAGE_SIZE),
     ("PIXEL_FMT", lib.AV_OPT_TYPE_PIXEL_FMT),
@@ -33,7 +33,7 @@ OptionType = define_enum("OptionType", __name__, (
     ("VIDEO_RATE", lib.AV_OPT_TYPE_VIDEO_RATE),
     ("DURATION", lib.AV_OPT_TYPE_DURATION),
     ("COLOR", lib.AV_OPT_TYPE_COLOR),
-    ("CHANNEL_LAYOUT", lib.AV_OPT_TYPE_CHANNEL_LAYOUT),
+    ("CHANNEL_LAYOUT", lib.AV_OPT_TYPE_CHLAYOUT),
     ("BOOL", lib.AV_OPT_TYPE_BOOL),
 ))
 
@@ -44,7 +44,7 @@ cdef tuple _INT_TYPES = (
     lib.AV_OPT_TYPE_PIXEL_FMT,
     lib.AV_OPT_TYPE_SAMPLE_FMT,
     lib.AV_OPT_TYPE_DURATION,
-    lib.AV_OPT_TYPE_CHANNEL_LAYOUT,
+    lib.AV_OPT_TYPE_CHLAYOUT,
     lib.AV_OPT_TYPE_BOOL,
 )
 

@@ -1,5 +1,3 @@
-channel_descriptions: dict[str, str]
-
 class AudioLayout:
     name: str
     layout: int
