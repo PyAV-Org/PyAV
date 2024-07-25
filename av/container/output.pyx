@@ -108,8 +108,7 @@ cdef class OutputContainer(Container):
             codec_context.bit_rate = 128000
             codec_context.bit_rate_tolerance = 32000
             codec_context.sample_rate = rate or 48000
-            # TODO:
-            # codec_context.ch_layout = $stereo
+            # TODO: codec_context.ch_layout = $stereo
 
         # Some formats want stream headers to be separate
         if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:

@@ -27,7 +27,7 @@ def generate_audio_frame(
     frame.sample_rate = sample_rate
     frame.pts = frame_num * frame_size
 
-    for i in range(len(frame.layout.channels)):
+    for i in range(frame.layout.nb_channels):
         data = np.zeros(frame_size, dtype=format_dtypes[input_format])
         for j in range(frame_size):
             data[j] = np.sin(2 * np.pi * (frame_num + j) * (i + 1) / float(frame_size))

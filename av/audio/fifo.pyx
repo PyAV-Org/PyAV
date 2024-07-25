@@ -61,7 +61,7 @@ cdef class AudioFifo:
 
             self.ptr = lib.av_audio_fifo_alloc(
                 <lib.AVSampleFormat>frame.ptr.format,
-                len(frame.layout.channels),  # TODO: Can we safely use frame.ptr.nb_channels?
+                frame.layout.nb_channels,
                 frame.ptr.nb_samples * 2,  # Just a default number of samples; it will adjust.
             )
 

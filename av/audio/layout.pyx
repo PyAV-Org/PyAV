@@ -3,7 +3,7 @@ cimport libav as lib
 
 cdef object _cinit_bypass_sentinel
 
-cdef AudioLayout get_audio_layout(int channels, lib.AVChannelLayout c_layout):
+cdef AudioLayout get_audio_layout(lib.AVChannelLayout c_layout):
     """Get an AudioLayout from Cython land."""
     cdef AudioLayout layout = AudioLayout.__new__(AudioLayout, _cinit_bypass_sentinel)
     layout._init(c_layout)

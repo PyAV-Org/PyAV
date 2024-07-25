@@ -81,7 +81,7 @@ cdef class AudioFrame(Frame):
         lib.av_freep(&self._buffer)
 
     cdef _init_user_attributes(self):
-        self.layout = get_audio_layout(0, self.ptr.ch_layout)
+        self.layout = get_audio_layout(self.ptr.ch_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
 
     def __repr__(self):
@@ -180,6 +180,6 @@ cdef class AudioFrame(Frame):
         if self.format.is_planar:
             count = self.samples
         else:
-            count = self.samples * len(self.layout.channels)
+            count = self.samples * self.layout.nb_channels
 
         return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])

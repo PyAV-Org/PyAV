@@ -55,7 +55,6 @@ cdef class AudioCodecContext(CodecContext):
         """
         return self.ptr.frame_size
 
-
     @property
     def sample_rate(self):
         """
@@ -78,33 +77,23 @@ cdef class AudioCodecContext(CodecContext):
     def rate(self, value):
         self.sample_rate = value
 
-    # # TODO: Integrate into AudioLayout.
-    # @property
-    # def channels(self):
-    #     return self.ptr.channels
+    @property
+    def channels(self):
+        return self.layout.nb_channels
 
-    # @channels.setter
-    # def channels(self, value):
-    #     self.ptr.channels = value
-    #     self.ptr.channel_layout = lib.av_get_default_channel_layout(value)
-    # @property
-    # def channel_layout(self):
-    #     return self.ptr.channel_layout
+    @property
+    def layout(self):
+        """
+        The audio channel layout.
 
-    # @property
-    # def layout(self):
-    #     """
-    #     The audio channel layout.
+        :type: AudioLayout
+        """
+        return get_audio_layout(self.ptr.ch_layout)
 
-    #     :type: AudioLayout
-    #     """
-    #     return get_audio_layout(self.ptr.channels, self.ptr.channel_layout)
-
-    # @layout.setter
-    # def layout(self, value):
-    #     cdef AudioLayout layout = AudioLayout(value)
-    #     self.ptr.channel_layout = layout.layout
-    #     self.ptr.channels = layout.nb_channels
+    @layout.setter
+    def layout(self, value):
+        cdef AudioLayout layout = AudioLayout(value)
+        self.ptr.ch_layout = layout.layout
 
     @property
     def format(self):
