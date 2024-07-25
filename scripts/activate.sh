@@ -14,7 +14,7 @@ if [[ ! "$PYAV_LIBRARY" ]]; then
     if [[ "$1" ]]; then
         PYAV_LIBRARY="$1"
     else
-        PYAV_LIBRARY=ffmpeg-6.1.1
+        PYAV_LIBRARY=ffmpeg-7.0.1
         echo "No \$PYAV_LIBRARY set; defaulting to $PYAV_LIBRARY"
     fi
 fi
