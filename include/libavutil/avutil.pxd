@@ -217,12 +217,6 @@ cdef extern from "libavutil/channel_layout.h" nogil:
     cdef uint64_t av_get_channel_layout(char* name)
     cdef int av_get_channel_layout_nb_channels(uint64_t channel_layout)
     cdef int64_t av_get_default_channel_layout(int nb_channels)
-    cdef void av_get_channel_layout_string(
-        char* buff,
-        int buf_size,
-        int nb_channels,
-        uint64_t channel_layout
-    )
 
     # Channels.
     cdef uint64_t av_channel_layout_extract_channel(uint64_t layout, int index)
@@ -260,14 +254,12 @@ cdef extern from "libavutil/audio_fifo.h" nogil:
 
 
 cdef extern from "stdarg.h" nogil:
-
     # For logging. Should really be in another PXD.
     ctypedef struct va_list:
         pass
 
 
 cdef extern from "Python.h" nogil:
-
     # For logging. See av/logging.pyx for an explanation.
     cdef int Py_AddPendingCall(void *, void *)
     void PyErr_PrintEx(int set_sys_last_vars)
@@ -276,9 +268,7 @@ cdef extern from "Python.h" nogil:
 
 
 cdef extern from "libavutil/opt.h" nogil:
-
     cdef enum AVOptionType:
-
         AV_OPT_TYPE_FLAGS
         AV_OPT_TYPE_INT
         AV_OPT_TYPE_INT64
@@ -288,7 +278,7 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_RATIONAL
         AV_OPT_TYPE_BINARY
         AV_OPT_TYPE_DICT
-        #AV_OPT_TYPE_UINT64 # since FFmpeg 3.3
+        AV_OPT_TYPE_UINT64
         AV_OPT_TYPE_CONST
         AV_OPT_TYPE_IMAGE_SIZE
         AV_OPT_TYPE_PIXEL_FMT
@@ -296,7 +286,7 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_VIDEO_RATE
         AV_OPT_TYPE_DURATION
         AV_OPT_TYPE_COLOR
-        AV_OPT_TYPE_CHANNEL_LAYOUT
+        AV_OPT_TYPE_CHLAYOUT
         AV_OPT_TYPE_BOOL
 
     cdef struct AVOption_default_val:

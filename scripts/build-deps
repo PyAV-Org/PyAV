@@ -43,6 +43,7 @@ echo ./configure
     --disable-stripping \
     --enable-debug=3 \
     --enable-gpl \
+    --enable-version3 \
     --enable-libx264 \
     --enable-libxml2 \
     --enable-shared \

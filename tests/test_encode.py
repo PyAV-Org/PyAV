@@ -121,7 +121,6 @@ def assert_rgb_rotate(self, input_, is_dash=False):
     self.assertEqual(stream.format.name, "yuv420p")
     self.assertEqual(stream.format.width, WIDTH)
     self.assertEqual(stream.format.height, HEIGHT)
-    self.assertEqual(stream.ticks_per_frame, 1)
 
 
 class TestBasicVideoEncoding(TestCase):
@@ -139,7 +138,6 @@ class TestBasicVideoEncoding(TestCase):
             self.assertEqual(stream.format.width, 640)
             self.assertEqual(stream.height, 480)
             self.assertEqual(stream.pix_fmt, "yuv420p")
-            self.assertEqual(stream.ticks_per_frame, 1)
             self.assertEqual(stream.width, 640)
 
     def test_encoding(self):
@@ -193,7 +191,6 @@ class TestBasicAudioEncoding(TestCase):
             self.assertEqual(stream.bit_rate, 128000)
             self.assertEqual(stream.format.name, "s16")
             self.assertEqual(stream.sample_rate, 48000)
-            self.assertEqual(stream.ticks_per_frame, 1)
 
     def test_transcode(self):
         path = self.sandboxed("audio_transcode.mov")
@@ -204,7 +201,6 @@ class TestBasicAudioEncoding(TestCase):
 
             sample_rate = 48000
             channel_layout = "stereo"
-            channels = 2
             sample_fmt = "s16"
 
             stream = output.add_stream("mp2", sample_rate)
@@ -215,7 +211,6 @@ class TestBasicAudioEncoding(TestCase):
             ctx.sample_rate = sample_rate
             ctx.format = sample_fmt
             ctx.layout = channel_layout
-            ctx.channels = channels
 
             with av.open(
                 fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav")
@@ -238,7 +233,6 @@ class TestBasicAudioEncoding(TestCase):
             self.assertIsInstance(stream, AudioStream)
 
             # codec context properties
-            self.assertEqual(stream.channels, channels)
             self.assertEqual(stream.format.name, "s16p")
             self.assertEqual(stream.sample_rate, sample_rate)
 
@@ -254,7 +248,7 @@ class TestEncodeStreamSemantics(TestCase):
 
             astream = output.add_stream("mp2", 48000)
             self.assertIn(astream, output.streams.audio)
-            astream.channels = 2
+            astream.layout = "stereo"
             astream.format = "s16"
 
             self.assertEqual(vstream.index, 0)

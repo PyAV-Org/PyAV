@@ -61,7 +61,7 @@ cdef class AudioFifo:
 
             self.ptr = lib.av_audio_fifo_alloc(
                 <lib.AVSampleFormat>frame.ptr.format,
-                len(frame.layout.channels),  # TODO: Can we safely use frame.ptr.nb_channels?
+                frame.layout.nb_channels,
                 frame.ptr.nb_samples * 2,  # Just a default number of samples; it will adjust.
             )
 
@@ -71,7 +71,7 @@ cdef class AudioFifo:
         # Make sure nothing changed.
         elif (
             frame.ptr.format != self.template.ptr.format or
-            frame.ptr.channel_layout != self.template.ptr.channel_layout or
+            # TODO: frame.ptr.ch_layout != self.template.ptr.ch_layout or
             frame.ptr.sample_rate != self.template.ptr.sample_rate or
             (frame._time_base.num and self.template._time_base.num and (
                 frame._time_base.num != self.template._time_base.num or
@@ -131,7 +131,7 @@ cdef class AudioFifo:
         frame._copy_internal_attributes(self.template)
         frame._init(
             <lib.AVSampleFormat>self.template.ptr.format,
-            self.template.ptr.channel_layout,
+            <lib.AVChannelLayout>self.template.ptr.ch_layout,
             samples,
             1,  # Align?
         )

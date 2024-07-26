@@ -4,10 +4,6 @@ from av.audio.plane cimport AudioPlane
 from av.error cimport err_check
 from av.utils cimport check_ndarray, check_ndarray_shape
 
-import warnings
-
-from av.deprecation import AVDeprecationWarning
-
 
 cdef object _cinit_bypass_sentinel
 
@@ -47,26 +43,22 @@ cdef class AudioFrame(Frame):
         cdef AudioLayout cy_layout = AudioLayout(layout)
         self._init(cy_format.sample_fmt, cy_layout.layout, samples, align)
 
-    cdef _init(self, lib.AVSampleFormat format, uint64_t layout, unsigned int nb_samples, unsigned int align):
-
+    cdef _init(self, lib.AVSampleFormat format, lib.AVChannelLayout layout, unsigned int nb_samples, unsigned int align):
         self.ptr.nb_samples = nb_samples
         self.ptr.format = <int>format
-        self.ptr.channel_layout = layout
+        self.ptr.ch_layout = layout
 
         # Sometimes this is called twice. Oh well.
         self._init_user_attributes()
 
-        # Audio filters need AVFrame.channels to match number of channels from layout.
-        self.ptr.channels = self.layout.nb_channels
-
-        if self.layout.channels and nb_samples:
+        if self.layout.nb_channels != 0 and nb_samples:
             # Cleanup the old buffer.
             lib.av_freep(&self._buffer)
 
             # Get a new one.
             self._buffer_size = err_check(lib.av_samples_get_buffer_size(
                 NULL,
-                len(self.layout.channels),
+                self.layout.nb_channels,
                 nb_samples,
                 format,
                 align
@@ -78,7 +70,7 @@ cdef class AudioFrame(Frame):
             # Connect the data pointers to the buffer.
             err_check(lib.avcodec_fill_audio_frame(
                 self.ptr,
-                len(self.layout.channels),
+                self.layout.nb_channels,
                 <lib.AVSampleFormat>self.ptr.format,
                 self._buffer,
                 self._buffer_size,
@@ -89,7 +81,7 @@ cdef class AudioFrame(Frame):
         lib.av_freep(&self._buffer)
 
     cdef _init_user_attributes(self):
-        self.layout = get_audio_layout(0, self.ptr.channel_layout)
+        self.layout = get_audio_layout(self.ptr.ch_layout)
         self.format = get_audio_format(<lib.AVSampleFormat>self.ptr.format)
 
     def __repr__(self):
@@ -114,7 +106,7 @@ cdef class AudioFrame(Frame):
             )
 
         # check input format
-        nb_channels = len(AudioLayout(layout).channels)
+        nb_channels = AudioLayout(layout).nb_channels
         check_ndarray(array, dtype, 2)
         if AudioFormat(format).is_planar:
             check_ndarray_shape(array, array.shape[0] == nb_channels)
@@ -188,6 +180,6 @@ cdef class AudioFrame(Frame):
         if self.format.is_planar:
             count = self.samples
         else:
-            count = self.samples * len(self.layout.channels)
+            count = self.samples * self.layout.nb_channels
 
         return np.vstack([np.frombuffer(x, dtype=dtype, count=count) for x in self.planes])
