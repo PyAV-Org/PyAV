@@ -1,5 +1,6 @@
 from fractions import Fraction
 
+import av
 from av import AudioFrame, AudioResampler
 
 from .common import TestCase
@@ -69,6 +70,7 @@ class TestAudioResampler(TestCase):
         self.assertEqual(len(oframes), 0)
 
     def test_pts_assertion_same_rate(self):
+        av.logging.set_level(av.logging.VERBOSE)
         resampler = AudioResampler("s16", "mono")
 
         # resample one frame
@@ -112,6 +114,8 @@ class TestAudioResampler(TestCase):
         # flush
         oframes = resampler.resample(None)
         self.assertEqual(len(oframes), 0)
+        av.logging.set_level(None)
+
 
     def test_pts_assertion_new_rate_up(self):
         resampler = AudioResampler("s16", "mono", 44100)
