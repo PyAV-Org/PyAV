@@ -21,4 +21,5 @@ which ffmpeg || exit 2
 ffmpeg -version || exit 3
 echo
 
+"$PYAV_PYTHON" scripts/comptime.py
 "$PYAV_PYTHON" setup.py config build_ext --inplace || exit 1
