@@ -5,5 +5,6 @@ black
 isort
 flake8
 flake8-pyproject
+pytest
 sphinx==5.1.0
 mypy==1.10.0

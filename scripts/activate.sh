@@ -9,10 +9,13 @@ fi
 export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 
 if [[ ! "$PYAV_LIBRARY" ]]; then
-
-    # Pull from command line argument.
     if [[ "$1" ]]; then
-        PYAV_LIBRARY="$1"
+        if [[ "$1" == ffmpeg-* ]]; then
+            PYAV_LIBRARY="$1"
+        else
+            echo "Error: PYAV_LIBRARY must start with 'ffmpeg-'" >&2
+            return 1
+        fi
     else
         PYAV_LIBRARY=ffmpeg-7.0.1
         echo "No \$PYAV_LIBRARY set; defaulting to $PYAV_LIBRARY"

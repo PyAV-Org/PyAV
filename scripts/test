@@ -19,7 +19,7 @@ istest() {
 }
 
 if istest main; then
-    $PYAV_PYTHON setup.py test
+    $PYAV_PYTHON -m pytest
 fi
 
 if istest examples; then

@@ -24,9 +24,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Packages
-        run: pip install -r tests/requirements.txt
-
       - name: Linters
         run: make lint
 
