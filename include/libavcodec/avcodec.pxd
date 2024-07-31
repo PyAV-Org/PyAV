@@ -378,6 +378,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int nb_samples  # Audio samples
         int sample_rate  # Audio Sample rate
+        int channels
         AVChannelLayout ch_layout
 
         int64_t pts
