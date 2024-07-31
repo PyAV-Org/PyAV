@@ -142,6 +142,7 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
         python scripts\\fetch-vendor.py --config-file scripts\\ffmpeg-${{ matrix.config.ffmpeg }}.json $CONDA_PREFIX\\Library
+        python scripts\\comptime.py  ${{ matrix.config.ffmpeg }}
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX\\Library
 
     - name: Test

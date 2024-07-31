@@ -47,7 +47,7 @@ cdef class AudioFrame(Frame):
         self.ptr.nb_samples = nb_samples
         self.ptr.format = <int>format
         self.ptr.ch_layout = layout
-        self.ptr.channels = layout.nb_channels
+        # [FFMPEG6] self.ptr.channels = layout.nb_channels  # ffmpeg 6 only
 
         # Sometimes this is called twice. Oh well.
         self._init_user_attributes()
