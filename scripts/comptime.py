@@ -20,10 +20,12 @@ def process_directory(directory):
             file_path = os.path.join(root, file)
             replace_in_file(file_path)
 
-if sys.platform == "win32":
+
+version = os.environ.get("PYAV_LIBRARY")
+if version is None:
     is_6 = sys.argv[1].startswith("6")
 else:
-    is_6 = os.environ.get("PYAV_LIBRARY").startswith("ffmpeg-6")
+    is_6 = version.startswith("ffmpeg-6")
 
 if is_6:
     process_directory("av")
