@@ -13,8 +13,7 @@ default: build
 
 
 build:
-	# Always try to install the Python dependencies they are cheap.
-	$(PIP) install --upgrade -r tests/requirements.txt
+	$(PIP) install --upgrade cython
 	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) $(PYTHON) setup.py build_ext --inplace --debug
 
 clean:
@@ -29,12 +28,12 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
-	$(PIP) install --upgrade -r tests/requirements.txt
+	$(PIP) install -U black isort flake8 flake8-pyproject pillow numpy mypy==1.10.0
 	black --check av examples tests setup.py
 	flake8 av examples tests
 	isort --check-only --diff av examples tests
 	mypy av tests
 
 test:
-	$(PIP) install --upgrade -r tests/requirements.txt
+	$(PIP) install --upgrade cython numpy pillow pytest
 	$(PYTHON) -m pytest
