@@ -4,6 +4,9 @@ SPHINXBUILD   = sphinx-build
 BUILDDIR      = _build
 FFMPEGDIR     = _ffmpeg
 
+PYAV_PIP ?= pip
+PIP := $(PYAV_PIP)
+
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 
 .PHONY: clean html open upload default
@@ -29,6 +32,7 @@ clean:
 	rm -rf $(BUILDDIR) $(FFMPEGDIR)
 
 html: $(RENDERED) $(TAGFILE)
+	$(PIP) install -U sphinx==5.1.0
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 test:
