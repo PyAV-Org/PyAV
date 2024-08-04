@@ -133,6 +133,7 @@ jobs:
           cython \
           numpy \
           pillow \
+          pytest \
           python=${{ matrix.config.python }} \
           setuptools
 
@@ -150,4 +151,4 @@ jobs:
       run: |
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
-        python setup.py test
+        python -m pytest
