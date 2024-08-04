@@ -33,8 +33,6 @@ cd $PYAV_LIBRARY
 echo ./configure
 ./configure \
     --disable-doc \
-    --disable-mmx \
-    --disable-optimizations \
     --disable-static \
     --disable-stripping \
     --enable-debug=3 \
@@ -43,6 +41,9 @@ echo ./configure
     --enable-libx264 \
     --enable-libxml2 \
     --enable-shared \
+    --enable-sse \
+    --enable-avx \
+    --enable-avx2 \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo
