@@ -12,8 +12,7 @@ on:
       - '**.md'
       - '**.rst'
       - '**.txt'
-  release:
-    types: [published]
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
