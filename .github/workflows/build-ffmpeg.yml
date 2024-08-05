@@ -96,7 +96,7 @@ jobs:
       - name: Build FFmpeg dependencies
         run: |
           docker run -v $PWD:/project:rw --workdir=/project quay.io/pypa/manylinux2014_${{ matrix.arch }} bash -exc '
-            export PATH=/opt/python/cp38-cp38/bin:$PATH;
+            export PATH=/opt/python/cp39-cp39/bin:$PATH;
             export CIBUILDWHEEL=1;
             python scripts/build-ffmpeg.py /tmp/vendor --stage ${{ env.stage }};
             cp -ar /tmp/vendor /project;
@@ -131,7 +131,7 @@ jobs:
       - name: Build FFmpeg dependencies
         run: |
           docker run -v $PWD:/project:rw --workdir=/project quay.io/pypa/manylinux2014_${{ matrix.arch }} bash -exc '
-            export PATH=/opt/python/cp38-cp38/bin:$PATH;
+            export PATH=/opt/python/cp39-cp39/bin:$PATH;
             export CIBUILDWHEEL=1;
             cp -ar vendor /tmp;
             python scripts/build-ffmpeg.py /tmp/vendor --stage ${{ env.stage }};
@@ -169,7 +169,7 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_ALL_LINUX: cp -ar vendor /tmp
           CIBW_BEFORE_BUILD: python scripts/build-ffmpeg.py /tmp/vendor --stage ${{ env.stage }}
-          CIBW_BUILD: cp38-*
+          CIBW_BUILD: cp39-*
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH auditwheel repair -w {dest_dir} {wheel}
           CIBW_SKIP: "*musllinux*"
           CIBW_TEST_COMMAND: python -c "import dummy"
