@@ -45,7 +45,9 @@ library_group = [
     Package(
         name="freetype",
         requires=["png"],
-        source_url="https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz",
+        # source_url="https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz",
+        # Real URL is unacceptably flakey.
+        source_url="https://pyav.basswood-io.com/mirror/freetype-2.10.1.tar.gz",
         build_arguments=["--with-harfbuzz=no"],
     ),
     Package(
