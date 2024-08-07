@@ -31,30 +31,10 @@ library_group = [
         build_dir=".",
     ),
     Package(
-        name="png",
-        source_url="http://deb.debian.org/debian/pool/main/libp/libpng1.6/libpng1.6_1.6.37.orig.tar.gz",
-        # avoid an assembler error on Windows
-        build_arguments=["PNG_COPTS=-fno-asynchronous-unwind-tables"],
-    ),
-    Package(
         name="xml2",
         requires=["xz"],
         source_url="https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz",
         build_arguments=["--without-python"],
-    ),
-    Package(
-        name="freetype",
-        requires=["png"],
-        # source_url="https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz",
-        # Real URL is unacceptably flakey.
-        source_url="https://pyav.basswood-io.com/mirror/freetype-2.10.1.tar.gz",
-        build_arguments=["--with-harfbuzz=no"],
-    ),
-    Package(
-        name="fontconfig",
-        requires=["freetype", "xml2"],
-        source_url="https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz",
-        build_arguments=["--disable-nls", "--enable-libxml2"],
     ),
 ]
 
@@ -105,12 +85,6 @@ codec_group = [
         build_parallel=False,
     ),
     Package(
-        name="bluray",
-        requires=["fontconfig"],
-        source_url="https://download.videolan.org/pub/videolan/libbluray/1.3.4/libbluray-1.3.4.tar.bz2",
-        build_arguments=["--disable-bdjava-jar"],
-    ),
-    Package(
         name="dav1d",
         requires=["meson", "nasm", "ninja"],
         source_url="https://code.videolan.org/videolan/dav1d/-/archive/1.4.1/dav1d-1.4.1.tar.bz2",
@@ -129,13 +103,6 @@ codec_group = [
         source_url="http://deb.debian.org/debian/pool/main/o/opencore-amr/opencore-amr_0.1.5.orig.tar.gz",
         # parallel build hangs on Windows
         build_parallel=plat != "Windows",
-    ),
-    Package(
-        name="openjpeg",
-        requires=["cmake"],
-        source_filename="openjpeg-2.5.2.tar.gz",
-        source_url="https://github.com/uclouvain/openjpeg/archive/v2.5.2.tar.gz",
-        build_system="cmake",
     ),
     Package(
         name="opus",
@@ -166,6 +133,12 @@ codec_group = [
             "--disable-tools",
             "--disable-unit-tests",
         ],
+    ),
+    Package(
+        name="png",
+        source_url="http://deb.debian.org/debian/pool/main/libp/libpng1.6/libpng1.6_1.6.37.orig.tar.gz",
+        # avoid an assembler error on Windows
+        build_arguments=["PNG_COPTS=-fno-asynchronous-unwind-tables"],
     ),
     Package(
         name="webp",
@@ -211,7 +184,7 @@ openh264 = Package(
 
 ffmpeg_package = Package(
     name="ffmpeg",
-    source_url="https://ffmpeg.org/releases/ffmpeg-7.0.1.tar.xz",
+    source_url="https://ffmpeg.org/releases/ffmpeg-7.0.2.tar.xz",
     build_arguments=[],
 )
 
@@ -253,7 +226,7 @@ def main():
     parser.add_argument(
         "--stage",
         default=None,
-        help="AArch64 build requires stage and possible values can be 1, 2 or 3",
+        help="AArch64 build requires stage and possible values can be 1, 2",
     )
     parser.add_argument("--disable-gpl", action="store_true")
     args = parser.parse_args()
@@ -266,7 +239,7 @@ def main():
     output_dir = os.path.abspath("output")
 
     # FFmpeg has native TLS backends for macOS and Windows
-    use_gnutls = plat == "Linux"
+    use_gnutls = False # plat == "Linux"
 
     if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
         output_dir = "/output"
@@ -330,18 +303,18 @@ def main():
         "--disable-alsa",
         "--disable-doc",
         "--disable-libtheora",
+        "--disable-libfreetype",
+        "--disable-libfontconfig",
+        "--disable-libbluray",
+        "--disable-libopenjpeg",
         "--enable-mediafoundation" if plat == "Windows" else "--disable-mediafoundation",
-        "--enable-fontconfig",
         "--enable-gmp",
         "--enable-gnutls" if use_gnutls else "--disable-gnutls",
         "--enable-libaom",
-        "--enable-libbluray",
         "--enable-libdav1d",
-        "--enable-libfreetype",
         "--enable-libmp3lame",
         "--enable-libopencore-amrnb",
         "--enable-libopencore-amrwb",
-        "--enable-libopenjpeg",
         "--enable-libopus",
         "--enable-libspeex",
         "--enable-libtwolame",
@@ -375,7 +348,7 @@ def main():
     if use_gnutls:
         library_group += gnutls_group
 
-    package_groups = [library_group, codec_group, [ffmpeg_package]]
+    package_groups = [library_group + codec_group, [ffmpeg_package]]
     if build_stage is not None:
         packages = package_groups[build_stage]
     else:
@@ -390,7 +363,7 @@ def main():
         else:
             builder.build(package)
 
-    if plat == "Windows" and (build_stage is None or build_stage == 2):
+    if plat == "Windows" and (build_stage is None or build_stage == 1):
         # fix .lib files being installed in the wrong directory
         for name in (
             "avcodec",
@@ -440,7 +413,7 @@ def main():
         run(["strip", "-s"] + libraries)
 
     # build output tarball
-    if build_stage is None or build_stage == 2:
+    if build_stage is None or build_stage == 1:
         os.makedirs(output_dir, exist_ok=True)
         run(["tar", "czvf", output_tarball, "-C", dest_dir, "bin", "include", "lib"])
 
