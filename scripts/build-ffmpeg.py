@@ -239,7 +239,7 @@ def main():
     output_dir = os.path.abspath("output")
 
     # FFmpeg has native TLS backends for macOS and Windows
-    use_gnutls = False # plat == "Linux"
+    use_gnutls = plat == "Linux"
 
     if plat == "Linux" and os.environ.get("CIBUILDWHEEL") == "1":
         output_dir = "/output"
