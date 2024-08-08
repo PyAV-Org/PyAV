@@ -153,6 +153,31 @@ class TestFilters(TestCase):
         self.assertEqual(out_frame.layout.name, "stereo")
         self.assertEqual(out_frame.sample_rate, 44100)
 
+    def test_audio_buffer_frame_size(self):
+        graph = Graph()
+        graph.link_nodes(
+            graph.add_abuffer(
+                format="fltp",
+                sample_rate=48000,
+                layout="stereo",
+                time_base=Fraction(1, 48000),
+            ),
+            graph.add("abuffersink"),
+        ).configure()
+        graph.set_audio_frame_size(256)
+        graph.push(
+            generate_audio_frame(
+                0,
+                input_format="fltp",
+                layout="stereo",
+                sample_rate=48000,
+                frame_size=1024,
+            )
+        )
+        out_frame = graph.pull()
+        self.assertEqual(out_frame.sample_rate, 48000)
+        self.assertEqual(out_frame.samples, 256)
+
     def test_audio_buffer_volume_filter(self):
         graph = Graph()
         graph.link_nodes(

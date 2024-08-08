@@ -1,5 +1,3 @@
-cimport libav as lib
-
 from av.filter.context cimport FilterContext
 
 import errno
@@ -95,7 +93,7 @@ cdef class AudioResampler:
             self.graph.configure()
 
             if self.frame_size > 0:
-                lib.av_buffersink_set_frame_size((<FilterContext>abuffersink).ptr, self.frame_size)
+                self.graph.set_audio_frame_size(self.frame_size)
 
         elif frame is not None:
             if (

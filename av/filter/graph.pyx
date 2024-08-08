@@ -171,6 +171,15 @@ cdef class Graph:
 
         return self.add("abuffer", name=name, **kwargs)
 
+    def set_audio_frame_size(self, frame_size):
+        if not self.configured:
+            raise ValueError("graph not configured")
+        sinks = self._context_by_type.get("abuffersink", [])
+        if not sinks:
+            raise ValueError("missing abuffersink filter")
+        for sink in sinks:
+            lib.av_buffersink_set_frame_size((<FilterContext>sink).ptr, frame_size)
+
     def push(self, frame):
         if frame is None:
             contexts = self._context_by_type.get("buffer", []) + self._context_by_type.get("abuffer", [])
