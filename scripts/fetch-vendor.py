@@ -42,20 +42,19 @@ logging.info(f"Creating directory {args.destination_dir}")
 if not os.path.exists(args.destination_dir):
     os.makedirs(args.destination_dir)
 
-for url_template in config["urls"]:
-    tarball_url = url_template.replace("{platform}", get_platform())
+tarball_url = config["url"].replace("{platform}", get_platform())
 
-    # download tarball
-    tarball_name = tarball_url.split("/")[-1]
-    tarball_file = os.path.join(args.cache_dir, tarball_name)
-    if not os.path.exists(tarball_file):
-        logging.info(f"Downloading {tarball_url}")
-        if not os.path.exists(args.cache_dir):
-            os.mkdir(args.cache_dir)
-        subprocess.check_call(
-            ["curl", "--location", "--output", tarball_file, "--silent", tarball_url]
-        )
+# download tarball
+tarball_name = tarball_url.split("/")[-1]
+tarball_file = os.path.join(args.cache_dir, tarball_name)
+if not os.path.exists(tarball_file):
+    logging.info(f"Downloading {tarball_url}")
+    if not os.path.exists(args.cache_dir):
+        os.mkdir(args.cache_dir)
+    subprocess.check_call(
+        ["curl", "--location", "--output", tarball_file, "--silent", tarball_url]
+    )
 
-    # extract tarball
-    logging.info(f"Extracting {tarball_name}")
-    subprocess.check_call(["tar", "-C", args.destination_dir, "-xf", tarball_file])
+# extract tarball
+logging.info(f"Extracting {tarball_name}")
+subprocess.check_call(["tar", "-C", args.destination_dir, "-xf", tarball_file])
