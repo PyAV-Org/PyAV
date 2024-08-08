@@ -172,6 +172,10 @@ cdef class Graph:
         return self.add("abuffer", name=name, **kwargs)
 
     def set_audio_frame_size(self, frame_size):
+        """
+        Set the audio frame size for the graphs `abuffersink`.
+        See `av_buffersink_set_frame_size <https://ffmpeg.org/doxygen/trunk/group__lavfi__buffersink.html#ga359d7d1e42c27ca14c07559d4e9adba7>`_.
+        """
         if not self.configured:
             raise ValueError("graph not configured")
         sinks = self._context_by_type.get("abuffersink", [])
