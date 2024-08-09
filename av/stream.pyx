@@ -1,5 +1,3 @@
-import warnings
-
 cimport libav as lib
 from libc.stdint cimport int32_t
 
@@ -12,9 +10,6 @@ from av.utils cimport (
     dict_to_avdict,
     to_avrational,
 )
-
-from av.deprecation import AVDeprecationWarning
-
 
 cdef object _cinit_bypass_sentinel = object()
 
@@ -96,9 +91,10 @@ cdef class Stream:
         )
 
     def __repr__(self):
+        name = getattr(self, "name", None)
         return (
             f"<av.{self.__class__.__name__} #{self.index} {self.type or '<notype>'}/"
-            f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
+            f"{name or '<nocodec>'} at 0x{id(self):x}>"
         )
 
     def __setattr__(self, name, value):
@@ -239,7 +235,7 @@ cdef class Stream:
 
         :type: :class:`str` or ``None``
         """
-        return self.metadata.get('language')
+        return self.metadata.get("language")
 
     @property
     def type(self):
