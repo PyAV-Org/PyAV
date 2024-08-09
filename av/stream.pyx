@@ -11,6 +11,7 @@ from av.utils cimport (
     to_avrational,
 )
 
+
 cdef object _cinit_bypass_sentinel = object()
 
 
@@ -42,6 +43,9 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContex
     elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
         from av.subtitles.stream import SubtitleStream
         py_stream = SubtitleStream.__new__(SubtitleStream, _cinit_bypass_sentinel)
+    elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
+        from av.attachments.stream import AttachmentStream
+        py_stream = AttachmentStream.__new__(AttachmentStream, _cinit_bypass_sentinel)
     elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA:
         from av.data.stream import DataStream
         py_stream = DataStream.__new__(DataStream, _cinit_bypass_sentinel)
