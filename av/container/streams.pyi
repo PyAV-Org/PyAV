@@ -1,5 +1,6 @@
 from typing import Iterator, overload
 
+from av.attachments.stream import AttachmentStream
 from av.audio.stream import AudioStream
 from av.data.stream import DataStream
 from av.stream import Stream
@@ -10,6 +11,7 @@ class StreamContainer:
     video: tuple[VideoStream, ...]
     audio: tuple[AudioStream, ...]
     subtitles: tuple[SubtitleStream, ...]
+    attachments: tuple[AttachmentStream, ...]
     data: tuple[DataStream, ...]
     other: tuple[Stream, ...]
 

@@ -9,6 +9,7 @@ cdef class StreamContainer:
     cdef readonly tuple video
     cdef readonly tuple audio
     cdef readonly tuple subtitles
+    cdef readonly tuple attachments
     cdef readonly tuple data
     cdef readonly tuple other
 
