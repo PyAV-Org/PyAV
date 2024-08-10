@@ -12,7 +12,6 @@ def _flatten(input_):
 
 
 cdef class StreamContainer:
-
     """
 
     A tuple-like container of :class:`Stream`.
@@ -33,6 +32,7 @@ cdef class StreamContainer:
         self.audio = ()
         self.subtitles = ()
         self.data = ()
+        self.attachments = ()
         self.other = ()
 
     cdef add_stream(self, Stream stream):
@@ -46,6 +46,8 @@ cdef class StreamContainer:
             self.audio = self.audio + (stream, )
         elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
             self.subtitles = self.subtitles + (stream, )
+        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
+            self.attachments = self.attachments + (stream, )
         elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA:
             self.data = self.data + (stream, )
         else:

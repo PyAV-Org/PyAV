@@ -1,4 +1,8 @@
+from typing import Literal
+
 from av.stream import Stream
 
 class AttachmentStream(Stream):
-    pass
+    type: Literal["attachment"]
+    @property
+    def mimetype(self) -> str | None: ...
