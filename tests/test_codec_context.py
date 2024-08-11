@@ -1,5 +1,4 @@
 import os
-import warnings
 from fractions import Fraction
 from unittest import SkipTest
 
@@ -89,29 +88,17 @@ class TestCodecContext(TestCase):
     def test_decoder_gop_size(self):
         ctx = av.codec.Codec("h264", "r").create()
 
-        with warnings.catch_warnings(record=True) as captured:
-            self.assertIsInstance(ctx.gop_size, int)
-            self.assertEqual(
-                captured[0].message.args[0],
-                "Using VideoCodecContext.gop_size for decoders is deprecated.",
-            )
+        with self.assertRaises(RuntimeError):
+            ctx.gop_size
 
-    def test_decoder_timebase(self):
+    def test_decoder_timebase(self) -> None:
         ctx = av.codec.Codec("h264", "r").create()
 
-        with warnings.catch_warnings(record=True) as captured:
-            self.assertIsNone(ctx.time_base)
-            self.assertEqual(
-                captured[0].message.args[0],
-                "Using CodecContext.time_base for decoders is deprecated.",
-            )
+        with self.assertRaises(RuntimeError):
+            ctx.time_base
 
-        with warnings.catch_warnings(record=True) as captured:
+        with self.assertRaises(RuntimeError):
             ctx.time_base = Fraction(1, 25)
-            self.assertEqual(
-                captured[0].message.args[0],
-                "Using CodecContext.time_base for decoders is deprecated.",
-            )
 
     def test_encoder_extradata(self):
         ctx = av.codec.Codec("h264", "w").create()

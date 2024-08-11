@@ -8,10 +8,6 @@ from av.utils cimport check_ndarray, check_ndarray_shape
 from av.video.format cimport get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
 
-import warnings
-
-from av.deprecation import AVDeprecationWarning
-
 
 cdef object _cinit_bypass_sentinel
 
@@ -574,10 +570,3 @@ cdef class VideoFrame(Frame):
         copy_array_to_plane(array, frame.planes[0], 1 if array.ndim == 2 else array.shape[2])
 
         return frame
-
-    def __getattribute__(self, attribute):
-        # This method should be deleted when `frame.index` is removed
-        if attribute == "index":
-            warnings.warn("Using `frame.index` is deprecated.", AVDeprecationWarning)
-
-        return Frame.__getattribute__(self, attribute)

@@ -1,5 +1,3 @@
-import warnings
-
 cimport libav as lib
 from libc.stdint cimport int64_t
 
@@ -10,8 +8,6 @@ from av.utils cimport avrational_to_fraction, to_avrational
 from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
-
-from av.deprecation import AVDeprecationWarning
 
 
 cdef class VideoCodecContext(CodecContext):
@@ -161,19 +157,13 @@ cdef class VideoCodecContext(CodecContext):
         :type: int
         """
         if self.is_decoder:
-            warnings.warn(
-                "Using VideoCodecContext.gop_size for decoders is deprecated.",
-                AVDeprecationWarning
-            )
+            raise RuntimeError("Cannnot access 'gop_size' as a decoder")
         return self.ptr.gop_size
 
     @gop_size.setter
     def gop_size(self, int value):
         if self.is_decoder:
-            warnings.warn(
-                "Using VideoCodecContext.gop_size for decoders is deprecated.",
-                AVDeprecationWarning
-            )
+            raise RuntimeError("Cannnot access 'gop_size' as a decoder")
         self.ptr.gop_size = value
 
     @property
