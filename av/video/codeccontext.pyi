@@ -8,7 +8,7 @@ from .format import VideoFormat
 from .frame import VideoFrame
 
 class VideoCodecContext(CodecContext):
-    format: VideoFormat
+    format: VideoFormat | None
     width: int
     height: int
     bits_per_codec_sample: int

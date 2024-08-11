@@ -34,6 +34,9 @@ cdef class VideoCodecContext(CodecContext):
 
         cdef VideoFrame vframe = input
 
+        if self._format is None:
+            raise ValueError("self._format is None, cannot encode")
+
         # Reformat if it doesn't match.
         if (
             vframe.format.pix_fmt != self._format.pix_fmt or
@@ -42,11 +45,9 @@ cdef class VideoCodecContext(CodecContext):
         ):
             if not self.reformatter:
                 self.reformatter = VideoReformatter()
+
             vframe = self.reformatter.reformat(
-                vframe,
-                self.ptr.width,
-                self.ptr.height,
-                self._format,
+                vframe, self.ptr.width, self.ptr.height, self._format
             )
 
         # There is no pts, so create one.
@@ -121,9 +122,9 @@ cdef class VideoCodecContext(CodecContext):
         """
         The pixel format's name.
 
-        :type: str
+        :type: str | None
         """
-        return self._format.name
+        return getattr(self._format, "name")
 
     @pix_fmt.setter
     def pix_fmt(self, value):
