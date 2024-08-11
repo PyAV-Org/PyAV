@@ -146,7 +146,9 @@ cdef class StreamContainer:
 
     def best(self, str type, /, Stream related = None):
         """best(type: Literal["video", "audio", "subtitle", "attachment", "data"], /, related: Stream | None)
-        Finds the "best" stream in the file. Wraps :ffmpeg:`av_find_best_stream`
+        Finds the "best" stream in the file. Wraps :ffmpeg:`av_find_best_stream`. Example::
+
+            stream = container.streams.best("video")
 
         :param type: The type of stream to find
         :param related: A related stream to use as a reference (optional)
