@@ -1,8 +1,11 @@
+cimport libav as lib
+
 from av.stream cimport Stream
+
+from .core cimport Container
 
 
 cdef class StreamContainer:
-
     cdef list _streams
 
     # For the different types.
@@ -14,3 +17,5 @@ cdef class StreamContainer:
     cdef readonly tuple other
 
     cdef add_stream(self, Stream stream)
+    cdef int _get_best_stream_index(self, Container container, lib.AVMediaType type_enum, Stream related) noexcept
+
