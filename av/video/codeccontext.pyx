@@ -120,7 +120,7 @@ cdef class VideoCodecContext(CodecContext):
 
         :type: str | None
         """
-        return getattr(self._format, "name")
+        return getattr(self._format, "name", None)
 
     @pix_fmt.setter
     def pix_fmt(self, value):
