@@ -49,13 +49,18 @@ git clone https://github.com/PyAV-Org/PyAV.git
 cd PyAV
 source scripts/activate.sh
 
-# Either install the testing dependencies:
-pip install --upgrade -r tests/requirements.txt
-# or have it all, including FFmpeg, built/installed for you:
+# Build ffmpeg from source. You can skip this step
+# if ffmpeg is already installed.
 ./scripts/build-deps
 
-# Build PyAV.
+# Build PyAV
 make
+
+# Testing
+make test
+
+# Install globally
+deactivate
 pip install .
 ```
 
