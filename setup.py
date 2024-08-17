@@ -210,16 +210,13 @@ setup(
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
     url="https://github.com/PyAV-Org/PyAV",
-    packages=find_packages(
-        exclude=["build*", "examples*", "scratchpad*", "tests*", "include*"]
-    )
+    packages=find_packages(exclude=["build*", "examples*", "tests*", "include*"])
     + list(package_dir.keys()),
     package_dir=package_dir,
     package_data=package_data,
     python_requires=">=3.9",
     zip_safe=False,
     ext_modules=ext_modules,
-    test_suite="tests",
     entry_points={
         "console_scripts": ["pyav = av.__main__:main"],
     },
