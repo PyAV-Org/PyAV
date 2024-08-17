@@ -72,7 +72,7 @@ jobs:
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: numpy
           # skip tests when there are no binary wheels of numpy
-          CIBW_TEST_SKIP: pp* *_i686
+          CIBW_TEST_SKIP: pp* *_i686 cp313-win_amd64
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
