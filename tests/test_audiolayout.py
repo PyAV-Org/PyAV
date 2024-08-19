@@ -13,10 +13,13 @@ class TestAudioLayout(TestCase):
         layout2 = AudioLayout(layout)
         self._test_stereo(layout2)
 
-    def _test_stereo(self, layout):
+    def _test_stereo(self, layout: AudioLayout) -> None:
         self.assertEqual(layout.name, "stereo")
         self.assertEqual(layout.nb_channels, 2)
         self.assertEqual(repr(layout), "<av.AudioLayout 'stereo'>")
+
+        # Re-enable when FFmpeg 6.0 is dropped.
+
         # self.assertEqual(layout.channels[0].name, "FL")
         # self.assertEqual(layout.channels[0].description, "front left")
         # self.assertEqual(

@@ -27,6 +27,21 @@ FFMPEG_LIBRARIES = [
 old_embed_signature = EmbedSignature._embed_signature
 
 
+def insert_enum_in_generated_files(source):
+    # Work around Cython failing to add `enum` to `AVChannel` type.
+    # TODO: Make Cython bug report
+    if source.endswith(".c"):
+        with open(source, "r") as file:
+            content = file.read()
+
+        # Replace "AVChannel __pyx_v_channel;" with "enum AVChannel __pyx_v_channel;"
+        modified_content = re.sub(
+            r"\b(?<!enum\s)(AVChannel\s+__pyx_v_\w+;)", r"enum \1", content
+        )
+        with open(source, "w") as file:
+            file.write(modified_content)
+
+
 def new_embed_signature(self, sig, doc):
     # Strip any `self` parameters from the front.
     sig = re.sub(r"\(self(,\s+)?", "(", sig)
@@ -172,6 +187,9 @@ for dirname, dirnames, filenames in os.walk("av"):
             include_path=["include"],
         )
 
+for ext in ext_modules:
+    for cfile in ext.sources:
+        insert_enum_in_generated_files(cfile)
 
 # Read package metadata
 about = {}

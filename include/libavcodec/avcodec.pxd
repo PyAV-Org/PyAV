@@ -42,6 +42,9 @@ cdef extern from "libavutil/channel_layout.h":
     void av_channel_layout_uninit(AVChannelLayout *channel_layout)
     int av_channel_layout_copy(AVChannelLayout *dst, const AVChannelLayout *src)
     int av_channel_layout_describe(const AVChannelLayout *channel_layout, char *buf, size_t buf_size)
+    int av_channel_name(char *buf, size_t buf_size, AVChannel channel_id)
+    int av_channel_description(char *buf, size_t buf_size, AVChannel channel_id)
+    AVChannel av_channel_layout_channel_from_index(AVChannelLayout *channel_layout, unsigned int idx)
 
 
 cdef extern from "libavcodec/avcodec.h" nogil:

@@ -1,5 +1,16 @@
 cimport libav as lib
+from cpython.bytes cimport PyBytes_FromStringAndSize
 
+from dataclasses import dataclass
+
+
+@dataclass
+class AudioChannel:
+    name: str
+    description: str
+
+    def __repr__(self):
+        return f"<av.AudioChannel '{self.name}' ({self.description})>"
 
 cdef object _cinit_bypass_sentinel
 
@@ -40,9 +51,30 @@ cdef class AudioLayout:
         return self.layout.nb_channels
 
     @property
-    def name(self):
+    def channels(self):
+        cdef lib.AVChannel channel
+        cdef char buf[16]
+        cdef char buf2[128]
+
+        results = []
+
+        for index in range(self.layout.nb_channels):
+            channel = lib.av_channel_layout_channel_from_index(&self.layout, index);
+            size = lib.av_channel_name(buf, sizeof(buf), channel) - 1
+            size2 = lib.av_channel_description(buf2, sizeof(buf2), channel) - 1
+            results.append(
+                AudioChannel(
+                    PyBytes_FromStringAndSize(buf, size).decode("utf-8"),
+                    PyBytes_FromStringAndSize(buf2, size2).decode("utf-8"),
+                )
+            )
+
+        return tuple(results)
+
+    @property
+    def name(self) -> str:
         """The canonical name of the audio layout."""
-        cdef char layout_name[128]  # Adjust buffer size as needed
+        cdef char layout_name[128]
         cdef int ret
 
         ret = lib.av_channel_layout_describe(&self.layout, layout_name, sizeof(layout_name))
