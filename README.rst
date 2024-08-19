@@ -14,26 +14,22 @@ The builds are provided for several platforms:
 Features
 --------
 
-Currently FFmpeg 6.1.1 is built with the following packages enabled for all platforms:
+Currently FFmpeg 7.0.2 is built with the following packages enabled for all platforms:
 
-- fontconfig 2.15.0
-- freetype 2.10.1
 - gmp 6.3.0
-- png 1.6.37
 - xml2 2.9.13
 - xz 5.4.4
 - aom 3.2.0
-- bluray 1.3.4
 - dav1d 1.4.1
 - lame 3.100
 - ogg 1.3.5
 - opencore-amr 0.1.5
-- openjpeg 2.5.2
 - opus 1.4
 - speex 1.2.1
 - twolame 0.4.0
 - vorbis 1.3.7
 - vpx 1.14.0
+- png 1.6.37
 - webp 1.4.0
 - x264 master
 - x265 3.5
