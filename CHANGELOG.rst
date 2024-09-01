@@ -16,6 +16,29 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v13.0.0
+-------
+
+Major:
+
+- Drop FFmpeg 5, Support FFmpeg 7.
+- Drop Python 3.8, Support Python 3.13.
+- Update FFmpeg to 7.0.2 for the binary wheels.
+- Disallow initializing an AudioLayout object with an int.
+- Disallow accessing gop_size, timebase as a decoder (Raised deprecation warning before).
+- Remove `ticks_per_frame` property because it was deprecated in FFmpeg.
+
+Features:
+
+- Add AttachmentStream class.
+- Add `best()` method to StreamContainer.
+- Add `set_audio_frame_size()` method to Graph object.
+- Add `nb_channels` property to AudioLayout object.
+
+Fixes:
+
+- Fix VideoCC's repl breaking when `self._format` is None.
+- Fix getting `pix_fmt` property when VideoCC's `self._format` is None.
 
 v12.3.0
 -------
