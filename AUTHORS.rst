@@ -48,12 +48,14 @@ All contributors (by number of commits):
 * mephi42 <mephi42@gmail.com>
 * Miles Kaufmann <mkfmnn@gmail.com>
 * Pablo Prietz <pablo@prietz.org>
+* Andrew Wason <rectalogic@rectalogic.com>
 * Radek Senfeld <rush@logic.cz>; `@radek-senfeld <https://github.com/radek-senfeld>`_
 * Benjamin Chrétien <2742231+bchretien@users.noreply.github.com>
 * Marc Mueller <30130371+cdce8p@users.noreply.github.com>
 * zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
 * Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
+* Dexer <73297572+DexerBR@users.noreply.github.com>
 * Artturin <Artturin@artturin.com>
 * Ian Lee <IanLee1521@gmail.com>
 * Ryan Huang <NPN@users.noreply.github.com>
