@@ -34,6 +34,7 @@ Features:
 - Add `best()` method to StreamContainer.
 - Add `set_audio_frame_size()` method to Graph object.
 - Add `nb_channels` property to AudioLayout object.
+- Add `from_bytes()` method to VideoFrame object.
 
 Fixes:
 

@@ -68,7 +68,7 @@ class VideoFrame(Frame):
         data: bytes,
         width: int,
         height: int,
-        format="rgba",
-        flip_horizontal=False,
-        flip_vertical=False,
+        format: str = "rgba",
+        flip_horizontal: bool = False,
+        flip_vertical: bool = False,
     ) -> VideoFrame: ...
