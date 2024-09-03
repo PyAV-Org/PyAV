@@ -60,16 +60,13 @@ jobs:
           ubuntu-latest)
             sudo apt-get update
             sudo apt-get install autoconf automake build-essential cmake \
-              libtool mercurial pkg-config texinfo wget yasm zlib1g-dev
-            sudo apt-get install libass-dev libfreetype6-dev libjpeg-dev \
-              libtheora-dev libvorbis-dev libx264-dev
+              libtool pkg-config yasm zlib1g-dev libvorbis-dev libx264-dev
             if [[ "${{ matrix.config.extras }}" ]]; then
-              sudo apt-get install doxygen
+              sudo apt-get install doxygen wget
             fi
             ;;
           macos-12)
-            brew install automake libtool nasm pkg-config shtool texi2html wget
-            brew install libass libjpeg libpng libvorbis libvpx opus theora x264
+            brew install automake libtool nasm pkg-config libpng libvorbis libvpx opus x264
             ;;
         esac
 
