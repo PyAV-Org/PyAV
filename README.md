@@ -1,11 +1,11 @@
 PyAV
 ====
 
-[![GitHub Test Status][github-tests-badge]][github-tests]
-[![Gitter Chat][gitter-badge]][gitter] [![Documentation][docs-badge]][docs] \
-[![Python Package Index][pypi-badge]][pypi] [![Conda Forge][conda-badge]][conda]
-
 PyAV is a Pythonic binding for the [FFmpeg][ffmpeg] libraries. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
+
+---
+
+[![GitHub Test Status][github-tests-badge]][github-tests] [![Documentation][docs-badge]][docs] [![Python Package Index][pypi-badge]][pypi] [![Conda Forge][conda-badge]][conda]
 
 PyAV is for direct and precise access to your media via containers, streams, packets, codecs, and frames. It exposes a few transformations of that data, and helps you get your data to/from other packages (e.g. Numpy and Pillow).
 
@@ -66,7 +66,7 @@ pip install .
 
 ---
 
-Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
+Have fun, [read the docs][docs], [come chat with us][discuss], and good luck!
 
 
 
@@ -74,10 +74,9 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [conda]: https://anaconda.org/conda-forge/av
 [docs-badge]: https://img.shields.io/badge/docs-on%20pyav.basswood--io.com-blue.svg
 [docs]: https://pyav.basswood-io.com
-[gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
-[gitter]: https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
 [pypi]: https://pypi.org/project/av
+[discuss]: https://github.com/PyAV-Org/PyAV/discussions
 
 [github-tests-badge]: https://github.com/PyAV-Org/PyAV/workflows/tests/badge.svg
 [github-tests]: https://github.com/PyAV-Org/PyAV/actions?workflow=tests
