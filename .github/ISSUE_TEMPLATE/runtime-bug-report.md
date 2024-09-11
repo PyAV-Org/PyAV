@@ -2,7 +2,6 @@
 name: Runtime bug report
 about: Report on an issue while running PyAV.
 title: "The FOO does not BAR."
-labels: bug
 assignees: ''
 
 ---
@@ -47,10 +46,8 @@ Traceback:
 ```
 {{ Complete output of `python -m av --version`. If this command won't run, you are likely dealing with the build issue and should use the appropriate template. }}
 ```
-- PyAV build:
-```
-{{ Complete output of `python setup.py config --verbose`. }}
-```
+- [ ] I am/tried using the binary wheels
+- [ ] I compiled from source
 
 ## Research
 
