@@ -2,7 +2,6 @@
 name: FFmpeg feature request
 about: Request a feature of FFmpeg be exposed or supported by PyAV.
 title: "Allow FOO to BAR"
-labels: enhancement
 assignees: ''
 
 ---
@@ -51,11 +50,6 @@ Example:
 ```
 {{ Complete output of `python setup.py config --verbose`. }}
 ```
-- FFmpeg:
-```
-{{ Complete output of `ffmpeg -version` }}
-```
-
 
 ## Additional context
 
