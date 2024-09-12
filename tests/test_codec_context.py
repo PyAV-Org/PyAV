@@ -105,9 +105,9 @@ class TestCodecContext(TestCase):
         self.assertEqual(ctx.extradata, None)
         self.assertEqual(ctx.extradata_size, 0)
 
-        with self.assertRaises(ValueError) as cm:
-            ctx.extradata = b"123"
-        self.assertEqual(str(cm.exception), "Can only set extradata for decoders.")
+        ctx.extradata = b"123"
+        self.assertEqual(ctx.extradata, b"123")
+        self.assertEqual(ctx.extradata_size, 3)
 
     def test_encoder_pix_fmt(self):
         ctx = av.codec.Codec("h264", "w").create()
