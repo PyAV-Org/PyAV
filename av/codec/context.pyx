@@ -189,9 +189,6 @@ cdef class CodecContext:
 
     @extradata.setter
     def extradata(self, data):
-        if not self.is_decoder:
-            raise ValueError("Can only set extradata for decoders.")
-
         if data is None:
             lib.av_freep(&self.ptr.extradata)
             self.ptr.extradata_size = 0
