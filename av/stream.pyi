@@ -1,7 +1,7 @@
 from fractions import Fraction
 from typing import Literal
 
-from .codec import CodecContext
+from .codec import Codec, CodecContext
 from .container import Container
 from .enum import EnumItem
 from .frame import Frame
@@ -15,6 +15,7 @@ class Stream:
     thread_type: Literal["NONE", "FRAME", "SLICE", "AUTO"]
 
     container: Container
+    codec: Codec
     codec_context: CodecContext
     metadata: dict[str, str]
     id: int

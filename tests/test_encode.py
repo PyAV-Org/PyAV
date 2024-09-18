@@ -1,7 +1,6 @@
 import io
 import math
 from fractions import Fraction
-from typing import cast
 from unittest import SkipTest
 
 import numpy as np
@@ -27,7 +26,7 @@ def write_rgb_rotate(output: av.container.OutputContainer) -> None:
     output.metadata["title"] = "container"
     output.metadata["key"] = "value"
 
-    stream = cast(VideoStream, output.add_stream("mpeg4", 24))
+    stream = output.add_stream("mpeg4", 24)
     stream.width = WIDTH
     stream.height = HEIGHT
     stream.pix_fmt = "yuv420p"
@@ -66,15 +65,13 @@ def write_rgb_rotate(output: av.container.OutputContainer) -> None:
         output.mux(packet)
 
 
-def assert_rgb_rotate(self, input_, is_dash=False):
+def assert_rgb_rotate(
+    self, input_: av.container.InputContainer, is_dash: bool = False
+) -> None:
     # Now inspect it a little.
     self.assertEqual(len(input_.streams), 1)
     if is_dash:
-        # FFmpeg 4.2 added parsing of the programme information and it is named "Title"
-        if av.library_versions["libavformat"] >= (58, 28):
-            self.assertTrue(
-                input_.metadata.get("Title") == "container", input_.metadata
-            )
+        self.assertTrue(input_.metadata.get("Title") == "container", input_.metadata)
     else:
         self.assertEqual(input_.metadata.get("title"), "container", input_.metadata)
     self.assertEqual(input_.metadata.get("key"), None)
@@ -90,19 +87,14 @@ def assert_rgb_rotate(self, input_, is_dash=False):
         expected_frames = 0
         expected_id = 0
     else:
-        if av.library_versions["libavformat"] < (58, 76):
-            # FFmpeg < 4.4
-            expected_average_rate = Fraction(1152, 47)
-            expected_duration = 24064
-        else:
-            # FFmpeg >= 4.4
-            expected_average_rate = 24
-            expected_duration = 24576
+        expected_average_rate = 24
+        expected_duration = 24576
         expected_frames = 48
         expected_id = 1
 
     # actual stream properties
     self.assertIsInstance(stream, VideoStream)
+    assert isinstance(stream, VideoStream)
     self.assertEqual(stream.average_rate, expected_average_rate)
     self.assertEqual(stream.base_rate, 24)
     self.assertEqual(stream.duration, expected_duration)
@@ -124,7 +116,7 @@ def assert_rgb_rotate(self, input_, is_dash=False):
 
 
 class TestBasicVideoEncoding(TestCase):
-    def test_default_options(self):
+    def test_default_options(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mpeg4")
             self.assertIn(stream, output.streams.video)
