@@ -2,6 +2,7 @@ cimport libav as lib
 
 from av.bytesource cimport bytesource
 from av.error cimport err_check
+from av.opaque cimport opaque_container
 from av.utils cimport avrational_to_fraction, to_avrational
 
 
@@ -207,7 +208,7 @@ cdef class Packet(Buffer):
             self.ptr.flags &= ~(lib.AV_PKT_FLAG_CORRUPT)
 
     @property
-    def is_discard(self): 
+    def is_discard(self):
         return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISCARD)
 
     @property
@@ -217,4 +218,17 @@ cdef class Packet(Buffer):
     @property
     def is_disposable(self):
         return bool(self.ptr.flags & lib.AV_PKT_FLAG_DISPOSABLE)
+
+    @property
+    def opaque(self):
+        if self.ptr.opaque_ref is not NULL:
+            return opaque_container.get(<char *> self.ptr.opaque_ref.data)
+
+    @opaque.setter
+    def opaque(self, v):
+        lib.av_buffer_unref(&self.ptr.opaque_ref)
+
+        if v is None:
+            return
+        self.ptr.opaque_ref = opaque_container.add(v)
 
