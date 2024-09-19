@@ -69,6 +69,14 @@ Flags = define_enum("Flags", __name__, (
     ("DROPCHANGED", 1 << 5,
         "Don't output frames whose parameters differ from first decoded frame in stream."
     ),
+    ("RECON_FRAME", lib.AV_CODEC_FLAG_RECON_FRAME, "Request the encoder to output reconstructed frames, i.e. frames that would be produced by decoding the encoded bistream."),
+    ("COPY_OPAQUE", lib.AV_CODEC_FLAG_COPY_OPAQUE,
+        """Request the decoder to propagate each packet's AVPacket.opaque and AVPacket.opaque_ref
+        to its corresponding output AVFrame. Request the encoder to propagate each frame's
+        AVFrame.opaque and AVFrame.opaque_ref values to its corresponding output AVPacket."""),
+    ("FRAME_DURATION", lib.AV_CODEC_FLAG_FRAME_DURATION,
+        """Signal to the encoder that the values of AVFrame.duration are valid and should be
+        used (typically for transferring them to output packets)."""),
     ("PASS1", lib.AV_CODEC_FLAG_PASS1, "Use internal 2pass ratecontrol in first pass mode."),
     ("PASS2", lib.AV_CODEC_FLAG_PASS2, "Use internal 2pass ratecontrol in second pass mode."),
     ("LOOP_FILTER", lib.AV_CODEC_FLAG_LOOP_FILTER, "loop filter."),
@@ -150,6 +158,9 @@ cdef class CodecContext:
     output_corrupt = flags.flag_property("OUTPUT_CORRUPT")
     qpel = flags.flag_property("QPEL")
     drop_changed = flags.flag_property("DROPCHANGED")
+    recon_frame = flags.flag_property("RECON_FRAME")
+    copy_opaque = flags.flag_property("COPY_OPAQUE")
+    frame_duration = flags.flag_property("FRAME_DURATION")
     pass1 = flags.flag_property("PASS1")
     pass2 = flags.flag_property("PASS2")
     loop_filter = flags.flag_property("LOOP_FILTER")

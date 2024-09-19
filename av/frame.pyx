@@ -1,4 +1,5 @@
 from av.error cimport err_check
+from av.opaque cimport opaque_container
 from av.utils cimport avrational_to_fraction, to_avrational
 
 from av.sidedata.sidedata import SideDataContainer
@@ -146,3 +147,16 @@ cdef class Frame:
 
         ret = lib.av_frame_make_writable(self.ptr)
         err_check(ret)
+
+    @property
+    def opaque(self):
+        if self.ptr.opaque_ref is not NULL:
+            return opaque_container.get(<char *> self.ptr.opaque_ref.data)
+
+    @opaque.setter
+    def opaque(self, v):
+        lib.av_buffer_unref(&self.ptr.opaque_ref)
+
+        if v is None:
+            return
+        self.ptr.opaque_ref = opaque_container.add(v)

@@ -99,6 +99,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG_OUTPUT_CORRUPT
         AV_CODEC_FLAG_QPEL
         AV_CODEC_FLAG_DROPCHANGED
+        AV_CODEC_FLAG_RECON_FRAME
+        AV_CODEC_FLAG_COPY_OPAQUE
+        AV_CODEC_FLAG_FRAME_DURATION
         AV_CODEC_FLAG_PASS1
         AV_CODEC_FLAG_PASS2
         AV_CODEC_FLAG_LOOP_FILTER
@@ -392,6 +395,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         uint8_t **base
         void *opaque
+        AVBufferRef *opaque_ref
         AVDictionary *metadata
         int flags
         int decode_error_flags
@@ -415,6 +419,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int duration
 
         int64_t pos
+
+        void *opaque
+        AVBufferRef *opaque_ref
+
 
     cdef int avcodec_fill_audio_frame(
         AVFrame *frame,
