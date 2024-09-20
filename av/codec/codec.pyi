@@ -43,6 +43,7 @@ class Capabilities(EnumFlag):
 class UnknownCodecError(ValueError): ...
 
 class Codec:
+    is_encoder: bool
     is_decoder: bool
     descriptor: Descriptor
     name: str
@@ -55,8 +56,9 @@ class Codec:
     audio_formats: list[AudioFormat] | None
     properties: Properties
     capabilities: Capabilities
+    delay: bool
 
-    def __init__(self, name: str, mode: Literal["r", "w"]) -> None: ...
+    def __init__(self, name: str, mode: Literal["r", "w"] = "r") -> None: ...
     def create(self) -> CodecContext: ...
 
 class codec_descriptor:
