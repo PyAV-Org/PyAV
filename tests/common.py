@@ -57,7 +57,7 @@ def fate_png():
     return fate_suite("png1/55c99e750a5fd6_50314226.png")
 
 
-def sandboxed(*args, **kwargs):
+def sandboxed(*args, **kwargs) -> str:
     do_makedirs = kwargs.pop("makedirs", True)
     base = kwargs.pop("sandbox", None)
     timed = kwargs.pop("timed", False)
@@ -114,16 +114,16 @@ class MethodLogger:
 
 class TestCase(_Base):
     @classmethod
-    def _sandbox(cls, timed=True):
+    def _sandbox(cls, timed: bool = True) -> str:
         path = os.path.join(_sandbox(timed=timed), cls.__name__)
         makedirs(path)
         return path
 
     @property
-    def sandbox(self):
+    def sandbox(self) -> str:
         return self._sandbox(timed=True)
 
-    def sandboxed(self, *args, **kwargs):
+    def sandboxed(self, *args, **kwargs) -> str:
         kwargs.setdefault("sandbox", self.sandbox)
         kwargs.setdefault("timed", True)
         return sandboxed(*args, **kwargs)
