@@ -220,8 +220,8 @@ class TestBasicAudioEncoding(TestCase):
             )
             self.assertEqual(container.metadata.get("key"), None)
 
+            assert isinstance(container.streams[0], AudioStream)
             stream = container.streams[0]
-            self.assertIsInstance(stream, AudioStream)
 
             # codec context properties
             self.assertEqual(stream.format.name, "s16p")
