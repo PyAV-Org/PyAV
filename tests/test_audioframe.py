@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 
 from av import AudioFrame
 
@@ -76,114 +76,112 @@ class TestAudioFrameConveniences(TestCase):
     def test_basic_to_ndarray(self) -> None:
         frame = AudioFrame(format="s16p", layout="stereo", samples=160)
         array = frame.to_ndarray()
-        self.assertEqual(array.dtype, "i2")
-        self.assertEqual(array.shape, (2, 160))
+        assert array.dtype == "i2"
+        assert array.shape == (2, 160)
 
-    def test_ndarray_dbl(self):
+    def test_ndarray_dbl(self) -> None:
         layouts = [
-            ("dbl", "mono", "f8", (1, 160)),
-            ("dbl", "stereo", "f8", (1, 320)),
-            ("dblp", "mono", "f8", (1, 160)),
-            ("dblp", "stereo", "f8", (2, 160)),
+            ("dbl", "mono", (1, 160)),
+            ("dbl", "stereo", (1, 320)),
+            ("dblp", "mono", (1, 160)),
+            ("dblp", "stereo", (2, 160)),
         ]
-        for format, layout, dtype, size in layouts:
-            array = numpy.ndarray(shape=size, dtype=dtype)
+        for format, layout, size in layouts:
+            array = np.zeros(shape=size, dtype="f8")
             for i in range(size[0]):
-                array[i][:] = numpy.random.rand(size[1])
+                array[i][:] = np.random.rand(size[1])
             frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
-            self.assertEqual(frame.format.name, format)
-            self.assertEqual(frame.layout.name, layout)
-            self.assertEqual(frame.samples, 160)
+            assert frame.format.name == format
+            assert frame.layout.name == layout
+            assert frame.samples == 160
             self.assertNdarraysEqual(frame.to_ndarray(), array)
 
-    def test_from_ndarray_value_error(self):
+    def test_from_ndarray_value_error(self) -> None:
         # incorrect dtype
-        array = numpy.ndarray(shape=(1, 160), dtype="f2")
+        array = np.zeros(shape=(1, 160), dtype="f2")
         with self.assertRaises(ValueError) as cm:
             AudioFrame.from_ndarray(array, format="flt", layout="mono")
-        self.assertEqual(
-            str(cm.exception),
-            "Expected numpy array with dtype `float32` but got `float16`",
+        assert (
+            str(cm.exception)
+            == "Expected numpy array with dtype `float32` but got `float16`"
         )
 
         # incorrect number of dimensions
-        array = numpy.ndarray(shape=(1, 160, 2), dtype="f4")
+        array = np.zeros(shape=(1, 160, 2), dtype="f4")
         with self.assertRaises(ValueError) as cm:
             AudioFrame.from_ndarray(array, format="flt", layout="mono")
-        self.assertEqual(
-            str(cm.exception), "Expected numpy array with ndim `2` but got `3`"
-        )
+        assert str(cm.exception) == "Expected numpy array with ndim `2` but got `3`"
 
         # incorrect shape
-        array = numpy.ndarray(shape=(2, 160), dtype="f4")
+        array = np.zeros(shape=(2, 160), dtype="f4")
         with self.assertRaises(ValueError) as cm:
             AudioFrame.from_ndarray(array, format="flt", layout="mono")
-        self.assertEqual(str(cm.exception), "Unexpected numpy array shape `(2, 160)`")
+        assert str(cm.exception) == "Unexpected numpy array shape `(2, 160)`"
 
-    def test_ndarray_flt(self):
+    def test_ndarray_flt(self) -> None:
         layouts = [
-            ("flt", "mono", "f4", (1, 160)),
-            ("flt", "stereo", "f4", (1, 320)),
-            ("fltp", "mono", "f4", (1, 160)),
-            ("fltp", "stereo", "f4", (2, 160)),
+            ("flt", "mono", (1, 160)),
+            ("flt", "stereo", (1, 320)),
+            ("fltp", "mono", (1, 160)),
+            ("fltp", "stereo", (2, 160)),
         ]
-        for format, layout, dtype, size in layouts:
-            array = numpy.ndarray(shape=size, dtype=dtype)
+        for format, layout, size in layouts:
+            array: np.ndarray = np.zeros(shape=size, dtype="f4")
             for i in range(size[0]):
-                array[i][:] = numpy.random.rand(size[1])
+                array[i][:] = np.random.rand(size[1])
             frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
-            self.assertEqual(frame.format.name, format)
-            self.assertEqual(frame.layout.name, layout)
-            self.assertEqual(frame.samples, 160)
+            assert frame.format.name == format
+            assert frame.layout.name == layout
+            assert frame.samples == 160
             self.assertNdarraysEqual(frame.to_ndarray(), array)
 
-    def test_ndarray_s16(self):
+    def test_ndarray_s16(self) -> None:
         layouts = [
-            ("s16", "mono", "i2", (1, 160)),
-            ("s16", "stereo", "i2", (1, 320)),
-            ("s16p", "mono", "i2", (1, 160)),
-            ("s16p", "stereo", "i2", (2, 160)),
+            ("s16", "mono", (1, 160)),
+            ("s16", "stereo", (1, 320)),
+            ("s16p", "mono", (1, 160)),
+            ("s16p", "stereo", (2, 160)),
         ]
-        for format, layout, dtype, size in layouts:
-            array = numpy.random.randint(0, 256, size=size, dtype=dtype)
+        for format, layout, size in layouts:
+            array = np.random.randint(0, 256, size=size, dtype="i2")
             frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
-            self.assertEqual(frame.format.name, format)
-            self.assertEqual(frame.layout.name, layout)
-            self.assertEqual(frame.samples, 160)
+            assert frame.format.name == format
+            assert frame.layout.name == layout
+            assert frame.samples == 160
             self.assertNdarraysEqual(frame.to_ndarray(), array)
 
-    def test_ndarray_s16p_align_8(self):
+    def test_ndarray_s16p_align_8(self) -> None:
         frame = AudioFrame(format="s16p", layout="stereo", samples=159, align=8)
         array = frame.to_ndarray()
-        self.assertEqual(array.dtype, "i2")
-        self.assertEqual(array.shape, (2, 159))
+        assert array.dtype == "i2"
+        assert array.shape == (2, 159)
 
-    def test_ndarray_s32(self):
+    def test_ndarray_s32(self) -> None:
         layouts = [
-            ("s32", "mono", "i4", (1, 160)),
-            ("s32", "stereo", "i4", (1, 320)),
-            ("s32p", "mono", "i4", (1, 160)),
-            ("s32p", "stereo", "i4", (2, 160)),
+            ("s32", "mono", (1, 160)),
+            ("s32", "stereo", (1, 320)),
+            ("s32p", "mono", (1, 160)),
+            ("s32p", "stereo", (2, 160)),
         ]
-        for format, layout, dtype, size in layouts:
-            array = numpy.random.randint(0, 256, size=size, dtype=dtype)
+        for format, layout, size in layouts:
+            array = np.random.randint(0, 256, size=size, dtype="i4")
             frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
-            self.assertEqual(frame.format.name, format)
-            self.assertEqual(frame.layout.name, layout)
-            self.assertEqual(frame.samples, 160)
+            assert frame.format.name == format
+            assert frame.layout.name == layout
+            assert frame.samples == 160
             self.assertNdarraysEqual(frame.to_ndarray(), array)
 
-    def test_ndarray_u8(self):
+    def test_ndarray_u8(self) -> None:
         layouts = [
-            ("u8", "mono", "u1", (1, 160)),
-            ("u8", "stereo", "u1", (1, 320)),
-            ("u8p", "mono", "u1", (1, 160)),
-            ("u8p", "stereo", "u1", (2, 160)),
+            ("u8", "mono", (1, 160)),
+            ("u8", "stereo", (1, 320)),
+            ("u8p", "mono", (1, 160)),
+            ("u8p", "stereo", (2, 160)),
         ]
-        for format, layout, dtype, size in layouts:
-            array = numpy.random.randint(0, 256, size=size, dtype=dtype)
+        for format, layout, size in layouts:
+            array = np.random.randint(0, 256, size=size, dtype="u1")
             frame = AudioFrame.from_ndarray(array, format=format, layout=layout)
-            self.assertEqual(frame.format.name, format)
-            self.assertEqual(frame.layout.name, layout)
-            self.assertEqual(frame.samples, 160)
+            assert frame.format.name == format
+            assert frame.layout.name == layout
+            assert frame.samples == 160
             self.assertNdarraysEqual(frame.to_ndarray(), array)
