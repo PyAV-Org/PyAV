@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from fractions import Fraction
 from unittest import SkipTest
@@ -8,12 +10,6 @@ from av.codec.codec import UnknownCodecError
 from av.video.frame import PictureType
 
 from .common import TestCase, fate_suite
-
-
-def iter_frames(container, stream):
-    for packet in container.demux(stream):
-        for frame in packet.decode():
-            yield frame
 
 
 def iter_raw_frames(path, packet_sizes, ctx):
@@ -27,6 +23,7 @@ def iter_raw_frames(path, packet_sizes, ctx):
                 break
             for frame in ctx.decode(packet):
                 yield frame
+
         while True:
             try:
                 frames = ctx.decode(None)
@@ -177,20 +174,20 @@ class TestCodecContext(TestCase):
 
 
 class TestEncoding(TestCase):
-    def test_encoding_png(self):
+    def test_encoding_png(self) -> None:
         self.image_sequence_encode("png")
 
-    def test_encoding_mjpeg(self):
+    def test_encoding_mjpeg(self) -> None:
         self.image_sequence_encode("mjpeg")
 
-    def test_encoding_tiff(self):
+    def test_encoding_tiff(self) -> None:
         self.image_sequence_encode("tiff")
 
-    def image_sequence_encode(self, codec_name):
+    def image_sequence_encode(self, codec_name: str) -> None:
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
-            raise SkipTest()
+            raise SkipTest(f"Unknown codec: {codec_name}")
 
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = container.streams.video[0]
@@ -198,19 +195,22 @@ class TestEncoding(TestCase):
         width = 640
         height = 480
 
-        ctx = codec.create()
+        ctx = codec.create("video")
 
+        assert ctx.codec.video_formats
         pix_fmt = ctx.codec.video_formats[0].name
 
         ctx.width = width
         ctx.height = height
+
+        assert video_stream.time_base is not None
         ctx.time_base = video_stream.time_base
         ctx.pix_fmt = pix_fmt
         ctx.open()
 
         frame_count = 1
         path_list = []
-        for frame in iter_frames(container, video_stream):
+        for frame in container.decode(video_stream):
             new_frame = frame.reformat(width, height, pix_fmt)
             new_packets = ctx.encode(new_frame)
 
@@ -232,7 +232,7 @@ class TestEncoding(TestCase):
             if frame_count > 5:
                 break
 
-        ctx = av.Codec(codec_name, "r").create()
+        ctx = av.Codec(codec_name, "r").create("video")
 
         for path in path_list:
             with open(path, "rb") as f:
@@ -275,7 +275,7 @@ class TestEncoding(TestCase):
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
-            raise SkipTest()
+            raise SkipTest(f"Unknown codec: {codec_name}")
 
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = container.streams.video[0]
@@ -299,12 +299,12 @@ class TestEncoding(TestCase):
             ctx.codec_tag = codec_tag
         ctx.open()
 
-        path = self.sandboxed("encoder.%s" % codec_name)
+        path = self.sandboxed(f"encoder.{codec_name}")
         packet_sizes = []
         frame_count = 0
 
         with open(path, "wb") as f:
-            for frame in iter_frames(container, video_stream):
+            for frame in container.decode(video_stream):
                 new_frame = frame.reformat(width, height, pix_fmt)
 
                 # reset the picture type
@@ -357,40 +357,42 @@ class TestEncoding(TestCase):
         final_gop_size = decoded_frame_count - max(keyframe_indices)
         self.assertLessEqual(final_gop_size, gop_size)
 
-    def test_encoding_pcm_s24le(self):
+    def test_encoding_pcm_s24le(self) -> None:
         self.audio_encoding("pcm_s24le")
 
-    def test_encoding_aac(self):
+    def test_encoding_aac(self) -> None:
         self.audio_encoding("aac")
 
-    def test_encoding_mp2(self):
+    def test_encoding_mp2(self) -> None:
         self.audio_encoding("mp2")
 
-    maxDiff = None
-
-    def audio_encoding(self, codec_name):
+    def audio_encoding(self, codec_name: str) -> None:
         self._audio_encoding(codec_name=codec_name, channel_layout="stereo")
         self._audio_encoding(
             codec_name=codec_name, channel_layout=AudioLayout("stereo")
         )
 
-    def _audio_encoding(self, *, codec_name, channel_layout):
+    def _audio_encoding(
+        self, *, codec_name: str, channel_layout: str | AudioLayout
+    ) -> None:
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
-            raise SkipTest()
+            raise SkipTest(f"Unknown codec: {codec_name}")
 
-        ctx = codec.create()
+        ctx = codec.create(kind="audio")
+
         if ctx.codec.experimental:
-            raise SkipTest()
+            raise SkipTest(f"Experimental codec: {codec_name}")
 
+        assert ctx.codec.audio_formats
         sample_fmt = ctx.codec.audio_formats[-1].name
         sample_rate = 48000
 
         ctx.time_base = Fraction(1) / sample_rate
         ctx.sample_rate = sample_rate
-        ctx.format = sample_fmt
-        ctx.layout = channel_layout
+        ctx.format = sample_fmt  # type: ignore
+        ctx.layout = channel_layout  # type: ignore
 
         ctx.open()
 
@@ -399,32 +401,32 @@ class TestEncoding(TestCase):
         container = av.open(fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav"))
         audio_stream = container.streams.audio[0]
 
-        path = self.sandboxed("encoder.%s" % codec_name)
+        path = self.sandboxed(f"encoder.{codec_name}")
 
         samples = 0
         packet_sizes = []
 
         with open(path, "wb") as f:
-            for frame in iter_frames(container, audio_stream):
+            for frame in container.decode(audio_stream):
                 resampled_frames = resampler.resample(frame)
                 for resampled_frame in resampled_frames:
-                    self.assertEqual(resampled_frame.time_base, Fraction(1, 48000))
+                    assert resampled_frame.time_base == Fraction(1, 48000)
                     samples += resampled_frame.samples
 
                     for packet in ctx.encode(resampled_frame):
-                        self.assertEqual(packet.time_base, Fraction(1, 48000))
+                        assert packet.time_base == Fraction(1, 48000)
                         packet_sizes.append(packet.size)
                         f.write(packet)
 
             for packet in ctx.encode(None):
-                self.assertEqual(packet.time_base, Fraction(1, 48000))
+                assert packet.time_base == Fraction(1, 48000)
                 packet_sizes.append(packet.size)
                 f.write(packet)
 
-        ctx = Codec(codec_name, "r").create()
+        ctx = Codec(codec_name, "r").create("audio")
         ctx.sample_rate = sample_rate
-        ctx.format = sample_fmt
-        ctx.layout = channel_layout
+        ctx.format = sample_fmt  # type: ignore
+        ctx.layout = channel_layout  # type: ignore
         ctx.open()
 
         result_samples = 0

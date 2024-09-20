@@ -60,6 +60,7 @@ class CodecContext:
     is_encoder: bool
     is_decoder: bool
     name: str
+    codec: Codec
     options: dict[str, str]
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
     profile: str | None
