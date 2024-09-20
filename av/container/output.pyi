@@ -1,6 +1,7 @@
 from fractions import Fraction
 from typing import Literal, Sequence, overload
 
+from av.audio.layout import AudioLayout
 from av.audio.stream import AudioStream
 from av.packet import Packet
 from av.stream import Stream
@@ -17,6 +18,7 @@ class OutputContainer(Container):
         rate: Fraction | int | float | None = None,
         template: None = None,
         options: dict[str, str] | None = None,
+        **kwargs,
     ) -> AudioStream: ...
     @overload
     def add_stream(
@@ -25,6 +27,7 @@ class OutputContainer(Container):
         rate: Fraction | int | float | None = None,
         template: None = None,
         options: dict[str, str] | None = None,
+        **kwargs,
     ) -> VideoStream: ...
     @overload
     def add_stream(
@@ -33,6 +36,7 @@ class OutputContainer(Container):
         rate: Fraction | int | float | None = None,
         template: Stream | None = None,
         options: dict[str, str] | None = None,
+        **kwargs,
     ) -> Stream: ...
     def start_encoding(self) -> None: ...
     def close(self) -> None: ...

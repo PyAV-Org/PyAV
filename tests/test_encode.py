@@ -132,7 +132,7 @@ class TestBasicVideoEncoding(TestCase):
             self.assertEqual(stream.pix_fmt, "yuv420p")
             self.assertEqual(stream.width, 640)
 
-    def test_encoding(self):
+    def test_encoding(self) -> None:
         path = self.sandboxed("rgb_rotate.mov")
 
         with av.open(path, "w") as output:
@@ -140,7 +140,7 @@ class TestBasicVideoEncoding(TestCase):
         with av.open(path) as input:
             assert_rgb_rotate(self, input)
 
-    def test_encoding_with_pts(self):
+    def test_encoding_with_pts(self) -> None:
         path = self.sandboxed("video_with_pts.mov")
 
         with av.open(path, "w") as output:
@@ -163,7 +163,7 @@ class TestBasicVideoEncoding(TestCase):
                 self.assertEqual(packet.time_base, Fraction(1, 24))
                 output.mux(packet)
 
-    def test_encoding_with_unicode_filename(self):
+    def test_encoding_with_unicode_filename(self) -> None:
         path = self.sandboxed("¢∞§¶•ªº.mov")
 
         with av.open(path, "w") as output:
@@ -173,7 +173,7 @@ class TestBasicVideoEncoding(TestCase):
 
 
 class TestBasicAudioEncoding(TestCase):
-    def test_default_options(self):
+    def test_default_options(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
             self.assertIn(stream, output.streams.audio)
@@ -184,7 +184,7 @@ class TestBasicAudioEncoding(TestCase):
             self.assertEqual(stream.format.name, "s16")
             self.assertEqual(stream.sample_rate, 48000)
 
-    def test_transcode(self):
+    def test_transcode(self) -> None:
         path = self.sandboxed("audio_transcode.mov")
 
         with av.open(path, "w") as output:
@@ -199,10 +199,9 @@ class TestBasicAudioEncoding(TestCase):
             self.assertIn(stream, output.streams.audio)
 
             ctx = stream.codec_context
-            ctx.time_base = sample_rate
             ctx.sample_rate = sample_rate
-            ctx.format = sample_fmt
-            ctx.layout = channel_layout
+            stream.format = sample_fmt  # type: ignore
+            ctx.layout = channel_layout  # type: ignore
 
             with av.open(
                 fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav")
@@ -230,7 +229,7 @@ class TestBasicAudioEncoding(TestCase):
 
 
 class TestEncodeStreamSemantics(TestCase):
-    def test_stream_index(self):
+    def test_stream_index(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             vstream = output.add_stream("mpeg4", 24)
             self.assertIn(vstream, output.streams.video)
@@ -240,8 +239,8 @@ class TestEncodeStreamSemantics(TestCase):
 
             astream = output.add_stream("mp2", 48000)
             self.assertIn(astream, output.streams.audio)
-            astream.layout = "stereo"
-            astream.format = "s16"
+            astream.layout = "stereo"  # type: ignore
+            astream.format = "s16"  # type: ignore
 
             self.assertEqual(vstream.index, 0)
             self.assertEqual(astream.index, 1)
@@ -268,7 +267,7 @@ class TestEncodeStreamSemantics(TestCase):
             self.assertIs(apacket.stream, astream)
             self.assertEqual(apacket.stream_index, 1)
 
-    def test_stream_audio_resample(self):
+    def test_stream_audio_resample(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             vstream = output.add_stream("mpeg4", 24)
             vstream.pix_fmt = "yuv420p"
@@ -299,7 +298,7 @@ class TestEncodeStreamSemantics(TestCase):
                 self.assertEqual(apacket.pts, pts_expected.pop(0))
                 self.assertEqual(apacket.time_base, Fraction(1, 8000))
 
-    def test_set_id_and_time_base(self):
+    def test_set_id_and_time_base(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
             self.assertIn(stream, output.streams.audio)
@@ -315,7 +314,7 @@ class TestEncodeStreamSemantics(TestCase):
             self.assertEqual(stream.time_base, Fraction(1, 48000))
 
 
-def encode_file_with_max_b_frames(max_b_frames):
+def encode_file_with_max_b_frames(max_b_frames: int) -> io.BytesIO:
     """
     Create an encoded video file (or file-like object) with the given
     maximum run of B frames.
@@ -354,7 +353,7 @@ def encode_file_with_max_b_frames(max_b_frames):
     return file
 
 
-def max_b_frame_run_in_file(file):
+def max_b_frame_run_in_file(file: io.BytesIO) -> int:
     """
     Count the maximum run of B frames in a file (or file-like object).
 
@@ -363,18 +362,17 @@ def max_b_frame_run_in_file(file):
 
     Returns: non-negative integer which is the maximum B frame run length.
     """
-    container = av.open(file)
+    container = av.open(file, "r")
     stream = container.streams.video[0]
 
     max_b_frame_run = 0
     b_frame_run = 0
-    for packet in container.demux(stream):
-        for frame in packet.decode():
-            if frame.pict_type == av.video.frame.PictureType.B:
-                b_frame_run += 1
-            else:
-                max_b_frame_run = max(max_b_frame_run, b_frame_run)
-                b_frame_run = 0
+    for frame in container.decode(stream):
+        if frame.pict_type == av.video.frame.PictureType.B:
+            b_frame_run += 1
+        else:
+            max_b_frame_run = max(max_b_frame_run, b_frame_run)
+            b_frame_run = 0
 
     # Outside chance that the longest run was at the end of the file.
     max_b_frame_run = max(max_b_frame_run, b_frame_run)
@@ -385,7 +383,7 @@ def max_b_frame_run_in_file(file):
 
 
 class TestMaxBFrameEncoding(TestCase):
-    def test_max_b_frames(self):
+    def test_max_b_frames(self) -> None:
         """
         Test that we never get longer runs of B frames than we asked for with
         the max_b_frames property.
