@@ -27,6 +27,7 @@ class VideoStream(Stream):
     rate: Fraction
     gop_size: int
     has_b_frames: bool
+    max_b_frames: int
     coded_width: int
     coded_height: int
     color_range: int
