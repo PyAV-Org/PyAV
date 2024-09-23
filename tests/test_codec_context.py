@@ -266,7 +266,7 @@ class TestEncoding(TestCase):
             "pix_fmt": "yuv422p",
             "width": 1920,
             "height": 1080,
-            "time_base": "1001/30000",
+            "time_base": Fraction(1001, 30_000),
             "max_frames": 5,
         }
         self.video_encoding("dnxhd", options)

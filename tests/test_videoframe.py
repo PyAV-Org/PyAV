@@ -1,3 +1,4 @@
+from fractions import Fraction
 from unittest import SkipTest
 
 import numpy
@@ -595,7 +596,7 @@ class TestVideoFrameTiming(TestCase):
     def test_reformat_pts(self):
         frame = VideoFrame(640, 480, "rgb24")
         frame.pts = 123
-        frame.time_base = "456/1"  # Just to be different.
+        frame.time_base = Fraction("456/1")
         frame = frame.reformat(320, 240)
         self.assertEqual(frame.pts, 123)
         self.assertEqual(frame.time_base, 456)
