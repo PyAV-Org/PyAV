@@ -1,12 +1,13 @@
 from fractions import Fraction
 
+import av
 from av import AudioFrame, AudioResampler
 
 from .common import TestCase
 
 
 class TestAudioResampler(TestCase):
-    def test_flush_immediately(self):
+    def test_flush_immediately(self) -> None:
         """
         If we flush the resampler before passing any input, it returns
         a `None` frame without setting up the graph.
@@ -18,7 +19,7 @@ class TestAudioResampler(TestCase):
         oframes = resampler.resample(None)
         self.assertEqual(len(oframes), 0)
 
-    def test_identity_passthrough(self):
+    def test_identity_passthrough(self) -> None:
         """
         If we don't ask it to do anything, it won't.
         """
@@ -37,13 +38,13 @@ class TestAudioResampler(TestCase):
 
         oframes = resampler.resample(iframe)
         self.assertEqual(len(oframes), 1)
-        self.assertIs(iframe, oframes[0])
+        assert iframe is oframes[0]
 
         # flush
         oframes = resampler.resample(None)
         self.assertEqual(len(oframes), 0)
 
-    def test_matching_passthrough(self):
+    def test_matching_passthrough(self) -> None:
         """
         If the frames match, it won't do anything.
         """
@@ -68,9 +69,7 @@ class TestAudioResampler(TestCase):
         oframes = resampler.resample(None)
         self.assertEqual(len(oframes), 0)
 
-    def test_pts_assertion_same_rate(self):
-        import av
-
+    def test_pts_assertion_same_rate(self) -> None:
         av.logging.set_level(av.logging.VERBOSE)
         resampler = AudioResampler("s16", "mono")
 
@@ -117,13 +116,13 @@ class TestAudioResampler(TestCase):
         self.assertEqual(len(oframes), 0)
         av.logging.set_level(None)
 
-    def test_pts_assertion_new_rate_up(self):
+    def test_pts_assertion_new_rate_up(self) -> None:
         resampler = AudioResampler("s16", "mono", 44100)
 
         # resample one frame
         iframe = AudioFrame("s16", "stereo", 1024)
         iframe.sample_rate = 48000
-        iframe.time_base = "1/48000"
+        iframe.time_base = Fraction(1, 48000)
         iframe.pts = 0
 
         oframes = resampler.resample(iframe)
@@ -137,7 +136,7 @@ class TestAudioResampler(TestCase):
 
         iframe = AudioFrame("s16", "stereo", 1024)
         iframe.sample_rate = 48000
-        iframe.time_base = "1/48000"
+        iframe.time_base = Fraction(1, 48000)
         iframe.pts = 1024
 
         oframes = resampler.resample(iframe)
@@ -159,13 +158,13 @@ class TestAudioResampler(TestCase):
         self.assertEqual(oframe.sample_rate, 44100)
         self.assertEqual(oframe.samples, 15)
 
-    def test_pts_assertion_new_rate_down(self):
+    def test_pts_assertion_new_rate_down(self) -> None:
         resampler = AudioResampler("s16", "mono", 48000)
 
         # resample one frame
         iframe = AudioFrame("s16", "stereo", 1024)
         iframe.sample_rate = 44100
-        iframe.time_base = "1/44100"
+        iframe.time_base = Fraction(1, 44100)
         iframe.pts = 0
 
         oframes = resampler.resample(iframe)
@@ -179,7 +178,7 @@ class TestAudioResampler(TestCase):
 
         iframe = AudioFrame("s16", "stereo", 1024)
         iframe.sample_rate = 44100
-        iframe.time_base = "1/44100"
+        iframe.time_base = Fraction(1, 44100)
         iframe.pts = 1024
 
         oframes = resampler.resample(iframe)
@@ -201,13 +200,13 @@ class TestAudioResampler(TestCase):
         self.assertEqual(oframe.sample_rate, 48000)
         self.assertEqual(oframe.samples, 18)
 
-    def test_pts_assertion_new_rate_fltp(self):
+    def test_pts_assertion_new_rate_fltp(self) -> None:
         resampler = AudioResampler("fltp", "mono", 8000, 1024)
 
         # resample one frame
         iframe = AudioFrame("s16", "mono", 1024)
         iframe.sample_rate = 8000
-        iframe.time_base = "1/1000"
+        iframe.time_base = Fraction(1, 1000)
         iframe.pts = 0
 
         oframes = resampler.resample(iframe)
@@ -221,7 +220,7 @@ class TestAudioResampler(TestCase):
 
         iframe = AudioFrame("s16", "mono", 1024)
         iframe.sample_rate = 8000
-        iframe.time_base = "1/1000"
+        iframe.time_base = Fraction(1, 1000)
         iframe.pts = 8192
 
         oframes = resampler.resample(iframe)
@@ -237,7 +236,7 @@ class TestAudioResampler(TestCase):
         oframes = resampler.resample(None)
         self.assertEqual(len(oframes), 0)
 
-    def test_pts_missing_time_base(self):
+    def test_pts_missing_time_base(self) -> None:
         resampler = AudioResampler("s16", "mono", 44100)
 
         # resample one frame
@@ -263,7 +262,7 @@ class TestAudioResampler(TestCase):
         self.assertEqual(oframe.sample_rate, 44100)
         self.assertEqual(oframe.samples, 16)
 
-    def test_mismatched_input(self):
+    def test_mismatched_input(self) -> None:
         """
         Consecutive frames must have the same layout, sample format and sample rate.
         """
@@ -279,6 +278,5 @@ class TestAudioResampler(TestCase):
         iframe.sample_rate = 48000
         with self.assertRaises(ValueError) as cm:
             resampler.resample(iframe)
-        self.assertEqual(
-            str(cm.exception), "Frame does not match AudioResampler setup."
-        )
+
+        assert str(cm.exception) == "Frame does not match AudioResampler setup."

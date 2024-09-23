@@ -47,17 +47,7 @@ cdef object avrational_to_fraction(const lib.AVRational *input):
         return Fraction(input.num, input.den)
 
 
-cdef object to_avrational(object value, lib.AVRational *input):
-    if value is None:
-        input.num = 0
-        input.den = 1
-        return
-
-    if isinstance(value, Fraction):
-        frac = value
-    else:
-        frac = Fraction(value)
-
+cdef void to_avrational(object frac, lib.AVRational *input):
     input.num = frac.numerator
     input.den = frac.denominator
 
