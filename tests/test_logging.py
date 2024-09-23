@@ -14,8 +14,8 @@ def do_log(message):
 
 class TestLogging(TestCase):
     def test_adapt_level(self):
-        self.assertEqual(av.logging.adapt_level(av.logging.ERROR), logging.ERROR)
-        self.assertEqual(av.logging.adapt_level(av.logging.WARNING), logging.WARNING)
+        assert av.logging.adapt_level(av.logging.ERROR) == logging.ERROR
+        assert av.logging.adapt_level(av.logging.WARNING) == logging.WARNING
         self.assertEqual(
             av.logging.adapt_level((av.logging.WARNING + av.logging.ERROR) // 2),
             logging.WARNING,
@@ -80,7 +80,7 @@ class TestLogging(TestCase):
         try:
             av.error.err_check(-errno.EPERM)
         except OSError as e:
-            self.assertEqual(e.log, log)
+            assert e.log == log
         else:
             self.fail()
 

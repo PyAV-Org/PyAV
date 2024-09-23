@@ -69,7 +69,7 @@ def assert_rgb_rotate(
     self, input_: av.container.InputContainer, is_dash: bool = False
 ) -> None:
     # Now inspect it a little.
-    self.assertEqual(len(input_.streams), 1)
+    assert len(input_.streams) == 1
     if is_dash:
         self.assertTrue(input_.metadata.get("Title") == "container", input_.metadata)
     else:
@@ -81,7 +81,7 @@ def assert_rgb_rotate(
     if is_dash:
         # The DASH format doesn't provide a duration for the stream
         # and so the container duration (micro seconds) is checked instead
-        self.assertEqual(input_.duration, 2000000)
+        assert input_.duration == 2000000
         expected_average_rate = 24
         expected_duration = None
         expected_frames = 0
@@ -95,24 +95,24 @@ def assert_rgb_rotate(
     # actual stream properties
     self.assertIsInstance(stream, VideoStream)
     assert isinstance(stream, VideoStream)
-    self.assertEqual(stream.average_rate, expected_average_rate)
-    self.assertEqual(stream.base_rate, 24)
-    self.assertEqual(stream.duration, expected_duration)
-    self.assertEqual(stream.guessed_rate, 24)
-    self.assertEqual(stream.frames, expected_frames)
-    self.assertEqual(stream.id, expected_id)
-    self.assertEqual(stream.index, 0)
-    self.assertEqual(stream.profile, "Simple Profile")
-    self.assertEqual(stream.start_time, 0)
-    self.assertEqual(stream.time_base, Fraction(1, 12288))
-    self.assertEqual(stream.type, "video")
+    assert stream.average_rate == expected_average_rate
+    assert stream.base_rate == 24
+    assert stream.duration == expected_duration
+    assert stream.guessed_rate == 24
+    assert stream.frames == expected_frames
+    assert stream.id == expected_id
+    assert stream.index == 0
+    assert stream.profile == "Simple Profile"
+    assert stream.start_time == 0
+    assert stream.time_base == Fraction(1, 12288)
+    assert stream.type == "video"
 
     # codec context properties
-    self.assertEqual(stream.codec.name, "mpeg4")
-    self.assertEqual(stream.codec.long_name, "MPEG-4 part 2")
-    self.assertEqual(stream.format.name, "yuv420p")
-    self.assertEqual(stream.format.width, WIDTH)
-    self.assertEqual(stream.format.height, HEIGHT)
+    assert stream.codec.name == "mpeg4"
+    assert stream.codec.long_name == "MPEG-4 part 2"
+    assert stream.format.name == "yuv420p"
+    assert stream.format.width == WIDTH
+    assert stream.format.height == HEIGHT
 
 
 class TestBasicVideoEncoding(TestCase):
@@ -120,17 +120,17 @@ class TestBasicVideoEncoding(TestCase):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mpeg4")
             self.assertIn(stream, output.streams.video)
-            self.assertEqual(stream.average_rate, Fraction(24, 1))
-            self.assertEqual(stream.time_base, None)
+            assert stream.average_rate == Fraction(24, 1)
+            assert stream.time_base is None
 
             # codec context properties
-            self.assertEqual(stream.bit_rate, 1024000)
-            self.assertEqual(stream.format.height, 480)
-            self.assertEqual(stream.format.name, "yuv420p")
-            self.assertEqual(stream.format.width, 640)
-            self.assertEqual(stream.height, 480)
-            self.assertEqual(stream.pix_fmt, "yuv420p")
-            self.assertEqual(stream.width, 640)
+            assert stream.bit_rate == 1024000
+            assert stream.format.height == 480
+            assert stream.format.name == "yuv420p"
+            assert stream.format.width == 640
+            assert stream.height == 480
+            assert stream.pix_fmt == "yuv420p"
+            assert stream.width == 640
 
     def test_encoding(self) -> None:
         path = self.sandboxed("rgb_rotate.mov")
@@ -156,11 +156,11 @@ class TestBasicVideoEncoding(TestCase):
                 frame.time_base = Fraction(1, 48000)
 
                 for packet in stream.encode(frame):
-                    self.assertEqual(packet.time_base, Fraction(1, 24))
+                    assert packet.time_base == Fraction(1, 24)
                     output.mux(packet)
 
             for packet in stream.encode(None):
-                self.assertEqual(packet.time_base, Fraction(1, 24))
+                assert packet.time_base == Fraction(1, 24)
                 output.mux(packet)
 
     def test_encoding_with_unicode_filename(self) -> None:
@@ -177,12 +177,12 @@ class TestBasicAudioEncoding(TestCase):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
             self.assertIn(stream, output.streams.audio)
-            self.assertEqual(stream.time_base, None)
+            assert stream.time_base is None
 
             # codec context properties
-            self.assertEqual(stream.bit_rate, 128000)
-            self.assertEqual(stream.format.name, "s16")
-            self.assertEqual(stream.sample_rate, 48000)
+            assert stream.bit_rate == 128000
+            assert stream.format.name == "s16"
+            assert stream.sample_rate == 48000
 
     def test_transcode(self) -> None:
         path = self.sandboxed("audio_transcode.mov")
@@ -214,18 +214,18 @@ class TestBasicAudioEncoding(TestCase):
                 output.mux(packet)
 
         with av.open(path) as container:
-            self.assertEqual(len(container.streams), 1)
+            assert len(container.streams) == 1
             self.assertEqual(
                 container.metadata.get("title"), "container", container.metadata
             )
-            self.assertEqual(container.metadata.get("key"), None)
+            assert container.metadata.get("key") is None
 
             assert isinstance(container.streams[0], AudioStream)
             stream = container.streams[0]
 
             # codec context properties
-            self.assertEqual(stream.format.name, "s16p")
-            self.assertEqual(stream.sample_rate, sample_rate)
+            assert stream.format.name == "s16p"
+            assert stream.sample_rate == sample_rate
 
 
 class TestEncodeStreamSemantics(TestCase):
@@ -242,14 +242,14 @@ class TestEncodeStreamSemantics(TestCase):
             astream.layout = "stereo"  # type: ignore
             astream.format = "s16"  # type: ignore
 
-            self.assertEqual(vstream.index, 0)
-            self.assertEqual(astream.index, 1)
+            assert vstream.index == 0
+            assert astream.index == 1
 
             vframe = VideoFrame(320, 240, "yuv420p")
             vpacket = vstream.encode(vframe)[0]
 
             self.assertIs(vpacket.stream, vstream)
-            self.assertEqual(vpacket.stream_index, 0)
+            assert vpacket.stream_index == 0
 
             for i in range(10):
                 if astream.frame_size != 0:
@@ -265,7 +265,7 @@ class TestEncodeStreamSemantics(TestCase):
                     break
 
             self.assertIs(apacket.stream, astream)
-            self.assertEqual(apacket.stream_index, 1)
+            assert apacket.stream_index == 1
 
     def test_stream_audio_resample(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
@@ -289,14 +289,14 @@ class TestEncodeStreamSemantics(TestCase):
                 apackets = astream.encode(aframe)
                 if apackets:
                     apacket = apackets[0]
-                    self.assertEqual(apacket.pts, pts_expected.pop(0))
-                    self.assertEqual(apacket.time_base, Fraction(1, 8000))
+                    assert apacket.pts == pts_expected.pop(0)
+                    assert apacket.time_base == Fraction(1, 8000)
 
             apackets = astream.encode(None)
             if apackets:
                 apacket = apackets[0]
-                self.assertEqual(apacket.pts, pts_expected.pop(0))
-                self.assertEqual(apacket.time_base, Fraction(1, 8000))
+                assert apacket.pts == pts_expected.pop(0)
+                assert apacket.time_base == Fraction(1, 8000)
 
     def test_set_id_and_time_base(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
@@ -304,14 +304,14 @@ class TestEncodeStreamSemantics(TestCase):
             self.assertIn(stream, output.streams.audio)
 
             # set id
-            self.assertEqual(stream.id, 0)
+            assert stream.id == 0
             stream.id = 1
-            self.assertEqual(stream.id, 1)
+            assert stream.id == 1
 
             # set time_base
-            self.assertEqual(stream.time_base, None)
+            assert stream.time_base is None
             stream.time_base = Fraction(1, 48000)
-            self.assertEqual(stream.time_base, Fraction(1, 48000))
+            assert stream.time_base == Fraction(1, 48000)
 
 
 def encode_file_with_max_b_frames(max_b_frames: int) -> io.BytesIO:

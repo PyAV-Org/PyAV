@@ -47,7 +47,7 @@ class TestSeek(TestCase):
         for packet in container.demux():
             seek_packet_count += 1
 
-        self.assertEqual(total_packet_count, seek_packet_count)
+        assert total_packet_count == seek_packet_count
 
     def test_seek_middle(self):
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
@@ -84,8 +84,8 @@ class TestSeek(TestCase):
             seek_packet_count += 1
 
         # there should be some packet because we're seeking to the last keyframe
-        self.assertTrue(seek_packet_count > 0)
-        self.assertTrue(seek_packet_count < middle_packet_count)
+        assert seek_packet_count > 0
+        assert seek_packet_count < middle_packet_count
 
     def test_decode_half(self):
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
@@ -98,7 +98,7 @@ class TestSeek(TestCase):
             for frame in packet.decode():
                 total_frame_count += 1
 
-        self.assertEqual(video_stream.frames, total_frame_count)
+        assert video_stream.frames == total_frame_count
 
         # set target frame to middle frame
         target_frame = int(total_frame_count / 2.0)
@@ -123,7 +123,7 @@ class TestSeek(TestCase):
                 if current_frame is not None and current_frame >= target_frame:
                     frame_count += 1
 
-        self.assertEqual(frame_count, total_frame_count - target_frame)
+        assert frame_count == total_frame_count - target_frame
 
     def test_stream_seek(self):
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
@@ -160,7 +160,7 @@ class TestSeek(TestCase):
                 if current_frame is not None and current_frame >= target_frame:
                     frame_count += 1
 
-        self.assertEqual(frame_count, total_frame_count - target_frame)
+        assert frame_count == total_frame_count - target_frame
 
 
 if __name__ == "__main__":

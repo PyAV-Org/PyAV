@@ -50,21 +50,21 @@ def pull_until_blocked(graph):
 class TestFilters(TestCase):
     def test_filter_descriptor(self):
         f = Filter("testsrc")
-        self.assertEqual(f.name, "testsrc")
-        self.assertEqual(f.description, "Generate test pattern.")
-        self.assertFalse(f.dynamic_inputs)
-        self.assertEqual(len(f.inputs), 0)
-        self.assertFalse(f.dynamic_outputs)
-        self.assertEqual(len(f.outputs), 1)
-        self.assertEqual(f.outputs[0].name, "default")
-        self.assertEqual(f.outputs[0].type, "video")
+        assert f.name == "testsrc"
+        assert f.description == "Generate test pattern."
+        assert not f.dynamic_inputs
+        assert len(f.inputs) == 0
+        assert not f.dynamic_outputs
+        assert len(f.outputs) == 1
+        assert f.outputs[0].name == "default"
+        assert f.outputs[0].type == "video"
 
     def test_dynamic_filter_descriptor(self):
         f = Filter("split")
-        self.assertFalse(f.dynamic_inputs)
-        self.assertEqual(len(f.inputs), 1)
-        self.assertTrue(f.dynamic_outputs)
-        self.assertEqual(len(f.outputs), 0)
+        assert not f.dynamic_inputs
+        assert len(f.inputs) == 1
+        assert f.dynamic_outputs
+        assert len(f.outputs) == 0
 
     def test_generator_graph(self):
         graph = Graph()
@@ -83,7 +83,7 @@ class TestFilters(TestCase):
         self.assertIs(lutrgb.inputs[0].link.input, src.outputs[0])
 
         frame = sink.pull()
-        self.assertIsInstance(frame, VideoFrame)
+        assert isinstance(frame, VideoFrame)
 
         if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot2.png"))
@@ -149,9 +149,9 @@ class TestFilters(TestCase):
             )
         )
         out_frame = graph.pull()
-        self.assertEqual(out_frame.format.name, "s16")
-        self.assertEqual(out_frame.layout.name, "stereo")
-        self.assertEqual(out_frame.sample_rate, 44100)
+        assert out_frame.format.name == "s16"
+        assert out_frame.layout.name == "stereo"
+        assert out_frame.sample_rate == 44100
 
     def test_audio_buffer_frame_size(self):
         graph = Graph()
@@ -175,8 +175,8 @@ class TestFilters(TestCase):
             )
         )
         out_frame = graph.pull()
-        self.assertEqual(out_frame.sample_rate, 48000)
-        self.assertEqual(out_frame.samples, 256)
+        assert out_frame.sample_rate == 48000
+        assert out_frame.samples == 256
 
     def test_audio_buffer_volume_filter(self):
         graph = Graph()
@@ -197,9 +197,9 @@ class TestFilters(TestCase):
         graph.push(input_frame)
 
         out_frame = graph.pull()
-        self.assertEqual(out_frame.format.name, "fltp")
-        self.assertEqual(out_frame.layout.name, "stereo")
-        self.assertEqual(out_frame.sample_rate, 48000)
+        assert out_frame.format.name == "fltp"
+        assert out_frame.layout.name == "stereo"
+        assert out_frame.sample_rate == 48000
 
         input_data = input_frame.to_ndarray()
         output_data = out_frame.to_ndarray()
@@ -221,22 +221,22 @@ class TestFilters(TestCase):
         graph.configure()
 
         for frame in input_container.decode():
-            self.assertEqual(frame.time_base, Fraction(1, 30))
+            assert frame.time_base == Fraction(1, 30)
             graph.vpush(frame)
             filtered_frames = pull_until_blocked(graph)
 
             if frame.pts == 0:
                 # no output for the first input frame
-                self.assertEqual(len(filtered_frames), 0)
+                assert len(filtered_frames) == 0
             else:
                 # we expect two filtered frames per input frame
-                self.assertEqual(len(filtered_frames), 2)
+                assert len(filtered_frames) == 2
 
-                self.assertEqual(filtered_frames[0].pts, (frame.pts - 1) * 2)
-                self.assertEqual(filtered_frames[0].time_base, Fraction(1, 60))
+                assert filtered_frames[0].pts == (frame.pts - 1) * 2
+                assert filtered_frames[0].time_base == Fraction(1, 60)
 
-                self.assertEqual(filtered_frames[1].pts, (frame.pts - 1) * 2 + 1)
-                self.assertEqual(filtered_frames[1].time_base, Fraction(1, 60))
+                assert filtered_frames[1].pts == (frame.pts - 1) * 2 + 1
+                assert filtered_frames[1].time_base == Fraction(1, 60)
 
     def test_EOF(self) -> None:
         input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
@@ -258,6 +258,6 @@ class TestFilters(TestCase):
         # if we do not push None, we get a BlockingIOError
         palette_frame = graph.vpull()
 
-        self.assertIsInstance(palette_frame, av.VideoFrame)
-        self.assertEqual(palette_frame.width, 16)
-        self.assertEqual(palette_frame.height, 16)
+        assert isinstance(palette_frame, av.VideoFrame)
+        assert palette_frame.width == 16
+        assert palette_frame.height == 16

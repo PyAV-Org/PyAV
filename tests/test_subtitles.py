@@ -1,10 +1,10 @@
 import av
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
 
-from .common import TestCase, fate_suite
+from .common import fate_suite
 
 
-class TestSubtitle(TestCase):
+class TestSubtitle:
     def test_movtext(self) -> None:
         path = fate_suite("sub/MovText_capability_tester.mp4")
 
@@ -13,24 +13,22 @@ class TestSubtitle(TestCase):
             for packet in container.demux():
                 subs.extend(packet.decode())
 
-        self.assertEqual(len(subs), 3)
+        assert len(subs) == 3
 
         subset = subs[0]
-        self.assertEqual(subset.format, 1)
-        self.assertEqual(subset.pts, 970000)
-        self.assertEqual(subset.start_display_time, 0)
-        self.assertEqual(subset.end_display_time, 1570)
+        assert subset.format == 1
+        assert subset.pts == 970000
+        assert subset.start_display_time == 0
+        assert subset.end_display_time == 1570
 
         sub = subset[0]
-        self.assertIsInstance(sub, AssSubtitle)
         assert isinstance(sub, AssSubtitle)
+        assert sub.type == b"ass"
+        assert sub.text == b""
+        assert sub.ass == b"0,0,Default,,0,0,0,,- Test 1.\\N- Test 2."
+        assert sub.dialogue == b"- Test 1.\n- Test 2."
 
-        self.assertEqual(sub.type, b"ass")
-        self.assertEqual(sub.text, b"")
-        self.assertEqual(sub.ass, b"0,0,Default,,0,0,0,,- Test 1.\\N- Test 2.")
-        self.assertEqual(sub.dialogue, b"- Test 1.\n- Test 2.")
-
-    def test_vobsub(self):
+    def test_vobsub(self) -> None:
         path = fate_suite("sub/vobsub.sub")
 
         subs = []
@@ -38,26 +36,26 @@ class TestSubtitle(TestCase):
             for packet in container.demux():
                 subs.extend(packet.decode())
 
-        self.assertEqual(len(subs), 43)
+        assert len(subs) == 43
 
         subset = subs[0]
-        self.assertEqual(subset.format, 0)
-        self.assertEqual(subset.pts, 132499044)
-        self.assertEqual(subset.start_display_time, 0)
-        self.assertEqual(subset.end_display_time, 4960)
+        assert subset.format == 0
+        assert subset.pts == 132499044
+        assert subset.start_display_time == 0
+        assert subset.end_display_time == 4960
 
         sub = subset[0]
-        self.assertIsInstance(sub, BitmapSubtitle)
-        self.assertEqual(sub.type, b"bitmap")
-        self.assertEqual(sub.x, 259)
-        self.assertEqual(sub.y, 379)
-        self.assertEqual(sub.width, 200)
-        self.assertEqual(sub.height, 24)
-        self.assertEqual(sub.nb_colors, 4)
+        assert isinstance(sub, BitmapSubtitle)
+        assert sub.type == b"bitmap"
+        assert sub.x == 259
+        assert sub.y == 379
+        assert sub.width == 200
+        assert sub.height == 24
+        assert sub.nb_colors == 4
 
         bms = sub.planes
-        self.assertEqual(len(bms), 1)
-        self.assertEqual(len(memoryview(bms[0])), 4800)
+        assert len(bms) == 1
+        assert len(memoryview(bms[0])) == 4800  # type: ignore
 
     def test_subtitle_flush(self) -> None:
         path = fate_suite("sub/MovText_capability_tester.mp4")
@@ -69,4 +67,4 @@ class TestSubtitle(TestCase):
                 subs.extend(stream.decode(packet))
                 subs.extend(stream.decode())
 
-        self.assertEqual(len(subs), 3)
+        assert len(subs) == 3
