@@ -6,21 +6,19 @@ from .common import TestCase, fate_suite
 
 
 class TestDecode(TestCase):
-    def test_decoded_video_frame_count(self):
+    def test_decoded_video_frame_count(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = next(s for s in container.streams if s.type == "video")
 
-        self.assertIs(video_stream, container.streams.video[0])
+        assert video_stream is container.streams.video[0]
 
         frame_count = 0
+        for frame in container.decode(video_stream):
+            frame_count += 1
 
-        for packet in container.demux(video_stream):
-            for frame in packet.decode():
-                frame_count += 1
+        assert frame_count == video_stream.frames
 
-        self.assertEqual(frame_count, video_stream.frames)
-
-    def test_decode_audio_corrupt(self):
+    def test_decode_audio_corrupt(self) -> None:
         # write an empty file
         path = self.sandboxed("empty.flac")
         with open(path, "wb"):
@@ -35,36 +33,38 @@ class TestDecode(TestCase):
                     frame_count += 1
                 packet_count += 1
 
-        self.assertEqual(packet_count, 1)
-        self.assertEqual(frame_count, 0)
+        assert packet_count == 1
+        assert frame_count == 0
 
-    def test_decode_audio_sample_count(self):
+    def test_decode_audio_sample_count(self) -> None:
         container = av.open(fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav"))
         audio_stream = next(s for s in container.streams if s.type == "audio")
 
-        self.assertIs(audio_stream, container.streams.audio[0])
+        assert audio_stream is container.streams.audio[0]
+        assert isinstance(audio_stream, av.audio.AudioStream)
 
         sample_count = 0
 
-        for packet in container.demux(audio_stream):
-            for frame in packet.decode():
-                sample_count += frame.samples
+        for frame in container.decode(audio_stream):
+            sample_count += frame.samples
 
+        assert audio_stream.duration is not None
+        assert audio_stream.time_base is not None
         total_samples = (
             audio_stream.duration * audio_stream.sample_rate.numerator
         ) / audio_stream.time_base.denominator
-        self.assertEqual(sample_count, total_samples)
+        assert sample_count == total_samples
 
     def test_decoded_time_base(self):
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
 
-        self.assertEqual(stream.time_base, Fraction(1, 25))
+        assert stream.time_base == Fraction(1, 25)
 
         for packet in container.demux(stream):
             for frame in packet.decode():
-                self.assertEqual(packet.time_base, frame.time_base)
-                self.assertEqual(stream.time_base, frame.time_base)
+                assert packet.time_base == frame.time_base
+                assert stream.time_base == frame.time_base
                 return
 
     def test_decoded_motion_vectors(self):
@@ -109,8 +109,8 @@ class TestDecode(TestCase):
                     frame_count += 1
                 packet_count += 1
 
-        self.assertEqual(packet_count, 1)
-        self.assertEqual(frame_count, 0)
+        assert packet_count == 1
+        assert frame_count == 0
 
     def test_decode_close_then_use(self):
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
@@ -155,4 +155,4 @@ class TestDecode(TestCase):
             self.assertIsNone(frame.time_base)
             output_count += 1
 
-        self.assertEqual(output_count, input_count)
+        assert output_count == input_count

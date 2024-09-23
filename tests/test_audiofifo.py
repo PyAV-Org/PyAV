@@ -59,17 +59,17 @@ class TestAudioFifo(TestCase):
         assert oframe.pts == 0
         assert oframe.time_base == iframe.time_base
 
-        self.assertEqual(fifo.samples_written, 1024)
-        self.assertEqual(fifo.samples_read, 512)
-        self.assertEqual(fifo.pts_per_sample, 1.0)
+        assert fifo.samples_written == 1024
+        assert fifo.samples_read == 512
+        assert fifo.pts_per_sample == 1.0
 
         iframe.pts = 1024
         fifo.write(iframe)
         oframe = fifo.read(512)
         assert oframe is not None
 
-        self.assertEqual(oframe.pts, 512)
-        self.assertEqual(oframe.time_base, iframe.time_base)
+        assert oframe.pts == 512
+        assert oframe.time_base == iframe.time_base
 
         iframe.pts = 9999  # Wrong!
         self.assertRaises(ValueError, fifo.write, iframe)
@@ -88,8 +88,8 @@ class TestAudioFifo(TestCase):
 
         oframe = fifo.read_many(1024)[-1]
 
-        self.assertEqual(oframe.pts, 2048)
-        self.assertEqual(fifo.pts_per_sample, 2.0)
+        assert oframe.pts == 2048
+        assert fifo.pts_per_sample == 2.0
 
     def test_missing_sample_rate(self) -> None:
         fifo = av.AudioFifo()
@@ -103,9 +103,9 @@ class TestAudioFifo(TestCase):
         oframe = fifo.read(512)
 
         assert oframe is not None
-        self.assertIsNone(oframe.pts)
-        self.assertEqual(oframe.sample_rate, 0)
-        self.assertEqual(oframe.time_base, iframe.time_base)
+        assert oframe.pts is None
+        assert oframe.sample_rate == 0
+        assert oframe.time_base == iframe.time_base
 
     def test_missing_time_base(self) -> None:
         fifo = av.AudioFifo()
@@ -119,6 +119,5 @@ class TestAudioFifo(TestCase):
         oframe = fifo.read(512)
 
         assert oframe is not None
-        self.assertIsNone(oframe.pts)
-        self.assertIsNone(oframe.time_base)
-        self.assertEqual(oframe.sample_rate, iframe.sample_rate)
+        assert oframe.pts is None and oframe.time_base is None
+        assert oframe.sample_rate == iframe.sample_rate

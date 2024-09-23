@@ -23,14 +23,14 @@ class TestBitStreamFilters(TestCase):
         ctx = BitStreamFilterContext("chomp")
 
         src_packets: tuple[Packet, None] = (Packet(b"\x0012345\0\0\0"), None)
-        self.assertEqual(bytes(src_packets[0]), b"\x0012345\0\0\0")
+        assert bytes(src_packets[0]) == b"\x0012345\0\0\0"
 
         result_packets = []
         for p in src_packets:
             result_packets.extend(ctx.filter(p))
 
-        self.assertEqual(len(result_packets), 1)
-        self.assertEqual(bytes(result_packets[0]), b"\x0012345")
+        assert len(result_packets) == 1
+        assert bytes(result_packets[0]) == b"\x0012345"
 
     def test_filter_setts(self) -> None:
         ctx = BitStreamFilterContext("setts=pts=N")
@@ -48,9 +48,9 @@ class TestBitStreamFilters(TestCase):
         for p in src_packets:
             result_packets.extend(ctx.filter(p))
 
-        self.assertEqual(len(result_packets), 2)
-        self.assertEqual(result_packets[0].pts, 0)
-        self.assertEqual(result_packets[1].pts, 1)
+        assert len(result_packets) == 2
+        assert result_packets[0].pts == 0
+        assert result_packets[1].pts == 1
 
     def test_filter_h264_mp4toannexb(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
@@ -62,22 +62,22 @@ class TestBitStreamFilters(TestCase):
                 self.assertFalse(is_annexb(p))
                 res_packets.extend(ctx.filter(p))
 
-            self.assertEqual(len(res_packets), stream.frames)
+            assert len(res_packets) == stream.frames
 
             for p in res_packets:
-                self.assertTrue(is_annexb(p))
+                assert is_annexb(p)
 
     def test_filter_output_parameters(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
             stream = container.streams.video[0]
 
-            self.assertFalse(is_annexb(stream.codec_context.extradata))
+            assert not is_annexb(stream.codec_context.extradata)
             ctx = BitStreamFilterContext("h264_mp4toannexb", stream)
-            self.assertFalse(is_annexb(stream.codec_context.extradata))
+            assert not is_annexb(stream.codec_context.extradata)
             del ctx
 
             _ = BitStreamFilterContext("h264_mp4toannexb", stream, out_stream=stream)
-            self.assertTrue(is_annexb(stream.codec_context.extradata))
+            assert is_annexb(stream.codec_context.extradata)
 
     def test_filter_flush(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
@@ -87,7 +87,7 @@ class TestBitStreamFilters(TestCase):
             res_packets = []
             for p in container.demux(stream):
                 res_packets.extend(ctx.filter(p))
-            self.assertEqual(len(res_packets), stream.frames)
+            assert len(res_packets) == stream.frames
 
             container.seek(0)
             # Without flushing, we expect to get an error: "A non-NULL packet sent after an EOF."
@@ -100,4 +100,4 @@ class TestBitStreamFilters(TestCase):
             for p in container.demux(stream):
                 res_packets.extend(ctx.filter(p))
 
-            self.assertEqual(len(res_packets), stream.frames * 2)
+            assert len(res_packets) == stream.frames * 2

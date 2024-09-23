@@ -38,52 +38,52 @@ def iter_raw_frames(path, packet_sizes, ctx):
 class TestCodecContext(TestCase):
     def test_skip_frame_default(self):
         ctx = Codec("png", "w").create()
-        self.assertEqual(ctx.skip_frame.name, "DEFAULT")
+        assert ctx.skip_frame.name == "DEFAULT"
 
     def test_codec_delay(self):
         with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
-            self.assertEqual(container.streams.audio[0].codec_context.delay, 312)
+            assert container.streams.audio[0].codec_context.delay == 312
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
-            self.assertEqual(container.streams.video[0].codec_context.delay, 0)
+            assert container.streams.video[0].codec_context.delay == 0
 
     def test_codec_tag(self):
         ctx = Codec("mpeg4", "w").create()
-        self.assertEqual(ctx.codec_tag, "\x00\x00\x00\x00")
+        assert ctx.codec_tag == "\x00\x00\x00\x00"
         ctx.codec_tag = "xvid"
-        self.assertEqual(ctx.codec_tag, "xvid")
+        assert ctx.codec_tag == "xvid"
 
         # wrong length
         with self.assertRaises(ValueError) as cm:
             ctx.codec_tag = "bob"
-        self.assertEqual(str(cm.exception), "Codec tag should be a 4 character string.")
+        assert str(cm.exception) == "Codec tag should be a 4 character string."
 
         # wrong type
         with self.assertRaises(ValueError) as cm:
             ctx.codec_tag = 123
-        self.assertEqual(str(cm.exception), "Codec tag should be a 4 character string.")
+        assert str(cm.exception) == "Codec tag should be a 4 character string."
 
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
-            self.assertEqual(container.streams[0].codec_tag, "avc1")
+            assert container.streams[0].codec_tag == "avc1"
 
     def test_decoder_extradata(self):
         ctx = av.codec.Codec("h264", "r").create()
-        self.assertEqual(ctx.extradata, None)
-        self.assertEqual(ctx.extradata_size, 0)
+        assert ctx.extradata is None
+        assert ctx.extradata_size == 0
 
         ctx.extradata = b"123"
-        self.assertEqual(ctx.extradata, b"123")
-        self.assertEqual(ctx.extradata_size, 3)
+        assert ctx.extradata == b"123"
+        assert ctx.extradata_size == 3
 
         ctx.extradata = b"54321"
-        self.assertEqual(ctx.extradata, b"54321")
-        self.assertEqual(ctx.extradata_size, 5)
+        assert ctx.extradata == b"54321"
+        assert ctx.extradata_size == 5
 
         ctx.extradata = None
-        self.assertEqual(ctx.extradata, None)
-        self.assertEqual(ctx.extradata_size, 0)
+        assert ctx.extradata is None
+        assert ctx.extradata_size == 0
 
-    def test_decoder_gop_size(self):
-        ctx = av.codec.Codec("h264", "r").create()
+    def test_decoder_gop_size(self) -> None:
+        ctx = av.codec.Codec("h264", "r").create("video")
 
         with self.assertRaises(RuntimeError):
             ctx.gop_size
@@ -99,7 +99,7 @@ class TestCodecContext(TestCase):
 
     def test_encoder_extradata(self):
         ctx = av.codec.Codec("h264", "w").create()
-        self.assertEqual(ctx.extradata, None)
+        assert ctx.extradata is None
         self.assertEqual(ctx.extradata_size, 0)
 
         ctx.extradata = b"123"
@@ -170,7 +170,7 @@ class TestCodecContext(TestCase):
 
             parsed_source = b"".join(bytes(p) for p in packets)
             self.assertEqual(len(parsed_source), len(full_source))
-            self.assertEqual(full_source, parsed_source)
+            assert full_source == parsed_source
 
 
 class TestEncoding(TestCase):
@@ -214,7 +214,7 @@ class TestEncoding(TestCase):
             new_frame = frame.reformat(width, height, pix_fmt)
             new_packets = ctx.encode(new_frame)
 
-            self.assertEqual(len(new_packets), 1)
+            assert len(new_packets) == 1
             new_packet = new_packets[0]
 
             path = self.sandboxed(
@@ -240,9 +240,9 @@ class TestEncoding(TestCase):
                 packet = Packet(size)
                 size = f.readinto(packet)
                 frame = ctx.decode(packet)[0]
-                self.assertEqual(frame.width, width)
-                self.assertEqual(frame.height, height)
-                self.assertEqual(frame.format.name, pix_fmt)
+                assert frame.width == width
+                assert frame.height == height
+                assert frame.format.name == pix_fmt
 
     def test_encoding_h264(self):
         self.video_encoding("h264", {"crf": "19"})
@@ -333,13 +333,13 @@ class TestEncoding(TestCase):
         decoded_frame_count = 0
         for frame in iter_raw_frames(path, packet_sizes, ctx):
             decoded_frame_count += 1
-            self.assertEqual(frame.width, width)
-            self.assertEqual(frame.height, height)
-            self.assertEqual(frame.format.name, pix_fmt)
+            assert frame.width == width
+            assert frame.height == height
+            assert frame.format.name == pix_fmt
             if frame.key_frame:
                 keyframe_indices.append(decoded_frame_count)
 
-        self.assertEqual(frame_count, decoded_frame_count)
+        assert frame_count == decoded_frame_count
 
         self.assertIsInstance(
             all(keyframe_index for keyframe_index in keyframe_indices), int
@@ -352,7 +352,7 @@ class TestEncoding(TestCase):
         ):
             raise SkipTest()
         for i in decoded_gop_sizes:
-            self.assertEqual(i, gop_size)
+            assert i == gop_size
 
         final_gop_size = decoded_frame_count - max(keyframe_indices)
         self.assertLessEqual(final_gop_size, gop_size)
@@ -433,5 +433,5 @@ class TestEncoding(TestCase):
 
         for frame in iter_raw_frames(path, packet_sizes, ctx):
             result_samples += frame.samples
-            self.assertEqual(frame.sample_rate, sample_rate)
-            self.assertEqual(frame.layout.nb_channels, 2)
+            assert frame.sample_rate == sample_rate
+            assert frame.layout.nb_channels == 2

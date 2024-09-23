@@ -232,13 +232,13 @@ class TestEncodeStreamSemantics(TestCase):
     def test_stream_index(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             vstream = output.add_stream("mpeg4", 24)
-            self.assertIn(vstream, output.streams.video)
+            assert vstream in output.streams.video
             vstream.pix_fmt = "yuv420p"
             vstream.width = 320
             vstream.height = 240
 
             astream = output.add_stream("mp2", 48000)
-            self.assertIn(astream, output.streams.audio)
+            assert astream in output.streams.audio
             astream.layout = "stereo"  # type: ignore
             astream.format = "s16"  # type: ignore
 
@@ -248,7 +248,7 @@ class TestEncodeStreamSemantics(TestCase):
             vframe = VideoFrame(320, 240, "yuv420p")
             vpacket = vstream.encode(vframe)[0]
 
-            self.assertIs(vpacket.stream, vstream)
+            assert vpacket.stream is vstream
             assert vpacket.stream_index == 0
 
             for i in range(10):
@@ -264,7 +264,7 @@ class TestEncodeStreamSemantics(TestCase):
                     apacket = apackets[0]
                     break
 
-            self.assertIs(apacket.stream, astream)
+            assert apacket.stream is astream
             assert apacket.stream_index == 1
 
     def test_stream_audio_resample(self) -> None:
