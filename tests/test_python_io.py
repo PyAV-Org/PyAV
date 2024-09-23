@@ -243,34 +243,34 @@ class TestPythonIO(TestCase):
                     output.mux(packet)
 
         # Check that "frame_count" files were opened using the custom IO
-        self.assertEqual(len(wrapped_custom_io._log), frame_count)
-        self.assertEqual(len(wrapped_custom_io._method_log), frame_count)
+        assert len(wrapped_custom_io._log) == frame_count
+        assert len(wrapped_custom_io._method_log) == frame_count
 
         # Check that all files were written to
         all_write = all(
             method_log._filter("write") for method_log in wrapped_custom_io._method_log
         )
-        self.assertTrue(all_write)
+        assert all_write
 
         # Check that all files were closed
         all_closed = all(
             method_log._filter("close") for method_log in wrapped_custom_io._method_log
         )
-        self.assertTrue(all_closed)
+        assert all_closed
 
         # Check contents.
         with av.open(sequence_filename, "r", "image2") as container:
-            self.assertEqual(len(container.streams), 1)
+            assert len(container.streams) == 1
             stream = container.streams[0]
-            self.assertIsInstance(stream, av.video.stream.VideoStream)
-            self.assertEqual(stream.duration, frame_count)
-            self.assertEqual(stream.type, "video")
+            assert isinstance(stream, av.video.stream.VideoStream)
+            assert stream.duration == frame_count
+            assert stream.type == "video"
 
             # codec context properties
-            self.assertEqual(stream.codec.name, "png")
-            self.assertEqual(stream.format.name, "rgb24")
-            self.assertEqual(stream.format.width, width)
-            self.assertEqual(stream.format.height, height)
+            assert stream.codec.name == "png"
+            assert stream.format.name == "rgb24"
+            assert stream.format.width == width
+            assert stream.format.height == height
 
     def test_writing_to_file(self) -> None:
         path = self.sandboxed("writing.mp4")
@@ -286,9 +286,9 @@ class TestPythonIO(TestCase):
         buf = ReadOnlyPipe()
         with self.assertRaises(ValueError) as cm:
             self.write(buf)
-        self.assertEqual(
-            str(cm.exception),
-            "File object has no write() method, or writable() returned False.",
+        assert (
+            str(cm.exception)
+            == "File object has no write() method, or writable() returned False."
         )
 
     def test_writing_to_pipe_writeonly(self):
@@ -297,10 +297,7 @@ class TestPythonIO(TestCase):
         buf = WriteOnlyPipe()
         with self.assertRaises(ValueError) as cm:
             self.write(buf)
-        self.assertIn(
-            "[mp4] muxer does not support non seekable output",
-            str(cm.exception),
-        )
+        assert "[mp4] muxer does not support non seekable output" in str(cm.exception)
 
         av.logging.set_level(None)
 
@@ -308,14 +305,14 @@ class TestPythonIO(TestCase):
         wrapped = MethodLogger(fh)
 
         with av.open(wrapped, "r") as container:
-            self.assertEqual(container.format.name, "mpegts")
+            assert container.format.name == "mpegts"
             self.assertEqual(
                 container.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)"
             )
-            self.assertEqual(len(container.streams), 1)
+            assert len(container.streams) == 1
             if seekable:
-                self.assertEqual(container.size, 800000)
-            self.assertEqual(container.metadata, {})
+                assert container.size == 800000
+            assert container.metadata == {}
 
         # Check method calls.
         self.assertTrue(wrapped._filter("read"))
