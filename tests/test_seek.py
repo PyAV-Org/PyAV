@@ -13,13 +13,6 @@ def timestamp_to_frame(timestamp, stream):
     return frame
 
 
-def step_forward(container, stream):
-    for packet in container.demux(stream):
-        for frame in packet.decode():
-            if frame:
-                return frame
-
-
 class TestSeek(TestCase):
     def test_seek_float(self):
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
