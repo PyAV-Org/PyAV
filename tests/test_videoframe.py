@@ -1,11 +1,25 @@
+import time
 from fractions import Fraction
 from unittest import SkipTest
 
 import numpy
 
+import av
 from av import VideoFrame
 
-from .common import TestCase, fate_png, has_pillow
+from .common import TestCase, fate_png, fate_suite, has_pillow
+
+
+class TestOpaque:
+    def test_opaque(self) -> None:
+        with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+            video_stream = container.streams.video[0]
+            video_stream.codec_context.copy_opaque = True
+            for packet_idx, packet in enumerate(container.demux()):
+                packet.opaque = (time.time(), packet_idx)
+                for frame in packet.decode():
+                    assert isinstance(frame, av.frame.Frame)
+                    assert type(frame.opaque) is tuple and len(frame.opaque) == 2
 
 
 class TestVideoFrameConstructors(TestCase):
@@ -33,7 +47,7 @@ class TestVideoFrameConstructors(TestCase):
         assert frame.format.name == "rgb24"
 
 
-class TestVideoFramePlanes(TestCase):
+class TestVideoFramePlanes:
     def test_null_planes(self):
         frame = VideoFrame()  # yuv420p
         assert len(frame.planes) == 0
