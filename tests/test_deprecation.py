@@ -2,48 +2,42 @@ import warnings
 
 from av import deprecation
 
-from .common import TestCase
+
+def test_method() -> None:
+    class Example:
+        def __init__(self, x: int = 100) -> None:
+            self.x = x
+
+        @deprecation.method
+        def foo(self, a: int, b: int) -> int:
+            return self.x + a + b
+
+    obj = Example()
+
+    with warnings.catch_warnings(record=True) as captured:
+        assert obj.foo(20, b=3) == 123
+        assert "Example.foo is deprecated" in str(captured[0].message)
 
 
-class TestDeprecations(TestCase):
-    def test_method(self):
-        class Example:
-            def __init__(self, x=100):
-                self.x = x
+def test_renamed_attr() -> None:
+    class Example:
+        new_value = "foo"
+        old_value = deprecation.renamed_attr("new_value")
 
-            @deprecation.method
-            def foo(self, a, b):
-                return self.x + a + b
+        def new_func(self, a: int, b: int) -> int:
+            return a + b
 
-        obj = Example()
+        old_func = deprecation.renamed_attr("new_func")
 
-        with warnings.catch_warnings(record=True) as captured:
-            self.assertEqual(obj.foo(20, b=3), 123)
-            self.assertIn("Example.foo is deprecated", captured[0].message.args[0])
+    obj = Example()
 
-    def test_renamed_attr(self):
-        class Example:
-            new_value = "foo"
-            old_value = deprecation.renamed_attr("new_value")
+    with warnings.catch_warnings(record=True) as captured:
+        assert obj.old_value == "foo"
+        assert "Example.old_value is deprecated" in str(captured[0].message)
 
-            def new_func(self, a, b):
-                return a + b
+        obj.old_value = "bar"
+        assert "Example.old_value is deprecated" in str(captured[1].message)
 
-            old_func = deprecation.renamed_attr("new_func")
-
-        obj = Example()
-
-        with warnings.catch_warnings(record=True) as captured:
-            self.assertEqual(obj.old_value, "foo")
-            self.assertIn(
-                "Example.old_value is deprecated", captured[0].message.args[0]
-            )
-
-            obj.old_value = "bar"
-            self.assertIn(
-                "Example.old_value is deprecated", captured[1].message.args[0]
-            )
-
-        with warnings.catch_warnings(record=True) as captured:
-            self.assertEqual(obj.old_func(1, 2), 3)
-            self.assertIn("Example.old_func is deprecated", captured[0].message.args[0])
+    with warnings.catch_warnings(record=True) as captured:
+        assert obj.old_func(1, 2) == 3
+        assert "Example.old_func is deprecated" in str(captured[0].message)

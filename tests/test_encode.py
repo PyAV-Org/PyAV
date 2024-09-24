@@ -70,11 +70,8 @@ def assert_rgb_rotate(
 ) -> None:
     # Now inspect it a little.
     assert len(input_.streams) == 1
-    if is_dash:
-        self.assertTrue(input_.metadata.get("Title") == "container", input_.metadata)
-    else:
-        self.assertEqual(input_.metadata.get("title"), "container", input_.metadata)
-    self.assertEqual(input_.metadata.get("key"), None)
+    assert input_.metadata.get("Title" if is_dash else "title") == "container"
+    assert input_.metadata.get("key") is None
 
     stream = input_.streams[0]
 
@@ -93,7 +90,6 @@ def assert_rgb_rotate(
         expected_id = 1
 
     # actual stream properties
-    self.assertIsInstance(stream, VideoStream)
     assert isinstance(stream, VideoStream)
     assert stream.average_rate == expected_average_rate
     assert stream.base_rate == 24
@@ -119,7 +115,7 @@ class TestBasicVideoEncoding(TestCase):
     def test_default_options(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mpeg4")
-            self.assertIn(stream, output.streams.video)
+            assert stream in output.streams.video
             assert stream.average_rate == Fraction(24, 1)
             assert stream.time_base is None
 
@@ -145,7 +141,7 @@ class TestBasicVideoEncoding(TestCase):
 
         with av.open(path, "w") as output:
             stream = output.add_stream("h264", 24)
-            self.assertIn(stream, output.streams.video)
+            assert stream in output.streams.video
             stream.width = WIDTH
             stream.height = HEIGHT
             stream.pix_fmt = "yuv420p"
@@ -176,7 +172,7 @@ class TestBasicAudioEncoding(TestCase):
     def test_default_options(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
-            self.assertIn(stream, output.streams.audio)
+            assert stream in output.streams.audio
             assert stream.time_base is None
 
             # codec context properties
@@ -196,7 +192,7 @@ class TestBasicAudioEncoding(TestCase):
             sample_fmt = "s16"
 
             stream = output.add_stream("mp2", sample_rate)
-            self.assertIn(stream, output.streams.audio)
+            assert stream in output.streams.audio
 
             ctx = stream.codec_context
             ctx.sample_rate = sample_rate
@@ -215,9 +211,7 @@ class TestBasicAudioEncoding(TestCase):
 
         with av.open(path) as container:
             assert len(container.streams) == 1
-            self.assertEqual(
-                container.metadata.get("title"), "container", container.metadata
-            )
+            assert container.metadata.get("title") == "container"
             assert container.metadata.get("key") is None
 
             assert isinstance(container.streams[0], AudioStream)
@@ -301,7 +295,7 @@ class TestEncodeStreamSemantics(TestCase):
     def test_set_id_and_time_base(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
-            self.assertIn(stream, output.streams.audio)
+            assert stream in output.streams.audio
 
             # set id
             assert stream.id == 0
