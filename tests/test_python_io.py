@@ -1,17 +1,41 @@
+import functools
+import types
 from io import BytesIO
 from unittest import SkipTest
 
 import av
 
-from .common import (
-    MethodLogger,
-    TestCase,
-    fate_png,
-    fate_suite,
-    has_pillow,
-    run_in_sandbox,
-)
+from .common import TestCase, fate_png, fate_suite, has_pillow, run_in_sandbox
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
+
+
+class MethodLogger:
+    def __init__(self, obj):
+        self._obj = obj
+        self._log = []
+
+    def __getattr__(self, name):
+        value = getattr(self._obj, name)
+        if isinstance(
+            value,
+            (
+                types.MethodType,
+                types.FunctionType,
+                types.BuiltinFunctionType,
+                types.BuiltinMethodType,
+            ),
+        ):
+            return functools.partial(self._method, name, value)
+        else:
+            self._log.append(("__getattr__", (name,), {}))
+            return value
+
+    def _method(self, name, meth, *args, **kwargs):
+        self._log.append((name, args, kwargs))
+        return meth(*args, **kwargs)
+
+    def _filter(self, type_):
+        return [log for log in self._log if log[0] == type_]
 
 
 class BrokenBuffer(BytesIO):
@@ -103,7 +127,7 @@ class CustomIOLogger:
         elif (flags & 2) == 2:
             mode = "wb"
         else:
-            raise RuntimeError("Unsupported io open mode {}".format(flags))
+            raise RuntimeError(f"Unsupported io open mode {flags}")
 
         return MethodLogger(open(url, mode))
 
@@ -137,9 +161,10 @@ class TestPythonIO(TestCase):
             buf = WriteOnlyPipe(fh.read())
         with self.assertRaises(ValueError) as cm:
             self.read(buf, seekable=False)
-        self.assertEqual(
-            str(cm.exception),
-            "File object has no read() method, or readable() returned False.",
+
+        assert (
+            str(cm.exception)
+            == "File object has no read() method, or readable() returned False."
         )
 
     def test_writing_to_buffer(self):
@@ -199,13 +224,13 @@ class TestPythonIO(TestCase):
         all_write = all(
             method_log._filter("write") for method_log in wrapped_custom_io._method_log
         )
-        self.assertTrue(all_write)
+        assert all_write
 
         # Check that all files were closed
         all_closed = all(
             method_log._filter("close") for method_log in wrapped_custom_io._method_log
         )
-        self.assertTrue(all_closed)
+        assert all_closed
 
         # Check contents.
         # Note that the dash demuxer doesn't support custom I/O.

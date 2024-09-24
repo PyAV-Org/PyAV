@@ -1,18 +1,17 @@
+import pytest
+
 from av.dictionary import Dictionary
 
-from .common import TestCase
 
+def test_dictionary() -> None:
+    d = Dictionary()
+    d["key"] = "value"
 
-class TestDictionary(TestCase):
-    def test_basics(self):
-        d = Dictionary()
-        d["key"] = "value"
+    assert d["key"] == "value"
+    assert "key" in d
+    assert len(d) == 1
+    assert list(d) == ["key"]
 
-        self.assertEqual(d["key"], "value")
-        self.assertIn("key", d)
-        self.assertEqual(len(d), 1)
-        self.assertEqual(list(d), ["key"])
-
-        self.assertEqual(d.pop("key"), "value")
-        self.assertRaises(KeyError, d.pop, "key")
-        self.assertEqual(len(d), 0)
+    assert d.pop("key") == "value"
+    pytest.raises(KeyError, d.pop, "key")
+    assert len(d) == 0

@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 from fractions import Fraction
 from typing import Iterator, TypedDict, overload
-from unittest import SkipTest
+
+import pytest
 
 import av
 from av import (
@@ -116,39 +117,39 @@ class TestCodecContext(TestCase):
     def test_decoder_gop_size(self) -> None:
         ctx = av.codec.Codec("h264", "r").create("video")
 
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             ctx.gop_size
 
     def test_decoder_timebase(self) -> None:
         ctx = av.codec.Codec("h264", "r").create()
 
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             ctx.time_base
 
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             ctx.time_base = Fraction(1, 25)
 
     def test_encoder_extradata(self):
         ctx = av.codec.Codec("h264", "w").create()
         assert ctx.extradata is None
-        self.assertEqual(ctx.extradata_size, 0)
+        assert ctx.extradata_size == 0
 
         ctx.extradata = b"123"
-        self.assertEqual(ctx.extradata, b"123")
-        self.assertEqual(ctx.extradata_size, 3)
+        assert ctx.extradata == b"123"
+        assert ctx.extradata_size == 3
 
     def test_encoder_pix_fmt(self):
         ctx = av.codec.Codec("h264", "w").create()
 
         # valid format
         ctx.pix_fmt = "yuv420p"
-        self.assertEqual(ctx.pix_fmt, "yuv420p")
+        assert ctx.pix_fmt == "yuv420p"
 
         # invalid format
         with self.assertRaises(ValueError) as cm:
             ctx.pix_fmt = "__unknown_pix_fmt"
-        self.assertEqual(str(cm.exception), "not a pixel format: '__unknown_pix_fmt'")
-        self.assertEqual(ctx.pix_fmt, "yuv420p")
+        assert str(cm.exception) == "not a pixel format: '__unknown_pix_fmt'"
+        assert ctx.pix_fmt == "yuv420p"
 
     def test_bits_per_coded_sample(self):
         with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:
@@ -158,21 +159,20 @@ class TestCodecContext(TestCase):
             for packet in container.demux(stream):
                 for frame in packet.decode():
                     pass
-                self.assertEqual(packet.stream.bits_per_coded_sample, 32)
+                assert packet.stream.bits_per_coded_sample == 32
 
         with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:
             stream = container.streams.video[0]
             stream.bits_per_coded_sample = 31
 
-            with self.assertRaises(av.error.InvalidDataError):
-                for packet in container.demux(stream):
-                    for frame in packet.decode():
-                        pass
+            with pytest.raises(av.error.InvalidDataError):
+                for frame in container.decode(stream):
+                    pass
 
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("qtrle")
 
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 stream.codec_context.bits_per_coded_sample = 32
 
     def test_parse(self):
@@ -200,7 +200,7 @@ class TestCodecContext(TestCase):
             packets.extend(ctx.parse())
 
             parsed_source = b"".join(bytes(p) for p in packets)
-            self.assertEqual(len(parsed_source), len(full_source))
+            assert len(parsed_source) == len(full_source)
             assert full_source == parsed_source
 
 
@@ -218,7 +218,7 @@ class TestEncoding(TestCase):
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
-            raise SkipTest(f"Unknown codec: {codec_name}")
+            pytest.skip(f"Unknown codec: {codec_name}")
 
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = container.streams.video[0]
@@ -311,7 +311,7 @@ class TestEncoding(TestCase):
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
-            raise SkipTest(f"Unknown codec: {codec_name}")
+            pytest.skip(f"Unknown codec: {codec_name}")
 
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = container.streams.video[0]
@@ -388,7 +388,7 @@ class TestEncoding(TestCase):
         if codec_name in ("dvvideo", "dnxhd") and all(
             i == 1 for i in decoded_gop_sizes
         ):
-            raise SkipTest("I'm not sure why we skip this actually.")
+            pytest.skip()
         for i in decoded_gop_sizes:
             assert i == gop_size
 
@@ -416,12 +416,12 @@ class TestEncoding(TestCase):
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
-            raise SkipTest(f"Unknown codec: {codec_name}")
+            pytest.skip(f"Unknown codec: {codec_name}")
 
         ctx = codec.create(kind="audio")
 
         if ctx.codec.experimental:
-            raise SkipTest(f"Experimental codec: {codec_name}")
+            pytest.skip(f"Experimental codec: {codec_name}")
 
         assert ctx.codec.audio_formats
         sample_fmt = ctx.codec.audio_formats[-1].name

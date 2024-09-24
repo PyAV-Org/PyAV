@@ -5,6 +5,8 @@ import os
 import types
 from unittest import TestCase as _Base
 
+import numpy as np
+
 from av.datasets import fate as fate_suite
 
 try:
@@ -55,7 +57,7 @@ def asset(*args: str) -> str:
 os.environ["PYAV_TESTDATA_DIR"] = asset()
 
 
-def fate_png():
+def fate_png() -> str:
     return fate_suite("png1/55c99e750a5fd6_50314226.png")
 
 
@@ -85,33 +87,32 @@ def run_in_sandbox(func):
     return _inner
 
 
-class MethodLogger:
-    def __init__(self, obj):
-        self._obj = obj
-        self._log = []
+def assertNdarraysEqual(a: np.ndarray, b: np.ndarray) -> None:
+    assert a.shape == b.shape
 
-    def __getattr__(self, name):
-        value = getattr(self._obj, name)
-        if isinstance(
-            value,
-            (
-                types.MethodType,
-                types.FunctionType,
-                types.BuiltinFunctionType,
-                types.BuiltinMethodType,
-            ),
-        ):
-            return functools.partial(self._method, name, value)
-        else:
-            self._log.append(("__getattr__", (name,), {}))
-            return value
+    comparison = a == b
+    if not comparison.all():
+        it = np.nditer(comparison, flags=["multi_index"])
+        msg = ""
+        for equal in it:
+            if not equal:
+                msg += "- arrays differ at index {}; {} {}\n".format(
+                    it.multi_index,
+                    a[it.multi_index],
+                    b[it.multi_index],
+                )
+        assert False, f"ndarrays contents differ\n{msg}"
 
-    def _method(self, name, meth, *args, **kwargs):
-        self._log.append((name, args, kwargs))
-        return meth(*args, **kwargs)
 
-    def _filter(self, type_):
-        return [log for log in self._log if log[0] == type_]
+def assertImagesAlmostEqual(a, b, epsilon=0.1):
+    import PIL.ImageFilter as ImageFilter
+
+    assert a.size == b.size
+    a = a.filter(ImageFilter.BLUR).getdata()
+    b = b.filter(ImageFilter.BLUR).getdata()
+    for i, ax, bx in zip(range(len(a)), a, b):
+        diff = sum(abs(ac / 256 - bc / 256) for ac, bc in zip(ax, bx)) / 3
+        assert diff < epsilon, f"images differed by {diff} at index {i}; {ax} {bx}"
 
 
 class TestCase(_Base):
@@ -129,34 +130,3 @@ class TestCase(_Base):
         kwargs.setdefault("sandbox", self.sandbox)
         kwargs.setdefault("timed", True)
         return sandboxed(*args, **kwargs)
-
-    def assertNdarraysEqual(self, a, b):
-        import numpy
-
-        self.assertEqual(a.shape, b.shape)
-
-        comparison = a == b
-        if not comparison.all():
-            it = numpy.nditer(comparison, flags=["multi_index"])
-            msg = ""
-            for equal in it:
-                if not equal:
-                    msg += "- arrays differ at index %s; %s %s\n" % (
-                        it.multi_index,
-                        a[it.multi_index],
-                        b[it.multi_index],
-                    )
-            self.fail("ndarrays contents differ\n%s" % msg)
-
-    def assertImagesAlmostEqual(self, a, b, epsilon=0.1, *args):
-        import PIL.ImageFilter as ImageFilter
-
-        self.assertEqual(a.size, b.size, "sizes dont match")
-        a = a.filter(ImageFilter.BLUR).getdata()
-        b = b.filter(ImageFilter.BLUR).getdata()
-        for i, ax, bx in zip(range(len(a)), a, b):
-            diff = sum(abs(ac / 256 - bc / 256) for ac, bc in zip(ax, bx)) / 3
-            if diff > epsilon:
-                self.fail(
-                    "images differed by %s at index %d; %s %s" % (diff, i, ax, bx)
-                )
