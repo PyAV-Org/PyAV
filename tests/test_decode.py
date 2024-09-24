@@ -51,8 +51,10 @@ class TestDecode(TestCase):
         assert audio_stream.duration is not None
         assert audio_stream.time_base is not None
         total_samples = (
-            audio_stream.duration * audio_stream.sample_rate.numerator
-        ) / audio_stream.time_base.denominator
+            audio_stream.duration
+            * audio_stream.sample_rate.numerator
+            / audio_stream.time_base.denominator
+        )
         assert sample_count == total_samples
 
     def test_decoded_time_base(self):
@@ -125,11 +127,9 @@ class TestDecode(TestCase):
                 except AssertionError:
                     pass
 
-    def test_flush_decoded_video_frame_count(self):
+    def test_flush_decoded_video_frame_count(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
-        video_stream = next(s for s in container.streams if s.type == "video")
-
-        self.assertIs(video_stream, container.streams.video[0])
+        video_stream = container.streams.video[0]
 
         # Decode the first GOP, which requires a flush to get all frames
         have_keyframe = False
@@ -148,11 +148,11 @@ class TestDecode(TestCase):
                 output_count += 1
 
         # Check the test works as expected and requires a flush
-        self.assertLess(output_count, input_count)
+        assert output_count < input_count
 
         for frame in video_stream.decode(None):
             # The Frame._time_base is not set by PyAV
-            self.assertIsNone(frame.time_base)
+            assert frame.time_base is None
             output_count += 1
 
         assert output_count == input_count

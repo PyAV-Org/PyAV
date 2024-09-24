@@ -15,15 +15,13 @@ class TestEnums(TestCase):
     def test_basics(self):
         cls = self.define_foobar()
 
-        self.assertIsInstance(cls, EnumType)
+        assert isinstance(cls, EnumType)
 
         foo = cls.FOO
 
-        self.assertIsInstance(foo, cls)
-        self.assertEqual(foo.name, "FOO")
-        self.assertEqual(foo.value, 1)
-
-        self.assertNotIsInstance(foo, PickleableFooBar)
+        assert isinstance(foo, cls)
+        assert foo.name == "FOO" and foo.value == 1
+        assert not isinstance(foo, PickleableFooBar)
 
     def test_access(self):
         cls = self.define_foobar()
@@ -35,9 +33,9 @@ class TestEnums(TestCase):
         assert foo1 is foo3
         assert foo1 is foo4
 
-        self.assertIn(foo1, cls)
-        self.assertIn("FOO", cls)
-        self.assertIn(1, cls)
+        assert foo1 in cls
+        assert "FOO" in cls
+        assert 1 in cls
 
         self.assertRaises(KeyError, lambda: cls["not a foo"])
         self.assertRaises(KeyError, lambda: cls[10])
@@ -53,12 +51,12 @@ class TestEnums(TestCase):
         self.assertEqual(repr(foo), "<tests.test_enums.Foobar:FOO(0x1)>")
 
         str_foo = str(foo)
-        self.assertIsInstance(str_foo, str)
-        self.assertEqual(str_foo, "FOO")
+        assert isinstance(str_foo, str)
+        assert str_foo == "FOO"
 
         int_foo = int(foo)
-        self.assertIsInstance(int_foo, int)
-        self.assertEqual(int_foo, 1)
+        assert isinstance(int_foo, int)
+        assert int_foo == 1
 
     def test_iteration(self):
         cls = self.define_foobar()

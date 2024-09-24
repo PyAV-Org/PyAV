@@ -112,10 +112,10 @@ class TestAudioProbeCorrupt(TestCase):
 
 
 class TestDataProbe(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.file = av.open(fate_suite("mxf/track_01_v02.mxf"))
 
-    def test_container_probing(self):
+    def test_container_probing(self) -> None:
         assert self.file.bit_rate == 27872687
         assert self.file.duration == 417083
         assert str(self.file.format) == "<av.ContainerFormat 'mxf'>"
@@ -125,43 +125,28 @@ class TestDataProbe(TestCase):
         assert self.file.start_time == 0
         assert len(self.file.streams) == 4
 
-        for key, value, min_version in (
-            ("application_platform", "AAFSDK (MacOS X)", None),
-            ("comment_Comments", "example comment", None),
-            (
-                "comment_UNC Path",
-                "/Users/mark/Desktop/dnxhr_tracknames_export.aaf",
-                None,
-            ),
-            ("company_name", "Avid Technology, Inc.", None),
-            ("generation_uid", "b6bcfcab-70ff-7331-c592-233869de11d2", None),
-            ("material_package_name", "Example.new.04", None),
+        for key, value in (
+            ("application_platform", "AAFSDK (MacOS X)"),
+            ("comment_Comments", "example comment"),
+            ("comment_UNC Path", "/Users/mark/Desktop/dnxhr_tracknames_export.aaf"),
+            ("company_name", "Avid Technology, Inc."),
+            ("generation_uid", "b6bcfcab-70ff-7331-c592-233869de11d2"),
+            ("material_package_name", "Example.new.04"),
             (
                 "material_package_umid",
                 "0x060A2B340101010101010F001300000057E19D16BA8202DB060E2B347F7F2A80",
-                None,
             ),
-            ("modification_date", "2016-09-20T20:33:26.000000Z", None),
-            # Next one is FFmpeg >= 4.2.
-            (
-                "operational_pattern_ul",
-                "060e2b34.04010102.0d010201.10030000",
-                {"libavformat": (58, 29)},
-            ),
-            ("product_name", "Avid Media Composer 8.6.3.43955", None),
-            ("product_uid", "acfbf03a-4f42-a231-d0b7-c06ecd3d4ad7", None),
-            ("product_version", "Unknown version", None),
-            ("project_name", "UHD", None),
-            ("uid", "4482d537-4203-ea40-9e4e-08a22900dd39", None),
+            ("modification_date", "2016-09-20T20:33:26.000000Z"),
+            ("operational_pattern_ul", "060e2b34.04010102.0d010201.10030000"),
+            ("product_name", "Avid Media Composer 8.6.3.43955"),
+            ("product_uid", "acfbf03a-4f42-a231-d0b7-c06ecd3d4ad7"),
+            ("product_version", "Unknown version"),
+            ("project_name", "UHD"),
+            ("uid", "4482d537-4203-ea40-9e4e-08a22900dd39"),
         ):
-            if min_version and any(
-                av.library_versions[name] < version
-                for name, version in min_version.items()
-            ):
-                continue
             assert self.file.metadata.get(key) == value
 
-    def test_stream_probing(self):
+    def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
         assert str(stream).startswith("<av.DataStream #0 data/<nocodec> at ")
@@ -171,53 +156,43 @@ class TestDataProbe(TestCase):
         assert stream.id == 1
         assert stream.index == 0
         assert stream.language is None
-        self.assertEqual(
-            stream.metadata,
-            {
-                "data_type": "video",
-                "file_package_umid": "0x060A2B340101010101010F001300000057E19D16BA8302DB060E2B347F7F2A80",
-                "track_name": "Base",
-            },
-        )
+        assert stream.metadata == {
+            "data_type": "video",
+            "file_package_umid": "0x060A2B340101010101010F001300000057E19D16BA8302DB060E2B347F7F2A80",
+            "track_name": "Base",
+        }
         assert stream.profile is None
         assert stream.start_time == 0
         assert stream.time_base == Fraction(1, 90000)
         assert stream.type == "data"
-        self.assertEqual(hasattr(stream, "codec"), False)
+        assert not hasattr(stream, "codec")
 
 
 class TestSubtitleProbe(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.file = av.open(fate_suite("sub/MovText_capability_tester.mp4"))
 
-    def test_container_probing(self):
+    def test_container_probing(self) -> None:
         assert self.file.bit_rate == 810
         assert self.file.duration == 8140000
-        self.assertEqual(
-            str(self.file.format), "<av.ContainerFormat 'mov,mp4,m4a,3gp,3g2,mj2'>"
-        )
+        assert str(self.file.format) == "<av.ContainerFormat 'mov,mp4,m4a,3gp,3g2,mj2'>"
         assert self.file.format.name == "mov,mp4,m4a,3gp,3g2,mj2"
         assert self.file.format.long_name == "QuickTime / MOV"
-        self.assertEqual(
-            self.file.metadata,
-            {
-                "compatible_brands": "isom",
-                "creation_time": "2012-07-04T05:10:41.000000Z",
-                "major_brand": "isom",
-                "minor_version": "1",
-            },
-        )
+        assert self.file.metadata == {
+            "compatible_brands": "isom",
+            "creation_time": "2012-07-04T05:10:41.000000Z",
+            "major_brand": "isom",
+            "minor_version": "1",
+        }
         assert self.file.size == 825
         assert self.file.start_time is None
         assert len(self.file.streams) == 1
 
-    def test_stream_probing(self):
+    def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
         # check __repr__
-        self.assertTrue(
-            str(stream).startswith("<av.SubtitleStream #0 subtitle/mov_text at ")
-        )
+        assert str(stream).startswith("<av.SubtitleStream #0 subtitle/mov_text at ")
 
         # actual stream properties
         assert stream.duration == 8140
@@ -225,14 +200,11 @@ class TestSubtitleProbe(TestCase):
         assert stream.id == 1
         assert stream.index == 0
         assert stream.language == "und"
-        self.assertEqual(
-            stream.metadata,
-            {
-                "creation_time": "2012-07-04T05:10:41.000000Z",
-                "handler_name": "reference.srt - Imported with GPAC 0.4.6-DEV-rev4019",
-                "language": "und",
-            },
-        )
+        assert stream.metadata == {
+            "creation_time": "2012-07-04T05:10:41.000000Z",
+            "handler_name": "reference.srt - Imported with GPAC 0.4.6-DEV-rev4019",
+            "language": "und",
+        }
         assert stream.profile is None
         assert stream.start_time is None
         assert stream.time_base == Fraction(1, 1000)
@@ -244,10 +216,10 @@ class TestSubtitleProbe(TestCase):
 
 
 class TestVideoProbe(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.file = av.open(fate_suite("mpeg2/mpeg2_field_encoding.ts"))
 
-    def test_container_probing(self):
+    def test_container_probing(self) -> None:
         assert self.file.bit_rate == 3950617
         assert self.file.duration == 1620000
         assert str(self.file.format) == "<av.ContainerFormat 'mpegts'>"
@@ -258,12 +230,12 @@ class TestVideoProbe(TestCase):
         assert self.file.start_time == 22953408322
         assert len(self.file.streams) == 1
 
-    def test_stream_probing(self):
+    def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
-        # check __repr__
-        self.assertTrue(
-            str(stream).startswith("<av.VideoStream #0 mpeg2video, yuv420p 720x576 at ")
+        assert isinstance(stream, av.video.stream.VideoStream)
+        assert str(stream).startswith(
+            "<av.VideoStream #0 mpeg2video, yuv420p 720x576 at "
         )
 
         # actual stream properties
@@ -290,26 +262,22 @@ class TestVideoProbe(TestCase):
         assert stream.max_bit_rate is None
         assert stream.sample_aspect_ratio == Fraction(16, 15)
         assert stream.width == 720
-
-        # For some reason, these behave differently on OS X (@mikeboers) and
-        # Ubuntu (Travis). We think it is FFmpeg, but haven't been able to
-        # confirm.
-        assert stream.coded_width in (720, 0)
-        assert stream.coded_height in (576, 0)
+        assert stream.coded_width == 0
+        assert stream.coded_height == 0
 
         assert not hasattr(stream, "framerate")
         assert not hasattr(stream, "rate")
 
 
 class TestVideoProbeCorrupt(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         path = self.sandboxed("empty.h264")
         with open(path, "wb"):
             pass
 
         self.file = av.open(path)
 
-    def test_container_probing(self):
+    def test_container_probing(self) -> None:
         assert str(self.file.format) == "<av.ContainerFormat 'h264'>"
         assert self.file.format.name == "h264"
         assert self.file.format.long_name == "raw H.264 video"
@@ -321,13 +289,13 @@ class TestVideoProbeCorrupt(TestCase):
         assert self.file.start_time is None
         assert self.file.metadata == {}
 
-    def test_stream_probing(self):
+    def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
-        # ensure __repr__ does not crash
         assert str(stream).startswith("<av.VideoStream #0 h264, None 0x0 at ")
 
         # actual stream properties
+        assert stream.type == "video"
         assert stream.duration is None
         assert stream.frames == 0
         assert stream.id == 0
@@ -337,7 +305,6 @@ class TestVideoProbeCorrupt(TestCase):
         assert stream.profile is None
         assert stream.start_time is None
         assert stream.time_base == Fraction(1, 1200000)
-        assert stream.type == "video"
 
         # codec context properties
         assert stream.bit_rate is None
