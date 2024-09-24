@@ -2,17 +2,48 @@ from __future__ import annotations
 
 import os
 from fractions import Fraction
+from typing import Iterator, TypedDict, overload
 from unittest import SkipTest
 
 import av
-from av import AudioLayout, AudioResampler, Codec, Packet
+from av import (
+    AudioCodecContext,
+    AudioFrame,
+    AudioLayout,
+    AudioResampler,
+    Codec,
+    Packet,
+    VideoCodecContext,
+    VideoFrame,
+)
 from av.codec.codec import UnknownCodecError
 from av.video.frame import PictureType
 
 from .common import TestCase, fate_suite
 
 
-def iter_raw_frames(path, packet_sizes, ctx):
+class Options(TypedDict, total=False):
+    b: str
+    crf: str
+    pix_fmt: str
+    width: int
+    height: int
+    max_frames: int
+    time_base: Fraction
+    gop_size: int
+
+
+@overload
+def iter_raw_frames(
+    path: str, packet_sizes: list, ctx: VideoCodecContext
+) -> Iterator[VideoFrame]: ...
+@overload
+def iter_raw_frames(
+    path: str, packet_sizes: list, ctx: AudioCodecContext
+) -> Iterator[AudioFrame]: ...
+def iter_raw_frames(
+    path: str, packet_sizes: list, ctx: VideoCodecContext | AudioCodecContext
+) -> Iterator[VideoFrame | AudioFrame]:
     with open(path, "rb") as f:
         for i, size in enumerate(packet_sizes):
             packet = Packet(size)
@@ -244,24 +275,24 @@ class TestEncoding(TestCase):
                 assert frame.height == height
                 assert frame.format.name == pix_fmt
 
-    def test_encoding_h264(self):
+    def test_encoding_h264(self) -> None:
         self.video_encoding("h264", {"crf": "19"})
 
-    def test_encoding_mpeg4(self):
+    def test_encoding_mpeg4(self) -> None:
         self.video_encoding("mpeg4")
 
-    def test_encoding_xvid(self):
+    def test_encoding_xvid(self) -> None:
         self.video_encoding("mpeg4", codec_tag="xvid")
 
-    def test_encoding_mpeg1video(self):
+    def test_encoding_mpeg1video(self) -> None:
         self.video_encoding("mpeg1video")
 
-    def test_encoding_dvvideo(self):
-        options = {"pix_fmt": "yuv411p", "width": 720, "height": 480}
+    def test_encoding_dvvideo(self) -> None:
+        options: Options = {"pix_fmt": "yuv411p", "width": 720, "height": 480}
         self.video_encoding("dvvideo", options)
 
-    def test_encoding_dnxhd(self):
-        options = {
+    def test_encoding_dnxhd(self) -> None:
+        options: Options = {
             "b": "90M",  # bitrate
             "pix_fmt": "yuv422p",
             "width": 1920,
@@ -271,7 +302,12 @@ class TestEncoding(TestCase):
         }
         self.video_encoding("dnxhd", options)
 
-    def video_encoding(self, codec_name, options={}, codec_tag=None):
+    def video_encoding(
+        self,
+        codec_name: str,
+        options: Options = {},
+        codec_tag: str | None = None,
+    ) -> None:
         try:
             codec = Codec(codec_name, "w")
         except UnknownCodecError:
@@ -280,6 +316,8 @@ class TestEncoding(TestCase):
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = container.streams.video[0]
 
+        assert video_stream.time_base is not None
+
         pix_fmt = options.pop("pix_fmt", "yuv420p")
         width = options.pop("width", 640)
         height = options.pop("height", 480)
@@ -287,14 +325,14 @@ class TestEncoding(TestCase):
         time_base = options.pop("time_base", video_stream.time_base)
         gop_size = options.pop("gop_size", 20)
 
-        ctx = codec.create()
+        ctx = codec.create("video")
         ctx.width = width
         ctx.height = height
         ctx.time_base = time_base
         ctx.framerate = 1 / ctx.time_base
         ctx.pix_fmt = pix_fmt
         ctx.gop_size = gop_size
-        ctx.options = options  # TODO
+        ctx.options = options  # type: ignore
         if codec_tag:
             ctx.codec_tag = codec_tag
         ctx.open()
@@ -326,7 +364,7 @@ class TestEncoding(TestCase):
         if codec_name == "libx264":
             dec_codec_name = "h264"
 
-        ctx = av.Codec(dec_codec_name, "r").create()
+        ctx = av.Codec(dec_codec_name, "r").create("video")
         ctx.open()
 
         keyframe_indices = []
@@ -341,7 +379,7 @@ class TestEncoding(TestCase):
 
         assert frame_count == decoded_frame_count
 
-        self.assertIsInstance(
+        assert isinstance(
             all(keyframe_index for keyframe_index in keyframe_indices), int
         )
         decoded_gop_sizes = [
@@ -350,7 +388,7 @@ class TestEncoding(TestCase):
         if codec_name in ("dvvideo", "dnxhd") and all(
             i == 1 for i in decoded_gop_sizes
         ):
-            raise SkipTest()
+            raise SkipTest("I'm not sure why we skip this actually.")
         for i in decoded_gop_sizes:
             assert i == gop_size
 

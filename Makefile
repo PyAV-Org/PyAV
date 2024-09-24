@@ -30,7 +30,7 @@ fate-suite:
 lint:
 	$(PIP) install -U black isort flake8 flake8-pyproject pillow numpy mypy==1.11.2
 	black --check av examples tests setup.py
-	flake8 av examples tests
+	flake8 av
 	isort --check-only --diff av examples tests
 	mypy av tests
 

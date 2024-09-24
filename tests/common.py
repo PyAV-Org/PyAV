@@ -14,6 +14,8 @@ try:
 except ImportError:
     has_pillow = False
 
+__all__ = ("fate_suite",)
+
 
 is_windows = os.name == "nt"
 skip_tests = frozenset(os.environ.get("PYAV_SKIP_TESTS", "").split(","))

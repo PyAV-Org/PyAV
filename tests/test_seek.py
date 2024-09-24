@@ -1,30 +1,28 @@
-import unittest
-
 import av
 
 from .common import TestCase, fate_suite
 
 
-def timestamp_to_frame(timestamp, stream):
+def timestamp_to_frame(timestamp: int, stream: av.video.stream.VideoStream) -> float:
     fps = stream.average_rate
     time_base = stream.time_base
     start_time = stream.start_time
-    frame = (timestamp - start_time) * float(time_base) * float(fps)
-    return frame
+    assert time_base is not None and start_time is not None and fps is not None
+    return (timestamp - start_time) * float(time_base) * float(fps)
 
 
 class TestSeek(TestCase):
-    def test_seek_float(self):
+    def test_seek_float(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         self.assertRaises(TypeError, container.seek, 1.0)
 
-    def test_seek_int64(self):
+    def test_seek_int64(self) -> None:
         # Assert that it accepts large values.
         # Issue 251 pointed this out.
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         container.seek(2**32)
 
-    def test_seek_start(self):
+    def test_seek_start(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
 
         # count all the packets
@@ -42,8 +40,9 @@ class TestSeek(TestCase):
 
         assert total_packet_count == seek_packet_count
 
-    def test_seek_middle(self):
+    def test_seek_middle(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        assert container.duration is not None
 
         # count all the packets
         total_packet_count = 0
@@ -57,10 +56,11 @@ class TestSeek(TestCase):
         for packet in container.demux():
             seek_packet_count += 1
 
-        self.assertTrue(seek_packet_count < total_packet_count)
+        assert seek_packet_count < total_packet_count
 
-    def test_seek_end(self):
+    def test_seek_end(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        assert container.duration is not None
 
         # seek to middle
         container.seek(container.duration // 2)
@@ -80,21 +80,19 @@ class TestSeek(TestCase):
         assert seek_packet_count > 0
         assert seek_packet_count < middle_packet_count
 
-    def test_decode_half(self):
+    def test_decode_half(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        video_stream = container.streams.video[0]
 
-        video_stream = next(s for s in container.streams if s.type == "video")
         total_frame_count = 0
-
-        # Count number of frames in video
-        for packet in container.demux(video_stream):
-            for frame in packet.decode():
-                total_frame_count += 1
+        for frame in container.decode(video_stream):
+            total_frame_count += 1
 
         assert video_stream.frames == total_frame_count
+        assert video_stream.average_rate is not None
 
         # set target frame to middle frame
-        target_frame = int(total_frame_count / 2.0)
+        target_frame = total_frame_count // 2
         target_timestamp = int(
             (target_frame * av.time_base) / video_stream.average_rate
         )
@@ -105,35 +103,33 @@ class TestSeek(TestCase):
         current_frame = None
         frame_count = 0
 
-        for packet in container.demux(video_stream):
-            for frame in packet.decode():
-                if current_frame is None:
-                    current_frame = timestamp_to_frame(frame.pts, video_stream)
-                else:
-                    current_frame += 1
+        for frame in container.decode(video_stream):
+            if current_frame is None:
+                current_frame = timestamp_to_frame(frame.pts, video_stream)
+            else:
+                current_frame += 1
 
-                # start counting once we reach the target frame
-                if current_frame is not None and current_frame >= target_frame:
-                    frame_count += 1
+            # start counting once we reach the target frame
+            if current_frame is not None and current_frame >= target_frame:
+                frame_count += 1
 
         assert frame_count == total_frame_count - target_frame
 
-    def test_stream_seek(self):
+    def test_stream_seek(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        video_stream = container.streams.video[0]
 
-        video_stream = next(s for s in container.streams if s.type == "video")
+        assert video_stream.time_base is not None
+        assert video_stream.start_time is not None
+        assert video_stream.average_rate is not None
+
         total_frame_count = 0
+        for frame in container.decode(video_stream):
+            total_frame_count += 1
 
-        # Count number of frames in video
-        for packet in container.demux(video_stream):
-            for frame in packet.decode():
-                total_frame_count += 1
-
-        target_frame = int(total_frame_count / 2.0)
+        target_frame = total_frame_count // 2
         time_base = float(video_stream.time_base)
-
-        rate = float(video_stream.average_rate)
-        target_sec = target_frame * 1 / rate
+        target_sec = target_frame * 1 / float(video_stream.average_rate)
 
         target_timestamp = int(target_sec / time_base) + video_stream.start_time
         container.seek(target_timestamp, stream=video_stream)
@@ -141,20 +137,15 @@ class TestSeek(TestCase):
         current_frame = None
         frame_count = 0
 
-        for packet in container.demux(video_stream):
-            for frame in packet.decode():
-                if current_frame is None:
-                    current_frame = timestamp_to_frame(frame.pts, video_stream)
+        for frame in container.decode(video_stream):
+            if current_frame is None:
+                assert frame.pts is not None
+                current_frame = timestamp_to_frame(frame.pts, video_stream)
+            else:
+                current_frame += 1
 
-                else:
-                    current_frame += 1
-
-                # start counting once we reach the target frame
-                if current_frame is not None and current_frame >= target_frame:
-                    frame_count += 1
+            # start counting once we reach the target frame
+            if current_frame is not None and current_frame >= target_frame:
+                frame_count += 1
 
         assert frame_count == total_frame_count - target_frame
-
-
-if __name__ == "__main__":
-    unittest.main()

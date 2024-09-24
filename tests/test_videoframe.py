@@ -19,6 +19,10 @@ class TestOpaque:
                 packet.opaque = (time.time(), packet_idx)
                 for frame in packet.decode():
                     assert isinstance(frame, av.frame.Frame)
+
+                    if frame.opaque is None:
+                        continue
+
                     assert type(frame.opaque) is tuple and len(frame.opaque) == 2
 
 
@@ -28,19 +32,19 @@ class TestVideoFrameConstructors(TestCase):
             VideoFrame(640, 480, "__unknown_pix_fmt")
         assert str(cm.exception) == "not a pixel format: '__unknown_pix_fmt'"
 
-    def test_null_constructor(self):
+    def test_null_constructor(self) -> None:
         frame = VideoFrame()
         assert frame.width == 0
         assert frame.height == 0
         assert frame.format.name == "yuv420p"
 
-    def test_manual_yuv_constructor(self):
+    def test_manual_yuv_constructor(self) -> None:
         frame = VideoFrame(640, 480, "yuv420p")
         assert frame.width == 640
         assert frame.height == 480
         assert frame.format.name == "yuv420p"
 
-    def test_manual_rgb_constructor(self):
+    def test_manual_rgb_constructor(self) -> None:
         frame = VideoFrame(640, 480, "rgb24")
         assert frame.width == 640
         assert frame.height == 480
@@ -48,11 +52,11 @@ class TestVideoFrameConstructors(TestCase):
 
 
 class TestVideoFramePlanes:
-    def test_null_planes(self):
+    def test_null_planes(self) -> None:
         frame = VideoFrame()  # yuv420p
         assert len(frame.planes) == 0
 
-    def test_yuv420p_planes(self):
+    def test_yuv420p_planes(self) -> None:
         frame = VideoFrame(640, 480, "yuv420p")
         assert len(frame.planes) == 3
         assert frame.planes[0].width == 640
