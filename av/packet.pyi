@@ -14,6 +14,7 @@ class Packet(Buffer):
     pos: int | None
     size: int
     duration: int | None
+    opaque: object
     is_keyframe: bool
     is_corrupt: bool
     is_discard: bool

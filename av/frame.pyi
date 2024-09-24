@@ -7,5 +7,6 @@ class Frame:
     time_base: Fraction
     is_corrupt: bool
     side_data: dict[str, str]
+    opaque: object
 
     def make_writable(self) -> None: ...
