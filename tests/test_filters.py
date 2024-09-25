@@ -12,16 +12,14 @@ from .common import TestCase, has_pillow
 
 
 def generate_audio_frame(
-    frame_num, input_format="s16", layout="stereo", sample_rate=44100, frame_size=1024
-):
+    frame_num: int,
+    input_format: str = "s16",
+    layout: str = "stereo",
+    sample_rate: int = 44100,
+    frame_size: int = 1024,
+) -> AudioFrame:
     """
     Generate audio frame representing part of the sinusoidal wave
-    :param input_format: default: s16
-    :param layout: default: stereo
-    :param sample_rate: default: 44100
-    :param frame_size: default: 1024
-    :param frame_num: frame number
-    :return: audio frame for sinusoidal wave audio signal slice
     """
     frame = AudioFrame(format=input_format, layout=layout, samples=frame_size)
     frame.sample_rate = sample_rate
@@ -31,7 +29,7 @@ def generate_audio_frame(
         data = np.zeros(frame_size, dtype=format_dtypes[input_format])
         for j in range(frame_size):
             data[j] = np.sin(2 * np.pi * (frame_num + j) * (i + 1) / float(frame_size))
-        frame.planes[i].update(data)
+        frame.planes[i].update(data)  # type: ignore
 
     return frame
 
@@ -79,8 +77,8 @@ class TestFilters(TestCase):
         lutrgb.link_to(sink)
 
         # pads and links
-        self.assertIs(src.outputs[0].link.output, lutrgb.inputs[0])
-        self.assertIs(lutrgb.inputs[0].link.input, src.outputs[0])
+        assert src.outputs[0].link.output is lutrgb.inputs[0]
+        assert lutrgb.inputs[0].link.input is src.outputs[0]
 
         frame = sink.pull()
         assert isinstance(frame, VideoFrame)
