@@ -170,17 +170,17 @@ class TestVideoFrameImage(TestCase):
             assert img.tobytes() == expected
 
 
-def test_basic_to_ndarray():
+def test_basic_to_ndarray() -> None:
     array = VideoFrame(640, 480, "rgb24").to_ndarray()
     assert array.shape == (480, 640, 3)
 
 
-def test_to_image_with_dimensions():
+def test_to_image_with_dimensions() -> None:
     img = VideoFrame(640, 480, format="rgb24").to_image(width=320, height=240)
     assert img.size == (320, 240)
 
 
-def test_ndarray_gray():
+def test_ndarray_gray() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
     for format in ("gray", "gray8"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -189,7 +189,7 @@ def test_ndarray_gray():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_gray_align():
+def test_ndarray_gray_align() -> None:
     array = numpy.random.randint(0, 256, size=(238, 318), dtype=numpy.uint8)
     for format in ("gray", "gray8"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -198,7 +198,7 @@ def test_ndarray_gray_align():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_rgb():
+def test_ndarray_rgb() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
     for format in ("rgb24", "bgr24"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -207,7 +207,7 @@ def test_ndarray_rgb():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_rgb_align():
+def test_ndarray_rgb_align() -> None:
     array = numpy.random.randint(0, 256, size=(238, 318, 3), dtype=numpy.uint8)
     for format in ("rgb24", "bgr24"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -216,7 +216,7 @@ def test_ndarray_rgb_align():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_rgba():
+def test_ndarray_rgba() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640, 4), dtype=numpy.uint8)
     for format in ("argb", "rgba", "abgr", "bgra"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -225,7 +225,7 @@ def test_ndarray_rgba():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_rgba_align():
+def test_ndarray_rgba_align() -> None:
     array = numpy.random.randint(0, 256, size=(238, 318, 4), dtype=numpy.uint8)
     for format in ("argb", "rgba", "abgr", "bgra"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -234,7 +234,7 @@ def test_ndarray_rgba_align():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_gbrp():
+def test_ndarray_gbrp() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="gbrp")
     assert frame.width == 640 and frame.height == 480
@@ -242,7 +242,7 @@ def test_ndarray_gbrp():
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_gbrp_align():
+def test_ndarray_gbrp_align() -> None:
     array = numpy.random.randint(0, 256, size=(238, 318, 3), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="gbrp")
     assert frame.width == 318 and frame.height == 238
@@ -250,7 +250,7 @@ def test_ndarray_gbrp_align():
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_gbrp10():
+def test_ndarray_gbrp10() -> None:
     array = numpy.random.randint(0, 1024, size=(480, 640, 3), dtype=numpy.uint16)
     for format in ("gbrp10be", "gbrp10le"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -259,7 +259,7 @@ def test_ndarray_gbrp10():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_gbrp10_align():
+def test_ndarray_gbrp10_align() -> None:
     array = numpy.random.randint(0, 1024, size=(238, 318, 3), dtype=numpy.uint16)
     for format in ("gbrp10be", "gbrp10le"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -268,7 +268,7 @@ def test_ndarray_gbrp10_align():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_gbrp12():
+def test_ndarray_gbrp12() -> None:
     array = numpy.random.randint(0, 4096, size=(480, 640, 3), dtype=numpy.uint16)
     for format in ("gbrp12be", "gbrp12le"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -277,7 +277,7 @@ def test_ndarray_gbrp12():
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_gbrp12_align():
+def test_ndarray_gbrp12_align() -> None:
     array = numpy.random.randint(0, 4096, size=(238, 318, 3), dtype=numpy.uint16)
     for format in ("gbrp12be", "gbrp12le"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -407,7 +407,7 @@ def test_ndarray_gray16be() -> None:
     assertPixelValue16(frame.planes[0], array[0][0], "big")
 
 
-def test_ndarray_gray16le():
+def test_ndarray_gray16le() -> None:
     array = numpy.random.randint(0, 65536, size=(480, 640), dtype=numpy.uint16)
     frame = VideoFrame.from_ndarray(array, format="gray16le")
     assert frame.width == 640 and frame.height == 480
@@ -418,7 +418,7 @@ def test_ndarray_gray16le():
     assertPixelValue16(frame.planes[0], array[0][0], "little")
 
 
-def test_ndarray_rgb48be():
+def test_ndarray_rgb48be() -> None:
     array = numpy.random.randint(0, 65536, size=(480, 640, 3), dtype=numpy.uint16)
     frame = VideoFrame.from_ndarray(array, format="rgb48be")
     assert frame.width == 640 and frame.height == 480
@@ -561,7 +561,7 @@ def test_shares_memory_bgr8() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_rgb24():
+def test_shares_memory_rgb24() -> None:
     array = numpy.random.randint(0, 256, size=(357, 318, 3), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "rgb24")
     assertNdarraysEqual(frame.to_ndarray(), array)
@@ -572,7 +572,7 @@ def test_shares_memory_rgb24():
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_yuv420p():
+def test_shares_memory_yuv420p() -> None:
     array = numpy.random.randint(0, 256, size=(512 * 6 // 4, 256), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "yuv420p")
     assertNdarraysEqual(frame.to_ndarray(), array)
@@ -583,7 +583,7 @@ def test_shares_memory_yuv420p():
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_yuvj420p():
+def test_shares_memory_yuvj420p() -> None:
     array = numpy.random.randint(0, 256, size=(512 * 6 // 4, 256), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "yuvj420p")
     assertNdarraysEqual(frame.to_ndarray(), array)
@@ -594,7 +594,7 @@ def test_shares_memory_yuvj420p():
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_nv12():
+def test_shares_memory_nv12() -> None:
     array = numpy.random.randint(0, 256, size=(512 * 6 // 4, 256), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "nv12")
     assertNdarraysEqual(frame.to_ndarray(), array)
@@ -605,7 +605,7 @@ def test_shares_memory_nv12():
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_bgr24():
+def test_shares_memory_bgr24() -> None:
     array = numpy.random.randint(0, 256, size=(357, 318, 3), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "bgr24")
     assertNdarraysEqual(frame.to_ndarray(), array)
@@ -624,13 +624,13 @@ def test_reformat_pts() -> None:
     assert frame.pts == 123 and frame.time_base == 456
 
 
-def test_reformat_identity():
+def test_reformat_identity() -> None:
     frame1 = VideoFrame(640, 480, "rgb24")
     frame2 = frame1.reformat(640, 480, "rgb24")
     assert frame1 is frame2
 
 
-def test_reformat_colorspace():
+def test_reformat_colorspace() -> None:
     # This is allowed.
     frame = VideoFrame(640, 480, "rgb24")
     frame.reformat(src_colorspace=None, dst_colorspace="smpte240")
@@ -640,7 +640,7 @@ def test_reformat_colorspace():
     frame.reformat(src_colorspace=None, dst_colorspace="smpte240")
 
 
-def test_reformat_pixel_format_align():
+def test_reformat_pixel_format_align() -> None:
     height = 480
     for width in range(2, 258, 2):
         frame_yuv = VideoFrame(width, height, "yuv420p")

@@ -1,9 +1,9 @@
 import io
 import math
 from fractions import Fraction
-from unittest import SkipTest
 
 import numpy as np
+import pytest
 
 import av
 from av import AudioFrame, VideoFrame
@@ -19,7 +19,7 @@ DURATION = 48
 
 def write_rgb_rotate(output: av.container.OutputContainer) -> None:
     if not has_pillow:
-        raise SkipTest("Don't have Pillow")
+        pytest.skip()
 
     import PIL.Image as Image
 
@@ -233,8 +233,8 @@ class TestEncodeStreamSemantics(TestCase):
 
             astream = output.add_stream("mp2", 48000)
             assert astream in output.streams.audio
-            astream.layout = "stereo"  # type: ignore
-            astream.format = "s16"  # type: ignore
+            astream.layout = "stereo"
+            astream.format = "s16"
 
             assert vstream.index == 0
             assert astream.index == 1
@@ -385,4 +385,4 @@ class TestMaxBFrameEncoding(TestCase):
         for max_b_frames in range(4):
             file = encode_file_with_max_b_frames(max_b_frames)
             actual_max_b_frames = max_b_frame_run_in_file(file)
-            self.assertTrue(actual_max_b_frames <= max_b_frames)
+            assert actual_max_b_frames <= max_b_frames

@@ -355,13 +355,13 @@ class TestPythonIO(TestCase):
         ) as cm:
             write(buf)
 
-    def test_writing_to_pipe_writeonly(self):
+    def test_writing_to_pipe_writeonly(self) -> None:
         av.logging.set_level(av.logging.VERBOSE)
 
         buf = WriteOnlyPipe()
         with pytest.raises(
             ValueError, match=escape("[mp4] muxer does not support non seekable output")
-        ) as cm:
+        ):
             write(buf)
 
         av.logging.set_level(None)

@@ -169,7 +169,7 @@ class TestCodecContext(TestCase):
             stream.bits_per_coded_sample = 31
 
             with pytest.raises(av.error.InvalidDataError):
-                for frame in container.decode(stream):
+                for _ in container.decode(stream):
                     pass
 
         with av.open(self.sandboxed("output.mov"), "w") as output:
@@ -396,7 +396,7 @@ class TestEncoding(TestCase):
             assert i == gop_size
 
         final_gop_size = decoded_frame_count - max(keyframe_indices)
-        self.assertLessEqual(final_gop_size, gop_size)
+        assert final_gop_size < gop_size
 
     def test_encoding_pcm_s24le(self) -> None:
         self.audio_encoding("pcm_s24le")

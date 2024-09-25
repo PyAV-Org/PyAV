@@ -41,7 +41,7 @@ class TestDecode(TestCase):
         audio_stream = next(s for s in container.streams if s.type == "audio")
 
         assert audio_stream is container.streams.audio[0]
-        assert isinstance(audio_stream, av.audio.AudioStream)
+        assert isinstance(audio_stream, av.AudioStream)
 
         sample_count = 0
 

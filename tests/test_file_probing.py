@@ -9,7 +9,7 @@ class TestAudioProbe(TestCase):
     def setUp(self):
         self.file = av.open(fate_suite("aac/latm_stereo_to_51.ts"))
 
-    def test_container_probing(self):
+    def test_container_probing(self) -> None:
         assert self.file.bit_rate == 269558
         assert self.file.duration == 6165333
         assert str(self.file.format) == "<av.ContainerFormat 'mpegts'>"
@@ -20,9 +20,10 @@ class TestAudioProbe(TestCase):
         assert self.file.start_time == 1400000
         assert len(self.file.streams) == 1
 
-    def test_stream_probing(self):
+    def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
+        assert isinstance(stream, av.AudioStream)
         assert str(stream).startswith(
             "<av.AudioStream #0 aac_latm at 48000Hz, stereo, fltp at "
         )
@@ -52,7 +53,7 @@ class TestAudioProbe(TestCase):
 
 
 class TestAudioProbeCorrupt(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # write an empty file
         path = self.sandboxed("empty.flac")
         with open(path, "wb"):
