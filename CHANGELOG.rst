@@ -1,7 +1,7 @@
 Changelog
 =========
 
-We are operating with `semantic versioning <http://semver.org>`_.
+We are operating with `semantic versioning <https://semver.org>`_.
 
 ..
     Please try to update this file in the commits that make the changes.
@@ -15,6 +15,22 @@ We are operating with `semantic versioning <http://semver.org>`_.
 
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
+
+v13.1.0
+-------
+
+Features:
+
+- Allow passing Python objects around using `Frame.opaque` and `Packet.opaque`.
+- Allow extradata to be set by encoders by @daveisfera in (:issue:`1526`).
+
+Fixes:
+
+- Remove the `deprecation` module in anticipation of `PEP 702 <https://peps.python.org/pep-0702/>`_
+- Add type stubs to previously unannotated API sections.
+- Improve type stubs for both `mypy` and `mypy --strict`.
+- Permit only setting `time_base` with a Fraction, as mypy is unable to respect different types in getters vs setters.
+- Declare `write_packet` function as const by @hmaarrfk in (:issue:`1517`).
 
 v13.0.0
 -------
@@ -415,7 +431,7 @@ Micro:
 Build:
 
 - Assert building against compatible FFmpeg. (:issue:`401`)
-- Lock down Cython lanaguage level to avoid build warnings. (:issue:`443`)
+- Lock down Cython language level to avoid build warnings. (:issue:`443`)
 
 Other:
 
@@ -596,9 +612,9 @@ Major:
   of streams/containers.
 - ``Stream.encode`` returns a list of packets, instead of a single packet.
 - ``AudioFifo`` and ``AudioResampler`` will raise ``ValueError`` if input frames
-  inconsistant ``pts``.
+  inconsistent ``pts``.
 - ``time_base`` use has been revisited across the codebase, and may not be converted
-  bettween ``Stream.time_base`` and ``CodecContext.time_base`` at the same times
+  between ``Stream.time_base`` and ``CodecContext.time_base`` at the same times
   in the transcoding pipeline.
 - ``CodecContext.rate`` has been removed, but proxied to ``VideoCodecContext.framerate``
   and ``AudioCodecContext.sample_rate``. The definition is effectively inverted from
@@ -611,7 +627,7 @@ Minor:
 
 - Added ``Packet.is_keyframe`` and ``Packet.is_corrupt``.
   (:issue:`226`)
-- Many more ``time_base``, ``pts`` and other attributes are writeable.
+- Many more ``time_base``, ``pts`` and other attributes are writable.
 - ``Option`` exposes much more of the API (but not get/set).
   (:issue:`243`)
 - Expose metadata encoding controls.
@@ -721,7 +737,7 @@ v0.2.3
 Major:
 
 - Python IO.
-- Agressively releases GIL
+- Aggressively releases GIL
 - Add experimental Windows build.
   (:issue:`84`)
 
