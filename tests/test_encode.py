@@ -196,8 +196,8 @@ class TestBasicAudioEncoding(TestCase):
 
             ctx = stream.codec_context
             ctx.sample_rate = sample_rate
-            stream.format = sample_fmt  # type: ignore
-            ctx.layout = channel_layout  # type: ignore
+            stream.format = sample_fmt
+            ctx.layout = channel_layout
 
             with av.open(
                 fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav")
