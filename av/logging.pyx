@@ -38,8 +38,6 @@ API Reference
 
 """
 
-from __future__ import absolute_import
-
 cimport libav as lib
 from libc.stdio cimport fprintf, stderr
 from libc.stdlib cimport free, malloc
@@ -223,7 +221,9 @@ cpdef log(int level, str name, str message):
     cdef log_context *obj = <log_context*>malloc(sizeof(log_context))
     obj.class_ = &log_class
     obj.name = name
-    lib.av_log(<void*>obj, level, "%s", message)
+    cdef bytes message_bytes = message.encode("utf-8")
+
+    lib.av_log(<void*>obj, level, "%s", <char*>message_bytes)
     free(obj)
 
 
