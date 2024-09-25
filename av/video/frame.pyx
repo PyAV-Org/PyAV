@@ -591,6 +591,7 @@ cdef class VideoFrame(Frame):
 
         return frame
 
+    @staticmethod
     def from_bytes(img_bytes: bytes, width: int, height: int, format="rgba", flip_horizontal=False, flip_vertical=False):
         frame = VideoFrame(width, height, format)
         if format == "rgba":
