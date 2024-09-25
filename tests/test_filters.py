@@ -34,11 +34,11 @@ def generate_audio_frame(
     return frame
 
 
-def pull_until_blocked(graph):
-    frames = []
+def pull_until_blocked(graph: Graph) -> list[av.VideoFrame]:
+    frames: list[av.VideoFrame] = []
     while True:
         try:
-            frames.append(graph.pull())
+            frames.append(graph.vpull())
         except av.AVError as e:
             if e.errno != errno.EAGAIN:
                 raise
@@ -46,7 +46,7 @@ def pull_until_blocked(graph):
 
 
 class TestFilters(TestCase):
-    def test_filter_descriptor(self):
+    def test_filter_descriptor(self) -> None:
         f = Filter("testsrc")
         assert f.name == "testsrc"
         assert f.description == "Generate test pattern."
@@ -86,24 +86,25 @@ class TestFilters(TestCase):
         if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot2.png"))
 
-    def test_auto_find_sink(self):
+    def test_auto_find_sink(self) -> None:
         graph = Graph()
         src = graph.add("testsrc")
         src.link_to(graph.add("buffersink"))
         graph.configure()
 
-        frame = graph.pull()
+        frame = graph.vpull()
 
         if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot3.png"))
 
-    def test_delegate_sink(self):
+    def test_delegate_sink(self) -> None:
         graph = Graph()
         src = graph.add("testsrc")
         src.link_to(graph.add("buffersink"))
         graph.configure()
 
         frame = src.pull()
+        assert isinstance(frame, av.VideoFrame)
 
         if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot4.png"))
