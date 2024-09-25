@@ -23,7 +23,7 @@ class OutputContainer(Container):
     @overload
     def add_stream(
         self,
-        codec_name: Literal["h264", "mpeg4", "png"],
+        codec_name: Literal["h264", "mpeg4", "png", "qtrle"],
         rate: Fraction | int | float | None = None,
         template: None = None,
         options: dict[str, str] | None = None,

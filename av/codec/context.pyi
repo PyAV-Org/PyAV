@@ -56,6 +56,7 @@ class Flags2(EnumFlag):
 
 class CodecContext:
     extradata: bytes | None
+    extradata_size: int
     is_open: bool
     is_encoder: bool
     is_decoder: bool
@@ -95,6 +96,7 @@ class CodecContext:
     ac_pred: bool
     interlaced_me: bool
     closed_gop: bool
+    delay: bool
 
     def open(self, strict: bool = True) -> None: ...
     def close(self, strict: bool = True) -> None: ...

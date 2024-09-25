@@ -67,7 +67,7 @@ class ReadOnlyBuffer:
     Minimal buffer which *only* implements the read() method.
     """
 
-    def __init__(self, data):
+    def __init__(self, data) -> None:
         self.data = data
 
     def read(self, n):
@@ -225,7 +225,7 @@ class TestPythonIO(TestCase):
                 # break I/O
                 buf.broken = True
 
-    def test_writing_to_buffer_broken_with_close(self):
+    def test_writing_to_buffer_broken_with_close(self) -> None:
         buf = BrokenBuffer()
 
         with av.open(buf, "w", "mp4") as container:
