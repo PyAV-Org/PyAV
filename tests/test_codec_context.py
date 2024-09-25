@@ -139,7 +139,7 @@ class TestCodecContext(TestCase):
         assert ctx.extradata_size == 3
 
     def test_encoder_pix_fmt(self):
-        ctx = av.codec.Codec("h264", "w").create()
+        ctx = av.codec.Codec("h264", "w").create("video")
 
         # valid format
         ctx.pix_fmt = "yuv420p"
@@ -429,8 +429,8 @@ class TestEncoding(TestCase):
 
         ctx.time_base = Fraction(1) / sample_rate
         ctx.sample_rate = sample_rate
-        ctx.format = sample_fmt  # type: ignore
-        ctx.layout = channel_layout  # type: ignore
+        ctx.format = sample_fmt
+        ctx.layout = channel_layout
 
         ctx.open()
 
@@ -463,8 +463,8 @@ class TestEncoding(TestCase):
 
         ctx = Codec(codec_name, "r").create("audio")
         ctx.sample_rate = sample_rate
-        ctx.format = sample_fmt  # type: ignore
-        ctx.layout = channel_layout  # type: ignore
+        ctx.format = sample_fmt
+        ctx.layout = channel_layout
         ctx.open()
 
         result_samples = 0
