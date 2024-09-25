@@ -8,7 +8,7 @@ import av.logging
 from .common import TestCase
 
 
-def do_log(message):
+def do_log(message: str) -> None:
     av.logging.log(av.logging.INFO, "test", message)
 
 
@@ -16,9 +16,9 @@ class TestLogging(TestCase):
     def test_adapt_level(self):
         assert av.logging.adapt_level(av.logging.ERROR) == logging.ERROR
         assert av.logging.adapt_level(av.logging.WARNING) == logging.WARNING
-        self.assertEqual(
-            av.logging.adapt_level((av.logging.WARNING + av.logging.ERROR) // 2),
-            logging.WARNING,
+        assert (
+            av.logging.adapt_level((av.logging.WARNING + av.logging.ERROR) // 2)
+            == logging.WARNING
         )
 
     def test_threaded_captures(self):
@@ -30,7 +30,7 @@ class TestLogging(TestCase):
             thread.start()
             thread.join()
 
-        self.assertIn((av.logging.INFO, "test", "main"), logs)
+        assert (av.logging.INFO, "test", "main") in logs
         av.logging.set_level(None)
 
     def test_global_captures(self):
@@ -42,8 +42,8 @@ class TestLogging(TestCase):
             thread.start()
             thread.join()
 
-        self.assertIn((av.logging.INFO, "test", "main"), logs)
-        self.assertIn((av.logging.INFO, "test", "thread"), logs)
+        assert (av.logging.INFO, "test", "main") in logs
+        assert (av.logging.INFO, "test", "thread") in logs
         av.logging.set_level(None)
 
     def test_repeats(self):
@@ -59,16 +59,13 @@ class TestLogging(TestCase):
 
         logs = [log for log in logs if log[1] == "test"]
 
-        self.assertEqual(
-            logs,
-            [
-                (av.logging.INFO, "test", "foo"),
-                (av.logging.INFO, "test", "foo"),
-                (av.logging.INFO, "test", "bar"),
-                (av.logging.INFO, "test", "bar (repeated 2 more times)"),
-                (av.logging.INFO, "test", "baz"),
-            ],
-        )
+        assert logs == [
+            (av.logging.INFO, "test", "foo"),
+            (av.logging.INFO, "test", "foo"),
+            (av.logging.INFO, "test", "bar"),
+            (av.logging.INFO, "test", "bar (repeated 2 more times)"),
+            (av.logging.INFO, "test", "baz"),
+        ]
 
         av.logging.set_level(None)
 

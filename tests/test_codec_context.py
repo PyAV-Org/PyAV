@@ -72,7 +72,7 @@ class TestCodecContext(TestCase):
         ctx = Codec("png", "w").create()
         assert ctx.skip_frame.name == "DEFAULT"
 
-    def test_codec_delay(self):
+    def test_codec_delay(self) -> None:
         with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
             assert container.streams.audio[0].codec_context.delay == 312
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
@@ -131,7 +131,7 @@ class TestCodecContext(TestCase):
         with pytest.raises(RuntimeError):
             ctx.time_base = Fraction(1, 25)
 
-    def test_encoder_extradata(self):
+    def test_encoder_extradata(self) -> None:
         ctx = av.codec.Codec("h264", "w").create()
         assert ctx.extradata is None
         assert ctx.extradata_size == 0
@@ -140,7 +140,7 @@ class TestCodecContext(TestCase):
         assert ctx.extradata == b"123"
         assert ctx.extradata_size == 3
 
-    def test_encoder_pix_fmt(self):
+    def test_encoder_pix_fmt(self) -> None:
         ctx = av.codec.Codec("h264", "w").create("video")
 
         # valid format
@@ -161,6 +161,7 @@ class TestCodecContext(TestCase):
             for packet in container.demux(stream):
                 for frame in packet.decode():
                     pass
+                assert isinstance(packet.stream, av.VideoStream)
                 assert packet.stream.bits_per_coded_sample == 32
 
         with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:

@@ -11,7 +11,7 @@ class VideoCodecContext(CodecContext):
     format: VideoFormat | None
     width: int
     height: int
-    bits_per_codec_sample: int
+    bits_per_coded_sample: int
     pix_fmt: str | None
     framerate: Fraction
     rate: Fraction

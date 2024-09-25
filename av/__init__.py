@@ -47,6 +47,7 @@ from av.video.stream import VideoStream
 AVError = FFmpegError  # noqa: F405
 
 __all__ = (
+    "__version__",
     "time_base",
     "library_versions",
     "AudioCodecContext",
