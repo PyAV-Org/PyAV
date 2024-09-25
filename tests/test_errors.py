@@ -53,11 +53,11 @@ def test_filenotfound():
         assert False, "No exception raised!"
 
 
-def test_buffertoosmall():
+def test_buffertoosmall() -> None:
     """Throw an exception from an enum."""
     try:
         av.error.err_check(-av.error.BUFFER_TOO_SMALL.value)
-    except av.BufferTooSmallError as e:
+    except av.error.BufferTooSmallError as e:
         assert e.errno == av.error.BUFFER_TOO_SMALL.value
     else:
         assert False, "No exception raised!"

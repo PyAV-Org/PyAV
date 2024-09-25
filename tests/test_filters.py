@@ -126,7 +126,7 @@ class TestFilters(TestCase):
             if e.errno != errno.EAGAIN:
                 raise
 
-    def test_audio_buffer_resample(self):
+    def test_audio_buffer_resample(self) -> None:
         graph = Graph()
         graph.link_nodes(
             graph.add_abuffer(
@@ -147,6 +147,7 @@ class TestFilters(TestCase):
             )
         )
         out_frame = graph.pull()
+        assert isinstance(out_frame, av.AudioFrame)
         assert out_frame.format.name == "s16"
         assert out_frame.layout.name == "stereo"
         assert out_frame.sample_rate == 44100
@@ -202,9 +203,7 @@ class TestFilters(TestCase):
         input_data = input_frame.to_ndarray()
         output_data = out_frame.to_ndarray()
 
-        self.assertTrue(
-            np.allclose(input_data * 0.5, output_data), "Check that volume is reduced"
-        )
+        assert np.allclose(input_data * 0.5, output_data)
 
     def test_video_buffer(self):
         input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")

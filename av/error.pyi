@@ -11,6 +11,9 @@ def make_error(
     filename: str | None = None,
     log: tuple[int, tuple[int, str, str] | None] | None = None,
 ) -> None: ...
+def err_check(res: int, filename: str | None = None) -> int: ...
+
+BUFFER_TOO_SMALL: EnumItem
 
 class ErrorType(EnumItem):
     BSF_NOT_FOUND: int
