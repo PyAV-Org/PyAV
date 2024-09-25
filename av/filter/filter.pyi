@@ -18,4 +18,6 @@ class Filter:
     inputs: tuple[FilterPad, ...]
     outputs: tuple[FilterPad, ...]
 
+    def __init__(self, name: str) -> None: ...
+
 filters_available: set[str]

@@ -43,10 +43,8 @@ def test_opaque() -> None:
                 assert type(frame.opaque) is tuple and len(frame.opaque) == 2
 
 
-def test_invalid_pixel_format():
-    with pytest.raises(
-        ValueError, match="not a pixel format: '__unknown_pix_fmt'"
-    ) as cm:
+def test_invalid_pixel_format() -> None:
+    with pytest.raises(ValueError, match="not a pixel format: '__unknown_pix_fmt'"):
         VideoFrame(640, 480, "__unknown_pix_fmt")
 
 
@@ -90,7 +88,7 @@ def test_yuv420p_planes() -> None:
         assert frame.planes[i].buffer_size == 320 * 240
 
 
-def test_yuv420p_planes_align():
+def test_yuv420p_planes_align() -> None:
     # If we request 8-byte alignment for a width which is not a multiple of 8,
     # the line sizes are larger than the plane width.
     frame = VideoFrame(318, 238, "yuv420p")
@@ -106,7 +104,7 @@ def test_yuv420p_planes_align():
         assert frame.planes[i].buffer_size == 160 * 119
 
 
-def test_rgb24_planes():
+def test_rgb24_planes() -> None:
     frame = VideoFrame(640, 480, "rgb24")
     assert len(frame.planes) == 1
     assert frame.planes[0].width == 640
@@ -115,7 +113,7 @@ def test_rgb24_planes():
     assert frame.planes[0].buffer_size == 640 * 480 * 3
 
 
-def test_memoryview_read():
+def test_memoryview_read() -> None:
     frame = VideoFrame(640, 480, "rgb24")
     frame.planes[0].update(b"01234" + (b"x" * (640 * 480 * 3 - 5)))
     mem = memoryview(frame.planes[0])
@@ -129,11 +127,11 @@ def test_memoryview_read():
 
 
 class TestVideoFrameImage(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         if not has_pillow:
             pytest.skip()
 
-    def test_roundtrip(self):
+    def test_roundtrip(self) -> None:
         import PIL.Image as Image
 
         image = Image.open(fate_png())
@@ -142,7 +140,7 @@ class TestVideoFrameImage(TestCase):
         img.save(self.sandboxed("roundtrip-high.jpg"))
         assertImagesAlmostEqual(image, img)
 
-    def test_to_image_rgb24(self):
+    def test_to_image_rgb24(self) -> None:
         sizes = [(318, 238), (320, 240), (500, 500)]
         for width, height in sizes:
             frame = VideoFrame(width, height, format="rgb24")
