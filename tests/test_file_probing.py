@@ -14,9 +14,7 @@ class TestAudioProbe(TestCase):
         assert self.file.duration == 6165333
         assert str(self.file.format) == "<av.ContainerFormat 'mpegts'>"
         assert self.file.format.name == "mpegts"
-        self.assertEqual(
-            self.file.format.long_name, "MPEG-TS (MPEG-2 Transport Stream)"
-        )
+        assert self.file.format.long_name == "MPEG-TS (MPEG-2 Transport Stream)"
         assert self.file.metadata == {}
         assert self.file.size == 207740
         assert self.file.start_time == 1400000
@@ -25,11 +23,8 @@ class TestAudioProbe(TestCase):
     def test_stream_probing(self):
         stream = self.file.streams[0]
 
-        # check __repr__
-        self.assertTrue(
-            str(stream).startswith(
-                "<av.AudioStream #0 aac_latm at 48000Hz, stereo, fltp at "
-            )
+        assert str(stream).startswith(
+            "<av.AudioStream #0 aac_latm at 48000Hz, stereo, fltp at "
         )
 
         # actual stream properties
@@ -65,9 +60,9 @@ class TestAudioProbeCorrupt(TestCase):
         with open(path, "wb"):
             pass
 
-        self.file = av.open(path)
+        self.file = av.open(path, "r")
 
-    def test_container_probing(self):
+    def test_container_probing(self) -> None:
         assert self.file.bit_rate == 0
         assert self.file.duration is None
         assert str(self.file.format) == "<av.ContainerFormat 'flac'>"
@@ -78,14 +73,11 @@ class TestAudioProbeCorrupt(TestCase):
         assert self.file.start_time is None
         assert len(self.file.streams) == 1
 
-    def test_stream_probing(self):
+    def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
-        # ensure __repr__ does not crash
-        self.assertTrue(
-            str(stream).startswith(
-                "<av.AudioStream #0 flac at 0Hz, 0 channels, None at "
-            )
+        assert str(stream).startswith(
+            "<av.AudioStream #0 flac at 0Hz, 0 channels, None at "
         )
 
         # actual stream properties
@@ -191,7 +183,6 @@ class TestSubtitleProbe(TestCase):
     def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
-        # check __repr__
         assert str(stream).startswith("<av.SubtitleStream #0 subtitle/mov_text at ")
 
         # actual stream properties

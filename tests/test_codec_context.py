@@ -36,14 +36,14 @@ class Options(TypedDict, total=False):
 
 @overload
 def iter_raw_frames(
-    path: str, packet_sizes: list, ctx: VideoCodecContext
+    path: str, packet_sizes: list[int], ctx: VideoCodecContext
 ) -> Iterator[VideoFrame]: ...
 @overload
 def iter_raw_frames(
-    path: str, packet_sizes: list, ctx: AudioCodecContext
+    path: str, packet_sizes: list[int], ctx: AudioCodecContext
 ) -> Iterator[AudioFrame]: ...
 def iter_raw_frames(
-    path: str, packet_sizes: list, ctx: VideoCodecContext | AudioCodecContext
+    path: str, packet_sizes: list[int], ctx: VideoCodecContext | AudioCodecContext
 ) -> Iterator[VideoFrame | AudioFrame]:
     with open(path, "rb") as f:
         for i, size in enumerate(packet_sizes):
@@ -85,14 +85,16 @@ class TestCodecContext(TestCase):
         assert ctx.codec_tag == "xvid"
 
         # wrong length
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(
+            ValueError, match="Codec tag should be a 4 character string"
+        ):
             ctx.codec_tag = "bob"
-        assert str(cm.exception) == "Codec tag should be a 4 character string."
 
         # wrong type
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(
+            ValueError, match="Codec tag should be a 4 character string"
+        ):
             ctx.codec_tag = 123
-        assert str(cm.exception) == "Codec tag should be a 4 character string."
 
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
             assert container.streams[0].codec_tag == "avc1"
@@ -175,14 +177,14 @@ class TestCodecContext(TestCase):
             with pytest.raises(ValueError):
                 stream.codec_context.bits_per_coded_sample = 32
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         # This one parses into a single packet.
         self._assert_parse("mpeg4", fate_suite("h264/interlaced_crop.mp4"))
 
         # This one parses into many small packets.
         self._assert_parse("mpeg2video", fate_suite("mpeg2/mpeg2_field_encoding.ts"))
 
-    def _assert_parse(self, codec_name, path):
+    def _assert_parse(self, codec_name: str, path: str) -> None:
         fh = av.open(path)
         packets = []
         for packet in fh.demux(video=0):

@@ -57,7 +57,7 @@ class TestDecode(TestCase):
         )
         assert sample_count == total_samples
 
-    def test_decoded_time_base(self):
+    def test_decoded_time_base(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
 
@@ -65,38 +65,37 @@ class TestDecode(TestCase):
 
         for packet in container.demux(stream):
             for frame in packet.decode():
+                assert not isinstance(frame, av.subtitles.subtitle.SubtitleSet)
                 assert packet.time_base == frame.time_base
                 assert stream.time_base == frame.time_base
                 return
 
-    def test_decoded_motion_vectors(self):
+    def test_decoded_motion_vectors(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
         codec_context = stream.codec_context
         codec_context.options = {"flags2": "+export_mvs"}
 
-        for packet in container.demux(stream):
-            for frame in packet.decode():
-                vectors = frame.side_data.get("MOTION_VECTORS")
-                if frame.key_frame:
-                    # Key frame don't have motion vectors
-                    assert vectors is None
-                else:
-                    assert len(vectors) > 0
-                    return
+        for frame in container.decode(stream):
+            vectors = frame.side_data.get("MOTION_VECTORS")
+            if frame.key_frame:
+                # Key frame don't have motion vectors
+                assert vectors is None
+            else:
+                assert vectors is not None and len(vectors) > 0
+                return
 
-    def test_decoded_motion_vectors_no_flag(self):
+    def test_decoded_motion_vectors_no_flag(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
 
-        for packet in container.demux(stream):
-            for frame in packet.decode():
-                vectors = frame.side_data.get("MOTION_VECTORS")
-                if not frame.key_frame:
-                    assert vectors is None
-                    return
+        for frame in container.decode(stream):
+            vectors = frame.side_data.get("MOTION_VECTORS")
+            if not frame.key_frame:
+                assert vectors is None
+                return
 
-    def test_decode_video_corrupt(self):
+    def test_decode_video_corrupt(self) -> None:
         # write an empty file
         path = self.sandboxed("empty.h264")
         with open(path, "wb"):
@@ -114,7 +113,7 @@ class TestDecode(TestCase):
         assert packet_count == 1
         assert frame_count == 0
 
-    def test_decode_close_then_use(self):
+    def test_decode_close_then_use(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         container.close()
 
