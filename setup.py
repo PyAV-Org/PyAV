@@ -177,12 +177,12 @@ for dirname, dirnames, filenames in os.walk("av"):
                 library_dirs=extension_extra["library_dirs"],
                 sources=[pyx_path],
             ),
-            compiler_directives=dict(
-                c_string_type="str",
-                c_string_encoding="ascii",
-                embedsignature=True,
-                language_level=2,
-            ),
+            compiler_directives={
+                "c_string_type": "str",
+                "c_string_encoding": "ascii",
+                "embedsignature": True,
+                "language_level": 3,
+            },
             build_dir="src",
             include_path=["include"],
         )
