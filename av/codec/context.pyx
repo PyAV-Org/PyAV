@@ -11,7 +11,6 @@ from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
 
-from av.deprecation import AVDeprecationWarning
 from av.dictionary import Dictionary
 
 
