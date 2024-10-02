@@ -36,10 +36,11 @@ jobs:
         config:
           - {os: ubuntu-latest, python: "3.9", ffmpeg: "6.1.1", extras: true}
           - {os: ubuntu-latest, python: "3.9", ffmpeg: "7.0.2"}
-          - {os: ubuntu-latest, python: "3.9", ffmpeg: "6.0"}
+          - {os: ubuntu-latest, python: "3.9", ffmpeg: "7.1"}
           - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "6.1.1"}
-          - {os: macos-12,  python: "3.9", ffmpeg: "7.0.2"}
-          - {os: macos-12,  python: "3.9", ffmpeg: "6.1.1"}
+          - {os: macos-13,  python: "3.9", ffmpeg: "7.1"}
+          - {os: macos-13,  python: "3.9", ffmpeg: "7.0.2"}
+          - {os: macos-13,  python: "3.9", ffmpeg: "6.1.1"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -65,7 +66,7 @@ jobs:
               sudo apt-get install doxygen wget
             fi
             ;;
-          macos-12)
+          macos-13)
             brew install automake libtool nasm pkg-config libpng libvorbis libvpx opus x264
             ;;
         esac
@@ -112,6 +113,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - {os: windows-latest, python: "3.9", ffmpeg: "7.1"}
           - {os: windows-latest, python: "3.9", ffmpeg: "7.0"}
           - {os: windows-latest, python: "3.9", ffmpeg: "6.1"}
           - {os: windows-latest, python: "3.9", ffmpeg: "6.0"}
