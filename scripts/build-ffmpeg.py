@@ -184,7 +184,7 @@ openh264 = Package(
 
 ffmpeg_package = Package(
     name="ffmpeg",
-    source_url="https://ffmpeg.org/releases/ffmpeg-7.0.2.tar.xz",
+    source_url="https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz",
     build_arguments=[],
 )
 
