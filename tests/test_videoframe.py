@@ -174,6 +174,9 @@ def test_basic_to_ndarray() -> None:
 
 
 def test_to_image_with_dimensions() -> None:
+    if not has_pillow:
+        pytest.skip()
+
     img = VideoFrame(640, 480, format="rgb24").to_image(width=320, height=240)
     assert img.size == (320, 240)
 
