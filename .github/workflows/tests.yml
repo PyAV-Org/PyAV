@@ -69,8 +69,8 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:\cibw\vendor\bin -w {dest_dir} {wheel}
           CIBW_SKIP: "*-musllinux*"
-          CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
-          CIBW_TEST_REQUIRES: numpy
+          CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
+          CIBW_TEST_REQUIRES: pytest numpy
           # skip tests when there are no binary wheels of numpy
           CIBW_TEST_SKIP: pp* *_i686
         run: |
