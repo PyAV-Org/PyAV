@@ -18,6 +18,8 @@ istest() {
     return $?
 }
 
+$PYAV_PYTHON -c "import av; print(f'PyAV: {av.__version__}'); print(f'FFMPEG: {av.ffmpeg_version_info}')"
+
 if istest main; then
     $PYAV_PYTHON -m pytest
 fi

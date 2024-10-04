@@ -18,6 +18,12 @@ cdef decode_version(v):
 
     return (major, minor, micro)
 
+# Return an informative version string.
+# This usually is the actual release version number or a git commit
+# description. This string has no fixed format and can change any time. It
+# should never be parsed by code.
+ffmpeg_version_info = lib.av_version_info()
+
 library_meta = {
     "libavutil": dict(
         version=decode_version(lib.avutil_version()),
