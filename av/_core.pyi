@@ -7,5 +7,6 @@ class _Meta(TypedDict):
 
 library_meta: dict[str, _Meta]
 library_versions: dict[str, tuple[int, int, int]]
+ffmpeg_version_info: str
 
 time_base: int

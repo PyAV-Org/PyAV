@@ -12,6 +12,7 @@ cdef extern from "libavutil/rational.h" nogil:
 
 cdef extern from "libavutil/avutil.h" nogil:
 
+    cdef const char* av_version_info()
     cdef int   avutil_version()
     cdef char* avutil_configuration()
     cdef char* avutil_license()

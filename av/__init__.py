@@ -1,6 +1,6 @@
 # MUST import the core before anything else in order to initialize the underlying
 # library that is being wrapped.
-from av._core import time_base, library_versions
+from av._core import time_base, library_versions, ffmpeg_version_info
 
 # Capture logging (by importing it).
 from av import logging
@@ -32,6 +32,7 @@ AVError = FFmpegError  # noqa: F405
 __all__ = (
     "__version__",
     "time_base",
+    "ffmpeg_version_info",
     "library_versions",
     "AudioCodecContext",
     "AudioFifo",
