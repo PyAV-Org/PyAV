@@ -26,9 +26,6 @@ from av.video.format import VideoFormat
 from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
 
-# Backwards compatibility
-AVError = FFmpegError  # noqa: F405
-
 __all__ = (
     "__version__",
     "time_base",
