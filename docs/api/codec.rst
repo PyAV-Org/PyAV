@@ -79,7 +79,6 @@ Attributes
 .. autoattribute:: CodecContext.profile
 
 .. autoattribute:: CodecContext.time_base
-.. autoattribute:: CodecContext.ticks_per_frame
 
 .. autoattribute:: CodecContext.bit_rate
 .. autoattribute:: CodecContext.bit_rate_tolerance

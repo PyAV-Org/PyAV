@@ -6,8 +6,8 @@ All contributors (by number of commits):
 - Mike Boers <github@mikeboers.com>; `@mikeboers <https://github.com/mikeboers>`_
 
 * Jeremy Lainé <jeremy.laine@m4x.org>; `@jlaine <https://github.com/jlaine>`_
+* WyattBlue <wyattblue@auto-editor.com>; `@WyattBlue <https://github.com/WyattBlue>`_
 
-- WyattBlue <wyattblue@auto-editor.com>; `@WyattBlue <https://github.com/WyattBlue>`_
 - Mark Reid <mindmark@gmail.com>; `@markreidvfx <https://github.com/markreidvfx>`_
 
 * Vidar Tonaas Fauske <vidartf@gmail.com>; `@vidartf <https://github.com/vidartf>`_
@@ -19,11 +19,11 @@ All contributors (by number of commits):
 * JoeUgly <41972063+JoeUgly@users.noreply.github.com>
 * Justin Wong <46082645+uvjustin@users.noreply.github.com>
 
-- Alba Mendez <me@alba.sh>
 - Mark Harfouche <mark.harfouche@gmail.com>
+- Alba Mendez <me@alba.sh>
+- Dave Johansen <davejohansen@gmail.com>
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
 - Dan Allan <daniel.b.allan@gmail.com>; `@danielballan <https://github.com/danielballan>`_
-- Dave Johansen <davejohansen@gmail.com>
 - Moonsik Park <moonsik.park@estsoft.com>
 - Santtu Keskinen <santtu.keskinen@gmail.com>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
@@ -35,6 +35,7 @@ All contributors (by number of commits):
 - Wel C. van der <wel@Physics.LeidenUniv.nl>
 - Will Patera <willpatera@gmail.com>; `@willpatera <https://github.com/willpatera>`_
 
+* Dexer <73297572+DexerBR@users.noreply.github.com>
 * rutsh <Eugene.Krokhalev@gmail.com>
 * Felix Vollmer <FelixVollmer@gmail.com>
 * Santiago Castro <bryant1410@gmail.com>
@@ -55,11 +56,11 @@ All contributors (by number of commits):
 * zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
 * Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
-* Dexer <73297572+DexerBR@users.noreply.github.com>
 * Artturin <Artturin@artturin.com>
 * Ian Lee <IanLee1521@gmail.com>
 * Ryan Huang <NPN@users.noreply.github.com>
 * Arthur Barros <arthbarros@gmail.com>
+* Carlos Ruiz <carlos.r.domin@gmail.com>
 * Carlos Ruiz <carlos.ruiz.dominguez@west.cmu.edu>
 * David Plowman <david.plowman@raspberrypi.com>
 * Maxime Desroches <desroches.maxime@gmail.com>
