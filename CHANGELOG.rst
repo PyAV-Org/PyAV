@@ -21,16 +21,17 @@ v13.1.0
 
 Features:
 
-- Allow passing Python objects around using `Frame.opaque` and `Packet.opaque`.
-- Allow extradata to be set by encoders by @daveisfera in (:issue:`1526`).
+- Allow passing Python objects around using `Frame.opaque` and `Packet.opaque` by :gh-user:`CarlosRDomin` and :gh-user:`WyattBlue` in (:pr:`1533`).
+- Allow extradata to be set by encoders by :gh-user:`daveisfera` in (:pr:`1526`).
+- Add getting ffmpeg version info string by :gh-user:`hmaarrfk` in (:pr:`1564`).
 
 Fixes:
 
-- Remove the `deprecation` module in anticipation of `PEP 702 <https://peps.python.org/pep-0702/>`_
+- Remove the `deprecation` module in anticipation of `PEP 702 <https://peps.python.org/pep-0702/>`_.
 - Add type stubs to previously unannotated API sections.
 - Improve type stubs for both `mypy` and `mypy --strict`.
 - Permit only setting `time_base` with a Fraction, as mypy is unable to respect different types in getters vs setters.
-- Declare `write_packet` function as const by @hmaarrfk in (:issue:`1517`).
+- Declare `write_packet` function as const by :gh-user:`hmaarrfk` in (:pr:`1517`).
 
 v13.0.0
 -------
@@ -62,20 +63,20 @@ v12.3.0
 
 Features:
 
-- Support libav's `av_log_set_level` by @materight in (:issue:`1448`).
-- Add Graph.link_nodes by @WyattBlue in (:issue:`1449`).
-- Add default codec properties by @WyattBlue in (:issue:`1450`).
-- Remove the xvid and ass packages in ffmpeg binaries because they were unused by @WyattBlue in (:issue:`1462`).
-- Add supported_codecs property to OutputContainer by @WyattBlue in (:issue:`1465`).
-- Add text and dialogue property to AssSubtitle, remove TextSubtitle by @WyattBlue in (:issue:`1456`).
+- Support libav's `av_log_set_level` by :gh-user:`materight` in (:pr:`1448`).
+- Add Graph.link_nodes by :gh-user:`WyattBlue` in (:pr:`1449`).
+- Add default codec properties by :gh-user:`WyattBlue` in (:pr:`1450`).
+- Remove the xvid and ass packages in ffmpeg binaries because they were unused by :gh-user:`WyattBlue` in (:pr:`1462`).
+- Add supported_codecs property to OutputContainer by :gh-user:`WyattBlue` in (:pr:`1465`).
+- Add text and dialogue property to AssSubtitle, remove TextSubtitle by :gh-user:`WyattBlue` in (:pr:`1456`).
 
 Fixes:
 
-- Include libav headers in final distribution by @materight in (:issue:`1455`).
-- Fix segfault when calling subtitle_stream.decode() by @WyattBlue in (:issue:`1460`).
-- flushing subtitle decoder requires a new uninitialized packet by @moonsikpark in (:issue:`1461`).
-- Set default color range for VideoReformatter.format() by @elxy in (:issue:`1458`).
-- Resampler: format, layout accepts `str` `int` too by @WyattBlue in (:issue:`1446`).
+- Include libav headers in final distribution by :gh-user:`materight` in (:pr:`1455`).
+- Fix segfault when calling subtitle_stream.decode() by :gh-user:`WyattBlue` in (:pr:`1460`).
+- flushing subtitle decoder requires a new uninitialized packet by :gh-user:`moonsikpark` in (:pr:`1461`).
+- Set default color range for VideoReformatter.format() by :gh-user:`elxy` in (:pr:`1458`).
+- Resampler: format, layout accepts `str` `int` too by :gh-user:`WyattBlue` in (:pr:`1446`).
 
 v12.2.0
 -------
@@ -98,19 +99,19 @@ Features:
 
 - Build binary wheels with webp support.
 - Allow disabling logs, disable logs by default.
-- Add bitstream filters by @skeskinen in (:issue:`1375`) (:issue:`1379`).
-- Expose CodecContext flush_buffers by @skeskinen in (:issue:`1382`).
+- Add bitstream filters by :gh-user:`skeskinen` in (:pr:`1379` :issue:`1375`).
+- Expose CodecContext flush_buffers by :gh-user:`skeskinen` in (:pr:`1382`).
 
 Fixes:
 
 - Fix type stubs, add missing type stubs.
-- Add S12M_TIMECODE by @WyattBlue in (:issue:`1381`).
-- Subtitle.text now returns bytes by @WyattBlue in (:issue:`1398`).
-- Allow packet.duration to be writable by @WyattBlue in (:issue:`1399`).
-- Remove deprecated `VideoStream.frame_rate` by @WyattBlue in (:issue:`1351`).
-- Build with Arm for PyPy now by @WyattBlue in (:issue:`1395`).
-- Fix #1378 by @WyattBlue in (:issue:`1400`).
-- setup.py: use PKG_CONFIG env var to get the pkg-config to use by @Artturin in (:issue:`1387`).
+- Add S12M_TIMECODE by :gh-user:`WyattBlue` in (:pr:`1381`).
+- Subtitle.text now returns bytes by :gh-user:`WyattBlue` in (:pr:`1398`).
+- Allow packet.duration to be writable by :gh-user:`WyattBlue` in (:pr:`1399`).
+- Remove deprecated `VideoStream.frame_rate` by :gh-user:`WyattBlue` in (:pr:`1351`).
+- Build with Arm for PyPy now by :gh-user:`WyattBlue` in (:pr:`1395`).
+- Fix #1378 by :gh-user:`WyattBlue` in (:pr:`1400`).
+- setup.py: use PKG_CONFIG env var to get the pkg-config to use by :gh-user:`Artturin` in (:pr:`1387`).
 
 v12.0.0
 -------
@@ -120,28 +121,28 @@ Major:
 - Add type hints.
 - Update FFmpeg to 6.1.1 for the binary wheels.
 - Update libraries for the binary wheels (notably dav1d to 1.4.1).
-- Deprecate VideoCodecContext.gop_size for decoders by @JoeSchiff in (:issue:`1256`).
-- Deprecate frame.index by @JoeSchiff in (:issue:`1218`).
+- Deprecate VideoCodecContext.gop_size for decoders by :gh-user:`JoeSchiff` in (:pr:`1256`).
+- Deprecate frame.index by :gh-user:`JoeSchiff` in (:pr:`1218`).
 
 Features:
 
-- Allow using pathlib.Path for av.open by @WyattBlue in (:issue:`1231`).
-- Add `max_b_frames` property to CodecContext by @davidplowman in (:issue:`1119`).
-- Add `encode_lazy` method to CodecContext by @rawler in (:issue:`1092`).
-- Add `color_range` to CodecContext/Frame by @johanjeppsson in (:issue:`686`).
-- Set `time_base` for AudioResampler by @daveisfera in (:issue:`1209`).
-- Add support for ffmpeg's AVCodecContext::delay by @JoeSchiff in (:issue:`1279`).
-- Add `color_primaries`, `color_trc`, `colorspace` to VideoStream by @WyattBlue in (:issue:`1304`).
-- Add `bits_per_coded_sample` to VideoCodecContext by @rvanlaar in (:issue:`1203`).
-- AssSubtitle.ass now returns as bytes by @WyattBlue in (:issue:`1333`).
-- Expose DISPLAYMATRIX side data by @hyenal in (:issue:`1249`).
+- Allow using pathlib.Path for av.open by :gh-user:`WyattBlue` in (:pr:`1231`).
+- Add `max_b_frames` property to CodecContext by :gh-user:`davidplowman` in (:pr:`1119`).
+- Add `encode_lazy` method to CodecContext by :gh-user:`rawler` in (:pr:`1092`).
+- Add `color_range` to CodecContext/Frame by :gh-user:`johanjeppsson` in (:pr:`686`).
+- Set `time_base` for AudioResampler by :gh-user:`daveisfera` in (:issue:`1209`).
+- Add support for ffmpeg's AVCodecContext::delay by :gh-user:`JoeSchiff` in (:issue:`1279`).
+- Add `color_primaries`, `color_trc`, `colorspace` to VideoStream by :gh-user:`WyattBlue` in (:pr:`1304`).
+- Add `bits_per_coded_sample` to VideoCodecContext by :gh-user:`rvanlaar` in (:pr:`1203`).
+- AssSubtitle.ass now returns as bytes by :gh-user:`WyattBlue` in (:pr:`1333`).
+- Expose DISPLAYMATRIX side data by :gh-user:`hyenal` in (:pr:`1249`).
 
 Fixes:
 
-- Convert deprecated Cython extension class properties to decorator syntax by @JoeSchiff
-- Check None packet when setting time_base after decode by @philipnbbc in (:issue:`1281`).
-- Remove deprecated `Buffer.to_bytes` by @WyattBlue in (:issue:`1286`).
-- Remove deprecated `Packet.decode_one` by @WyattBlue in (:issue:`1301`).
+- Convert deprecated Cython extension class properties to decorator syntax by :gh-user:`JoeSchiff`.
+- Check None packet when setting time_base after decode by :gh-user:`philipnbbc` in (:pr:`1281`).
+- Remove deprecated `Buffer.to_bytes` by :gh-user:`WyattBlue` in (:pr:`1286`).
+- Remove deprecated `Packet.decode_one` by :gh-user:`WyattBlue` in (:pr:`1301`).
 
 v11.0.0
 -------
