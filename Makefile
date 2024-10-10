@@ -1,5 +1,5 @@
 LDFLAGS ?= ""
-CFLAGS ?= "-O0 -Wno-incompatible-function-pointer-types"
+CFLAGS ?= "-O0 -Wno-incompatible-pointer-types -Wno-unreachable-code"
 
 PYAV_PYTHON ?= python
 PYAV_PIP ?= pip
