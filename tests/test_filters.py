@@ -39,7 +39,7 @@ def pull_until_blocked(graph: Graph) -> list[av.VideoFrame]:
     while True:
         try:
             frames.append(graph.vpull())
-        except av.AVError as e:
+        except av.FFmpegError as e:
             if e.errno != errno.EAGAIN:
                 raise
             return frames

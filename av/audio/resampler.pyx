@@ -111,7 +111,7 @@ cdef class AudioResampler:
                 output.append(self.graph.pull())
             except EOFError:
                 break
-            except av.AVError as e:
+            except av.FFmpegError as e:
                 if e.errno != errno.EAGAIN:
                     raise
                 break
