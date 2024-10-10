@@ -6,12 +6,9 @@ input_file = av.open("input.wav")
 output_file = av.open("output.wav", mode="w")
 
 input_stream = input_file.streams.audio[0]
-
 output_stream = output_file.add_stream("pcm_s16le", rate=input_stream.rate)
-assert isinstance(output_stream, av.audio.AudioStream)
 
 graph = av.filter.Graph()
-
 graph.link_nodes(
     graph.add_abuffer(template=input_stream),
     graph.add("atempo", "2.0"),
@@ -31,6 +28,5 @@ for frame in input_file.decode(input_stream):
 for packet in output_stream.encode(None):
     output_file.mux(packet)
 
-# Close the files
 input_file.close()
 output_file.close()
