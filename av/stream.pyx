@@ -85,8 +85,6 @@ cdef class Stream:
         self.codec_context = codec_context
         if self.codec_context:
             self.codec_context.stream_index = stream.index
-
-        self.nb_side_data, self.side_data = self._get_side_data(stream)
         
         self.metadata = avdict_to_dict(
             stream.metadata,
@@ -127,20 +125,6 @@ cdef class Stream:
         # It prefers if we pass it parameters via this other object.
         # Lets just copy what we want.
         err_check(lib.avcodec_parameters_from_context(self.ptr.codecpar, self.codec_context.ptr))
-
-    cdef _get_side_data(self, lib.AVStream *stream):
-        # Get DISPLAYMATRIX SideData from a lib.AVStream object.
-        # Returns: tuple[int, dict[str, Any]]
-
-        nb_side_data = stream.nb_side_data
-        side_data = {}
-        
-        for i in range(nb_side_data):
-            # Based on: https://www.ffmpeg.org/doxygen/trunk/dump_8c_source.html#l00430
-            if stream.side_data[i].type == lib.AV_PKT_DATA_DISPLAYMATRIX:
-                side_data["DISPLAYMATRIX"] = lib.av_display_rotation_get(<const int32_t *>stream.side_data[i].data)
-
-        return nb_side_data, side_data
 
     @property
     def id(self):
