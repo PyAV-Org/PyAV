@@ -7,11 +7,6 @@ with av.open(content) as container:
     stream = container.streams.video[0]
     stream.codec_context.skip_frame = "NONKEY"
 
-    for frame in container.decode(stream):
+    for i, frame in enumerate(container.decode(stream)):
         print(frame)
-
-        # We use `frame.pts` as `frame.index` won't make must sense with the `skip_frame`.
-        frame.to_image().save(
-            "night-sky.{:04d}.jpg".format(frame.pts),
-            quality=80,
-        )
+        frame.to_image().save(f"night-sky.{i:04d}.jpg", quality=80)
