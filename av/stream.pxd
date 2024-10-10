@@ -21,7 +21,6 @@ cdef class Stream:
     # Private API.
     cdef _init(self, Container, lib.AVStream*, CodecContext)
     cdef _finalize_for_output(self)
-    cdef _get_side_data(self, lib.AVStream *stream)
     cdef _set_time_base(self, value)
     cdef _set_id(self, value)
 

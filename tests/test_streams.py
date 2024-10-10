@@ -35,15 +35,9 @@ class TestStreams:
         data = container.streams.data[0]
         assert data == container.streams.best("data")
 
-    def test_noside_data(self) -> None:
-        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
-        video = container.streams.video[0]
+    # def test_side_data(self) -> None:
+    #     container = av.open(fate_suite("mov/displaymatrix.mov"))
+    #     video = container.streams.video[0]
 
-        assert video.nb_side_data == 0
-
-    def test_side_data(self) -> None:
-        container = av.open(fate_suite("mov/displaymatrix.mov"))
-        video = container.streams.video[0]
-
-        assert video.nb_side_data == 1
-        assert video.side_data["DISPLAYMATRIX"] == -90.0
+    #     assert video.nb_side_data == 1
+    #     assert video.side_data["DISPLAYMATRIX"] == -90.0

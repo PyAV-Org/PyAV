@@ -20,8 +20,6 @@ class Stream:
     metadata: dict[str, str]
     id: int
     profile: str
-    nb_side_data: int
-    side_data: dict[str, str]
     index: int
     time_base: Fraction | None
     average_rate: Fraction | None
