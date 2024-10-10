@@ -21,6 +21,7 @@ v14.0.0
 
 Major:
 
+- Drop FFmpeg 6.
 - Remove ``AVError`` alias (use ``FFmpegError`` directly instead).
 
 v13.1.0
