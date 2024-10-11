@@ -15,7 +15,7 @@ class OutputContainer(Container):
     def add_stream(
         self,
         codec_name: Literal["pcm_s16le", "aac", "mp3", "mp2"],
-        rate: Fraction | int | float | None = None,
+        rate: int | None = None,
         template: None = None,
         options: dict[str, str] | None = None,
         **kwargs,
@@ -24,7 +24,7 @@ class OutputContainer(Container):
     def add_stream(
         self,
         codec_name: Literal["h264", "mpeg4", "png", "qtrle"],
-        rate: Fraction | int | float | None = None,
+        rate: Fraction | int | None = None,
         template: None = None,
         options: dict[str, str] | None = None,
         **kwargs,
@@ -33,7 +33,7 @@ class OutputContainer(Container):
     def add_stream(
         self,
         codec_name: str | None = None,
-        rate: Fraction | int | float | None = None,
+        rate: Fraction | int | None = None,
         template: Stream | None = None,
         options: dict[str, str] | None = None,
         **kwargs,
