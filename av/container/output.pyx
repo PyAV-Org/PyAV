@@ -49,9 +49,8 @@ cdef class OutputContainer(Container):
 
         :param str codec_name: The name of a codec.
         :param rate: The frame rate for video, and sample rate for audio.
-            Examples for video include ``24``, ``23.976``, and
-            ``Fraction(30000,1001)``. Examples for audio include ``48000``
-            and ``44100``.
+            Examples for video include ``24`` and ``Fraction(30000, 1001)``.
+            Examples for audio include ``48000`` and ``44100``.
         :param template: Copy codec from another :class:`~av.stream.Stream` instance.
         :param dict options: Stream options.
         :param \\**kwargs: Set attributes of the stream.
@@ -115,7 +114,13 @@ cdef class OutputContainer(Container):
                 to_avrational(kwargs.pop("time_base"), &codec_context.time_base)
             except KeyError:
                 pass
-            codec_context.sample_rate = rate or 48000
+
+            if rate is None:
+                codec_context.sample_rate = 48000
+            elif type(rate) is int:
+                codec_context.sample_rate = rate
+            else:
+                raise TypeError("audio stream `rate` must be: int | None")
             stream.time_base = codec_context.time_base
             lib.av_channel_layout_default(&codec_context.ch_layout, 2)
 
