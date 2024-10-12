@@ -15,7 +15,7 @@ If you just want to look at keyframes, you can set :attr:`.CodecContext.skip_fra
 Remuxing
 --------
 
-Remuxing is copying audio/video data from one container to the other without transcoding it. By doing so, the data does not suffer any generational loss, and is the full quality that it was in the source container.
+Remuxing is copying audio/video data from one container to the other without transcoding. By doing so, the data does not suffer any generational loss, and is the full quality that it was in the source container.
 
 .. literalinclude:: ../../examples/basics/remux.py
 
@@ -40,3 +40,16 @@ Also enabling :data:`~av.codec.context.ThreadType.FRAME` (or :data:`~av.codec.co
 .. literalinclude:: ../../examples/basics/thread_type.py
 
 On the author's machine, the second pass decodes ~5 times faster.
+
+
+Recording the Screen
+--------------------
+
+.. literalinclude:: ../../examples/basics/record_screen.py
+
+
+Recording a Facecam
+-------------------
+
+.. literalinclude:: ../../examples/basics/record_facecam.py
+
