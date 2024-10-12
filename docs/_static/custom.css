@@ -12,3 +12,7 @@
 .ffmpeg-quicklink:after {
     content: "]";
 }
+
+.body a, .document a {
+    text-decoration: underline !important;
+}

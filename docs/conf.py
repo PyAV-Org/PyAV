@@ -71,7 +71,7 @@ html_theme_path = [os.path.abspath(os.path.join(__file__, "..", "_themes"))]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/logo-250.png"
+html_logo = "_static/logo.webp"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
