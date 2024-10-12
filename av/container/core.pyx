@@ -365,7 +365,7 @@ def open(
     :param int buffer_size: Size of buffer for Python input/output operations in bytes.
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
     :param timeout: How many seconds to wait for data before giving up, as a float, or a
-        :ref:`(open timeout, read timeout)` tuple.
+        ``(open timeout, read timeout)`` tuple.
     :param callable io_open: Custom I/O callable for opening files/streams.
         This option is intended for formats that need to open additional
         file-like objects to ``file`` using custom I/O.
@@ -378,8 +378,8 @@ def open(
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
 
-        >>> # Open webcam on OS X.
-        >>> av.open(format='avfoundation', file='0') # doctest: +SKIP
+        >>> # Open webcam on MacOS.
+        >>> av.open('0', format='avfoundation') # doctest: +SKIP
 
     For DASH and custom I/O using ``io_open``, add a protocol prefix to the ``file`` to
     prevent the DASH encoder defaulting to the file protocol and using temporary files.

@@ -42,7 +42,7 @@ class Container:
     format: ContainerFormat
     options: dict[str, str]
     container_options: dict[str, str]
-    stream_options: list[str]
+    stream_options: list[dict[str, str]]
     streams: StreamContainer
     metadata: dict[str, str]
     open_timeout: Real | None
