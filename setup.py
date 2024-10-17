@@ -221,7 +221,7 @@ setup(
     long_description_content_type="text/markdown",
     license="BSD",
     project_urls={
-        "Bug Reports": "https://github.com/PyAV-Org/PyAV/issues",
+        "Bug Reports": "https://github.com/PyAV-Org/PyAV/discussions/new?category=4-bugs",
         "Documentation": "https://pyav.basswood-io.com",
         "Download": "https://pypi.org/project/av",
     },
