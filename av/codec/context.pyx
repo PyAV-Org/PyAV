@@ -130,6 +130,7 @@ cdef class CodecContext:
 
         self.options = {}
         self.stream_index = -1  # This is set by the container immediately.
+        self._is_open = False
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         self.ptr = ptr
@@ -217,7 +218,7 @@ cdef class CodecContext:
 
     @property
     def is_open(self):
-        return lib.avcodec_is_open(self.ptr)
+        return self._is_open
 
     @property
     def is_encoder(self):
@@ -228,7 +229,7 @@ cdef class CodecContext:
         return lib.av_codec_is_decoder(self.ptr.codec)
 
     cpdef open(self, bint strict=True):
-        if lib.avcodec_is_open(self.ptr):
+        if self._is_open:
             if strict:
                 raise ValueError("CodecContext is already open.")
             return
@@ -241,7 +242,7 @@ cdef class CodecContext:
             self._set_default_time_base()
 
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
-
+        self._is_open = True
         self.options = dict(options)
 
     cdef _set_default_time_base(self):
@@ -249,17 +250,17 @@ cdef class CodecContext:
         self.ptr.time_base.den = lib.AV_TIME_BASE
 
     cpdef close(self, bint strict=True):
-        if not lib.avcodec_is_open(self.ptr):
+        if not self._is_open:
             if strict:
                 raise ValueError("CodecContext is already closed.")
             return
-        err_check(lib.avcodec_close(self.ptr))
+        self._is_open = False
+        lib.avcodec_free_context(&self.ptr)
 
     def __dealloc__(self):
         if self.ptr and self.extradata_set:
             lib.av_freep(&self.ptr.extradata)
         if self.ptr:
-            lib.avcodec_close(self.ptr)
             lib.avcodec_free_context(&self.ptr)
         if self.parser:
             lib.av_parser_close(self.parser)
@@ -565,7 +566,7 @@ cdef class CodecContext:
 
     @thread_count.setter
     def thread_count(self, int value):
-        if lib.avcodec_is_open(self.ptr):
+        if self._is_open:
             raise RuntimeError("Cannot change thread_count after codec is open.")
         self.ptr.thread_count = value
 
@@ -580,7 +581,7 @@ cdef class CodecContext:
 
     @thread_type.setter
     def thread_type(self, value):
-        if lib.avcodec_is_open(self.ptr):
+        if self._is_open:
             raise RuntimeError("Cannot change thread_type after codec is open.")
         self.ptr.thread_type = ThreadType[value].value
 

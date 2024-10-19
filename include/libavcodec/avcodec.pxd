@@ -291,9 +291,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDictionary **options,
     )
 
-    cdef int avcodec_is_open(AVCodecContext *ctx )
-    cdef int avcodec_close(AVCodecContext *ctx)
-
     cdef int AV_NUM_DATA_POINTERS
 
     cdef enum AVPacketSideDataType:
