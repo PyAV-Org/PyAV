@@ -13,6 +13,7 @@ cdef class CodecContext:
 
     # Whether AVCodecContext.extradata should be de-allocated upon destruction.
     cdef bint extradata_set
+    cdef bint _is_open
 
     # Used as a signal that this is within a stream, and also for us to access
     # that stream. This is set "manually" by the stream after constructing
