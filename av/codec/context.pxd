@@ -49,8 +49,8 @@ cdef class CodecContext:
     cdef _setup_decoded_frame(self, Frame, Packet)
 
     # Implemented by base for the generic send/recv API.
-    # Note that the user cannot send without recieving. This is because
-    # _prepare_frames_for_encode may expand a frame into multiple (e.g. when
+    # Note that the user cannot send without receiving. This is because
+    # `_prepare_frames_for_encode` may expand a frame into multiple (e.g. when
     # resampling audio to a higher rate but with fixed size frames), and the
     # send/recv buffer may be limited to a single frame. Ergo, we need to flush
     # the buffer as often as possible.

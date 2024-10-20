@@ -35,6 +35,41 @@ class TestStreams:
         data = container.streams.data[0]
         assert data == container.streams.best("data")
 
+    def test_printing_closed_video_stream(self) -> None:
+        input_ = av.open(
+            fate_suite("amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv")
+        )
+        container = av.open("out.mkv", "w")
+
+        video_stream = container.add_stream("h264", rate=30)
+        # encoder = video_stream.codec.name + ""
+
+        video_stream.width = input_.streams.video[0].width
+        video_stream.height = input_.streams.video[0].height
+        video_stream.pix_fmt = "yuv420p"
+
+        for frame in input_.decode(video=0):
+            container.mux(video_stream.encode(frame))
+            break
+
+        encoder = "libx264"
+        repr = f"{video_stream}"
+        assert repr.startswith(f"<av.VideoStream #0 {encoder}, yuv420p 160x120 at ")
+        assert repr.endswith(">")
+
+        # repr = f"{video_stream}"
+        # assert repr.startswith(f"<av.VideoStream #0 {encoder}, yuv420p 160x120 at ")
+        # assert repr.endswith(">")
+
+        video_stream.close()
+
+        repr = f"{video_stream}"
+        assert repr.startswith(f"<av.VideoStream #0 {encoder}, yuv420p 0x0 at ")
+        assert repr.endswith(">")
+
+        container.close()
+        input_.close()
+
     # def test_side_data(self) -> None:
     #     container = av.open(fate_suite("mov/displaymatrix.mov"))
     #     video = container.streams.video[0]

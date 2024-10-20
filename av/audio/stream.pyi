@@ -18,6 +18,9 @@ class _Layout:
 
 class AudioStream(Stream):
     codec_context: AudioCodecContext
+    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...
+    def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
+
     # From codec context
     frame_size: int
     sample_rate: int
@@ -27,5 +30,5 @@ class AudioStream(Stream):
     type: Literal["audio"]
     format: _Format
     layout: _Layout
-    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...
-    def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
+
+    def close(self, strict: bool = True) -> None: ...

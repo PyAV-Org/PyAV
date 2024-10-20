@@ -193,10 +193,11 @@ cdef class CodecContext:
 
     @property
     def extradata(self):
+        if self.ptr is NULL:
+            return None
         if self.ptr.extradata_size > 0:
             return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
-        else:
-            return None
+        return None
 
     @extradata.setter
     def extradata(self, data):
@@ -222,10 +223,14 @@ cdef class CodecContext:
 
     @property
     def is_encoder(self):
+        if self.ptr is NULL:
+            return False
         return lib.av_codec_is_encoder(self.ptr.codec)
 
     @property
     def is_decoder(self):
+        if self.ptr is NULL:
+            return False
         return lib.av_codec_is_decoder(self.ptr.codec)
 
     cpdef open(self, bint strict=True):
