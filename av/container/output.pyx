@@ -79,8 +79,7 @@ cdef class OutputContainer(Container):
             )
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
-        lib.avformat_new_stream(self.ptr, codec)
-        cdef lib.AVStream *stream = self.ptr.streams[self.ptr.nb_streams - 1]
+        cdef lib.AVStream *stream = lib.avformat_new_stream(self.ptr, codec)
         cdef lib.AVCodecContext *codec_context = lib.avcodec_alloc_context3(codec)
 
         # Copy from the template.
@@ -160,10 +159,11 @@ cdef class OutputContainer(Container):
         # Finalize and open all streams.
         cdef Stream stream
         for stream in self.streams:
-
             ctx = stream.codec_context
-            if not ctx.is_open:
+            if ctx is None:
+                raise ValueError(f"Stream {stream.index} has no codec context")
 
+            if not ctx.is_open:
                 for k, v in self.options.items():
                     ctx.options.setdefault(k, v)
                 ctx.open()
@@ -190,10 +190,7 @@ cdef class OutputContainer(Container):
 
         cdef _Dictionary all_options = Dictionary(self.options, self.container_options)
         cdef _Dictionary options = all_options.copy()
-        self.err_check(lib.avformat_write_header(
-            self.ptr,
-            &options.ptr
-        ))
+        self.err_check(lib.avformat_write_header(self.ptr, &options.ptr))
 
         # Track option usage...
         for k in all_options:
