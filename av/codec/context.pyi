@@ -99,7 +99,6 @@ class CodecContext:
     delay: bool
 
     def open(self, strict: bool = True) -> None: ...
-    def close(self, strict: bool = True) -> None: ...
     @staticmethod
     def create(
         codec: str | Codec, mode: Literal["r", "w"] | None = None

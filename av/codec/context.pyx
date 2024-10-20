@@ -254,13 +254,6 @@ cdef class CodecContext:
         self.ptr.time_base.num = 1
         self.ptr.time_base.den = lib.AV_TIME_BASE
 
-    cpdef close(self, bint strict=True):
-        if not self._is_open:
-            if strict:
-                raise ValueError("CodecContext is already closed.")
-            return
-        self._is_open = False
-        lib.avcodec_free_context(&self.ptr)
 
     def __dealloc__(self):
         if self.ptr and self.extradata_set:

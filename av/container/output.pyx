@@ -246,8 +246,7 @@ cdef class OutputContainer(Container):
 
     def close(self):
         for stream in self.streams:
-            if stream.codec_context:
-                stream.codec_context.close(strict=False)
+            del stream
 
         close_output(self)
 

@@ -30,7 +30,6 @@ cdef class CodecContext:
 
     # Public API.
     cpdef open(self, bint strict=?)
-    cpdef close(self, bint strict=?)
 
     cdef _set_default_time_base(self)
 

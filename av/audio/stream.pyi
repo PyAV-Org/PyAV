@@ -30,5 +30,3 @@ class AudioStream(Stream):
     type: Literal["audio"]
     format: _Format
     layout: _Layout
-
-    def close(self, strict: bool = True) -> None: ...
