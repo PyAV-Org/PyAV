@@ -40,5 +40,3 @@ class VideoStream(Stream):
     color_trc: int
     colorspace: int
     type: Literal["video"]
-
-    def close(self, strict: bool = True) -> None: ...
