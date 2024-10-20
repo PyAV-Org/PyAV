@@ -78,6 +78,8 @@ cdef class VideoCodecContext(CodecContext):
 
     @property
     def width(self):
+        if self.ptr is NULL:
+            return 0
         return self.ptr.width
 
     @width.setter
@@ -87,6 +89,8 @@ cdef class VideoCodecContext(CodecContext):
 
     @property
     def height(self):
+        if self.ptr is NULL:
+            return 0
         return self.ptr.height
 
     @height.setter
