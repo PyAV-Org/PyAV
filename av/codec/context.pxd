@@ -13,32 +13,27 @@ cdef class CodecContext:
     # Whether AVCodecContext.extradata should be de-allocated upon destruction.
     cdef bint extradata_set
 
-    # Used as a signal that this is within a stream, and also for us to access
-    # that stream. This is set "manually" by the stream after constructing
-    # this object.
+    # Used as a signal that this is within a stream, and also for us to access that
+    # stream. This is set "manually" by the stream after constructing this object.
     cdef int stream_index
 
     cdef lib.AVCodecParserContext *parser
-
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec)
 
-    cdef readonly Codec codec
-
-    cdef public dict options
-
     # Public API.
-    cpdef open(self, bint strict=?)
     cdef readonly bint is_open
+    cdef readonly Codec codec
+    cdef public dict options
+    cpdef open(self, bint strict=?)
 
     # Wraps both versions of the transcode API, returning lists.
     cpdef encode(self, Frame frame=?)
     cpdef decode(self, Packet packet=?)
-
     cpdef flush_buffers(self)
 
     # Used by both transcode APIs to setup user-land objects.
-    # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing
-    # packets are bogus). It should take all info it needs from the context and/or stream.
+    # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing packets
+    # are bogus). It should take all info it needs from the context and/or stream.
     cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame)
     cdef _prepare_frames_for_encode(self, Frame frame)
     cdef _setup_encoded_packet(self, Packet)
