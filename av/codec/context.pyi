@@ -55,23 +55,20 @@ class Flags2(EnumFlag):
     RO_FLUSH_NOOP: int
 
 class CodecContext:
-    extradata: bytes | None
-    extradata_size: int
     name: str
-    codec: Codec
-    options: dict[str, str]
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
+    options: dict[str, str]
     profile: str | None
+    extradata: bytes | None
     time_base: Fraction
     codec_tag: str
     bit_rate: int | None
-    max_bit_rate: int | None
     bit_rate_tolerance: int
     thread_count: int
     thread_type: Any
     skip_frame: Any
 
-    # flgas
+    # flags
     unaligned: bool
     qscale: bool
     four_mv: bool
@@ -93,7 +90,6 @@ class CodecContext:
     ac_pred: bool
     interlaced_me: bool
     closed_gop: bool
-    delay: bool
 
     @property
     def is_open(self) -> bool: ...
@@ -101,6 +97,14 @@ class CodecContext:
     def is_encoder(self) -> bool: ...
     @property
     def is_decoder(self) -> bool: ...
+    @property
+    def codec(self) -> Codec: ...
+    @property
+    def max_bit_rate(self) -> int | None: ...
+    @property
+    def delay(self) -> bool: ...
+    @property
+    def extradata_size(self) -> int: ...
     def open(self, strict: bool = True) -> None: ...
     @staticmethod
     def create(
