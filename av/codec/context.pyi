@@ -57,9 +57,6 @@ class Flags2(EnumFlag):
 class CodecContext:
     extradata: bytes | None
     extradata_size: int
-    is_open: bool
-    is_encoder: bool
-    is_decoder: bool
     name: str
     codec: Codec
     options: dict[str, str]
@@ -98,6 +95,12 @@ class CodecContext:
     closed_gop: bool
     delay: bool
 
+    @property
+    def is_open(self) -> bool: ...
+    @property
+    def is_encoder(self) -> bool: ...
+    @property
+    def is_decoder(self) -> bool: ...
     def open(self, strict: bool = True) -> None: ...
     @staticmethod
     def create(

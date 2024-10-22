@@ -8,12 +8,10 @@ from av.packet cimport Packet
 
 
 cdef class CodecContext:
-
     cdef lib.AVCodecContext *ptr
 
     # Whether AVCodecContext.extradata should be de-allocated upon destruction.
     cdef bint extradata_set
-    cdef bint _is_open
 
     # Used as a signal that this is within a stream, and also for us to access
     # that stream. This is set "manually" by the stream after constructing
@@ -30,8 +28,7 @@ cdef class CodecContext:
 
     # Public API.
     cpdef open(self, bint strict=?)
-
-    cdef _set_default_time_base(self)
+    cdef readonly bint is_open
 
     # Wraps both versions of the transcode API, returning lists.
     cpdef encode(self, Frame frame=?)
