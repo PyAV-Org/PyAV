@@ -11,14 +11,9 @@ cdef class AudioCodecContext(CodecContext):
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         CodecContext._init(self, ptr, codec)
 
-    cdef _set_default_time_base(self):
-        self.ptr.time_base.num = 1
-        self.ptr.time_base.den = self.ptr.sample_rate
-
     cdef _prepare_frames_for_encode(self, Frame input_frame):
 
         cdef AudioFrame frame = input_frame
-
         cdef bint allow_var_frame_size = self.ptr.codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
 
         # Note that the resampler will simply return an input frame if there is

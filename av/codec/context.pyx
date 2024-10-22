@@ -117,7 +117,6 @@ Flags2 = define_enum("Flags2", __name__, (
 
 
 cdef class CodecContext:
-
     @staticmethod
     def create(codec, mode=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
@@ -130,7 +129,7 @@ cdef class CodecContext:
 
         self.options = {}
         self.stream_index = -1  # This is set by the container immediately.
-        self._is_open = False
+        self.is_open = False
 
     cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
         self.ptr = ptr
@@ -218,10 +217,6 @@ cdef class CodecContext:
         return self.ptr.extradata_size
 
     @property
-    def is_open(self):
-        return self._is_open
-
-    @property
     def is_encoder(self):
         if self.ptr is NULL:
             return False
@@ -234,7 +229,7 @@ cdef class CodecContext:
         return lib.av_codec_is_decoder(self.ptr.codec)
 
     cpdef open(self, bint strict=True):
-        if self._is_open:
+        if self.is_open:
             if strict:
                 raise ValueError("CodecContext is already open.")
             return
@@ -242,18 +237,20 @@ cdef class CodecContext:
         cdef _Dictionary options = Dictionary()
         options.update(self.options or {})
 
-        # Assert we have a time_base for encoders.
         if not self.ptr.time_base.num and self.is_encoder:
-            self._set_default_time_base()
+            if self.type == "video":
+                self.ptr.time_base.num = self.ptr.framerate.den or 1
+                self.ptr.time_base.den = self.ptr.framerate.num or lib.AV_TIME_BASE
+            elif self.type == "audio":
+                self.ptr.time_base.num = 1
+                self.ptr.time_base.den = self.ptr.sample_rate
+            else:
+                self.ptr.time_base.num = 1
+                self.ptr.time_base.den = lib.AV_TIME_BASE
 
         err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
-        self._is_open = True
+        self.is_open = True
         self.options = dict(options)
-
-    cdef _set_default_time_base(self):
-        self.ptr.time_base.num = 1
-        self.ptr.time_base.den = lib.AV_TIME_BASE
-
 
     def __dealloc__(self):
         if self.ptr and self.extradata_set:
@@ -564,7 +561,7 @@ cdef class CodecContext:
 
     @thread_count.setter
     def thread_count(self, int value):
-        if self._is_open:
+        if self.is_open:
             raise RuntimeError("Cannot change thread_count after codec is open.")
         self.ptr.thread_count = value
 
@@ -579,7 +576,7 @@ cdef class CodecContext:
 
     @thread_type.setter
     def thread_type(self, value):
-        if self._is_open:
+        if self.is_open:
             raise RuntimeError("Cannot change thread_type after codec is open.")
         self.ptr.thread_type = ThreadType[value].value
 
