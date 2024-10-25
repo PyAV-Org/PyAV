@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 
 
 cdef close_output(OutputContainer self):
+    self.streams = StreamContainer()
     if self._started and not self._done:
         # We must only ever call av_write_trailer *once*, otherwise we get a
         # segmentation fault. Therefore no matter whether it succeeds or not
@@ -245,9 +246,6 @@ cdef class OutputContainer(Container):
         return lib.avcodec_get_name(self.format.optr.subtitle_codec)
 
     def close(self):
-        for stream in self.streams:
-            del stream
-
         close_output(self)
 
     def mux(self, packets):

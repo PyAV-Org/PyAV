@@ -13,6 +13,7 @@ from av.dictionary import Dictionary
 
 
 cdef close_input(InputContainer self):
+    self.streams = StreamContainer()
     if self.input_was_opened:
         with nogil:
             # This causes `self.ptr` to be set to NULL.
