@@ -162,6 +162,43 @@ Flags = define_enum("Flags", __name__, (
         "Add bitstream filters as requested by the muxer."),
 ), is_flags=True)
 
+AudioCodec = define_enum("AudioCodec", __name__, (
+    ("NONE", lib.AV_CODEC_ID_NONE),
+    ("PCM_ALAW", lib.AV_CODEC_ID_PCM_ALAW),
+    ("PCM_BLURAY", lib.AV_CODEC_ID_PCM_BLURAY),
+    ("PCM_DVD", lib.AV_CODEC_ID_PCM_DVD),
+    ("PCM_F16LE", lib.AV_CODEC_ID_PCM_F16LE),
+    ("PCM_F24LE", lib.AV_CODEC_ID_PCM_F24LE),
+    ("PCM_F32BE", lib.AV_CODEC_ID_PCM_F32BE),
+    ("PCM_F32LE", lib.AV_CODEC_ID_PCM_F32LE),
+    ("PCM_F64BE", lib.AV_CODEC_ID_PCM_F64BE),
+    ("PCM_F64LE", lib.AV_CODEC_ID_PCM_F64LE),
+    ("PCM_LXF", lib.AV_CODEC_ID_PCM_LXF),
+    ("PCM_MULAW", lib.AV_CODEC_ID_PCM_MULAW),
+    ("PCM_S16BE", lib.AV_CODEC_ID_PCM_S16BE),
+    ("PCM_S16BE_PLANAR", lib.AV_CODEC_ID_PCM_S16BE_PLANAR),
+    ("PCM_S16LE", lib.AV_CODEC_ID_PCM_S16LE),
+    ("PCM_S16LE_PLANAR", lib.AV_CODEC_ID_PCM_S16LE_PLANAR),
+    ("PCM_S24BE", lib.AV_CODEC_ID_PCM_S24BE),
+    ("PCM_S24DAUD", lib.AV_CODEC_ID_PCM_S24DAUD),
+    ("PCM_S24LE", lib.AV_CODEC_ID_PCM_S24LE),
+    ("PCM_S24LE_PLANAR", lib.AV_CODEC_ID_PCM_S24LE_PLANAR),
+    ("PCM_S32BE", lib.AV_CODEC_ID_PCM_S32BE),
+    ("PCM_S32LE", lib.AV_CODEC_ID_PCM_S32LE),
+    ("PCM_S32LE_PLANAR", lib.AV_CODEC_ID_PCM_S32LE_PLANAR),
+    ("PCM_S64BE", lib.AV_CODEC_ID_PCM_S64BE),
+    ("PCM_S64LE", lib.AV_CODEC_ID_PCM_S64LE),
+    ("PCM_S8", lib.AV_CODEC_ID_PCM_S8),
+    ("PCM_S8_PLANAR", lib.AV_CODEC_ID_PCM_S8_PLANAR),
+    ("PCM_U16BE", lib.AV_CODEC_ID_PCM_U16BE),
+    ("PCM_U16LE", lib.AV_CODEC_ID_PCM_U16LE),
+    ("PCM_U24BE", lib.AV_CODEC_ID_PCM_U24BE),
+    ("PCM_U24LE", lib.AV_CODEC_ID_PCM_U24LE),
+    ("PCM_U32BE", lib.AV_CODEC_ID_PCM_U32BE),
+    ("PCM_U32LE", lib.AV_CODEC_ID_PCM_U32LE),
+    ("PCM_U8", lib.AV_CODEC_ID_PCM_U8),
+    ("PCM_VIDC", lib.AV_CODEC_ID_PCM_VIDC)
+))
 
 cdef class Container:
 
@@ -196,7 +233,10 @@ cdef class Container:
         self.buffer_size = buffer_size
         self.io_open = io_open
 
+        acodec = None  # no audio codec specified
         if format_name is not None:
+            if ":" in format_name:
+                format_name, acodec = format_name.split(":")
             self.format = ContainerFormat(format_name)
 
         self.input_was_opened = False
@@ -230,6 +270,9 @@ cdef class Container:
             if self.open_timeout is not None or self.read_timeout is not None:
                 self.ptr.interrupt_callback.callback = interrupt_cb
                 self.ptr.interrupt_callback.opaque = &self.interrupt_callback_info
+
+            if acodec is not None:
+                self.ptr.audio_codec_id = AudioCodec[acodec.upper()]
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = <void*>self
