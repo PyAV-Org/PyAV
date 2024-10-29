@@ -164,7 +164,7 @@ cdef class AudioFrame(Frame):
     def rate(self, value):
         self.ptr.sample_rate = value
 
-    def to_ndarray(self, **kwargs):
+    def to_ndarray(self):
         """Get a numpy array of this frame.
 
         .. note:: Numpy must be installed.
