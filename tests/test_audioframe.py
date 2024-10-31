@@ -124,7 +124,8 @@ def test_from_ndarray_value_error() -> None:
     # incorrect shape
     array = np.zeros(shape=(2, 160), dtype="f4")
     with pytest.raises(
-        ValueError, match=escape("Unexpected numpy array shape `(2, 160)`")
+        ValueError,
+        match=escape("Expected packed `array.shape[0]` to equal `1` but got `2`"),
     ) as cm:
         AudioFrame.from_ndarray(array, format="flt", layout="mono")
 

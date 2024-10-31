@@ -24,7 +24,6 @@ class MethodLogger:
         self._log: list[tuple[str, object]] = []
 
     def __getattr__(self, name: str) -> object:
-
         def _method(name: str, meth: Callable, *args, **kwargs) -> object:
             self._log.append((name, args))
             return meth(*args, **kwargs)
