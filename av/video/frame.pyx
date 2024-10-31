@@ -4,7 +4,7 @@ from libc.stdint cimport uint8_t
 
 from av.enum cimport define_enum
 from av.error cimport err_check
-from av.utils cimport check_ndarray, check_ndarray_shape
+from av.utils cimport check_ndarray
 from av.video.format cimport get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
 
@@ -92,6 +92,11 @@ cdef useful_array(VideoPlane plane, unsigned int bytes_per_pixel=1, str dtype="u
     return arr.view(np.dtype(dtype))
 
 
+cdef check_ndarray_shape(object array, bint ok):
+    if not ok:
+        raise ValueError(f"Unexpected numpy array shape `{array.shape}`")
+
+
 cdef class VideoFrame(Frame):
     def __cinit__(self, width=0, height=0, format="yuv420p"):
         if width is _cinit_bypass_sentinel:
@@ -109,18 +114,12 @@ cdef class VideoFrame(Frame):
             self.ptr.height = height
             self.ptr.format = format
 
-            # Allocate the buffer for the video frame.
-            #
             # We enforce aligned buffers, otherwise `sws_scale` can perform
             # poorly or even cause out-of-bounds reads and writes.
             if width and height:
                 res = lib.av_image_alloc(
-                    self.ptr.data,
-                    self.ptr.linesize,
-                    width,
-                    height,
-                    format,
-                    16)
+                    self.ptr.data, self.ptr.linesize, width, height, format, 16
+                )
                 self._buffer = self.ptr.data[0]
 
         if res:
