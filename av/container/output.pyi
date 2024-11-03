@@ -1,13 +1,14 @@
 from fractions import Fraction
-from typing import Literal, Sequence, overload
+from typing import Literal, Sequence, TypeVar, overload
 
-from av.audio.layout import AudioLayout
 from av.audio.stream import AudioStream
 from av.packet import Packet
 from av.stream import Stream
 from av.video.stream import VideoStream
 
 from .core import Container
+
+_StreamT = TypeVar("_StreamT", bound=Stream, default=Stream)
 
 class OutputContainer(Container):
     def __enter__(self) -> OutputContainer: ...
@@ -32,12 +33,22 @@ class OutputContainer(Container):
     @overload
     def add_stream(
         self,
+        codec_name: None = None,
+        rate: Fraction | int | None = None,
+        template: _StreamT | None = None,
+        options: dict[str, str] | None = None,
+        **kwargs,
+    ) -> _StreamT: ...
+    @overload
+    def add_stream(
+        self,
         codec_name: str | None = None,
         rate: Fraction | int | None = None,
         template: Stream | None = None,
         options: dict[str, str] | None = None,
         **kwargs,
     ) -> Stream: ...
+    def add_stream_from_template(self, template: _StreamT, **kwargs) -> _StreamT: ...
     def start_encoding(self) -> None: ...
     def close(self) -> None: ...
     def mux(self, packets: Packet | Sequence[Packet]) -> None: ...
