@@ -23,6 +23,11 @@ Major:
 
 - Drop FFmpeg 6.
 - Remove ``AVError`` alias (use ``FFmpegError`` directly instead).
+- Remove the `template` arg from ``OutputContainer.add_stream()``.
+
+Features:
+
+- Add ``OutputContainer.add_stream_from_template()`` by :gh-user:`WyattBlue` and :gh-user:`cdce8p`.
 
 v13.1.0
 -------
