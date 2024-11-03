@@ -43,33 +43,28 @@ cdef class OutputContainer(Container):
         with nogil:
             lib.av_packet_free(&self.packet_ptr)
 
-    def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
+    def add_stream(self, codec_name, rate=None, dict options=None, **kwargs):
         """add_stream(codec_name, rate=None)
 
-        Creates a new stream from a codec name or a template, and returns it.
+        Creates a new stream from a codec name and returns it.
 
         :param codec_name: The name of a codec.
-        :type codec_name: str | Codec | None
-        :param template: Copy codec from another :class:`~av.stream.Stream` instance.
-        :type template: :class:`~av.stream.Stream` | None
+        :type codec_name: str | Codec
         :param dict options: Stream options.
         :param \\**kwargs: Set attributes for the stream.
         :rtype: The new :class:`~av.stream.Stream`.
 
         """
 
-        if (codec_name is None and template is None) or (codec_name is not None and template is not None):
-            raise ValueError("needs one of codec_name or template")
-
         cdef const lib.AVCodec *codec
         cdef Codec codec_obj
 
-        if codec_name is not None:
-            codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, "w")
+        if isinstance(codec_name, Codec):
+            if codec_name.mode != "w":
+                raise ValueError("codec_name must be an encoder.")
+            codec_obj = codec_name
         else:
-            if not template.codec_context:
-                raise ValueError("template has no codec context")
-            codec_obj = template.codec_context.codec
+            codec_obj = Codec(codec_name, "w")
         codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
@@ -82,14 +77,8 @@ cdef class OutputContainer(Container):
         cdef lib.AVStream *stream = lib.avformat_new_stream(self.ptr, codec)
         cdef lib.AVCodecContext *codec_context = lib.avcodec_alloc_context3(codec)
 
-        # Copy from the template.
-        if template is not None:
-            err_check(lib.avcodec_parameters_to_context(codec_context, template.ptr.codecpar))
-            # Reset the codec tag assuming we are remuxing.
-            codec_context.codec_tag = 0
-
         # Now lets set some more sane video defaults
-        elif codec.type == lib.AVMEDIA_TYPE_VIDEO:
+        if codec.type == lib.AVMEDIA_TYPE_VIDEO:
             codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_context.width = kwargs.pop("width", 640)
             codec_context.height = kwargs.pop("height", 480)

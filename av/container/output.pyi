@@ -17,34 +17,22 @@ class OutputContainer(Container):
         self,
         codec_name: Literal["pcm_s16le", "aac", "mp3", "mp2"],
         rate: int | None = None,
-        template: None = None,
         options: dict[str, str] | None = None,
         **kwargs,
     ) -> AudioStream: ...
     @overload
     def add_stream(
         self,
-        codec_name: Literal["h264", "mpeg4", "png", "qtrle"],
+        codec_name: Literal["h264", "hevc", "mpeg4", "png", "gif", "qtrle"],
         rate: Fraction | int | None = None,
-        template: None = None,
         options: dict[str, str] | None = None,
         **kwargs,
     ) -> VideoStream: ...
     @overload
     def add_stream(
         self,
-        codec_name: None = None,
+        codec_name: str,
         rate: Fraction | int | None = None,
-        template: _StreamT | None = None,
-        options: dict[str, str] | None = None,
-        **kwargs,
-    ) -> _StreamT: ...
-    @overload
-    def add_stream(
-        self,
-        codec_name: str | None = None,
-        rate: Fraction | int | None = None,
-        template: Stream | None = None,
         options: dict[str, str] | None = None,
         **kwargs,
     ) -> Stream: ...
