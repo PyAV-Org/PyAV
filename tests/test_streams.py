@@ -59,6 +59,25 @@ class TestStreams:
         container.close()
         input_.close()
 
+    def test_printing_video_stream2(self) -> None:
+        input_ = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        input_stream = input_.streams.video[0]
+        container = av.open("out.mkv", "w")
+
+        video_stream = container.add_stream_from_template(input_stream)
+        encoder = video_stream.codec.name
+
+        for frame in input_.decode(video=0):
+            container.mux(video_stream.encode(frame))
+            break
+
+        repr = f"{video_stream}"
+        assert repr.startswith(f"<av.VideoStream #0 {encoder}, yuv420p 640x360 at ")
+        assert repr.endswith(">")
+
+        container.close()
+        input_.close()
+
     # def test_side_data(self) -> None:
     #     container = av.open(fate_suite("mov/displaymatrix.mov"))
     #     video = container.streams.video[0]

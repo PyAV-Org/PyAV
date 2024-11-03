@@ -46,16 +46,15 @@ cdef class OutputContainer(Container):
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)
 
-        Create a new stream, and return it.
+        Creates a new stream from a codec name or a template, and returns it.
 
-        :param str codec_name: The name of a codec.
-        :param rate: The frame rate for video, and sample rate for audio.
-            Examples for video include ``24`` and ``Fraction(30000, 1001)``.
-            Examples for audio include ``48000`` and ``44100``.
+        :param codec_name: The name of a codec.
+        :type codec_name: str | Codec | None
         :param template: Copy codec from another :class:`~av.stream.Stream` instance.
+        :type template: :class:`~av.stream.Stream` | None
         :param dict options: Stream options.
-        :param \\**kwargs: Set attributes of the stream.
-        :returns: The new :class:`~av.stream.Stream`.
+        :param \\**kwargs: Set attributes for the stream.
+        :rtype: The new :class:`~av.stream.Stream`.
 
         """
 
@@ -76,7 +75,7 @@ cdef class OutputContainer(Container):
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
             raise ValueError(
-                f"{self.format.name!r} format does not support {codec_name!r} codec"
+                f"{self.format.name!r} format does not support {codec_obj.name!r} codec"
             )
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
@@ -141,6 +140,63 @@ cdef class OutputContainer(Container):
 
         if options:
             py_stream.options.update(options)
+
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+
+        return py_stream
+
+    def add_stream_from_template(self, Stream template not None, **kwargs):
+        """
+        Creates a new stream from a template.
+
+        :param template: Copy codec from another :class:`~av.stream.Stream` instance.
+        :param \\**kwargs: Set attributes for the stream.
+        :rtype: The new :class:`~av.stream.Stream`.
+
+        """
+
+        if not template.codec_context:
+            raise ValueError("template has no codec context")
+
+        cdef Codec codec_obj = Codec(template.codec_context.codec.name, "w")
+        cdef const lib.AVCodec *codec = codec_obj.ptr
+
+        # Assert that this format supports the requested codec.
+        if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
+            raise ValueError(
+                f"{self.format.name!r} format does not support {codec_obj.name!r} codec"
+            )
+
+        # Create new stream in the AVFormatContext, set AVCodecContext values.
+        cdef lib.AVStream *stream = lib.avformat_new_stream(self.ptr, codec)
+        cdef lib.AVCodecContext *codec_context = lib.avcodec_alloc_context3(codec)
+
+        err_check(lib.avcodec_parameters_to_context(codec_context, template.ptr.codecpar))
+        # Reset the codec tag assuming we are remuxing.
+        codec_context.codec_tag = 0
+
+        # Some formats want stream headers to be separate
+        if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+            codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+        # Initialise stream codec parameters to populate the codec type.
+        #
+        # Subsequent changes to the codec context will be applied just before
+        # encoding starts in `start_encoding()`.
+        err_check(lib.avcodec_parameters_from_context(stream.codecpar, codec_context))
+
+        # Construct the user-land stream
+        cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec)
+        cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)
+        self.streams.add_stream(py_stream)
+
+        if template.type == "video":
+            py_stream.time_base = kwargs.pop("time_base", 1 / template.average_rate)
+        elif template.type == "audio":
+            py_stream.time_base = kwargs.pop("time_base", 1 / template.rate)
+        else:
+            py_stream.time_base = kwargs.pop("time_base", None)
 
         for k, v in kwargs.items():
             setattr(py_stream, k, v)
