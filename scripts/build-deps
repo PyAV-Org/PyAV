@@ -44,6 +44,7 @@ echo ./configure
     --enable-sse \
     --enable-avx \
     --enable-avx2 \
+    --enable-libsrt \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo
