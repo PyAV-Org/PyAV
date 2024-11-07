@@ -634,11 +634,11 @@ def test_reformat_identity() -> None:
 def test_reformat_colorspace() -> None:
     # This is allowed.
     frame = VideoFrame(640, 480, "rgb24")
-    frame.reformat(src_colorspace=None, dst_colorspace="smpte240")
+    frame.reformat(src_colorspace=None, dst_colorspace="smpte240m")
 
     # I thought this was not allowed, but it seems to be.
     frame = VideoFrame(640, 480, "yuv420p")
-    frame.reformat(src_colorspace=None, dst_colorspace="smpte240")
+    frame.reformat(src_colorspace=None, dst_colorspace="smpte240m")
 
 
 def test_reformat_pixel_format_align() -> None:

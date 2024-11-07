@@ -117,3 +117,9 @@ Enums
 
     .. enumtable:: av.video.reformatter.Colorspace
 
+.. autoclass:: av.video.reformatter.ColorRange
+
+    Wraps the ``AVCOL*`` flags.
+
+    .. enumtable:: av.video.reformatter.ColorRange
+

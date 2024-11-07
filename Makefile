@@ -13,7 +13,7 @@ default: build
 
 
 build:
-	$(PIP) install --upgrade cython
+	$(PIP) install -U cython setuptools
 	CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) $(PYTHON) setup.py build_ext --inplace --debug
 
 clean:
