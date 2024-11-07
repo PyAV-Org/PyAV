@@ -1,50 +1,49 @@
 cimport libav as lib
 from libc.stdint cimport uint8_t
 
-from av.enum cimport define_enum
 from av.error cimport err_check
 from av.video.format cimport VideoFormat
 from av.video.frame cimport alloc_video_frame
 
-Interpolation = define_enum("Interpolation", __name__, (
-    ("FAST_BILINEAR", lib.SWS_FAST_BILINEAR, "Fast bilinear"),
-    ("BILINEAR", lib.SWS_BILINEAR, "Bilinear"),
-    ("BICUBIC", lib.SWS_BICUBIC, "Bicubic"),
-    ("X", lib.SWS_X, "Experimental"),
-    ("POINT", lib.SWS_POINT, "Nearest neighbor / point"),
-    ("AREA", lib.SWS_AREA, "Area averaging"),
-    ("BICUBLIN", lib.SWS_BICUBLIN, "Luma bicubic / chroma bilinear"),
-    ("GAUSS", lib.SWS_GAUSS, "Gaussian"),
-    ("SINC", lib.SWS_SINC, "Sinc"),
-    ("LANCZOS", lib.SWS_LANCZOS, "Lanczos"),
-    ("SPLINE", lib.SWS_SPLINE, "Bicubic spline"),
-))
+from enum import IntEnum
 
-Colorspace = define_enum("Colorspace", __name__, (
-    ("ITU709", lib.SWS_CS_ITU709),
-    ("FCC", lib.SWS_CS_FCC),
-    ("ITU601", lib.SWS_CS_ITU601),
-    ("ITU624", lib.SWS_CS_ITU624),
-    ("SMPTE170M", lib.SWS_CS_SMPTE170M),
-    ("SMPTE240M", lib.SWS_CS_SMPTE240M),
-    ("DEFAULT", lib.SWS_CS_DEFAULT),
 
+class Interpolation(IntEnum):
+    FAST_BILINEAR: "Fast bilinear" = lib.SWS_FAST_BILINEAR
+    BILINEAR: "Bilinear" = lib.SWS_BILINEAR
+    BICUBIC: "Bicubic" = lib.SWS_BICUBIC
+    X: "Experimental" = lib.SWS_X
+    POINT: "Nearest neighbor / point" = lib.SWS_POINT
+    AREA: "Area averaging" = lib.SWS_AREA
+    BICUBLIN: "Luma bicubic / chroma bilinear" = lib.SWS_BICUBLIN
+    GAUSS: "Gaussian" = lib.SWS_GAUSS
+    SINC: "Sinc" = lib.SWS_SINC
+    LANCZOS: "Bicubic spline" = lib.SWS_LANCZOS
+
+
+class Colorspace(IntEnum):
+    ITU709 = lib.SWS_CS_ITU709
+    FCC = lib.SWS_CS_FCC
+    ITU601 = lib.SWS_CS_ITU601
+    ITU624 = lib.SWS_CS_ITU624
+    SMPTE170M = lib.SWS_CS_SMPTE170M
+    SMPTE240M = lib.SWS_CS_SMPTE240M
+    DEFAULT = lib.SWS_CS_DEFAULT
     # Lowercase for b/c.
-    ("itu709", lib.SWS_CS_ITU709),
-    ("fcc", lib.SWS_CS_FCC),
-    ("itu601", lib.SWS_CS_ITU601),
-    ("itu624", lib.SWS_CS_SMPTE170M),
-    ("smpte240", lib.SWS_CS_SMPTE240M),
-    ("default", lib.SWS_CS_DEFAULT),
+    itu709 = lib.SWS_CS_ITU709
+    fcc = lib.SWS_CS_FCC
+    itu601 = lib.SWS_CS_ITU601
+    itu624 = lib.SWS_CS_SMPTE170M
+    smpte170m = lib.SWS_CS_SMPTE170M
+    smpte240m = lib.SWS_CS_SMPTE240M
+    default = lib.SWS_CS_DEFAULT
 
-))
+class ColorRange(IntEnum):
+    UNSPECIFIED: "Unspecified" = lib.AVCOL_RANGE_UNSPECIFIED
+    MPEG: "MPEG (limited) YUV range, 219*2^(n-8)" = lib.AVCOL_RANGE_MPEG
+    JPEG: "JPEG (full) YUV range, 2^n-1" = lib.AVCOL_RANGE_JPEG
+    NB: "Not part of ABI" = lib.AVCOL_RANGE_NB
 
-ColorRange = define_enum("ColorRange", __name__, (
-    ("UNSPECIFIED", lib.AVCOL_RANGE_UNSPECIFIED, "Unspecified"),
-    ("MPEG", lib.AVCOL_RANGE_MPEG, "MPEG (limited) YUV range, 219*2^(n-8)"),
-    ("JPEG", lib.AVCOL_RANGE_JPEG, "JPEG (full) YUV range, 2^n-1"),
-    ("NB", lib.AVCOL_RANGE_NB, "Not part of ABI"),
-))
 
 cdef class VideoReformatter:
     """An object for reformatting size and pixel format of :class:`.VideoFrame`.

@@ -65,7 +65,6 @@ Contexts
 
 .. automethod:: CodecContext.create
 .. automethod:: CodecContext.open
-.. automethod:: CodecContext.close
 
 Attributes
 ~~~~~~~~~~
