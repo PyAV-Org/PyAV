@@ -58,6 +58,7 @@ class CodecContext:
     name: str
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
     options: dict[str, str]
+    profiles: list[str]
     profile: str | None
     extradata: bytes | None
     time_base: Fraction

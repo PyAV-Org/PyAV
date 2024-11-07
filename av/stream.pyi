@@ -19,6 +19,7 @@ class Stream:
     codec_context: CodecContext
     metadata: dict[str, str]
     id: int
+    profiles: list[str]
     profile: str
     index: int
     time_base: Fraction | None

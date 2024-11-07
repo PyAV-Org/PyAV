@@ -498,9 +498,54 @@ cdef class CodecContext:
         return self.codec.type
 
     @property
+    def profiles(self):
+        """
+        List the available profiles for this stream.
+
+        :type: list[str]
+        """
+        ret = []
+        if not self.ptr.codec or not self.codec.desc or not self.codec.desc.profiles:
+            return ret
+
+        # Profiles are always listed in the codec descriptor, but not necessarily in
+        # the codec itself. So use the descriptor here.
+        desc = self.codec.desc
+        cdef int i = 0
+        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+            ret.append(desc.profiles[i].name)
+            i += 1
+
+        return ret
+
+    @property
     def profile(self):
-        if self.ptr.codec and lib.av_get_profile_name(self.ptr.codec, self.ptr.profile):
-            return lib.av_get_profile_name(self.ptr.codec, self.ptr.profile)
+        if not self.ptr.codec or not self.codec.desc or not self.codec.desc.profiles:
+            return
+
+        # Profiles are always listed in the codec descriptor, but not necessarily in
+        # the codec itself. So use the descriptor here.
+        desc = self.codec.desc
+        cdef int i = 0
+        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+            if desc.profiles[i].profile == self.ptr.profile:
+                return desc.profiles[i].name
+            i += 1
+
+    @profile.setter
+    def profile(self, value):
+        if not self.codec or not self.codec.desc or not self.codec.desc.profiles:
+            return
+
+        # Profiles are always listed in the codec descriptor, but not necessarily in
+        # the codec itself. So use the descriptor here.
+        desc = self.codec.desc
+        cdef int i = 0
+        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+            if desc.profiles[i].name == value:
+                self.ptr.profile = desc.profiles[i].profile
+                return
+            i += 1
 
     @property
     def time_base(self):
