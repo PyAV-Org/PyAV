@@ -33,7 +33,7 @@ class Colorspace(IntEnum):
     itu709 = lib.SWS_CS_ITU709
     fcc = lib.SWS_CS_FCC
     itu601 = lib.SWS_CS_ITU601
-    itu624 = lib.SWS_CS_SMPTE170M
+    itu624 = lib.SWS_CS_ITU624
     smpte170m = lib.SWS_CS_SMPTE170M
     smpte240m = lib.SWS_CS_SMPTE240M
     default = lib.SWS_CS_DEFAULT

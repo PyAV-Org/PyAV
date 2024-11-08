@@ -24,10 +24,17 @@ Major:
 - Drop FFmpeg 6.
 - Remove ``AVError`` alias (use ``FFmpegError`` directly instead).
 - Remove the `template` arg from ``OutputContainer.add_stream()``.
+- Remove ``CodecContext.close()`` because it's deprecated in ffmpeg.
 
 Features:
 
 - Add ``OutputContainer.add_stream_from_template()`` by :gh-user:`WyattBlue` and :gh-user:`cdce8p`.
+- Add ``qmin`` and ``qmax`` parameters to the ``VideoCodecContext`` by :gh-user:`davidplowman` in (:pr:`1618`).
+
+Fixes:
+
+- Correct ``Colorspace``'s lowercase enums.
+- Ensure streams in StreamContainer are released. Fixes :issue:`1599`.
 
 v13.1.0
 -------
