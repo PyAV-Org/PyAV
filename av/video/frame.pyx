@@ -170,22 +170,10 @@ cdef class VideoFrame(Frame):
         """Width of the image, in pixels."""
         return self.ptr.width
 
-
     @property
     def height(self):
         """Height of the image, in pixels."""
         return self.ptr.height
-
-
-    @property
-    def key_frame(self):
-        """Is this frame a key frame?
-
-        Wraps :ffmpeg:`AVFrame.key_frame`.
-
-        """
-        return self.ptr.key_frame
-
 
     @property
     def interlaced_frame(self):
@@ -195,7 +183,6 @@ cdef class VideoFrame(Frame):
 
         """
         return self.ptr.interlaced_frame
-
 
     @property
     def pict_type(self):

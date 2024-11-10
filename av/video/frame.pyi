@@ -32,7 +32,6 @@ class VideoFrame(Frame):
     planes: tuple[VideoPlane, ...]
     width: int
     height: int
-    key_frame: bool
     interlaced_frame: bool
     pict_type: int
     colorspace: int
