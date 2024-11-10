@@ -139,7 +139,7 @@ cdef class Frame:
         Wraps :ffmpeg:`AVFrame.key_frame`.
 
         """
-        return bool(self.ptr.key_frame)
+        return bool(self.ptr.flags & lib.AV_FRAME_FLAG_KEY)
 
 
     @property

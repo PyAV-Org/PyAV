@@ -177,12 +177,9 @@ cdef class VideoFrame(Frame):
 
     @property
     def interlaced_frame(self):
-        """Is this frame an interlaced or progressive?
+        """Is this frame an interlaced or progressive?"""
 
-        Wraps :ffmpeg:`AVFrame.interlaced_frame`.
-
-        """
-        return self.ptr.interlaced_frame
+        return bool(self.ptr.flags & lib.AV_FRAME_FLAG_INTERLACED)
 
     @property
     def pict_type(self):
