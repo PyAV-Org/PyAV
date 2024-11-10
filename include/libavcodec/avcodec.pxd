@@ -135,6 +135,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef enum:
         AV_FRAME_FLAG_CORRUPT
+        AV_FRAME_FLAG_KEY
+        AV_FRAME_FLAG_DISCARD
+        AV_FRAME_FLAG_INTERLACED
 
     cdef enum:
         FF_COMPLIANCE_VERY_STRICT
@@ -368,10 +371,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         uint8_t **extended_data
 
         int format  # Should be AVPixelFormat or AVSampleFormat
-        int key_frame  # 0 or 1.
         AVPictureType pict_type
-
-        int interlaced_frame  # 0 or 1.
 
         int width
         int height
@@ -379,8 +379,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int nb_side_data
         AVFrameSideData **side_data
 
-        int nb_samples  # Audio samples
-        int sample_rate  # Audio Sample rate
+        int nb_samples
+        int sample_rate
 
         AVChannelLayout ch_layout
 
