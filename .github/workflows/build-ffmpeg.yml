@@ -82,7 +82,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [aarch64, ppc64le]
+        arch: [aarch64]
         os: [ubuntu-latest]
     env:
       stage: 1
@@ -113,7 +113,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [aarch64, ppc64le]
+        arch: [aarch64]
         os: [ubuntu-latest]
     env:
       stage: 2
