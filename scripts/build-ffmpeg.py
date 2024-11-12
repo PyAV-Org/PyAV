@@ -177,8 +177,8 @@ codec_group = [
 openh264 = Package(
     name="openh264",
     requires=["meson", "nasm", "ninja"],
-    source_filename="openh264-2.4.1.tar.gz",
-    source_url="https://github.com/cisco/openh264/archive/refs/tags/v2.4.1.tar.gz",
+    source_filename="openh264-2.5.0.tar.gz",
+    source_url="https://github.com/cisco/openh264/archive/refs/tags/v2.5.0.tar.gz",
     build_system="meson",
 )
 
@@ -228,7 +228,9 @@ def main():
         default=None,
         help="AArch64 build requires stage and possible values can be 1, 2",
     )
+    parser.add_argument("--enable-gpl", action="store_true")
     parser.add_argument("--disable-gpl", action="store_true")
+
     args = parser.parse_args()
 
     dest_dir = args.destination
