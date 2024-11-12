@@ -449,3 +449,29 @@ class TestQminQmaxEncoding(TestCase):
 
         factor = 1.3  # insist at least 30% larger each time
         assert all(small * factor < large for small, large in zip(sizes, sizes[1:]))
+
+
+class TestProfiles(TestCase):
+    def test_profiles(self) -> None:
+        """
+        Test that we can set different encoder profiles.
+        """
+        # Let's try a video and an audio codec.
+        file = io.BytesIO()
+        codecs = (
+            ("h264", 30),
+            ("aac", 48000),
+        )
+
+        for codec_name, rate in codecs:
+            print("Testing:", codec_name)
+            container = av.open(file, mode="w", format="mp4")
+            stream = container.add_stream(codec_name, rate=rate)
+            assert len(stream.profiles) >= 1  # check that we're testing something!
+
+            # It should be enough to test setting and retrieving the code. That means
+            # libav has recognised the profile and set it correctly.
+            for profile in stream.profiles:
+                stream.profile = profile
+                print("Set", profile, "got", stream.profile)
+                assert stream.profile == profile

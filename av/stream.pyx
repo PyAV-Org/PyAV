@@ -146,6 +146,18 @@ cdef class Stream:
             self.ptr.id = value
 
     @property
+    def profiles(self):
+        """
+        List the available profiles for this stream.
+
+        :type: list[str]
+        """
+        if self.codec_context:
+            return self.codec_context.profiles
+        else:
+            return []
+
+    @property
     def profile(self):
         """
         The profile of this stream.
