@@ -14,7 +14,7 @@ The builds are provided for several platforms:
 Features
 --------
 
-Currently FFmpeg 7.0.2 is built with the following packages enabled for all platforms:
+Currently FFmpeg 7.1 is built with the following packages enabled for all platforms:
 
 - gmp 6.3.0
 - xml2 2.9.13
