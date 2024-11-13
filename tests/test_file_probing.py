@@ -75,6 +75,7 @@ class TestAudioProbeCorrupt(TestCase):
     def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
+        assert isinstance(stream, av.AudioStream)
         assert str(stream).startswith(
             "<av.AudioStream #0 flac at 0Hz, 0 channels, None at "
         )
@@ -282,6 +283,7 @@ class TestVideoProbeCorrupt(TestCase):
     def test_stream_probing(self) -> None:
         stream = self.file.streams[0]
 
+        assert isinstance(stream, av.VideoStream)
         assert str(stream).startswith("<av.VideoStream #0 h264, None 0x0 at ")
 
         # actual stream properties
