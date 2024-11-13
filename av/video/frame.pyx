@@ -374,31 +374,54 @@ cdef class VideoFrame(Frame):
         return frame
 
     @staticmethod
-    def from_numpy_buffer(array, format="rgb24"):
+    def from_numpy_buffer(array, format="rgb24", width=0):
+        # Usually the width of the array is the same as the width of the image. But sometimes
+        # this is not possible, for example with yuv420p images that have padding. These are
+        # awkward because the UV rows at the bottom have padding bytes in the middle of the
+        # row as well as at the end. To cope with these, callers need to be able to pass the
+        # actual width to us.
+        height = array.shape[0]
+        if not width:
+            width = array.shape[1]
+
         if format in ("rgb24", "bgr24"):
             check_ndarray(array, "uint8", 3)
             check_ndarray_shape(array, array.shape[2] == 3)
-            height, width = array.shape[:2]
+            if array.strides[1:] != (3, 1):
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            linesizes = (array.strides[0], )
+        elif format in ("rgba", "bgra"):
+            check_ndarray(array, "uint8", 3)
+            check_ndarray_shape(array, array.shape[2] == 4)
+            if array.strides[1:] != (4, 1):
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            linesizes = (array.strides[0], )
         elif format in ("gray", "gray8", "rgb8", "bgr8"):
             check_ndarray(array, "uint8", 2)
-            height, width = array.shape[:2]
+            if array.strides[1] != 1:
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            linesizes = (array.strides[0], )
         elif format in ("yuv420p", "yuvj420p", "nv12"):
             check_ndarray(array, "uint8", 2)
             check_ndarray_shape(array, array.shape[0] % 3 == 0)
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
-            height, width = array.shape[:2]
             height = height // 6 * 4
+            if array.strides[1] != 1:
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            if format in ("yuv420p", "yuvj420p"):
+                # For YUV420 planar formats, the UV plane stride is always half the Y stride.
+                linesizes = (array.strides[0], array.strides[0] // 2, array.strides[0] // 2)
+            else:
+                # Planes where U and V are interleaved have the same stride as Y.
+                linesizes = (array.strides[0], array.strides[0])
         else:
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
 
-        if not array.flags["C_CONTIGUOUS"]:
-            raise ValueError("provided array must be C_CONTIGUOUS")
-
         frame = alloc_video_frame()
-        frame._image_fill_pointers_numpy(array, width, height, format)
+        frame._image_fill_pointers_numpy(array, width, height, linesizes, format)
         return frame
 
-    def _image_fill_pointers_numpy(self, buffer, width, height, format):
+    def _image_fill_pointers_numpy(self, buffer, width, height, linesizes, format):
         cdef lib.AVPixelFormat c_format
         cdef uint8_t * c_ptr
         cdef size_t c_data
@@ -433,13 +456,8 @@ cdef class VideoFrame(Frame):
         self.ptr.format = c_format
         self.ptr.width = width
         self.ptr.height = height
-        res = lib.av_image_fill_linesizes(
-            self.ptr.linesize,
-            <lib.AVPixelFormat>self.ptr.format,
-            width,
-        )
-        if res:
-          err_check(res)
+        for i, linesize in enumerate(linesizes):
+            self.ptr.linesize[i] = linesize
 
         res = lib.av_image_fill_pointers(
             self.ptr.data,
