@@ -1,8 +1,8 @@
 import sys
+from enum import IntEnum
 
 from libc.stdint cimport uint8_t
 
-from av.enum cimport define_enum
 from av.error cimport err_check
 from av.utils cimport check_ndarray
 from av.video.format cimport get_pix_fmt, get_video_format
@@ -20,18 +20,15 @@ cdef VideoFrame alloc_video_frame():
     """
     return VideoFrame.__new__(VideoFrame, _cinit_bypass_sentinel)
 
-
-PictureType = define_enum("PictureType", __name__, (
-    ("NONE", lib.AV_PICTURE_TYPE_NONE, "Undefined"),
-    ("I", lib.AV_PICTURE_TYPE_I, "Intra"),
-    ("P", lib.AV_PICTURE_TYPE_P, "Predicted"),
-    ("B", lib.AV_PICTURE_TYPE_B, "Bi-directional predicted"),
-    ("S", lib.AV_PICTURE_TYPE_S, "S(GMC)-VOP MPEG-4"),
-    ("SI", lib.AV_PICTURE_TYPE_SI, "Switching intra"),
-    ("SP", lib.AV_PICTURE_TYPE_SP, "Switching predicted"),
-    ("BI", lib.AV_PICTURE_TYPE_BI, "BI type"),
-))
-
+class PictureType(IntEnum):
+    NONE = lib.AV_PICTURE_TYPE_NONE  # Undefined
+    I = lib.AV_PICTURE_TYPE_I  # Intra
+    P = lib.AV_PICTURE_TYPE_P  # Predicted
+    B = lib.AV_PICTURE_TYPE_B  # Bi-directional predicted
+    S = lib.AV_PICTURE_TYPE_S  # S(GMC)-VOP MPEG-4
+    SI = lib.AV_PICTURE_TYPE_SI  # Switching intra
+    SP = lib.AV_PICTURE_TYPE_SP  # Switching predicted
+    BI = lib.AV_PICTURE_TYPE_BI  # BI type
 
 cdef byteswap_array(array, bint big_endian):
     if (sys.byteorder == "big") != big_endian:
@@ -183,16 +180,17 @@ cdef class VideoFrame(Frame):
 
     @property
     def pict_type(self):
-        """One of :class:`.PictureType`.
+        """Returns an integer that corresponds to the PictureType enum.
 
-        Wraps :ffmpeg:`AVFrame.pict_type`.
+        Wraps :ffmpeg:`AVFrame.pict_type`
 
+        :type: int
         """
-        return PictureType.get(self.ptr.pict_type, create=True)
+        return self.ptr.pict_type
 
     @pict_type.setter
     def pict_type(self, value):
-        self.ptr.pict_type = PictureType[value].value
+        self.ptr.pict_type = value
 
     @property
     def colorspace(self):

@@ -1,9 +1,9 @@
-from typing import Any, Union
+from enum import IntEnum
+from typing import Any, ClassVar, Union
 
 import numpy as np
 from PIL import Image
 
-from av.enum import EnumItem
 from av.frame import Frame
 
 from .format import VideoFormat
@@ -15,7 +15,7 @@ _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.float32]],
 ]
 
-class PictureType(EnumItem):
+class PictureType(IntEnum):
     NONE: int
     I: int
     P: int
@@ -28,15 +28,19 @@ class PictureType(EnumItem):
 class VideoFrame(Frame):
     format: VideoFormat
     pts: int
-    time: float
     planes: tuple[VideoPlane, ...]
-    width: int
-    height: int
-    interlaced_frame: bool
     pict_type: int
     colorspace: int
     color_range: int
 
+    @property
+    def time(self) -> float: ...
+    @property
+    def width(self) -> int: ...
+    @property
+    def height(self) -> int: ...
+    @property
+    def interlaced_frame(self) -> bool: ...
     def __init__(
         self, width: int = 0, height: int = 0, format: str = "yuv420p"
     ) -> None: ...
