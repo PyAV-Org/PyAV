@@ -1,7 +1,8 @@
 cimport libav as lib
 from libc.stdint cimport int32_t
 
-from av.enum cimport define_enum
+from enum import Enum
+
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport (
@@ -14,12 +15,10 @@ from av.utils cimport (
 
 cdef object _cinit_bypass_sentinel = object()
 
-
 # If necessary more can be added from
 # https://ffmpeg.org/doxygen/trunk/group__lavc__packet.html#ga9a80bfcacc586b483a973272800edb97
-SideData = define_enum("SideData", __name__, (
-    ("DISPLAYMATRIX", lib.AV_PKT_DATA_DISPLAYMATRIX, "Display Matrix"),
-))
+class SideData(Enum):
+    DISPLAYMATRIX: "Display Matrix" = lib.AV_PKT_DATA_DISPLAYMATRIX
 
 cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContext codec_context):
     """Build an av.Stream for an existing AVStream.
