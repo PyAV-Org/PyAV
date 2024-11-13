@@ -1,25 +1,26 @@
+from enum import Enum, Flag
 from fractions import Fraction
-from typing import Any, Literal
+from typing import ClassVar, Literal
 
 from av.enum import EnumFlag, EnumItem
 from av.packet import Packet
 
 from .codec import Codec
 
-class ThreadType(EnumFlag):
-    NONE: int
-    FRAME: int
-    SLICE: int
-    AUTO: int
+class ThreadType(Flag):
+    NONE: ClassVar[ThreadType]
+    FRAME: ClassVar[ThreadType]
+    SLICE: ClassVar[ThreadType]
+    AUTO: ClassVar[ThreadType]
 
-class SkipType(EnumItem):
-    NONE: int
-    DEFAULT: int
-    NONREF: int
-    BIDIR: int
-    NONINTRA: int
-    NONKEY: int
-    ALL: int
+class SkipType(Enum):
+    NONE: ClassVar[SkipType]
+    DEFAULT: ClassVar[SkipType]
+    NONREF: ClassVar[SkipType]
+    BIDIR: ClassVar[SkipType]
+    NONINTRA: ClassVar[SkipType]
+    NONKEY: ClassVar[SkipType]
+    ALL: ClassVar[SkipType]
 
 class Flags(EnumFlag):
     NONE: int
@@ -67,8 +68,8 @@ class CodecContext:
     bit_rate: int | None
     bit_rate_tolerance: int
     thread_count: int
-    thread_type: Any
-    skip_frame: Any
+    thread_type: ThreadType
+    skip_frame: SkipType
 
     # flags
     unaligned: bool
