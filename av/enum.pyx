@@ -126,37 +126,6 @@ copyreg.constructor(_unpickle)
 
 
 cdef class EnumItem:
-    """
-    Enumerations are when an attribute may only take on a single value at once, and
-    they are represented as integers in the FFmpeg API. We associate names with each
-    value that are easier to operate with.
-
-    Consider :data:`av.codec.context.SkipType`, which is the type of the :attr:`CodecContext.skip_frame` attribute::
-
-        >>> fh = av.open(video_path)
-        >>> cc = fh.streams.video[0].codec_context
-
-        >>> # The skip_frame attribute has a name and value:
-        >>> cc.skip_frame.name
-        'DEFAULT'
-        >>> cc.skip_frame.value
-        0
-
-        >>> # You can compare it to strings and ints:
-        >>> cc.skip_frame == 'DEFAULT'
-        True
-        >>> cc.skip_frame == 0
-        True
-
-        >>> # You can assign strings and ints:
-        >>> cc.skip_frame = 'NONKEY'
-        >>> cc.skip_frame == 'NONKEY'
-        True
-        >>> cc.skip_frame == 32
-        True
-
-    """
-
     cdef readonly str name
     cdef readonly int value
     cdef Py_hash_t _hash
@@ -167,7 +136,7 @@ cdef class EnumItem:
 
         self.name = name
         self.value = value
-        self.__doc__ = doc  # This is not cdef because it doesn't work if it is.
+        self.__doc__ = doc
 
         # We need to establish a hash that doesn't collide with anything that
         # would return true from `__eq__`. This is because these enums (vs
@@ -196,7 +165,7 @@ cdef class EnumItem:
 
     def __eq__(self, other):
         if isinstance(other, str):
-            if self.name == other:  # The quick method.
+            if self.name == other:
                 return True
 
             try:

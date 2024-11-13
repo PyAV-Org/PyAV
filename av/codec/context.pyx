@@ -11,6 +11,8 @@ from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
 
+from enum import Enum, Flag
+
 from av.dictionary import Dictionary
 
 
@@ -39,22 +41,20 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     return py_ctx
 
 
-ThreadType = define_enum("ThreadType", __name__, (
-    ("NONE", 0),
-    ("FRAME", lib.FF_THREAD_FRAME, "Decode more than one frame at once"),
-    ("SLICE", lib.FF_THREAD_SLICE, "Decode more than one part of a single frame at once"),
-    ("AUTO", lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME, "Decode using both FRAME and SLICE methods."),
-), is_flags=True)
+class ThreadType(Flag):
+    NONE = 0
+    FRAME: "Decode more than one frame at once" = lib.FF_THREAD_FRAME
+    SLICE: "Decode more than one part of a single frame at once" = lib.FF_THREAD_SLICE
+    AUTO: "Decode using both FRAME and SLICE methods." = lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME
 
-SkipType = define_enum("SkipType", __name__, (
-    ("NONE", lib.AVDISCARD_NONE, "Discard nothing"),
-    ("DEFAULT", lib.AVDISCARD_DEFAULT, "Discard useless packets like 0 size packets in AVI"),
-    ("NONREF", lib.AVDISCARD_NONREF, "Discard all non reference"),
-    ("BIDIR", lib.AVDISCARD_BIDIR, "Discard all bidirectional frames"),
-    ("NONINTRA", lib.AVDISCARD_NONINTRA, "Discard all non intra frames"),
-    ("NONKEY", lib.AVDISCARD_NONKEY, "Discard all frames except keyframes"),
-    ("ALL", lib.AVDISCARD_ALL, "Discard all"),
-))
+class SkipType(Enum):
+    NONE: "Discard nothing" = lib.AVDISCARD_NONE
+    DEFAULT: "Discard useless packets like 0 size packets in AVI" = lib.AVDISCARD_DEFAULT
+    NONREF: "Discard all non reference" = lib.AVDISCARD_NONREF
+    BIDIR: "Discard all bidirectional frames" = lib.AVDISCARD_BIDIR
+    NONINTRA: "Discard all non intra frames" = lib.AVDISCARD_NONINTRA
+    NONKEY: "Discard all frames except keyframes" = lib.AVDISCARD_NONKEY
+    ALL: "Discard all" = lib.AVDISCARD_ALL
 
 Flags = define_enum("Flags", __name__, (
     ("NONE", 0),
@@ -617,13 +617,13 @@ cdef class CodecContext:
         Wraps :ffmpeg:`AVCodecContext.thread_type`.
 
         """
-        return ThreadType.get(self.ptr.thread_type, create=True)
+        return ThreadType(self.ptr.thread_type)
 
     @thread_type.setter
     def thread_type(self, value):
         if self.is_open:
             raise RuntimeError("Cannot change thread_type after codec is open.")
-        self.ptr.thread_type = ThreadType[value].value
+        self.ptr.thread_type = value.value
 
     @property
     def skip_frame(self):
@@ -632,11 +632,11 @@ cdef class CodecContext:
         Wraps :ffmpeg:`AVCodecContext.skip_frame`.
 
         """
-        return SkipType._get(self.ptr.skip_frame, create=True)
+        return SkipType(self.ptr.skip_frame)
 
     @skip_frame.setter
     def skip_frame(self, value):
-        self.ptr.skip_frame = SkipType[value].value
+        self.ptr.skip_frame = value.value
 
     @property
     def delay(self):
