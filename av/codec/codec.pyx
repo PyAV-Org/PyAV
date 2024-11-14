@@ -4,9 +4,10 @@ from av.enum cimport define_enum
 from av.utils cimport avrational_to_fraction
 from av.video.format cimport get_video_format
 
+from enum import Flag
+
 
 cdef object _cinit_sentinel = object()
-
 
 cdef Codec wrap_codec(const lib.AVCodec *ptr):
     cdef Codec codec = Codec(_cinit_sentinel)
@@ -15,34 +16,14 @@ cdef Codec wrap_codec(const lib.AVCodec *ptr):
     codec._init()
     return codec
 
-
-Properties = define_enum("Properties", "av.codec", (
-    ("NONE", 0),
-    ("INTRA_ONLY", lib.AV_CODEC_PROP_INTRA_ONLY,
-        """Codec uses only intra compression.
-        Video and audio codecs only."""),
-    ("LOSSY", lib.AV_CODEC_PROP_LOSSY,
-        """Codec supports lossy compression. Audio and video codecs only.
-
-        Note: A codec may support both lossy and lossless
-        compression modes."""),
-    ("LOSSLESS", lib.AV_CODEC_PROP_LOSSLESS,
-        """Codec supports lossless compression. Audio and video codecs only."""),
-    ("REORDER", lib.AV_CODEC_PROP_REORDER,
-        """Codec supports frame reordering. That is, the coded order (the order in which
-        the encoded packets are output by the encoders / stored / input to the
-        decoders) may be different from the presentation order of the corresponding
-        frames.
-
-        For codecs that do not have this property set, PTS and DTS should always be
-        equal."""),
-    ("BITMAP_SUB", lib.AV_CODEC_PROP_BITMAP_SUB,
-        """Subtitle codec is bitmap based
-        Decoded AVSubtitle data can be read from the AVSubtitleRect->pict field."""),
-    ("TEXT_SUB", lib.AV_CODEC_PROP_TEXT_SUB,
-        """Subtitle codec is text based.
-        Decoded AVSubtitle data can be read from the AVSubtitleRect->ass field."""),
-), is_flags=True)
+class Properties(Flag):
+    NONE = 0
+    INTRA_ONLY = lib.AV_CODEC_PROP_INTRA_ONLY
+    LOSSY = lib.AV_CODEC_PROP_LOSSY
+    LOSSLESS = lib.AV_CODEC_PROP_LOSSLESS
+    REORDER = lib.AV_CODEC_PROP_REORDER
+    BITMAP_SUB = lib.AV_CODEC_PROP_BITMAP_SUB
+    TEXT_SUB = lib.AV_CODEC_PROP_TEXT_SUB
 
 Capabilities = define_enum("Capabilities", "av.codec", (
     ("NONE", 0),
@@ -287,21 +268,33 @@ cdef class Codec:
             i += 1
         return ret
 
-    # NOTE: there are some overlaps, which we defer to how `ffmpeg -codecs`
-    # handles them (by prefering the capablity to the property).
-    # Also, LOSSLESS and LOSSY don't have to agree.
-
-    @Properties.property
+    @property
     def properties(self):
-        """Flag property of :class:`.Properties`"""
         return self.desc.props
 
-    intra_only = properties.flag_property("INTRA_ONLY")
-    lossy = properties.flag_property("LOSSY")  # Defer to capability.
-    lossless = properties.flag_property("LOSSLESS")  # Defer to capability.
-    reorder = properties.flag_property("REORDER")
-    bitmap_sub = properties.flag_property("BITMAP_SUB")
-    text_sub = properties.flag_property("TEXT_SUB")
+    @property
+    def intra_only(self):
+        return bool(self.desc.props & lib.AV_CODEC_PROP_INTRA_ONLY)
+
+    @property
+    def lossy(self):
+        return bool(self.desc.props & lib.AV_CODEC_PROP_LOSSY)
+
+    @property
+    def lossless(self):
+        return bool(self.desc.props & lib.AV_CODEC_PROP_LOSSLESS)
+
+    @property
+    def reorder(self):
+        return bool(self.desc.props & lib.AV_CODEC_PROP_REORDER)
+
+    @property
+    def bitmap_sub(self):
+        return bool(self.desc.props & lib.AV_CODEC_PROP_BITMAP_SUB)
+
+    @property
+    def text_sub(self):
+        return bool(self.desc.props & lib.AV_CODEC_PROP_TEXT_SUB)
 
     @Capabilities.property
     def capabilities(self):
@@ -324,8 +317,6 @@ cdef class Codec:
     auto_threads = capabilities.flag_property("AUTO_THREADS")
     variable_frame_size = capabilities.flag_property("VARIABLE_FRAME_SIZE")
     avoid_probing = capabilities.flag_property("AVOID_PROBING")
-    # intra_only = capabilities.flag_property("INTRA_ONLY")  # Dupes.
-    # lossless = capabilities.flag_property("LOSSLESS")  # Dupes.
     hardware = capabilities.flag_property("HARDWARE")
     hybrid = capabilities.flag_property("HYBRID")
     encoder_reordered_opaque = capabilities.flag_property("ENCODER_REORDERED_OPAQUE")
