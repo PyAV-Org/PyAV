@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import av
 
 from .common import fate_suite
@@ -77,6 +79,42 @@ class TestStreams:
 
         container.close()
         input_.close()
+
+    def test_data_stream(self) -> None:
+        # First test writing and reading a simple data stream
+        container1 = av.open("data.ts", "w")
+        data_stream = container1.add_data_stream()
+
+        test_data = [b"test data 1", b"test data 2", b"test data 3"]
+        for i, data_ in enumerate(test_data):
+            packet = av.Packet(data_)
+            packet.pts = i
+            packet.stream = data_stream
+            container1.mux(packet)
+        container1.close()
+
+        # Test reading back the data stream
+        container = av.open("data.ts")
+
+        # Test best stream selection
+        data = container.streams.best("data")
+        assert data == container.streams.data[0]
+
+        # Test get method
+        assert [data] == container.streams.get(data=0)
+        assert [data] == container.streams.get(data=(0,))
+
+        # Verify we can read back all the packets, ignoring empty ones
+        packets = [p for p in container.demux(data) if bytes(p)]
+        assert len(packets) == len(test_data)
+        for packet, original_data in zip(packets, test_data):
+            assert bytes(packet) == original_data
+
+        # Test string representation
+        repr = f"{data_stream}"
+        assert repr.startswith("<av.DataStream #0") and repr.endswith(">")
+
+        container.close()
 
     # def test_side_data(self) -> None:
     #     container = av.open(fate_suite("mov/displaymatrix.mov"))
