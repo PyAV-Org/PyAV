@@ -1,4 +1,7 @@
+import os
 from fractions import Fraction
+
+import pytest
 
 import av
 
@@ -6,6 +9,13 @@ from .common import fate_suite
 
 
 class TestStreams:
+    @pytest.fixture(autouse=True)
+    def cleanup(self):
+        yield
+        for file in ("data.ts", "out.mkv"):
+            if os.path.exists(file):
+                os.remove(file)
+
     def test_stream_tuples(self) -> None:
         for fate_name in ("h264/interlaced_crop.mp4",):
             container = av.open(fate_suite(fate_name))
