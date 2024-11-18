@@ -399,6 +399,10 @@ def encode_frames_with_qminmax(frames: list, shape: tuple, qminmax: tuple) -> in
 
     Returns: total length of the encoded bytes.
     """
+
+    if av.codec.Codec("h264", "w").name != "libx264":
+        pytest.skip()
+
     file = io.BytesIO()
     container = av.open(file, mode="w", format="mp4")
     stream = container.add_stream("h264", rate=30)
