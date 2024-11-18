@@ -12,6 +12,8 @@ class ThreadType(Flag):
     FRAME: ClassVar[ThreadType]
     SLICE: ClassVar[ThreadType]
     AUTO: ClassVar[ThreadType]
+    def __get__(self, i: object | None, owner: type | None = None) -> ThreadType: ...
+    def __set__(self, instance: object, value: int | str | ThreadType) -> None: ...
 
 class SkipType(Enum):
     NONE: ClassVar[SkipType]
