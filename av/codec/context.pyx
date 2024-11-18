@@ -138,10 +138,8 @@ cdef class CodecContext:
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
 
         # Set reasonable threading defaults.
-        # count == 0 -> use as many threads as there are CPUs.
-        # type == 2 -> thread within a frame. This does not change the API.
-        self.ptr.thread_count = 0
-        self.ptr.thread_type = 2
+        self.ptr.thread_count = 0  # use as many threads as there are CPUs.
+        self.ptr.thread_type = 0x02  # thread within a frame. Does not change the API.
 
     def _get_flags(self):
         return self.ptr.flags
@@ -623,7 +621,12 @@ cdef class CodecContext:
     def thread_type(self, value):
         if self.is_open:
             raise RuntimeError("Cannot change thread_type after codec is open.")
-        self.ptr.thread_type = value.value
+        if type(value) is int:
+            self.ptr.thread_type = value
+        elif type(value) is str:
+            self.ptr.thread_type = ThreadType[value].value
+        else:
+            self.ptr.thread_type = value.value
 
     @property
     def skip_frame(self):

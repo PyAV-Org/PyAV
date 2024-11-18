@@ -21,6 +21,16 @@ class TestStreams:
             fate_suite("amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv")
         )
         video = container.streams.video[0]
+
+        video.thread_type = av.codec.context.ThreadType.AUTO
+        assert video.thread_type == av.codec.context.ThreadType.AUTO
+
+        video.thread_type = 0x03
+        assert video.thread_type == av.codec.context.ThreadType.AUTO
+
+        video.thread_type = "AUTO"
+        assert video.thread_type == av.codec.context.ThreadType.AUTO
+
         audio = container.streams.audio[0]
 
         assert [video] == container.streams.get(video=0)
