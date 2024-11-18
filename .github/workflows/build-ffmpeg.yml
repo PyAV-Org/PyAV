@@ -17,24 +17,24 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
-          - os: macos-14
-            arch: arm64
-            shell: bash
-          - os: macos-13
+#          - os: macos-14
+#            arch: arm64
+#            shell: bash
+#          - os: macos-13
+#            arch: x86_64
+#            shell: bash
+#          - os: ubuntu-latest
+#            arch: i686
+#            shell: bash
+          - os: ubuntu-latest
             arch: x86_64
             shell: bash
-          - os: ubuntu-latest
-            arch: i686
-            shell: bash
-          - os: ubuntu-latest
-            arch: x86_64
-            shell: bash
-          - os: windows-latest
-            arch: AMD64
-            shell: 'msys2 {0}'
+#          - os: windows-latest
+#            arch: AMD64
+#           shell: 'msys2 {0}'
     defaults:
       run:
         shell: ${{ matrix.shell }}
@@ -46,17 +46,17 @@ jobs:
       - name: Set deployment target
         if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
         run: echo "MACOSX_DEPLOYMENT_TARGET=10.13" >> $GITHUB_ENV
-      - name: Install packages
-        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
-        run: |
-          brew update
-          brew install pkg-config
-          brew unlink gettext libidn2 libpng libtiff libunistring libx11 libxau libxcb libxdmcp little-cms2 unbound
-      - uses: msys2/setup-msys2@v2
-        if: matrix.os == 'windows-latest'
-        with:
-          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gperf mingw-w64-x86_64-nasm
-          path-type: inherit
+#      - name: Install packages
+#        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+#        run: |
+#          brew update
+#          brew install pkg-config
+#          brew unlink gettext libidn2 libpng libtiff libunistring libx11 libxau libxcb libxdmcp little-cms2 unbound
+#      - uses: msys2/setup-msys2@v2
+#        if: matrix.os == 'windows-latest'
+#        with:
+#          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gperf mingw-w64-x86_64-nasm
+#          path-type: inherit
       - name: Build FFmpeg
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -80,7 +80,7 @@ jobs:
   build-qemu-stage-1:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         arch: [aarch64]
         os: [ubuntu-latest]
@@ -111,7 +111,7 @@ jobs:
     needs: build-qemu-stage-1
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         arch: [aarch64]
         os: [ubuntu-latest]
