@@ -56,7 +56,7 @@ jobs:
       - name: Set Minimum MacOS Target
         if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
         run: |
-          echo "MACOSX_DEPLOYMENT_TARGET=10.13" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
       - name: Build wheels
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
