@@ -1,5 +1,6 @@
 import logging
 import os
+from fractions import Fraction
 
 cimport libav as lib
 
@@ -186,7 +187,7 @@ cdef class OutputContainer(Container):
         elif template.type == "audio":
             py_stream.time_base = kwargs.pop("time_base", 1 / template.rate)
         else:
-            py_stream.time_base = kwargs.pop("time_base", None)
+            py_stream.time_base = kwargs.pop("time_base", Fraction(0, 1))
 
         for k, v in kwargs.items():
             setattr(py_stream, k, v)
