@@ -135,10 +135,3 @@ class TestStreams:
         assert repr.startswith("<av.DataStream #0") and repr.endswith(">")
 
         container.close()
-
-    # def test_side_data(self) -> None:
-    #     container = av.open(fate_suite("mov/displaymatrix.mov"))
-    #     video = container.streams.video[0]
-
-    #     assert video.nb_side_data == 1
-    #     assert video.side_data["DISPLAYMATRIX"] == -90.0

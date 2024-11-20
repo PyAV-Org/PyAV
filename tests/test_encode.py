@@ -222,6 +222,29 @@ class TestBasicAudioEncoding(TestCase):
             assert stream.sample_rate == sample_rate
 
 
+class TestSubtitleEncoding:
+    def test_subtitle_muxing(self) -> None:
+        input_ = av.open(fate_suite("sub/MovText_capability_tester.mp4"))
+        in_stream = input_.streams.subtitles[0]
+
+        output_bytes = io.BytesIO()
+        output = av.open(output_bytes, "w", format="mp4")
+
+        out_stream = output.add_stream_from_template(in_stream)
+
+        for packet in input_.demux(in_stream):
+            if packet.dts is None:
+                continue
+            packet.stream = out_stream
+            output.mux(packet)
+
+        output.close()
+        output_bytes.seek(0)
+        assert output_bytes.getvalue().startswith(
+            b"\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isomiso2mp41\x00\x00\x00\x08free"
+        )
+
+
 class TestEncodeStreamSemantics(TestCase):
     def test_stream_index(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
