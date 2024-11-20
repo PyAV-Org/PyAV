@@ -240,7 +240,9 @@ class TestSubtitleEncoding:
 
         output.close()
         output_bytes.seek(0)
-        # assert output_bytes.getvalue() == b""
+        assert output_bytes.getvalue().startswith(
+            b"\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isomiso2mp41\x00\x00\x00\x08free"
+        )
 
 
 class TestEncodeStreamSemantics(TestCase):

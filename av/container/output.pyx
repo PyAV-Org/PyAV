@@ -144,14 +144,15 @@ cdef class OutputContainer(Container):
         :param template: Copy codec from another :class:`~av.stream.Stream` instance.
         :param \\**kwargs: Set attributes for the stream.
         :rtype: The new :class:`~av.stream.Stream`.
-
         """
+        cdef const lib.AVCodec *codec
+        cdef Codec codec_obj
 
-        if not template.codec_context:
-            raise ValueError("template has no codec context")
-
-        cdef Codec codec_obj = Codec(template.codec_context.codec.name, "w")
-        cdef const lib.AVCodec *codec = codec_obj.ptr
+        if template.type == "subtitle":
+            codec_obj = template.codec_context.codec
+        else:
+            codec_obj = Codec(template.codec_context.codec.name, "w")
+        codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
@@ -181,13 +182,6 @@ cdef class OutputContainer(Container):
         cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec)
         cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
-
-        if template.type == "video":
-            py_stream.time_base = kwargs.pop("time_base", 1 / template.average_rate)
-        elif template.type == "audio":
-            py_stream.time_base = kwargs.pop("time_base", 1 / template.rate)
-        else:
-            py_stream.time_base = kwargs.pop("time_base", Fraction(0, 1))
 
         for k, v in kwargs.items():
             setattr(py_stream, k, v)
