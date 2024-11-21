@@ -35,7 +35,7 @@ class TestStreams:
 
         assert isinstance(stats, bytes) and len(stats) > 30
         assert b"inf" not in stats
-        assert b"\"input_i\"" in stats
+        assert b'"input_i"' in stats
 
     def test_selection(self) -> None:
         container = av.open(

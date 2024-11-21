@@ -4,11 +4,22 @@
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
-#include <pthread.h>
 #include <string.h>
 
-static pthread_mutex_t json_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t json_cond = PTHREAD_COND_INITIALIZER;
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <pthread.h>
+#endif
+
+#ifdef _WIN32
+    static CRITICAL_SECTION json_mutex;
+    static CONDITION_VARIABLE json_cond;
+    static int mutex_initialized = 0;
+#else
+    static pthread_mutex_t json_mutex = PTHREAD_MUTEX_INITIALIZER;
+    static pthread_cond_t json_cond = PTHREAD_COND_INITIALIZER;
+#endif
 
 static char json_buffer[2048] = {0};
 static int json_captured = 0;
@@ -20,11 +31,22 @@ static void logging_callback(void *ptr, int level, const char *fmt, va_list vl) 
 
     const char *json_start = strstr(line, "{");
     if (json_start) {
+        #ifdef _WIN32
+        EnterCriticalSection(&json_mutex);
+        #else
         pthread_mutex_lock(&json_mutex);
+        #endif
+
         strncpy(json_buffer, json_start, sizeof(json_buffer) - 1);
         json_captured = 1;
-        pthread_cond_signal(&json_cond);  // Signal that we have the JSON
+
+        #ifdef _WIN32
+        WakeConditionVariable(&json_cond);
+        LeaveCriticalSection(&json_mutex);
+        #else
+        pthread_cond_signal(&json_cond);
         pthread_mutex_unlock(&json_mutex);
+        #endif
     }
 }
 
@@ -36,6 +58,16 @@ char* loudnorm_get_stats(
     char* result = NULL;
     json_captured = 0;    // Reset the captured flag
     memset(json_buffer, 0, sizeof(json_buffer));  // Clear the buffer
+
+    #ifdef _WIN32
+    // Initialize synchronization objects if needed
+    if (!mutex_initialized) {
+        InitializeCriticalSection(&json_mutex);
+        InitializeConditionVariable(&json_cond);
+        mutex_initialized = 1;
+    }
+    #endif
+
     av_log_set_callback(logging_callback);
 
     AVFilterGraph *filter_graph = NULL;
@@ -64,8 +96,6 @@ char* loudnorm_get_stats(
         codecpar->sample_rate,
         av_get_sample_fmt_name(codec_ctx->sample_fmt),
         ch_layout_str);
-
-
 
     avfilter_graph_create_filter(&src_ctx, avfilter_get_by_name("abuffer"),
         "src", args, NULL, filter_graph);
@@ -126,8 +156,7 @@ char* loudnorm_get_stats(
 
     // Force stats print
     if (loudnorm_ctx) {
-        av_log_set_level(AV_LOG_INFO);  // Make sure log level is high enough
-        // Trigger stats print
+        av_log_set_level(AV_LOG_INFO);
         av_opt_set(loudnorm_ctx, "print_format", "json", AV_OPT_SEARCH_CHILDREN);
         av_opt_set(loudnorm_ctx, "measured_i", NULL, AV_OPT_SEARCH_CHILDREN);
         av_opt_set(loudnorm_ctx, "measured_lra", NULL, AV_OPT_SEARCH_CHILDREN);
@@ -136,7 +165,6 @@ char* loudnorm_get_stats(
         avfilter_init_str(loudnorm_ctx, NULL);
     }
 
-    // Flush the filter graph to ensure all processing is done
     avfilter_graph_request_oldest(filter_graph);
 
 end:
@@ -147,9 +175,22 @@ end:
     av_frame_free(&frame);
     av_packet_free(&packet);
 
+    #ifdef _WIN32
+    EnterCriticalSection(&json_mutex);
+    while (!json_captured) {
+        if (!SleepConditionVariableCS(&json_cond, &json_mutex, 5000)) { // 5 second timeout
+            fprintf(stderr, "Timeout waiting for JSON data\n");
+            break;
+        }
+    }
+    if (json_captured) {
+        result = _strdup(json_buffer);  // Use _strdup on Windows
+    }
+    LeaveCriticalSection(&json_mutex);
+    #else
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
-    //timeout.tv_sec += 0;
+    timeout.tv_sec += 5;  // 5 second timeout
 
     pthread_mutex_lock(&json_mutex);
     while (json_captured == 0) {
@@ -163,6 +204,8 @@ end:
         result = strdup(json_buffer);
     }
     pthread_mutex_unlock(&json_mutex);
+    #endif
+
     av_log_set_callback(av_log_default_callback);
     return result;
 }
