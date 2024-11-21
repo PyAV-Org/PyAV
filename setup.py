@@ -153,10 +153,36 @@ else:
         "library_dirs": [],
     }
 
+loudnorm_extension = Extension(
+    "av.filter.loudnorm",
+    sources=[
+        "av/filter/loudnorm.pyx",
+        "av/filter/loudnorm_impl.c",
+    ],
+    include_dirs=["av/filter"] + extension_extra["include_dirs"],
+    libraries=extension_extra["libraries"],
+    library_dirs=extension_extra["library_dirs"],
+)
+
+# Add the cythonized loudnorm extension to ext_modules
+ext_modules = cythonize(
+    loudnorm_extension,
+    compiler_directives={
+        "c_string_type": "str",
+        "c_string_encoding": "ascii",
+        "embedsignature": True,
+        "language_level": 3,
+    },
+    build_dir="src",
+    include_path=["include"],
+)
+
 # Construct the modules that we find in the "av" directory.
-ext_modules = []
 for dirname, dirnames, filenames in os.walk("av"):
     for filename in filenames:
+        if filename == "loudnorm.pyx":
+            continue
+
         # We are looking for Cython sources.
         if filename.startswith(".") or os.path.splitext(filename)[1] != ".pyx":
             continue

@@ -26,6 +26,17 @@ class TestStreams:
             audio_streams = tuple([s for s in container.streams if s.type == "audio"])
             assert audio_streams == container.streams.audio
 
+    def test_loudnorm(self) -> None:
+        container = av.open(
+            fate_suite("amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv")
+        )
+        audio = container.streams.audio[0]
+        stats = av.filter.loudnorm.stats("i=-24.0:lra=7.0:tp=-2.0", audio)
+
+        assert isinstance(stats, bytes) and len(stats) > 30
+        assert b"inf" not in stats
+        assert b'"input_i"' in stats
+
     def test_selection(self) -> None:
         container = av.open(
             fate_suite("amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv")
