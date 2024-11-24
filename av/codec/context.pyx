@@ -47,14 +47,6 @@ class ThreadType(Flag):
     SLICE: "Decode more than one part of a single frame at once" = lib.FF_THREAD_SLICE
     AUTO: "Decode using both FRAME and SLICE methods." = lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME
 
-class SkipType(Enum):
-    NONE: "Discard nothing" = lib.AVDISCARD_NONE
-    DEFAULT: "Discard useless packets like 0 size packets in AVI" = lib.AVDISCARD_DEFAULT
-    NONREF: "Discard all non reference" = lib.AVDISCARD_NONREF
-    BIDIR: "Discard all bidirectional frames" = lib.AVDISCARD_BIDIR
-    NONINTRA: "Discard all non intra frames" = lib.AVDISCARD_NONINTRA
-    NONKEY: "Discard all frames except keyframes" = lib.AVDISCARD_NONKEY
-    ALL: "Discard all" = lib.AVDISCARD_ALL
 
 Flags = define_enum("Flags", __name__, (
     ("NONE", 0),
@@ -630,16 +622,53 @@ cdef class CodecContext:
 
     @property
     def skip_frame(self):
-        """One of :class:`.SkipType`.
+        """Returns one of the following str literals:
+
+        "NONE" Discard nothing
+        "DEFAULT" Discard useless packets like 0 size packets in AVI
+        "NONREF" Discard all non reference
+        "BIDIR" Discard all bidirectional frames
+        "NONINTRA" Discard all non intra frames
+        "NONKEY Discard all frames except keyframes
+        "ALL" Discard all
 
         Wraps :ffmpeg:`AVCodecContext.skip_frame`.
-
         """
-        return SkipType(self.ptr.skip_frame)
+        value = self.ptr.skip_frame
+        if value == lib.AVDISCARD_NONE:
+            return "NONE"
+        if value == lib.AVDISCARD_DEFAULT:
+            return "DEFAULT"
+        if value == lib.AVDISCARD_NONREF:
+            return "NONREF"
+        if value == lib.AVDISCARD_BIDIR:
+            return "BIDIR"
+        if value == lib.AVDISCARD_NONINTRA:
+            return "NONINTRA"
+        if value == lib.AVDISCARD_NONKEY:
+            return "NONKEY"
+        if value == lib.AVDISCARD_ALL:
+            return "ALL"
+        return f"{value}"
 
     @skip_frame.setter
     def skip_frame(self, value):
-        self.ptr.skip_frame = value.value
+        if value == "NONE":
+            self.ptr.skip_frame = lib.AVDISCARD_NONE
+        elif value == "DEFAULT":
+            self.ptr.skip_frame = lib.AVDISCARD_DEFAULT
+        elif value == "NONREF":
+            self.ptr.skip_frame = lib.AVDISCARD_NONREF
+        elif value == "BIDIR":
+            self.ptr.skip_frame = lib.AVDISCARD_BIDIR
+        elif value == "NONINTRA":
+            self.ptr.skip_frame = lib.AVDISCARD_NONINTRA
+        elif value == "NONKEY":
+            self.ptr.skip_frame = lib.AVDISCARD_NONKEY
+        elif value == "ALL":
+            self.ptr.skip_frame = lib.AVDISCARD_ALL
+        else:
+            raise ValueError("Invalid skip_frame type")
 
     @property
     def delay(self):

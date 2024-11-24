@@ -15,15 +15,6 @@ class ThreadType(Flag):
     def __get__(self, i: object | None, owner: type | None = None) -> ThreadType: ...
     def __set__(self, instance: object, value: int | str | ThreadType) -> None: ...
 
-class SkipType(Enum):
-    NONE: ClassVar[SkipType]
-    DEFAULT: ClassVar[SkipType]
-    NONREF: ClassVar[SkipType]
-    BIDIR: ClassVar[SkipType]
-    NONINTRA: ClassVar[SkipType]
-    NONKEY: ClassVar[SkipType]
-    ALL: ClassVar[SkipType]
-
 class Flags(EnumFlag):
     NONE: int
     UNALIGNED: int
@@ -71,7 +62,9 @@ class CodecContext:
     bit_rate_tolerance: int
     thread_count: int
     thread_type: ThreadType
-    skip_frame: SkipType
+    skip_frame: Literal[
+        "NONE", "DEFAULT", "NONREF", "BIDIR", "NONINTRA", "NONKEY", "ALL"
+    ]
 
     # flags
     unaligned: bool
