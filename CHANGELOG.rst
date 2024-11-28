@@ -22,18 +22,23 @@ v14.0.0
 Major:
 
 - Drop FFmpeg 6.
-- Remove ``AVError`` alias (use ``FFmpegError`` directly instead).
+- Drop support for MacOS <11 in our binary wheels.
+- Change many instances ``EnumItem`` s (our custom enum class) with Python's standard Enums.
 - Remove the `template` arg from ``OutputContainer.add_stream()``.
 - Remove ``CodecContext.close()`` because it's deprecated in ffmpeg.
+- Remove ``AVError`` alias (use ``FFmpegError`` directly instead).
 
 Features:
 
 - Add ``OutputContainer.add_stream_from_template()`` by :gh-user:`WyattBlue` and :gh-user:`cdce8p`.
+- Add ``OutputContainer.add_data_stream()`` by :gh-user:`WyattBlue`.
+- Add ``filter.loudnorm.stats()`` function that returns the stats of loudnorm for 2-pass filtering by :gh-user:`WyattBlue`.
 - Add ``qmin`` and ``qmax`` parameters to the ``VideoCodecContext`` by :gh-user:`davidplowman` in (:pr:`1618`).
 
 Fixes:
 
 - Correct ``Colorspace``'s lowercase enums.
+- Updated ``sidedata.Type`` enum.
 - Ensure streams in StreamContainer are released. Fixes :issue:`1599`.
 
 v13.1.0
