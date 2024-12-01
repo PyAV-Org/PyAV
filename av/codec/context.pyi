@@ -1,8 +1,7 @@
-from enum import Enum, Flag
+from enum import Flag, IntEnum
 from fractions import Fraction
 from typing import ClassVar, Literal
 
-from av.enum import EnumFlag, EnumItem
 from av.packet import Packet
 
 from .codec import Codec
@@ -15,38 +14,39 @@ class ThreadType(Flag):
     def __get__(self, i: object | None, owner: type | None = None) -> ThreadType: ...
     def __set__(self, instance: object, value: int | str | ThreadType) -> None: ...
 
-class Flags(EnumFlag):
-    NONE: int
-    UNALIGNED: int
-    QSCALE: int
-    # 4MV
-    OUTPUT_CORRUPT: int
-    QPEL: int
-    DROPCHANGED: int
-    PASS1: int
-    PASS2: int
-    LOOP_FILTER: int
-    GRAY: int
-    PSNR: int
-    INTERLACED_DCT: int
-    LOW_DELAY: int
-    GLOBAL_HEADER: int
-    BITEXACT: int
-    AC_PRED: int
-    INTERLACED_ME: int
-    CLOSED_GOP: int
+class Flags(IntEnum):
+    unaligned: int
+    qscale: int
+    four_mv: int
+    output_corrupt: int
+    qpel: int
+    drop_changed: int
+    recon_frame: int
+    copy_opaque: int
+    frame_duration: int
+    pass1: int
+    pass2: int
+    loop_filter: int
+    gray: int
+    psnr: int
+    interlaced_dct: int
+    low_delay: int
+    global_header: int
+    bitexact: int
+    ac_pred: int
+    interlaced_me: int
+    closed_gop: int
 
-class Flags2(EnumFlag):
-    NONE: int
-    FAST: int
-    NO_OUTPUT: int
-    LOCAL_HEADER: int
-    CHUNKS: int
-    IGNORE_CROP: int
-    SHOW_ALL: int
-    EXPORT_MVS: int
-    SKIP_MANUAL: int
-    RO_FLUSH_NOOP: int
+class Flags2(IntEnum):
+    fast: int
+    no_output: int
+    local_header: int
+    chunks: int
+    ignore_crop: int
+    show_all: int
+    export_mvs: int
+    skip_manual: int
+    ro_flush_noop: int
 
 class CodecContext:
     name: str
@@ -65,30 +65,10 @@ class CodecContext:
     skip_frame: Literal[
         "NONE", "DEFAULT", "NONREF", "BIDIR", "NONINTRA", "NONKEY", "ALL"
     ]
-
-    # flags
-    unaligned: bool
+    flags: int
     qscale: bool
-    four_mv: bool
-    output_corrupt: bool
-    qpel: bool
-    drop_changed: bool
-    recon_frame: bool
     copy_opaque: bool
-    frame_duration: bool
-    pass1: bool
-    pass2: bool
-    loop_filter: bool
-    gray: bool
-    psnr: bool
-    interlaced_dct: bool
-    low_delay: bool
-    global_header: bool
-    bitexact: bool
-    ac_pred: bool
-    interlaced_me: bool
-    closed_gop: bool
-
+    flags2: int
     @property
     def is_open(self) -> bool: ...
     @property

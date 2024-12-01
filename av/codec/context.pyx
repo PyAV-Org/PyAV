@@ -6,12 +6,11 @@ from libc.string cimport memcpy
 from av.bytesource cimport ByteSource, bytesource
 from av.codec.codec cimport Codec, wrap_codec
 from av.dictionary cimport _Dictionary
-from av.enum cimport define_enum
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
 
-from enum import Enum, Flag
+from enum import Flag, IntEnum
 
 from av.dictionary import Dictionary
 
@@ -47,65 +46,39 @@ class ThreadType(Flag):
     SLICE: "Decode more than one part of a single frame at once" = lib.FF_THREAD_SLICE
     AUTO: "Decode using both FRAME and SLICE methods." = lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME
 
+class Flags(IntEnum):
+    unaligned = lib.AV_CODEC_FLAG_UNALIGNED
+    qscale = lib.AV_CODEC_FLAG_QSCALE
+    four_mv = lib.AV_CODEC_FLAG_4MV
+    output_corrupt = lib.AV_CODEC_FLAG_OUTPUT_CORRUPT
+    qpel = lib.AV_CODEC_FLAG_QPEL
+    drop_changed = 1 << 5
+    recon_frame = lib.AV_CODEC_FLAG_RECON_FRAME
+    copy_opaque = lib.AV_CODEC_FLAG_COPY_OPAQUE
+    frame_duration = lib.AV_CODEC_FLAG_FRAME_DURATION
+    pass1 = lib.AV_CODEC_FLAG_PASS1
+    pass2 = lib.AV_CODEC_FLAG_PASS2
+    loop_filter = lib.AV_CODEC_FLAG_LOOP_FILTER
+    gray = lib.AV_CODEC_FLAG_GRAY
+    psnr = lib.AV_CODEC_FLAG_PSNR
+    interlaced_dct = lib.AV_CODEC_FLAG_INTERLACED_DCT
+    low_delay = lib.AV_CODEC_FLAG_LOW_DELAY
+    global_header = lib.AV_CODEC_FLAG_GLOBAL_HEADER
+    bitexact = lib.AV_CODEC_FLAG_BITEXACT
+    ac_pred = lib.AV_CODEC_FLAG_AC_PRED
+    interlaced_me = lib.AV_CODEC_FLAG_INTERLACED_ME
+    closed_gop = lib.AV_CODEC_FLAG_CLOSED_GOP
 
-Flags = define_enum("Flags", __name__, (
-    ("NONE", 0),
-    ("UNALIGNED", lib.AV_CODEC_FLAG_UNALIGNED,
-        "Allow decoders to produce frames with data planes that are not aligned to CPU requirements (e.g. due to cropping)."
-    ),
-    ("QSCALE", lib.AV_CODEC_FLAG_QSCALE, "Use fixed qscale."),
-    ("4MV", lib.AV_CODEC_FLAG_4MV, "4 MV per MB allowed / advanced prediction for H.263."),
-    ("OUTPUT_CORRUPT", lib.AV_CODEC_FLAG_OUTPUT_CORRUPT, "Output even those frames that might be corrupted."),
-    ("QPEL", lib.AV_CODEC_FLAG_QPEL, "Use qpel MC."),
-    ("DROPCHANGED", 1 << 5,
-        "Don't output frames whose parameters differ from first decoded frame in stream."
-    ),
-    ("RECON_FRAME", lib.AV_CODEC_FLAG_RECON_FRAME, "Request the encoder to output reconstructed frames, i.e. frames that would be produced by decoding the encoded bistream."),
-    ("COPY_OPAQUE", lib.AV_CODEC_FLAG_COPY_OPAQUE,
-        """Request the decoder to propagate each packet's AVPacket.opaque and AVPacket.opaque_ref
-        to its corresponding output AVFrame. Request the encoder to propagate each frame's
-        AVFrame.opaque and AVFrame.opaque_ref values to its corresponding output AVPacket."""),
-    ("FRAME_DURATION", lib.AV_CODEC_FLAG_FRAME_DURATION,
-        """Signal to the encoder that the values of AVFrame.duration are valid and should be
-        used (typically for transferring them to output packets)."""),
-    ("PASS1", lib.AV_CODEC_FLAG_PASS1, "Use internal 2pass ratecontrol in first pass mode."),
-    ("PASS2", lib.AV_CODEC_FLAG_PASS2, "Use internal 2pass ratecontrol in second pass mode."),
-    ("LOOP_FILTER", lib.AV_CODEC_FLAG_LOOP_FILTER, "loop filter."),
-    ("GRAY", lib.AV_CODEC_FLAG_GRAY, "Only decode/encode grayscale."),
-    ("PSNR", lib.AV_CODEC_FLAG_PSNR, "error[?] variables will be set during encoding."),
-    ("INTERLACED_DCT", lib.AV_CODEC_FLAG_INTERLACED_DCT, "Use interlaced DCT."),
-    ("LOW_DELAY", lib.AV_CODEC_FLAG_LOW_DELAY, "Force low delay."),
-    ("GLOBAL_HEADER", lib.AV_CODEC_FLAG_GLOBAL_HEADER,
-        "Place global headers in extradata instead of every keyframe."
-    ),
-    ("BITEXACT", lib.AV_CODEC_FLAG_BITEXACT, "Use only bitexact stuff (except (I)DCT)."),
-    ("AC_PRED", lib.AV_CODEC_FLAG_AC_PRED, "H.263 advanced intra coding / MPEG-4 AC prediction"),
-    ("INTERLACED_ME", lib.AV_CODEC_FLAG_INTERLACED_ME, "Interlaced motion estimation"),
-    ("CLOSED_GOP", lib.AV_CODEC_FLAG_CLOSED_GOP),
-), is_flags=True)
-
-Flags2 = define_enum("Flags2", __name__, (
-    ("NONE", 0),
-    ("FAST", lib.AV_CODEC_FLAG2_FAST,
-        """Allow non spec compliant speedup tricks."""),
-    ("NO_OUTPUT", lib.AV_CODEC_FLAG2_NO_OUTPUT,
-        """Skip bitstream encoding."""),
-    ("LOCAL_HEADER", lib.AV_CODEC_FLAG2_LOCAL_HEADER,
-        """Place global headers at every keyframe instead of in extradata."""),
-    ("CHUNKS", lib.AV_CODEC_FLAG2_CHUNKS,
-        """Input bitstream might be truncated at a packet boundaries
-        instead of only at frame boundaries."""),
-    ("IGNORE_CROP", lib.AV_CODEC_FLAG2_IGNORE_CROP,
-        """Discard cropping information from SPS."""),
-    ("SHOW_ALL", lib.AV_CODEC_FLAG2_SHOW_ALL,
-        """Show all frames before the first keyframe"""),
-    ("EXPORT_MVS", lib.AV_CODEC_FLAG2_EXPORT_MVS,
-        """Export motion vectors through frame side data"""),
-    ("SKIP_MANUAL", lib.AV_CODEC_FLAG2_SKIP_MANUAL,
-        """Do not skip samples and export skip information as frame side data"""),
-    ("RO_FLUSH_NOOP", lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP,
-        """Do not reset ASS ReadOrder field on flush (subtitles decoding)"""),
-), is_flags=True)
+class Flags2(IntEnum):
+    fast = lib.AV_CODEC_FLAG2_FAST
+    no_output = lib.AV_CODEC_FLAG2_NO_OUTPUT
+    local_header = lib.AV_CODEC_FLAG2_LOCAL_HEADER
+    chunks = lib.AV_CODEC_FLAG2_CHUNKS
+    ignore_crop = lib.AV_CODEC_FLAG2_IGNORE_CROP
+    show_all = lib.AV_CODEC_FLAG2_SHOW_ALL
+    export_mvs = lib.AV_CODEC_FLAG2_EXPORT_MVS
+    skip_manual = lib.AV_CODEC_FLAG2_SKIP_MANUAL
+    ro_flush_noop = lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP
 
 
 cdef class CodecContext:
@@ -133,52 +106,58 @@ cdef class CodecContext:
         self.ptr.thread_count = 0  # use as many threads as there are CPUs.
         self.ptr.thread_type = 0x02  # thread within a frame. Does not change the API.
 
-    def _get_flags(self):
+    @property
+    def flags(self):
+        """
+        Get and set the flags bitmask of CodecContext.
+
+        :rtype: int
+        """
         return self.ptr.flags
 
-    def _set_flags(self, value):
+    @flags.setter
+    def flags(self, int value):
         self.ptr.flags = value
 
-    flags = Flags.property(_get_flags, _set_flags, "Flag property of :class:`.Flags`.")
+    @property
+    def qscale(self):
+        """
+        Use fixed qscale.
 
-    unaligned = flags.flag_property("UNALIGNED")
-    qscale = flags.flag_property("QSCALE")
-    four_mv = flags.flag_property("4MV")
-    output_corrupt = flags.flag_property("OUTPUT_CORRUPT")
-    qpel = flags.flag_property("QPEL")
-    drop_changed = flags.flag_property("DROPCHANGED")
-    recon_frame = flags.flag_property("RECON_FRAME")
-    copy_opaque = flags.flag_property("COPY_OPAQUE")
-    frame_duration = flags.flag_property("FRAME_DURATION")
-    pass1 = flags.flag_property("PASS1")
-    pass2 = flags.flag_property("PASS2")
-    loop_filter = flags.flag_property("LOOP_FILTER")
-    gray = flags.flag_property("GRAY")
-    psnr = flags.flag_property("PSNR")
-    interlaced_dct = flags.flag_property("INTERLACED_DCT")
-    low_delay = flags.flag_property("LOW_DELAY")
-    global_header = flags.flag_property("GLOBAL_HEADER")
-    bitexact = flags.flag_property("BITEXACT")
-    ac_pred = flags.flag_property("AC_PRED")
-    interlaced_me = flags.flag_property("INTERLACED_ME")
-    closed_gop = flags.flag_property("CLOSED_GOP")
+        :rtype: bool
+        """
+        return bool(self.ptr.flags & lib.AV_CODEC_FLAG_QSCALE)
 
-    def _get_flags2(self):
+    @qscale.setter
+    def qscale(self, value):
+        if value:
+            self.ptr.flags |= lib.AV_CODEC_FLAG_QSCALE
+        else:
+            self.ptr.flags &= ~lib.AV_CODEC_FLAG_QSCALE
+
+    @property
+    def copy_opaque(self):
+        return bool(self.ptr.flags & lib.AV_CODEC_FLAG_COPY_OPAQUE)
+
+    @copy_opaque.setter
+    def copy_opaque(self, value):
+        if value:
+            self.ptr.flags |= lib.AV_CODEC_FLAG_COPY_OPAQUE
+        else:
+            self.ptr.flags &= ~lib.AV_CODEC_FLAG_COPY_OPAQUE
+
+    @property
+    def flags2(self):
+        """
+        Get and set the flags2 bitmask of CodecContext.
+
+        :rtype: int
+        """
         return self.ptr.flags2
 
-    def _set_flags2(self, value):
+    @flags2.setter
+    def flags2(self, int value):
         self.ptr.flags2 = value
-
-    flags2 = Flags2.property(_get_flags2, _set_flags2, "Flag property of :class:`.Flags2`.")
-    fast = flags2.flag_property("FAST")
-    no_output = flags2.flag_property("NO_OUTPUT")
-    local_header = flags2.flag_property("LOCAL_HEADER")
-    chunks = flags2.flag_property("CHUNKS")
-    ignore_crop = flags2.flag_property("IGNORE_CROP")
-    show_all = flags2.flag_property("SHOW_ALL")
-    export_mvs = flags2.flag_property("EXPORT_MVS")
-    skip_manual = flags2.flag_property("SKIP_MANUAL")
-    ro_flush_noop = flags2.flag_property("RO_FLUSH_NOOP")
 
     @property
     def extradata(self):

@@ -117,7 +117,7 @@ cdef class Codec:
         if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
             raise RuntimeError("%s is both encoder and decoder.")
 
-    def create(self, str kind = None):
+    def create(self, kind = None):
         """Create a :class:`.CodecContext` for this codec.
 
         :param str kind: Gives a hint to static type checkers for what exact CodecContext is used.

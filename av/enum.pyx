@@ -198,46 +198,6 @@ cdef class EnumItem:
 
 
 cdef class EnumFlag(EnumItem):
-
-    """
-    Flags are sets of boolean attributes, which the FFmpeg API represents as individual
-    bits in a larger integer which you manipulate with the bitwise operators.
-    We associate names with each flag that are easier to operate with.
-
-    Consider :data:`CodecContextFlags`, whis is the type of the :attr:`CodecContext.flags`
-    attribute, and the set of boolean properties::
-
-        >>> fh = av.open(video_path)
-        >>> cc = fh.streams.video[0].codec_context
-
-        >>> cc.flags
-        <av.codec.context.Flags:NONE(0x0)>
-
-        >>> # You can set flags via bitwise operations with the objects, names, or values:
-        >>> cc.flags |= cc.flags.OUTPUT_CORRUPT
-        >>> cc.flags |= 'GLOBAL_HEADER'
-        >>> cc.flags
-        <av.codec.context.Flags:OUTPUT_CORRUPT|GLOBAL_HEADER(0x400008)>
-
-        >>> # You can test flags via bitwise operations with objects, names, or values:
-        >>> bool(cc.flags & cc.flags.OUTPUT_CORRUPT)
-        True
-        >>> bool(cc.flags & 'QSCALE')
-        False
-
-        >>> # There are boolean properties for each flag:
-        >>> cc.output_corrupt
-        True
-        >>> cc.qscale
-        False
-
-        >>> # You can set them:
-        >>> cc.qscale = True
-        >>> cc.flags
-        <av.codec.context.Flags:QSCALE|OUTPUT_CORRUPT|GLOBAL_HEADER(0x40000a)>
-
-    """
-
     cdef readonly tuple flags
 
     def __cinit__(self, sentinel, name, value, doc=None):
