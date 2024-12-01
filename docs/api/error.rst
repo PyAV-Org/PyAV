@@ -5,39 +5,18 @@ Errors
 
 .. _error_behaviour:
 
-General Behaviour
+General Behavior
 -----------------
 
 When PyAV encounters an FFmpeg error, it raises an appropriate exception.
 
 FFmpeg has a couple dozen of its own error types which we represent via
-:ref:`error_classes` and at a lower level via :ref:`error_types`.
+:ref:`error_classes`.
 
 FFmpeg will also return more typical errors such as ``ENOENT`` or ``EAGAIN``,
 which we do our best to translate to extensions of the builtin exceptions
 as defined by
-`PEP 3151 <https://www.python.org/dev/peps/pep-3151/#new-exception-classes>`_
-(and fall back onto ``OSError`` if using Python < 3.3).
-
-
-.. _error_types:
-
-Error Type Enumerations
------------------------
-
-We provide :class:`av.error.ErrorType` as an enumeration of the various FFmpeg errors.
-To mimick the stdlib ``errno`` module, all enumeration values are available in
-the ``av.error`` module, e.g.::
-
-    try:
-        do_something()
-    except OSError as e:
-        if e.errno != av.error.FILTER_NOT_FOUND:
-            raise
-        handle_error()
-
-
-.. autoclass:: av.error.ErrorType
+`PEP 3151 <https://www.python.org/dev/peps/pep-3151/#new-exception-classes>`_.
 
 
 .. _error_classes:
@@ -55,7 +34,7 @@ There are two competing ideas that have influenced the final design:
 
 2. We want to use the builtin exceptions whenever possible.
 
-As such, PyAV effectivly shadows as much of the builtin exception heirarchy as
+As such, PyAV effectively shadows as much of the builtin exception hierarchy as
 it requires, extending from both the builtins and from :class:`FFmpegError`.
 
 Therefore, an argument error within FFmpeg will raise a ``av.error.ValueError``, which
@@ -73,13 +52,4 @@ All of these exceptions are available on the top-level ``av`` package, e.g.::
 
 
 .. autoclass:: av.FFmpegError
-
-
-Mapping Codes and Classes
--------------------------
-
-Here is how the classes line up with the error codes/enumerations:
-
-.. include:: ../_build/rst/api/error_table.rst
-
 

@@ -90,8 +90,8 @@ Transcoding
 .. automethod:: CodecContext.flush_buffers
 
 
-Flags
-~~~~~
+Enums and Flags
+~~~~~~~~~~~~~~~
 
 .. autoattribute:: CodecContext.flags
 
@@ -107,10 +107,6 @@ Flags
     .. enumtable:: av.codec.context:Flags2
         :class: av.codec.context:CodecContext
 
-
-Enums
-~~~~~
-
 .. autoclass:: av.codec.context.ThreadType
 
     Which multithreading methods to use.
@@ -118,9 +114,5 @@ Enums
     so clients which cannot provide future frames should not use it.
 
     .. enumtable:: av.codec.context.ThreadType
-
-.. autoclass:: av.codec.context.SkipType
-
-    .. enumtable:: av.codec.context.SkipType
 
 
