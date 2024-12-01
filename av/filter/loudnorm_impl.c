@@ -3,7 +3,6 @@
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
-#include <libavutil/opt.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -154,22 +153,11 @@ char* loudnorm_get_stats(
         av_frame_unref(filt_frame);
     }
 
-    // Force stats print
-    if (loudnorm_ctx) {
-        av_log_set_level(AV_LOG_INFO);
-        av_opt_set(loudnorm_ctx, "print_format", "json", AV_OPT_SEARCH_CHILDREN);
-        av_opt_set(loudnorm_ctx, "measured_i", NULL, AV_OPT_SEARCH_CHILDREN);
-        av_opt_set(loudnorm_ctx, "measured_lra", NULL, AV_OPT_SEARCH_CHILDREN);
-        av_opt_set(loudnorm_ctx, "measured_tp", NULL, AV_OPT_SEARCH_CHILDREN);
-        av_opt_set(loudnorm_ctx, "measured_thresh", NULL, AV_OPT_SEARCH_CHILDREN);
-        avfilter_init_str(loudnorm_ctx, NULL);
-    }
-
-    avfilter_graph_request_oldest(filter_graph);
+    // Pushes graph
+    avfilter_graph_free(&filter_graph);
 
 end:
     avcodec_free_context(&codec_ctx);
-    avfilter_graph_free(&filter_graph);
     avformat_close_input(&fmt_ctx);
     av_frame_free(&filt_frame);
     av_frame_free(&frame);

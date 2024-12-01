@@ -8,6 +8,7 @@ from av.audio.codeccontext cimport AudioCodecContext
 from av.audio.stream cimport AudioStream
 from av.container.core cimport Container
 from av.stream cimport Stream
+from av.logging import get_level, set_level
 
 
 cdef extern from "libavcodec/avcodec.h":
@@ -51,6 +52,9 @@ cpdef bytes stats(str loudnorm_args, AudioStream stream):
     cdef const char* c_args = py_args
     cdef char* result
 
+    # Save log level since C function overwrite it.
+    level = get_level()
+
     with nogil:
         result = loudnorm_get_stats(format_ptr, stream_index, c_args)
 
@@ -59,5 +63,7 @@ cpdef bytes stats(str loudnorm_args, AudioStream stream):
 
     py_result = result[:]  # Make a copy of the string
     free(result)  # Free the C string
+
+    set_level(level)
 
     return py_result
