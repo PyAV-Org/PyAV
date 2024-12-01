@@ -31,7 +31,12 @@ def assertPixelValue16(plane, expected, byteorder: str) -> None:
 def test_opaque() -> None:
     with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
         video_stream = container.streams.video[0]
-        video_stream.codec_context.copy_opaque = True
+
+        ctx = video_stream.codec_context
+        ctx.flags |= av.codec.context.Flags.copy_opaque
+
+        assert video_stream.codec_context.copy_opaque
+
         for packet_idx, packet in enumerate(container.demux()):
             packet.opaque = (time.time(), packet_idx)
             for frame in packet.decode():
