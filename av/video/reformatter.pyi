@@ -1,8 +1,8 @@
-from av.enum import EnumItem
+from enum import IntEnum
 
 from .frame import VideoFrame
 
-class Interpolation(EnumItem):
+class Interpolation(IntEnum):
     FAST_BILINEAER: int
     BILINEAR: int
     BICUBIC: int
@@ -15,7 +15,7 @@ class Interpolation(EnumItem):
     LANCZOS: int
     SPLINE: int
 
-class Colorspace(EnumItem):
+class Colorspace(IntEnum):
     ITU709: int
     FCC: int
     ITU601: int
@@ -30,7 +30,7 @@ class Colorspace(EnumItem):
     smpte240: int
     default: int
 
-class ColorRange(EnumItem):
+class ColorRange(IntEnum):
     UNSPECIFIED: int
     MPEG: int
     JPEG: int

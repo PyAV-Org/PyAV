@@ -1,58 +1,17 @@
 import builtins
 from enum import Enum
 
-from .enum import EnumItem
-
 classes: dict[int, Exception]
 
 def code_to_tag(code: int) -> bytes: ...
 def tag_to_code(tag: bytes) -> int: ...
-def make_error(
-    res: int,
-    filename: str | None = None,
-    log: tuple[int, tuple[int, str, str] | None] | None = None,
-) -> None: ...
 def err_check(res: int, filename: str | None = None) -> int: ...
-
-BUFFER_TOO_SMALL: EnumItem
-
-class ErrorType(EnumItem, Enum):
-    BSF_NOT_FOUND: EnumItem
-    BUG: EnumItem
-    BUFFER_TOO_SMALL: EnumItem
-    DECODER_NOT_FOUND: EnumItem
-    DEMUXER_NOT_FOUND: EnumItem
-    ENCODER_NOT_FOUND: EnumItem
-    EOF: EnumItem
-    EXIT: EnumItem
-    EXTERNAL: EnumItem
-    FILTER_NOT_FOUND: EnumItem
-    INVALIDDATA: EnumItem
-    MUXER_NOT_FOUND: EnumItem
-    OPTION_NOT_FOUND: EnumItem
-    PATCHWELCOME: EnumItem
-    PROTOCOL_NOT_FOUND: EnumItem
-    UNKNOWN: EnumItem
-    EXPERIMENTAL: EnumItem
-    INPUT_CHANGED: EnumItem
-    OUTPUT_CHANGED: EnumItem
-    HTTP_BAD_REQUEST: EnumItem
-    HTTP_UNAUTHORIZED: EnumItem
-    HTTP_FORBIDDEN: EnumItem
-    HTTP_NOT_FOUND: EnumItem
-    HTTP_OTHER_4XX: EnumItem
-    HTTP_SERVER_ERROR: EnumItem
-    PYAV_CALLBACK: EnumItem
-
-    @property
-    def tag(self) -> bytes: ...
 
 class FFmpegError(Exception):
     errno: int
     strerror: str
     filename: str
     log: tuple[int, tuple[int, str, str] | None]
-    type: ErrorType
 
     def __init__(
         self,

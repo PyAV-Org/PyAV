@@ -5,7 +5,6 @@ from typing import ClassVar, Literal, overload
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
 from av.descriptor import Descriptor
-from av.enum import EnumFlag
 from av.subtitles.codeccontext import SubtitleCodecContext
 from av.video.codeccontext import VideoCodecContext
 from av.video.format import VideoFormat
