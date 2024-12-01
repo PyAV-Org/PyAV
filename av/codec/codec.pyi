@@ -1,4 +1,4 @@
-from enum import Flag
+from enum import Flag, IntEnum
 from fractions import Fraction
 from typing import ClassVar, Literal, overload
 
@@ -21,28 +21,29 @@ class Properties(Flag):
     BITMAP_SUB: ClassVar[Properties]
     TEXT_SUB: ClassVar[Properties]
 
-class Capabilities(EnumFlag):
-    NONE: int
-    DARW_HORIZ_BAND: int
-    DR1: int
-    HWACCEL: int
-    DELAY: int
-    SMALL_LAST_FRAME: int
-    HWACCEL_VDPAU: int
-    SUBFRAMES: int
-    EXPERIMENTAL: int
-    CHANNEL_CONF: int
-    NEG_LINESIZES: int
-    FRAME_THREADS: int
-    SLICE_THREADS: int
-    PARAM_CHANGE: int
-    AUTO_THREADS: int
-    VARIABLE_FRAME_SIZE: int
-    AVOID_PROBING: int
-    HARDWARE: int
-    HYBRID: int
-    ENCODER_REORDERED_OPAQUE: int
-    ENCODER_FLUSH: int
+class Capabilities(IntEnum):
+    none: int
+    draw_horiz_band: int
+    dr1: int
+    hwaccel: int
+    delay: int
+    small_last_frame: int
+    hwaccel_vdpau: int
+    subframes: int
+    experimental: int
+    channel_conf: int
+    neg_linesizes: int
+    frame_threads: int
+    slice_threads: int
+    param_change: int
+    auto_threads: int
+    variable_frame_size: int
+    avoid_probing: int
+    hardware: int
+    hybrid: int
+    encoder_reordered_opaque: int
+    encoder_flush: int
+    encoder_recon_frame: int
 
 class UnknownCodecError(ValueError): ...
 
@@ -79,29 +80,12 @@ class Codec:
     def bitmap_sub(self) -> bool: ...
     @property
     def text_sub(self) -> bool: ...
-
-    capabilities: Capabilities
-    draw_horiz_band: bool
-    dr1: bool
-    hwaccel: bool
-    delay: bool
-    small_last_frame: bool
-    hwaccel_vdpau: bool
-    subframes: bool
-    experimental: bool
-    channel_conf: bool
-    neg_linesizes: bool
-    frame_threads: bool
-    slice_threads: bool
-    param_change: bool
-    auto_threads: bool
-    variable_frame_size: bool
-    avoid_probing: bool
-    hardware: bool
-    hybrid: bool
-    encoder_reordered_opaque: bool
-    encoder_flush: bool
-
+    @property
+    def capabilities(self) -> int: ...
+    @property
+    def experimental(self) -> bool: ...
+    @property
+    def delay(self) -> bool: ...
     def __init__(self, name: str, mode: Literal["r", "w"] = "r") -> None: ...
     @overload
     def create(self, kind: Literal["video"]) -> VideoCodecContext: ...

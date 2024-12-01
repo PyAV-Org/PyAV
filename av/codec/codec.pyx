@@ -1,10 +1,9 @@
 from av.audio.format cimport get_audio_format
 from av.descriptor cimport wrap_avclass
-from av.enum cimport define_enum
 from av.utils cimport avrational_to_fraction
 from av.video.format cimport get_video_format
 
-from enum import Flag
+from enum import Flag, IntEnum
 
 
 cdef object _cinit_sentinel = object()
@@ -25,94 +24,30 @@ class Properties(Flag):
     BITMAP_SUB = lib.AV_CODEC_PROP_BITMAP_SUB
     TEXT_SUB = lib.AV_CODEC_PROP_TEXT_SUB
 
-Capabilities = define_enum("Capabilities", "av.codec", (
-    ("NONE", 0),
-    ("DRAW_HORIZ_BAND", lib.AV_CODEC_CAP_DRAW_HORIZ_BAND,
-        """Decoder can use draw_horiz_band callback."""),
-    ("DR1", lib.AV_CODEC_CAP_DR1,
-        """Codec uses get_buffer() for allocating buffers and supports custom allocators.
-        If not set, it might not use get_buffer() at all or use operations that
-        assume the buffer was allocated by avcodec_default_get_buffer."""),
-    ("HWACCEL", 1 << 4),
-    ("DELAY", lib.AV_CODEC_CAP_DELAY,
-        """Encoder or decoder requires flushing with NULL input at the end in order to
-        give the complete and correct output.
 
-        NOTE: If this flag is not set, the codec is guaranteed to never be fed with
-              with NULL data. The user can still send NULL data to the public encode
-              or decode function, but libavcodec will not pass it along to the codec
-              unless this flag is set.
-
-        Decoders:
-        The decoder has a non-zero delay and needs to be fed with avpkt->data=NULL,
-        avpkt->size=0 at the end to get the delayed data until the decoder no longer
-        returns frames.
-
-        Encoders:
-        The encoder needs to be fed with NULL data at the end of encoding until the
-        encoder no longer returns data.
-
-        NOTE: For encoders implementing the AVCodec.encode2() function, setting this
-              flag also means that the encoder must set the pts and duration for
-              each output packet. If this flag is not set, the pts and duration will
-              be determined by libavcodec from the input frame."""),
-    ("SMALL_LAST_FRAME", lib.AV_CODEC_CAP_SMALL_LAST_FRAME,
-        """Codec can be fed a final frame with a smaller size.
-        This can be used to prevent truncation of the last audio samples."""),
-    ("HWACCEL_VDPAU", 1 << 7),
-    ("SUBFRAMES", lib.AV_CODEC_CAP_SUBFRAMES,
-        """Codec can output multiple frames per AVPacket
-        Normally demuxers return one frame at a time, demuxers which do not do
-        are connected to a parser to split what they return into proper frames.
-        This flag is reserved to the very rare category of codecs which have a
-        bitstream that cannot be split into frames without timeconsuming
-        operations like full decoding. Demuxers carrying such bitstreams thus
-        may return multiple frames in a packet. This has many disadvantages like
-        prohibiting stream copy in many cases thus it should only be considered
-        as a last resort."""),
-    ("EXPERIMENTAL", lib.AV_CODEC_CAP_EXPERIMENTAL,
-        """Codec is experimental and is thus avoided in favor of non experimental
-        encoders"""),
-    ("CHANNEL_CONF", lib.AV_CODEC_CAP_CHANNEL_CONF,
-        """Codec should fill in channel configuration and samplerate instead of container"""),
-    ("NEG_LINESIZES", 1 << 11),
-    ("FRAME_THREADS", lib.AV_CODEC_CAP_FRAME_THREADS,
-        """Codec supports frame-level multithreading""",),
-    ("SLICE_THREADS", lib.AV_CODEC_CAP_SLICE_THREADS,
-        """Codec supports slice-based (or partition-based) multithreading."""),
-    ("PARAM_CHANGE", lib.AV_CODEC_CAP_PARAM_CHANGE,
-        """Codec supports changed parameters at any point."""),
-    ("AUTO_THREADS", lib.AV_CODEC_CAP_OTHER_THREADS,
-        """Codec supports multithreading through a method other than slice- or
-        frame-level multithreading. Typically this marks wrappers around
-        multithreading-capable external libraries."""),
-    ("VARIABLE_FRAME_SIZE", lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE,
-        """Audio encoder supports receiving a different number of samples in each call."""),
-    ("AVOID_PROBING", lib.AV_CODEC_CAP_AVOID_PROBING,
-        """Decoder is not a preferred choice for probing.
-        This indicates that the decoder is not a good choice for probing.
-        It could for example be an expensive to spin up hardware decoder,
-        or it could simply not provide a lot of useful information about
-        the stream.
-        A decoder marked with this flag should only be used as last resort
-        choice for probing."""),
-    ("HARDWARE", lib.AV_CODEC_CAP_HARDWARE,
-        """Codec is backed by a hardware implementation. Typically used to
-        identify a non-hwaccel hardware decoder. For information about hwaccels, use
-        avcodec_get_hw_config() instead."""),
-    ("HYBRID", lib.AV_CODEC_CAP_HYBRID,
-        """Codec is potentially backed by a hardware implementation, but not
-        necessarily. This is used instead of AV_CODEC_CAP_HARDWARE, if the
-        implementation provides some sort of internal fallback."""),
-    ("ENCODER_REORDERED_OPAQUE", 1 << 20,  # lib.AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,  # FFmpeg 4.2
-        """This codec takes the reordered_opaque field from input AVFrames
-        and returns it in the corresponding field in AVCodecContext after
-        encoding."""),
-    ("ENCODER_FLUSH", 1 << 21,  # lib.AV_CODEC_CAP_ENCODER_FLUSH  # FFmpeg 4.3
-        """This encoder can be flushed using avcodec_flush_buffers(). If this
-        flag is not set, the encoder must be closed and reopened to ensure that
-        no frames remain pending."""),
-), is_flags=True)
+class Capabilities(IntEnum):
+    none = 0
+    draw_horiz_band = lib.AV_CODEC_CAP_DRAW_HORIZ_BAND
+    dr1 = lib.AV_CODEC_CAP_DR1
+    hwaccel = 1 << 4
+    delay = lib.AV_CODEC_CAP_DELAY
+    small_last_frame = lib.AV_CODEC_CAP_SMALL_LAST_FRAME
+    hwaccel_vdpau = 1 << 7
+    subframes = lib.AV_CODEC_CAP_SUBFRAMES
+    experimental = lib.AV_CODEC_CAP_EXPERIMENTAL
+    channel_conf = lib.AV_CODEC_CAP_CHANNEL_CONF
+    neg_linesizes = 1 << 11
+    frame_threads = lib.AV_CODEC_CAP_FRAME_THREADS
+    slice_threads = lib.AV_CODEC_CAP_SLICE_THREADS
+    param_change = lib.AV_CODEC_CAP_PARAM_CHANGE
+    auto_threads = lib.AV_CODEC_CAP_OTHER_THREADS
+    variable_frame_size = lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
+    avoid_probing = lib.AV_CODEC_CAP_AVOID_PROBING
+    hardware = lib.AV_CODEC_CAP_HARDWARE
+    hybrid = lib.AV_CODEC_CAP_HYBRID
+    encoder_reordered_opaque = 1 << 20
+    encoder_flush = 1 << 21
+    encoder_recon_frame = 1 << 22
 
 
 class UnknownCodecError(ValueError):
@@ -296,32 +231,48 @@ cdef class Codec:
     def text_sub(self):
         return bool(self.desc.props & lib.AV_CODEC_PROP_TEXT_SUB)
 
-    @Capabilities.property
+    @property
     def capabilities(self):
-        """Flag property of :class:`.Capabilities`"""
+        """
+        Get the capabilities bitmask of the codec.
+
+        This method returns an integer representing the codec capabilities bitmask,
+        which can be used to check specific codec features by performing bitwise
+        operations with the Capabilities enum values.
+
+        :example:
+
+        .. code-block:: python
+
+            from av.codec import Codec, Capabilities
+
+            codec = Codec("h264", "w")
+
+            # Check if the codec can be fed a final frame with a smaller size.
+            # This can be used to prevent truncation of the last audio samples.
+            small_last_frame = bool(codec.capabilities & Capabilities.small_last_frame)
+
+        :rtype: int
+        """
         return self.ptr.capabilities
 
-    draw_horiz_band = capabilities.flag_property("DRAW_HORIZ_BAND")
-    dr1 = capabilities.flag_property("DR1")
-    hwaccel = capabilities.flag_property("HWACCEL")
-    delay = capabilities.flag_property("DELAY")
-    small_last_frame = capabilities.flag_property("SMALL_LAST_FRAME")
-    hwaccel_vdpau = capabilities.flag_property("HWACCEL_VDPAU")
-    subframes = capabilities.flag_property("SUBFRAMES")
-    experimental = capabilities.flag_property("EXPERIMENTAL")
-    channel_conf = capabilities.flag_property("CHANNEL_CONF")
-    neg_linesizes = capabilities.flag_property("NEG_LINESIZES")
-    frame_threads = capabilities.flag_property("FRAME_THREADS")
-    slice_threads = capabilities.flag_property("SLICE_THREADS")
-    param_change = capabilities.flag_property("PARAM_CHANGE")
-    auto_threads = capabilities.flag_property("AUTO_THREADS")
-    variable_frame_size = capabilities.flag_property("VARIABLE_FRAME_SIZE")
-    avoid_probing = capabilities.flag_property("AVOID_PROBING")
-    hardware = capabilities.flag_property("HARDWARE")
-    hybrid = capabilities.flag_property("HYBRID")
-    encoder_reordered_opaque = capabilities.flag_property("ENCODER_REORDERED_OPAQUE")
-    encoder_flush = capabilities.flag_property("ENCODER_FLUSH")
+    @property
+    def experimental(self):
+        """
+        Check if codec is experimental and is thus avoided in favor of non experimental encoders.
 
+        :rtype: bool
+        """
+        return bool(self.ptr.capabilities & lib.AV_CODEC_CAP_EXPERIMENTAL)
+
+    @property
+    def delay(self):
+        """
+        If true, encoder or decoder requires flushing with `None` at the end in order to give the complete and correct output.
+
+        :rtype: bool
+        """
+        return bool(self.ptr.capabilities & lib.AV_CODEC_CAP_DELAY)
 
 cdef get_codec_names():
     names = set()
