@@ -23,10 +23,10 @@ Major:
 
 - Drop FFmpeg 6.
 - Drop support for MacOS <11 in our binary wheels.
-- Change many instances ``EnumItem`` s (our custom enum class) with Python's standard Enums.
-- Remove the `template` arg from ``OutputContainer.add_stream()``.
-- Remove ``CodecContext.close()`` because it's deprecated in ffmpeg.
+- Deleted PyAV's custom Enum class in favor of Python's standard Enums.
+- Remove ``CodecContext.close()``  and ``Stream.side_data`` because it's deprecated in ffmpeg.
 - Remove ``AVError`` alias (use ``FFmpegError`` directly instead).
+- Remove the `template` arg from ``OutputContainer.add_stream()``.
 
 Features:
 
@@ -34,9 +34,10 @@ Features:
 - Add ``OutputContainer.add_data_stream()`` by :gh-user:`WyattBlue`.
 - Add ``filter.loudnorm.stats()`` function that returns the stats of loudnorm for 2-pass filtering by :gh-user:`WyattBlue`.
 - Add ``qmin`` and ``qmax`` parameters to the ``VideoCodecContext`` by :gh-user:`davidplowman` in (:pr:`1618`).
+- Allow the profile of a codec to be set as well as queried by :gh-user:`davidplowman` in (:pr:`1625`).
 
 Fixes:
-
+- Make ``VideoFrame.from_numpy_buffer()`` support buffers with padding by :gh-user:`davidplowman` in (:pr:`1635`).
 - Correct ``Colorspace``'s lowercase enums.
 - Updated ``sidedata.Type`` enum.
 - Ensure streams in StreamContainer are released. Fixes :issue:`1599`.
