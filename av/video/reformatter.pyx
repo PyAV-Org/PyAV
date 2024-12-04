@@ -45,6 +45,19 @@ class ColorRange(IntEnum):
     NB: "Not part of ABI" = lib.AVCOL_RANGE_NB
 
 
+def _resolve_enum_value(value, enum_class, default):
+    # Helper function to resolve enum values from different input types.
+    if value is None:
+        return default
+    if isinstance(value, enum_class):
+        return value.value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        return enum_class[value].value
+    raise ValueError(f"Cannot convert {value} to {enum_class.__name__}")
+
+
 cdef class VideoReformatter:
     """An object for reformatting size and pixel format of :class:`.VideoFrame`.
 
@@ -83,11 +96,12 @@ cdef class VideoReformatter:
         """
 
         cdef VideoFormat video_format = VideoFormat(format if format is not None else frame.format)
-        cdef int c_src_colorspace = (Colorspace[src_colorspace].value if src_colorspace is not None else frame.colorspace)
-        cdef int c_dst_colorspace = (Colorspace[dst_colorspace].value if dst_colorspace is not None else frame.colorspace)
-        cdef int c_interpolation = (Interpolation[interpolation] if interpolation is not None else Interpolation.BILINEAR).value
-        cdef int c_src_color_range = (ColorRange[src_color_range].value if src_color_range is not None else 0)
-        cdef int c_dst_color_range = (ColorRange[dst_color_range].value if dst_color_range is not None else 0)
+
+        cdef int c_src_colorspace = _resolve_enum_value(src_colorspace, Colorspace, frame.colorspace)
+        cdef int c_dst_colorspace = _resolve_enum_value(dst_colorspace, Colorspace, frame.colorspace)
+        cdef int c_interpolation = _resolve_enum_value(interpolation, Interpolation, int(Interpolation.BILINEAR))
+        cdef int c_src_color_range = _resolve_enum_value(src_color_range, ColorRange, 0)
+        cdef int c_dst_color_range = _resolve_enum_value(dst_color_range, ColorRange, 0)
 
         return self._reformat(
             frame,

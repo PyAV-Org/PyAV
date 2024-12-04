@@ -7,6 +7,7 @@ import pytest
 
 import av
 from av import VideoFrame
+from av.video.reformatter import ColorRange, Colorspace, Interpolation
 
 from .common import (
     TestCase,
@@ -144,6 +145,24 @@ class TestVideoFrameImage(TestCase):
         img = frame.to_image()
         img.save(self.sandboxed("roundtrip-high.jpg"))
         assertImagesAlmostEqual(image, img)
+
+    def test_interpolation(self) -> None:
+        import PIL.Image as Image
+
+        image = Image.open(fate_png())
+        frame = VideoFrame.from_image(image)
+        assert frame.width == 330 and frame.height == 330
+
+        img = frame.to_image(width=200, height=100, interpolation=Interpolation.BICUBIC)
+        assert img.width == 200 and img.height == 100
+
+        img = frame.to_image(width=200, height=100, interpolation="BICUBIC")
+        assert img.width == 200 and img.height == 100
+
+        img = frame.to_image(
+            width=200, height=100, interpolation=int(Interpolation.BICUBIC)
+        )
+        assert img.width == 200 and img.height == 100
 
     def test_to_image_rgb24(self) -> None:
         sizes = [(318, 238), (320, 240), (500, 500)]
@@ -838,13 +857,19 @@ def test_reformat_identity() -> None:
 
 
 def test_reformat_colorspace() -> None:
-    # This is allowed.
     frame = VideoFrame(640, 480, "rgb24")
     frame.reformat(src_colorspace=None, dst_colorspace="smpte240m")
 
-    # I thought this was not allowed, but it seems to be.
+    frame = VideoFrame(640, 480, "rgb24")
+    frame.reformat(src_colorspace=None, dst_colorspace=Colorspace.smpte240m)
+
     frame = VideoFrame(640, 480, "yuv420p")
     frame.reformat(src_colorspace=None, dst_colorspace="smpte240m")
+
+    frame = VideoFrame(640, 480, "rgb24")
+    frame.colorspace = Colorspace.smpte240m
+    assert frame.colorspace == int(Colorspace.smpte240m)
+    assert frame.colorspace == Colorspace.smpte240m
 
 
 def test_reformat_pixel_format_align() -> None:

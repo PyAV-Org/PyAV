@@ -27,7 +27,8 @@ class Colorspace(IntEnum):
     fcc: int
     itu601: int
     itu624: int
-    smpte240: int
+    smpte170m: int
+    smpte240m: int
     default: int
 
 class ColorRange(IntEnum):
