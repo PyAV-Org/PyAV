@@ -1,14 +1,8 @@
-from enum import Enum
 from fractions import Fraction
-from typing import ClassVar, Literal
+from typing import Literal
 
 from .codec import Codec, CodecContext
 from .container import Container
-from .frame import Frame
-from .packet import Packet
-
-class SideData(Enum):
-    DISPLAYMATRIX: ClassVar[SideData]
 
 class Stream:
     name: str | None
