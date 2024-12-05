@@ -155,3 +155,16 @@ class TestDecode(TestCase):
             output_count += 1
 
         assert output_count == input_count
+
+    def test_no_side_data(self):
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        frame = next(container.decode(video=0))
+        matrix = frame.side_data.get(av.sidedata.sidedata.Type.DISPLAYMATRIX)
+        assert matrix is None
+
+    def test_side_data(self):
+        container = av.open(fate_suite("mov/displaymatrix.mov"))
+        frame = next(container.decode(video=0))
+        matrix = frame.side_data.get(av.sidedata.sidedata.Type.DISPLAYMATRIX)
+        rotation = av.video.display.get_display_rotation(matrix)
+        self.assertEqual(rotation, -90.0)
