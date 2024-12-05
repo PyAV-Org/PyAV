@@ -1,13 +1,13 @@
 cimport libav as lib
 from libc.stdint cimport int32_t
 
-import numpy as np
-
 from av.sidedata.sidedata import SideData
 from av.sidedata.sidedata import Type as SideDataType
 
 
 def get_display_rotation(matrix):
+    import numpy as np
+
     if not isinstance(matrix, SideData) or matrix.type != SideDataType.DISPLAYMATRIX:
         raise ValueError("Matrix must be `SideData` of type `DISPLAYMATRIX`")
     cdef const int32_t[:] view = np.frombuffer(matrix, dtype=np.int32)
