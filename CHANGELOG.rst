@@ -16,6 +16,15 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+
+v14.0.1
+
+Fixes:
+
+- Include header files in source distribution by :gh-user:`hmaarrfk` in (:pr:`1662`).
+- Cleanup ``AVStream.side_data`` leftovers by :gh-user:`lgeiger` in (:pr:`1674`).
+- Address :issue:`1663` by :gh-user:`WyattBlue`.
+
 v14.0.0
 -------
 
@@ -37,6 +46,7 @@ Features:
 - Allow the profile of a codec to be set as well as queried by :gh-user:`davidplowman` in (:pr:`1625`).
 
 Fixes:
+
 - Make ``VideoFrame.from_numpy_buffer()`` support buffers with padding by :gh-user:`davidplowman` in (:pr:`1635`).
 - Correct ``Colorspace``'s lowercase enums.
 - Updated ``sidedata.Type`` enum.
