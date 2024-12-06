@@ -148,7 +148,7 @@ cdef class OutputContainer(Container):
         cdef const lib.AVCodec *codec
         cdef Codec codec_obj
 
-        if template.type == "subtitle":
+        if template.type != "video":
             codec_obj = template.codec_context.codec
         else:
             codec_obj = Codec(template.codec_context.codec.name, "w")
