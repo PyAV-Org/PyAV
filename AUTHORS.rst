@@ -18,8 +18,8 @@ All contributors (by number of commits):
 * Tadas Dailyda <tadas@dailyda.com>
 * JoeUgly <41972063+JoeUgly@users.noreply.github.com>
 * Justin Wong <46082645+uvjustin@users.noreply.github.com>
+* Mark Harfouche <mark.harfouche@gmail.com>
 
-- Mark Harfouche <mark.harfouche@gmail.com>
 - Alba Mendez <me@alba.sh>
 - Dave Johansen <davejohansen@gmail.com>
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
@@ -73,6 +73,7 @@ All contributors (by number of commits):
 * Jonathan Martin <homerunisgood@hotmail.com>
 * Johan Jeppsson Karlin <johjep@gmail.com>
 * Philipp Klaus <klaus@physik.uni-frankfurt.de>
+* Lukas Geiger <lukas.geiger94@gmail.com>
 * Mattias Wadman <mattias.wadman@gmail.com>
 * Manuel Goacolou <mgoacolou@cls.fr>
 * Julian Schweizer <neuneck@gmail.com>
