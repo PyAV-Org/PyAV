@@ -24,6 +24,7 @@ Fixes:
 - Include header files in source distribution by :gh-user:`hmaarrfk` in (:pr:`1662`).
 - Cleanup ``AVStream.side_data`` leftovers by :gh-user:`lgeiger` in (:pr:`1674`).
 - Address :issue:`1663` by :gh-user:`WyattBlue`.
+- Make ``mp3`` work with ``OutputContainer.add_stream_from_template()``.
 
 v14.0.0
 -------
