@@ -4,6 +4,7 @@ from enum import IntEnum
 from libc.stdint cimport uint8_t
 
 from av.error cimport err_check
+from av.sidedata.sidedata cimport get_display_rotation
 from av.utils cimport check_ndarray
 from av.video.format cimport get_pix_fmt, get_video_format
 from av.video.plane cimport VideoPlane
@@ -171,6 +172,16 @@ cdef class VideoFrame(Frame):
     def height(self):
         """Height of the image, in pixels."""
         return self.ptr.height
+
+    @property
+    def rotation(self):
+        """The rotation component of the `DISPLAYMATRIX` transformation matrix.
+
+        Returns:
+            int: The angle (in degrees) by which the transformation rotates the frame
+                counterclockwise. The angle will be in range [-180, 180].
+        """
+        return get_display_rotation(self)
 
     @property
     def interlaced_frame(self):
