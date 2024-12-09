@@ -1,3 +1,5 @@
+from libc.stdint cimport int32_t
+
 from collections.abc import Mapping
 from enum import Enum
 
@@ -45,11 +47,17 @@ class Type(Enum):
 
 
 cdef SideData wrap_side_data(Frame frame, int index):
-    cdef lib.AVFrameSideDataType type_ = frame.ptr.side_data[index].type
-    if type_ == lib.AV_FRAME_DATA_MOTION_VECTORS:
+    if frame.ptr.side_data[index].type == lib.AV_FRAME_DATA_MOTION_VECTORS:
         return MotionVectors(_cinit_bypass_sentinel, frame, index)
     else:
         return SideData(_cinit_bypass_sentinel, frame, index)
+
+
+cdef int get_display_rotation(Frame frame):
+    for i in range(frame.ptr.nb_side_data):
+        if frame.ptr.side_data[i].type == lib.AV_FRAME_DATA_DISPLAYMATRIX:
+            return int(lib.av_display_rotation_get(<const int32_t *>frame.ptr.side_data[i].data))
+    return 0
 
 
 cdef class SideData(Buffer):
