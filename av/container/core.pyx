@@ -8,6 +8,7 @@ from pathlib import Path
 
 cimport libav as lib
 
+from av.codec.hwaccel cimport HWAccel
 from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
@@ -143,7 +144,7 @@ class Flags(Flag):
 
 cdef class Container:
     def __cinit__(self, sentinel, file_, format_name, options,
-                  container_options, stream_options,
+                  container_options, stream_options, hwaccel,
                   metadata_encoding, metadata_errors,
                   buffer_size, open_timeout, read_timeout,
                   io_open):
@@ -163,6 +164,8 @@ cdef class Container:
         self.options = dict(options or ())
         self.container_options = dict(container_options or ())
         self.stream_options = [dict(x) for x in stream_options or ()]
+
+        self.hwaccel = hwaccel
 
         self.metadata_encoding = metadata_encoding
         self.metadata_errors = metadata_errors
@@ -296,6 +299,7 @@ def open(
     buffer_size=32768,
     timeout=None,
     io_open=None,
+    hwaccel=None
 ):
     """open(file, mode='r', **kwargs)
 
@@ -322,6 +326,7 @@ def open(
         ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
         ``options`` is a dictionary of additional options. The callable should return a
         file-like object.
+    :param HWAccel hwaccel: Optional settings for hardware-accelerated decoding.
     :rtype: Container
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
@@ -367,7 +372,7 @@ def open(
 
     if mode.startswith("r"):
         return InputContainer(_cinit_sentinel, file, format, options,
-            container_options, stream_options, metadata_encoding, metadata_errors,
+            container_options, stream_options, hwaccel, metadata_encoding, metadata_errors,
             buffer_size, open_timeout, read_timeout, io_open,
         )
 
@@ -376,6 +381,6 @@ def open(
             "Provide stream options via Container.add_stream(..., options={})."
         )
     return OutputContainer(_cinit_sentinel, file, format, options,
-        container_options, stream_options, metadata_encoding, metadata_errors,
+        container_options, stream_options, None, metadata_encoding, metadata_errors,
         buffer_size, open_timeout, read_timeout, io_open,
     )

@@ -1,8 +1,45 @@
+import functools
+import os
+import pathlib
 from fractions import Fraction
+
+import numpy as np
+import pytest
 
 import av
 
 from .common import TestCase, fate_suite
+
+
+@functools.cache
+def make_h264_test_video(path: str) -> None:
+    """Generates a black H264 test video for testing hardware decoding."""
+
+    # We generate a file here that's designed to be as compatible as possible with hardware
+    # encoders. Hardware encoders are sometimes very picky and the errors we get are often
+    # opaque, so there is nothing much we (PyAV) can do. The user needs to figure that out
+    # if they want to use hwaccel. We only want to test the PyAV plumbing here.
+    # Our video is H264, 1280x720p (note that some decoders have a minimum resolution limit), 24fps,
+    # 8-bit yuv420p.
+    pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+    output_container = av.open(path, "w")
+    stream = output_container.add_stream("libx264", rate=24)
+    assert isinstance(stream, av.VideoStream)
+    stream.width = 1280
+    stream.height = 720
+    stream.pix_fmt = "yuv420p"
+
+    for _ in range(24):
+        frame = av.VideoFrame.from_ndarray(
+            np.zeros((720, 1280, 3), dtype=np.uint8), format="rgb24"
+        )
+        for packet in stream.encode(frame):
+            output_container.mux(packet)
+
+    for packet in stream.encode():
+        output_container.mux(packet)
+
+    output_container.close()
 
 
 class TestDecode(TestCase):
@@ -165,3 +202,37 @@ class TestDecode(TestCase):
         container = av.open(fate_suite("mov/displaymatrix.mov"))
         frame = next(container.decode(video=0))
         assert frame.rotation == -90
+
+    def test_hardware_decode(self) -> None:
+        if "HWACCEL_DEVICE_TYPE" not in os.environ:
+            pytest.skip(
+                "Set the HWACCEL_DEVICE_TYPE to run this test. "
+                f"Options are {' '.join(av.codec.hwaccel.hwdevices_available)}"
+            )
+
+        HWACCEL_DEVICE_TYPE = os.environ["HWACCEL_DEVICE_TYPE"]
+
+        assert (
+            HWACCEL_DEVICE_TYPE in av.codec.hwaccel.hwdevices_available
+        ), f"{HWACCEL_DEVICE_TYPE} not available"
+
+        test_video_path = "tests/assets/black.mp4"
+        make_h264_test_video(test_video_path)
+
+        # Test decode.
+        hwaccel = av.codec.hwaccel.HWAccel(
+            device_type=HWACCEL_DEVICE_TYPE, allow_software_fallback=False
+        )
+
+        container = av.open(test_video_path, hwaccel=hwaccel)
+        video_stream = next(s for s in container.streams if s.type == "video")
+
+        assert video_stream is container.streams.video[0]
+
+        assert video_stream.codec_context.is_hardware_accelerated()
+
+        frame_count = 0
+        for frame in container.decode(video_stream):
+            frame_count += 1
+
+        assert frame_count == video_stream.frames

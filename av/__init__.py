@@ -17,6 +17,7 @@ from av.audio.stream import AudioStream
 from av.bitstream import BitStreamFilterContext, bitstream_filters_available
 from av.codec.codec import Codec, codecs_available
 from av.codec.context import CodecContext
+from av.codec.hwaccel import HWConfig
 from av.container import open
 from av.format import ContainerFormat, formats_available
 from av.packet import Packet
