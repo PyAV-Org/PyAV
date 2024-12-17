@@ -44,7 +44,6 @@ class Container:
     options: dict[str, str]
     container_options: dict[str, str]
     stream_options: list[dict[str, str]]
-    hwaccel: HWAccel
     streams: StreamContainer
     metadata: dict[str, str]
     open_timeout: Real | None

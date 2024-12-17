@@ -33,9 +33,11 @@ def main() -> None:
                 print(f"{libname:<13} {version[0]:3d}.{version[1]:3d}.{version[2]:3d}")
 
     if args.hwdevices:
-        from av.codec.hwaccel import dump_hwdevices
+        from av.codec.hwaccel import hwdevices_available
 
-        dump_hwdevices()
+        print("Hardware device types:")
+        for x in hwdevices_available():
+            print("   ", x)
 
     if args.hwconfigs:
         from av.codec.codec import dump_hwconfigs

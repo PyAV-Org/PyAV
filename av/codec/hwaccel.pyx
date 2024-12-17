@@ -14,26 +14,26 @@ from av.dictionary import Dictionary
 
 
 class HWDeviceType(IntEnum):
-    NONE = lib.AV_HWDEVICE_TYPE_NONE
-    VDPAU = lib.AV_HWDEVICE_TYPE_VDPAU
-    CUDA = lib.AV_HWDEVICE_TYPE_CUDA
-    VAAPI = lib.AV_HWDEVICE_TYPE_VAAPI
-    DXVA2 = lib.AV_HWDEVICE_TYPE_DXVA2
-    QSV = lib.AV_HWDEVICE_TYPE_QSV
-    VIDEOTOOLBOX = lib.AV_HWDEVICE_TYPE_VIDEOTOOLBOX
-    D3D11VA = lib.AV_HWDEVICE_TYPE_D3D11VA
-    DRM = lib.AV_HWDEVICE_TYPE_DRM
-    OPENCL = lib.AV_HWDEVICE_TYPE_OPENCL
-    MEDIACODEC = lib.AV_HWDEVICE_TYPE_MEDIACODEC
-    VULKAN = lib.AV_HWDEVICE_TYPE_VULKAN
-    D3D12VA = lib.AV_HWDEVICE_TYPE_D3D12VA
+    none = lib.AV_HWDEVICE_TYPE_NONE
+    vdpau = lib.AV_HWDEVICE_TYPE_VDPAU
+    cuda = lib.AV_HWDEVICE_TYPE_CUDA
+    vaapi = lib.AV_HWDEVICE_TYPE_VAAPI
+    dxva2 = lib.AV_HWDEVICE_TYPE_DXVA2
+    qsv = lib.AV_HWDEVICE_TYPE_QSV
+    videotoolbox = lib.AV_HWDEVICE_TYPE_VIDEOTOOLBOX
+    d3d11va = lib.AV_HWDEVICE_TYPE_D3D11VA
+    drm = lib.AV_HWDEVICE_TYPE_DRM
+    opencl = lib.AV_HWDEVICE_TYPE_OPENCL
+    mediacodec = lib.AV_HWDEVICE_TYPE_MEDIACODEC
+    vulkan = lib.AV_HWDEVICE_TYPE_VULKAN
+    d3d12va = lib.AV_HWDEVICE_TYPE_D3D12VA
 
 class HWConfigMethod(IntEnum):
-    NONE = 0
-    HW_DEVICE_CTX = lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX  # This is the only one we support.
-    HW_FRAME_CTX = lib.AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX
-    INTERNAL = lib.AV_CODEC_HW_CONFIG_METHOD_INTERNAL
-    AD_HOC = lib.AV_CODEC_HW_CONFIG_METHOD_AD_HOC
+    none = 0
+    hw_device_ctx = lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX  # This is the only one we support.
+    hw_frame_ctx = lib.AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX
+    internal = lib.AV_CODEC_HW_CONFIG_METHOD_INTERNAL
+    ad_hoc = lib.AV_CODEC_HW_CONFIG_METHOD_AD_HOC
 
 
 cdef object _cinit_sentinel = object()
@@ -82,30 +82,22 @@ cdef class HWConfig:
     def is_supported(self):
         return bool(self.ptr.methods & lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)
 
-hwdevices_available = []
 
-cdef lib.AVHWDeviceType x = lib.AV_HWDEVICE_TYPE_NONE
-while True:
-    x = lib.av_hwdevice_iterate_types(x)
-    if x == lib.AV_HWDEVICE_TYPE_NONE:
-        break
-    hwdevices_available.append(lib.av_hwdevice_get_type_name(HWDeviceType(x)))
+cpdef hwdevices_available():
+    result = []
 
-def dump_hwdevices():
-    print("Hardware device types:")
-    for x in hwdevices_available:
-        print("   ", x)
+    cdef lib.AVHWDeviceType x = lib.AV_HWDEVICE_TYPE_NONE
+    while True:
+        x = lib.av_hwdevice_iterate_types(x)
+        if x == lib.AV_HWDEVICE_TYPE_NONE:
+            break
+        result.append(lib.av_hwdevice_get_type_name(HWDeviceType(x)))
+
+    return result
 
 
 cdef class HWAccel:
-    def __init__(
-        self,
-        device_type: str | HWDeviceType,
-        device: str | None = None,
-        allow_software_fallback: bool = True,
-        options=None,
-        **kwargs,
-    ):
+    def __init__(self, device_type, device=None, allow_software_fallback=True, options=None):
         if isinstance(device_type, HWDeviceType):
             self._device_type = device_type
         elif isinstance(device_type, str):
@@ -115,25 +107,22 @@ cdef class HWAccel:
 
         self._device = device
         self.allow_software_fallback = allow_software_fallback
+        self.options = {} if not options else dict(options)
 
-        if options and kwargs:
-            raise ValueError("accepts only one of options arg or kwargs")
-        self.options = dict(options or kwargs)
-
-    def create(self, Codec codec):
+    def create(self, Codec codec not None):
         return HWAccelContext(
-            device_type=HWDeviceType(self._device_type),
-            device=self._device,
-            options=self.options,
-            codec=codec,
-            allow_software_fallback=self.allow_software_fallback,
+            HWDeviceType(self._device_type),
+            self._device,
+            self.options,
+            self.allow_software_fallback,
+            codec,
         )
 
 cdef class HWAccelContext(HWAccel):
-    def __init__(self, device_type, device, options, codec, allow_software_fallback, **kwargs):
-        super().__init__(device_type, device, options, **kwargs)
+    def __init__(self, device_type, device, allow_software_fallback, options, codec):
+        super().__init__(device_type, device, options)
         if not codec:
-            raise ValueError("codec is required")
+            raise ValueError("`codec` is required")
         self.codec = codec
         cdef HWConfig config
 
@@ -144,7 +133,7 @@ cdef class HWAccelContext(HWAccel):
                 continue
             break
         else:
-            raise NotImplementedError(f"no supported hardware config for {codec}")
+            raise NotImplementedError(f"No supported hardware config for {codec}")
 
         self.config = config
         cdef char *c_device = NULL
@@ -162,6 +151,3 @@ cdef class HWAccelContext(HWAccel):
     def __dealloc__(self):
         if self.ptr:
             lib.av_buffer_unref(&self.ptr)
-
-    def create(self, *args, **kwargs):
-        raise ValueError("cannot call HWAccelContext.create")

@@ -88,7 +88,9 @@ class CodecContext:
     def open(self, strict: bool = True) -> None: ...
     @staticmethod
     def create(
-        codec: str | Codec, mode: Literal["r", "w"] | None = None
+        codec: str | Codec,
+        mode: Literal["r", "w"] | None = None,
+        hwaccel: HWAccel | None = None,
     ) -> CodecContext: ...
     def parse(
         self, raw_input: bytes | bytearray | memoryview | None = None

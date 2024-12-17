@@ -1,46 +1,48 @@
 from enum import IntEnum
-from typing import Sequence
 
 from av.codec.codec import Codec
+from av.video.format import VideoFormat
 
 class HWDeviceType(IntEnum):
-    NONE = int
-    VDPAU = int
-    CUDA = int
-    VAAPI = int
-    DXVA2 = int
-    QSV = int
-    VIDEOTOOLBOX = int
-    D3D11VA = int
-    DRM = int
-    OPENCL = int
-    MEDIACODEC = int
-    VULKAN = int
-    D3D12VA = int
+    none: int
+    vdpau: int
+    cuda: int
+    vaapi: int
+    dxva2: int
+    qsv: int
+    videotoolbox: int
+    d3d11va: int
+    drm: int
+    opencl: int
+    mediacodec: int
+    vulkan: int
+    d3d12va: int
 
-class HWConfig(object):
-    def __init__(self, sentinel): ...
-    def __repr__(self): ...
+class HWConfigMethod(IntEnum):
+    none: int
+    hw_device_ctx: int
+    hw_frame_ctx: int
+    internal: int
+    ad_hoc: int
+
+class HWConfig:
     @property
-    def device_type(self): ...
+    def device_type(self) -> HWDeviceType: ...
     @property
-    def format(self): ...
+    def format(self) -> VideoFormat: ...
     @property
-    def methods(self): ...
+    def methods(self) -> HWConfigMethod: ...
     @property
-    def is_supported(self): ...
+    def is_supported(self) -> bool: ...
 
 class HWAccel:
     def __init__(
         self,
         device_type: str | HWDeviceType,
         device: str | None = None,
-        allow_software_fallback: bool = True,
-        options=None,
-        **kwargs
-    ): ...
+        allow_software_fallback: bool = False,
+        options: dict[str, object] | None = None,
+    ) -> None: ...
     def create(self, codec: Codec): ...
 
-hwdevices_available: Sequence[str]
-
-def dump_hwdevices() -> None: ...
+def hwdevices_available() -> list[str]: ...

@@ -119,7 +119,8 @@ cdef class Codec:
             raise RuntimeError("%s is both encoder and decoder.")
 
     def __repr__(self):
-        return f"<av.{self.__class__.__name__}({self.name!r}, {self.mode!r})>"
+        mode = "w" if self.is_encoder else "r"
+        return f"<av.{self.__class__.__name__} {self.name} {mode=}>"
 
     def create(self, kind = None):
         """Create a :class:`.CodecContext` for this codec.
@@ -315,16 +316,18 @@ codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 def dump_codecs():
     """Print information about available codecs."""
 
-    print('''Codecs:
-    D....  = Decoding supported
-    .E...  = Encoding supported
-    ..V..  = Video codec
-    ..A..  = Audio codec
-    ..S..  = Subtitle codec
-    ...I.  = Intra frame-only codec
-    ....L  = Lossless compression
-    .....H = Hardware decoding supported
-    ------''')
+    print(
+        """Codecs:
+ D..... = Decoding supported
+ .E.... = Encoding supported
+ ..V... = Video codec
+ ..A... = Audio codec
+ ..S... = Subtitle codec
+ ...I.. = Intra frame-only codec
+ ....L. = Lossy compression
+ .....S = Lossless compression
+ ------"""
+    )
 
     for name in sorted(codecs_available):
         try:
@@ -342,14 +345,14 @@ def dump_codecs():
 
         try:
             print(
-                "    %s%s%s%s%s%s %-18s %s"
+                " %s%s%s%s%s%s %-18s %s"
                 % (
                     ".D"[bool(d_codec)],
                     ".E"[bool(e_codec)],
                     codec.type[0].upper(),
                     ".I"[codec.intra_only],
-                    ".L"[codec.lossless],
-                    ".H"[bool((d_codec or codec).hardware_configs)],
+                    ".L"[codec.lossy],
+                    ".S"[codec.lossless],
                     codec.name,
                     codec.long_name,
                 )
@@ -358,15 +361,17 @@ def dump_codecs():
             print(f"...... {codec.name:<18} ERROR: {e}")
 
 def dump_hwconfigs():
-    print('Hardware configs:')
+    print("Hardware configs:")
     for name in sorted(codecs_available):
         try:
-            codec = Codec(name, 'r')
+            codec = Codec(name, "r")
         except ValueError:
             continue
+
         configs = codec.hardware_configs
         if not configs:
             continue
-        print('   ', codec.name)
+
+        print("   ", codec.name)
         for config in configs:
-            print('       ', config)
+            print("       ", config)
