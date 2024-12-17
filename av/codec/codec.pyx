@@ -121,13 +121,13 @@ cdef class Codec:
     def __repr__(self):
         return f"<av.{self.__class__.__name__}({self.name!r}, {self.mode!r})>"
 
-    def create(self, kind = None, *args, **kwargs):
+    def create(self, kind = None):
         """Create a :class:`.CodecContext` for this codec.
 
         :param str kind: Gives a hint to static type checkers for what exact CodecContext is used.
         """
         from .context import CodecContext
-        return CodecContext.create(self, *args, **kwargs)
+        return CodecContext.create(self)
 
     @property
     def is_decoder(self):
