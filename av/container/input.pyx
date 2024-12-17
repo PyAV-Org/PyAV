@@ -77,7 +77,7 @@ cdef class InputContainer(Container):
                 codec_context = lib.avcodec_alloc_context3(codec)
                 err_check(lib.avcodec_parameters_to_context(codec_context, stream.codecpar))
                 codec_context.pkt_timebase = stream.time_base
-                py_codec_context = wrap_codec_context(codec_context, codec)
+                py_codec_context = wrap_codec_context(codec_context, codec, self.hwaccel)
             else:
                 # no decoder is available
                 py_codec_context = None

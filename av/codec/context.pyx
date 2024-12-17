@@ -18,7 +18,7 @@ from av.dictionary import Dictionary
 cdef object _cinit_sentinel = object()
 
 
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec):
+cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, HWAccel hwaccel):
     """Build an av.CodecContext for an existing AVCodecContext."""
 
     cdef CodecContext py_ctx
@@ -35,7 +35,7 @@ cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCode
     else:
         py_ctx = CodecContext(_cinit_sentinel)
 
-    py_ctx._init(c_ctx, c_codec)
+    py_ctx._init(c_ctx, c_codec, hwaccel)
 
     return py_ctx
 
@@ -83,10 +83,10 @@ class Flags2(IntEnum):
 
 cdef class CodecContext:
     @staticmethod
-    def create(codec, mode=None):
+    def create(codec, mode=None, hwaccel=None):
         cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
         cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
-        return wrap_codec_context(c_ctx, cy_codec.ptr)
+        return wrap_codec_context(c_ctx, cy_codec.ptr, hwaccel)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
         if sentinel is not _cinit_sentinel:
@@ -96,11 +96,12 @@ cdef class CodecContext:
         self.stream_index = -1  # This is set by the container immediately.
         self.is_open = False
 
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel):
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError("Wrapping CodecContext with mismatched codec.")
         self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
+        self.hwaccel = hwaccel
 
         # Set reasonable threading defaults.
         self.ptr.thread_count = 0  # use as many threads as there are CPUs.
@@ -310,6 +311,13 @@ cdef class CodecContext:
 
         return packets
 
+    @property
+    def is_hwaccel(self):
+        """
+        Returns ``True`` if this codec context is hardware accelerated, ``False`` otherwise.
+        """
+        return self.hwaccel_ctx is not None
+
     def _send_frame_and_recv(self, Frame frame):
         cdef Packet packet
 
@@ -359,9 +367,14 @@ cdef class CodecContext:
             return
         err_check(res)
 
+        frame = self._transfer_hwframe(frame)
+
         if not res:
             self._next_frame = None
             return frame
+
+    cdef _transfer_hwframe(self, Frame frame):
+        return frame
 
     cdef _recv_packet(self):
         cdef Packet packet = Packet()

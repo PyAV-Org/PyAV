@@ -1,4 +1,5 @@
 from av.audio.format cimport get_audio_format
+from av.codec.hwaccel cimport wrap_hwconfig
 from av.descriptor cimport wrap_avclass
 from av.utils cimport avrational_to_fraction
 from av.video.format cimport get_video_format
@@ -117,6 +118,10 @@ cdef class Codec:
         if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
             raise RuntimeError("%s is both encoder and decoder.")
 
+    def __repr__(self):
+        mode = "w" if self.is_encoder else "r"
+        return f"<av.{self.__class__.__name__} {self.name} {mode=}>"
+
     def create(self, kind = None):
         """Create a :class:`.CodecContext` for this codec.
 
@@ -201,6 +206,23 @@ cdef class Codec:
         while self.ptr.sample_fmts[i] != -1:
             ret.append(get_audio_format(self.ptr.sample_fmts[i]))
             i += 1
+        return ret
+
+    @property
+    def hardware_configs(self):
+        if self._hardware_configs:
+            return self._hardware_configs
+        ret = []
+        cdef int i = 0
+        cdef lib.AVCodecHWConfig *ptr
+        while True:
+            ptr = lib.avcodec_get_hw_config(self.ptr, i)
+            if not ptr:
+                break
+            ret.append(wrap_hwconfig(ptr))
+            i += 1
+        ret = tuple(ret)
+        self._hardware_configs = ret
         return ret
 
     @property
@@ -337,3 +359,19 @@ def dump_codecs():
             )
         except Exception as e:
             print(f"...... {codec.name:<18} ERROR: {e}")
+
+def dump_hwconfigs():
+    print("Hardware configs:")
+    for name in sorted(codecs_available):
+        try:
+            codec = Codec(name, "r")
+        except ValueError:
+            continue
+
+        configs = codec.hardware_configs
+        if not configs:
+            continue
+
+        print("   ", codec.name)
+        for config in configs:
+            print("       ", config)

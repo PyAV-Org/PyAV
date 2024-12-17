@@ -5,6 +5,7 @@ from typing import ClassVar, Literal
 from av.packet import Packet
 
 from .codec import Codec
+from .hwaccel import HWAccel
 
 class ThreadType(Flag):
     NONE: ClassVar[ThreadType]
@@ -83,10 +84,14 @@ class CodecContext:
     def delay(self) -> bool: ...
     @property
     def extradata_size(self) -> int: ...
+    @property
+    def is_hwaccel(self) -> bool: ...
     def open(self, strict: bool = True) -> None: ...
     @staticmethod
     def create(
-        codec: str | Codec, mode: Literal["r", "w"] | None = None
+        codec: str | Codec,
+        mode: Literal["r", "w"] | None = None,
+        hwaccel: HWAccel | None = None,
     ) -> CodecContext: ...
     def parse(
         self, raw_input: bytes | bytearray | memoryview | None = None
