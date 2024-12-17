@@ -23,6 +23,7 @@ v14.1.0 (Unreleased)
 Features
 
 - Add hardware decoding by :gh-user:`matthewlai` and :gh-user:`WyattBlue` in (:pr:`1685`).
+- Add ``VideoFrame.rotation`` by :gh-user:`lgeiger` in (:pr:`1675`).
 
 
 v14.0.1
