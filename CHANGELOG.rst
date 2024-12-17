@@ -17,7 +17,16 @@ We are operating with `semantic versioning <https://semver.org>`_.
     are merged into the "default" branch.
 
 
+v14.1.0 (Unreleased)
+--------------------
+
+Features
+
+- Add hardware decoding by :gh-user:`matthewlai` and :gh-user:`WyattBlue` in (:pr:`1685`).
+
+
 v14.0.1
+-------
 
 Fixes:
 
