@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import weakref
 from enum import IntEnum
 
@@ -9,7 +7,6 @@ from av.codec.codec cimport Codec
 from av.dictionary cimport _Dictionary
 from av.error cimport err_check
 from av.video.format cimport get_video_format
-
 from av.dictionary import Dictionary
 
 
@@ -97,7 +94,7 @@ cpdef hwdevices_available():
 
 
 cdef class HWAccel:
-    def __init__(self, device_type, device=None, allow_software_fallback=True, options=None):
+    def __init__(self, device_type, device=None, codec=None, allow_software_fallback=True, options=None):
         if isinstance(device_type, HWDeviceType):
             self._device_type = device_type
         elif isinstance(device_type, str):
@@ -108,34 +105,26 @@ cdef class HWAccel:
         self._device = device
         self.allow_software_fallback = allow_software_fallback
         self.options = {} if not options else dict(options)
-
-    def create(self, Codec codec not None):
-        return HWAccelContext(
-            HWDeviceType(self._device_type),
-            self._device,
-            self.options,
-            self.allow_software_fallback,
-            codec,
-        )
-
-cdef class HWAccelContext(HWAccel):
-    def __init__(self, device_type, device, allow_software_fallback, options, codec):
-        super().__init__(device_type, device, options)
-        if not codec:
-            raise ValueError("`codec` is required")
+        self.ptr = NULL
         self.codec = codec
-        cdef HWConfig config
+        self.config = None
 
-        for config in codec.hardware_configs:
+        if codec:
+            self._initialize_hw_context()
+
+    def _initialize_hw_context(self):
+        cdef HWConfig config
+        for config in self.codec.hardware_configs:
             if not (config.ptr.methods & lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX):
                 continue
             if self._device_type and config.device_type != self._device_type:
                 continue
             break
         else:
-            raise NotImplementedError(f"No supported hardware config for {codec}")
+            raise NotImplementedError(f"No supported hardware config for {self.codec}")
 
         self.config = config
+
         cdef char *c_device = NULL
         if self._device:
             device_bytes = self._device.encode()
@@ -147,6 +136,15 @@ cdef class HWAccelContext(HWAccel):
                 &self.ptr, config.ptr.device_type, c_device, c_options.ptr, 0
             )
         )
+
+    def create(self, Codec codec not None):
+        """Create a new hardware accelerator context with the given codec"""
+        if self.ptr:
+            raise RuntimeError("Hardware context already initialized")
+
+        self.codec = codec
+        self._initialize_hw_context()
+        return self
 
     def __dealloc__(self):
         if self.ptr:

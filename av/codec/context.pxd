@@ -3,7 +3,7 @@ from libc.stdint cimport int64_t
 
 from av.bytesource cimport ByteSource
 from av.codec.codec cimport Codec
-from av.codec.hwaccel cimport HWAccel, HWAccelContext
+from av.codec.hwaccel cimport HWAccel
 from av.frame cimport Frame
 from av.packet cimport Packet
 
@@ -34,7 +34,7 @@ cdef class CodecContext:
     cpdef flush_buffers(self)
 
     # Used by hardware-accelerated decode.
-    cdef HWAccelContext hwaccel_ctx
+    cdef HWAccel hwaccel_ctx
 
     # Used by both transcode APIs to setup user-land objects.
     # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing packets

@@ -5,6 +5,7 @@ from typing import ClassVar, Literal
 from av.packet import Packet
 
 from .codec import Codec
+from .hwaccel import HWAccel
 
 class ThreadType(Flag):
     NONE: ClassVar[ThreadType]
