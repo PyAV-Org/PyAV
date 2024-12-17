@@ -119,7 +119,7 @@ cdef class Codec:
             raise RuntimeError("%s is both encoder and decoder.")
 
     def __repr__(self):
-        return f'<av.{self.__class__.__name__}({self.name!r}, {self.mode!r})>'
+        return f"<av.{self.__class__.__name__}({self.name!r}, {self.mode!r})>"
 
     def create(self, kind = None, *args, **kwargs):
         """Create a :class:`.CodecContext` for this codec.
@@ -132,10 +132,6 @@ cdef class Codec:
     @property
     def is_decoder(self):
         return not self.is_encoder
-
-    @property
-    def mode(self):
-        return 'w' if self.is_encoder else 'r'
 
     @property
     def descriptor(self): return wrap_avclass(self.ptr.priv_class)

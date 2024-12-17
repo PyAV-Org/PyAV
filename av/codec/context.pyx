@@ -311,7 +311,11 @@ cdef class CodecContext:
 
         return packets
 
-    def is_hardware_accelerated(self):
+    @property
+    def is_hwaccel(self):
+        """
+        Returns ``True`` if this codec context is hardware accelerated, ``False`` otherwise.
+        """
         return self.hwaccel_ctx is not None
 
     def _send_frame_and_recv(self, Frame frame):

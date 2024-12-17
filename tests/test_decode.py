@@ -228,8 +228,7 @@ class TestDecode(TestCase):
         video_stream = next(s for s in container.streams if s.type == "video")
 
         assert video_stream is container.streams.video[0]
-
-        assert video_stream.codec_context.is_hardware_accelerated()
+        assert video_stream.codec_context.is_hwaccel
 
         frame_count = 0
         for frame in container.decode(video_stream):
