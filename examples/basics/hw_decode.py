@@ -30,11 +30,14 @@ else:
     )
 
 if HW_DEVICE is None:
-    av.codec.hwaccel.dump_hwdevices()
-    print("Please set HW_DEVICE.")
+    print(
+        f"Please set HW_DEVICE. Options are: {str(av.codec.hwaccel.hwdevices_available())}"
+    )
     exit()
 
-assert HW_DEVICE in av.codec.hwaccel.hwdevices_available, f"{HW_DEVICE} not available."
+assert (
+    HW_DEVICE in av.codec.hwaccel.hwdevices_available()
+), f"{HW_DEVICE} not available."
 
 print("Decoding in software (auto threading)...")
 

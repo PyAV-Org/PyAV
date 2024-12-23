@@ -54,7 +54,7 @@ cdef class VideoCodecContext(CodecContext):
                 # stream with it, so we shouldn't abort even if we find a stream that can't
                 # be HW decoded.
                 # If the user wants to make sure hwaccel is actually used, they can check with the
-                # is_hardware_accelerated() function on each stream's codec context.
+                # is_hwaccel() function on each stream's codec context.
                 self.hwaccel_ctx = None
 
         self._build_format()
