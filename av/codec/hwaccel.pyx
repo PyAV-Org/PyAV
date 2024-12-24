@@ -7,6 +7,7 @@ from av.codec.codec cimport Codec
 from av.dictionary cimport _Dictionary
 from av.error cimport err_check
 from av.video.format cimport get_video_format
+
 from av.dictionary import Dictionary
 
 
@@ -94,11 +95,13 @@ cpdef hwdevices_available():
 
 
 cdef class HWAccel:
-    def __init__(self, device_type, device=None, codec=None, allow_software_fallback=True, options=None):
+    def __init__(self, device_type, device=None, allow_software_fallback=True, options=None):
         if isinstance(device_type, HWDeviceType):
             self._device_type = device_type
         elif isinstance(device_type, str):
             self._device_type = int(lib.av_hwdevice_find_type_by_name(device_type))
+        elif isinstance(device_type, int):
+            self._device_type = device_type
         else:
             raise ValueError("Unknown type for device_type")
 
@@ -106,22 +109,18 @@ cdef class HWAccel:
         self.allow_software_fallback = allow_software_fallback
         self.options = {} if not options else dict(options)
         self.ptr = NULL
-        self.codec = codec
         self.config = None
 
-        if codec:
-            self._initialize_hw_context()
-
-    def _initialize_hw_context(self):
+    def _initialize_hw_context(self, Codec codec not None):
         cdef HWConfig config
-        for config in self.codec.hardware_configs:
+        for config in codec.hardware_configs:
             if not (config.ptr.methods & lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX):
                 continue
             if self._device_type and config.device_type != self._device_type:
                 continue
             break
         else:
-            raise NotImplementedError(f"No supported hardware config for {self.codec}")
+            raise NotImplementedError(f"No supported hardware config for {codec}")
 
         self.config = config
 
@@ -142,9 +141,14 @@ cdef class HWAccel:
         if self.ptr:
             raise RuntimeError("Hardware context already initialized")
 
-        self.codec = codec
-        self._initialize_hw_context()
-        return self
+        ret = HWAccel(
+            device_type=self._device_type,
+            device=self._device,
+            allow_software_fallback=self.allow_software_fallback,
+            options=self.options
+        )
+        ret._initialize_hw_context(codec)
+        return ret
 
     def __dealloc__(self):
         if self.ptr:

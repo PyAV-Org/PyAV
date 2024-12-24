@@ -13,7 +13,7 @@ from .common import TestCase, fate_suite
 
 @functools.cache
 def make_h264_test_video(path: str) -> None:
-    """Generates a black H264 test video for testing hardware decoding."""
+    """Generates a black H264 test video with two streams for testing hardware decoding."""
 
     # We generate a file here that's designed to be as compatible as possible with hardware
     # encoders. Hardware encoders are sometimes very picky and the errors we get are often
@@ -23,21 +23,27 @@ def make_h264_test_video(path: str) -> None:
     # 8-bit yuv420p.
     pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
     output_container = av.open(path, "w")
-    stream = output_container.add_stream("libx264", rate=24)
-    assert isinstance(stream, av.VideoStream)
-    stream.width = 1280
-    stream.height = 720
-    stream.pix_fmt = "yuv420p"
+
+    streams = []
+    for _ in range(2):
+        stream = output_container.add_stream("libx264", rate=24)
+        assert isinstance(stream, av.VideoStream)
+        stream.width = 1280
+        stream.height = 720
+        stream.pix_fmt = "yuv420p"
+        streams.append(stream)
 
     for _ in range(24):
         frame = av.VideoFrame.from_ndarray(
             np.zeros((720, 1280, 3), dtype=np.uint8), format="rgb24"
         )
-        for packet in stream.encode(frame):
-            output_container.mux(packet)
+        for stream in streams:
+            for packet in stream.encode(frame):
+                output_container.mux(packet)
 
-    for packet in stream.encode():
-        output_container.mux(packet)
+    for stream in streams:
+        for packet in stream.encode():
+            output_container.mux(packet)
 
     output_container.close()
 
