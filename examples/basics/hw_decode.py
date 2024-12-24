@@ -3,6 +3,7 @@ import time
 
 import av
 import av.datasets
+from av.codec.hwaccel import HWAccel, hwdevices_available
 
 # What accelerator to use.
 # Recommendations:
@@ -30,14 +31,10 @@ else:
     )
 
 if HW_DEVICE is None:
-    print(
-        f"Please set HW_DEVICE. Options are: {str(av.codec.hwaccel.hwdevices_available())}"
-    )
+    print(f"Please set HW_DEVICE. Options are: {hwdevices_available()}")
     exit()
 
-assert (
-    HW_DEVICE in av.codec.hwaccel.hwdevices_available()
-), f"{HW_DEVICE} not available."
+assert HW_DEVICE in hwdevices_available(), f"{HW_DEVICE} not available."
 
 print("Decoding in software (auto threading)...")
 
@@ -56,11 +53,12 @@ sw_fps = frame_count / sw_time
 assert frame_count == container.streams.video[0].frames
 container.close()
 
-print(f"Decoded with software in {sw_time:.2f}s ({sw_fps:.2f} fps).")
+print(
+    f"Decoded with software in {sw_time:.2f}s ({sw_fps:.2f} fps).\n"
+    f"Decoding with {HW_DEVICE}"
+)
 
-print(f"Decoding with {HW_DEVICE}")
-
-hwaccel = av.codec.hwaccel.HWAccel(device_type=HW_DEVICE, allow_software_fallback=False)
+hwaccel = HWAccel(device_type=HW_DEVICE, allow_software_fallback=False)
 
 # Note the additional argument here.
 container = av.open(test_file_path, hwaccel=hwaccel)

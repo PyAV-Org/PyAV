@@ -8,10 +8,6 @@ import pytest
 
 import av
 
-# This import is needed to make the test_decoded_time_base test pass when we run only this test file.
-# Not sure why.
-from av.subtitles import subtitle
-
 from .common import TestCase, fate_suite
 
 

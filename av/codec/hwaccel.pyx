@@ -1,4 +1,3 @@
-import copy
 import weakref
 from enum import IntEnum
 
