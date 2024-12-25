@@ -139,9 +139,6 @@ cdef class VideoReformatter:
         ):
             return frame
 
-        # Try and reuse existing SwsContextProxy
-        # VideoStream.decode will copy its SwsContextProxy to VideoFrame
-        # So all Video frames from the same VideoStream should have the same one
         with nogil:
             self.ptr = lib.sws_getCachedContext(
                 self.ptr,
