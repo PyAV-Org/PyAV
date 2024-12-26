@@ -90,9 +90,6 @@ Building from the latest source
     # Prep a virtualenv.
     source scripts/activate.sh
 
-    # Install basic requirements.
-    pip install -r tests/requirements.txt
-
     # Optionally build FFmpeg.
     ./scripts/build-deps
 
