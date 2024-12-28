@@ -214,7 +214,7 @@ cdef class Codec:
             return self._hardware_configs
         ret = []
         cdef int i = 0
-        cdef lib.AVCodecHWConfig *ptr
+        cdef const lib.AVCodecHWConfig *ptr
         while True:
             ptr = lib.avcodec_get_hw_config(self.ptr, i)
             if not ptr:
