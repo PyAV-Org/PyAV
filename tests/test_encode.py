@@ -167,6 +167,30 @@ class TestBasicVideoEncoding(TestCase):
         with av.open(path) as input:
             assert_rgb_rotate(self, input)
 
+    def test_libsvtav1(self) -> None:
+        if not "libsvtav1" in av.codecs_available:
+            pytest.skip()
+
+        with av.open(self.sandboxed("output.mp4"), "w") as output:
+            stream = output.add_stream("libsvtav1", 24)
+            assert isinstance(stream, VideoStream)
+
+            for i in range(24):
+                frame = av.VideoFrame(200, 100, "rgb24")
+                frame.pts = i * 2000
+                frame.time_base = Fraction(1, 48000)
+                for packet in stream.encode(frame):
+                    assert packet.time_base == Fraction(1, 24)
+                    output.mux(packet)
+
+            for packet in stream.encode(None):
+                assert packet.time_base == Fraction(1, 24)
+                output.mux(packet)
+
+            assert output.streams[0].codec.name == "libsvtav1"
+            assert output.streams[0].codec.is_encoder is True
+            assert output.streams[0].frames == 24
+
 
 class TestBasicAudioEncoding(TestCase):
     def test_default_options(self) -> None:
