@@ -95,7 +95,7 @@ cdef class AudioResampler:
             if self.frame_size > 0:
                 self.graph.set_audio_frame_size(self.frame_size)
 
-        elif frame is not None:
+        if frame is not None:
             if (
                 frame.format.sample_fmt != self.template.format.sample_fmt or
                 frame.layout != self.template.layout or
