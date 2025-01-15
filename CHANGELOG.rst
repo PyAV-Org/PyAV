@@ -24,6 +24,7 @@ Features
 
 - Add hardware decoding by :gh-user:`matthewlai` and :gh-user:`WyattBlue` in (:pr:`1685`).
 - Add ``VideoFrame.rotation`` by :gh-user:`lgeiger` in (:pr:`1675`).
+- Support grayf32le and gbrapf32le in numpy convertion by :gh-user:`robinechuca` in (:pr:`1712`).
 
 
 v14.0.1
