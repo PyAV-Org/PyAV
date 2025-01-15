@@ -295,7 +295,7 @@ cdef class VideoFrame(Frame):
         .. note:: For ``pal8``, an ``(image, palette)`` tuple will be returned,
         with the palette being in ARGB (PyAV will swap bytes if needed).
 
-        .. note:: For ``gbrp`` formats, channels are fliped in RGB order.
+        .. note:: For ``gbrp`` formats, channels are flipped to RGB order.
 
         """
         cdef VideoFrame frame = self.reformat(**kwargs)

@@ -222,6 +222,7 @@ def test_ndarray_gray_align() -> None:
         assert frame.format.name == "gray"
         assertNdarraysEqual(frame.to_ndarray(), array)
 
+
 def test_ndarray_grayf32() -> None:
     array = numpy.random.random_sample(size=(480, 640)).astype(numpy.float32)
     for format in ("grayf32be", "grayf32le"):
