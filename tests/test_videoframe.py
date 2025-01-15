@@ -222,6 +222,23 @@ def test_ndarray_gray_align() -> None:
         assert frame.format.name == "gray"
         assertNdarraysEqual(frame.to_ndarray(), array)
 
+def test_ndarray_grayf32() -> None:
+    array = numpy.random.random_sample(size=(480, 640)).astype(numpy.float32)
+    for format in ("grayf32be", "grayf32le"):
+        frame = VideoFrame.from_ndarray(array, format=format)
+        assert frame.width == 640 and frame.height == 480
+        assert frame.format.name == format
+        assertNdarraysEqual(frame.to_ndarray(), array)
+
+
+def test_ndarray_grayf32_align() -> None:
+    array = numpy.random.random_sample(size=(238, 318)).astype(numpy.float32)
+    for format in ("grayf32be", "grayf32le"):
+        frame = VideoFrame.from_ndarray(array, format=format)
+        assert frame.width == 318 and frame.height == 238
+        assert frame.format.name == format
+        assertNdarraysEqual(frame.to_ndarray(), array)
+
 
 def test_ndarray_rgb() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
@@ -359,6 +376,24 @@ def test_ndarray_gbrpf32() -> None:
 def test_ndarray_gbrpf32_align() -> None:
     array = numpy.random.random_sample(size=(238, 318, 3)).astype(numpy.float32)
     for format in ["gbrpf32be", "gbrpf32le"]:
+        frame = VideoFrame.from_ndarray(array, format=format)
+        assert frame.width == 318 and frame.height == 238
+        assert frame.format.name == format
+        assertNdarraysEqual(frame.to_ndarray(), array)
+
+
+def test_ndarray_gbrapf32() -> None:
+    array = numpy.random.random_sample(size=(480, 640, 4)).astype(numpy.float32)
+    for format in ("gbrapf32be", "gbrapf32le"):
+        frame = VideoFrame.from_ndarray(array, format=format)
+        assert frame.width == 640 and frame.height == 480
+        assert frame.format.name == format
+        assertNdarraysEqual(frame.to_ndarray(), array)
+
+
+def test_ndarray_gbrapf32_allign() -> None:
+    array = numpy.random.random_sample(size=(238, 318, 4)).astype(numpy.float32)
+    for format in ("gbrapf32be", "gbrapf32le"):
         frame = VideoFrame.from_ndarray(array, format=format)
         assert frame.width == 318 and frame.height == 238
         assert frame.format.name == format
