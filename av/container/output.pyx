@@ -4,9 +4,6 @@ from fractions import Fraction
 
 cimport libav as lib
 
-from libc.string cimport memcpy
-from libc.stdint cimport uint8_t
-
 from av.codec.codec cimport Codec
 from av.codec.context cimport CodecContext, wrap_codec_context
 from av.container.streams cimport StreamContainer
@@ -250,60 +247,6 @@ cdef class OutputContainer(Container):
 
         return py_stream
 
-
-    def add_attachment(self, file_data, filename, mimetype=None):
-        """Add a file as an attachment stream."""
-        cdef lib.AVStream *stream
-        cdef size_t data_len
-        cdef uint8_t *attachment
-        cdef Stream py_stream
-
-        if not isinstance(file_data, bytes):
-            raise TypeError("file_data must be bytes")
-
-        if not filename:
-            raise ValueError("filename must be provided")
-
-        # Create new stream without codec
-        stream = lib.avformat_new_stream(self.ptr, NULL)
-        if stream == NULL:
-            raise MemoryError("Could not allocate stream")
-
-        try:
-            # Mark as attachment type
-            stream.codecpar.codec_type = lib.AVMEDIA_TYPE_ATTACHMENT
-
-            # Allocate and copy attachment data
-            data_len = len(file_data)
-            attachment = <uint8_t*>lib.av_malloc(data_len)
-            if attachment == NULL:
-                raise MemoryError("Could not allocate attachment buffer")
-
-            # Copy the data
-            memcpy(attachment, <uint8_t*>file_data, data_len)
-
-            # Store attachment in codecpar extradata
-            stream.codecpar.extradata = attachment
-            stream.codecpar.extradata_size = data_len
-
-            # Add metadata
-            err_check(lib.av_dict_set(&stream.metadata, "filename", filename.encode('utf-8'), 0))
-            err_check(lib.av_dict_set(&stream.metadata, "mimetype", mimetype.encode('utf-8'), 0))
-
-            # Explicitly set time_base to avoid duration issues
-            stream.time_base.num = 1
-            stream.time_base.den = 1
-
-            # Create Python stream object
-            py_stream = wrap_stream(self, stream, None)
-            self.streams.add_stream(py_stream)
-
-            return py_stream
-
-        except Exception:
-            lib.av_free(attachment)
-            raise
-
     cpdef start_encoding(self):
         """Write the file header! Called automatically."""
 
@@ -320,7 +263,7 @@ cdef class OutputContainer(Container):
             ctx = stream.codec_context
             # Skip codec context handling for data streams without codecs
             if ctx is None:
-                if stream.type not in ("data", "attachment"):
+                if stream.type != "data":
                     raise ValueError(f"Stream {stream.index} has no codec context")
                 continue
 

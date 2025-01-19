@@ -23,10 +23,6 @@ include "libavfilter/buffersink.pxd"
 include "libavfilter/buffersrc.pxd"
 
 
-cdef extern from "libavutil/mem.h":
-    void* av_malloc(size_t size) nogil
-    void av_free(void* ptr) nogil
-
 cdef extern from "stdio.h" nogil:
     cdef int snprintf(char *output, int n, const char *format, ...)
     cdef int vsnprintf(char *output, int n, const char *format, va_list args)
