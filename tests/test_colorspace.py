@@ -31,6 +31,8 @@ def test_sky_timelapse() -> None:
     )
     stream = container.streams.video[0]
 
+    assert stream.disposition == av.stream.Disposition.default
+
     assert stream.codec_context.color_range == 1
     assert stream.codec_context.color_range == ColorRange.MPEG
     assert stream.codec_context.color_primaries == 1

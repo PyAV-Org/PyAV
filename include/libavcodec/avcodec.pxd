@@ -8,6 +8,16 @@ cdef extern from "libavcodec/codec_id.h":
     AVCodecID av_codec_get_id(const AVCodecTag *const *tags, uint32_t tag)
 
 
+cdef extern from "libavcodec/packet.h" nogil:
+    AVPacketSideData* av_packet_side_data_new(
+        AVPacketSideData **sides,
+        int *nb_sides,
+        AVPacketSideDataType type,
+        size_t size,
+        int free_opaque
+    )
+
+
 cdef extern from "libavutil/channel_layout.h":
     ctypedef enum AVChannelOrder:
         AV_CHANNEL_ORDER_UNSPEC
@@ -542,6 +552,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef struct AVCodecParameters:
         AVMediaType codec_type
         AVCodecID codec_id
+        AVPacketSideData *coded_side_data
+        int nb_coded_side_data
+        uint8_t *extradata
+        int extradata_size
 
     cdef int avcodec_parameters_copy(
         AVCodecParameters *dst,
