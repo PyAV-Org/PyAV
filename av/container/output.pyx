@@ -4,6 +4,9 @@ from fractions import Fraction
 
 cimport libav as lib
 
+from libc.string cimport memcpy
+from libc.stdint cimport uint8_t
+
 from av.codec.codec cimport Codec
 from av.codec.context cimport CodecContext, wrap_codec_context
 from av.container.streams cimport StreamContainer
@@ -247,6 +250,95 @@ cdef class OutputContainer(Container):
 
         return py_stream
 
+    def add_attachment(self, file_data, filename, mimetype=None):
+        """Add a file as an attachment stream.
+
+        Creates a new attachment stream and adds the provided file data to it.
+        This is particularly useful for formats like Matroska that support file attachments
+        (e.g., fonts, images, etc.)
+
+        :param file_data: The raw file data to attach
+        :type file_data: bytes
+        :param filename: Name of the attached file
+        :type filename: str
+        :param mimetype: MIME type of the file (optional, will attempt to guess if not provided)
+        :type mimetype: str | None
+        :rtype: The new :class:`~av.attachments.stream.AttachmentStream`
+        """
+        cdef lib.AVStream *stream
+        cdef size_t data_len
+        cdef uint8_t *attachment
+        cdef Stream py_stream
+        cdef lib.AVCodecContext *codec_context
+
+        if not isinstance(file_data, bytes):
+            raise TypeError("file_data must be bytes")
+
+        if not filename:
+            raise ValueError("filename must be provided")
+
+        # For PNG attachments, we create a stream with the PNG codec
+        codec = lib.avcodec_find_encoder_by_name("png")
+        if codec == NULL:
+            raise ValueError("PNG codec not available")
+
+        # Create new stream
+        stream = lib.avformat_new_stream(self.ptr, codec)
+        if stream == NULL:
+            raise MemoryError("Could not allocate stream")
+
+        # Create and setup codec context
+        codec_context = lib.avcodec_alloc_context3(codec)
+        if codec_context == NULL:
+            raise MemoryError("Could not allocate codec context")
+
+        try:
+            # Set basic video parameters
+            codec_context.width = 1  # Minimal valid dimensions
+            codec_context.height = 1
+            codec_context.time_base.num = 1
+            codec_context.time_base.den = 1
+            codec_context.pix_fmt = lib.AV_PIX_FMT_RGBA
+
+            # Apply codec parameters to stream
+            err_check(lib.avcodec_parameters_from_context(stream.codecpar, codec_context))
+
+            # Mark as attachment
+            stream.disposition = 0x0400
+
+            # Allocate and copy attachment data
+            data_len = len(file_data)
+            attachment = <uint8_t*>lib.av_malloc(data_len)
+            if attachment == NULL:
+                raise MemoryError("Could not allocate attachment buffer")
+
+            # Copy the data
+            memcpy(attachment, <uint8_t*>file_data, data_len)
+
+            # Set the extradata to hold our attachment
+            stream.codecpar.extradata = attachment
+            stream.codecpar.extradata_size = data_len
+
+            # Add metadata
+            err_check(lib.av_dict_set(&stream.metadata, "filename", filename.encode('utf-8'), 0))
+
+            if mimetype is not None:
+                err_check(lib.av_dict_set(&stream.metadata, "mimetype", mimetype.encode('utf-8'), 0))
+
+            # Create Python stream object
+            py_stream = wrap_stream(self, stream, wrap_codec_context(codec_context, codec, None))
+            self.streams.add_stream(py_stream)
+
+            return py_stream
+
+        except Exception:
+            if attachment != NULL:
+                lib.av_free(attachment)
+            if codec_context != NULL:
+                lib.avcodec_free_context(&codec_context)
+            raise
+
+
     cpdef start_encoding(self):
         """Write the file header! Called automatically."""
 
@@ -263,7 +355,7 @@ cdef class OutputContainer(Container):
             ctx = stream.codec_context
             # Skip codec context handling for data streams without codecs
             if ctx is None:
-                if stream.type != "data":
+                if stream.type not in ("data", "attachment"):
                     raise ValueError(f"Stream {stream.index} has no codec context")
                 continue
 
