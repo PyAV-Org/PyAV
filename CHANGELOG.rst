@@ -23,6 +23,7 @@ v14.1.0 (Unreleased)
 Features
 
 - Add hardware decoding by :gh-user:`matthewlai` and :gh-user:`WyattBlue` in (:pr:`1685`).
+- Add ``Stream.disposition`` and ``Disposition`` enum by :gh-user:`WyattBlue` in (:pr:`1720`).
 - Add ``VideoFrame.rotation`` by :gh-user:`lgeiger` in (:pr:`1675`).
 - Support grayf32le and gbrapf32le in numpy convertion by :gh-user:`robinechuca` in (:pr:`1712`).
 
