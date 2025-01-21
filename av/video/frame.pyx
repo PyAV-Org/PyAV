@@ -282,7 +282,13 @@ cdef class VideoFrame(Frame):
 
         return Image.frombytes("RGB", (plane.width, plane.height), bytes(o_buf), "raw", "RGB", 0, 1)
 
-    def to_ndarray(self, skip_channel: bool=True, gbr_to_rgb: bool=True, **kwargs):
+    def to_ndarray(
+        self,
+        skip_channel: bool=True,
+        gbr_to_rgb: bool=True,
+        yuv444p_channel_first: bool=True,
+        **kwargs
+    ):
         """Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`.VideoReformatter.reformat`.
@@ -292,6 +298,9 @@ cdef class VideoFrame(Frame):
         :param bool skip_channel: If True, squeeze the channel dimension for grayscale frames.
         :param bool gbr_to_rgb: If True, for ``gbrp`` formats,
         channels are flipped to RGB order for backward compatibility.
+        :param bool yuv444p_channel_first: If True, the shape for the yuv444p and yuvj444p
+        will be (channels, height, width) rather than (height, width, channels) as usual.
+        This is for backward compatibility.
 
         .. note:: Numpy must be installed.
 
@@ -370,6 +379,8 @@ cdef class VideoFrame(Frame):
                 array[:, :, 0] = array[:, :, 2]
                 array[:, :, 2] = array[:, :, 1]
                 array[:, :, 1] = buffer
+            if yuv444p_channel_first and frame.format.name in {"yuv444p", "yuvj444p"}:
+                array = np.moveaxis(array, 2, 0)
             return array
 
         # special cases
@@ -505,12 +516,15 @@ cdef class VideoFrame(Frame):
         self._init_user_attributes()
 
     @staticmethod
-    def from_ndarray(array, format="rgb24", rgb_to_gbr: bool=True):
+    def from_ndarray(array, format: str="rgb24", rgb_to_gbr: bool=True, yuv444p_channel_first: bool=True):
         """
         Construct a frame from a numpy array.
 
         :param bool rgb_to_gbr: If True, for ``gbrp`` formats,
         channels are assumed to be given in RGB order, for backward compatibility.
+        :param bool yuv444p_channel_first: If True, the shape for the yuv444p and yuvj444p
+        is given by (channels, height, width) rather than (height, width, channels).
+        This is for backward compatibility.
 
         .. note:: For formats which expect an array of ``uint16``, the samples
         must be in the system's native byte order.
@@ -554,6 +568,8 @@ cdef class VideoFrame(Frame):
             if array.ndim == 2:  # (height, width) -> (height, width, 1)
                 array = array[:, :, None]
             check_ndarray(array, dtype, 3)
+            if format in {"yuv444p", "yuvj444p"}:
+                array = np.moveaxis(array, 0, 2)
             check_ndarray_shape(array, array.shape[2] == channels)
             array = byteswap_array(array, format.endswith("be"))
             frame = VideoFrame(array.shape[1], array.shape[0], format)
@@ -576,7 +592,7 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(array, frame.planes[0], 1)
             frame.planes[1].update(palette.view(">i4").astype("i4").tobytes())
             return frame
-        elif format in ("yuv420p", "yuvj420p"):
+        elif format in {"yuv420p", "yuvj420p"}:
             check_ndarray(array, "uint8", 2)
             check_ndarray_shape(array, array.shape[0] % 3 == 0)
             check_ndarray_shape(array, array.shape[1] % 2 == 0)

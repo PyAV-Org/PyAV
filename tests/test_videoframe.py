@@ -434,7 +434,7 @@ def test_ndarray_yuyv422() -> None:
 
 
 def test_ndarray_yuv444p() -> None:
-    array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
+    array = numpy.random.randint(0, 256, size=(3, 480, 640), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="yuv444p")
     assert frame.width == 640 and frame.height == 480
     assert frame.format.name == "yuv444p"
@@ -442,7 +442,7 @@ def test_ndarray_yuv444p() -> None:
 
 
 def test_ndarray_yuvj444p() -> None:
-    array = numpy.random.randint(0, 256, size=(480, 640, 3), dtype=numpy.uint8)
+    array = numpy.random.randint(0, 256, size=(3, 480, 640), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="yuvj444p")
     assert frame.width == 640 and frame.height == 480
     assert frame.format.name == "yuvj444p"
