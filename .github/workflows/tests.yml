@@ -10,10 +10,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.13"
       - name: Build source package
         run: |
-          pip install cython
+          pip install setuptools cython
           python scripts/fetch-vendor.py --config-file scripts/ffmpeg-7.1.json /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
@@ -32,7 +32,7 @@ jobs:
             arch: arm64
           - os: macos-13
             arch: x86_64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             arch: aarch64
           - os: ubuntu-latest
             arch: i686
@@ -44,10 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
-      - name: Set up QEMU
-        if: matrix.os == 'ubuntu-latest'
-        uses: docker/setup-qemu-action@v3
+          python-version: "3.13"
       - name: Install packages
         if: matrix.os == 'macos-13'
         run: |
