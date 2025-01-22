@@ -282,33 +282,28 @@ cdef class VideoFrame(Frame):
 
         return Image.frombytes("RGB", (plane.width, plane.height), bytes(o_buf), "raw", "RGB", 0, 1)
 
-    def to_ndarray(
-        self,
-        skip_channel: bool=True,
-        gbr_to_rgb: bool=True,
-        yuv444p_channel_first: bool=True,
-        **kwargs
-    ):
+    def to_ndarray(self, force_channel_last=False, **kwargs):
         """Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`.VideoReformatter.reformat`.
 
         The array returned is generally of dimension (height, width, channels).
 
-        :param bool skip_channel: If True, squeeze the channel dimension for grayscale frames.
-        :param bool gbr_to_rgb: If True, for ``gbrp`` formats,
-        channels are flipped to RGB order for backward compatibility.
-        :param bool yuv444p_channel_first: If True, the shape for the yuv444p and yuvj444p
-        will be (channels, height, width) rather than (height, width, channels) as usual.
-        This is for backward compatibility.
+        :param bool force_channel_last: If False (default), the shape for the yuv444p and yuvj444p
+            will be (channels, height, width) rather than (height, width, channels) as usual.
+            This is for backward compatibility and also for keeping that
+            `bytes(to_ndarray(frame))` should be the same as the ffmpeg cli
+            when returning the pix_fmt with `-c:v rawvideo`.
 
         .. note:: Numpy must be installed.
 
-        .. note:: For formats which return an array of ``uint16`, the samples
-        will be in the system's native byte order.
+        .. note:: For formats which return an array of ``uint16`` or ``float32``,
+            the samples will be in the system's native byte order.
 
         .. note:: For ``pal8``, an ``(image, palette)`` tuple will be returned,
-        with the palette being in ARGB (PyAV will swap bytes if needed).
+            with the palette being in ARGB (PyAV will swap bytes if needed).
+
+        .. note:: For ``gbrp`` formats, channels are flipped to RGB order.
 
         """
         cdef VideoFrame frame = self.reformat(**kwargs)
@@ -372,14 +367,14 @@ cdef class VideoFrame(Frame):
             else:  # general case
                 array = np.concatenate(layers, axis=2)
             array = byteswap_array(array, frame.format.name.endswith("be"))
-            if array.shape[2] == 1 and skip_channel:
+            if array.shape[2] == 1:  # skip last channel for gray images
                 return array.squeeze(2)
-            if gbr_to_rgb and frame.format.name.startswith("gbr"):
+            if frame.format.name.startswith("gbr"):  # gbr -> rgb
                 buffer = array[:, :, 0].copy()
                 array[:, :, 0] = array[:, :, 2]
                 array[:, :, 2] = array[:, :, 1]
                 array[:, :, 1] = buffer
-            if yuv444p_channel_first and frame.format.name in {"yuv444p", "yuvj444p"}:
+            if not force_channel_last and frame.format.name in {"yuv444p", "yuvj444p"}:
                 array = np.moveaxis(array, 2, 0)
             return array
 
@@ -516,20 +511,19 @@ cdef class VideoFrame(Frame):
         self._init_user_attributes()
 
     @staticmethod
-    def from_ndarray(array, format: str="rgb24", rgb_to_gbr: bool=True, yuv444p_channel_first: bool=True):
+    def from_ndarray(array, format="rgb24", channel_last=False):
         """
         Construct a frame from a numpy array.
 
-        :param bool rgb_to_gbr: If True, for ``gbrp`` formats,
-        channels are assumed to be given in RGB order, for backward compatibility.
-        :param bool yuv444p_channel_first: If True, the shape for the yuv444p and yuvj444p
-        is given by (channels, height, width) rather than (height, width, channels).
-        This is for backward compatibility.
+        :param bool channel_last: If False (default), the shape for the yuv444p and yuvj444p
+            is given by (channels, height, width) rather than (height, width, channels).
 
-        .. note:: For formats which expect an array of ``uint16``, the samples
-        must be in the system's native byte order.
+        .. note:: For formats which expect an array of ``uint16``,
+            the samples must be in the system's native byte order.
 
         .. note:: for ``pal8``, an ``(image, palette)`` pair must be passed. `palette` must have shape (256, 4) and is given in ARGB format (PyAV will swap bytes if needed).
+
+        .. note:: for ``gbrp`` formats, channels are assumed to be given in RGB order.
 
         """
         import numpy as np
@@ -568,12 +562,12 @@ cdef class VideoFrame(Frame):
             if array.ndim == 2:  # (height, width) -> (height, width, 1)
                 array = array[:, :, None]
             check_ndarray(array, dtype, 3)
-            if format in {"yuv444p", "yuvj444p"}:
-                array = np.moveaxis(array, 0, 2)
+            if not channel_last and format in {"yuv444p", "yuvj444p"}:
+                array = np.moveaxis(array, 0, 2)  # (channels, h, w) -> (h, w, channels)
             check_ndarray_shape(array, array.shape[2] == channels)
             array = byteswap_array(array, format.endswith("be"))
             frame = VideoFrame(array.shape[1], array.shape[0], format)
-            if rgb_to_gbr and frame.format.name.startswith("gbr"):
+            if frame.format.name.startswith("gbr"):  # rgb -> gbr
                 array = np.concatenate([  # not inplace to avoid bad surprises
                     array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
                 ], axis=2)
