@@ -440,6 +440,17 @@ def test_ndarray_yuv444p() -> None:
     assert frame.format.name == "yuv444p"
     assertNdarraysEqual(frame.to_ndarray(), array)
 
+    array = numpy.random.randint(0, 256, size=(3, 480, 640), dtype=numpy.uint8)
+    frame = VideoFrame.from_ndarray(array, channel_last=False, format="yuv444p")
+    assert frame.width == 640 and frame.height == 480
+    assert frame.format.name == "yuv444p"
+    assertNdarraysEqual(frame.to_ndarray(channel_last=False), array)
+    assert array.shape != frame.to_ndarray(channel_last=True).shape
+    assert (
+        frame.to_ndarray(channel_last=False).shape
+        != frame.to_ndarray(channel_last=True).shape
+    )
+
 
 def test_ndarray_yuvj444p() -> None:
     array = numpy.random.randint(0, 256, size=(3, 480, 640), dtype=numpy.uint8)
@@ -458,7 +469,7 @@ def test_ndarray_yuv444p16() -> None:
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_yuv444p16_allign() -> None:
+def test_ndarray_yuv444p16_align() -> None:
     array = numpy.random.randint(0, 65536, size=(238, 318, 3), dtype=numpy.uint16)
     for format in ("yuv444p16be", "yuv444p16le"):
         frame = VideoFrame.from_ndarray(array, format=format)
@@ -476,7 +487,7 @@ def test_ndarray_yuva444p16() -> None:
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_yuva444p16_allign() -> None:
+def test_ndarray_yuva444p16_align() -> None:
     array = numpy.random.randint(0, 65536, size=(238, 318, 4), dtype=numpy.uint16)
     for format in ("yuva444p16be", "yuva444p16le"):
         frame = VideoFrame.from_ndarray(array, format=format)

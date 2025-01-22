@@ -282,18 +282,16 @@ cdef class VideoFrame(Frame):
 
         return Image.frombytes("RGB", (plane.width, plane.height), bytes(o_buf), "raw", "RGB", 0, 1)
 
-    def to_ndarray(self, force_channel_last=False, **kwargs):
+    def to_ndarray(self, channel_last=False, **kwargs):
         """Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`.VideoReformatter.reformat`.
 
         The array returned is generally of dimension (height, width, channels).
 
-        :param bool force_channel_last: If False (default), the shape for the yuv444p and yuvj444p
-            will be (channels, height, width) rather than (height, width, channels) as usual.
-            This is for backward compatibility and also for keeping that
-            `bytes(to_ndarray(frame))` should be the same as the ffmpeg cli
-            when returning the pix_fmt with `-c:v rawvideo`.
+        :param bool channel_last: If True, the shape of array will be
+            (height, width, channels) rather than (channels, height, width) for
+            the "yuv444p" and "yuvj444p" formats.
 
         .. note:: Numpy must be installed.
 
@@ -374,7 +372,7 @@ cdef class VideoFrame(Frame):
                 array[:, :, 0] = array[:, :, 2]
                 array[:, :, 2] = array[:, :, 1]
                 array[:, :, 1] = buffer
-            if not force_channel_last and frame.format.name in {"yuv444p", "yuvj444p"}:
+            if not channel_last and frame.format.name in {"yuv444p", "yuvj444p"}:
                 array = np.moveaxis(array, 2, 0)
             return array
 
