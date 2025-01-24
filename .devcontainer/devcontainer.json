@@ -1,0 +1,18 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "name": "pyav",
+  "forwardPorts": [],
+  "appPort": [],
+  "privileged": true,
+  "mounts": [],
+  "containerEnv": {},
+  "runArgs": [],
+  "customizations": {
+    "vscode": {
+      "settings": {},
+      "extensions": []
+    }
+  }
+}
