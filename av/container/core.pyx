@@ -253,7 +253,7 @@ cdef class Container:
                 self.ptr.interrupt_callback.opaque = &self.interrupt_callback_info
 
             if acodec is not None:
-                self.ptr.audio_codec_id = AudioCodec[acodec.upper()]
+                self.ptr.audio_codec_id = AudioCodec.acodec.name.upper()
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = <void*>self
