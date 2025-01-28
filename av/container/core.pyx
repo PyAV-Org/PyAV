@@ -3,7 +3,7 @@ from libc.stdint cimport int64_t
 
 import os
 import time
-from enum import Flag
+from enum import Flag, IntEnum
 from pathlib import Path
 
 cimport libav as lib
@@ -141,42 +141,43 @@ class Flags(Flag):
     shortest: "Stop muxing when the shortest stream stops." = lib.AVFMT_FLAG_SHORTEST
     auto_bsf: "Add bitstream filters as requested by the muxer." = lib.AVFMT_FLAG_AUTO_BSF
 
-class AudioCodec(Enum):
-    none: "No codec." = lib.AV_CODEC_ID_NONE
-    pcm_alaw: "PCM A-law." = lib.AV_CODEC_ID_PCM_ALAW
-    pcm_bluray: "PCM Blu-ray." = lib.AV_CODEC_ID_PCM_BLURAY
-    pcm_dvd: "PCM DVD." = lib.AV_CODEC_ID_PCM_DVD
-    pcm_f16le: "PCM F16 little-endian." = lib.AV_CODEC_ID_PCM_F16LE
-    pcm_f24le: "PCM F24 little-endian." = lib.AV_CODEC_ID_PCM_F24LE
-    pcm_f32be: "PCM F32 big-endian." = lib.AV_CODEC_ID_PCM_F32BE
-    pcm_f32le: "PCM F32 little-endian." = lib.AV_CODEC_ID_PCM_F32LE
-    pcm_f64be: "PCM F64 big-endian." = lib.AV_CODEC_ID_PCM_F64BE
-    pcm_f64le: "PCM F64 little-endian." = lib.AV_CODEC_ID_PCM_F64LE
-    pcm_lxf: "PCM LXF." = lib.AV_CODEC_ID_PCM_LXF
-    pcm_mulaw: "PCM μ-law." = lib.AV_CODEC_ID_PCM_MULAW
-    pcm_s16be: "PCM signed 16-bit big-endian." = lib.AV_CODEC_ID_PCM_S16BE
-    pcm_s16be_planar: "PCM signed 16-bit big-endian planar." = lib.AV_CODEC_ID_PCM_S16BE_PLANAR
-    pcm_s16le: "PCM signed 16-bit little-endian." = lib.AV_CODEC_ID_PCM_S16LE
-    pcm_s16le_planar: "PCM signed 16-bit little-endian planar." = lib.AV_CODEC_ID_PCM_S16LE_PLANAR
-    pcm_s24be: "PCM signed 24-bit big-endian." = lib.AV_CODEC_ID_PCM_S24BE
-    pcm_s24daud: "PCM signed 24-bit D-Cinema audio." = lib.AV_CODEC_ID_PCM_S24DAUD
-    pcm_s24le: "PCM signed 24-bit little-endian." = lib.AV_CODEC_ID_PCM_S24LE
-    pcm_s24le_planar: "PCM signed 24-bit little-endian planar." = lib.AV_CODEC_ID_PCM_S24LE_PLANAR
-    pcm_s32be: "PCM signed 32-bit big-endian." = lib.AV_CODEC_ID_PCM_S32BE
-    pcm_s32le: "PCM signed 32-bit little-endian." = lib.AV_CODEC_ID_PCM_S32LE
-    pcm_s32le_planar: "PCM signed 32-bit little-endian planar." = lib.AV_CODEC_ID_PCM_S32LE_PLANAR
-    pcm_s64be: "PCM signed 64-bit big-endian." = lib.AV_CODEC_ID_PCM_S64BE
-    pcm_s64le: "PCM signed 64-bit little-endian." = lib.AV_CODEC_ID_PCM_S64LE
-    pcm_s8: "PCM signed 8-bit." = lib.AV_CODEC_ID_PCM_S8
-    pcm_s8_planar: "PCM signed 8-bit planar." = lib.AV_CODEC_ID_PCM_S8_PLANAR
-    pcm_u16be: "PCM unsigned 16-bit big-endian." = lib.AV_CODEC_ID_PCM_U16BE
-    pcm_u16le: "PCM unsigned 16-bit little-endian." = lib.AV_CODEC_ID_PCM_U16LE
-    pcm_u24be: "PCM unsigned 24-bit big-endian." = lib.AV_CODEC_ID_PCM_U24BE
-    pcm_u24le: "PCM unsigned 24-bit little-endian." = lib.AV_CODEC_ID_PCM_U24LE
-    pcm_u32be: "PCM unsigned 32-bit big-endian." = lib.AV_CODEC_ID_PCM_U32BE
-    pcm_u32le: "PCM unsigned 32-bit little-endian." = lib.AV_CODEC_ID_PCM_U32LE
-    pcm_u8: "PCM unsigned 8-bit." = lib.AV_CODEC_ID_PCM_U8
-    pcm_vidc: "PCM VIDC." = lib.AV_CODEC_ID_PCM_VIDC
+class AudioCodec(IntEnum):
+    """Enumeration for audio codec IDs."""
+    none = lib.AV_CODEC_ID_NONE  # No codec.
+    pcm_alaw = lib.AV_CODEC_ID_PCM_ALAW  # PCM A-law.
+    pcm_bluray = lib.AV_CODEC_ID_PCM_BLURAY  # PCM Blu-ray.
+    pcm_dvd = lib.AV_CODEC_ID_PCM_DVD  # PCM DVD.
+    pcm_f16le = lib.AV_CODEC_ID_PCM_F16LE  # PCM F16 little-endian.
+    pcm_f24le = lib.AV_CODEC_ID_PCM_F24LE  # PCM F24 little-endian.
+    pcm_f32be = lib.AV_CODEC_ID_PCM_F32BE  # PCM F32 big-endian.
+    pcm_f32le = lib.AV_CODEC_ID_PCM_F32LE  # PCM F32 little-endian.
+    pcm_f64be = lib.AV_CODEC_ID_PCM_F64BE  # PCM F64 big-endian.
+    pcm_f64le = lib.AV_CODEC_ID_PCM_F64LE  # PCM F64 little-endian.
+    pcm_lxf = lib.AV_CODEC_ID_PCM_LXF  # PCM LXF.
+    pcm_mulaw = lib.AV_CODEC_ID_PCM_MULAW  # PCM μ-law.
+    pcm_s16be = lib.AV_CODEC_ID_PCM_S16BE  # PCM signed 16-bit big-endian.
+    pcm_s16be_planar = lib.AV_CODEC_ID_PCM_S16BE_PLANAR  # PCM signed 16-bit big-endian planar.
+    pcm_s16le = lib.AV_CODEC_ID_PCM_S16LE  # PCM signed 16-bit little-endian.
+    pcm_s16le_planar = lib.AV_CODEC_ID_PCM_S16LE_PLANAR  # PCM signed 16-bit little-endian planar.
+    pcm_s24be = lib.AV_CODEC_ID_PCM_S24BE  # PCM signed 24-bit big-endian.
+    pcm_s24daud = lib.AV_CODEC_ID_PCM_S24DAUD  # PCM signed 24-bit D-Cinema audio.
+    pcm_s24le = lib.AV_CODEC_ID_PCM_S24LE  # PCM signed 24-bit little-endian.
+    pcm_s24le_planar = lib.AV_CODEC_ID_PCM_S24LE_PLANAR  # PCM signed 24-bit little-endian planar.
+    pcm_s32be = lib.AV_CODEC_ID_PCM_S32BE  # PCM signed 32-bit big-endian.
+    pcm_s32le = lib.AV_CODEC_ID_PCM_S32LE  # PCM signed 32-bit little-endian.
+    pcm_s32le_planar = lib.AV_CODEC_ID_PCM_S32LE_PLANAR  # PCM signed 32-bit little-endian planar.
+    pcm_s64be = lib.AV_CODEC_ID_PCM_S64BE  # PCM signed 64-bit big-endian.
+    pcm_s64le = lib.AV_CODEC_ID_PCM_S64LE  # PCM signed 64-bit little-endian.
+    pcm_s8 = lib.AV_CODEC_ID_PCM_S8  # PCM signed 8-bit.
+    pcm_s8_planar = lib.AV_CODEC_ID_PCM_S8_PLANAR  # PCM signed 8-bit planar.
+    pcm_u16be = lib.AV_CODEC_ID_PCM_U16BE  # PCM unsigned 16-bit big-endian.
+    pcm_u16le = lib.AV_CODEC_ID_PCM_U16LE  # PCM unsigned 16-bit little-endian.
+    pcm_u24be = lib.AV_CODEC_ID_PCM_U24BE  # PCM unsigned 24-bit big-endian.
+    pcm_u24le = lib.AV_CODEC_ID_PCM_U24LE  # PCM unsigned 24-bit little-endian.
+    pcm_u32be = lib.AV_CODEC_ID_PCM_U32BE  # PCM unsigned 32-bit big-endian.
+    pcm_u32le = lib.AV_CODEC_ID_PCM_U32LE  # PCM unsigned 32-bit little-endian.
+    pcm_u8 = lib.AV_CODEC_ID_PCM_U8  # PCM unsigned 8-bit.
+    pcm_vidc = lib.AV_CODEC_ID_PCM_VIDC  # PCM VIDC.
 
 
 cdef class Container:
