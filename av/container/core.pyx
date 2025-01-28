@@ -162,43 +162,43 @@ Flags = define_enum("Flags", __name__, (
         "Add bitstream filters as requested by the muxer."),
 ), is_flags=True)
 
-AudioCodec = define_enum("AudioCodec", __name__, (
-    ("NONE", lib.AV_CODEC_ID_NONE),
-    ("PCM_ALAW", lib.AV_CODEC_ID_PCM_ALAW),
-    ("PCM_BLURAY", lib.AV_CODEC_ID_PCM_BLURAY),
-    ("PCM_DVD", lib.AV_CODEC_ID_PCM_DVD),
-    ("PCM_F16LE", lib.AV_CODEC_ID_PCM_F16LE),
-    ("PCM_F24LE", lib.AV_CODEC_ID_PCM_F24LE),
-    ("PCM_F32BE", lib.AV_CODEC_ID_PCM_F32BE),
-    ("PCM_F32LE", lib.AV_CODEC_ID_PCM_F32LE),
-    ("PCM_F64BE", lib.AV_CODEC_ID_PCM_F64BE),
-    ("PCM_F64LE", lib.AV_CODEC_ID_PCM_F64LE),
-    ("PCM_LXF", lib.AV_CODEC_ID_PCM_LXF),
-    ("PCM_MULAW", lib.AV_CODEC_ID_PCM_MULAW),
-    ("PCM_S16BE", lib.AV_CODEC_ID_PCM_S16BE),
-    ("PCM_S16BE_PLANAR", lib.AV_CODEC_ID_PCM_S16BE_PLANAR),
-    ("PCM_S16LE", lib.AV_CODEC_ID_PCM_S16LE),
-    ("PCM_S16LE_PLANAR", lib.AV_CODEC_ID_PCM_S16LE_PLANAR),
-    ("PCM_S24BE", lib.AV_CODEC_ID_PCM_S24BE),
-    ("PCM_S24DAUD", lib.AV_CODEC_ID_PCM_S24DAUD),
-    ("PCM_S24LE", lib.AV_CODEC_ID_PCM_S24LE),
-    ("PCM_S24LE_PLANAR", lib.AV_CODEC_ID_PCM_S24LE_PLANAR),
-    ("PCM_S32BE", lib.AV_CODEC_ID_PCM_S32BE),
-    ("PCM_S32LE", lib.AV_CODEC_ID_PCM_S32LE),
-    ("PCM_S32LE_PLANAR", lib.AV_CODEC_ID_PCM_S32LE_PLANAR),
-    ("PCM_S64BE", lib.AV_CODEC_ID_PCM_S64BE),
-    ("PCM_S64LE", lib.AV_CODEC_ID_PCM_S64LE),
-    ("PCM_S8", lib.AV_CODEC_ID_PCM_S8),
-    ("PCM_S8_PLANAR", lib.AV_CODEC_ID_PCM_S8_PLANAR),
-    ("PCM_U16BE", lib.AV_CODEC_ID_PCM_U16BE),
-    ("PCM_U16LE", lib.AV_CODEC_ID_PCM_U16LE),
-    ("PCM_U24BE", lib.AV_CODEC_ID_PCM_U24BE),
-    ("PCM_U24LE", lib.AV_CODEC_ID_PCM_U24LE),
-    ("PCM_U32BE", lib.AV_CODEC_ID_PCM_U32BE),
-    ("PCM_U32LE", lib.AV_CODEC_ID_PCM_U32LE),
-    ("PCM_U8", lib.AV_CODEC_ID_PCM_U8),
-    ("PCM_VIDC", lib.AV_CODEC_ID_PCM_VIDC)
-))
+class AudioCodec(Enum):
+    none: "No codec." = lib.AV_CODEC_ID_NONE
+    pcm_alaw: "PCM A-law." = lib.AV_CODEC_ID_PCM_ALAW
+    pcm_bluray: "PCM Blu-ray." = lib.AV_CODEC_ID_PCM_BLURAY
+    pcm_dvd: "PCM DVD." = lib.AV_CODEC_ID_PCM_DVD
+    pcm_f16le: "PCM F16 little-endian." = lib.AV_CODEC_ID_PCM_F16LE
+    pcm_f24le: "PCM F24 little-endian." = lib.AV_CODEC_ID_PCM_F24LE
+    pcm_f32be: "PCM F32 big-endian." = lib.AV_CODEC_ID_PCM_F32BE
+    pcm_f32le: "PCM F32 little-endian." = lib.AV_CODEC_ID_PCM_F32LE
+    pcm_f64be: "PCM F64 big-endian." = lib.AV_CODEC_ID_PCM_F64BE
+    pcm_f64le: "PCM F64 little-endian." = lib.AV_CODEC_ID_PCM_F64LE
+    pcm_lxf: "PCM LXF." = lib.AV_CODEC_ID_PCM_LXF
+    pcm_mulaw: "PCM μ-law." = lib.AV_CODEC_ID_PCM_MULAW
+    pcm_s16be: "PCM signed 16-bit big-endian." = lib.AV_CODEC_ID_PCM_S16BE
+    pcm_s16be_planar: "PCM signed 16-bit big-endian planar." = lib.AV_CODEC_ID_PCM_S16BE_PLANAR
+    pcm_s16le: "PCM signed 16-bit little-endian." = lib.AV_CODEC_ID_PCM_S16LE
+    pcm_s16le_planar: "PCM signed 16-bit little-endian planar." = lib.AV_CODEC_ID_PCM_S16LE_PLANAR
+    pcm_s24be: "PCM signed 24-bit big-endian." = lib.AV_CODEC_ID_PCM_S24BE
+    pcm_s24daud: "PCM signed 24-bit D-Cinema audio." = lib.AV_CODEC_ID_PCM_S24DAUD
+    pcm_s24le: "PCM signed 24-bit little-endian." = lib.AV_CODEC_ID_PCM_S24LE
+    pcm_s24le_planar: "PCM signed 24-bit little-endian planar." = lib.AV_CODEC_ID_PCM_S24LE_PLANAR
+    pcm_s32be: "PCM signed 32-bit big-endian." = lib.AV_CODEC_ID_PCM_S32BE
+    pcm_s32le: "PCM signed 32-bit little-endian." = lib.AV_CODEC_ID_PCM_S32LE
+    pcm_s32le_planar: "PCM signed 32-bit little-endian planar." = lib.AV_CODEC_ID_PCM_S32LE_PLANAR
+    pcm_s64be: "PCM signed 64-bit big-endian." = lib.AV_CODEC_ID_PCM_S64BE
+    pcm_s64le: "PCM signed 64-bit little-endian." = lib.AV_CODEC_ID_PCM_S64LE
+    pcm_s8: "PCM signed 8-bit." = lib.AV_CODEC_ID_PCM_S8
+    pcm_s8_planar: "PCM signed 8-bit planar." = lib.AV_CODEC_ID_PCM_S8_PLANAR
+    pcm_u16be: "PCM unsigned 16-bit big-endian." = lib.AV_CODEC_ID_PCM_U16BE
+    pcm_u16le: "PCM unsigned 16-bit little-endian." = lib.AV_CODEC_ID_PCM_U16LE
+    pcm_u24be: "PCM unsigned 24-bit big-endian." = lib.AV_CODEC_ID_PCM_U24BE
+    pcm_u24le: "PCM unsigned 24-bit little-endian." = lib.AV_CODEC_ID_PCM_U24LE
+    pcm_u32be: "PCM unsigned 32-bit big-endian." = lib.AV_CODEC_ID_PCM_U32BE
+    pcm_u32le: "PCM unsigned 32-bit little-endian." = lib.AV_CODEC_ID_PCM_U32LE
+    pcm_u8: "PCM unsigned 8-bit." = lib.AV_CODEC_ID_PCM_U8
+    pcm_vidc: "PCM VIDC." = lib.AV_CODEC_ID_PCM_VIDC
+
 
 cdef class Container:
 
