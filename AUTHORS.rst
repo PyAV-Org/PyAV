@@ -18,15 +18,17 @@ All contributors (by number of commits):
 * Tadas Dailyda <tadas@dailyda.com>
 * JoeUgly <41972063+JoeUgly@users.noreply.github.com>
 * Justin Wong <46082645+uvjustin@users.noreply.github.com>
+* Mark Harfouche <mark.harfouche@gmail.com>
 
-- Mark Harfouche <mark.harfouche@gmail.com>
 - Alba Mendez <me@alba.sh>
 - Dave Johansen <davejohansen@gmail.com>
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
 - Dan Allan <daniel.b.allan@gmail.com>; `@danielballan <https://github.com/danielballan>`_
 - Moonsik Park <moonsik.park@estsoft.com>
 - Santtu Keskinen <santtu.keskinen@gmail.com>
+- Marc Mueller <30130371+cdce8p@users.noreply.github.com>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
+- David Plowman <david.plowman@raspberrypi.com>
 - Alireza Davoudi <davoudialireza@gmail.com>; `@adavoudi <https://github.com/adavoudi>`_
 - Jonathan Drolet <jonathan.drolet@riedel.net>
 - Moritz Kassner <moritzkassner@gmail.com>; `@mkassner <https://github.com/mkassner>`_
@@ -52,8 +54,8 @@ All contributors (by number of commits):
 * Andrew Wason <rectalogic@rectalogic.com>
 * Radek Senfeld <rush@logic.cz>; `@radek-senfeld <https://github.com/radek-senfeld>`_
 * Benjamin Chrétien <2742231+bchretien@users.noreply.github.com>
-* Marc Mueller <30130371+cdce8p@users.noreply.github.com>
 * zzjjbb <31069326+zzjjbb@users.noreply.github.com>
+* davidplowman <38045873+davidplowman@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
 * Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
 * Artturin <Artturin@artturin.com>
@@ -62,15 +64,16 @@ All contributors (by number of commits):
 * Arthur Barros <arthbarros@gmail.com>
 * Carlos Ruiz <carlos.r.domin@gmail.com>
 * Carlos Ruiz <carlos.ruiz.dominguez@west.cmu.edu>
-* David Plowman <david.plowman@raspberrypi.com>
 * Maxime Desroches <desroches.maxime@gmail.com>
 * egao1980 <egao1980@gmail.com>
 * Eric Kalosa-Kenyon <ekalosak@gmail.com>
 * elxy <elxy@outlook.com>
 * Gemfield <gemfield@civilnet.cn>
+* henri-gasc <henri.gasc@eurecom.fr>
 * Jonathan Martin <homerunisgood@hotmail.com>
 * Johan Jeppsson Karlin <johjep@gmail.com>
 * Philipp Klaus <klaus@physik.uni-frankfurt.de>
+* Lukas Geiger <lukas.geiger94@gmail.com>
 * Mattias Wadman <mattias.wadman@gmail.com>
 * Manuel Goacolou <mgoacolou@cls.fr>
 * Julian Schweizer <neuneck@gmail.com>

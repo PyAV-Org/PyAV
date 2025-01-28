@@ -34,11 +34,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: "3.9", ffmpeg: "7.1", extras: true}
+          - {os: ubuntu-latest, python: "3.12", ffmpeg: "7.1", extras: true}
           - {os: ubuntu-latest, python: "3.9", ffmpeg: "7.0.2"}
-          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "7.1"}
-          - {os: macos-14,  python: "3.9", ffmpeg: "7.1"}
-          - {os: macos-14,  python: "3.9", ffmpeg: "7.0.2"}
+          - {os: ubuntu-latest, python: "pypy3.10", ffmpeg: "7.1"}
+          - {os: macos-14, python: "3.9", ffmpeg: "7.1"}
+          - {os: macos-14, python: "3.9", ffmpeg: "7.0.2"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -65,7 +65,7 @@ jobs:
             fi
             ;;
           macos-14)
-            brew install automake libtool nasm pkg-config libpng libvorbis libvpx opus x264
+            brew install automake libtool nasm libpng libvorbis libvpx opus x264
             ;;
         esac
 

@@ -70,7 +70,7 @@ def iter_raw_frames(
 class TestCodecContext(TestCase):
     def test_skip_frame_default(self):
         ctx = Codec("png", "w").create()
-        assert ctx.skip_frame.name == "DEFAULT"
+        assert ctx.skip_frame == "DEFAULT"
 
     def test_codec_delay(self) -> None:
         with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:

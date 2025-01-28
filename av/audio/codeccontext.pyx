@@ -3,13 +3,14 @@ cimport libav as lib
 from av.audio.format cimport AudioFormat, get_audio_format
 from av.audio.frame cimport AudioFrame, alloc_audio_frame
 from av.audio.layout cimport AudioLayout, get_audio_layout
+from av.codec.hwaccel cimport HWAccel
 from av.frame cimport Frame
 from av.packet cimport Packet
 
 
 cdef class AudioCodecContext(CodecContext):
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
-        CodecContext._init(self, ptr, codec)
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel):
+        CodecContext._init(self, ptr, codec, hwaccel)
 
     cdef _prepare_frames_for_encode(self, Frame input_frame):
 

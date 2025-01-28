@@ -1,9 +1,10 @@
+from enum import Flag
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Literal, Type, overload
+from typing import Any, Callable, ClassVar, Literal, Type, overload
 
-from av.enum import EnumFlag
+from av.codec.hwaccel import HWAccel
 from av.format import ContainerFormat
 
 from .input import InputContainer
@@ -12,22 +13,22 @@ from .streams import StreamContainer
 
 Real = int | float | Fraction
 
-class Flags(EnumFlag):
-    GENPTS: int
-    IGNIDX: int
-    NONBLOCK: int
-    IGNDTS: int
-    NOFILLIN: int
-    NOPARSE: int
-    NOBUFFER: int
-    CUSTOM_IO: int
-    DISCARD_CORRUPT: int
-    FLUSH_PACKETS: int
-    BITEXACT: int
-    SORT_DTS: int
-    FAST_SEEK: int
-    SHORTEST: int
-    AUTO_BSF: int
+class Flags(Flag):
+    gen_pts: ClassVar[Flags]
+    ign_idx: ClassVar[Flags]
+    non_block: ClassVar[Flags]
+    ign_dts: ClassVar[Flags]
+    no_fillin: ClassVar[Flags]
+    no_parse: ClassVar[Flags]
+    no_buffer: ClassVar[Flags]
+    custom_io: ClassVar[Flags]
+    discard_corrupt: ClassVar[Flags]
+    flush_packets: ClassVar[Flags]
+    bitexact: ClassVar[Flags]
+    sort_dts: ClassVar[Flags]
+    fast_seek: ClassVar[Flags]
+    shortest: ClassVar[Flags]
+    auto_bsf: ClassVar[Flags]
 
 class Container:
     writeable: bool
@@ -47,6 +48,7 @@ class Container:
     metadata: dict[str, str]
     open_timeout: Real | None
     read_timeout: Real | None
+    flags: int
 
     def __enter__(self) -> Container: ...
     def __exit__(
@@ -72,6 +74,7 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
 @overload
 def open(
@@ -86,6 +89,7 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
 @overload
 def open(
@@ -100,6 +104,7 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> OutputContainer: ...
 @overload
 def open(
@@ -114,4 +119,5 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> InputContainer | OutputContainer: ...

@@ -133,6 +133,16 @@ cdef class Frame:
         return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
 
     @property
+    def key_frame(self):
+        """Is this frame a key frame?
+
+        Wraps :ffmpeg:`AVFrame.key_frame`.
+
+        """
+        return bool(self.ptr.flags & lib.AV_FRAME_FLAG_KEY)
+
+
+    @property
     def side_data(self):
         if self._side_data is None:
             self._side_data = SideDataContainer(self)

@@ -11,37 +11,6 @@ Binary wheels are provided on PyPI for Linux, MacOS, and Windows linked against 
     pip install av
 
 
-Currently FFmpeg 6.1.1 is used with the following features enabled for all platforms:
-
-- fontconfig
-- gmp
-- libaom
-- libass
-- libbluray
-- libdav1d
-- libfreetype
-- libmp3lame
-- libopencore-amrnb
-- libopencore-amrwb
-- libopenjpeg
-- libopus
-- libspeex
-- libtwolame
-- libvorbis
-- libvpx
-- libx264
-- libx265
-- libxml2
-- libxvid
-- lzma
-- zlib
-
-The following additional features are also enabled on Linux:
-
-- gnutls
-- libxcb
-
-
 Conda
 -----
 
@@ -55,7 +24,7 @@ See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs t
 Bring your own FFmpeg
 ---------------------
 
-PyAV can also be compiled against your own build of FFmpeg (version ``6.0`` or higher). You can force installing PyAV from source by running:
+PyAV can also be compiled against your own build of FFmpeg (version ``7.0`` or higher). You can force installing PyAV from source by running:
 
 .. code-block:: bash
 
@@ -120,9 +89,6 @@ Building from the latest source
 
     # Prep a virtualenv.
     source scripts/activate.sh
-
-    # Install basic requirements.
-    pip install -r tests/requirements.txt
 
     # Optionally build FFmpeg.
     ./scripts/build-deps

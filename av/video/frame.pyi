@@ -1,9 +1,9 @@
-from typing import Any, Union
+from enum import IntEnum
+from typing import Any, ClassVar, Union
 
 import numpy as np
 from PIL import Image
 
-from av.enum import EnumItem
 from av.frame import Frame
 
 from .format import VideoFormat
@@ -15,7 +15,7 @@ _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.float32]],
 ]
 
-class PictureType(EnumItem):
+class PictureType(IntEnum):
     NONE: int
     I: int
     P: int
@@ -28,16 +28,21 @@ class PictureType(EnumItem):
 class VideoFrame(Frame):
     format: VideoFormat
     pts: int
-    time: float
     planes: tuple[VideoPlane, ...]
-    width: int
-    height: int
-    key_frame: bool
-    interlaced_frame: bool
     pict_type: int
     colorspace: int
     color_range: int
 
+    @property
+    def time(self) -> float: ...
+    @property
+    def width(self) -> int: ...
+    @property
+    def height(self) -> int: ...
+    @property
+    def interlaced_frame(self) -> bool: ...
+    @property
+    def rotation(self) -> int: ...
     def __init__(
         self, width: int = 0, height: int = 0, format: str = "yuv420p"
     ) -> None: ...
@@ -54,15 +59,19 @@ class VideoFrame(Frame):
     ) -> VideoFrame: ...
     def to_rgb(self, **kwargs: Any) -> VideoFrame: ...
     def to_image(self, **kwargs: Any) -> Image.Image: ...
-    def to_ndarray(self, **kwargs: Any) -> _SupportedNDarray: ...
+    def to_ndarray(
+        self, channel_last: bool = False, **kwargs: Any
+    ) -> _SupportedNDarray: ...
     @staticmethod
     def from_image(img: Image.Image) -> VideoFrame: ...
     @staticmethod
     def from_numpy_buffer(
-        array: _SupportedNDarray, format: str = "rgb24"
+        array: _SupportedNDarray, format: str = "rgb24", width: int = 0
     ) -> VideoFrame: ...
     @staticmethod
-    def from_ndarray(array: _SupportedNDarray, format: str = "rgb24") -> VideoFrame: ...
+    def from_ndarray(
+        array: _SupportedNDarray, format: str = "rgb24", channel_last: bool = False
+    ) -> VideoFrame: ...
     @staticmethod
     def from_bytes(
         data: bytes,

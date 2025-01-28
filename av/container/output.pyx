@@ -1,5 +1,6 @@
 import logging
 import os
+from fractions import Fraction
 
 cimport libav as lib
 
@@ -43,54 +44,43 @@ cdef class OutputContainer(Container):
         with nogil:
             lib.av_packet_free(&self.packet_ptr)
 
-    def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
+    def add_stream(self, codec_name, rate=None, dict options=None, **kwargs):
         """add_stream(codec_name, rate=None)
 
-        Create a new stream, and return it.
+        Creates a new stream from a codec name and returns it.
+        Supports video, audio, and subtitle streams.
 
-        :param str codec_name: The name of a codec.
-        :param rate: The frame rate for video, and sample rate for audio.
-            Examples for video include ``24`` and ``Fraction(30000, 1001)``.
-            Examples for audio include ``48000`` and ``44100``.
-        :param template: Copy codec from another :class:`~av.stream.Stream` instance.
+        :param codec_name: The name of a codec.
+        :type codec_name: str | Codec
         :param dict options: Stream options.
-        :param \\**kwargs: Set attributes of the stream.
-        :returns: The new :class:`~av.stream.Stream`.
+        :param \\**kwargs: Set attributes for the stream.
+        :rtype: The new :class:`~av.stream.Stream`.
 
         """
-
-        if (codec_name is None and template is None) or (codec_name is not None and template is not None):
-            raise ValueError("needs one of codec_name or template")
 
         cdef const lib.AVCodec *codec
         cdef Codec codec_obj
 
-        if codec_name is not None:
-            codec_obj = codec_name if isinstance(codec_name, Codec) else Codec(codec_name, "w")
+        if isinstance(codec_name, Codec):
+            if codec_name.mode != "w":
+                raise ValueError("codec_name must be an encoder.")
+            codec_obj = codec_name
         else:
-            if not template.codec_context:
-                raise ValueError("template has no codec context")
-            codec_obj = template.codec_context.codec
+            codec_obj = Codec(codec_name, "w")
         codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
             raise ValueError(
-                f"{self.format.name!r} format does not support {codec_name!r} codec"
+                f"{self.format.name!r} format does not support {codec_obj.name!r} codec"
             )
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
         cdef lib.AVStream *stream = lib.avformat_new_stream(self.ptr, codec)
         cdef lib.AVCodecContext *codec_context = lib.avcodec_alloc_context3(codec)
 
-        # Copy from the template.
-        if template is not None:
-            err_check(lib.avcodec_parameters_to_context(codec_context, template.ptr.codecpar))
-            # Reset the codec tag assuming we are remuxing.
-            codec_context.codec_tag = 0
-
         # Now lets set some more sane video defaults
-        elif codec.type == lib.AVMEDIA_TYPE_VIDEO:
+        if codec.type == lib.AVMEDIA_TYPE_VIDEO:
             codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_context.width = kwargs.pop("width", 640)
             codec_context.height = kwargs.pop("height", 480)
@@ -135,7 +125,7 @@ cdef class OutputContainer(Container):
         err_check(lib.avcodec_parameters_from_context(stream.codecpar, codec_context))
 
         # Construct the user-land stream
-        cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec)
+        cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec, None)
         cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
 
@@ -144,6 +134,116 @@ cdef class OutputContainer(Container):
 
         for k, v in kwargs.items():
             setattr(py_stream, k, v)
+
+        return py_stream
+
+    def add_stream_from_template(self, Stream template not None, **kwargs):
+        """
+        Creates a new stream from a template. Supports video, audio, and subtitle streams.
+
+        :param template: Copy codec from another :class:`~av.stream.Stream` instance.
+        :param \\**kwargs: Set attributes for the stream.
+        :rtype: The new :class:`~av.stream.Stream`.
+        """
+        cdef const lib.AVCodec *codec
+        cdef Codec codec_obj
+
+        if template.type != "video":
+            codec_obj = template.codec_context.codec
+        else:
+            codec_obj = Codec(template.codec_context.codec.name, "w")
+        codec = codec_obj.ptr
+
+        # Assert that this format supports the requested codec.
+        if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
+            raise ValueError(
+                f"{self.format.name!r} format does not support {codec_obj.name!r} codec"
+            )
+
+        # Create new stream in the AVFormatContext, set AVCodecContext values.
+        cdef lib.AVStream *stream = lib.avformat_new_stream(self.ptr, codec)
+        cdef lib.AVCodecContext *codec_context = lib.avcodec_alloc_context3(codec)
+
+        err_check(lib.avcodec_parameters_to_context(codec_context, template.ptr.codecpar))
+        # Reset the codec tag assuming we are remuxing.
+        codec_context.codec_tag = 0
+
+        # Some formats want stream headers to be separate
+        if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+            codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+        # Initialise stream codec parameters to populate the codec type.
+        #
+        # Subsequent changes to the codec context will be applied just before
+        # encoding starts in `start_encoding()`.
+        err_check(lib.avcodec_parameters_from_context(stream.codecpar, codec_context))
+
+        # Construct the user-land stream
+        cdef CodecContext py_codec_context = wrap_codec_context(codec_context, codec, None)
+        cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)
+        self.streams.add_stream(py_stream)
+
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+
+        return py_stream
+
+
+    def add_data_stream(self, codec_name=None, dict options=None):
+        """add_data_stream(codec_name=None)
+
+        Creates a new data stream and returns it.
+
+        :param codec_name: Optional name of the data codec (e.g. 'klv')
+        :type codec_name: str | None
+        :param dict options: Stream options.
+        :rtype: The new :class:`~av.data.stream.DataStream`.
+        """
+        cdef const lib.AVCodec *codec = NULL
+
+        if codec_name is not None:
+            codec = lib.avcodec_find_encoder_by_name(codec_name.encode())
+            if codec == NULL:
+                raise ValueError(f"Unknown data codec: {codec_name}")
+
+            # Assert that this format supports the requested codec
+            if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
+                raise ValueError(
+                    f"{self.format.name!r} format does not support {codec_name!r} codec"
+                )
+
+        # Create new stream in the AVFormatContext
+        cdef lib.AVStream *stream = lib.avformat_new_stream(self.ptr, codec)
+        if stream == NULL:
+            raise MemoryError("Could not allocate stream")
+
+        # Set up codec context if we have a codec
+        cdef lib.AVCodecContext *codec_context = NULL
+        if codec != NULL:
+            codec_context = lib.avcodec_alloc_context3(codec)
+            if codec_context == NULL:
+                raise MemoryError("Could not allocate codec context")
+
+            # Some formats want stream headers to be separate
+            if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+                codec_context.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+            # Initialize stream codec parameters
+            err_check(lib.avcodec_parameters_from_context(stream.codecpar, codec_context))
+        else:
+            # For raw data streams, just set the codec type
+            stream.codecpar.codec_type = lib.AVMEDIA_TYPE_DATA
+
+        # Construct the user-land stream
+        cdef CodecContext py_codec_context = None
+        if codec_context != NULL:
+            py_codec_context = wrap_codec_context(codec_context, codec, None)
+
+        cdef Stream py_stream = wrap_stream(self, stream, py_codec_context)
+        self.streams.add_stream(py_stream)
+
+        if options:
+            py_stream.options.update(options)
 
         return py_stream
 
@@ -161,8 +261,11 @@ cdef class OutputContainer(Container):
         cdef Stream stream
         for stream in self.streams:
             ctx = stream.codec_context
+            # Skip codec context handling for data streams without codecs
             if ctx is None:
-                raise ValueError(f"Stream {stream.index} has no codec context")
+                if stream.type != "data":
+                    raise ValueError(f"Stream {stream.index} has no codec context")
+                continue
 
             if not ctx.is_open:
                 for k, v in self.options.items():

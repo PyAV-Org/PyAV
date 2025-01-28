@@ -3,6 +3,7 @@ from libc.stdint cimport int64_t
 
 from av.bytesource cimport ByteSource
 from av.codec.codec cimport Codec
+from av.codec.hwaccel cimport HWAccel
 from av.frame cimport Frame
 from av.packet cimport Packet
 
@@ -18,11 +19,12 @@ cdef class CodecContext:
     cdef int stream_index
 
     cdef lib.AVCodecParserContext *parser
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec)
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel)
 
     # Public API.
     cdef readonly bint is_open
     cdef readonly Codec codec
+    cdef readonly HWAccel hwaccel
     cdef public dict options
     cpdef open(self, bint strict=?)
 
@@ -30,6 +32,9 @@ cdef class CodecContext:
     cpdef encode(self, Frame frame=?)
     cpdef decode(self, Packet packet=?)
     cpdef flush_buffers(self)
+
+    # Used by hardware-accelerated decode.
+    cdef HWAccel hwaccel_ctx
 
     # Used by both transcode APIs to setup user-land objects.
     # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing packets
@@ -49,10 +54,11 @@ cdef class CodecContext:
     cdef _send_packet_and_recv(self, Packet packet)
     cdef _recv_frame(self)
 
+    cdef _transfer_hwframe(self, Frame frame)
+
     # Implemented by children for the generic send/recv API, so we have the
     # correct subclass of Frame.
     cdef Frame _next_frame
     cdef Frame _alloc_next_frame(self)
 
-
-cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*)
+cdef CodecContext wrap_codec_context(lib.AVCodecContext*, const lib.AVCodec*, HWAccel hwaccel)

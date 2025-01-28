@@ -115,16 +115,17 @@ def test_from_ndarray_value_error() -> None:
         AudioFrame.from_ndarray(array, format="flt", layout="mono")
 
     # incorrect number of dimensions
-    array = np.zeros(shape=(1, 160, 2), dtype="f4")
+    array2 = np.zeros(shape=(1, 160, 2), dtype="f4")
     with pytest.raises(
         ValueError, match="Expected numpy array with ndim `2` but got `3`"
     ) as cm:
-        AudioFrame.from_ndarray(array, format="flt", layout="mono")
+        AudioFrame.from_ndarray(array2, format="flt", layout="mono")
 
     # incorrect shape
     array = np.zeros(shape=(2, 160), dtype="f4")
     with pytest.raises(
-        ValueError, match=escape("Unexpected numpy array shape `(2, 160)`")
+        ValueError,
+        match=escape("Expected packed `array.shape[0]` to equal `1` but got `2`"),
     ) as cm:
         AudioFrame.from_ndarray(array, format="flt", layout="mono")
 

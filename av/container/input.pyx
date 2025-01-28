@@ -68,6 +68,8 @@ cdef class InputContainer(Container):
                 lib.av_dict_free(&c_options[i])
             free(c_options)
 
+        at_least_one_accelerated_context = False
+
         self.streams = StreamContainer()
         for i in range(self.ptr.nb_streams):
             stream = self.ptr.streams[i]
@@ -77,11 +79,16 @@ cdef class InputContainer(Container):
                 codec_context = lib.avcodec_alloc_context3(codec)
                 err_check(lib.avcodec_parameters_to_context(codec_context, stream.codecpar))
                 codec_context.pkt_timebase = stream.time_base
-                py_codec_context = wrap_codec_context(codec_context, codec)
+                py_codec_context = wrap_codec_context(codec_context, codec, self.hwaccel)
+                if py_codec_context.is_hwaccel:
+                    at_least_one_accelerated_context = True
             else:
                 # no decoder is available
                 py_codec_context = None
             self.streams.add_stream(wrap_stream(self, stream, py_codec_context))
+
+        if self.hwaccel and not self.hwaccel.allow_software_fallback and not at_least_one_accelerated_context:
+            raise RuntimeError("Hardware accelerated decode requested but no stream is compatible")
 
         self.metadata = avdict_to_dict(self.ptr.metadata, self.metadata_encoding, self.metadata_errors)
 

@@ -1,41 +1,52 @@
 from collections.abc import Mapping
-from typing import Iterator, Sequence, overload
+from enum import Enum
+from typing import ClassVar, Iterator, Sequence, overload
 
 from av.buffer import Buffer
-from av.enum import EnumItem
 from av.frame import Frame
 
-class Type(EnumItem):
-    PANSCAN: int
-    A53_CC: int
-    STEREO3D: int
-    MATRIXENCODING: int
-    DOWNMIX_INFO: int
-    REPLAYGAIN: int
-    DISPLAYMATRIX: int
-    AFD: int
-    MOTION_VECTORS: int
-    SKIP_SAMPLES: int
-    AUDIO_SERVICE_TYPE: int
-    MASTERING_DISPLAY_METADATA: int
-    GOP_TIMECODE: int
-    SPHERICAL: int
-    CONTENT_LIGHT_LEVEL: int
-    ICC_PROFILE: int
-    SEI_UNREGISTERED: int
-    S12M_TIMECODE: int
+class Type(Enum):
+    PANSCAN: ClassVar[Type]
+    A53_CC: ClassVar[Type]
+    STEREO3D: ClassVar[Type]
+    MATRIXENCODING: ClassVar[Type]
+    DOWNMIX_INFO: ClassVar[Type]
+    REPLAYGAIN: ClassVar[Type]
+    DISPLAYMATRIX: ClassVar[Type]
+    AFD: ClassVar[Type]
+    MOTION_VECTORS: ClassVar[Type]
+    SKIP_SAMPLES: ClassVar[Type]
+    AUDIO_SERVICE_TYPE: ClassVar[Type]
+    MASTERING_DISPLAY_METADATA: ClassVar[Type]
+    GOP_TIMECODE: ClassVar[Type]
+    SPHERICAL: ClassVar[Type]
+    CONTENT_LIGHT_LEVEL: ClassVar[Type]
+    ICC_PROFILE: ClassVar[Type]
+    S12M_TIMECODE: ClassVar[Type]
+    DYNAMIC_HDR_PLUS: ClassVar[Type]
+    REGIONS_OF_INTEREST: ClassVar[Type]
+    VIDEO_ENC_PARAMS: ClassVar[Type]
+    SEI_UNREGISTERED: ClassVar[Type]
+    FILM_GRAIN_PARAMS: ClassVar[Type]
+    DETECTION_BBOXES: ClassVar[Type]
+    DOVI_RPU_BUFFER: ClassVar[Type]
+    DOVI_METADATA: ClassVar[Type]
+    DYNAMIC_HDR_VIVID: ClassVar[Type]
+    AMBIENT_VIEWING_ENVIRONMENT: ClassVar[Type]
+    VIDEO_HINT: ClassVar[Type]
 
 class SideData(Buffer):
     type: Type
-    DISPLAYMATRIX: int
 
 class SideDataContainer(Mapping):
     frame: Frame
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[SideData]: ...
     @overload
-    def __getitem__(self, key: int) -> SideData: ...
+    def __getitem__(self, key: str | int | Type) -> SideData: ...
     @overload
     def __getitem__(self, key: slice) -> Sequence[SideData]: ...
     @overload
-    def __getitem__(self, key: int | slice) -> SideData | Sequence[SideData]: ...
+    def __getitem__(
+        self, key: str | int | Type | slice
+    ) -> SideData | Sequence[SideData]: ...

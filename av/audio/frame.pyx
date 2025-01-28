@@ -2,7 +2,7 @@ from av.audio.format cimport get_audio_format
 from av.audio.layout cimport get_audio_layout
 from av.audio.plane cimport AudioPlane
 from av.error cimport err_check
-from av.utils cimport check_ndarray, check_ndarray_shape
+from av.utils cimport check_ndarray
 
 
 cdef object _cinit_bypass_sentinel
@@ -109,10 +109,12 @@ cdef class AudioFrame(Frame):
         nb_channels = AudioLayout(layout).nb_channels
         check_ndarray(array, dtype, 2)
         if AudioFormat(format).is_planar:
-            check_ndarray_shape(array, array.shape[0] == nb_channels)
+            if array.shape[0] != nb_channels:
+                raise ValueError(f"Expected planar `array.shape[0]` to equal `{nb_channels}` but got `{array.shape[0]}`")
             samples = array.shape[1]
         else:
-            check_ndarray_shape(array, array.shape[0] == 1)
+            if array.shape[0] != 1:
+                raise ValueError(f"Expected packed `array.shape[0]` to equal `1` but got `{array.shape[0]}`")
             samples = array.shape[1] // nb_channels
 
         frame = AudioFrame(format=format, layout=layout, samples=samples)
@@ -164,7 +166,7 @@ cdef class AudioFrame(Frame):
     def rate(self, value):
         self.ptr.sample_rate = value
 
-    def to_ndarray(self, **kwargs):
+    def to_ndarray(self):
         """Get a numpy array of this frame.
 
         .. note:: Numpy must be installed.

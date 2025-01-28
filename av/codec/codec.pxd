@@ -7,6 +7,8 @@ cdef class Codec:
     cdef const lib.AVCodecDescriptor *desc
     cdef readonly bint is_encoder
 
+    cdef tuple _hardware_configs
+
     cdef _init(self, name=?)
 
 

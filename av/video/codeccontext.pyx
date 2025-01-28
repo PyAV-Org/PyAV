@@ -2,6 +2,8 @@ cimport libav as lib
 from libc.stdint cimport int64_t
 
 from av.codec.context cimport CodecContext
+from av.codec.hwaccel cimport HWAccel, HWConfig
+from av.error cimport err_check
 from av.frame cimport Frame
 from av.packet cimport Packet
 from av.utils cimport avrational_to_fraction, to_avrational
@@ -10,13 +12,51 @@ from av.video.frame cimport VideoFrame, alloc_video_frame
 from av.video.reformatter cimport VideoReformatter
 
 
+cdef lib.AVPixelFormat _get_hw_format(lib.AVCodecContext *ctx, const lib.AVPixelFormat *pix_fmts) noexcept:
+    # In the case where we requested accelerated decoding, the decoder first calls this function
+    # with a list that includes both the hardware format and software formats.
+    # First we try to pick the hardware format if it's in the list.
+    # However, if the decoder fails to initialize the hardware, it will call this function again,
+    # with only software formats in pix_fmts. We return ctx->sw_pix_fmt regardless in this case,
+    # because that should be in the candidate list. If not, we are out of ideas anyways.
+    cdef AVCodecPrivateData* private_data = <AVCodecPrivateData*>ctx.opaque
+    i = 0
+    while pix_fmts[i] != -1:
+        if pix_fmts[i] == private_data.hardware_pix_fmt:
+            return pix_fmts[i]
+        i += 1
+    return ctx.sw_pix_fmt if private_data.allow_software_fallback else lib.AV_PIX_FMT_NONE
+
+
 cdef class VideoCodecContext(CodecContext):
+
     def __cinit__(self, *args, **kwargs):
         self.last_w = 0
         self.last_h = 0
 
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec):
-        CodecContext._init(self, ptr, codec)  # TODO: Can this be `super`?
+    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel):
+        CodecContext._init(self, ptr, codec, hwaccel)  # TODO: Can this be `super`?
+
+        if hwaccel is not None:
+            try:
+                self.hwaccel_ctx = hwaccel.create(self.codec)
+                self.ptr.hw_device_ctx = lib.av_buffer_ref(self.hwaccel_ctx.ptr)
+                self.ptr.pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
+                self.ptr.get_format = _get_hw_format
+                self._private_data.hardware_pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
+                self._private_data.allow_software_fallback = self.hwaccel.allow_software_fallback
+                self.ptr.opaque = &self._private_data
+            except NotImplementedError:
+                # Some streams may not have a hardware decoder. For example, many action
+                # cam videos have a low resolution mjpeg stream, which is usually not
+                # compatible with hardware decoders.
+                # The user may have passed in a hwaccel because they want to decode the main
+                # stream with it, so we shouldn't abort even if we find a stream that can't
+                # be HW decoded.
+                # If the user wants to make sure hwaccel is actually used, they can check with the
+                # is_hwaccel() function on each stream's codec context.
+                self.hwaccel_ctx = None
+
         self._build_format()
         self.encoded_frame_count = 0
 
@@ -57,6 +97,26 @@ cdef class VideoCodecContext(CodecContext):
         CodecContext._setup_decoded_frame(self, frame, packet)
         cdef VideoFrame vframe = frame
         vframe._init_user_attributes()
+
+    cdef _transfer_hwframe(self, Frame frame):
+        if self.hwaccel_ctx is None:
+            return frame
+
+        if frame.ptr.format != self.hwaccel_ctx.config.ptr.pix_fmt:
+            # If we get a software frame, that means we are in software fallback mode, and don't actually
+            # need to transfer.
+            return frame
+
+        cdef Frame frame_sw
+
+        frame_sw = self._alloc_next_frame()
+
+        err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
+
+        # TODO: Is there anything else to transfer?!
+        frame_sw.pts = frame.pts
+
+        return frame_sw
 
     cdef _build_format(self):
         self._format = get_video_format(<lib.AVPixelFormat>self.ptr.pix_fmt, self.ptr.width, self.ptr.height)
@@ -278,3 +338,33 @@ cdef class VideoCodecContext(CodecContext):
     @max_b_frames.setter
     def max_b_frames(self, value):
         self.ptr.max_b_frames = value
+
+    @property
+    def qmin(self):
+        """
+        The minimum quantiser value of an encoded stream.
+
+        Wraps :ffmpeg:`AVCodecContext.qmin`.
+
+        :type: int
+        """
+        return self.ptr.qmin
+
+    @qmin.setter
+    def qmin(self, value):
+        self.ptr.qmin = value
+
+    @property
+    def qmax(self):
+        """
+        The maximum quantiser value of an encoded stream.
+
+        Wraps :ffmpeg:`AVCodecContext.qmax`.
+
+        :type: int
+        """
+        return self.ptr.qmax
+
+    @qmax.setter
+    def qmax(self, value):
+        self.ptr.qmax = value

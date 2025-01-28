@@ -1,6 +1,6 @@
-from .enum import EnumFlag, EnumItem
+from enum import Enum, Flag
 
-class OptionType(EnumItem):
+class OptionType(Enum):
     FLAGS: int
     INT: int
     INT64: int
@@ -20,7 +20,7 @@ class OptionType(EnumItem):
     CHANNEL_LAYOUT: int
     BOOL: int
 
-class OptionFlags(EnumFlag):
+class OptionFlags(Flag):
     ENCODING_PARAM: int
     DECODING_PARAM: int
     AUDIO_PARAM: int

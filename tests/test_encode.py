@@ -222,6 +222,29 @@ class TestBasicAudioEncoding(TestCase):
             assert stream.sample_rate == sample_rate
 
 
+class TestSubtitleEncoding:
+    def test_subtitle_muxing(self) -> None:
+        input_ = av.open(fate_suite("sub/MovText_capability_tester.mp4"))
+        in_stream = input_.streams.subtitles[0]
+
+        output_bytes = io.BytesIO()
+        output = av.open(output_bytes, "w", format="mp4")
+
+        out_stream = output.add_stream_from_template(in_stream)
+
+        for packet in input_.demux(in_stream):
+            if packet.dts is None:
+                continue
+            packet.stream = out_stream
+            output.mux(packet)
+
+        output.close()
+        output_bytes.seek(0)
+        assert output_bytes.getvalue().startswith(
+            b"\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isomiso2mp41\x00\x00\x00\x08free"
+        )
+
+
 class TestEncodeStreamSemantics(TestCase):
     def test_stream_index(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
@@ -386,3 +409,96 @@ class TestMaxBFrameEncoding(TestCase):
             file = encode_file_with_max_b_frames(max_b_frames)
             actual_max_b_frames = max_b_frame_run_in_file(file)
             assert actual_max_b_frames <= max_b_frames
+
+
+def encode_frames_with_qminmax(frames: list, shape: tuple, qminmax: tuple) -> int:
+    """
+    Encode a video with the given quantiser limits, and return how many enocded
+    bytes we made in total.
+
+    frames: the frames to encode
+    shape: the (numpy) shape of the video frames
+    qminmax: two integers with 1 <= qmin <= 31 giving the min and max quantiser.
+
+    Returns: total length of the encoded bytes.
+    """
+
+    if av.codec.Codec("h264", "w").name != "libx264":
+        pytest.skip()
+
+    file = io.BytesIO()
+    container = av.open(file, mode="w", format="mp4")
+    stream = container.add_stream("h264", rate=30)
+    stream.height, stream.width, _ = shape
+    stream.pix_fmt = "yuv420p"
+    stream.codec_context.gop_size = 15
+    stream.codec_context.qmin, stream.codec_context.qmax = qminmax
+
+    bytes_encoded = 0
+    for frame in frames:
+        for packet in stream.encode(frame):
+            bytes_encoded += packet.size
+
+    for packet in stream.encode():
+        bytes_encoded += packet.size
+
+    container.close()
+
+    return bytes_encoded
+
+
+class TestQminQmaxEncoding(TestCase):
+    def test_qmin_qmax(self) -> None:
+        """
+        Test that we can set the min and max quantisers, and the encoder is reacting
+        correctly to them.
+
+        Can't see a way to get hold of the quantisers in a decoded video, so instead
+        we'll encode the same frames with decreasing quantisers, and check that the
+        file size increases (by a noticeable factor) each time.
+        """
+        # Make a random - but repeatable - 10 frame video sequence.
+        np.random.seed(0)
+        frames = []
+        shape = (480, 640, 3)
+        for _ in range(10):
+            frames.append(
+                av.VideoFrame.from_ndarray(
+                    np.random.randint(0, 256, shape, dtype=np.uint8), format="rgb24"
+                )
+            )
+
+        # Get the size of the encoded output for different quantisers.
+        quantisers = ((31, 31), (15, 15), (1, 1))
+        sizes = [
+            encode_frames_with_qminmax(frames, shape, qminmax) for qminmax in quantisers
+        ]
+
+        factor = 1.3  # insist at least 30% larger each time
+        assert all(small * factor < large for small, large in zip(sizes, sizes[1:]))
+
+
+class TestProfiles(TestCase):
+    def test_profiles(self) -> None:
+        """
+        Test that we can set different encoder profiles.
+        """
+        # Let's try a video and an audio codec.
+        file = io.BytesIO()
+        codecs = (
+            ("h264", 30),
+            ("aac", 48000),
+        )
+
+        for codec_name, rate in codecs:
+            print("Testing:", codec_name)
+            container = av.open(file, mode="w", format="mp4")
+            stream = container.add_stream(codec_name, rate=rate)
+            assert len(stream.profiles) >= 1  # check that we're testing something!
+
+            # It should be enough to test setting and retrieving the code. That means
+            # libav has recognised the profile and set it correctly.
+            for profile in stream.profiles:
+                stream.profile = profile
+                print("Set", profile, "got", stream.profile)
+                assert stream.profile == profile

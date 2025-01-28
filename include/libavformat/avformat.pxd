@@ -30,18 +30,16 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef struct AVStream:
         int index
         int id
+        int disposition
 
         AVCodecParameters *codecpar
-
         AVRational time_base
 
         int64_t start_time
         int64_t duration
         int64_t nb_frames
         int64_t cur_dts
-
         AVDictionary *metadata
-
         AVRational avg_frame_rate
         AVRational r_frame_rate
         AVRational sample_aspect_ratio

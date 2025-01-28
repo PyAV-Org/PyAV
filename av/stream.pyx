@@ -1,7 +1,7 @@
 cimport libav as lib
-from libc.stdint cimport int32_t
 
-from av.enum cimport define_enum
+from enum import Flag
+
 from av.error cimport err_check
 from av.packet cimport Packet
 from av.utils cimport (
@@ -12,14 +12,29 @@ from av.utils cimport (
 )
 
 
+class Disposition(Flag):
+    default = 1 << 0
+    dub = 1 << 1
+    original = 1 << 2
+    comment = 1 << 3
+    lyrics = 1 << 4
+    karaoke = 1 << 5
+    forced = 1 << 6
+    hearing_impaired = 1 << 7
+    visual_impaired = 1 << 8
+    clean_effects = 1 << 9
+    attached_pic = 1 << 10
+    timed_thumbnails = 1 << 11
+    non_diegetic = 1 << 12
+    captions = 1 << 16
+    descriptions = 1 << 17
+    metadata = 1 << 18
+    dependent = 1 << 19
+    still_image = 1 << 20
+    multilayer = 1 << 21
+
+
 cdef object _cinit_bypass_sentinel = object()
-
-
-# If necessary more can be added from
-# https://ffmpeg.org/doxygen/trunk/group__lavc__packet.html#ga9a80bfcacc586b483a973272800edb97
-SideData = define_enum("SideData", __name__, (
-    ("DISPLAYMATRIX", lib.AV_PKT_DATA_DISPLAYMATRIX, "Display Matrix"),
-))
 
 cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContext codec_context):
     """Build an av.Stream for an existing AVStream.
@@ -85,7 +100,7 @@ cdef class Stream:
         self.codec_context = codec_context
         if self.codec_context:
             self.codec_context.stream_index = stream.index
-        
+
         self.metadata = avdict_to_dict(
             stream.metadata,
             encoding=self.container.metadata_encoding,
@@ -102,6 +117,9 @@ cdef class Stream:
     def __setattr__(self, name, value):
         if name == "id":
             self._set_id(value)
+            return
+        if name == "disposition":
+            self.ptr.disposition = value
             return
 
         # Convenience setter for codec context properties.
@@ -144,6 +162,18 @@ cdef class Stream:
             self.ptr.id = 0
         else:
             self.ptr.id = value
+
+    @property
+    def profiles(self):
+        """
+        List the available profiles for this stream.
+
+        :type: list[str]
+        """
+        if self.codec_context:
+            return self.codec_context.profiles
+        else:
+            return []
 
     @property
     def profile(self):
@@ -224,6 +254,10 @@ cdef class Stream:
         :type: :class:`str` or ``None``
         """
         return self.metadata.get("language")
+
+    @property
+    def disposition(self):
+        return Disposition(self.ptr.disposition)
 
     @property
     def type(self):

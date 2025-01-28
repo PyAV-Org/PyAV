@@ -8,6 +8,16 @@ cdef extern from "libavcodec/codec_id.h":
     AVCodecID av_codec_get_id(const AVCodecTag *const *tags, uint32_t tag)
 
 
+cdef extern from "libavcodec/packet.h" nogil:
+    AVPacketSideData* av_packet_side_data_new(
+        AVPacketSideData **sides,
+        int *nb_sides,
+        AVPacketSideDataType type,
+        size_t size,
+        int free_opaque
+    )
+
+
 cdef extern from "libavutil/channel_layout.h":
     ctypedef enum AVChannelOrder:
         AV_CHANNEL_ORDER_UNSPEC
@@ -135,6 +145,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef enum:
         AV_FRAME_FLAG_CORRUPT
+        AV_FRAME_FLAG_KEY
+        AV_FRAME_FLAG_DISCARD
+        AV_FRAME_FLAG_INTERLACED
 
     cdef enum:
         FF_COMPLIANCE_VERY_STRICT
@@ -142,6 +155,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         FF_COMPLIANCE_NORMAL
         FF_COMPLIANCE_UNOFFICIAL
         FF_COMPLIANCE_EXPERIMENTAL
+
+    cdef enum:
+        FF_PROFILE_UNKNOWN = -99
 
     cdef enum AVCodecID:
         AV_CODEC_ID_NONE
@@ -209,12 +225,17 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef int av_codec_is_encoder(AVCodec*)
     cdef int av_codec_is_decoder(AVCodec*)
 
+    cdef struct AVProfile:
+        int profile
+        char *name
+
     cdef struct AVCodecDescriptor:
         AVCodecID id
         char *name
         char *long_name
         int props
         char **mime_types
+        AVProfile *profiles
 
     AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
 
@@ -235,6 +256,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDiscard skip_frame
 
         AVFrame* coded_frame
+
+        void* opaque
 
         int bit_rate
         int bit_rate_tolerance
@@ -270,6 +293,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int coded_height
 
         AVPixelFormat pix_fmt
+        AVPixelFormat sw_pix_fmt
         AVRational sample_aspect_ratio
         int gop_size  # The number of pictures in a group of pictures, or 0 for intra_only.
         int max_b_frames
@@ -289,6 +313,11 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
         void release_buffer(AVCodecContext *ctx, AVFrame *frame)
 
+        # Hardware acceleration
+        AVHWAccel *hwaccel
+        AVBufferRef *hw_device_ctx
+        AVPixelFormat (*get_format)(AVCodecContext *s, const AVPixelFormat *fmt)
+
         # User Data
         void *opaque
 
@@ -296,13 +325,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef void avcodec_free_context(AVCodecContext **ctx)
 
     cdef AVClass* avcodec_get_class()
-
-    cdef struct AVCodecDescriptor:
-        AVCodecID id
-        AVMediaType type
-        char *name
-        char *long_name
-        int props
 
     cdef AVCodec* avcodec_find_decoder(AVCodecID id)
     cdef AVCodec* avcodec_find_encoder(AVCodecID id)
@@ -384,10 +406,18 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_FRAME_DATA_SPHERICAL
         AV_FRAME_DATA_CONTENT_LIGHT_LEVEL
         AV_FRAME_DATA_ICC_PROFILE
-        AV_FRAME_DATA_QP_TABLE_PROPERTIES
-        AV_FRAME_DATA_QP_TABLE_DATA
-        AV_FRAME_DATA_SEI_UNREGISTERED
         AV_FRAME_DATA_S12M_TIMECODE
+        AV_FRAME_DATA_DYNAMIC_HDR_PLUS
+        AV_FRAME_DATA_REGIONS_OF_INTEREST
+        AV_FRAME_DATA_VIDEO_ENC_PARAMS
+        AV_FRAME_DATA_SEI_UNREGISTERED
+        AV_FRAME_DATA_FILM_GRAIN_PARAMS
+        AV_FRAME_DATA_DETECTION_BBOXES
+        AV_FRAME_DATA_DOVI_RPU_BUFFER
+        AV_FRAME_DATA_DOVI_METADATA
+        AV_FRAME_DATA_DYNAMIC_HDR_VIVID
+        AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT
+        AV_FRAME_DATA_VIDEO_HINT
 
     cdef struct AVFrameSideData:
         AVFrameSideDataType type
@@ -402,10 +432,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         uint8_t **extended_data
 
         int format  # Should be AVPixelFormat or AVSampleFormat
-        int key_frame  # 0 or 1.
         AVPictureType pict_type
-
-        int interlaced_frame  # 0 or 1.
 
         int width
         int height
@@ -413,8 +440,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int nb_side_data
         AVFrameSideData **side_data
 
-        int nb_samples  # Audio samples
-        int sample_rate  # Audio Sample rate
+        int nb_samples
+        int sample_rate
 
         AVChannelLayout ch_layout
 
@@ -559,6 +586,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef struct AVCodecParameters:
         AVMediaType codec_type
         AVCodecID codec_id
+        AVPacketSideData *coded_side_data
+        int nb_coded_side_data
+        uint8_t *extradata
+        int extradata_size
 
     cdef int avcodec_parameters_copy(
         AVCodecParameters *dst,
