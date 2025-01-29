@@ -1,4 +1,4 @@
-from enum import Flag
+from enum import Flag, IntEnum
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
@@ -29,6 +29,43 @@ class Flags(Flag):
     fast_seek: ClassVar[Flags]
     shortest: ClassVar[Flags]
     auto_bsf: ClassVar[Flags]
+
+class AudioCodec(IntEnum):
+    none: int
+    pcm_alaw: int
+    pcm_bluray: int
+    pcm_dvd: int
+    pcm_f16le: int
+    pcm_f24le: int
+    pcm_f32be: int
+    pcm_f32le: int
+    pcm_f64be: int
+    pcm_f64le: int
+    pcm_lxf: int
+    pcm_mulaw: int
+    pcm_s16be: int
+    pcm_s16be_planar: int
+    pcm_s16le: int
+    pcm_s16le_planar: int
+    pcm_s24be: int
+    pcm_s24daud: int
+    pcm_s24le: int
+    pcm_s24le_planar: int
+    pcm_s32be: int
+    pcm_s32le: int
+    pcm_s32le_planar: int
+    pcm_s64be: int
+    pcm_s64le: int
+    pcm_s8: int
+    pcm_s8_planar: int
+    pcm_u16be: int
+    pcm_u16le: int
+    pcm_u24be: int
+    pcm_u24le: int
+    pcm_u32be: int
+    pcm_u32le: int
+    pcm_u8: int
+    pcm_vidc: int
 
 class Container:
     writeable: bool
