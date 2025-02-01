@@ -31,12 +31,15 @@ All contributors (by number of commits):
 - David Plowman <david.plowman@raspberrypi.com>
 - Alireza Davoudi <davoudialireza@gmail.com>; `@adavoudi <https://github.com/adavoudi>`_
 - Jonathan Drolet <jonathan.drolet@riedel.net>
+- Lukas Geiger <lukas.geiger94@gmail.com>
+- Matthew Lai <m@matthewlai.ca>
 - Moritz Kassner <moritzkassner@gmail.com>; `@mkassner <https://github.com/mkassner>`_
 - Thomas A Caswell <tcaswell@gmail.com>; `@tacaswell <https://github.com/tacaswell>`_
 - Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>; `@rawler <https://github.com/rawler>`_
 - Wel C. van der <wel@Physics.LeidenUniv.nl>
 - Will Patera <willpatera@gmail.com>; `@willpatera <https://github.com/willpatera>`_
 
+* Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
 * Dexer <73297572+DexerBR@users.noreply.github.com>
 * rutsh <Eugene.Krokhalev@gmail.com>
 * Felix Vollmer <FelixVollmer@gmail.com>
@@ -53,11 +56,11 @@ All contributors (by number of commits):
 * Pablo Prietz <pablo@prietz.org>
 * Andrew Wason <rectalogic@rectalogic.com>
 * Radek Senfeld <rush@logic.cz>; `@radek-senfeld <https://github.com/radek-senfeld>`_
+* robinechuca <serveurpython.oz@gmail.com>
 * Benjamin Chrétien <2742231+bchretien@users.noreply.github.com>
 * zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 * davidplowman <38045873+davidplowman@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
-* Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
 * Artturin <Artturin@artturin.com>
 * Ian Lee <IanLee1521@gmail.com>
 * Ryan Huang <NPN@users.noreply.github.com>
@@ -73,7 +76,7 @@ All contributors (by number of commits):
 * Jonathan Martin <homerunisgood@hotmail.com>
 * Johan Jeppsson Karlin <johjep@gmail.com>
 * Philipp Klaus <klaus@physik.uni-frankfurt.de>
-* Lukas Geiger <lukas.geiger94@gmail.com>
+* Kim Minjong <make.dirty.code@gmail.com>
 * Mattias Wadman <mattias.wadman@gmail.com>
 * Manuel Goacolou <mgoacolou@cls.fr>
 * Julian Schweizer <neuneck@gmail.com>
@@ -99,3 +102,4 @@ All contributors (by number of commits):
 * Koichi Akabe <vbkaisetsu@gmail.com>
 * David Joy <videan42@gmail.com>
 * Sviatoslav Sydorenko (Святослав Сидоренко) <webknjaz@redhat.com>
+* z-khan <zohaibkh_27@yahoo.com>
