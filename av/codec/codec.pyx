@@ -119,7 +119,7 @@ cdef class Codec:
             raise RuntimeError("%s is both encoder and decoder.")
 
     def __repr__(self):
-        mode = "w" if self.is_encoder else "r"
+        mode = self.mode
         return f"<av.{self.__class__.__name__} {self.name} {mode=}>"
 
     def create(self, kind = None):
@@ -129,6 +129,10 @@ cdef class Codec:
         """
         from .context import CodecContext
         return CodecContext.create(self)
+
+    @property
+    def mode(self):
+        return "w" if self.is_encoder else "r"
 
     @property
     def is_decoder(self):
