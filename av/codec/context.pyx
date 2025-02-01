@@ -324,7 +324,7 @@ cdef class CodecContext:
         cdef int res
         with nogil:
             res = lib.avcodec_send_frame(self.ptr, frame.ptr if frame is not None else NULL)
-        err_check(res)
+        err_check(res, "avcodec_send_frame()")
 
         packet = self._recv_packet()
         while packet:
@@ -337,7 +337,7 @@ cdef class CodecContext:
         cdef int res
         with nogil:
             res = lib.avcodec_send_packet(self.ptr, packet.ptr if packet is not None else NULL)
-        err_check(res)
+        err_check(res, "avcodec_send_packet()")
 
         out = []
         while True:
@@ -365,7 +365,7 @@ cdef class CodecContext:
 
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
-        err_check(res)
+        err_check(res, "avcodec_receive_frame()")
 
         frame = self._transfer_hwframe(frame)
 
@@ -384,7 +384,7 @@ cdef class CodecContext:
             res = lib.avcodec_receive_packet(self.ptr, packet.ptr)
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
-        err_check(res)
+        err_check(res, "avcodec_receive_packet()")
 
         if not res:
             return packet
