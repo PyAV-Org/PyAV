@@ -338,13 +338,13 @@ for enum_name, code, name, base in _ffmpeg_specs:
     name = name or enum_name.title().replace("_", "") + "Error"
 
     if base is None:
-        bases = (FFmpegError, )
+        bases = (FFmpegError,)
     elif issubclass(base, FFmpegError):
-        bases = (base, )
+        bases = (base,)
     else:
         bases = (FFmpegError, base)
 
-    cls = type(name, bases, dict(__module__=__name__))
+    cls = type(name, bases, {"__module__": __name__})
 
     # Register in builder.
     classes[code] = cls
