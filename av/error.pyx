@@ -379,27 +379,6 @@ cdef int stash_exception(exc_info=None):
 
 cdef int _last_log_count = 0
 
-
-cpdef make_error(int res, filename=None, log=None):
-    cdef int code = -res
-    cdef char* error_buffer = <char*>malloc(lib.AV_ERROR_MAX_STRING_SIZE * sizeof(char))
-    if error_buffer == NULL:
-        raise MemoryError()
-
-    try:
-        if code == c_PYAV_STASHED_ERROR:
-            message = PYAV_STASHED_ERROR_message
-        else:
-            lib.av_strerror(res, error_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
-            # Fallback to OS error string if no message
-            message = error_buffer or os.strerror(code)
-
-        cls = classes.get(code, UndefinedError)
-        return cls(code, message, filename, log)
-    finally:
-        free(error_buffer)
-
-
 cpdef int err_check(int res, filename=None) except -1:
     """Raise appropriate exceptions from library return code."""
 
@@ -425,7 +404,23 @@ cpdef int err_check(int res, filename=None) except -1:
     else:
         log = None
 
-    raise make_error(res, filename, log)
+    cdef int code = -res
+    cdef char* error_buffer = <char*>malloc(lib.AV_ERROR_MAX_STRING_SIZE * sizeof(char))
+    if error_buffer == NULL:
+        raise MemoryError()
+
+    try:
+        if code == c_PYAV_STASHED_ERROR:
+            message = PYAV_STASHED_ERROR_message
+        else:
+            lib.av_strerror(res, error_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
+            # Fallback to OS error string if no message
+            message = error_buffer or os.strerror(code)
+
+        cls = classes.get(code, UndefinedError)
+        raise cls(code, message, filename, log)
+    finally:
+        free(error_buffer)
 
 
 class UndefinedError(FFmpegError):
