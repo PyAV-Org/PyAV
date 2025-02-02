@@ -51,23 +51,15 @@ cdef class OutputContainer(Container):
         Supports video, audio, and subtitle streams.
 
         :param codec_name: The name of a codec.
-        :type codec_name: str | Codec
+        :type codec_name: str
         :param dict options: Stream options.
         :param \\**kwargs: Set attributes for the stream.
         :rtype: The new :class:`~av.stream.Stream`.
 
         """
 
-        cdef const lib.AVCodec *codec
-        cdef Codec codec_obj
-
-        if isinstance(codec_name, Codec):
-            if codec_name.mode != "w":
-                raise ValueError("codec_name must be an encoder.")
-            codec_obj = codec_name
-        else:
-            codec_obj = Codec(codec_name, "w")
-        codec = codec_obj.ptr
+        cdef Codec codec_obj = Codec(codec_name, "w")
+        cdef const lib.AVCodec *codec = codec_obj.ptr
 
         # Assert that this format supports the requested codec.
         if not lib.avformat_query_codec(self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL):
