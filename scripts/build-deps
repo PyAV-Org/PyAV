@@ -13,6 +13,9 @@ if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
     exit 0
 fi
 
+mkdir -p "$PYAV_LIBRARY_ROOT"
+mkdir -p "$PYAV_LIBRARY_PREFIX"
+
 # Add CUDA support if available
 CONFFLAGS_NVIDIA=""
 if [[ -e /usr/local/cuda ]]; then
@@ -38,11 +41,7 @@ else
     echo "         Building without NVIDIA NVENC/NVDEC support"
 fi
 
-
-mkdir -p "$PYAV_LIBRARY_ROOT"
-mkdir -p "$PYAV_LIBRARY_PREFIX"
 cd "$PYAV_LIBRARY_ROOT"
-
 
 # Download and expand the source.
 if [[ ! -d $PYAV_LIBRARY ]]; then
