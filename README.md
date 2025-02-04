@@ -17,22 +17,11 @@ But where you can't work without it, PyAV is a critical tool.
 Installation
 ------------
 
-Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. Since release 8.0.0 binary wheels are provided on [PyPI][pypi] for Linux, Mac and Windows linked against a modern FFmpeg. You can install these wheels by running:
+Binary wheels are provided on [PyPI][pypi] for Linux, MacOS and Windows linked against the latest stable version of ffmpeg. You can install these wheels by running:
 
 ```bash
 pip install av
 ```
-
-If you want to use your existing FFmpeg, the source version of PyAV is on [PyPI][pypi] too:
-
-```bash
-pip install av --no-binary av
-```
-
-Installing from source is not supported on Windows.
-
-Alternative installation methods
---------------------------------
 
 Another way of installing PyAV is via [conda-forge][conda-forge]:
 
@@ -41,6 +30,20 @@ conda install av -c conda-forge
 ```
 
 See the [Conda install][conda-install] docs to get started with (mini)Conda.
+
+
+Alternative installation methods
+--------------------------------
+
+Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. If you want to use your existing ffmpeg (must be the correct major version), the source version of PyAV is on [PyPI][pypi]:
+
+```bash
+pip install av --no-binary av
+```
+
+> [!WARNING]
+> This installation method won't work for Windows or Debian based systems.
+
 
 And if you want to build from the absolute source (POSIX only):
 
