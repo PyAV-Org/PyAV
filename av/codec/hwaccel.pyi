@@ -42,6 +42,7 @@ class HWAccel:
         device: str | None = None,
         allow_software_fallback: bool = False,
         options: dict[str, object] | None = None,
+        flags: int | None = None,
     ) -> None: ...
     def create(self, codec: Codec) -> HWAccel: ...
 
