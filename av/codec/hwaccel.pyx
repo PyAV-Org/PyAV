@@ -95,7 +95,7 @@ cpdef hwdevices_available():
 
 
 cdef class HWAccel:
-    def __init__(self, device_type, device=None, allow_software_fallback=True, options=None):
+    def __init__(self, device_type, device=None, allow_software_fallback=True, options=None, flags=None):
         if isinstance(device_type, HWDeviceType):
             self._device_type = device_type
         elif isinstance(device_type, str):
@@ -108,6 +108,7 @@ cdef class HWAccel:
         self._device = device
         self.allow_software_fallback = allow_software_fallback
         self.options = {} if not options else dict(options)
+        self.flags = 0 if not flags else flags
         self.ptr = NULL
         self.config = None
 
@@ -132,7 +133,7 @@ cdef class HWAccel:
 
         err_check(
             lib.av_hwdevice_ctx_create(
-                &self.ptr, config.ptr.device_type, c_device, c_options.ptr, 0
+                &self.ptr, config.ptr.device_type, c_device, c_options.ptr, self.flags
             )
         )
 

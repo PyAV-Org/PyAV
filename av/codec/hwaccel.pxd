@@ -18,3 +18,4 @@ cdef class HWAccel:
     cdef lib.AVBufferRef *ptr
     cdef public bint allow_software_fallback
     cdef public dict options
+    cdef public int flags
