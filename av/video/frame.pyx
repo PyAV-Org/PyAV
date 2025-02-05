@@ -317,6 +317,18 @@ cdef class VideoFrame(Frame):
         itemsize, dtype = {
             "abgr": (4, "uint8"),
             "argb": (4, "uint8"),
+            "bayer_bggr8": (1, "uint8"),
+            "bayer_gbrg8": (1, "uint8"),
+            "bayer_grbg8": (1, "uint8"),
+            "bayer_rggb8": (1, "uint8"),
+            "bayer_bggr16le": (2, "uint16"),
+            "bayer_bggr16be": (2, "uint16"),
+            "bayer_gbrg16le": (2, "uint16"),
+            "bayer_gbrg16be": (2, "uint16"),
+            "bayer_grbg16le": (2, "uint16"),
+            "bayer_grbg16be": (2, "uint16"),
+            "bayer_rggb16le": (2, "uint16"),
+            "bayer_rggb16be": (2, "uint16"),
             "bgr24": (3, "uint8"),
             "bgr8": (1, "uint8"),
             "bgra": (4, "uint8"),
@@ -451,6 +463,14 @@ cdef class VideoFrame(Frame):
             else:
                 # Planes where U and V are interleaved have the same stride as Y.
                 linesizes = (array.strides[0], array.strides[0])
+        elif format in ("bayer_bggr8", "bayer_rggb8", "bayer_gbrg8", "bayer_grbg8","bayer_bggr16le", "bayer_rggb16le", "bayer_gbrg16le", "bayer_grbg16le","bayer_bggr16be", "bayer_rggb16be", "bayer_gbrg16be", "bayer_grbg16be"):
+            dtype = np.uint8 if format.endswith("8") else np.uint16
+            check_ndarray(array, dtype.__name__, 2)
+    
+            if array.strides[1] != (1 if format.endswith("8") else 2):
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+    
+            linesizes = (array.strides[0],)
         else:
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
 
@@ -554,7 +574,19 @@ cdef class VideoFrame(Frame):
             "yuv444p16be": (3, 2, "uint16"),
             "yuv444p16le": (3, 2, "uint16"),
             "yuva444p16be": (4, 2, "uint16"),
-            "yuva444p16le": (4, 2, "uint16"),
+            "yuva444p16le": (4, 2, "uint16"),            
+            "bayer_bggr8": (1, 1, "uint8"),
+            "bayer_rggb8": (1, 1, "uint8"),
+            "bayer_grbg8": (1, 1, "uint8"),
+            "bayer_gbrg8": (1, 1, "uint8"),
+            "bayer_bggr16be": (1, 2, "uint16"),
+            "bayer_bggr16le": (1, 2, "uint16"),
+            "bayer_rggb16be": (1, 2, "uint16"),
+            "bayer_rggb16le": (1, 2, "uint16"),
+            "bayer_grbg16be": (1, 2, "uint16"),
+            "bayer_grbg16le": (1, 2, "uint16"),
+            "bayer_gbrg16be": (1, 2, "uint16"),
+            "bayer_gbrg16le": (1, 2, "uint16"),
         }.get(format, (None, None, None))
         if channels is not None:
             if array.ndim == 2:  # (height, width) -> (height, width, 1)
@@ -631,6 +663,13 @@ cdef class VideoFrame(Frame):
             copy_array_to_plane(flat[:uv_start], frame.planes[0], 1)
             copy_array_to_plane(flat[uv_start:], frame.planes[1], 2)
             return frame
+        elif format in {"bayer_bggr8", "bayer_rggb8", "bayer_grbg8", "bayer_gbrg8", "bayer_bggr16be", "bayer_bggr16le", "bayer_rggb16be", "bayer_rggb16le", "bayer_grbg16be", "bayer_grbg16le", "bayer_gbrg16be", "bayer_gbrg16le"}:
+            check_ndarray(array, "uint8" if format.endswith("8") else "uint16", 2)
+            check_ndarray_shape(array, array.shape[0] % 2 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+            frame = VideoFrame(array.shape[1], array.shape[0], format)
+            copy_array_to_plane(array if format.endswith("8") else byteswap_array(array, format.endswith("be")), frame.planes[0], 1 if format.endswith("8") else 2)
+            return frame
         else:
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
 
@@ -644,6 +683,8 @@ cdef class VideoFrame(Frame):
         frame = VideoFrame(width, height, format)
         if format == "rgba":
             copy_bytes_to_plane(img_bytes, frame.planes[0], 4, flip_horizontal, flip_vertical)
+        elif format in ("bayer_bggr8", "bayer_rggb8", "bayer_gbrg8", "bayer_grbg8","bayer_bggr16le", "bayer_rggb16le", "bayer_gbrg16le", "bayer_grbg16le","bayer_bggr16be", "bayer_rggb16be", "bayer_gbrg16be", "bayer_grbg16be"):
+            copy_bytes_to_plane(img_bytes, frame.planes[0], 1 if format.endswith("8") else 2, flip_horizontal, flip_vertical)
         else:
             raise NotImplementedError(f"Format '{format}' is not supported.")
         return frame
