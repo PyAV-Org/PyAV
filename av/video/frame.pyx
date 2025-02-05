@@ -464,9 +464,7 @@ cdef class VideoFrame(Frame):
                 # Planes where U and V are interleaved have the same stride as Y.
                 linesizes = (array.strides[0], array.strides[0])
         elif format in ("bayer_bggr8", "bayer_rggb8", "bayer_gbrg8", "bayer_grbg8","bayer_bggr16le", "bayer_rggb16le", "bayer_gbrg16le", "bayer_grbg16le","bayer_bggr16be", "bayer_rggb16be", "bayer_gbrg16be", "bayer_grbg16be"):
-            check_ndarray(array, "uint8" if format.endswith("8") else "uint16", 2)            
-            check_ndarray_shape(array, array.shape[0] % 2 == 0)
-            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+            check_ndarray(array, "uint8" if format.endswith("8") else "uint16", 2)
     
             if array.strides[1] != (1 if format.endswith("8") else 2):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
@@ -663,13 +661,6 @@ cdef class VideoFrame(Frame):
             flat = array.reshape(-1)
             copy_array_to_plane(flat[:uv_start], frame.planes[0], 1)
             copy_array_to_plane(flat[uv_start:], frame.planes[1], 2)
-            return frame
-        elif format in {"bayer_bggr8", "bayer_rggb8", "bayer_grbg8", "bayer_gbrg8", "bayer_bggr16be", "bayer_bggr16le", "bayer_rggb16be", "bayer_rggb16le", "bayer_grbg16be", "bayer_grbg16le", "bayer_gbrg16be", "bayer_gbrg16le"}:
-            check_ndarray(array, "uint8" if format.endswith("8") else "uint16", 2)
-            check_ndarray_shape(array, array.shape[0] % 2 == 0)
-            check_ndarray_shape(array, array.shape[1] % 2 == 0)
-            frame = VideoFrame(array.shape[1], array.shape[0], format)
-            copy_array_to_plane(array if format.endswith("8") else byteswap_array(array, format.endswith("be")), frame.planes[0], 1 if format.endswith("8") else 2)
             return frame
         else:
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
