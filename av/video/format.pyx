@@ -108,7 +108,7 @@ cdef class VideoFormat:
 
     @property
     def is_bayer(self):
-        """The pixel format contains Bayer data (as opposed to RGB)."""
+        """The pixel format contains Bayer data."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BAYER)
 
     cpdef chroma_width(self, int luma_width=0):
