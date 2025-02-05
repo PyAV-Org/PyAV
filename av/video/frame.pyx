@@ -464,8 +464,9 @@ cdef class VideoFrame(Frame):
                 # Planes where U and V are interleaved have the same stride as Y.
                 linesizes = (array.strides[0], array.strides[0])
         elif format in ("bayer_bggr8", "bayer_rggb8", "bayer_gbrg8", "bayer_grbg8","bayer_bggr16le", "bayer_rggb16le", "bayer_gbrg16le", "bayer_grbg16le","bayer_bggr16be", "bayer_rggb16be", "bayer_gbrg16be", "bayer_grbg16be"):
-            dtype = np.uint8 if format.endswith("8") else np.uint16
-            check_ndarray(array, dtype.__name__, 2)
+            check_ndarray(array, "uint8" if format.endswith("8") else "uint16", 2)            
+            check_ndarray_shape(array, array.shape[0] % 2 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
     
             if array.strides[1] != (1 if format.endswith("8") else 2):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
