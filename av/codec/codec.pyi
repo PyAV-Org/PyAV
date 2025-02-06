@@ -1,6 +1,6 @@
 from enum import Flag, IntEnum
 from fractions import Fraction
-from typing import ClassVar, Literal, overload
+from typing import ClassVar, Literal, cast, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
@@ -12,37 +12,37 @@ from av.video.format import VideoFormat
 from .context import CodecContext
 
 class Properties(Flag):
-    NONE: ClassVar[Properties]
-    INTRA_ONLY: ClassVar[Properties]
-    LOSSY: ClassVar[Properties]
-    LOSSLESS: ClassVar[Properties]
-    REORDER: ClassVar[Properties]
-    BITMAP_SUB: ClassVar[Properties]
-    TEXT_SUB: ClassVar[Properties]
+    NONE = cast(ClassVar[Properties], ...)
+    INTRA_ONLY = cast(ClassVar[Properties], ...)
+    LOSSY = cast(ClassVar[Properties], ...)
+    LOSSLESS = cast(ClassVar[Properties], ...)
+    REORDER = cast(ClassVar[Properties], ...)
+    BITMAP_SUB = cast(ClassVar[Properties], ...)
+    TEXT_SUB = cast(ClassVar[Properties], ...)
 
 class Capabilities(IntEnum):
-    none: int
-    draw_horiz_band: int
-    dr1: int
-    hwaccel: int
-    delay: int
-    small_last_frame: int
-    hwaccel_vdpau: int
-    subframes: int
-    experimental: int
-    channel_conf: int
-    neg_linesizes: int
-    frame_threads: int
-    slice_threads: int
-    param_change: int
-    auto_threads: int
-    variable_frame_size: int
-    avoid_probing: int
-    hardware: int
-    hybrid: int
-    encoder_reordered_opaque: int
-    encoder_flush: int
-    encoder_recon_frame: int
+    none = cast(int, ...)
+    draw_horiz_band = cast(int, ...)
+    dr1 = cast(int, ...)
+    hwaccel = cast(int, ...)
+    delay = cast(int, ...)
+    small_last_frame = cast(int, ...)
+    hwaccel_vdpau = cast(int, ...)
+    subframes = cast(int, ...)
+    experimental = cast(int, ...)
+    channel_conf = cast(int, ...)
+    neg_linesizes = cast(int, ...)
+    frame_threads = cast(int, ...)
+    slice_threads = cast(int, ...)
+    param_change = cast(int, ...)
+    auto_threads = cast(int, ...)
+    variable_frame_size = cast(int, ...)
+    avoid_probing = cast(int, ...)
+    hardware = cast(int, ...)
+    hybrid = cast(int, ...)
+    encoder_reordered_opaque = cast(int, ...)
+    encoder_flush = cast(int, ...)
+    encoder_recon_frame = cast(int, ...)
 
 class UnknownCodecError(ValueError): ...
 

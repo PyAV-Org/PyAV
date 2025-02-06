@@ -1,30 +1,30 @@
 from enum import Flag
 from fractions import Fraction
-from typing import Literal
+from typing import Literal, cast
 
 from .codec import Codec, CodecContext
 from .container import Container
 
 class Disposition(Flag):
-    default: int
-    dub: int
-    original: int
-    comment: int
-    lyrics: int
-    karaoke: int
-    forced: int
-    hearing_impaired: int
-    visual_impaired: int
-    clean_effects: int
-    attached_pic: int
-    timed_thumbnails: int
-    non_diegetic: int
-    captions: int
-    descriptions: int
-    metadata: int
-    dependent: int
-    still_image: int
-    multilayer: int
+    default = cast(int, ...)
+    dub = cast(int, ...)
+    original = cast(int, ...)
+    comment = cast(int, ...)
+    lyrics = cast(int, ...)
+    karaoke = cast(int, ...)
+    forced = cast(int, ...)
+    hearing_impaired = cast(int, ...)
+    visual_impaired = cast(int, ...)
+    clean_effects = cast(int, ...)
+    attached_pic = cast(int, ...)
+    timed_thumbnails = cast(int, ...)
+    non_diegetic = cast(int, ...)
+    captions = cast(int, ...)
+    descriptions = cast(int, ...)
+    metadata = cast(int, ...)
+    dependent = cast(int, ...)
+    still_image = cast(int, ...)
+    multilayer = cast(int, ...)
 
 class Stream:
     name: str | None

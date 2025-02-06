@@ -2,7 +2,7 @@ from enum import Flag, IntEnum
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, ClassVar, Literal, Type, overload
+from typing import Any, Callable, ClassVar, Literal, Type, cast, overload
 
 from av.codec.hwaccel import HWAccel
 from av.format import ContainerFormat
@@ -14,58 +14,58 @@ from .streams import StreamContainer
 Real = int | float | Fraction
 
 class Flags(Flag):
-    gen_pts: ClassVar[Flags]
-    ign_idx: ClassVar[Flags]
-    non_block: ClassVar[Flags]
-    ign_dts: ClassVar[Flags]
-    no_fillin: ClassVar[Flags]
-    no_parse: ClassVar[Flags]
-    no_buffer: ClassVar[Flags]
-    custom_io: ClassVar[Flags]
-    discard_corrupt: ClassVar[Flags]
-    flush_packets: ClassVar[Flags]
-    bitexact: ClassVar[Flags]
-    sort_dts: ClassVar[Flags]
-    fast_seek: ClassVar[Flags]
-    shortest: ClassVar[Flags]
-    auto_bsf: ClassVar[Flags]
+    gen_pts = cast(ClassVar[Flags], ...)
+    ign_idx = cast(ClassVar[Flags], ...)
+    non_block = cast(ClassVar[Flags], ...)
+    ign_dts = cast(ClassVar[Flags], ...)
+    no_fillin = cast(ClassVar[Flags], ...)
+    no_parse = cast(ClassVar[Flags], ...)
+    no_buffer = cast(ClassVar[Flags], ...)
+    custom_io = cast(ClassVar[Flags], ...)
+    discard_corrupt = cast(ClassVar[Flags], ...)
+    flush_packets = cast(ClassVar[Flags], ...)
+    bitexact = cast(ClassVar[Flags], ...)
+    sort_dts = cast(ClassVar[Flags], ...)
+    fast_seek = cast(ClassVar[Flags], ...)
+    shortest = cast(ClassVar[Flags], ...)
+    auto_bsf = cast(ClassVar[Flags], ...)
 
 class AudioCodec(IntEnum):
-    none: int
-    pcm_alaw: int
-    pcm_bluray: int
-    pcm_dvd: int
-    pcm_f16le: int
-    pcm_f24le: int
-    pcm_f32be: int
-    pcm_f32le: int
-    pcm_f64be: int
-    pcm_f64le: int
-    pcm_lxf: int
-    pcm_mulaw: int
-    pcm_s16be: int
-    pcm_s16be_planar: int
-    pcm_s16le: int
-    pcm_s16le_planar: int
-    pcm_s24be: int
-    pcm_s24daud: int
-    pcm_s24le: int
-    pcm_s24le_planar: int
-    pcm_s32be: int
-    pcm_s32le: int
-    pcm_s32le_planar: int
-    pcm_s64be: int
-    pcm_s64le: int
-    pcm_s8: int
-    pcm_s8_planar: int
-    pcm_u16be: int
-    pcm_u16le: int
-    pcm_u24be: int
-    pcm_u24le: int
-    pcm_u32be: int
-    pcm_u32le: int
-    pcm_u8: int
-    pcm_vidc: int
+    none = cast(int, ...)
+    pcm_alaw = cast(int, ...)
+    pcm_bluray = cast(int, ...)
+    pcm_dvd = cast(int, ...)
+    pcm_f16le = cast(int, ...)
+    pcm_f24le = cast(int, ...)
+    pcm_f32be = cast(int, ...)
+    pcm_f32le = cast(int, ...)
+    pcm_f64be = cast(int, ...)
+    pcm_f64le = cast(int, ...)
+    pcm_lxf = cast(int, ...)
+    pcm_mulaw = cast(int, ...)
+    pcm_s16be = cast(int, ...)
+    pcm_s16be_planar = cast(int, ...)
+    pcm_s16le = cast(int, ...)
+    pcm_s16le_planar = cast(int, ...)
+    pcm_s24be = cast(int, ...)
+    pcm_s24daud = cast(int, ...)
+    pcm_s24le = cast(int, ...)
+    pcm_s24le_planar = cast(int, ...)
+    pcm_s32be = cast(int, ...)
+    pcm_s32le = cast(int, ...)
+    pcm_s32le_planar = cast(int, ...)
+    pcm_s64be = cast(int, ...)
+    pcm_s64le = cast(int, ...)
+    pcm_s8 = cast(int, ...)
+    pcm_s8_planar = cast(int, ...)
+    pcm_u16be = cast(int, ...)
+    pcm_u16le = cast(int, ...)
+    pcm_u24be = cast(int, ...)
+    pcm_u24le = cast(int, ...)
+    pcm_u32be = cast(int, ...)
+    pcm_u32le = cast(int, ...)
+    pcm_u8 = cast(int, ...)
+    pcm_vidc = cast(int, ...)
 
 class Container:
     writeable: bool

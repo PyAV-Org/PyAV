@@ -1,26 +1,26 @@
 __all__ = ("Flags", "ContainerFormat", "formats_available")
 
 from enum import Flag
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, cast
 
 class Flags(Flag):
-    no_file: ClassVar[Flags]
-    need_number: ClassVar[Flags]
-    show_ids: ClassVar[Flags]
-    global_header: ClassVar[Flags]
-    no_timestamps: ClassVar[Flags]
-    generic_index: ClassVar[Flags]
-    ts_discont: ClassVar[Flags]
-    variable_fps: ClassVar[Flags]
-    no_dimensions: ClassVar[Flags]
-    no_streams: ClassVar[Flags]
-    no_bin_search: ClassVar[Flags]
-    no_gen_search: ClassVar[Flags]
-    no_byte_seek: ClassVar[Flags]
-    allow_flush: ClassVar[Flags]
-    ts_nonstrict: ClassVar[Flags]
-    ts_negative: ClassVar[Flags]
-    seek_to_pts: ClassVar[Flags]
+    no_file = cast(ClassVar[Flags], ...)
+    need_number = cast(ClassVar[Flags], ...)
+    show_ids = cast(ClassVar[Flags], ...)
+    global_header = cast(ClassVar[Flags], ...)
+    no_timestamps = cast(ClassVar[Flags], ...)
+    generic_index = cast(ClassVar[Flags], ...)
+    ts_discont = cast(ClassVar[Flags], ...)
+    variable_fps = cast(ClassVar[Flags], ...)
+    no_dimensions = cast(ClassVar[Flags], ...)
+    no_streams = cast(ClassVar[Flags], ...)
+    no_bin_search = cast(ClassVar[Flags], ...)
+    no_gen_search = cast(ClassVar[Flags], ...)
+    no_byte_seek = cast(ClassVar[Flags], ...)
+    allow_flush = cast(ClassVar[Flags], ...)
+    ts_nonstrict = cast(ClassVar[Flags], ...)
+    ts_negative = cast(ClassVar[Flags], ...)
+    seek_to_pts = cast(ClassVar[Flags], ...)
 
 class ContainerFormat:
     def __init__(self, name: str, mode: Literal["r", "w"] | None = None) -> None: ...
