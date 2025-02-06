@@ -1,39 +1,39 @@
 from collections.abc import Mapping
 from enum import Enum
-from typing import ClassVar, Iterator, Sequence, overload
+from typing import ClassVar, Iterator, Sequence, cast, overload
 
 from av.buffer import Buffer
 from av.frame import Frame
 
 class Type(Enum):
-    PANSCAN: ClassVar[Type]
-    A53_CC: ClassVar[Type]
-    STEREO3D: ClassVar[Type]
-    MATRIXENCODING: ClassVar[Type]
-    DOWNMIX_INFO: ClassVar[Type]
-    REPLAYGAIN: ClassVar[Type]
-    DISPLAYMATRIX: ClassVar[Type]
-    AFD: ClassVar[Type]
-    MOTION_VECTORS: ClassVar[Type]
-    SKIP_SAMPLES: ClassVar[Type]
-    AUDIO_SERVICE_TYPE: ClassVar[Type]
-    MASTERING_DISPLAY_METADATA: ClassVar[Type]
-    GOP_TIMECODE: ClassVar[Type]
-    SPHERICAL: ClassVar[Type]
-    CONTENT_LIGHT_LEVEL: ClassVar[Type]
-    ICC_PROFILE: ClassVar[Type]
-    S12M_TIMECODE: ClassVar[Type]
-    DYNAMIC_HDR_PLUS: ClassVar[Type]
-    REGIONS_OF_INTEREST: ClassVar[Type]
-    VIDEO_ENC_PARAMS: ClassVar[Type]
-    SEI_UNREGISTERED: ClassVar[Type]
-    FILM_GRAIN_PARAMS: ClassVar[Type]
-    DETECTION_BBOXES: ClassVar[Type]
-    DOVI_RPU_BUFFER: ClassVar[Type]
-    DOVI_METADATA: ClassVar[Type]
-    DYNAMIC_HDR_VIVID: ClassVar[Type]
-    AMBIENT_VIEWING_ENVIRONMENT: ClassVar[Type]
-    VIDEO_HINT: ClassVar[Type]
+    PANSCAN = cast(ClassVar[Type], ...)
+    A53_CC = cast(ClassVar[Type], ...)
+    STEREO3D = cast(ClassVar[Type], ...)
+    MATRIXENCODING = cast(ClassVar[Type], ...)
+    DOWNMIX_INFO = cast(ClassVar[Type], ...)
+    REPLAYGAIN = cast(ClassVar[Type], ...)
+    DISPLAYMATRIX = cast(ClassVar[Type], ...)
+    AFD = cast(ClassVar[Type], ...)
+    MOTION_VECTORS = cast(ClassVar[Type], ...)
+    SKIP_SAMPLES = cast(ClassVar[Type], ...)
+    AUDIO_SERVICE_TYPE = cast(ClassVar[Type], ...)
+    MASTERING_DISPLAY_METADATA = cast(ClassVar[Type], ...)
+    GOP_TIMECODE = cast(ClassVar[Type], ...)
+    SPHERICAL = cast(ClassVar[Type], ...)
+    CONTENT_LIGHT_LEVEL = cast(ClassVar[Type], ...)
+    ICC_PROFILE = cast(ClassVar[Type], ...)
+    S12M_TIMECODE = cast(ClassVar[Type], ...)
+    DYNAMIC_HDR_PLUS = cast(ClassVar[Type], ...)
+    REGIONS_OF_INTEREST = cast(ClassVar[Type], ...)
+    VIDEO_ENC_PARAMS = cast(ClassVar[Type], ...)
+    SEI_UNREGISTERED = cast(ClassVar[Type], ...)
+    FILM_GRAIN_PARAMS = cast(ClassVar[Type], ...)
+    DETECTION_BBOXES = cast(ClassVar[Type], ...)
+    DOVI_RPU_BUFFER = cast(ClassVar[Type], ...)
+    DOVI_METADATA = cast(ClassVar[Type], ...)
+    DYNAMIC_HDR_VIVID = cast(ClassVar[Type], ...)
+    AMBIENT_VIEWING_ENVIRONMENT = cast(ClassVar[Type], ...)
+    VIDEO_HINT = cast(ClassVar[Type], ...)
 
 class SideData(Buffer):
     type: Type

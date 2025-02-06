@@ -1,29 +1,30 @@
 from enum import IntEnum
+from typing import cast
 
 from av.codec.codec import Codec
 from av.video.format import VideoFormat
 
 class HWDeviceType(IntEnum):
-    none: int
-    vdpau: int
-    cuda: int
-    vaapi: int
-    dxva2: int
-    qsv: int
-    videotoolbox: int
-    d3d11va: int
-    drm: int
-    opencl: int
-    mediacodec: int
-    vulkan: int
-    d3d12va: int
+    none = cast(int, ...)
+    vdpau = cast(int, ...)
+    cuda = cast(int, ...)
+    vaapi = cast(int, ...)
+    dxva2 = cast(int, ...)
+    qsv = cast(int, ...)
+    videotoolbox = cast(int, ...)
+    d3d11va = cast(int, ...)
+    drm = cast(int, ...)
+    opencl = cast(int, ...)
+    mediacodec = cast(int, ...)
+    vulkan = cast(int, ...)
+    d3d12va = cast(int, ...)
 
 class HWConfigMethod(IntEnum):
-    none: int
-    hw_device_ctx: int
-    hw_frame_ctx: int
-    internal: int
-    ad_hoc: int
+    none = cast(int, ...)
+    hw_device_ctx = cast(int, ...)
+    hw_frame_ctx = cast(int, ...)
+    internal = cast(int, ...)
+    ad_hoc = cast(int, ...)
 
 class HWConfig:
     @property

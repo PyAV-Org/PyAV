@@ -16,14 +16,14 @@ _SupportedNDarray = Union[
 ]
 
 class PictureType(IntEnum):
-    NONE: int
-    I: int
-    P: int
-    B: int
-    S: int
-    SI: int
-    SP: int
-    BI: int
+    NONE = 0
+    I = 1
+    P = 2
+    B = 3
+    S = 4
+    SI = 5
+    SP = 6
+    BI = 7
 
 class VideoFrame(Frame):
     format: VideoFormat
