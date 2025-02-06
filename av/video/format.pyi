@@ -6,7 +6,10 @@ class VideoFormat:
     has_palette: bool
     is_bit_stream: bool
     is_planar: bool
-    is_rgb: bool
+    @property
+    def is_rgb(self) -> bool: ...
+    @property
+    def is_bayer(self) -> bool: ...
     width: int
     height: int
     components: tuple[VideoFormatComponent, ...]
