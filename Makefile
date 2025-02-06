@@ -28,7 +28,7 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
-	$(PIP) install -U black isort flake8 flake8-pyproject pillow numpy mypy==1.13.0 pytest
+	$(PIP) install -U black isort flake8 flake8-pyproject pillow numpy mypy==1.15.0 pytest
 	black --check av examples tests setup.py
 	flake8 av
 	isort --check-only --diff av examples tests

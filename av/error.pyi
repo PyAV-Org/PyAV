@@ -8,8 +8,8 @@ def tag_to_code(tag: bytes) -> int: ...
 def err_check(res: int, filename: str | None = None) -> int: ...
 
 class FFmpegError(Exception):
-    errno: int
-    strerror: str
+    errno: int | None
+    strerror: str | None
     filename: str
     log: tuple[int, tuple[int, str, str] | None]
 

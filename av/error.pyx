@@ -95,11 +95,13 @@ class FFmpegError(Exception):
             pass
 
     def __str__(self):
-        msg = f"[Errno {self.errno}] {self.strerror}"
-
+        msg = ""
+        if self.errno is not None:
+            msg = f"{msg}[Errno {self.errno}] "
+        if self.strerror is not None:
+            msg = f"{msg}{self.strerror}"
         if self.filename:
             msg = f"{msg}: {self.filename!r}"
-
         if self.log:
             msg = f"{msg}; last error log: [{self.log[1].strip()}] {self.log[2].strip()}"
 
