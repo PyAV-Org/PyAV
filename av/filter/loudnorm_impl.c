@@ -144,11 +144,13 @@ char* loudnorm_get_stats(
     // Flush decoder
     avcodec_send_packet(codec_ctx, NULL);
     while (avcodec_receive_frame(codec_ctx, frame) >= 0) {
-        av_buffersrc_add_frame(src_ctx, frame);
+        ret = av_buffersrc_add_frame(src_ctx, frame);
+        if (ret < 0) goto end;
     }
 
     // Flush filter
-    av_buffersrc_add_frame(src_ctx, NULL);
+    ret = av_buffersrc_add_frame(src_ctx, NULL);
+    if (ret < 0) goto end;
     while (av_buffersink_get_frame(sink_ctx, filt_frame) >= 0) {
         av_frame_unref(filt_frame);
     }
