@@ -14,7 +14,7 @@ on:
       - '**.txt'
 jobs:
   style:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,9 +34,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest, python: "3.12", ffmpeg: "7.1", extras: true}
-          - {os: ubuntu-latest, python: "3.9", ffmpeg: "7.0.2"}
-          - {os: ubuntu-latest, python: "pypy3.10", ffmpeg: "7.1"}
+          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "7.1", extras: true}
+          - {os: ubuntu-24.04, python: "3.9", ffmpeg: "7.0.2"}
+          - {os: ubuntu-24.04, python: "pypy3.10", ffmpeg: "7.1"}
           - {os: macos-14, python: "3.9", ffmpeg: "7.1"}
           - {os: macos-14, python: "3.9", ffmpeg: "7.0.2"}
 
@@ -56,7 +56,7 @@ jobs:
     - name: OS Packages
       run: |
         case ${{ matrix.config.os }} in
-          ubuntu-latest)
+          ubuntu-24.04)
             sudo apt-get update
             sudo apt-get install autoconf automake build-essential cmake \
               libtool pkg-config nasm zlib1g-dev libvorbis-dev libx264-dev
