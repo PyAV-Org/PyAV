@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   package-source:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,9 +34,9 @@ jobs:
             arch: x86_64
           - os: ubuntu-24.04-arm
             arch: aarch64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             arch: i686
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             arch: x86_64
           - os: windows-latest
             arch: AMD64
