@@ -15,6 +15,8 @@ _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.float32]],
 ]
 
+supported_np_pix_fmts: set[str]
+
 class PictureType(IntEnum):
     NONE = 0
     I = 1

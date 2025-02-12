@@ -12,6 +12,19 @@ from av.video.plane cimport VideoPlane
 
 cdef object _cinit_bypass_sentinel
 
+# `pix_fmt`s supported by Frame.to_ndarray() and Frame.from_ndarray()
+supported_np_pix_fmts = {
+    "abgr", "argb", "bayer_bggr16be", "bayer_bggr16le", "bayer_bggr8", "bayer_gbrg16be",
+    "bayer_gbrg16le", "bayer_gbrg8", "bayer_grbg16be", "bayer_grbg16le", "bayer_grbg8",
+    "bayer_rggb16be", "bayer_rggb16le", "bayer_rggb8", "bgr24", "bgr8", "bgra",
+    "gbrapf32be", "gbrapf32le", "gbrp", "gbrp10be", "gbrp10le", "gbrp12be", "gbrp12le",
+    "gbrp14be", "gbrp14le", "gbrp16be", "gbrp16le", "gbrpf32be", "gbrpf32le", "gray",
+    "gray16be", "gray16le", "gray8", "grayf32be", "grayf32le", "nv12", "pal8", "rgb24",
+    "rgb48be", "rgb48le", "rgb8", "rgba", "rgba64be", "rgba64le", "yuv420p", "yuv444p",
+    "yuv444p16be", "yuv444p16le", "yuva444p16be", "yuva444p16le", "yuvj420p",
+    "yuvj444p", "yuyv422",
+}
+
 cdef VideoFrame alloc_video_frame():
     """Get a mostly uninitialized VideoFrame.
 
