@@ -485,6 +485,15 @@ def test_ndarray_yuv444p16() -> None:
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
+def test_ndarray_yuv422p10le() -> None:
+    array = numpy.random.randint(0, 65536, size=(3, 480, 640), dtype=numpy.uint16)
+    for format in ("yuv422p10le",):
+        frame = VideoFrame.from_ndarray(array, format=format)
+        assert frame.width == 640 and frame.height == 480
+        assert frame.format.name == format
+        assert format in av.video.frame.supported_np_pix_fmts
+
+
 def test_ndarray_yuv444p16_align() -> None:
     array = numpy.random.randint(0, 65536, size=(238, 318, 3), dtype=numpy.uint16)
     for format in ("yuv444p16be", "yuv444p16le"):
