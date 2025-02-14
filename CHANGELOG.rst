@@ -17,6 +17,21 @@ We are operating with `semantic versioning <https://semver.org>`_.
     are merged into the "default" branch.
 
 
+v14.2.0 (Unreleased)
+--------------------
+
+Features:
+
+- Add support for external flags in hwacccel by :gh-user:`materight` in (:pr:`1751`).
+- Add Bayer pixel formats by :gh-user:`z-khan` in (:pr:`1755`).
+- Add support for yuv422p10le pix_fmt by :gh-user:`WyattBlue` in (:pr:`1767`).
+- Add ``supported_np_pix_fmts`` by :gh-user:`WyattBlue` in (:pr:`1766`).
+
+Misc.
+- Drop support for MacOS 11 by :gh-user:`WyattBlue` in (:pr:`1764`).
+- Add warnings when compiling from source by :gh-user:`WyattBlue` in (:pr:`1773`).
+
+
 v14.1.0
 -------
 
