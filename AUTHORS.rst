@@ -5,8 +5,8 @@ All contributors (by number of commits):
 
 - Mike Boers <github@mikeboers.com>; `@mikeboers <https://github.com/mikeboers>`_
 
-* Jeremy Lainé <jeremy.laine@m4x.org>; `@jlaine <https://github.com/jlaine>`_
 * WyattBlue <wyattblue@auto-editor.com>; `@WyattBlue <https://github.com/WyattBlue>`_
+* Jeremy Lainé <jeremy.laine@m4x.org>; `@jlaine <https://github.com/jlaine>`_
 
 - Mark Reid <mindmark@gmail.com>; `@markreidvfx <https://github.com/markreidvfx>`_
 
@@ -38,6 +38,7 @@ All contributors (by number of commits):
 - Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>; `@rawler <https://github.com/rawler>`_
 - Wel C. van der <wel@Physics.LeidenUniv.nl>
 - Will Patera <willpatera@gmail.com>; `@willpatera <https://github.com/willpatera>`_
+- z-khan <zohaibkh_27@yahoo.com>
 
 * Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
 * Dexer <73297572+DexerBR@users.noreply.github.com>
@@ -77,6 +78,7 @@ All contributors (by number of commits):
 * Johan Jeppsson Karlin <johjep@gmail.com>
 * Philipp Klaus <klaus@physik.uni-frankfurt.de>
 * Kim Minjong <make.dirty.code@gmail.com>
+* Matteo Destro <matteo@cerrion.com>
 * Mattias Wadman <mattias.wadman@gmail.com>
 * Manuel Goacolou <mgoacolou@cls.fr>
 * Julian Schweizer <neuneck@gmail.com>
@@ -102,4 +104,3 @@ All contributors (by number of commits):
 * Koichi Akabe <vbkaisetsu@gmail.com>
 * David Joy <videan42@gmail.com>
 * Sviatoslav Sydorenko (Святослав Сидоренко) <webknjaz@redhat.com>
-* z-khan <zohaibkh_27@yahoo.com>
