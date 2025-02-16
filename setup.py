@@ -21,21 +21,20 @@ if platform.system() == "Darwin":
         )
         sleep(3)
 
-# Don't show message when using our project tooling.
-if not is_virtualenv() or os.getenv("_PYAV_ACTIVATED", "") != "1":
-    print(
-        "\n\033[1;91mWarning!\033[0m You are installing from source.\n"
-        "It is \033[1;37mEXPECTED\033[0m that it will fail. You are \033[1;37mREQUIRED\033[0m"
-        " to use ffmpeg 7.\nYou \033[1;37mMUST\033[0m have Cython, pkg-config, and a C compiler.\n"
-    )
-    if os.getenv("GITHUB_ACTIONS") != "true":
-        sleep(3)
+print(
+    "\n\033[1;91mWarning!\033[0m You are installing from source.\n"
+    "It is \033[1;37mEXPECTED\033[0m that it will fail. You are \033[1;37mREQUIRED\033[0m"
+    " to use ffmpeg 7.\nYou \033[1;37mMUST\033[0m have Cython, pkg-config, and a C compiler.\n"
+)
+if os.getenv("GITHUB_ACTIONS") == "true" or is_virtualenv():
+    pass
+else:
+    print("\033[1;91mWarning!\033[0m You are not using a virtual environment")
 
 
 from Cython.Build import cythonize
 from Cython.Compiler.AutoDocTransforms import EmbedSignature
 from setuptools import Extension, find_packages, setup
-
 
 FFMPEG_LIBRARIES = [
     "avformat",
@@ -202,12 +201,8 @@ ext_modules = cythonize(
     include_path=["include"],
 )
 
-# Construct the modules that we find in the "av" directory.
 for dirname, dirnames, filenames in os.walk("av"):
     for filename in filenames:
-        if filename == "loudnorm.pyx":
-            continue
-
         # We are looking for Cython sources.
         if filename.startswith(".") or os.path.splitext(filename)[1] != ".pyx":
             continue
@@ -242,74 +237,14 @@ for ext in ext_modules:
     for cfile in ext.sources:
         insert_enum_in_generated_files(cfile)
 
-# Read package metadata
-about = {}
-about_file = os.path.join(os.path.dirname(__file__), "av", "about.py")
-with open(about_file, encoding="utf-8") as fp:
-    exec(fp.read(), about)
 
 package_folders = pathlib.Path("av").glob("**/")
 package_data = {
     ".".join(pckg.parts): ["*.pxd", "*.pyi", "*.typed"] for pckg in package_folders
 }
 
-# Add include/ headers to av.include
-package_dir = {
-    ".".join(["av", *pckg.parts]): str(pckg)
-    for pckg in pathlib.Path("include").glob("**/")
-}
-package_data.update({pckg: ["*.pxd"] for pckg in package_dir})
-
-
-with open("README.md") as f:
-    long_description = f.read()
-
 setup(
-    name="av",
-    version=about["__version__"],
-    description="Pythonic bindings for FFmpeg's libraries.",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    license="BSD",
-    project_urls={
-        "Bug Reports": "https://github.com/PyAV-Org/PyAV/discussions/new?category=4-bugs",
-        "Documentation": "https://pyav.basswood-io.com",
-        "Download": "https://pypi.org/project/av",
-    },
-    author="Mike Boers",
-    author_email="pyav@mikeboers.com",
-    url="https://github.com/PyAV-Org/PyAV",
-    packages=find_packages(
-        exclude=["build*", "examples*", "tests*", "include*", "AUTHORS*"]
-    )
-    + list(package_dir.keys()),
-    package_dir=package_dir,
+    packages=find_packages(include=["av*"]),
     package_data=package_data,
-    python_requires=">=3.9",
-    zip_safe=False,
     ext_modules=ext_modules,
-    entry_points={
-        "console_scripts": ["pyav = av.__main__:main"],
-    },
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: BSD License",
-        "Natural Language :: English",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Operating System :: Unix",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Multimedia :: Sound/Audio",
-        "Topic :: Multimedia :: Sound/Audio :: Conversion",
-        "Topic :: Multimedia :: Video",
-        "Topic :: Multimedia :: Video :: Conversion",
-    ],
 )
