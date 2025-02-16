@@ -279,7 +279,9 @@ setup(
     author="Mike Boers",
     author_email="pyav@mikeboers.com",
     url="https://github.com/PyAV-Org/PyAV",
-    packages=find_packages(exclude=["build*", "examples*", "tests*", "include*"])
+    packages=find_packages(
+        exclude=["build*", "examples*", "tests*", "include*", "AUTHORS*"]
+    )
     + list(package_dir.keys()),
     package_dir=package_dir,
     package_data=package_data,

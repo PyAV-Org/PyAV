@@ -78,7 +78,6 @@ for line in (
 last = None
 block_i = 0
 for email, count in sorted(email_count.items(), key=lambda x: (-x[1], x[0])):
-
     # This is the natural log, because of course it should be. ;)
     order = int(math.log(count))
     if last and last != order:
