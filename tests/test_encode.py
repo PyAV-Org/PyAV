@@ -120,7 +120,6 @@ class TestBasicVideoEncoding(TestCase):
             assert stream.time_base is None
 
             # codec context properties
-            assert stream.bit_rate == 1024000
             assert stream.format.height == 480
             assert stream.format.name == "yuv420p"
             assert stream.format.width == 640
@@ -176,7 +175,6 @@ class TestBasicAudioEncoding(TestCase):
             assert stream.time_base is None
 
             # codec context properties
-            assert stream.bit_rate == 128000
             assert stream.format.name == "s16"
             assert stream.sample_rate == 48000
 

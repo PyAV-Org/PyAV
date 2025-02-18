@@ -76,7 +76,7 @@ cdef class OutputContainer(Container):
             codec_context.pix_fmt = lib.AV_PIX_FMT_YUV420P
             codec_context.width = kwargs.pop("width", 640)
             codec_context.height = kwargs.pop("height", 480)
-            codec_context.bit_rate = kwargs.pop("bit_rate", 1024000)
+            codec_context.bit_rate = kwargs.pop("bit_rate", 0)
             codec_context.bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 128000)
             try:
                 to_avrational(kwargs.pop("time_base"), &codec_context.time_base)
@@ -90,7 +90,7 @@ cdef class OutputContainer(Container):
         # Some sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
             codec_context.sample_fmt = codec.sample_fmts[0]
-            codec_context.bit_rate = kwargs.pop("bit_rate", 128000)
+            codec_context.bit_rate = kwargs.pop("bit_rate", 0)
             codec_context.bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 32000)
             try:
                 to_avrational(kwargs.pop("time_base"), &codec_context.time_base)
