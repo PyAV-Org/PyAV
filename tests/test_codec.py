@@ -68,6 +68,7 @@ def test_codec_opus_decoder() -> None:
 def test_codec_opus_encoder() -> None:
     c = Codec("opus", "w")
     assert c.name in ("opus", "libopus")
+    assert c.canonical_name == "opus"
     assert c.long_name in ("Opus", "libopus Opus")
     assert c.type == "audio"
     assert c.is_encoder
