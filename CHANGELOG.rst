@@ -26,6 +26,7 @@ Features:
 - Add Bayer pixel formats by :gh-user:`z-khan` in (:pr:`1755`).
 - Add support for yuv422p10le pix_fmt by :gh-user:`WyattBlue` in (:pr:`1767`).
 - Add ``supported_np_pix_fmts`` by :gh-user:`WyattBlue` in (:pr:`1766`).
+- Add ``Codec.canonical_name`` by :gh-user:`WyattBlue`.
 
 Misc.
 - Drop support for MacOS 11 by :gh-user:`WyattBlue` in (:pr:`1764`).

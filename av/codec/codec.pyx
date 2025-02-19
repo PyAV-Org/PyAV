@@ -1,3 +1,5 @@
+cimport libav as lib
+
 from av.audio.format cimport get_audio_format
 from av.codec.hwaccel cimport wrap_hwconfig
 from av.descriptor cimport wrap_avclass
@@ -143,6 +145,13 @@ cdef class Codec:
 
     @property
     def name(self): return self.ptr.name or ""
+
+    @property
+    def canonical_name(self):
+        """
+        Returns the name of the codec, not a specific encoder.
+        """
+        return lib.avcodec_get_name(self.ptr.id)
 
     @property
     def long_name(self): return self.ptr.long_name or ""
