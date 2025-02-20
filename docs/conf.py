@@ -88,7 +88,6 @@ doctest_global_cleanup = "os.chdir(_cwd)"
 doctest_test_doctest_blocks = ""
 
 extlinks = {
-    "ffmpeg": ("https://ffmpeg.org/doxygen/trunk/%s.html", "%s"),
     "ffstruct": ("https://ffmpeg.org/doxygen/trunk/struct%s.html", "struct %s"),
     "issue": ("https://github.com/PyAV-Org/PyAV/issues/%s", "#%s"),
     "pr": ("https://github.com/PyAV-Org/PyAV/pull/%s", "#%s"),
@@ -203,9 +202,7 @@ class EnumTable(SphinxDirective):
 
         seen = set()
         enum_items = [
-            (name, item)
-            for name, item in vars(enum).items()
-            if isinstance(item, enum)
+            (name, item) for name, item in vars(enum).items() if isinstance(item, enum)
         ]
         for name, item in enum_items:
             if name.lower() in seen:
@@ -226,8 +223,45 @@ class EnumTable(SphinxDirective):
         return [table]
 
 
+def ffmpeg_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    """
+    Custom role for FFmpeg API links.
+    Converts :ffmpeg:`AVSomething` into proper FFmpeg API documentation links.
+    """
+
+    base_url = "https://ffmpeg.org/doxygen/7.0/struct{}.html"
+
+    try:
+        struct_name, member = text.split(".")
+    except Exception:
+        struct_name = None
+
+    if struct_name is None:
+        url = base_url.format(text)
+    else:
+        fragment = {
+            "AVCodecContext.thread_count": "#aa852b6227d0778b62e9cc4034ad3720c",
+            "AVCodecContext.thread_type": "#a7651614f4309122981d70e06a4b42fcb",
+            "AVCodecContext.skip_frame": "#af869b808363998c80adf7df6a944a5a6",
+            "AVCodec.capabilities": "#af51f7ff3dac8b730f46b9713e49a2518",
+            "AVCodecDescriptor.props": "#a9949288403a12812cd6e3892ac45f40f",
+        }.get(text, f"#{member}")
+
+        url = base_url.format(struct_name) + fragment
+
+    node = nodes.reference(rawtext, text, refuri=url, **options)
+    return [node], []
+
+
 def setup(app):
     app.add_css_file("custom.css")
+    app.add_role("ffmpeg", ffmpeg_role)
     app.add_directive("flagtable", EnumTable)
     app.add_directive("enumtable", EnumTable)
     app.add_directive("pyinclude", PyInclude)
+
+    return {
+        "version": "1.0",
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }
