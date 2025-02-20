@@ -243,8 +243,15 @@ def ffmpeg_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
             "AVCodecContext.thread_count": "#aa852b6227d0778b62e9cc4034ad3720c",
             "AVCodecContext.thread_type": "#a7651614f4309122981d70e06a4b42fcb",
             "AVCodecContext.skip_frame": "#af869b808363998c80adf7df6a944a5a6",
+            "AVCodecContext.qmin": "#a3f63bc9141e25bf7f1cda0cef7cd4a60",
+            "AVCodecContext.qmax": "#ab015db3b7fcd227193a7c17283914187",
             "AVCodec.capabilities": "#af51f7ff3dac8b730f46b9713e49a2518",
             "AVCodecDescriptor.props": "#a9949288403a12812cd6e3892ac45f40f",
+            "AVCodecContext.bits_per_coded_sample": "#a3866500f51fabfa90faeae894c6e955c",
+            "AVFrame.color_range": "#a853afbad220bbc58549b4860732a3aa5",
+            "AVFrame.color_primaries": "#a59a3f830494f2ed1133103a1bc9481e7",
+            "AVFrame.color_trc": "#ab09abb126e3922bc1d010cf044087939",
+            "AVFrame.colorspace": "#a9262c231f1f64869439b4fe587fe1710",
         }.get(text, f"#{member}")
 
         url = base_url.format(struct_name) + fragment
