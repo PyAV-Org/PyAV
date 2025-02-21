@@ -202,7 +202,7 @@ cdef class Stream:
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
-        :type: :class:`~fractions.Fraction` or ``None``
+        :type: fractions.Fraction | None
 
         """
         return avrational_to_fraction(&self.ptr.time_base)
@@ -219,7 +219,7 @@ cdef class Stream:
         The presentation timestamp in :attr:`time_base` units of the first
         frame in this stream.
 
-        :type: :class:`int` or ``None``
+        :type: int | None
         """
         if self.ptr.start_time != lib.AV_NOPTS_VALUE:
             return self.ptr.start_time
@@ -229,7 +229,7 @@ cdef class Stream:
         """
         The duration of this stream in :attr:`time_base` units.
 
-        :type: :class:`int` or ``None``
+        :type: int | None
 
         """
         if self.ptr.duration != lib.AV_NOPTS_VALUE:
@@ -242,7 +242,7 @@ cdef class Stream:
 
         Returns ``0`` if it is not known.
 
-        :type: :class:`int`
+        :type: int
         """
         return self.ptr.nb_frames
 
@@ -251,7 +251,7 @@ cdef class Stream:
         """
         The language of the stream.
 
-        :type: :class:`str` or ``None``
+        :type: str | None
         """
         return self.metadata.get("language")
 
@@ -264,8 +264,6 @@ cdef class Stream:
         """
         The type of the stream.
 
-        Examples: ``'audio'``, ``'video'``, ``'subtitle'``.
-
-        :type: str
+        :type: Literal["audio", "video", "subtitle", "data", "attachment"]
         """
         return lib.av_get_media_type_string(self.ptr.codecpar.codec_type)

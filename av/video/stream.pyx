@@ -57,7 +57,7 @@ cdef class VideoStream(Stream):
         This is calculated when the file is opened by looking at the first
         few frames and averaging their rate.
 
-        :type: :class:`~fractions.Fraction` or ``None``
+        :type: fractions.Fraction | None
         """
         return avrational_to_fraction(&self.ptr.avg_frame_rate)
 
@@ -70,7 +70,7 @@ cdef class VideoStream(Stream):
         frames can be represented accurately. See :ffmpeg:`AVStream.r_frame_rate`
         for more.
 
-        :type: :class:`~fractions.Fraction` or ``None``
+        :type: fractions.Fraction | None
         """
         return avrational_to_fraction(&self.ptr.r_frame_rate)
 
@@ -81,7 +81,7 @@ cdef class VideoStream(Stream):
         This is a wrapper around :ffmpeg:`av_guess_frame_rate`, and uses multiple
         heuristics to decide what is "the" frame rate.
 
-        :type: :class:`~fractions.Fraction` or ``None``
+        :type: fractions.Fraction | None
         """
         # The two NULL arguments aren't used in FFmpeg >= 4.0
         cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self.ptr, NULL)
@@ -94,7 +94,7 @@ cdef class VideoStream(Stream):
         This is a wrapper around :ffmpeg:`av_guess_sample_aspect_ratio`, and uses multiple
         heuristics to decide what is "the" sample aspect ratio.
 
-        :type: :class:`~fractions.Fraction` or ``None``
+        :type: fractions.Fraction | None
         """
         cdef lib.AVRational sar = lib.av_guess_sample_aspect_ratio(self.container.ptr, self.ptr, NULL)
         return avrational_to_fraction(&sar)
@@ -105,7 +105,7 @@ cdef class VideoStream(Stream):
 
         This is calculated from :meth:`.VideoStream.guessed_sample_aspect_ratio`.
 
-        :type: :class:`~fractions.Fraction` or ``None``
+        :type: fractions.Fraction | None
         """
         cdef lib.AVRational dar
 

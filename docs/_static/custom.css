@@ -1,3 +1,10 @@
+body {
+    text-rendering: optimizeLegibility;
+}
+
+.sphinxsidebarwrapper {
+    overflow: scroll;
+}
 
 .ffmpeg-quicklink {
     float: right;
