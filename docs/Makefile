@@ -17,7 +17,7 @@ _build/rst/%.rst: %.py $(TAGFILE) $(shell find ../include ../av -name '*.pyx' -o
 	mv $@.tmp $@
 
 html: $(RENDERED)
-	$(PIP) install -U sphinx
+	$(PIP) install -U sphinx sphinx-copybutton
 	rm -rf $(BUILDDIR)
 	sphinx-build -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 

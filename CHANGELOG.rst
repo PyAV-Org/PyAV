@@ -28,7 +28,8 @@ Features:
 - Add ``supported_np_pix_fmts`` by :gh-user:`WyattBlue` in (:pr:`1766`).
 - Add ``Codec.canonical_name`` by :gh-user:`WyattBlue`.
 
-Misc.
+Misc:
+
 - Drop support for MacOS 11 by :gh-user:`WyattBlue` in (:pr:`1764`).
 - Add warnings when compiling from source by :gh-user:`WyattBlue` in (:pr:`1773`).
 
