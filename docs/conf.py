@@ -16,6 +16,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.extlinks",
     "sphinx.ext.doctest",
+    "sphinx_copybutton",  # Add copy button to code blocks
 ]
 
 # Add any paths that contain templates here, relative to this directory.
