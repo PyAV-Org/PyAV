@@ -18,7 +18,7 @@ Another way to install PyAV is via `conda-forge <https://conda-forge.github.io>`
 
     conda install av -c conda-forge
 
-See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs to get started with (mini)Conda.
+See the `Conda quick install <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_ docs to get started with (mini)Conda.
 
 
 Building from the latest source

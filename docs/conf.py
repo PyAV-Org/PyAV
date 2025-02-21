@@ -88,7 +88,6 @@ doctest_global_cleanup = "os.chdir(_cwd)"
 doctest_test_doctest_blocks = ""
 
 extlinks = {
-    "ffstruct": ("https://ffmpeg.org/doxygen/trunk/struct%s.html", "struct %s"),
     "issue": ("https://github.com/PyAV-Org/PyAV/issues/%s", "#%s"),
     "pr": ("https://github.com/PyAV-Org/PyAV/pull/%s", "#%s"),
     "gh-user": ("https://github.com/%s", "@%s"),
@@ -237,7 +236,15 @@ def ffmpeg_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
         struct_name = None
 
     if struct_name is None:
-        url = base_url.format(text)
+        fragment = {
+            "avformat_seek_file": "group__lavf__decoding.html#ga3b40fc8d2fda6992ae6ea2567d71ba30",
+            "av_find_best_stream": "avformat_8c.html#a8d4609a8f685ad894c1503ffd1b610b4",
+            "av_frame_make_writable": "group__lavu__frame.html#gadd5417c06f5a6b419b0dbd8f0ff363fd",
+            "avformat_write_header": "group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb",
+            "av_guess_frame_rate": "group__lavf__misc.html#ga698e6aa73caa9616851092e2be15875d",
+            "av_guess_sample_aspect_ratio": "group__lavf__misc.html#gafa6fbfe5c1bf6792fd6e33475b6056bd",
+        }.get(text, f"struct{text}.html")
+        url = "https://ffmpeg.org/doxygen/7.0/" + fragment
     else:
         fragment = {
             "AVCodecContext.thread_count": "#aa852b6227d0778b62e9cc4034ad3720c",

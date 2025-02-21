@@ -7,7 +7,7 @@ Video Barcode
 
 A video barcode shows the change in colour and tone over time. Time is represented on the horizontal axis, while the vertical remains the vertical direction in the image.
 
-See http://moviebarcode.tumblr.com/ for examples from Hollywood movies, and here is an example from a sunset timelapse:
+See https://moviebarcode.tumblr.com/ for examples from Hollywood movies, and here is an example from a sunset timelapse:
 
 .. image:: ../_static/examples/numpy/barcode.jpg
 
