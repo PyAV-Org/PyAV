@@ -32,10 +32,23 @@ conda install av -c conda-forge
 See the [Conda install][conda-install] docs to get started with (mini)Conda.
 
 
+Alternative installation methods
+--------------------------------
+
+Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. If you want to use your existing ffmpeg (must be the correct major version), the source version of PyAV is on [PyPI][pypi]:
+
+> [!WARNING]
+> You must be in a posix env, and have the correct version of ffmpeg installed on your system.
+
+```bash
+pip install av --no-binary av
+```
+
+
 Installing From Source
 ----------------------
 
-Here's how to build PyAV from source source. You must use [MSYS2](https://www.msys2.org/) when using Windows.
+Here's how to build PyAV from source. You must use [MSYS2](https://www.msys2.org/) when using Windows.
 
 ```bash
 git clone https://github.com/PyAV-Org/PyAV.git

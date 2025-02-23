@@ -4,6 +4,24 @@ on:
     types: [published]
   workflow_dispatch:
 jobs:
+  package-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Build source package
+        run: |
+          pip install setuptools cython
+          python scripts/fetch-vendor.py --config-file scripts/ffmpeg-7.1.json /tmp/vendor
+          PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
+      - name: Upload source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-source
+          path: dist/
+
   package-wheel:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -64,7 +82,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: [package-wheel]
+    needs: [package-source, package-wheel]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
