@@ -17,8 +17,8 @@ We are operating with `semantic versioning <https://semver.org>`_.
     are merged into the "default" branch.
 
 
-v14.2.0 (Unreleased)
---------------------
+v14.2.0
+-------
 
 Features:
 
@@ -31,7 +31,6 @@ Features:
 Misc:
 
 - Drop support for MacOS 11 by :gh-user:`WyattBlue` in (:pr:`1764`).
-- Add warnings when compiling from source by :gh-user:`WyattBlue` in (:pr:`1773`).
 
 
 v14.1.0

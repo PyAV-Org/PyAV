@@ -218,7 +218,7 @@ cdef class CodecContext:
                 self.ptr.time_base.num = 1
                 self.ptr.time_base.den = lib.AV_TIME_BASE
 
-        err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr))
+        err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr), "avcodec_open2(" + self.codec.name + ")")
         self.is_open = True
         self.options = dict(options)
 
