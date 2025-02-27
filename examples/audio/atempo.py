@@ -1,4 +1,9 @@
 import av
+from av.filter.context import FilterContext
+
+def link_nodes(*nodes: FilterContext) -> None:
+    for c, n in zip(nodes, nodes[1:]):
+        c.link_to(n)
 
 av.logging.set_level(av.logging.VERBOSE)
 
@@ -9,11 +14,12 @@ input_stream = input_file.streams.audio[0]
 output_stream = output_file.add_stream("pcm_s16le", rate=input_stream.rate)
 
 graph = av.filter.Graph()
-graph.link_nodes(
+link_nodes(
     graph.add_abuffer(template=input_stream),
     graph.add("atempo", "2.0"),
     graph.add("abuffersink"),
-).configure()
+)
+graph.configure()
 
 for frame in input_file.decode(input_stream):
     graph.push(frame)
