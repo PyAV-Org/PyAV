@@ -188,15 +188,18 @@ loudnorm_extension = Extension(
     library_dirs=extension_extra["library_dirs"],
 )
 
+compiler_directives = {
+    "c_string_type": "str",
+    "c_string_encoding": "ascii",
+    "embedsignature": True,
+    "binding": False,
+    "language_level": 3,
+}
+
 # Add the cythonized loudnorm extension to ext_modules
 ext_modules = cythonize(
     loudnorm_extension,
-    compiler_directives={
-        "c_string_type": "str",
-        "c_string_encoding": "ascii",
-        "embedsignature": True,
-        "language_level": 3,
-    },
+    compiler_directives=compiler_directives,
     build_dir="src",
     include_path=["include"],
 )
@@ -223,12 +226,7 @@ for dirname, dirnames, filenames in os.walk("av"):
                 library_dirs=extension_extra["library_dirs"],
                 sources=[pyx_path],
             ),
-            compiler_directives={
-                "c_string_type": "str",
-                "c_string_encoding": "ascii",
-                "embedsignature": True,
-                "language_level": 3,
-            },
+            compiler_directives=compiler_directives,
             build_dir="src",
             include_path=["include"],
         )
