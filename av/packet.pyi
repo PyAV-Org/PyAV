@@ -10,7 +10,7 @@ class Packet(Buffer):
     stream_index: int
     time_base: Fraction
     pts: int | None
-    dts: int
+    dts: int | None
     pos: int | None
     size: int
     duration: int | None
