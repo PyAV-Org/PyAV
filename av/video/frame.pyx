@@ -55,7 +55,6 @@ cdef copy_bytes_to_plane(img_bytes, VideoPlane plane, unsigned int bytes_per_pix
     cdef const uint8_t[:] i_buf = img_bytes
     cdef size_t i_pos = 0
     cdef size_t i_stride = plane.width * bytes_per_pixel
-    cdef size_t i_size = plane.height * i_stride
 
     cdef uint8_t[:] o_buf = plane
     cdef size_t o_pos = 0
