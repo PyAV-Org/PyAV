@@ -95,7 +95,7 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
         pb[0] = pyio_file.iocontext
         return 0
 
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
@@ -117,7 +117,7 @@ cdef int pyav_io_close_gil(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept
         else:
             result = pyio_close_gil(pb)
 
-    except Exception as e:
+    except Exception:
         stash_exception()
         result = lib.AVERROR_UNKNOWN  # Or another appropriate error code
 

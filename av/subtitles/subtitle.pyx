@@ -16,7 +16,6 @@ cdef class SubtitleSet:
     """
     def __cinit__(self, SubtitleProxy proxy):
         self.proxy = proxy
-        cdef int i
         self.rects = tuple(build_subtitle(self, i) for i in range(self.proxy.struct.num_rects))
 
     def __repr__(self):

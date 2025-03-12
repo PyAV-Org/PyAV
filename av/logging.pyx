@@ -318,7 +318,7 @@ cdef void log_callback(void *ptr, int level, const char *format, lib.va_list arg
     with gil:
         try:
             log_callback_gil(level, name, message)
-        except Exception as e:
+        except Exception:
             fprintf(stderr, "av.logging: exception while handling %s[%d]: %s\n",
                     name, level, message)
             # For some reason lib.PyErr_PrintEx(0) won't work.

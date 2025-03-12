@@ -89,7 +89,7 @@ cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size) noexcept:
         if not res:
             return lib.AVERROR_EOF
         return len(res)
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
@@ -108,7 +108,7 @@ cdef int pyio_write_gil(void *opaque, const uint8_t *buf, int buf_size) noexcept
         bytes_written = ret_value if isinstance(ret_value, int) else buf_size
         self.pos += bytes_written
         return bytes_written
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
@@ -140,7 +140,7 @@ cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
             else:
                 res = self.ftell()
         return res
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
@@ -148,7 +148,7 @@ cdef int pyio_close_gil(lib.AVIOContext *pb):
     try:
         return lib.avio_close(pb)
 
-    except Exception as e:
+    except Exception:
         stash_exception()
 
 
@@ -158,12 +158,12 @@ cdef int pyio_close_custom_gil(lib.AVIOContext *pb):
         self = <PyIOFile>pb.opaque
 
         # Flush bytes in the AVIOContext buffers to the custom I/O
-        result = lib.avio_flush(pb)
+        lib.avio_flush(pb)
 
         if self.fclose is not None:
             self.fclose()
 
         return 0
 
-    except Exception as e:
+    except Exception:
         stash_exception()
