@@ -121,6 +121,22 @@ cdef class CodecContext:
         self.ptr.flags = value
 
     @property
+    def global_header(self):
+        """
+        Use global header.
+
+        :rtype: bool
+        """
+        return bool(self.ptr.flags & lib.AV_CODEC_FLAG_GLOBAL_HEADER)
+
+    @global_header.setter
+    def global_header(self, value):
+        if value:
+            self.ptr.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+        else:
+            self.ptr.flags &= ~lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+    @property
     def qscale(self):
         """
         Use fixed qscale.
