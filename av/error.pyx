@@ -1,4 +1,5 @@
 cimport libav as lib
+from libc.stdio cimport fprintf, stderr
 from libc.stdlib cimport free, malloc
 
 from av.logging cimport get_last_error
@@ -367,7 +368,7 @@ cdef int stash_exception(exc_info=None):
 
     existing = getattr(_local, "exc_info", None)
     if existing is not None:
-        print >> sys.stderr, "PyAV library exception being dropped:"
+        fprintf(stderr, "PyAV library exception being dropped:\n")
         traceback.print_exception(*existing)
         _err_count -= 1  # Balance out the +=1 that is coming.
 
