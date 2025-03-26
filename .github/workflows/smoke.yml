@@ -57,13 +57,13 @@ jobs:
           ubuntu-24.04)
             sudo apt-get update
             sudo apt-get install autoconf automake build-essential cmake \
-              libtool pkg-config nasm zlib1g-dev libvorbis-dev libx264-dev
+              libtool pkg-config nasm zlib1g-dev libvorbis-dev libx264-dev libx265-dev
             if [[ "${{ matrix.config.extras }}" ]]; then
               sudo apt-get install doxygen wget
             fi
             ;;
           macos-14)
-            brew install automake libtool nasm libpng libvorbis libvpx opus x264
+            brew install automake libtool nasm libpng libvorbis libvpx opus x264 x265
             ;;
         esac
 
