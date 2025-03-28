@@ -6,7 +6,11 @@ if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
     exit 1
 fi
 
-export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
+if [[ "$(uname)" == "Darwin" ]]; then
+    export PYAV_ROOT="$(realpath -- "$(dirname -- "$(readlink -f -- "$0")")/..")"
+else
+    export PYAV_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
+fi
 
 if [[ ! "$PYAV_LIBRARY" ]]; then
     if [[ "$1" ]]; then

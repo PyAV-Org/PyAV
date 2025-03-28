@@ -47,7 +47,7 @@ cd "$PYAV_LIBRARY_ROOT"
 if [[ ! -d $PYAV_LIBRARY ]]; then
     url="https://ffmpeg.org/releases/$PYAV_LIBRARY.tar.gz"
     echo Downloading $url
-    wget --no-check-certificate "$url" || exit 1
+    curl "$url" --output ${PYAV_LIBRARY}.tar.gz || exit 1
     tar -xzf $PYAV_LIBRARY.tar.gz
     rm $PYAV_LIBRARY.tar.gz
     echo
