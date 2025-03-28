@@ -23,7 +23,10 @@ if [[ ! "$PYAV_LIBRARY" ]]; then
 fi
 export PYAV_LIBRARY
 
-if [[ ! "$PYAV_PYTHON" ]]; then
+if [[ "$VIRTUAL_ENV" ]]; then
+    PYAV_PYTHON="${VIRTUAL_ENV}/bin/python3"
+    echo "Using activated venv: $VIRTUAL_ENV"
+elif [[ ! "$PYAV_PYTHON" ]]; then
     PYAV_PYTHON="${PYAV_PYTHON-python3}"
     echo 'No $PYAV_PYTHON set; defaulting to python3.'
 fi
@@ -44,6 +47,9 @@ if [[ "$GITHUB_ACTION" ]]; then
     # GitHub has a very self-contained environment. Lets just work in that.
     echo "We're on CI, so not setting up another virtualenv."
 
+elif [[ "$VIRTUAL_ENV" ]]; then
+    # Using activated venv
+    true
 else
 
     export PYAV_VENV_NAME="$(uname -s).$(uname -r).$("$PYAV_PYTHON" -c '
