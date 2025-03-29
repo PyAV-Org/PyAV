@@ -3,6 +3,7 @@ from re import escape
 import numpy as np
 import pytest
 
+import av
 from av import AudioFrame
 
 from .common import assertNdarraysEqual
@@ -201,3 +202,23 @@ def test_ndarray_u8() -> None:
         assert frame.layout.name == layout
         assert frame.samples == 160
         assertNdarraysEqual(frame.to_ndarray(), array)
+
+
+def test_request_fmt() -> None:
+    with av.open("/Users/wyattblue/projects/auto-editor/out.opus") as c:
+        audio_stream = c.streams.audio[0]
+        audio_stream.codec_context.libopus_request_fmt = 2
+        for frame in c.decode(audio_stream):
+            assert frame.format.name == "s16"
+            break
+        else:
+            assert False
+
+    with av.open("/Users/wyattblue/projects/auto-editor/out.opus") as c:
+        audio_stream = c.streams.audio[0]
+        audio_stream.codec_context.libopus_request_fmt = 3
+        for frame in c.decode(audio_stream):
+            assert frame.format.name == "flt"
+            break
+        else:
+            assert False

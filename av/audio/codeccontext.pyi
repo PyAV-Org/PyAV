@@ -22,6 +22,7 @@ class AudioCodecContext(CodecContext):
     type: Literal["audio"]
     format: _Format
     layout: _Layout
+    libopus_request_fmt: int
     @property
     def channels(self) -> int: ...
     def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...

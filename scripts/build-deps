@@ -9,7 +9,8 @@ cd "$PYAV_ROOT"
 
 # Skip the rest of the build if it already exists.
 if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
-    echo "We have a cached build of ffmpeg-$PYAV_LIBRARY; skipping re-build."
+    echo "We have a cached build of $PYAV_LIBRARY; skipping re-build."
+    echo "Delete $PYAV_LIBRARY_PREFIX to force rebuild"
     exit 0
 fi
 
@@ -59,10 +60,15 @@ echo ./configure
     --disable-doc \
     --disable-static \
     --disable-stripping \
+    --disable-encoder=avui,dca,mlp,s302m,sonic,sonic_ls,opus,truehd,vorbis \
+    --disable-decoder=sonic,opus \
+    --disable-libjack \
+    --disable-indev=jack \
     --enable-debug=3 \
     --enable-gpl \
     --enable-version3 \
     --enable-libx264 \
+    --enable-libopus \
     --enable-libxml2 \
     --enable-shared \
     --enable-sse \
