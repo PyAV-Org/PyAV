@@ -103,3 +103,16 @@ class AudioCodecContext(CodecContext):
     def format(self, value):
         format: AudioFormat = AudioFormat(value)
         self.ptr.sample_fmt = format.sample_fmt
+
+    @property
+    def libopus_request_fmt(self):
+        """
+        For the libopus decoder, choose the sample format you want when decoding.
+
+        :rtype: int
+        """
+        return self.ptr.request_sample_fmt
+
+    @libopus_request_fmt.setter
+    def libopus_request_fmt(self, value):
+        self.ptr.request_sample_fmt = value

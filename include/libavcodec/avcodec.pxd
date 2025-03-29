@@ -284,6 +284,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int delay
 
+        AVSampleFormat request_sample_fmt
+
         AVCodec *codec
 
         # Video.

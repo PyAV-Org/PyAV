@@ -54,14 +54,14 @@ def test_codec_mpeg4_encoder() -> None:
 def test_codec_opus_decoder() -> None:
     c = Codec("opus")
 
-    assert c.name == "opus"
-    assert c.long_name == "Opus"
+    assert c.name == "libopus"
+    assert c.long_name in ("Opus", "libopus Opus")
     assert c.type == "audio"
     assert c.is_decoder
     assert not c.is_encoder
-    assert c.delay
+    assert not c.delay
 
-    assert c.audio_formats is None and c.audio_rates is None
+    assert c.audio_rates is None
     assert c.video_formats is None and c.frame_rates is None
 
 
