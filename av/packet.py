@@ -1,27 +1,30 @@
-cimport libav as lib
+import cython
+from cython.cimports import libav as lib
+from cython.cimports.av.bytesource import bytesource
+from cython.cimports.av.error import err_check
+from cython.cimports.av.opaque import opaque_container
+from cython.cimports.av.utils import avrational_to_fraction, to_avrational
 
-from av.bytesource cimport bytesource
-from av.error cimport err_check
-from av.opaque cimport opaque_container
-from av.utils cimport avrational_to_fraction, to_avrational
 
-
-cdef class Packet(Buffer):
-
+@cython.cclass
+class Packet(Buffer):
     """A packet of encoded data within a :class:`~av.format.Stream`.
 
     This may, or may not include a complete object within a stream.
     :meth:`decode` must be called to extract encoded data.
-
     """
 
     def __cinit__(self, input=None):
-        with nogil:
+        with cython.nogil:
             self.ptr = lib.av_packet_alloc()
 
+    def __dealloc__(self):
+        with cython.nogil:
+            lib.av_packet_free(cython.address(self.ptr))
+
     def __init__(self, input=None):
-        cdef size_t size = 0
-        cdef ByteSource source = None
+        size: cython.size_t = 0
+        source: ByteSource = None
 
         if input is None:
             return
@@ -41,24 +44,24 @@ cdef class Packet(Buffer):
             # instead of its data.
             # self.source = source
 
-    def __dealloc__(self):
-        with nogil:
-            lib.av_packet_free(&self.ptr)
-
     def __repr__(self):
         stream = self._stream.index if self._stream else 0
         return (
-            f"<av.{self.__class__.__name__} of #{stream}, dts={self.dts},"
+            f"av.{self.__class__.__name__} of #{stream}, dts={self.dts},"
             f" pts={self.pts}; {self.ptr.size} bytes at 0x{id(self):x}>"
         )
 
     # Buffer protocol.
-    cdef size_t _buffer_size(self):
+    @cython.cfunc
+    def _buffer_size(self) -> cython.size_t:
         return self.ptr.size
-    cdef void* _buffer_ptr(self):
+
+    @cython.cfunc
+    def _buffer_ptr(self) -> cython.p_void:
         return self.ptr.data
 
-    cdef _rebase_time(self, lib.AVRational dst):
+    @cython.cfunc
+    def _rebase_time(self, dst: lib.AVRational):
         if not dst.num:
             raise ValueError("Cannot rebase to zero time.")
 
@@ -92,7 +95,7 @@ cdef class Packet(Buffer):
         return self._stream
 
     @stream.setter
-    def stream(self, Stream stream):
+    def stream(self, stream: Stream):
         self._stream = stream
         self.ptr.stream_index = stream.ptr.index
 
@@ -103,11 +106,11 @@ cdef class Packet(Buffer):
 
         :type: fractions.Fraction
         """
-        return avrational_to_fraction(&self._time_base)
+        return avrational_to_fraction(cython.address(self._time_base))
 
     @time_base.setter
     def time_base(self, value):
-        to_avrational(value, &self._time_base)
+        to_avrational(value, cython.address(self._time_base))
 
     @property
     def pts(self):
@@ -116,7 +119,7 @@ cdef class Packet(Buffer):
 
         This is the time at which the packet should be shown to the user.
 
-        :type: int
+        :type: int | None
         """
         if self.ptr.pts != lib.AV_NOPTS_VALUE:
             return self.ptr.pts
@@ -133,7 +136,7 @@ cdef class Packet(Buffer):
         """
         The decoding timestamp in :attr:`time_base` units for this packet.
 
-        :type: int
+        :type: int | None
         """
         if self.ptr.dts != lib.AV_NOPTS_VALUE:
             return self.ptr.dts
@@ -152,7 +155,7 @@ cdef class Packet(Buffer):
 
         Returns `None` if it is not known.
 
-        :type: int
+        :type: int | None
         """
         if self.ptr.pos != -1:
             return self.ptr.pos
@@ -221,14 +224,15 @@ cdef class Packet(Buffer):
 
     @property
     def opaque(self):
-        if self.ptr.opaque_ref is not NULL:
-            return opaque_container.get(<char *> self.ptr.opaque_ref.data)
+        if self.ptr.opaque_ref is not cython.NULL:
+            return opaque_container.get(
+                cython.cast(cython.p_char, self.ptr.opaque_ref.data)
+            )
 
     @opaque.setter
     def opaque(self, v):
-        lib.av_buffer_unref(&self.ptr.opaque_ref)
+        lib.av_buffer_unref(cython.address(self.ptr.opaque_ref))
 
         if v is None:
             return
         self.ptr.opaque_ref = opaque_container.add(v)
-

@@ -13,7 +13,7 @@ jobs:
           python-version: "3.13"
       - name: Build source package
         run: |
-          pip install setuptools cython
+          pip install -U --pre cython setuptools
           python scripts/fetch-vendor.py --config-file scripts/ffmpeg-7.1.json /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
