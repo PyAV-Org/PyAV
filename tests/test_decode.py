@@ -218,9 +218,9 @@ class TestDecode(TestCase):
             )
 
         HWACCEL_DEVICE_TYPE = os.environ["HWACCEL_DEVICE_TYPE"]
-        assert (
-            HWACCEL_DEVICE_TYPE in hwdevices_available
-        ), f"{HWACCEL_DEVICE_TYPE} not available"
+        assert HWACCEL_DEVICE_TYPE in hwdevices_available, (
+            f"{HWACCEL_DEVICE_TYPE} not available"
+        )
 
         test_video_path = "tests/assets/black.mp4"
         make_h264_test_video(test_video_path)
