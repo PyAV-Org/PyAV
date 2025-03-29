@@ -1,21 +1,20 @@
-cimport libav as lib
+import cython
+from cython.cimports import libav as lib
+from cython.cimports.av.audio.format import AudioFormat, get_audio_format
+from cython.cimports.av.audio.frame import AudioFrame, alloc_audio_frame
+from cython.cimports.av.audio.layout import AudioLayout, get_audio_layout
+from cython.cimports.av.frame import Frame
+from cython.cimports.av.packet import Packet
 
-from av.audio.format cimport AudioFormat, get_audio_format
-from av.audio.frame cimport AudioFrame, alloc_audio_frame
-from av.audio.layout cimport AudioLayout, get_audio_layout
-from av.codec.hwaccel cimport HWAccel
-from av.frame cimport Frame
-from av.packet cimport Packet
 
-
-cdef class AudioCodecContext(CodecContext):
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel):
-        CodecContext._init(self, ptr, codec, hwaccel)
-
-    cdef _prepare_frames_for_encode(self, Frame input_frame):
-
-        cdef AudioFrame frame = input_frame
-        cdef bint allow_var_frame_size = self.ptr.codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
+@cython.cclass
+class AudioCodecContext(CodecContext):
+    @cython.cfunc
+    def _prepare_frames_for_encode(self, input_frame: Frame | None):
+        frame: AudioFrame | None = input_frame
+        allow_var_frame_size: cython.bint = (
+            self.ptr.codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
+        )
 
         # Note that the resampler will simply return an input frame if there is
         # no resampling to be done. The control flow was just a little easier this way.
@@ -24,22 +23,22 @@ cdef class AudioCodecContext(CodecContext):
                 format=self.format,
                 layout=self.layout,
                 rate=self.ptr.sample_rate,
-                frame_size=None if allow_var_frame_size else self.ptr.frame_size
+                frame_size=None if allow_var_frame_size else self.ptr.frame_size,
             )
         frames = self.resampler.resample(frame)
-
-        # flush if input frame is None
         if input_frame is None:
-            frames.append(None)
+            frames.append(None)  # flush if input frame is None
 
         return frames
 
-    cdef Frame _alloc_next_frame(self):
+    @cython.cfunc
+    def _alloc_next_frame(self) -> Frame:
         return alloc_audio_frame()
 
-    cdef _setup_decoded_frame(self, Frame frame, Packet packet):
+    @cython.cfunc
+    def _setup_decoded_frame(self, frame: Frame, packet: Packet):
         CodecContext._setup_decoded_frame(self, frame, packet)
-        cdef AudioFrame aframe = frame
+        aframe: AudioFrame = frame
         aframe._init_user_attributes()
 
     @property
@@ -61,7 +60,7 @@ cdef class AudioCodecContext(CodecContext):
         return self.ptr.sample_rate
 
     @sample_rate.setter
-    def sample_rate(self, int value):
+    def sample_rate(self, value: cython.int):
         self.ptr.sample_rate = value
 
     @property
@@ -88,7 +87,7 @@ cdef class AudioCodecContext(CodecContext):
 
     @layout.setter
     def layout(self, value):
-        cdef AudioLayout layout = AudioLayout(value)
+        layout: AudioLayout = AudioLayout(value)
         self.ptr.ch_layout = layout.layout
 
     @property
@@ -102,5 +101,5 @@ cdef class AudioCodecContext(CodecContext):
 
     @format.setter
     def format(self, value):
-        cdef AudioFormat format = AudioFormat(value)
+        format: AudioFormat = AudioFormat(value)
         self.ptr.sample_fmt = format.sample_fmt
