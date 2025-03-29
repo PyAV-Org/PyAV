@@ -31,6 +31,7 @@ Features:
 Misc:
 
 - Drop support for MacOS 11 by :gh-user:`WyattBlue` in (:pr:`1764`).
+- Set default bitrate to 0, allowing variable bitrate by :gh-user:`WyattBlue`.
 
 
 v14.1.0
