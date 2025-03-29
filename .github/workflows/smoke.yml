@@ -123,7 +123,6 @@ jobs:
         conda config --add channels conda-forge
         conda config --add channels scientific-python-nightly-wheels
         conda create -q -n pyav \
-          cython==3.1.0b0 \
           numpy \
           pillow \
           pytest \
@@ -135,6 +134,7 @@ jobs:
       run: |
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
+        pip install 'Cython==3.1.0a1'
         python scripts\\fetch-vendor.py --config-file scripts\\ffmpeg-${{ matrix.config.ffmpeg }}.json $CONDA_PREFIX\\Library
         python scripts\\comptime.py  ${{ matrix.config.ffmpeg }}
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX\\Library
