@@ -121,8 +121,9 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda config --set always_yes true
         conda config --add channels conda-forge
+        conda config --add channels scientific-python-nightly-wheels
         conda create -q -n pyav \
-          cython \
+          cython==3.1.0b0 \
           numpy \
           pillow \
           pytest \

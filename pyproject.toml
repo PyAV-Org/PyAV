@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>61", "cython>=3,<4"]
+requires = ["setuptools>61", "cython>=3.1.0a1,<4"]
 
 [project]
 name = "av"
