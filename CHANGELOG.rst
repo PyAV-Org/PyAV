@@ -17,6 +17,13 @@ We are operating with `semantic versioning <https://semver.org>`_.
     are merged into the "default" branch.
 
 
+v14.2.1
+-------
+
+Fixes:
+
+- Uses ffmpeg 7.1.1, fixes deadlocks.
+
 v14.2.0
 -------
 
