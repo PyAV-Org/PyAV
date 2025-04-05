@@ -20,6 +20,10 @@ We are operating with `semantic versioning <https://semver.org>`_.
 v14.2.1
 -------
 
+Features:
+
+- Provide binary wheels for musl-based Linux distros such as Alpine by :gh-user:`jlaine`.
+
 Fixes:
 
 - Uses ffmpeg 7.1.1, fixes deadlocks.
