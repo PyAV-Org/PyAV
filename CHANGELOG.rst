@@ -17,15 +17,19 @@ We are operating with `semantic versioning <https://semver.org>`_.
     are merged into the "default" branch.
 
 
-v14.2.1
+v14.3.0
 -------
 
 Features:
 
+- Support yuv420p10le in numpy conversion by :gh-user:`tsnl` in (:pr:`1833`).
+- Add typing overloads for ``CodecContext.create`` by :gh-user:`jlaine` in (:pr:`1853`).
 - Provide binary wheels for musl-based distros such as Alpine by :gh-user:`jlaine` in (:pr:`1856`).
 
 Fixes:
 
+- Fix ``Packet.dts`` typing by :gh-user:`daveisfera` in (:pr:`1815`).
+- Use Python 3 compatible stderr logging by :gh-user:`pmarcelll` in (:pr:`1832`).
 - Uses ffmpeg 7.1.1, fixes deadlocks.
 
 v14.2.0
@@ -53,8 +57,8 @@ Features:
 - Add hardware decoding by :gh-user:`matthewlai` and :gh-user:`WyattBlue` in (:pr:`1685`).
 - Add ``Stream.disposition`` and ``Disposition`` enum by :gh-user:`WyattBlue` in (:pr:`1720`).
 - Add ``VideoFrame.rotation`` by :gh-user:`lgeiger` in (:pr:`1675`).
-- Support grayf32le and gbrapf32le in numpy convertion by :gh-user:`robinechuca` in (:pr:`1712`).
-- Support yuv[a]p16 formats in numpy convertion by :gh-user:`robinechuca` in (:pr:`1722`).
+- Support grayf32le and gbrapf32le in numpy conversion by :gh-user:`robinechuca` in (:pr:`1712`).
+- Support yuv[a]p16 formats in numpy conversion by :gh-user:`robinechuca` in (:pr:`1722`).
 
 v14.0.1
 -------
