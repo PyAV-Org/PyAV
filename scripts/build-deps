@@ -16,42 +16,64 @@ fi
 mkdir -p "$PYAV_LIBRARY_ROOT"
 mkdir -p "$PYAV_LIBRARY_PREFIX"
 
+
+cd "$PYAV_LIBRARY_ROOT"
+# Clone the source.
+if [[ ! -d $PYAV_LIBRARY ]]; then
+    git clone git://source.ffmpeg.org/ffmpeg.git $PYAV_LIBRARY -b n${PYAV_LIBRARY#*-} --depth=1  || exit 1
+    echo
+fi
+
 # Add CUDA support if available
 CONFFLAGS_NVIDIA=""
 if [[ -e /usr/local/cuda ]]; then
-    # Get Nvidia headers for ffmpeg
-    cd $PYAV_LIBRARY_ROOT
-    if [[ ! -e "$PYAV_LIBRARY_ROOT/nv-codec-headers" ]]; then
-        git clone https://github.com/FFmpeg/nv-codec-headers.git
-        cd nv-codec-headers
-        make -j4
-        make PREFIX="$PYAV_LIBRARY_PREFIX" install
+    if [[ -e /etc/nv_tegra_release ]]; then
+        # Get NVIDIA Jetson multimedia api
+        if [[ ! -e /usr/src/jetson_multimedia_api/include ]]; then
+            apt install nvidia-l4t-jetson-multimedia-api -y
+        fi
+        if [[ ! -e "$PYAV_LIBRARY_ROOT/jetson-ffmpeg" ]]; then
+            cd "$PYAV_LIBRARY_ROOT"
+            git clone https://github.com/Keylost/jetson-ffmpeg.git
+            cd jetson-ffmpeg
+            mkdir build
+            cd build
+            cmake -DWITH_STUBS=ON ..
+            make -j$(nproc)
+            make PREFIX="$PYAV_LIBRARY_PREFIX" install
+            ldconfig
+            cd ..
+            ./ffpatch.sh "../$PYAV_LIBRARY"
+        fi
+        CONFFLAGS_NVIDIA="--enable-nvmpi"
+        echo "INFO: Found jetson multimedia api in /usr/src/jetson_multimedia_api/include..."
+        echo "         Building with Jetson NVENC/NVDEC support"
+    else
+        # Get NVIDIA headers for ffmpeg
+        cd $PYAV_LIBRARY_ROOT
+        if [[ ! -e "$PYAV_LIBRARY_ROOT/nv-codec-headers" ]]; then
+            git clone https://github.com/FFmpeg/nv-codec-headers.git
+            cd nv-codec-headers
+            make -j$(nproc)
+            make PREFIX="$PYAV_LIBRARY_PREFIX" install
+        fi
+        
+        PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+        CONFFLAGS_NVIDIA="--enable-cuda-nvcc \
+                          --enable-nonfree \
+                          --enable-libnpp \
+                          --extra-cflags=-I/usr/local/cuda/include \
+                          --extra-ldflags=-L/usr/local/cuda/lib64"
+        echo "INFO: Found CUDA libraries in /usr/local/cuda..."
+        echo "         Building with NVIDIA NVENC/NVDEC support"
     fi
-
-    PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
-    CONFFLAGS_NVIDIA="--enable-cuda \
-                      --enable-cuvid \
-                      --enable-nvenc \
-                      --enable-nonfree \
-                      --enable-libnpp \
-                      --extra-cflags=-I/usr/local/cuda/include \
-                      --extra-ldflags=-L/usr/local/cuda/lib64"
 else
-    echo "WARNING: Did not find cuda libraries in /usr/local/cuda..."
+    echo "WARNING: Did not find CUDA libraries in /usr/local/cuda..."
     echo "         Building without NVIDIA NVENC/NVDEC support"
 fi
 
 cd "$PYAV_LIBRARY_ROOT"
 
-# Download and expand the source.
-if [[ ! -d $PYAV_LIBRARY ]]; then
-    url="https://ffmpeg.org/releases/$PYAV_LIBRARY.tar.gz"
-    echo Downloading $url
-    curl "$url" --output ${PYAV_LIBRARY}.tar.gz || exit 1
-    tar -xzf $PYAV_LIBRARY.tar.gz
-    rm $PYAV_LIBRARY.tar.gz
-    echo
-fi
 cd $PYAV_LIBRARY
 
 echo ./configure
@@ -74,7 +96,7 @@ echo ./configure
 echo
 
 echo make
-make -j4 || exit 3
+make -j$(nproc) || exit 3
 echo
 
 echo make install
