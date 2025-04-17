@@ -28,26 +28,28 @@ fi
 CONFFLAGS_NVIDIA=""
 if [[ -e /usr/local/cuda ]]; then
     if [[ -e /etc/nv_tegra_release ]]; then
-        # Get NVIDIA Jetson multimedia api
-        if [[ ! -e /usr/src/jetson_multimedia_api/include ]]; then
-            apt install nvidia-l4t-jetson-multimedia-api -y
+        # Require NVIDIA Jetson multimedia api
+        if [[ -e /usr/src/jetson_multimedia_api/include ]]; then
+            if [[ ! -e "$PYAV_LIBRARY_ROOT/jetson-ffmpeg" ]]; then
+                cd "$PYAV_LIBRARY_ROOT"
+                git clone https://github.com/Keylost/jetson-ffmpeg.git
+                cd jetson-ffmpeg
+                mkdir build
+                cd build
+                cmake -DWITH_STUBS=ON ..
+                make -j$(nproc)
+                make PREFIX="$PYAV_LIBRARY_PREFIX" install
+                ldconfig
+                cd ..
+                ./ffpatch.sh "../$PYAV_LIBRARY"
+            fi
+            CONFFLAGS_NVIDIA="--enable-nvmpi"
+            echo "INFO: Found jetson multimedia api in /usr/src/jetson_multimedia_api/include..."
+            echo "         Building with Jetson NVENC/NVDEC support"
+        else
+            echo "WARNING: Did not find Jetson Multimedia API headers in /usr/src/jetson_multimedia_api/include"     
+            echo "         Building without Jetson NVENC/NVDEC support"       
         fi
-        if [[ ! -e "$PYAV_LIBRARY_ROOT/jetson-ffmpeg" ]]; then
-            cd "$PYAV_LIBRARY_ROOT"
-            git clone https://github.com/Keylost/jetson-ffmpeg.git
-            cd jetson-ffmpeg
-            mkdir build
-            cd build
-            cmake -DWITH_STUBS=ON ..
-            make -j$(nproc)
-            make PREFIX="$PYAV_LIBRARY_PREFIX" install
-            ldconfig
-            cd ..
-            ./ffpatch.sh "../$PYAV_LIBRARY"
-        fi
-        CONFFLAGS_NVIDIA="--enable-nvmpi"
-        echo "INFO: Found jetson multimedia api in /usr/src/jetson_multimedia_api/include..."
-        echo "         Building with Jetson NVENC/NVDEC support"
     else
         # Get NVIDIA headers for ffmpeg
         cd $PYAV_LIBRARY_ROOT
