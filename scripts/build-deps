@@ -29,9 +29,7 @@ if [[ -e /usr/local/cuda ]]; then
     fi
 
     PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
-    CONFFLAGS_NVIDIA="--enable-cuda \
-                      --enable-cuvid \
-                      --enable-nvenc \
+    CONFFLAGS_NVIDIA="--enable-cuda-nvcc \
                       --enable-nonfree \
                       --enable-libnpp \
                       --extra-cflags=-I/usr/local/cuda/include \
