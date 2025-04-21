@@ -16,7 +16,7 @@ cdef object _cinit_bypass_sentinel
 supported_np_pix_fmts = {
     "abgr", "argb", "bayer_bggr16be", "bayer_bggr16le", "bayer_bggr8", "bayer_gbrg16be",
     "bayer_gbrg16le", "bayer_gbrg8", "bayer_grbg16be", "bayer_grbg16le", "bayer_grbg8",
-    "bayer_rggb16be", "bayer_rggb16le", "bayer_rggb8", "bgr24", "bgr8", "bgra", "bgra64be", "bgra64le",
+    "bayer_rggb16be", "bayer_rggb16le", "bayer_rggb8", "bgr24", "bgr48be", "bgr48le", "bgr8", "bgra", "bgra64be", "bgra64le",
     "gbrapf32be", "gbrapf32le", "gbrp", "gbrp10be", "gbrp10le", "gbrp12be", "gbrp12le",
     "gbrp14be", "gbrp14le", "gbrp16be", "gbrp16le", "gbrpf32be", "gbrpf32le", "gray",
     "gray16be", "gray16le", "gray8", "grayf32be", "grayf32le", "nv12", "pal8", "rgb24",
@@ -342,6 +342,8 @@ cdef class VideoFrame(Frame):
             "bayer_rggb16le": (2, "uint16"),
             "bayer_rggb16be": (2, "uint16"),
             "bgr24": (3, "uint8"),
+            "bgr48be": (6, "uint16"),
+            "bgr48le": (6, "uint16"),
             "bgr8": (1, "uint8"),
             "bgra": (4, "uint8"),
             "gbrapf32be": (4, "float32"),
@@ -734,7 +736,7 @@ cdef class VideoFrame(Frame):
         elif format in {"argb", "rgba", "abgr", "bgra"}:
             check_ndarray(array, "uint8", 3)
             check_ndarray_shape(array, array.shape[2] == 4)
-        elif format in {"rgb48be", "rgb48le"}:
+        elif format in {"rgb48be", "rgb48le","bgr48be", "bgr48le"}:
             check_ndarray(array, "uint16", 3)
             check_ndarray_shape(array, array.shape[2] == 3)
             frame = VideoFrame(array.shape[1], array.shape[0], format)
