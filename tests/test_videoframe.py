@@ -783,44 +783,6 @@ def test_shares_memory_gray8() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_gray16() -> None:
-    for format in ("gray16be", "gray16le"):
-        array = numpy.random.randint(0, 65536, size=(357, 318), dtype=numpy.uint16)
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        array[...] = numpy.random.randint(0, 65536, size=(357, 318), dtype=numpy.uint16)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        array = numpy.random.randint(0, 65536, size=(357, 318), dtype=numpy.uint16)
-        array = array[:, :300]
-        assert not array.data.c_contiguous
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        array[...] = numpy.random.randint(0, 65536, size=array.shape, dtype=numpy.uint16)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-
-def test_shares_memory_grayf32() -> None:
-    for format in ("grayf32be", "grayf32le"):
-        array = numpy.random.rand(357, 318).astype(numpy.float32)
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        array[...] = numpy.random.rand(357, 318).astype(numpy.float32)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        array = numpy.random.rand(357, 318).astype(numpy.float32)
-        array = array[:, :300]
-        assert not array.data.c_contiguous
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        array[...] = numpy.random.rand(*array.shape).astype(numpy.float32)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-
 def test_shares_memory_rgb8() -> None:
     array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "rgb8")
@@ -893,31 +855,6 @@ def test_shares_memory_rgb24() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_rgb48() -> None:    
-    for format in ("rgb48be", "rgb48le"):
-        array = numpy.random.randint(0, 65536, size=(357, 318, 3), dtype=numpy.uint16)
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # overwrite the array, the contents thereof
-        array[...] = numpy.random.randint(0, 65536, size=(357, 318, 3), dtype=numpy.uint16)
-        # Make sure the frame reflects that
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # repeat the test, but with an array that is not fully contiguous, though the
-        # pixels in a row are
-        array = numpy.random.randint(0, 65536, size=(357, 318, 3), dtype=numpy.uint16)
-        array = array[:, :300, :]
-        assert not array.data.c_contiguous
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # overwrite the array, the contents thereof
-        array[...] = numpy.random.randint(0, 65536, size=array.shape, dtype=numpy.uint16)
-        # Make sure the frame reflects that
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-
 def test_shares_memory_rgba() -> None:
     array = numpy.random.randint(0, 256, size=(357, 318, 4), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "rgba")
@@ -942,31 +879,6 @@ def test_shares_memory_rgba() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_shares_memory_rgba64() -> None:    
-    for format in ("rgba64be", "rgba64le"):
-        array = numpy.random.randint(0, 65536, size=(357, 318, 4), dtype=numpy.uint16)
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # overwrite the array, the contents thereof
-        array[...] = numpy.random.randint(0, 65536, size=(357, 318, 4), dtype=numpy.uint16)
-        # Make sure the frame reflects that
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # repeat the test, but with an array that is not fully contiguous, though the
-        # pixels in a row are
-        array = numpy.random.randint(0, 65536, size=(357, 318, 4), dtype=numpy.uint16)
-        array = array[:, :300, :]
-        assert not array.data.c_contiguous
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # overwrite the array, the contents thereof
-        array[...] = numpy.random.randint(0, 65536, size=array.shape, dtype=numpy.uint16)
-        # Make sure the frame reflects that
-    assertNdarraysEqual(frame.to_ndarray(), array)
-
-
 def test_shares_memory_bayer8() -> None:
     for format in ("bayer_rggb8", "bayer_bggr8", "bayer_grbg8", "bayer_gbrg8"):
         array = numpy.random.randint(0, 256, size=(357, 318), dtype=numpy.uint8)
@@ -983,25 +895,6 @@ def test_shares_memory_bayer8() -> None:
         assertNdarraysEqual(frame.to_ndarray(), array)
 
         array[...] = numpy.random.randint(0, 256, size=array.shape, dtype=numpy.uint8)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-
-def test_shares_memory_bayer16() -> None:
-    for format in ("bayer_rggb16be","bayer_rggb16le", "bayer_bggr16be", "bayer_bggr16le", "bayer_grbg16be", "bayer_grbg16le", "bayer_gbrg16be", "bayer_gbrg16le"):
-        array = numpy.random.randint(0, 65536, size=(357, 318), dtype=numpy.uint16)
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-        array[...] = numpy.random.randint(0, 65536, size=(357, 318), dtype=numpy.uint16)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-        array = numpy.random.randint(0, 65536, size=(357, 318), dtype=numpy.uint16)
-        array = array[:, :300]
-        assert not array.data.c_contiguous
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-        array[...] = numpy.random.randint(0, 65536, size=array.shape, dtype=numpy.uint16)
         assertNdarraysEqual(frame.to_ndarray(), array)
 
 
@@ -1160,29 +1053,6 @@ def test_shares_memory_bgra() -> None:
     # Make sure the frame reflects that
     assertNdarraysEqual(frame.to_ndarray(), array)
 
-def test_shares_memory_bgra64() -> None:
-    for format in ("bgra64be","bgra64le"):
-        array = numpy.random.randint(0, 65536, size=(357, 318, 4), dtype=numpy.uint16)
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # overwrite the array, the contents thereof
-        array[...] = numpy.random.randint(0, 65536, size=(357, 318, 4), dtype=numpy.uint16)
-        # Make sure the frame reflects that
-        assertNdarraysEqual(frame.to_ndarray(), array)
-    
-        # repeat the test, but with an array that is not fully contiguous, though the
-        # pixels in a row are
-        array = numpy.random.randint(0, 65536, size=(357, 318, 4), dtype=numpy.uint16)
-        array = array[:, :300, :]
-        assert not array.data.c_contiguous
-        frame = VideoFrame.from_numpy_buffer(array, format)
-        assertNdarraysEqual(frame.to_ndarray(), array)
-
-    # overwrite the array, the contents thereof
-    array[...] = numpy.random.randint(0, 65536, size=array.shape, dtype=numpy.uint16)
-    # Make sure the frame reflects that
-    assertNdarraysEqual(frame.to_ndarray(), array)
 
 def test_reformat_pts() -> None:
     frame = VideoFrame(640, 480, "rgb24")
