@@ -284,6 +284,7 @@ def test_ndarray_rgba_align() -> None:
         assert frame.format.name == format
         assertNdarraysEqual(frame.to_ndarray(), array)
 
+
 def test_ndarray_bayer8() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
     for format in ("bayer_bggr8", "bayer_gbrg8", "bayer_grbg8", "bayer_rggb8"):
@@ -296,7 +297,16 @@ def test_ndarray_bayer8() -> None:
 
 def test_ndarray_bayer16() -> None:
     array = numpy.random.randint(0, 65536, size=(480, 640), dtype=numpy.uint16)
-    for format in ("bayer_bggr16be", "bayer_bggr16le", "bayer_gbrg16be", "bayer_gbrg16le", "bayer_grbg16be", "bayer_grbg16le", "bayer_rggb16be", "bayer_rggb16le"):
+    for format in (
+        "bayer_bggr16be",
+        "bayer_bggr16le",
+        "bayer_gbrg16be",
+        "bayer_gbrg16le",
+        "bayer_grbg16be",
+        "bayer_grbg16le",
+        "bayer_rggb16be",
+        "bayer_rggb16le",
+    ):
         frame = VideoFrame.from_ndarray(array, format=format)
         assert format in av.video.frame.supported_np_pix_fmts
         assert frame.width == 640 and frame.height == 480
