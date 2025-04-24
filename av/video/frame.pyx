@@ -768,12 +768,14 @@ cdef class VideoFrame(Frame):
         return frame
 
     @staticmethod
-    def from_bytes(img_bytes: bytes, width: int, height: int, format="rgba", flip_horizontal=False, flip_vertical=False):
+    def from_bytes(img_bytes: bytes, width: int, height: int, format="rgb24", flip_horizontal=False, flip_vertical=False):
         frame = VideoFrame(width, height, format)
-        if format == "rgba":
-            copy_bytes_to_plane(img_bytes, frame.planes[0], 4, flip_horizontal, flip_vertical)
-        elif format in ("bayer_bggr8", "bayer_rggb8", "bayer_gbrg8", "bayer_grbg8","bayer_bggr16le", "bayer_rggb16le", "bayer_gbrg16le", "bayer_grbg16le","bayer_bggr16be", "bayer_rggb16be", "bayer_gbrg16be", "bayer_grbg16be"):
-            copy_bytes_to_plane(img_bytes, frame.planes[0], 1 if format.endswith("8") else 2, flip_horizontal, flip_vertical)
+        if frame.format.is_planar:
+            raise NotImplementedError(f"Conversion from bytes with format `{format}` is not yet supported")
         else:
-            raise NotImplementedError(f"Format '{format}' is not supported.")
+            bytes_per_pixel = frame.format.padded_bits_per_pixel//8
+            expected_size = width * height * bytes_per_pixel
+            if len(img_bytes) != expected_size:
+                raise ValueError(f"Expected {expected_size} bytes, got {len(img_bytes)}")
+            copy_bytes_to_plane(img_bytes, frame.planes[0], bytes_per_pixel, flip_horizontal, flip_vertical)        
         return frame
