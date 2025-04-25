@@ -17,8 +17,9 @@ supported_np_pix_fmts = {
     "abgr", "argb", "bayer_bggr16be", "bayer_bggr16le", "bayer_bggr8", "bayer_gbrg16be",
     "bayer_gbrg16le", "bayer_gbrg8", "bayer_grbg16be", "bayer_grbg16le", "bayer_grbg8",
     "bayer_rggb16be", "bayer_rggb16le", "bayer_rggb8", "bgr24", "bgr48be", "bgr48le", "bgr8", "bgra", "bgra64be", "bgra64le",
-    "gbrapf32be", "gbrapf32le", "gbrp", "gbrp10be", "gbrp10le", "gbrp12be", "gbrp12le",
+    "gbrapf32be", "gbrapf32le", "gbrp", "gbrp9be", "gbrp9le",  "gbrp10be", "gbrp10le", "gbrp12be", "gbrp12le",
     "gbrp14be", "gbrp14le", "gbrp16be", "gbrp16le", "gbrpf32be", "gbrpf32le", "gray",
+    "gray9be", "gray9le", "gray10be", "gray10le", "gray12be", "gray12le", "gray14be", "gray14le", 
     "gray16be", "gray16le", "gray8", "grayf32be", "grayf32le", "nv12", "pal8", "rgb24",
     "rgb48be", "rgb48le", "rgb8", "rgba", "rgba64be", "rgba64le", "yuv420p",
     "yuv420p10le", "yuv422p10le", "yuv444p", "yuv444p16be", "yuv444p16le", "yuva444p16be",
@@ -349,6 +350,8 @@ cdef class VideoFrame(Frame):
             "gbrapf32be": (4, "float32"),
             "gbrapf32le": (4, "float32"),
             "gbrp": (1, "uint8"),
+            "gbrp9be": (2, "uint16"),
+            "gbrp9le": (2, "uint16"),
             "gbrp10be": (2, "uint16"),
             "gbrp10le": (2, "uint16"),
             "gbrp12be": (2, "uint16"),
@@ -360,6 +363,14 @@ cdef class VideoFrame(Frame):
             "gbrpf32be": (4, "float32"),
             "gbrpf32le": (4, "float32"),
             "gray": (1, "uint8"),
+            "gray9be": (2, "uint16"),
+            "gray9le": (2, "uint16"),
+            "gray10be": (2, "uint16"),
+            "gray10le": (2, "uint16"),
+            "gray12be": (2, "uint16"),
+            "gray12le": (2, "uint16"),
+            "gray14be": (2, "uint16"),
+            "gray14le": (2, "uint16"),
             "gray16be": (2, "uint16"),
             "gray16le": (2, "uint16"),
             "gray8": (1, "uint8"),
@@ -395,7 +406,7 @@ cdef class VideoFrame(Frame):
             array = byteswap_array(array, frame.format.name.endswith("be"))
             if array.shape[2] == 1:  # skip last channel for gray images
                 return array.squeeze(2)
-            if frame.format.name.startswith("gbr"):  # gbr -> rgb
+            if frame.format.name.startswith("gbrp"):  # gbr -> rgb
                 buffer = array[:, :, 0].copy()
                 array[:, :, 0] = array[:, :, 2]
                 array[:, :, 2] = array[:, :, 1]
@@ -461,12 +472,16 @@ cdef class VideoFrame(Frame):
         return frame
 
     @staticmethod
-    def from_numpy_buffer(array, format="rgb24", width=0):
-        # Usually the width of the array is the same as the width of the image. But sometimes
-        # this is not possible, for example with yuv420p images that have padding. These are
-        # awkward because the UV rows at the bottom have padding bytes in the middle of the
-        # row as well as at the end. To cope with these, callers need to be able to pass the
-        # actual width to us.
+    def from_numpy_buffer(array, format="rgb24", width:int=0):
+        """
+        Construct a frame from a numpy buffer.
+
+        :param int width: optional width of actual image, if different from the array width.
+
+        .. note:: For formats where width of the array is not the same as the width of the image,
+        for example with yuv420p images the UV rows at the bottom have padding bytes in the middle of the
+        row as well as at the end. To cope with these, callers need to be able to pass the actual width.
+        """
         height = array.shape[0]
         if not width:
             width = array.shape[1]
@@ -500,7 +515,8 @@ cdef class VideoFrame(Frame):
             if array.strides[1] != 1:
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
             linesizes = (array.strides[0], )
-        elif format in {"gray16le", "gray16be", "bayer_rggb16le", "bayer_gbrg16le", "bayer_grbg16le","bayer_bggr16be", "bayer_rggb16be", "bayer_gbrg16be", "bayer_grbg16be"}:
+        elif format in {"gray9be", "gray9le", "gray10be", "gray10le", "gray12be", "gray12le", "gray14be", "gray14le", "gray16be", "gray16le",
+            "bayer_rggb16be", "bayer_rggb16le", "bayer_gbrg16be", "bayer_grbg16le", "bayer_gbrg16be", "bayer_gbrg16le", "bayer_bggr16be", "bayer_bggr16le"}:
             check_ndarray(array, "uint16", 2)
             if array.strides[1] != 2:
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
@@ -603,10 +619,12 @@ cdef class VideoFrame(Frame):
             "yuv444p": (3, 1, "uint8"),
             "yuvj444p": (3, 1, "uint8"),
             "gbrp": (3, 1, "uint8"),
+            "gbrp9be": (3, 2, "uint16"),
             "gbrp10be": (3, 2, "uint16"),
             "gbrp12be": (3, 2, "uint16"),
             "gbrp14be": (3, 2, "uint16"),
             "gbrp16be": (3, 2, "uint16"),
+            "gbrp9le": (3, 2, "uint16"),
             "gbrp10le": (3, 2, "uint16"),
             "gbrp12le": (3, 2, "uint16"),
             "gbrp14le": (3, 2, "uint16"),
@@ -617,6 +635,14 @@ cdef class VideoFrame(Frame):
             "gray8": (1, 1, "uint8"),
             "rgb8": (1, 1, "uint8"),
             "bgr8": (1, 1, "uint8"),
+            "gray9be": (1, 2, "uint16"),
+            "gray9le": (1, 2, "uint16"),
+            "gray10be": (1, 2, "uint16"),
+            "gray10le": (1, 2, "uint16"),
+            "gray12be": (1, 2, "uint16"),
+            "gray12le": (1, 2, "uint16"),
+            "gray14be": (1, 2, "uint16"),
+            "gray14le": (1, 2, "uint16"),
             "gray16be": (1, 2, "uint16"),
             "gray16le": (1, 2, "uint16"),
             "grayf32be": (1, 4, "float32"),
@@ -649,7 +675,7 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[2] == channels)
             array = byteswap_array(array, format.endswith("be"))
             frame = VideoFrame(array.shape[1], array.shape[0], format)
-            if frame.format.name.startswith("gbr"):  # rgb -> gbr
+            if frame.format.name.startswith("gbrp"):  # rgb -> gbr
                 array = np.concatenate([  # not inplace to avoid bad surprises
                     array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
                 ], axis=2)
@@ -769,6 +795,16 @@ cdef class VideoFrame(Frame):
 
     @staticmethod
     def from_bytes(img_bytes: bytes, width: int, height: int, format="rgb24", flip_horizontal=False, flip_vertical=False):
+           """
+            Construct a frame from raw bytes.
+        
+            :param img_bytes: Raw image data.
+            :param width: Frame width.
+            :param height: Frame height.
+            :param format: Pixel format, e.g. "rgb24".
+            :param flip_horizontal: If True, flip image horizontally.
+            :param flip_vertical: If True, flip image vertically.
+            """
         frame = VideoFrame(width, height, format)
         if frame.format.is_planar:
             raise NotImplementedError(f"Conversion from bytes with format `{format}` is not yet supported")
