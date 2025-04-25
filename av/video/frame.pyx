@@ -795,7 +795,7 @@ cdef class VideoFrame(Frame):
 
     @staticmethod
     def from_bytes(img_bytes: bytes, width: int, height: int, format="rgb24", flip_horizontal=False, flip_vertical=False):
-       """
+        """
         Construct a frame from raw bytes.
     
         :param img_bytes: Raw image data.
@@ -809,9 +809,10 @@ cdef class VideoFrame(Frame):
         if frame.format.is_planar:
             raise NotImplementedError(f"Conversion from bytes with format `{format}` is not yet supported")
         else:
-            bytes_per_pixel = frame.format.padded_bits_per_pixel//8
+            bytes_per_pixel = frame.format.padded_bits_per_pixel // 8
             expected_size = width * height * bytes_per_pixel
             if len(img_bytes) != expected_size:
                 raise ValueError(f"Expected {expected_size} bytes, got {len(img_bytes)}")
-            copy_bytes_to_plane(img_bytes, frame.planes[0], bytes_per_pixel, flip_horizontal, flip_vertical)        
+            copy_bytes_to_plane(img_bytes, frame.planes[0], bytes_per_pixel, flip_horizontal, flip_vertical)
         return frame
+
