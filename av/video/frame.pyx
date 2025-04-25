@@ -795,16 +795,16 @@ cdef class VideoFrame(Frame):
 
     @staticmethod
     def from_bytes(img_bytes: bytes, width: int, height: int, format="rgb24", flip_horizontal=False, flip_vertical=False):
-           """
-            Construct a frame from raw bytes.
-        
-            :param img_bytes: Raw image data.
-            :param width: Frame width.
-            :param height: Frame height.
-            :param format: Pixel format, e.g. "rgb24".
-            :param flip_horizontal: If True, flip image horizontally.
-            :param flip_vertical: If True, flip image vertically.
-            """
+       """
+        Construct a frame from raw bytes.
+    
+        :param img_bytes: Raw image data.
+        :param width: Frame width.
+        :param height: Frame height.
+        :param format: Pixel format, e.g. "rgb24".
+        :param flip_horizontal: If True, flip image horizontally.
+        :param flip_vertical: If True, flip image vertically.
+        """
         frame = VideoFrame(width, height, format)
         if frame.format.is_planar:
             raise NotImplementedError(f"Conversion from bytes with format `{format}` is not yet supported")
