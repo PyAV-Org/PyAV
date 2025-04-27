@@ -516,7 +516,7 @@ cdef class VideoFrame(Frame):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
             linesizes = (array.strides[0], )
         elif format in {"gray9be", "gray9le", "gray10be", "gray10le", "gray12be", "gray12le", "gray14be", "gray14le", "gray16be", "gray16le",
-            "bayer_rggb16be", "bayer_rggb16le", "bayer_gbrg16be", "bayer_grbg16le", "bayer_gbrg16be", "bayer_gbrg16le", "bayer_bggr16be", "bayer_bggr16le"}:
+            "bayer_bggr16be", "bayer_bggr16le", "bayer_gbrg16be", "bayer_gbrg16le", "bayer_grbg16be", "bayer_grbg16le", "bayer_rggb16be", "bayer_rggb16le"}:
             check_ndarray(array, "uint16", 2)
             if array.strides[1] != 2:
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
