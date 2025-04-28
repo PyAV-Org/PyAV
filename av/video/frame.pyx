@@ -524,7 +524,7 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[2] == 3)
             if array.strides[1:] != (3, 1):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
-            linesizes = (array.strides[0], array.strides[0], array.strides[0], )
+            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, )
         elif format in {"gbrp9be", "gbrp9le", "gbrp10be", "gbrp10le", "gbrp12be", "gbrp12le", "gbrp14be", "gbrp14le", "gbrp16be", "gbrp16le"}:
             check_ndarray(array, "uint16", 3)
             check_ndarray_shape(array, array.shape[2] == 3)
@@ -581,10 +581,10 @@ cdef class VideoFrame(Frame):
         else:
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
             
-        if format.startswith("gbr"):  # rgb -> gbr
-            array = np.concatenate([  # not inplace to avoid bad surprises
-                array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
-            ], axis=2)
+        # if format.startswith("gbr"):  # rgb -> gbr
+        #     array = np.concatenate([  # not inplace to avoid bad surprises
+        #         array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
+        #     ], axis=2)
         frame = alloc_video_frame()
         frame._image_fill_pointers_numpy(array, width, height, linesizes, format)
         return frame
