@@ -524,31 +524,31 @@ cdef class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[2] == 3)
             if array.strides[1:] != (3, 1):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
-            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, )
+            linesizes = (width, width, width, )
         elif format in {"gbrp9be", "gbrp9le", "gbrp10be", "gbrp10le", "gbrp12be", "gbrp12le", "gbrp14be", "gbrp14le", "gbrp16be", "gbrp16le"}:
             check_ndarray(array, "uint16", 3)
             check_ndarray_shape(array, array.shape[2] == 3)
             if array.strides[1:] != (6, 2):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
-            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, )
+            linesizes = (width, width, width, )
         elif format in {"gbrpf32be", "gbrpf32le"}:
             check_ndarray(array, "float32", 3)
             check_ndarray_shape(array, array.shape[2] == 3)
             if array.strides[1:] != (12, 4):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
-            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3,)        
+            linesizes = (width, width, width, )      
         elif format in {"gbrap10be", "gbrap10le", "gbrap12be", "gbrap12le", "gbrap14be", "gbrap14le", "gbrap16be", "gbrap16le"}:
             check_ndarray(array, "uint16", 3)
             check_ndarray_shape(array, array.shape[2] == 4)
             if array.strides[1:] != (8, 2):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
-            linesizes = (array.strides[0] // 4, array.strides[0] // 4, array.strides[0] // 4,)
+            linesizes = (width, width, width, width, )
         elif format in {"gbrapf32be", "gbrapf32le"}:
             check_ndarray(array, "float32", 3)
             check_ndarray_shape(array, array.shape[2] == 4)
             if array.strides[1:] != (16, 4):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
-            linesizes = (array.strides[0] // 4, array.strides[0] // 4, array.strides[0] // 4,)
+            linesizes = (width, width, width, width, )
         elif format in {"gray", "gray8", "rgb8", "bgr8","bayer_bggr8", "bayer_rggb8", "bayer_gbrg8", "bayer_grbg8"}:
             check_ndarray(array, "uint8", 2)
             if array.strides[1] != 1:
@@ -582,6 +582,9 @@ cdef class VideoFrame(Frame):
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
             
         if format.startswith("gbr"):  # rgb -> gbr
+            array = np.concatenate([  # not inplace to avoid bad surprises
+                    array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
+                ], axis=2)
             array = np.ascontiguousarray(np.moveaxis(array,-1,0))
         frame = alloc_video_frame()
         frame._image_fill_pointers_numpy(array, width, height, linesizes, format)
