@@ -510,6 +510,42 @@ cdef class VideoFrame(Frame):
             if array.strides[1:] != (8, 2):
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
             linesizes = (array.strides[0], )
+        elif pix_fmt in {"gbrp"}:
+            check_ndarray(array, "uint8", 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+            if array.strides[1:] != (3, 1):
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            array = np.concatenate([  # not inplace to avoid bad surprises
+                    array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
+                ], axis=2)
+            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, )
+        elif pix_fmt in {"gbrp9be", "gbrp9le", "gbrp10be", "gbrp10le", "gbrp12be", "gbrp12le", "gbrp14be", "gbrp14le", "gbrp16be", "gbrp16le"}:
+            check_ndarray(array, "uint16", 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+            if array.strides[1:] != (6, 2):
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            array = np.concatenate([  # not inplace to avoid bad surprises
+                    array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
+                ], axis=2)
+            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, )
+        elif pix_fmt in {"gbrpf32be", "gbrpf32le"}:
+            check_ndarray(array, "float32", 3)
+            check_ndarray_shape(array, array.shape[2] == 3)
+            if array.strides[1:] != (12, 4):
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            array = np.concatenate([  # not inplace to avoid bad surprises
+                    array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
+                ], axis=2)
+            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, )
+        elif pix_fmt in {"gbrapf32be", "gbrapf32le"}:
+            check_ndarray(array, "float32", 3)
+            check_ndarray_shape(array, array.shape[2] == 4)
+            if array.strides[1:] != (16, 4):
+                raise ValueError("provided array does not have C_CONTIGUOUS rows")
+            array = np.concatenate([  # not inplace to avoid bad surprises
+                    array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
+                ], axis=2)
+            linesizes = (array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, array.strides[0] // 3, )
         elif format in {"gray", "gray8", "rgb8", "bgr8","bayer_bggr8", "bayer_rggb8", "bayer_gbrg8", "bayer_grbg8"}:
             check_ndarray(array, "uint8", 2)
             if array.strides[1] != 1:
