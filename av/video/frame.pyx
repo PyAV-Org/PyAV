@@ -582,7 +582,7 @@ cdef class VideoFrame(Frame):
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
             
         if format.startswith("gbr"):  # rgb -> gbr
-            array = np.ascontiguousarray(np.moveaxis(array,(-1,0))
+            array = np.ascontiguousarray(np.moveaxis(array,(-1,0)))
         frame = alloc_video_frame()
         frame._image_fill_pointers_numpy(array, width, height, linesizes, format)
         return frame
