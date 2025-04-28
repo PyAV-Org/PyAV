@@ -581,7 +581,7 @@ cdef class VideoFrame(Frame):
         else:
             raise ValueError(f"Conversion from numpy array with format `{format}` is not yet supported")
             
-        if frame.format.name.startswith("gbr"):  # rgb -> gbr
+        if format.startswith("gbr"):  # rgb -> gbr
             array = np.concatenate([  # not inplace to avoid bad surprises
                 array[:, :, 1:3], array[:, :, 0:1], array[:, :, 3:],
             ], axis=2)
