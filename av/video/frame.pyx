@@ -482,6 +482,8 @@ cdef class VideoFrame(Frame):
         for example with yuv420p images the UV rows at the bottom have padding bytes in the middle of the
         row as well as at the end. To cope with these, callers need to be able to pass the actual width.
         """
+        import numpy as np
+        
         height = array.shape[0]
         if not width:
             width = array.shape[1]
