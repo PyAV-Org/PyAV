@@ -49,6 +49,21 @@ def test_opaque() -> None:
                 assert type(frame.opaque) is tuple and len(frame.opaque) == 2
 
 
+def test_frame_duration_matches_packet() -> None:
+    with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+        packet_durations = [
+            (p.pts, p.duration) for p in container.demux() if p.pts is not None
+        ]
+        packet_durations.sort(key=lambda x: x[0])
+
+    with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+        frame_durations = [(f.pts, f.duration) for f in container.decode(video=0)]
+        frame_durations.sort(key=lambda x: x[0])
+
+    assert len(packet_durations) == len(frame_durations)
+    assert all(pd[1] == fd[1] for pd, fd in zip(packet_durations, frame_durations))
+
+
 def test_invalid_pixel_format() -> None:
     with pytest.raises(ValueError, match="not a pixel format: '__unknown_pix_fmt'"):
         VideoFrame(640, 480, "__unknown_pix_fmt")

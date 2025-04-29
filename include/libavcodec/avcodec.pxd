@@ -461,6 +461,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVColorTransferCharacteristic color_trc
         AVColorSpace colorspace
 
+        int64_t duration
+
     cdef AVFrame* avcodec_alloc_frame()
 
     cdef struct AVPacket:

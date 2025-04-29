@@ -53,6 +53,9 @@ cdef class Frame:
         if self.ptr.pts != lib.AV_NOPTS_VALUE:
             self.ptr.pts = lib.av_rescale_q(self.ptr.pts, self._time_base, dst)
 
+        if self.ptr.duration != 0:
+            self.ptr.duration = lib.av_rescale_q(self.ptr.duration, self._time_base, dst)
+
         self._time_base = dst
 
     @property
@@ -94,6 +97,24 @@ cdef class Frame:
             self.ptr.pts = lib.AV_NOPTS_VALUE
         else:
             self.ptr.pts = value
+
+    @property
+    def duration(self):
+        """
+        The duration of the frame in :attr:`time_base` units
+
+        :type: int
+        """
+        if self.ptr.duration == 0:
+            return None
+        return self.ptr.duration
+
+    @duration.setter
+    def duration(self, value):
+        if value is None:
+            self.ptr.duration = 0
+        else:
+            self.ptr.duration = value
 
     @property
     def time(self):
