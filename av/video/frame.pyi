@@ -30,6 +30,7 @@ class PictureType(IntEnum):
 class VideoFrame(Frame):
     format: VideoFormat
     pts: int
+    duration: int
     planes: tuple[VideoPlane, ...]
     pict_type: int
     colorspace: int
