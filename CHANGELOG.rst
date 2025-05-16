@@ -16,6 +16,17 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v14.4.0
+-------
+
+Features:
+
+- Expose the duration field for frames by :gh-user:`Queuecumber` in (:pr:`1880`).
+- Add support for BGR48 and BGRA64 pixel formats by :gh-user:`z-khan` in (:pr:`1873`).
+
+Fixes:
+
+- Fix security vulnerabilities in binary wheels by :gh-user:`jlaine` in (:pr:`1896`).
 
 v14.3.0
 -------
