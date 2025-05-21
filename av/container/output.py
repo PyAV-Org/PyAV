@@ -130,7 +130,9 @@ class OutputContainer(Container):
 
         return py_stream
 
-    def add_stream_from_template(self, template: Stream, opaque=None, **kwargs):
+    def add_stream_from_template(
+        self, template: Stream, opaque: bool | None = None, **kwargs
+    ):
         """
         Creates a new stream from a template. Supports video, audio, and subtitle streams.
 
@@ -169,6 +171,11 @@ class OutputContainer(Container):
         # Some formats want stream headers to be separate
         if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+
+        # Copy flags If we're creating a new codec object. This fixes some muxing issues.
+        # Overwriting `ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER` is intentional.
+        if not opaque:
+            ctx.flags = template.codec_context.flags
 
         # Initialize stream codec parameters to populate the codec type. Subsequent changes to
         # the codec context will be applied just before encoding starts in `start_encoding()`.
