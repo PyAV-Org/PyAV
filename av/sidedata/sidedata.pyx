@@ -110,6 +110,20 @@ cdef class _SideDataContainer:
         if isinstance(key, str):
             return self._by_type[Type[key]]
         return self._by_type[key]
+    
+    def add(self,buffer,type):
+       # Add Frame side data
+        cdef ByteSource source = bytesource(buffer)
+        i = self.frame.ptr.nb_side_data
+        lib.av_frame_make_writable(self.frame.ptr)
+        ptr = lib.av_frame_new_side_data(self.frame.ptr, type, source.length)
+
+        memcpy(ptr.data, source.ptr, source.length)
+
+        # Update side data
+        cdef SideData data = wrap_side_data(self.frame, i)
+        self._by_index.append(data)
+        self._by_type[data.type] = data
 
 
 class SideDataContainer(_SideDataContainer, Mapping):
