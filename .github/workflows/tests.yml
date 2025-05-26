@@ -5,12 +5,12 @@ on:
   workflow_dispatch:
 jobs:
   package-source:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
       - name: Build source package
         run: |
           pip install -U --pre cython setuptools
@@ -28,32 +28,32 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
-            arch: arm64
-          - os: macos-13
-            arch: x86_64
-          - os: ubuntu-24.04-arm
-            arch: aarch64
+          #- os: macos-14
+          #  arch: arm64
+          #- os: macos-13
+          #  arch: x86_64
+          #- os: ubuntu-24.04-arm
+          #  arch: aarch64
+          #- os: ubuntu-24.04
+          #  arch: i686
           - os: ubuntu-24.04
-            arch: i686
-          - os: ubuntu-24.04
             arch: x86_64
-          - os: windows-latest
-            arch: AMD64
+          #- os: windows-latest
+          #  arch: AMD64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
-      - name: Install packages
-        if: matrix.os == 'macos-13'
-        run: |
-          brew update
-          brew install pkg-config
-      - name: Set Minimum MacOS Target
-        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
-        run: |
-          echo "MACOSX_DEPLOYMENT_TARGET=12.0" >> $GITHUB_ENV
+          python-version: "3.12"
+      # - name: Install packages
+      #   if: matrix.os == 'macos-13'
+      #   run: |
+      #     brew update
+      #     brew install pkg-config
+      # - name: Set Minimum MacOS Target
+      #   if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+      #   run: |
+      #     echo "MACOSX_DEPLOYMENT_TARGET=12.0" >> $GITHUB_ENV
       - name: Build wheels
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
