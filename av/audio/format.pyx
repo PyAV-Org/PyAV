@@ -82,7 +82,7 @@ cdef class AudioFormat:
 
     @property
     def is_packed(self):
-        """Is this a planar format?
+        """Is this a packed format?
 
         Strictly opposite of :attr:`is_planar`.
 
