@@ -176,13 +176,19 @@ cdef class AudioFifo:
     @property
     def format(self):
         """The :class:`.AudioFormat` of this FIFO."""
+        if not self.ptr:
+            raise AttributeError(f"'{__name__}.AudioFifo' object has no attribute 'format'")
         return self.template.format
     @property
     def layout(self):
         """The :class:`.AudioLayout` of this FIFO."""
+        if not self.ptr:
+            raise AttributeError(f"'{__name__}.AudioFifo' object has no attribute 'layout'")
         return self.template.layout
     @property
     def sample_rate(self):
+        if not self.ptr:
+            raise AttributeError(f"'{__name__}.AudioFifo' object has no attribute 'sample_rate'")
         return self.template.sample_rate
 
     @property
