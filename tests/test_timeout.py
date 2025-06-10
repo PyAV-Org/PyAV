@@ -7,7 +7,6 @@ import av
 
 from .common import TestCase, fate_suite
 
-PORT = 8002
 CONTENT = open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb").read()
 # Needs to be long enough for all host OSes to deal.
 TIMEOUT = 0.25
@@ -34,8 +33,17 @@ class SlowRequestHandler(BaseHTTPRequestHandler):
 
 
 class TestTimeout(TestCase):
+    port = 8002
+
     def setUp(cls) -> None:
-        cls._server = HttpServer(("", PORT), SlowRequestHandler)
+        while True:
+            try:
+                cls._server = HttpServer(("", cls.port), SlowRequestHandler)
+            except OSError:
+                cls.port += 1
+            else:
+                break
+
         cls._thread = threading.Thread(target=cls._server.handle_request)
         cls._thread.daemon = True  # Make sure the tests will exit.
         cls._thread.start()
@@ -46,14 +54,16 @@ class TestTimeout(TestCase):
 
     def test_no_timeout(self) -> None:
         start = time.time()
-        av.open(f"http://localhost:{PORT}/mpeg2_field_encoding.ts")
+        av.open(f"http://localhost:{self.port}/mpeg2_field_encoding.ts")
         duration = time.time() - start
         assert duration > DELAY
 
     def test_open_timeout(self) -> None:
         with self.assertRaises(av.ExitError):
             start = time.time()
-            av.open(f"http://localhost:{PORT}/mpeg2_field_encoding.ts", timeout=TIMEOUT)
+            av.open(
+                f"http://localhost:{self.port}/mpeg2_field_encoding.ts", timeout=TIMEOUT
+            )
 
         duration = time.time() - start
         assert duration < DELAY
@@ -62,7 +72,7 @@ class TestTimeout(TestCase):
         with self.assertRaises(av.ExitError):
             start = time.time()
             av.open(
-                f"http://localhost:{PORT}/mpeg2_field_encoding.ts",
+                f"http://localhost:{self.port}/mpeg2_field_encoding.ts",
                 timeout=(TIMEOUT, None),
             )
 
