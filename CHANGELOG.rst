@@ -16,6 +16,13 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v15.0.0 (Unreleased)
+--------------------
+
+Major:
+
+- Make ``SubtitleStream.decode()`` return the list of subtitles directly, without the intermediate ``SubtitleSet``.
+
 v14.4.0
 -------
 
