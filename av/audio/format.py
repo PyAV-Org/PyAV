@@ -1,41 +1,40 @@
 import sys
 
+import cython
 
-cdef str container_format_postfix = "le" if sys.byteorder == "little" else "be"
+container_format_postfix: str = "le" if sys.byteorder == "little" else "be"
+_cinit_bypass_sentinel = object()
 
 
-cdef object _cinit_bypass_sentinel
-
-cdef AudioFormat get_audio_format(lib.AVSampleFormat c_format):
+@cython.cfunc
+def get_audio_format(c_format: lib.AVSampleFormat) -> AudioFormat:
     """Get an AudioFormat without going through a string."""
 
     if c_format < 0:
         return None
 
-    cdef AudioFormat format = AudioFormat.__new__(AudioFormat, _cinit_bypass_sentinel)
-    format._init(c_format)
+    format: AudioFormat = AudioFormat(_cinit_bypass_sentinel)
+    format.sample_fmt = c_format
     return format
 
 
-cdef class AudioFormat:
+@cython.cclass
+class AudioFormat:
     """Descriptor of audio formats."""
 
     def __cinit__(self, name):
         if name is _cinit_bypass_sentinel:
             return
 
-        cdef lib.AVSampleFormat sample_fmt
+        sample_fmt: lib.AVSampleFormat
         if isinstance(name, AudioFormat):
-            sample_fmt = (<AudioFormat>name).sample_fmt
+            sample_fmt = cython.cast(AudioFormat, name).sample_fmt
         else:
             sample_fmt = lib.av_get_sample_fmt(name)
 
         if sample_fmt < 0:
             raise ValueError(f"Not a sample format: {name!r}")
 
-        self._init(sample_fmt)
-
-    cdef _init(self, lib.AVSampleFormat sample_fmt):
         self.sample_fmt = sample_fmt
 
     def __repr__(self):
@@ -49,7 +48,7 @@ cdef class AudioFormat:
         's16p'
 
         """
-        return <str>lib.av_get_sample_fmt_name(self.sample_fmt)
+        return lib.av_get_sample_fmt_name(self.sample_fmt)
 
     @property
     def bytes(self):
