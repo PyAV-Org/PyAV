@@ -17,5 +17,6 @@ cdef class VideoFrame(Frame):
 
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
     cdef _init_user_attributes(self)
+    cpdef save(self, object filepath)
 
 cdef VideoFrame alloc_video_frame()
