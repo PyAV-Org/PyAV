@@ -35,13 +35,15 @@ class AudioFrame(Frame):
 
     def __init__(
         self,
-        format: str = "s16",
-        layout: str = "stereo",
+        format: AudioFormat | str = "s16",
+        layout: AudioLayout | str = "stereo",
         samples: int = 0,
         align: int = 1,
     ) -> None: ...
     @staticmethod
     def from_ndarray(
-        array: _SupportedNDarray, format: str = "s16", layout: str = "stereo"
+        array: _SupportedNDarray,
+        format: AudioFormat | str = "s16",
+        layout: AudioLayout | str = "stereo",
     ) -> AudioFrame: ...
     def to_ndarray(self) -> _SupportedNDarray: ...
