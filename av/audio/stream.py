@@ -1,9 +1,10 @@
-from av.packet cimport Packet
+import cython
+from cython.cimports.av.audio.frame import AudioFrame
+from cython.cimports.av.packet import Packet
 
-from .frame cimport AudioFrame
 
-
-cdef class AudioStream(Stream):
+@cython.cclass
+class AudioStream(Stream):
     def __repr__(self):
         form = self.format.name if self.format else None
         return (
@@ -14,7 +15,8 @@ cdef class AudioStream(Stream):
     def __getattr__(self, name):
         return getattr(self.codec_context, name)
 
-    cpdef encode(self, AudioFrame frame=None):
+    @cython.ccall
+    def encode(self, frame: AudioFrame | None = None):
         """
         Encode an :class:`.AudioFrame` and return a list of :class:`.Packet`.
 
@@ -24,14 +26,15 @@ cdef class AudioStream(Stream):
         """
 
         packets = self.codec_context.encode(frame)
-        cdef Packet packet
+        packet: Packet
         for packet in packets:
             packet._stream = self
             packet.ptr.stream_index = self.ptr.index
 
         return packets
 
-    cpdef decode(self, Packet packet=None):
+    @cython.ccall
+    def decode(self, packet: Packet | None = None):
         """
         Decode a :class:`.Packet` and return a list of :class:`.AudioFrame`.
 
