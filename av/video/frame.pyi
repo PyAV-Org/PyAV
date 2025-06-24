@@ -1,8 +1,8 @@
 from enum import IntEnum
+from pathlib import Path
 from typing import Any, ClassVar, Union
 
 import numpy as np
-from PIL import Image
 
 from av.frame import Frame
 
@@ -12,6 +12,7 @@ from .plane import VideoPlane
 _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.uint8]],
     np.ndarray[Any, np.dtype[np.uint16]],
+    np.ndarray[Any, np.dtype[np.float16]],
     np.ndarray[Any, np.dtype[np.float32]],
 ]
 
@@ -30,7 +31,6 @@ class PictureType(IntEnum):
 class VideoFrame(Frame):
     format: VideoFormat
     pts: int
-    duration: int
     planes: tuple[VideoPlane, ...]
     pict_type: int
     colorspace: int
@@ -61,12 +61,13 @@ class VideoFrame(Frame):
         dst_color_range: int | str | None = None,
     ) -> VideoFrame: ...
     def to_rgb(self, **kwargs: Any) -> VideoFrame: ...
-    def to_image(self, **kwargs: Any) -> Image.Image: ...
+    def save(self, filepath: str | Path) -> None: ...
+    def to_image(self, **kwargs): ...
     def to_ndarray(
         self, channel_last: bool = False, **kwargs: Any
     ) -> _SupportedNDarray: ...
     @staticmethod
-    def from_image(img: Image.Image) -> VideoFrame: ...
+    def from_image(img): ...
     @staticmethod
     def from_numpy_buffer(
         array: _SupportedNDarray, format: str = "rgb24", width: int = 0
