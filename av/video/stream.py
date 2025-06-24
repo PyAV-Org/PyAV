@@ -1,12 +1,12 @@
-cimport libav as lib
+import cython
+from cython.cimports import libav as lib
+from cython.cimports.av.packet import Packet
+from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.av.video.frame import VideoFrame
 
-from av.packet cimport Packet
-from av.utils cimport avrational_to_fraction, to_avrational
 
-from .frame cimport VideoFrame
-
-
-cdef class VideoStream(Stream):
+@cython.cclass
+class VideoStream(Stream):
     def __repr__(self):
         return (
             f"<av.VideoStream #{self.index} {self.name}, "
@@ -16,11 +16,14 @@ cdef class VideoStream(Stream):
 
     def __getattr__(self, name):
         if name in ("framerate", "rate"):
-            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
 
         return getattr(self.codec_context, name)
 
-    cpdef encode(self, VideoFrame frame=None):
+    @cython.ccall
+    def encode(self, frame: VideoFrame | None = None):
         """
         Encode an :class:`.VideoFrame` and return a list of :class:`.Packet`.
 
@@ -30,15 +33,14 @@ cdef class VideoStream(Stream):
         """
 
         packets = self.codec_context.encode(frame)
-        cdef Packet packet
+        packet: Packet
         for packet in packets:
             packet._stream = self
             packet.ptr.stream_index = self.ptr.index
-
         return packets
 
-
-    cpdef decode(self, Packet packet=None):
+    @cython.ccall
+    def decode(self, packet: Packet | None = None):
         """
         Decode a :class:`.Packet` and return a list of :class:`.VideoFrame`.
 
@@ -46,7 +48,6 @@ cdef class VideoStream(Stream):
 
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
-
         return self.codec_context.decode(packet)
 
     @property
@@ -59,7 +60,7 @@ cdef class VideoStream(Stream):
 
         :type: fractions.Fraction | None
         """
-        return avrational_to_fraction(&self.ptr.avg_frame_rate)
+        return avrational_to_fraction(cython.address(self.ptr.avg_frame_rate))
 
     @property
     def base_rate(self):
@@ -72,7 +73,7 @@ cdef class VideoStream(Stream):
 
         :type: fractions.Fraction | None
         """
-        return avrational_to_fraction(&self.ptr.r_frame_rate)
+        return avrational_to_fraction(cython.address(self.ptr.r_frame_rate))
 
     @property
     def guessed_rate(self):
@@ -83,9 +84,10 @@ cdef class VideoStream(Stream):
 
         :type: fractions.Fraction | None
         """
-        # The two NULL arguments aren't used in FFmpeg >= 4.0
-        cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self.ptr, NULL)
-        return avrational_to_fraction(&val)
+        val: lib.AVRational = lib.av_guess_frame_rate(
+            cython.NULL, self.ptr, cython.NULL
+        )
+        return avrational_to_fraction(cython.address(val))
 
     @property
     def sample_aspect_ratio(self):
@@ -96,9 +98,11 @@ cdef class VideoStream(Stream):
 
         :type: fractions.Fraction | None
         """
-        cdef lib.AVRational sar = lib.av_guess_sample_aspect_ratio(self.container.ptr, self.ptr, NULL)
-        return avrational_to_fraction(&sar)
-    
+        sar: lib.AVRational = lib.av_guess_sample_aspect_ratio(
+            self.container.ptr, self.ptr, cython.NULL
+        )
+        return avrational_to_fraction(cython.address(sar))
+
     @property
     def display_aspect_ratio(self):
         """The guessed display aspect ratio (DAR) of this stream.
@@ -107,11 +111,13 @@ cdef class VideoStream(Stream):
 
         :type: fractions.Fraction | None
         """
-        cdef lib.AVRational dar
-
+        dar = cython.declare(lib.AVRational)
         lib.av_reduce(
-            &dar.num, &dar.den,
+            cython.address(dar.num),
+            cython.address(dar.den),
             self.format.width * self.sample_aspect_ratio.num,
-            self.format.height * self.sample_aspect_ratio.den, 1024*1024)
+            self.format.height * self.sample_aspect_ratio.den,
+            1024 * 1024,
+        )
 
-        return avrational_to_fraction(&dar)
+        return avrational_to_fraction(cython.address(dar))
