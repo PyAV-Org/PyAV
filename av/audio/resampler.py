@@ -1,12 +1,14 @@
-from av.filter.context cimport FilterContext
+from errno import EAGAIN
 
-import errno
+import cython
+from cython.cimports.av.filter.context import FilterContext
+from cython.cimports.av.filter.graph import Graph
 
-import av.filter
+from av.error import FFmpegError
 
 
-cdef class AudioResampler:
-
+@cython.cclass
+class AudioResampler:
     """AudioResampler(format=None, layout=None, rate=None)
 
     :param AudioFormat format: The target format, or string that parses to one
@@ -14,23 +16,23 @@ cdef class AudioResampler:
     :param AudioLayout layout: The target layout, or an int/string that parses
         to one (e.g. ``"stereo"``).
     :param int rate: The target sample rate.
-
-
     """
 
     def __cinit__(self, format=None, layout=None, rate=None, frame_size=None):
         if format is not None:
-            self.format = format if isinstance(format, AudioFormat) else AudioFormat(format)
+            self.format = (
+                format if isinstance(format, AudioFormat) else AudioFormat(format)
+            )
 
         if layout is not None:
             self.layout = AudioLayout(layout)
+
         self.rate = int(rate) if rate else 0
-
         self.frame_size = int(frame_size) if frame_size else 0
-
         self.graph = None
 
-    cpdef resample(self, AudioFrame frame):
+    @cython.ccall
+    def resample(self, frame: AudioFrame | None) -> list:
         """resample(frame)
 
         Convert the ``sample_rate``, ``channel_layout`` and/or ``format`` of
@@ -60,30 +62,31 @@ cdef class AudioResampler:
 
             # Check if we can passthrough or if there is actually work to do.
             if (
-                frame.format.sample_fmt == self.format.sample_fmt and
-                frame.layout == self.layout and
-                frame.sample_rate == self.rate and
-                self.frame_size == 0
+                frame.format.sample_fmt == self.format.sample_fmt
+                and frame.layout == self.layout
+                and frame.sample_rate == self.rate
+                and self.frame_size == 0
             ):
                 self.is_passthrough = True
                 return [frame]
 
             # handle resampling with aformat filter
             # (similar to configure_output_audio_filter from ffmpeg)
-            self.graph = av.filter.Graph()
+            self.graph = Graph()
             extra_args = {}
             if frame.time_base is not None:
-                extra_args["time_base"] = str(frame.time_base)
+                extra_args["time_base"] = f"{frame.time_base}"
+
             abuffer = self.graph.add(
                 "abuffer",
-                sample_rate=str(frame.sample_rate),
+                sample_rate=f"{frame.sample_rate}",
                 sample_fmt=AudioFormat(frame.format).name,
                 channel_layout=frame.layout.name,
                 **extra_args,
             )
             aformat = self.graph.add(
                 "aformat",
-                sample_rates=str(self.rate),
+                sample_rates=f"{self.rate}",
                 sample_fmts=self.format.name,
                 channel_layouts=self.layout.name,
             )
@@ -97,22 +100,22 @@ cdef class AudioResampler:
 
         if frame is not None:
             if (
-                frame.format.sample_fmt != self.template.format.sample_fmt or
-                frame.layout != self.template.layout or
-                frame.sample_rate != self.template.rate
+                frame.format.sample_fmt != self.template.format.sample_fmt
+                or frame.layout != self.template.layout
+                or frame.sample_rate != self.template.rate
             ):
                 raise ValueError("Frame does not match AudioResampler setup.")
 
         self.graph.push(frame)
 
-        output = []
+        output: list = []
         while True:
             try:
                 output.append(self.graph.pull())
             except EOFError:
                 break
-            except av.FFmpegError as e:
-                if e.errno != errno.EAGAIN:
+            except FFmpegError as e:
+                if e.errno != EAGAIN:
                     raise
                 break
 
