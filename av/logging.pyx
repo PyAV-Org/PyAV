@@ -1,6 +1,6 @@
 """
-FFmpeg has a logging system that it uses extensively. It's very noisy so PyAV turns it
-off by default. This, unfortunately has the effect of making raised errors having less
+FFmpeg has a logging system that it uses extensively. It's very noisy, so PyAV turns it
+off by default. This unfortunately has the effect of making raised errors have less
 detailed messages. It's therefore recommended to use VERBOSE when developing.
 
 .. _enable_logging:
@@ -8,7 +8,7 @@ detailed messages. It's therefore recommended to use VERBOSE when developing.
 Enabling Logging
 ~~~~~~~~~~~~~~~~~
 
-You can hook the logging system with Python by setting the log level::
+You can hook into the logging system with Python by setting the log level::
 
     import av
 
@@ -25,10 +25,10 @@ quickly with::
     logging.basicConfig()
 
 
-Note that handling logs with Python sometimes doesn't play nice multi-threads workflows.
+Note that handling logs with Python sometimes doesn't play nicely with multi-threaded workflows.
 An alternative is :func:`restore_default_callback`.
 
-This will restores FFmpeg's logging default system, which prints to the terminal.
+This restores FFmpeg's default logging system, which prints to the terminal.
 Like with setting the log level to ``None``, this may also result in raised errors
 having less detailed messages.
 
