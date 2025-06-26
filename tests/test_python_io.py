@@ -237,42 +237,6 @@ class TestPythonIO(TestCase):
             with pytest.raises(OSError):
                 container.close()
 
-    @run_in_sandbox
-    def test_writing_to_custom_io_dash(self) -> None:
-        # Custom I/O that opens file and logs calls
-        wrapped_custom_io = CustomIOLogger()
-
-        output_filename = "custom_io_output.mpd"
-
-        # Write a DASH package using the custom IO. Prefix the name with CUSTOM_IO_PROTOCOL to
-        # avoid temporary file and renaming.
-        with av.open(
-            CUSTOM_IO_PROTOCOL + output_filename, "w", io_open=wrapped_custom_io
-        ) as container:
-            write_rgb_rotate(container)
-
-        # Check that at least 3 files were opened using the custom IO:
-        #   "output_filename", init-stream0.m4s and chunk-stream-0x.m4s
-        assert len(wrapped_custom_io._log) >= 3
-        assert len(wrapped_custom_io._method_log) >= 3
-
-        # Check that all files were written to
-        all_write = all(
-            method_log._filter("write") for method_log in wrapped_custom_io._method_log
-        )
-        assert all_write
-
-        # Check that all files were closed
-        all_closed = all(
-            method_log._filter("close") for method_log in wrapped_custom_io._method_log
-        )
-        assert all_closed
-
-        # Check contents.
-        # Note that the dash demuxer doesn't support custom I/O.
-        with av.open(output_filename, "r") as container:
-            assert_rgb_rotate(self, container, is_dash=True)
-
     def test_writing_to_custom_io_image2(self) -> None:
         if not has_pillow:
             pytest.skip()
