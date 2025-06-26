@@ -155,7 +155,6 @@ def copy_bytes_to_plane(
         end_row = plane.height
         step = 1
 
-    i, j = cython.declare(cython.int)
     for row in range(start_row, end_row, step):
         i_pos = row * i_stride
         if flip_horizontal:
