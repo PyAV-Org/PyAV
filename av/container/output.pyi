@@ -3,8 +3,8 @@ from typing import Sequence, TypeVar, Union, overload
 
 from av.audio import _AudioCodecName
 from av.audio.stream import AudioStream
-from av.data.stream import DataStream
 from av.packet import Packet
+from av.stream import DataStream
 from av.subtitles.stream import SubtitleStream
 from av.video import _VideoCodecName
 from av.video.stream import VideoStream

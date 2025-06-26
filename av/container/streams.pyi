@@ -1,9 +1,7 @@
 from typing import Iterator, Literal, overload
 
-from av.attachments.stream import AttachmentStream
 from av.audio.stream import AudioStream
-from av.data.stream import DataStream
-from av.stream import Stream
+from av.stream import AttachmentStream, DataStream, Stream
 from av.subtitles.stream import SubtitleStream
 from av.video.stream import VideoStream
 
