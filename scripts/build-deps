@@ -57,11 +57,11 @@ echo ./configure
     --disable-doc \
     --disable-static \
     --disable-stripping \
+    --disable-libxml2 \
     --enable-debug=3 \
     --enable-gpl \
     --enable-version3 \
     --enable-libx264 \
-    --enable-libxml2 \
     --enable-shared \
     --enable-sse \
     --enable-avx \
