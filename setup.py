@@ -6,30 +6,19 @@ import re
 import shlex
 import subprocess
 import sys
-from time import sleep
+
+if platform.system() == "Darwin":
+    major_version = int(platform.mac_ver()[0].split(".")[0])
+    if major_version < 12:
+        raise OSError("You are using an EOL, unsupported, and out-of-date OS.")
 
 
 def is_virtualenv():
     return sys.base_prefix != sys.prefix
 
 
-if platform.system() == "Darwin":
-    major_version = int(platform.mac_ver()[0].split(".")[0])
-    if major_version < 12:
-        print(
-            "\033[1;91mWarning!\033[0m You are using an EOL, unsupported, and out-of-date OS."
-        )
-        sleep(3)
-
-print(
-    "\n\033[1;91mWarning!\033[0m You are installing from source.\n"
-    "It is \033[1;37mEXPECTED\033[0m that it will fail. You are \033[1;37mREQUIRED\033[0m"
-    " to use ffmpeg 7.\nYou \033[1;37mMUST\033[0m have Cython, pkg-config, and a C compiler.\n"
-)
-if os.getenv("GITHUB_ACTIONS") == "true" or is_virtualenv():
-    pass
-else:
-    print("\033[1;91mWarning!\033[0m You are not using a virtual environment")
+if not (os.getenv("GITHUB_ACTIONS") == "true" or is_virtualenv()):
+    raise ValueError("You are not using a virtual environment")
 
 
 from Cython.Build import cythonize
@@ -159,16 +148,10 @@ for i, arg in enumerate(sys.argv):
         FFMPEG_DIR = arg.split("=")[1]
         del sys.argv[i]
 
-# Do not cythonize or use pkg-config when cleaning.
-use_pkg_config = platform.system() != "Windows"
-if len(sys.argv) > 1 and sys.argv[1] == "clean":
-    cythonize = lambda ext, **kwargs: [ext]
-    use_pkg_config = False
-
 # Locate ffmpeg libraries and headers.
 if FFMPEG_DIR is not None:
     extension_extra = get_config_from_directory(FFMPEG_DIR)
-elif use_pkg_config:
+elif platform.system() != "Windows":
     extension_extra = get_config_from_pkg_config()
 else:
     extension_extra = {
