@@ -1,10 +1,10 @@
-cimport libav as lib
-
 from enum import Flag
 
-from av.error cimport err_check
-from av.packet cimport Packet
-from av.utils cimport (
+import cython
+from cython.cimports import libav as lib
+from cython.cimports.av.error import err_check
+from cython.cimports.av.packet import Packet
+from cython.cimports.av.utils import (
     avdict_to_dict,
     avrational_to_fraction,
     dict_to_avdict,
@@ -34,35 +34,38 @@ class Disposition(Flag):
     multilayer = 1 << 21
 
 
-cdef object _cinit_bypass_sentinel = object()
+_cinit_bypass_sentinel = cython.declare(object, object())
 
-cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContext codec_context):
+
+@cython.cfunc
+def wrap_stream(
+    container: Container,
+    c_stream: cython.pointer[lib.AVStream],
+    codec_context: CodecContext,
+) -> Stream:
     """Build an av.Stream for an existing AVStream.
 
-    The AVStream MUST be fully constructed and ready for use before this is
-    called.
-
+    The AVStream MUST be fully constructed and ready for use before this is called.
     """
 
     # This better be the right one...
     assert container.ptr.streams[c_stream.index] == c_stream
 
-    cdef Stream py_stream
+    py_stream: Stream
+
+    from av.audio.stream import AudioStream
+    from av.subtitles.stream import SubtitleStream
+    from av.video.stream import VideoStream
 
     if c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-        from av.video.stream import VideoStream
         py_stream = VideoStream.__new__(VideoStream, _cinit_bypass_sentinel)
     elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-        from av.audio.stream import AudioStream
         py_stream = AudioStream.__new__(AudioStream, _cinit_bypass_sentinel)
     elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
-        from av.subtitles.stream import SubtitleStream
         py_stream = SubtitleStream.__new__(SubtitleStream, _cinit_bypass_sentinel)
     elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
-        from av.attachments.stream import AttachmentStream
         py_stream = AttachmentStream.__new__(AttachmentStream, _cinit_bypass_sentinel)
     elif c_stream.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA:
-        from av.data.stream import DataStream
         py_stream = DataStream.__new__(DataStream, _cinit_bypass_sentinel)
     else:
         py_stream = Stream.__new__(Stream, _cinit_bypass_sentinel)
@@ -71,7 +74,8 @@ cdef Stream wrap_stream(Container container, lib.AVStream *c_stream, CodecContex
     return py_stream
 
 
-cdef class Stream:
+@cython.cclass
+class Stream:
     """
     A single stream of audio, video or subtitles within a :class:`.Container`.
 
@@ -93,7 +97,13 @@ cdef class Stream:
             return
         raise RuntimeError("cannot manually instantiate Stream")
 
-    cdef _init(self, Container container, lib.AVStream *stream, CodecContext codec_context):
+    @cython.cfunc
+    def _init(
+        self,
+        container: Container,
+        stream: cython.pointer[lib.AVStream],
+        codec_context: CodecContext,
+    ):
         self.container = container
         self.ptr = stream
 
@@ -121,18 +131,19 @@ cdef class Stream:
         if name == "disposition":
             self.ptr.disposition = value
             return
+        if name == "time_base":
+            to_avrational(value, cython.address(self.ptr.time_base))
+            return
 
         # Convenience setter for codec context properties.
         if self.codec_context is not None:
             setattr(self.codec_context, name, value)
 
-        if name == "time_base":
-            self._set_time_base(value)
-
-    cdef _finalize_for_output(self):
-
+    @cython.cfunc
+    def _finalize_for_output(self):
         dict_to_avdict(
-            &self.ptr.metadata, self.metadata,
+            cython.address(self.ptr.metadata),
+            self.metadata,
             encoding=self.container.metadata_encoding,
             errors=self.container.metadata_errors,
         )
@@ -140,9 +151,12 @@ cdef class Stream:
         if not self.ptr.time_base.num:
             self.ptr.time_base = self.codec_context.ptr.time_base
 
-        # It prefers if we pass it parameters via this other object.
-        # Lets just copy what we want.
-        err_check(lib.avcodec_parameters_from_context(self.ptr.codecpar, self.codec_context.ptr))
+        # It prefers if we pass it parameters via this other object. Let's just copy what we want.
+        err_check(
+            lib.avcodec_parameters_from_context(
+                self.ptr.codecpar, self.codec_context.ptr
+            )
+        )
 
     @property
     def id(self):
@@ -154,10 +168,8 @@ cdef class Stream:
         """
         return self.ptr.id
 
-    cdef _set_id(self, value):
-        """
-        Setter used by __setattr__ for the id property.
-        """
+    @cython.cfunc
+    def _set_id(self, value):
         if value is None:
             self.ptr.id = 0
         else:
@@ -196,7 +208,6 @@ cdef class Stream:
         """
         return self.ptr.index
 
-
     @property
     def time_base(self):
         """
@@ -205,13 +216,7 @@ cdef class Stream:
         :type: fractions.Fraction | None
 
         """
-        return avrational_to_fraction(&self.ptr.time_base)
-
-    cdef _set_time_base(self, value):
-        """
-        Setter used by __setattr__ for the time_base property.
-        """
-        to_avrational(value, &self.ptr.time_base)
+        return avrational_to_fraction(cython.address(self.ptr.time_base))
 
     @property
     def start_time(self):
@@ -267,3 +272,47 @@ cdef class Stream:
         :type: Literal["audio", "video", "subtitle", "data", "attachment"]
         """
         return lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
+
+
+@cython.cclass
+class DataStream(Stream):
+    def __repr__(self):
+        return (
+            f"<av.{self.__class__.__name__} #{self.index} data/"
+            f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
+        )
+
+    @property
+    def name(self):
+        desc: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
+            lib.avcodec_descriptor_get(self.ptr.codecpar.codec_id)
+        )
+        if desc == cython.NULL:
+            return None
+        return desc.name
+
+
+@cython.cclass
+class AttachmentStream(Stream):
+    """
+    An :class:`AttachmentStream` represents a stream of attachment data within a media container.
+    Typically used to attach font files that are referenced in ASS/SSA Subtitle Streams.
+    """
+
+    @property
+    def name(self):
+        """
+        Returns the file name of the attachment.
+
+        :rtype: str | None
+        """
+        return self.metadata.get("filename")
+
+    @property
+    def mimetype(self):
+        """
+        Returns the MIME type of the attachment.
+
+        :rtype: str | None
+        """
+        return self.metadata.get("mimetype")

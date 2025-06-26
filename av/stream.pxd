@@ -19,8 +19,14 @@ cdef class Stream:
     # Private API.
     cdef _init(self, Container, lib.AVStream*, CodecContext)
     cdef _finalize_for_output(self)
-    cdef _set_time_base(self, value)
     cdef _set_id(self, value)
 
 
 cdef Stream wrap_stream(Container, lib.AVStream*, CodecContext)
+
+
+cdef class DataStream(Stream):
+    pass
+
+cdef class AttachmentStream(Stream):
+    pass
