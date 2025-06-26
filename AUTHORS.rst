@@ -23,10 +23,11 @@ All contributors (by number of commits):
 
 - Alba Mendez <me@alba.sh>
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
+- z-khan <zohaibkh_27@yahoo.com>
+- Marc Mueller <30130371+cdce8p@users.noreply.github.com>
 - Dan Allan <daniel.b.allan@gmail.com>; `@danielballan <https://github.com/danielballan>`_
 - Moonsik Park <moonsik.park@estsoft.com>
 - Santtu Keskinen <santtu.keskinen@gmail.com>
-- Marc Mueller <30130371+cdce8p@users.noreply.github.com>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
 - David Plowman <david.plowman@raspberrypi.com>
 - Alireza Davoudi <davoudialireza@gmail.com>; `@adavoudi <https://github.com/adavoudi>`_
@@ -38,8 +39,8 @@ All contributors (by number of commits):
 - Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>; `@rawler <https://github.com/rawler>`_
 - Wel C. van der <wel@Physics.LeidenUniv.nl>
 - Will Patera <willpatera@gmail.com>; `@willpatera <https://github.com/willpatera>`_
-- z-khan <zohaibkh_27@yahoo.com>
 
+* zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 * Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
 * Dexer <73297572+DexerBR@users.noreply.github.com>
 * rutsh <Eugene.Krokhalev@gmail.com>
@@ -59,7 +60,6 @@ All contributors (by number of commits):
 * Radek Senfeld <rush@logic.cz>; `@radek-senfeld <https://github.com/radek-senfeld>`_
 * robinechuca <serveurpython.oz@gmail.com>
 * Benjamin Chrétien <2742231+bchretien@users.noreply.github.com>
-* zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 * davidplowman <38045873+davidplowman@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
 * Artturin <Artturin@artturin.com>
@@ -81,12 +81,14 @@ All contributors (by number of commits):
 * Marcell Pardavi <marcell.pardavi@gmail.com>
 * Matteo Destro <matteo@cerrion.com>
 * Mattias Wadman <mattias.wadman@gmail.com>
+* Max Ehrlich <max.ehr@gmail.com>
 * Manuel Goacolou <mgoacolou@cls.fr>
 * Julian Schweizer <neuneck@gmail.com>
 * Nikhil Idiculla <nikhilidiculla@gmail.com>
 * Ömer Sezgin Uğurlu <omer@ugurlu.org>
 * Orivej Desh <orivej@gmx.fr>
 * Philipp Krähenbühl <philkr@users.noreply.github.com>
+* Mattia Procopio <promat85@gmail.com>
 * ramoncaldeira <ramoncaldeira_328@hotmail.com>
 * Roland van Laar <roland@rolandvanlaar.nl>
 * Santiago Castro <sacastro@umich.edu>
@@ -106,3 +108,4 @@ All contributors (by number of commits):
 * Koichi Akabe <vbkaisetsu@gmail.com>
 * David Joy <videan42@gmail.com>
 * Sviatoslav Sydorenko (Святослав Сидоренко) <webknjaz@redhat.com>
+* Jiabei Zhu <zjb@bu.edu>
