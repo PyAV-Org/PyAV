@@ -16,12 +16,26 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
-v15.0.0 (Unreleased)
---------------------
+v15.0.0rc1
+----------
 
 Major:
 
-- Make ``SubtitleStream.decode()`` return the list of subtitles directly, without the intermediate ``SubtitleSet``.
+- Make ``SubtitleStream.decode()`` return the list of subtitles directly, making the API nicer.
+- Binary wheels: Remove libxml2 because of security concerns.
+- Binary wheels: Remove xz because lzma encoding is very niche in media decoding and lesser security concerns.
+
+Features:
+
+- Add GBRP, GBRAP, RGBA formats by :gh-user:`z-khan`.
+- Add ``VideoFrame.save()``, a convenient way to save frames to PNGs or JPEGs, by :gh-user:`WyattBlue`.
+
+Fixes:
+
+- Binary wheels: Re-enable libx265, use version 4.1 by :gh-user:`WyattBlue`.
+- Fix memory error for AudioFifo properties by :gh-user:`zzjjbb`.
+- Copy template flags if creating a new Codec object by :gh-user:`WyattBlue`
+- ``AudioFrame.from_ndarray()``: Support python classes for parameters too, by :gh-user:`WyattBlue`.
 
 v14.4.0
 -------
