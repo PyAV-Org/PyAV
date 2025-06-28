@@ -22,6 +22,7 @@ v15.0.0rc1
 Major:
 
 - Make ``SubtitleStream.decode()`` return the list of subtitles directly, making the API nicer.
+- Drop support for MacOS 12 or under.
 - Binary wheels: Remove libxml2 because of security concerns.
 - Binary wheels: Remove xz because lzma encoding is very niche in media decoding and lesser security concerns.
 
