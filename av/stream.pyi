@@ -1,6 +1,6 @@
 from enum import Flag
 from fractions import Fraction
-from typing import Any, Literal, cast
+from typing import Literal, cast
 
 from .codec import Codec, CodecContext
 from .container import Container
@@ -36,7 +36,7 @@ class Stream:
     profiles: list[str]
     profile: str | None
     index: int
-    options: dict[str, Any]
+    options: dict[str, object]
     time_base: Fraction | None
     average_rate: Fraction | None
     base_rate: Fraction | None
