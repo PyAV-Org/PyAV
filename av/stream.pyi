@@ -48,6 +48,9 @@ class Stream:
     language: str | None
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
 
+    # From context
+    codec_tag: str
+
 class DataStream(Stream):
     type: Literal["data"]
     name: str | None
