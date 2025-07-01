@@ -350,3 +350,13 @@ cdef extern from "libavformat/avformat.h" nogil:
     # custom
 
     cdef set pyav_get_available_formats()
+
+    cdef struct AVIndexEntry:
+        int64_t pos
+        int64_t timestamp
+        int flags
+        int size
+        int min_distance
+
+    cdef AVIndexEntry *avformat_index_get_entry(AVStream *st, int idx)
+    cdef int av_index_search_timestamp(AVStream *st, int64_t timestamp, int flags)
