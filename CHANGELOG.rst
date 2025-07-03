@@ -16,8 +16,8 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
-v15.0.0rc1
-----------
+v15.0.0
+-------
 
 Major:
 
