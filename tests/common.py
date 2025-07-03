@@ -66,7 +66,7 @@ def asset(*args: str) -> str:
 
 
 # Store all of the sample data here.
-os.environ["PYAV_TESTDATA_DIR"] = asset()
+os.environ.setdefault("PYAV_TESTDATA_DIR", asset())
 
 
 def fate_png() -> str:
