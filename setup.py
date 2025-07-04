@@ -7,20 +7,6 @@ import shlex
 import subprocess
 import sys
 
-if platform.system() == "Darwin":
-    major_version = int(platform.mac_ver()[0].split(".")[0])
-    if major_version < 12:
-        raise OSError("You are using an EOL, unsupported, and out-of-date OS.")
-
-
-def is_virtualenv():
-    return sys.base_prefix != sys.prefix
-
-
-if not (os.getenv("GITHUB_ACTIONS") == "true" or is_virtualenv()):
-    raise ValueError("You are not using a virtual environment")
-
-
 from Cython.Build import cythonize
 from Cython.Compiler.AutoDocTransforms import EmbedSignature
 from setuptools import Extension, find_packages, setup
