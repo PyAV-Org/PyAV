@@ -52,16 +52,14 @@ cdef class AudioLayout:
 
     @property
     def channels(self):
-        cdef lib.AVChannel channel
         cdef char buf[16]
         cdef char buf2[128]
 
         results = []
 
         for index in range(self.layout.nb_channels):
-            channel = lib.av_channel_layout_channel_from_index(&self.layout, index);
-            size = lib.av_channel_name(buf, sizeof(buf), channel) - 1
-            size2 = lib.av_channel_description(buf2, sizeof(buf2), channel) - 1
+            size = lib.av_channel_name(buf, sizeof(buf), lib.av_channel_layout_channel_from_index(&self.layout, index)) - 1
+            size2 = lib.av_channel_description(buf2, sizeof(buf2), lib.av_channel_layout_channel_from_index(&self.layout, index)) - 1
             results.append(
                 AudioChannel(
                     PyBytes_FromStringAndSize(buf, size).decode("utf-8"),
