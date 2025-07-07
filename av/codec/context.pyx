@@ -428,7 +428,7 @@ cdef class CodecContext:
         #
         # NOTE: if the CodecContext's time_base is altered during encoding, all bets
         # are off!
-        packet._time_base = self.ptr.time_base
+        packet.ptr.time_base = self.ptr.time_base
 
     cpdef decode(self, Packet packet=None):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
@@ -469,7 +469,7 @@ cdef class CodecContext:
         # TODO: Somehow get this from the stream so we can not pass the
         # packet here (because flushing packets are bogus).
         if packet is not None:
-            frame._time_base = packet._time_base
+            frame._time_base = packet.ptr.time_base
 
     @property
     def name(self):

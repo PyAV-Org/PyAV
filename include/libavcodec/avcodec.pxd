@@ -466,19 +466,15 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef AVFrame* avcodec_alloc_frame()
 
     cdef struct AVPacket:
-
         int64_t pts
         int64_t dts
         uint8_t *data
-
+        AVRational time_base
         int size
         int stream_index
         int flags
-
         int duration
-
         int64_t pos
-
         void *opaque
         AVBufferRef *opaque_ref
 

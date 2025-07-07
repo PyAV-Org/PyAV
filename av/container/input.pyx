@@ -183,7 +183,7 @@ cdef class InputContainer(Container):
                     if packet.ptr.stream_index < len(self.streams):
                         packet._stream = self.streams[packet.ptr.stream_index]
                         # Keep track of this so that remuxing is easier.
-                        packet._time_base = packet._stream.ptr.time_base
+                        packet.ptr.time_base = packet._stream.ptr.time_base
                         yield packet
 
             # Flush!
@@ -191,7 +191,7 @@ cdef class InputContainer(Container):
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]
-                    packet._time_base = packet._stream.ptr.time_base
+                    packet.ptr.time_base = packet._stream.ptr.time_base
                     yield packet
 
         finally:

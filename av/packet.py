@@ -65,16 +65,15 @@ class Packet(Buffer):
         if not dst.num:
             raise ValueError("Cannot rebase to zero time.")
 
-        if not self._time_base.num:
-            self._time_base = dst
+        if not self.ptr.time_base.num:
+            self.ptr.time_base = dst
             return
 
-        if self._time_base.num == dst.num and self._time_base.den == dst.den:
+        if self.ptr.time_base.num == dst.num and self.ptr.time_base.den == dst.den:
             return
 
-        lib.av_packet_rescale_ts(self.ptr, self._time_base, dst)
-
-        self._time_base = dst
+        lib.av_packet_rescale_ts(self.ptr, self.ptr.time_base, dst)
+        self.ptr.time_base = dst
 
     def decode(self):
         """
@@ -106,11 +105,11 @@ class Packet(Buffer):
 
         :type: fractions.Fraction
         """
-        return avrational_to_fraction(cython.address(self._time_base))
+        return avrational_to_fraction(cython.address(self.ptr.time_base))
 
     @time_base.setter
     def time_base(self, value):
-        to_avrational(value, cython.address(self._time_base))
+        to_avrational(value, cython.address(self.ptr.time_base))
 
     @property
     def pts(self):
