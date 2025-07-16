@@ -65,6 +65,7 @@ jobs:
           CIBW_SKIP: "pp*"
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: pytest numpy
+          CIBW_ENABLE: cpython-freethreading
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
