@@ -127,14 +127,14 @@ jobs:
           pillow \
           pytest \
           python=${{ matrix.config.python }} \
-          setuptools
+          setuptools \
+          cython
 
     - name: Build
       shell: bash
       run: |
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
-        pip install 'Cython==3.1.0a1'
         python scripts\\fetch-vendor.py --config-file scripts\\ffmpeg-${{ matrix.config.ffmpeg }}.json $CONDA_PREFIX\\Library
         python scripts\\comptime.py  ${{ matrix.config.ffmpeg }}
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX\\Library
