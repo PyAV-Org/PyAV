@@ -312,6 +312,18 @@ class VideoFrame(Frame):
     def pict_type(self, value):
         self.ptr.pict_type = value
 
+    @key_frame.setter
+    def key_frame(self, v):
+        if v is None:
+            return
+        if v:
+            self.ptr.flags |= lib.AV_FRAME_FLAG_KEY
+            self.pict_type = PictureType.I
+        else:
+            self.ptr.flags &= ~lib.AV_FRAME_FLAG_KEY
+            if self.pict_type == PictureType.I:
+                self.pict_type = PictureType.P
+
     @property
     def colorspace(self):
         """Colorspace of frame.
