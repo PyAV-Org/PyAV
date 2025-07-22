@@ -610,16 +610,22 @@ class VideoFrame(Frame):
             f"Conversion to numpy array with format `{frame.format.name}` is not yet supported"
         )
 
+    def set_image(self, img):
+        """
+        Update content from a ``PIL.Image``.
+        """
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
+        copy_array_to_plane(img, self.planes[0], 3)
+
     @staticmethod
     def from_image(img):
         """
         Construct a frame from a ``PIL.Image``.
         """
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-
         frame: VideoFrame = VideoFrame(img.size[0], img.size[1], "rgb24")
-        copy_array_to_plane(img, frame.planes[0], 3)
+        frame.set_image(img)
 
         return frame
 
