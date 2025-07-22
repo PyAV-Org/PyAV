@@ -122,6 +122,21 @@ def test_memoryview_read() -> None:
     assert mem[:7] == b"0.234xx"
 
 
+def test_opaque() -> None:
+    frame = VideoFrame(640, 480, "rgb24")
+    frame.opaque = 3
+    assert frame.opaque == 3
+    frame.opaque = "a"
+    assert frame.opaque == "a"
+
+    greeting = "Hello World!"
+    frame.opaque = greeting
+    assert frame.opaque is greeting
+
+    frame.opaque = None
+    assert frame.opaque is None
+
+
 def test_interpolation() -> None:
     container = av.open(fate_png())
     for _ in container.decode(video=0):
