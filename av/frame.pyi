@@ -9,8 +9,8 @@ class SideData(TypedDict, total=False):
 class Frame:
     dts: int | None
     pts: int | None
-    duration: int | None
-    time_base: Fraction
+    duration: int
+    time_base: Fraction | None
     side_data: SideData
     opaque: object
     @property

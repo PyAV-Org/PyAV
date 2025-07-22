@@ -16,6 +16,13 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v15.1.0
+-------
+
+Features:
+
+- Make the `Frame.key_frame` flag writable.
+
 v15.0.0
 -------
 

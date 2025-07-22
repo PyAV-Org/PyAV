@@ -1,11 +1,13 @@
-from av.error cimport err_check
-from av.opaque cimport opaque_container
-from av.utils cimport avrational_to_fraction, to_avrational
+import cython
+from cython.cimports.av.error import err_check
+from cython.cimports.av.opaque import opaque_container
+from cython.cimports.av.utils import avrational_to_fraction, to_avrational
 
 from av.sidedata.sidedata import SideDataContainer
 
 
-cdef class Frame:
+@cython.cclass
+class Frame:
     """
     Base class for audio and video frames.
 
@@ -13,20 +15,19 @@ cdef class Frame:
     """
 
     def __cinit__(self, *args, **kwargs):
-        with nogil:
+        with cython.nogil:
             self.ptr = lib.av_frame_alloc()
 
     def __dealloc__(self):
-        with nogil:
-            # This calls av_frame_unref, and then frees the pointer.
-            # Thats it.
-            lib.av_frame_free(&self.ptr)
+        with cython.nogil:
+            lib.av_frame_free(cython.address(self.ptr))
 
     def __repr__(self):
-        return f"av.{self.__class__.__name__} pts={self.pts} at 0x{id(self):x}>"
+        return f"<av.{self.__class__.__name__} pts={self.pts} at 0x{id(self):x}>"
 
-    cdef _copy_internal_attributes(self, Frame source, bint data_layout=True):
-        """Mimic another frame."""
+    @cython.cfunc
+    def _copy_internal_attributes(self, source: Frame, data_layout: cython.bint = True):
+        # Mimic another frame
         self._time_base = source._time_base
         lib.av_frame_copy_props(self.ptr, source.ptr)
         if data_layout:
@@ -36,10 +37,12 @@ cdef class Frame:
             self.ptr.height = source.ptr.height
             self.ptr.ch_layout = source.ptr.ch_layout
 
-    cdef _init_user_attributes(self):
+    @cython.cfunc
+    def _init_user_attributes(self):
         pass  # Dummy to match the API of the others.
 
-    cdef _rebase_time(self, lib.AVRational dst):
+    @cython.cfunc
+    def _rebase_time(self, dst: lib.AVRational):
         if not dst.num:
             raise ValueError("Cannot rebase to zero time.")
 
@@ -54,7 +57,9 @@ cdef class Frame:
             self.ptr.pts = lib.av_rescale_q(self.ptr.pts, self._time_base, dst)
 
         if self.ptr.duration != 0:
-            self.ptr.duration = lib.av_rescale_q(self.ptr.duration, self._time_base, dst)
+            self.ptr.duration = lib.av_rescale_q(
+                self.ptr.duration, self._time_base, dst
+            )
 
         self._time_base = dst
 
@@ -65,7 +70,7 @@ cdef class Frame:
 
         (if frame threading isn't used) This is also the Presentation time of this frame calculated from only :attr:`.Packet.dts` values without pts values.
 
-        :type: int
+        :type: int | None
         """
         if self.ptr.pkt_dts == lib.AV_NOPTS_VALUE:
             return None
@@ -85,7 +90,7 @@ cdef class Frame:
 
         This is the time at which the frame should be shown to the user.
 
-        :type: int
+        :type: int | None
         """
         if self.ptr.pts == lib.AV_NOPTS_VALUE:
             return None
@@ -105,16 +110,11 @@ cdef class Frame:
 
         :type: int
         """
-        if self.ptr.duration == 0:
-            return None
         return self.ptr.duration
 
     @duration.setter
     def duration(self, value):
-        if value is None:
-            self.ptr.duration = 0
-        else:
-            self.ptr.duration = value
+        self.ptr.duration = value
 
     @property
     def time(self):
@@ -123,26 +123,25 @@ cdef class Frame:
 
         This is the time at which the frame should be shown to the user.
 
-        :type: float
+        :type: float | None
         """
         if self.ptr.pts == lib.AV_NOPTS_VALUE:
             return None
-        else:
-            return float(self.ptr.pts) * self._time_base.num / self._time_base.den
+        return float(self.ptr.pts) * self._time_base.num / self._time_base.den
 
     @property
     def time_base(self):
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
-        :type: fractions.Fraction
+        :type: fractions.Fraction | None
         """
         if self._time_base.num:
-            return avrational_to_fraction(&self._time_base)
+            return avrational_to_fraction(cython.address(self._time_base))
 
     @time_base.setter
     def time_base(self, value):
-        to_avrational(value, &self._time_base)
+        to_avrational(value, cython.address(self._time_base))
 
     @property
     def is_corrupt(self):
@@ -151,7 +150,9 @@ cdef class Frame:
 
         :type: bool
         """
-        return self.ptr.decode_error_flags != 0 or bool(self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT)
+        return self.ptr.decode_error_flags != 0 or bool(
+            self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT
+        )
 
     @property
     def key_frame(self):
@@ -162,6 +163,13 @@ cdef class Frame:
         """
         return bool(self.ptr.flags & lib.AV_FRAME_FLAG_KEY)
 
+    @key_frame.setter
+    def key_frame(self, v):
+        # PyAV makes no guarantees this does anything.
+        if v:
+            self.ptr.flags |= lib.AV_FRAME_FLAG_KEY
+        else:
+            self.ptr.flags &= ~lib.AV_FRAME_FLAG_KEY
 
     @property
     def side_data(self):
@@ -174,20 +182,19 @@ cdef class Frame:
         Ensures that the frame data is writable. Copy the data to new buffer if it is not.
         This is a wrapper around :ffmpeg:`av_frame_make_writable`.
         """
-        cdef int ret
-
-        ret = lib.av_frame_make_writable(self.ptr)
+        ret: cython.int = lib.av_frame_make_writable(self.ptr)
         err_check(ret)
 
     @property
     def opaque(self):
-        if self.ptr.opaque_ref is not NULL:
-            return opaque_container.get(<char *> self.ptr.opaque_ref.data)
+        if self.ptr.opaque_ref is not cython.NULL:
+            return opaque_container.get(
+                cython.cast(cython.p_char, self.ptr.opaque_ref.data)
+            )
 
     @opaque.setter
     def opaque(self, v):
-        lib.av_buffer_unref(&self.ptr.opaque_ref)
+        lib.av_buffer_unref(cython.address(self.ptr.opaque_ref))
 
-        if v is None:
-            return
-        self.ptr.opaque_ref = opaque_container.add(v)
+        if v is not None:
+            self.ptr.opaque_ref = opaque_container.add(v)
