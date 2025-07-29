@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 import datetime
 import errno
 import functools
 import os
 import types
+import typing
+from typing import TYPE_CHECKING
 from unittest import TestCase as _Base
+
+import numpy as np
 
 from av.datasets import fate as fate_suite
 
@@ -14,12 +20,22 @@ try:
 except ImportError:
     has_pillow = False
 
+if TYPE_CHECKING:
+    from typing import Any, Callable, TypeVar
+
+    from PIL.Image import Image
+
+    T = TypeVar("T")
+
+
+__all__ = ("fate_suite",)
+
 
 is_windows = os.name == "nt"
 skip_tests = frozenset(os.environ.get("PYAV_SKIP_TESTS", "").split(","))
 
 
-def makedirs(path: str) -> None:
+def safe_makedirs(path: str) -> None:
     try:
         os.makedirs(path)
     except OSError as e:
@@ -53,26 +69,24 @@ def asset(*args: str) -> str:
 os.environ["PYAV_TESTDATA_DIR"] = asset()
 
 
-def fate_png():
+def fate_png() -> str:
     return fate_suite("png1/55c99e750a5fd6_50314226.png")
 
 
-def sandboxed(*args, **kwargs):
-    do_makedirs = kwargs.pop("makedirs", True)
-    base = kwargs.pop("sandbox", None)
-    timed = kwargs.pop("timed", False)
-    if kwargs:
-        raise TypeError("extra kwargs: %s" % ", ".join(sorted(kwargs)))
-    path = os.path.join(_sandbox(timed=timed) if base is None else base, *args)
-    if do_makedirs:
-        makedirs(os.path.dirname(path))
+def sandboxed(
+    *args: str, makedirs: bool = True, sandbox: str | None = None, timed: bool = False
+) -> str:
+    path = os.path.join(_sandbox(timed) if sandbox is None else sandbox, *args)
+    if makedirs:
+        safe_makedirs(os.path.dirname(path))
+
     return path
 
 
 # Decorator for running a test in the sandbox directory
-def run_in_sandbox(func):
+def run_in_sandbox(func: Callable[..., T]) -> Callable[..., T]:
     @functools.wraps(func)
-    def _inner(self, *args, **kwargs):
+    def _inner(self: Any, *args: Any, **kwargs: Any) -> T:
         current_dir = os.getcwd()
         try:
             os.chdir(self.sandbox)
@@ -83,78 +97,56 @@ def run_in_sandbox(func):
     return _inner
 
 
-class MethodLogger:
-    def __init__(self, obj):
-        self._obj = obj
-        self._log = []
+def assertNdarraysEqual(a: np.ndarray, b: np.ndarray) -> None:
+    assert a.shape == b.shape
 
-    def __getattr__(self, name):
-        value = getattr(self._obj, name)
-        if isinstance(
-            value,
-            (
-                types.MethodType,
-                types.FunctionType,
-                types.BuiltinFunctionType,
-                types.BuiltinMethodType,
-            ),
-        ):
-            return functools.partial(self._method, name, value)
-        else:
-            self._log.append(("__getattr__", (name,), {}))
-            return value
+    comparison = a == b
+    if not comparison.all():
+        it = np.nditer(comparison, flags=["multi_index"])
+        msg = ""
+        for equal in it:
+            if not equal:
+                msg += "- arrays differ at index {}; {} {}\n".format(
+                    it.multi_index,
+                    a[it.multi_index],
+                    b[it.multi_index],
+                )
+        assert False, f"ndarrays contents differ\n{msg}"
 
-    def _method(self, name, meth, *args, **kwargs):
-        self._log.append((name, args, kwargs))
-        return meth(*args, **kwargs)
 
-    def _filter(self, type_):
-        return [log for log in self._log if log[0] == type_]
+@typing.no_type_check
+def assertImagesAlmostEqual(a: Image, b: Image, epsilon: float = 0.1) -> None:
+    import PIL.ImageFilter as ImageFilter
+
+    assert a.size == b.size
+    a = a.filter(ImageFilter.BLUR).getdata()
+    b = b.filter(ImageFilter.BLUR).getdata()
+    for i, ax, bx in zip(range(len(a)), a, b):
+        diff = sum(abs(ac / 256 - bc / 256) for ac, bc in zip(ax, bx)) / 3
+        assert diff < epsilon, f"images differed by {diff} at index {i}; {ax} {bx}"
 
 
 class TestCase(_Base):
     @classmethod
-    def _sandbox(cls, timed=True):
+    def _sandbox(cls, timed: bool = True) -> str:
         path = os.path.join(_sandbox(timed=timed), cls.__name__)
-        makedirs(path)
+        safe_makedirs(path)
         return path
 
     @property
-    def sandbox(self):
+    def sandbox(self) -> str:
         return self._sandbox(timed=True)
 
-    def sandboxed(self, *args, **kwargs):
-        kwargs.setdefault("sandbox", self.sandbox)
-        kwargs.setdefault("timed", True)
-        return sandboxed(*args, **kwargs)
-
-    def assertNdarraysEqual(self, a, b):
-        import numpy
-
-        self.assertEqual(a.shape, b.shape)
-
-        comparison = a == b
-        if not comparison.all():
-            it = numpy.nditer(comparison, flags=["multi_index"])
-            msg = ""
-            for equal in it:
-                if not equal:
-                    msg += "- arrays differ at index %s; %s %s\n" % (
-                        it.multi_index,
-                        a[it.multi_index],
-                        b[it.multi_index],
-                    )
-            self.fail("ndarrays contents differ\n%s" % msg)
-
-    def assertImagesAlmostEqual(self, a, b, epsilon=0.1, *args):
-        import PIL.ImageFilter as ImageFilter
-
-        self.assertEqual(a.size, b.size, "sizes dont match")
-        a = a.filter(ImageFilter.BLUR).getdata()
-        b = b.filter(ImageFilter.BLUR).getdata()
-        for i, ax, bx in zip(range(len(a)), a, b):
-            diff = sum(abs(ac / 256 - bc / 256) for ac, bc in zip(ax, bx)) / 3
-            if diff > epsilon:
-                self.fail(
-                    "images differed by %s at index %d; %s %s" % (diff, i, ax, bx)
-                )
+    def sandboxed(
+        self,
+        *args: str,
+        makedirs: bool = True,
+        timed: bool = True,
+        sandbox: str | None = None,
+    ) -> str:
+        if sandbox is None:
+            return sandboxed(
+                *args, makedirs=makedirs, timed=timed, sandbox=self.sandbox
+            )
+        else:
+            return sandboxed(*args, makedirs=makedirs, timed=timed, sandbox=sandbox)

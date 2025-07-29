@@ -28,28 +28,21 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVMEDIA_TYPE_NB
 
     cdef struct AVStream:
-
         int index
         int id
+        int disposition
 
         AVCodecParameters *codecpar
-
         AVRational time_base
 
         int64_t start_time
         int64_t duration
         int64_t nb_frames
         int64_t cur_dts
-
         AVDictionary *metadata
-
         AVRational avg_frame_rate
         AVRational r_frame_rate
         AVRational sample_aspect_ratio
-
-        int nb_side_data
-        AVPacketSideData *side_data
-
 
     # http://ffmpeg.org/doxygen/trunk/structAVIOContext.html
     cdef struct AVIOContext:
@@ -80,7 +73,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int write_flag,
         void *opaque,
         int(*read_packet)(void *opaque, uint8_t *buf, int buf_size),
-        int(*write_packet)(void *opaque, uint8_t *buf, int buf_size),
+        int(*write_packet)(void *opaque, const uint8_t *buf, int buf_size),
         int64_t(*seek)(void *opaque, int64_t offset, int whence)
     )
 
@@ -114,6 +107,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
         # const AVCodecTag* const *codec_tag
         const AVClass *priv_class
+
+    int avformat_query_codec(const AVOutputFormat *oformat, AVCodecID codec_id, int std_compliance)
 
     # AVInputFormat.flags and AVOutputFormat.flags
     cdef enum:
@@ -162,6 +157,15 @@ cdef extern from "libavformat/avformat.h" nogil:
         unsigned int max_probe_size
     )
 
+    cdef int av_find_best_stream(
+        AVFormatContext *ic,
+        AVMediaType type,
+        int wanted_stream_nb,
+        int related_stream,
+        AVCodec **decoder_ret,
+        int flags
+    ) 
+
     cdef AVInputFormat* av_find_input_format(const char *name)
 
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
@@ -187,6 +191,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
         int64_t max_analyze_duration
 
+        AVCodecID audio_codec_id
         void *opaque
 
         int (*io_open)(
@@ -196,7 +201,7 @@ cdef extern from "libavformat/avformat.h" nogil:
             int flags,
             AVDictionary **options
         )
-        void (*io_close)(
+        int (*io_close2)(
             AVFormatContext *s,
             AVIOContext *pb
         )
@@ -320,6 +325,12 @@ cdef extern from "libavformat/avformat.h" nogil:
     )
 
     cdef AVRational av_guess_frame_rate(
+        AVFormatContext *ctx,
+        AVStream *stream,
+        AVFrame *frame
+    )
+
+    cdef AVRational av_guess_sample_aspect_ratio(
         AVFormatContext *ctx,
         AVStream *stream,
         AVFrame *frame

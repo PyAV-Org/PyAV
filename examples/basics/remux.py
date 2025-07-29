@@ -1,13 +1,15 @@
 import av
 import av.datasets
 
+av.logging.set_level(av.logging.VERBOSE)
+
 input_ = av.open(av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4"))
 output = av.open("remuxed.mkv", "w")
 
 # Make an output stream using the input as a template. This copies the stream
 # setup from one to the other.
 in_stream = input_.streams.video[0]
-out_stream = output.add_stream(template=in_stream)
+out_stream = output.add_stream_from_template(in_stream)
 
 for packet in input_.demux(in_stream):
     print(packet)

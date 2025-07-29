@@ -1,8 +1,0 @@
-cython
-numpy
-pillow
-black
-isort
-flake8
-flake8-pyproject
-sphinx==5.1.0

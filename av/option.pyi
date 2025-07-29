@@ -1,34 +1,35 @@
-from .enum import EnumFlag, EnumItem
+from enum import Enum, Flag
+from typing import cast
 
-class OptionType(EnumItem):
-    FLAGS: int
-    INT: int
-    INT64: int
-    DOUBLE: int
-    FLOAT: int
-    STRING: int
-    RATIONAL: int
-    BINARY: int
-    DICT: int
-    CONST: int
-    IMAGE_SIZE: int
-    PIXEL_FMT: int
-    SAMPLE_FMT: int
-    VIDEO_RATE: int
-    DURATION: int
-    COLOR: int
-    CHANNEL_LAYOUT: int
-    BOOL: int
+class OptionType(Enum):
+    FLAGS = cast(int, ...)
+    INT = cast(int, ...)
+    INT64 = cast(int, ...)
+    DOUBLE = cast(int, ...)
+    FLOAT = cast(int, ...)
+    STRING = cast(int, ...)
+    RATIONAL = cast(int, ...)
+    BINARY = cast(int, ...)
+    DICT = cast(int, ...)
+    CONST = cast(int, ...)
+    IMAGE_SIZE = cast(int, ...)
+    PIXEL_FMT = cast(int, ...)
+    SAMPLE_FMT = cast(int, ...)
+    VIDEO_RATE = cast(int, ...)
+    DURATION = cast(int, ...)
+    COLOR = cast(int, ...)
+    CHANNEL_LAYOUT = cast(int, ...)
+    BOOL = cast(int, ...)
 
-class OptionFlags(EnumFlag):
-    ENCODING_PARAM: int
-    DECODING_PARAM: int
-    AUDIO_PARAM: int
-    VIDEO_PARAM: int
-    SUBTITLE_PARAM: int
-    EXPORT: int
-    READONLY: int
-    FILTERING_PARAM: int
+class OptionFlags(Flag):
+    ENCODING_PARAM = cast(int, ...)
+    DECODING_PARAM = cast(int, ...)
+    AUDIO_PARAM = cast(int, ...)
+    VIDEO_PARAM = cast(int, ...)
+    SUBTITLE_PARAM = cast(int, ...)
+    EXPORT = cast(int, ...)
+    READONLY = cast(int, ...)
+    FILTERING_PARAM = cast(int, ...)
 
 class BaseOption:
     name: str

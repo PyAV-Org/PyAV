@@ -36,21 +36,13 @@ Flags
 
     Wraps :ffmpeg:`AVCodecDescriptor.props` (``AV_CODEC_PROP_*``).
 
-    .. enumtable:: av.codec.codec.Properties
-        :class: av.codec.codec.Codec
-
 .. autoattribute:: Codec.capabilities
 
 .. autoclass:: Capabilities
 
     Wraps :ffmpeg:`AVCodec.capabilities` (``AV_CODEC_CAP_*``).
 
-    Note that ``ffmpeg -codecs`` prefers the properties versions of
-    ``INTRA_ONLY`` and ``LOSSLESS``.
-
-    .. enumtable:: av.codec.codec.Capabilities
-        :class: av.codec.codec.Codec
-
+    Note that ``ffmpeg -codecs`` prefers the properties versions of ``INTRA_ONLY`` and ``LOSSLESS``.
 
 Contexts
 --------
@@ -65,7 +57,6 @@ Contexts
 
 .. automethod:: CodecContext.create
 .. automethod:: CodecContext.open
-.. automethod:: CodecContext.close
 
 Attributes
 ~~~~~~~~~~
@@ -79,7 +70,6 @@ Attributes
 .. autoattribute:: CodecContext.profile
 
 .. autoattribute:: CodecContext.time_base
-.. autoattribute:: CodecContext.ticks_per_frame
 
 .. autoattribute:: CodecContext.bit_rate
 .. autoattribute:: CodecContext.bit_rate_tolerance
@@ -97,10 +87,11 @@ Transcoding
 .. automethod:: CodecContext.parse
 .. automethod:: CodecContext.encode
 .. automethod:: CodecContext.decode
+.. automethod:: CodecContext.flush_buffers
 
 
-Flags
-~~~~~
+Enums and Flags
+~~~~~~~~~~~~~~~
 
 .. autoattribute:: CodecContext.flags
 
@@ -116,10 +107,6 @@ Flags
     .. enumtable:: av.codec.context:Flags2
         :class: av.codec.context:CodecContext
 
-
-Enums
-~~~~~
-
 .. autoclass:: av.codec.context.ThreadType
 
     Which multithreading methods to use.
@@ -127,9 +114,5 @@ Enums
     so clients which cannot provide future frames should not use it.
 
     .. enumtable:: av.codec.context.ThreadType
-
-.. autoclass:: av.codec.context.SkipType
-
-    .. enumtable:: av.codec.context.SkipType
 
 

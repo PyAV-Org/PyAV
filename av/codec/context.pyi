@@ -1,80 +1,118 @@
-from typing import Any, Literal
+from enum import Flag, IntEnum
+from fractions import Fraction
+from typing import ClassVar, Literal, cast, overload
 
-from av.enum import EnumFlag, EnumItem
+from av.audio import _AudioCodecName
+from av.audio.codeccontext import AudioCodecContext
 from av.packet import Packet
+from av.video import _VideoCodecName
+from av.video.codeccontext import VideoCodecContext
 
 from .codec import Codec
+from .hwaccel import HWAccel
 
-class ThreadType(EnumFlag):
-    NONE: int
-    FRAME: int
-    SLICE: int
-    AUTO: int
+class ThreadType(Flag):
+    NONE = cast(ClassVar[ThreadType], ...)
+    FRAME = cast(ClassVar[ThreadType], ...)
+    SLICE = cast(ClassVar[ThreadType], ...)
+    AUTO = cast(ClassVar[ThreadType], ...)
+    def __get__(self, i: object | None, owner: type | None = None) -> ThreadType: ...
+    def __set__(self, instance: object, value: int | str | ThreadType) -> None: ...
 
-class SkipType(EnumItem):
-    NONE: int
-    DEFAULT: int
-    NONREF: int
-    BIDIR: int
-    NONINTRA: int
-    NONKEY: int
-    ALL: int
+class Flags(IntEnum):
+    unaligned = cast(int, ...)
+    qscale = cast(int, ...)
+    four_mv = cast(int, ...)
+    output_corrupt = cast(int, ...)
+    qpel = cast(int, ...)
+    drop_changed = cast(int, ...)
+    recon_frame = cast(int, ...)
+    copy_opaque = cast(int, ...)
+    frame_duration = cast(int, ...)
+    pass1 = cast(int, ...)
+    pass2 = cast(int, ...)
+    loop_filter = cast(int, ...)
+    gray = cast(int, ...)
+    psnr = cast(int, ...)
+    interlaced_dct = cast(int, ...)
+    low_delay = cast(int, ...)
+    global_header = cast(int, ...)
+    bitexact = cast(int, ...)
+    ac_pred = cast(int, ...)
+    interlaced_me = cast(int, ...)
+    closed_gop = cast(int, ...)
 
-class Flags(EnumFlag):
-    NONE: int
-    UNALIGNED: int
-    QSCALE: int
-    # 4MV
-    OUTPUT_CORRUPT: int
-    QPEL: int
-    DROPCHANGED: int
-    PASS1: int
-    PASS2: int
-    LOOP_FILTER: int
-    GRAY: int
-    PSNR: int
-    INTERLACED_DCT: int
-    LOW_DELAY: int
-    GLOBAL_HEADER: int
-    BITEXACT: int
-    AC_PRED: int
-    INTERLACED_ME: int
-    CLOSED_GOP: int
-
-class Flags2(EnumFlag):
-    NONE: int
-    FAST: int
-    NO_OUTPUT: int
-    LOCAL_HEADER: int
-    CHUNKS: int
-    IGNORE_CROP: int
-    SHOW_ALL: int
-    EXPORT_MVS: int
-    SKIP_MANUAL: int
-    RO_FLUSH_NOOP: int
+class Flags2(IntEnum):
+    fast = cast(int, ...)
+    no_output = cast(int, ...)
+    local_header = cast(int, ...)
+    chunks = cast(int, ...)
+    ignore_crop = cast(int, ...)
+    show_all = cast(int, ...)
+    export_mvs = cast(int, ...)
+    skip_manual = cast(int, ...)
+    ro_flush_noop = cast(int, ...)
 
 class CodecContext:
-    extradata: bytes | None
-    is_open: bool
-    is_encoder: bool
-    is_decoder: bool
     name: str
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
+    options: dict[str, str]
     profile: str | None
+    @property
+    def profiles(self) -> list[str]: ...
+    extradata: bytes | None
+    time_base: Fraction
     codec_tag: str
     bit_rate: int | None
-    max_bit_rate: int | None
     bit_rate_tolerance: int
     thread_count: int
-    thread_type: Any
-    skip_frame: Any
-
+    thread_type: ThreadType
+    skip_frame: Literal[
+        "NONE", "DEFAULT", "NONREF", "BIDIR", "NONINTRA", "NONKEY", "ALL"
+    ]
+    flags: int
+    qscale: bool
+    copy_opaque: bool
+    flags2: int
+    @property
+    def is_open(self) -> bool: ...
+    @property
+    def is_encoder(self) -> bool: ...
+    @property
+    def is_decoder(self) -> bool: ...
+    @property
+    def codec(self) -> Codec: ...
+    @property
+    def max_bit_rate(self) -> int | None: ...
+    @property
+    def delay(self) -> bool: ...
+    @property
+    def extradata_size(self) -> int: ...
+    @property
+    def is_hwaccel(self) -> bool: ...
     def open(self, strict: bool = True) -> None: ...
-    def close(self, strict: bool = True) -> None: ...
+    @overload
     @staticmethod
     def create(
-        codec: str | Codec, mode: Literal["r", "w"] | None = None
+        codec: _AudioCodecName,
+        mode: Literal["r", "w"] | None = None,
+        hwaccel: HWAccel | None = None,
+    ) -> AudioCodecContext: ...
+    @overload
+    @staticmethod
+    def create(
+        codec: _VideoCodecName,
+        mode: Literal["r", "w"] | None = None,
+        hwaccel: HWAccel | None = None,
+    ) -> VideoCodecContext: ...
+    @overload
+    @staticmethod
+    def create(
+        codec: str | Codec,
+        mode: Literal["r", "w"] | None = None,
+        hwaccel: HWAccel | None = None,
     ) -> CodecContext: ...
     def parse(
         self, raw_input: bytes | bytearray | memoryview | None = None
     ) -> list[Packet]: ...
+    def flush_buffers(self) -> None: ...

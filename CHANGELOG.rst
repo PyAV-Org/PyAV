@@ -1,7 +1,7 @@
 Changelog
 =========
 
-We are operating with `semantic versioning <http://semver.org>`_.
+We are operating with `semantic versioning <https://semver.org>`_.
 
 ..
     Please try to update this file in the commits that make the changes.
@@ -16,6 +16,224 @@ We are operating with `semantic versioning <http://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v15.1.0
+-------
+
+Features:
+
+- Make the `Frame.key_frame` flag writable.
+
+v15.0.0
+-------
+
+Major:
+
+- Make ``SubtitleStream.decode()`` return the list of subtitles directly, making the API nicer.
+- Drop support for MacOS 12 or under.
+- Binary wheels: Remove libxml2 because of security concerns.
+- Binary wheels: Remove xz because lzma encoding is very niche in media decoding and lesser security concerns.
+
+Features:
+
+- Add GBRP, GBRAP, RGBA formats by :gh-user:`z-khan`.
+- Add ``VideoFrame.save()``, a convenient way to save frames to PNGs or JPEGs, by :gh-user:`WyattBlue`.
+
+Fixes:
+
+- Binary wheels: Re-enable libx265, use version 4.1 by :gh-user:`WyattBlue`.
+- Fix memory error for AudioFifo properties by :gh-user:`zzjjbb`.
+- Copy template flags if creating a new Codec object by :gh-user:`WyattBlue`
+- ``AudioFrame.from_ndarray()``: Support python classes for parameters too, by :gh-user:`WyattBlue`.
+
+v14.4.0
+-------
+
+Features:
+
+- Expose the duration field for frames by :gh-user:`Queuecumber` in (:pr:`1880`).
+- Add support for BGR48 and BGRA64 pixel formats by :gh-user:`z-khan` in (:pr:`1873`).
+
+Fixes:
+
+- Fix security vulnerabilities in binary wheels by :gh-user:`jlaine` in (:pr:`1896`).
+
+v14.3.0
+-------
+
+Features:
+
+- Support yuv420p10le in numpy conversion by :gh-user:`tsnl` in (:pr:`1833`).
+- Add typing overloads for ``CodecContext.create`` by :gh-user:`jlaine` in (:pr:`1853`).
+- Provide binary wheels for musl-based distros such as Alpine by :gh-user:`jlaine` in (:pr:`1856`).
+
+Fixes:
+
+- Fix ``Packet.dts`` typing by :gh-user:`daveisfera` in (:pr:`1815`).
+- Use Python 3 compatible stderr logging by :gh-user:`pmarcelll` in (:pr:`1832`).
+- Uses ffmpeg 7.1.1, fixes deadlocks.
+
+v14.2.0
+-------
+
+Features:
+
+- Add support for external flags in hwacccel by :gh-user:`materight` in (:pr:`1751`).
+- Add Bayer pixel formats by :gh-user:`z-khan` in (:pr:`1755`).
+- Add support for yuv422p10le pix_fmt by :gh-user:`WyattBlue` in (:pr:`1767`).
+- Add ``supported_np_pix_fmts`` by :gh-user:`WyattBlue` in (:pr:`1766`).
+- Add ``Codec.canonical_name`` by :gh-user:`WyattBlue`.
+
+Misc:
+
+- Drop support for MacOS 11 by :gh-user:`WyattBlue` in (:pr:`1764`).
+- Set default bitrate to 0, allowing variable bitrate by :gh-user:`WyattBlue`.
+
+
+v14.1.0
+-------
+
+Features:
+
+- Add hardware decoding by :gh-user:`matthewlai` and :gh-user:`WyattBlue` in (:pr:`1685`).
+- Add ``Stream.disposition`` and ``Disposition`` enum by :gh-user:`WyattBlue` in (:pr:`1720`).
+- Add ``VideoFrame.rotation`` by :gh-user:`lgeiger` in (:pr:`1675`).
+- Support grayf32le and gbrapf32le in numpy conversion by :gh-user:`robinechuca` in (:pr:`1712`).
+- Support yuv[a]p16 formats in numpy conversion by :gh-user:`robinechuca` in (:pr:`1722`).
+
+v14.0.1
+-------
+
+Fixes:
+
+- Include header files in source distribution by :gh-user:`hmaarrfk` in (:pr:`1662`).
+- Cleanup ``AVStream.side_data`` leftovers by :gh-user:`lgeiger` in (:pr:`1674`).
+- Address :issue:`1663` by :gh-user:`WyattBlue`.
+- Make ``mp3`` work with ``OutputContainer.add_stream_from_template()``.
+
+v14.0.0
+-------
+
+Major:
+
+- Drop FFmpeg 6.
+- Drop support for MacOS <11 in our binary wheels.
+- Deleted PyAV's custom Enum class in favor of Python's standard Enums.
+- Remove ``CodecContext.close()``  and ``Stream.side_data`` because it's deprecated in ffmpeg.
+- Remove ``AVError`` alias (use ``FFmpegError`` directly instead).
+- Remove the `template` arg from ``OutputContainer.add_stream()``.
+
+Features:
+
+- Add ``OutputContainer.add_stream_from_template()`` by :gh-user:`WyattBlue` and :gh-user:`cdce8p`.
+- Add ``OutputContainer.add_data_stream()`` by :gh-user:`WyattBlue`.
+- Add ``filter.loudnorm.stats()`` function that returns the stats of loudnorm for 2-pass filtering by :gh-user:`WyattBlue`.
+- Add ``qmin`` and ``qmax`` parameters to the ``VideoCodecContext`` by :gh-user:`davidplowman` in (:pr:`1618`).
+- Allow the profile of a codec to be set as well as queried by :gh-user:`davidplowman` in (:pr:`1625`).
+
+Fixes:
+
+- Make ``VideoFrame.from_numpy_buffer()`` support buffers with padding by :gh-user:`davidplowman` in (:pr:`1635`).
+- Correct ``Colorspace``'s lowercase enums.
+- Updated ``sidedata.Type`` enum.
+- Ensure streams in StreamContainer are released. Fixes :issue:`1599`.
+
+v13.1.0
+-------
+
+Features:
+
+- Allow passing Python objects around using `Frame.opaque` and `Packet.opaque` by :gh-user:`CarlosRDomin` and :gh-user:`WyattBlue` in (:pr:`1533`).
+- Allow extradata to be set by encoders by :gh-user:`daveisfera` in (:pr:`1526`).
+- Add getting ffmpeg version info string by :gh-user:`hmaarrfk` in (:pr:`1564`).
+
+Fixes:
+
+- Remove the `deprecation` module in anticipation of `PEP 702 <https://peps.python.org/pep-0702/>`_.
+- Add type stubs to previously unannotated API sections.
+- Improve type stubs for both `mypy` and `mypy --strict`.
+- Permit only setting `time_base` with a Fraction, as mypy is unable to respect different types in getters vs setters.
+- Declare `write_packet` function as const by :gh-user:`hmaarrfk` in (:pr:`1517`).
+
+v13.0.0
+-------
+
+Major:
+
+- Drop FFmpeg 5, Support FFmpeg 7.
+- Drop Python 3.8, Support Python 3.13.
+- Update FFmpeg to 7.0.2 for the binary wheels.
+- Disallow initializing an AudioLayout object with an int.
+- Disallow accessing gop_size, timebase as a decoder (Raised deprecation warning before).
+- Remove `ticks_per_frame` property because it was deprecated in FFmpeg.
+
+Features:
+
+- Add AttachmentStream class.
+- Add `best()` method to StreamContainer.
+- Add `set_audio_frame_size()` method to Graph object.
+- Add `nb_channels` property to AudioLayout object.
+- Add `from_bytes()` method to VideoFrame object.
+
+Fixes:
+
+- Fix VideoCC's repl breaking when `self._format` is None.
+- Fix getting `pix_fmt` property when VideoCC's `self._format` is None.
+
+v12.3.0
+-------
+
+Features:
+
+- Support libav's `av_log_set_level` by :gh-user:`materight` in (:pr:`1448`).
+- Add Graph.link_nodes by :gh-user:`WyattBlue` in (:pr:`1449`).
+- Add default codec properties by :gh-user:`WyattBlue` in (:pr:`1450`).
+- Remove the xvid and ass packages in ffmpeg binaries because they were unused by :gh-user:`WyattBlue` in (:pr:`1462`).
+- Add supported_codecs property to OutputContainer by :gh-user:`WyattBlue` in (:pr:`1465`).
+- Add text and dialogue property to AssSubtitle, remove TextSubtitle by :gh-user:`WyattBlue` in (:pr:`1456`).
+
+Fixes:
+
+- Include libav headers in final distribution by :gh-user:`materight` in (:pr:`1455`).
+- Fix segfault when calling subtitle_stream.decode() by :gh-user:`WyattBlue` in (:pr:`1460`).
+- flushing subtitle decoder requires a new uninitialized packet by :gh-user:`moonsikpark` in (:pr:`1461`).
+- Set default color range for VideoReformatter.format() by :gh-user:`elxy` in (:pr:`1458`).
+- Resampler: format, layout accepts `str` `int` too by :gh-user:`WyattBlue` in (:pr:`1446`).
+
+v12.2.0
+-------
+
+Features:
+
+- Add a `make_writable` method to `Frame` instances (:issue:`1414`).
+- Use `av_guess_sample_aspect_ratio` to report sample and display aspect ratios.
+
+Fixes:
+
+- Fix a crash when assigning an `AudioLayout` to `AudioCodecContext.layout` (:issue:`1434`).
+- Remove a circular reference which caused `AudioSampler` to occupy memory until garbage collected (:issue:`1429`).
+- Fix more type stubs, remove incorrect `__init__.pyi`.
+
+v12.1.0
+-------
+
+Features:
+
+- Build binary wheels with webp support.
+- Allow disabling logs, disable logs by default.
+- Add bitstream filters by :gh-user:`skeskinen` in (:pr:`1379` :issue:`1375`).
+- Expose CodecContext flush_buffers by :gh-user:`skeskinen` in (:pr:`1382`).
+
+Fixes:
+
+- Fix type stubs, add missing type stubs.
+- Add S12M_TIMECODE by :gh-user:`WyattBlue` in (:pr:`1381`).
+- Subtitle.text now returns bytes by :gh-user:`WyattBlue` in (:pr:`1398`).
+- Allow packet.duration to be writable by :gh-user:`WyattBlue` in (:pr:`1399`).
+- Remove deprecated `VideoStream.frame_rate` by :gh-user:`WyattBlue` in (:pr:`1351`).
+- Build with Arm for PyPy now by :gh-user:`WyattBlue` in (:pr:`1395`).
+- Fix #1378 by :gh-user:`WyattBlue` in (:pr:`1400`).
+- setup.py: use PKG_CONFIG env var to get the pkg-config to use by :gh-user:`Artturin` in (:pr:`1387`).
+
 v12.0.0
 -------
 
@@ -24,28 +242,28 @@ Major:
 - Add type hints.
 - Update FFmpeg to 6.1.1 for the binary wheels.
 - Update libraries for the binary wheels (notably dav1d to 1.4.1).
-- Deprecate VideoCodecContext.gop_size for decoders by @JoeSchiff in (:issue:`1256`).
-- Deprecate frame.index by @JoeSchiff in (:issue:`1218`).
+- Deprecate VideoCodecContext.gop_size for decoders by :gh-user:`JoeSchiff` in (:pr:`1256`).
+- Deprecate frame.index by :gh-user:`JoeSchiff` in (:pr:`1218`).
 
 Features:
 
-- Allow using pathlib.Path for av.open by @WyattBlue in (:issue:`1231`).
-- Add `max_b_frames` property to CodecContext by @davidplowman in (:issue:`1119`).
-- Add `encode_lazy` method to CodecContext by @rawler in (:issue:`1092`).
-- Add `color_range` to CodecContext/Frame by @johanjeppsson in (:issue:`686`).
-- Set `time_base` for AudioResampler by @daveisfera in (:issue:`1209`).
-- Add support for ffmpeg's AVCodecContext::delay by @JoeSchiff in (:issue:`1279`).
-- Add `color_primaries`, `color_trc`, `colorspace` to VideoStream by @WyattBlue in (:issue:`1304`).
-- Add `bits_per_coded_sample` to VideoCodecContext by @rvanlaar in (:issue:`1203`).
-- AssSubtitle.ass now returns as bytes by @WyattBlue in (:issue:`1333`).
-- Expose DISPLAYMATRIX side data by @hyenal in (:issue:`1249`).
+- Allow using pathlib.Path for av.open by :gh-user:`WyattBlue` in (:pr:`1231`).
+- Add `max_b_frames` property to CodecContext by :gh-user:`davidplowman` in (:pr:`1119`).
+- Add `encode_lazy` method to CodecContext by :gh-user:`rawler` in (:pr:`1092`).
+- Add `color_range` to CodecContext/Frame by :gh-user:`johanjeppsson` in (:pr:`686`).
+- Set `time_base` for AudioResampler by :gh-user:`daveisfera` in (:issue:`1209`).
+- Add support for ffmpeg's AVCodecContext::delay by :gh-user:`JoeSchiff` in (:issue:`1279`).
+- Add `color_primaries`, `color_trc`, `colorspace` to VideoStream by :gh-user:`WyattBlue` in (:pr:`1304`).
+- Add `bits_per_coded_sample` to VideoCodecContext by :gh-user:`rvanlaar` in (:pr:`1203`).
+- AssSubtitle.ass now returns as bytes by :gh-user:`WyattBlue` in (:pr:`1333`).
+- Expose DISPLAYMATRIX side data by :gh-user:`hyenal` in (:pr:`1249`).
 
 Fixes:
 
-- Convert deprecated Cython extension class properties to decorator syntax by @JoeSchiff
-- Check None packet when setting time_base after decode by @philipnbbc in (:issue:`1281`).
-- Remove deprecated `Buffer.to_bytes` by @WyattBlue in (:issue:`1286`).
-- Remove deprecated `Packet.decode_one` by @WyattBlue in (:issue:`1301`).
+- Convert deprecated Cython extension class properties to decorator syntax by :gh-user:`JoeSchiff`.
+- Check None packet when setting time_base after decode by :gh-user:`philipnbbc` in (:pr:`1281`).
+- Remove deprecated `Buffer.to_bytes` by :gh-user:`WyattBlue` in (:pr:`1286`).
+- Remove deprecated `Packet.decode_one` by :gh-user:`WyattBlue` in (:pr:`1301`).
 
 v11.0.0
 -------
@@ -335,7 +553,7 @@ Micro:
 Build:
 
 - Assert building against compatible FFmpeg. (:issue:`401`)
-- Lock down Cython lanaguage level to avoid build warnings. (:issue:`443`)
+- Lock down Cython language level to avoid build warnings. (:issue:`443`)
 
 Other:
 
@@ -516,9 +734,9 @@ Major:
   of streams/containers.
 - ``Stream.encode`` returns a list of packets, instead of a single packet.
 - ``AudioFifo`` and ``AudioResampler`` will raise ``ValueError`` if input frames
-  inconsistant ``pts``.
+  inconsistent ``pts``.
 - ``time_base`` use has been revisited across the codebase, and may not be converted
-  bettween ``Stream.time_base`` and ``CodecContext.time_base`` at the same times
+  between ``Stream.time_base`` and ``CodecContext.time_base`` at the same times
   in the transcoding pipeline.
 - ``CodecContext.rate`` has been removed, but proxied to ``VideoCodecContext.framerate``
   and ``AudioCodecContext.sample_rate``. The definition is effectively inverted from
@@ -531,7 +749,7 @@ Minor:
 
 - Added ``Packet.is_keyframe`` and ``Packet.is_corrupt``.
   (:issue:`226`)
-- Many more ``time_base``, ``pts`` and other attributes are writeable.
+- Many more ``time_base``, ``pts`` and other attributes are writable.
 - ``Option`` exposes much more of the API (but not get/set).
   (:issue:`243`)
 - Expose metadata encoding controls.
@@ -641,7 +859,7 @@ v0.2.3
 Major:
 
 - Python IO.
-- Agressively releases GIL
+- Aggressively releases GIL
 - Add experimental Windows build.
   (:issue:`84`)
 

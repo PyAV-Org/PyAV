@@ -2,12 +2,13 @@ import errno
 import logging
 import os
 import sys
+from typing import Iterator
 from urllib.request import urlopen
 
 log = logging.getLogger(__name__)
 
 
-def iter_data_dirs(check_writable=False):
+def iter_data_dirs(check_writable: bool = False) -> Iterator[str]:
     try:
         yield os.environ["PYAV_TESTDATA_DIR"]
     except KeyError:
@@ -42,7 +43,7 @@ def iter_data_dirs(check_writable=False):
     yield os.path.join(os.path.expanduser("~"), ".pyav", "datasets")
 
 
-def cached_download(url, name):
+def cached_download(url: str, name: str) -> str:
     """Download the data at a URL, and cache it under the given name.
 
     The file is stored under `pyav/test` with the given name in the directory
@@ -96,7 +97,7 @@ def cached_download(url, name):
     return path
 
 
-def fate(name):
+def fate(name: str) -> str:
     """Download and return a path to a sample from the FFmpeg test suite.
 
     Data is handled by :func:`cached_download`.
@@ -110,7 +111,7 @@ def fate(name):
     )
 
 
-def curated(name):
+def curated(name: str) -> str:
     """Download and return a path to a sample that is curated by the PyAV developers.
 
     Data is handled by :func:`cached_download`.

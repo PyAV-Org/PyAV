@@ -1,31 +1,71 @@
-from numbers import Real
+from enum import Flag, IntEnum
+from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Literal, Type, overload
+from typing import Any, Callable, ClassVar, Literal, Type, cast, overload
 
-from av.enum import EnumFlag
+from av.codec.hwaccel import HWAccel
 from av.format import ContainerFormat
 
 from .input import InputContainer
 from .output import OutputContainer
 from .streams import StreamContainer
 
-class Flags(EnumFlag):
-    GENPTS: int
-    IGNIDX: int
-    NONBLOCK: int
-    IGNDTS: int
-    NOFILLIN: int
-    NOPARSE: int
-    NOBUFFER: int
-    CUSTOM_IO: int
-    DISCARD_CORRUPT: int
-    FLUSH_PACKETS: int
-    BITEXACT: int
-    SORT_DTS: int
-    FAST_SEEK: int
-    SHORTEST: int
-    AUTO_BSF: int
+Real = int | float | Fraction
+
+class Flags(Flag):
+    gen_pts = cast(ClassVar[Flags], ...)
+    ign_idx = cast(ClassVar[Flags], ...)
+    non_block = cast(ClassVar[Flags], ...)
+    ign_dts = cast(ClassVar[Flags], ...)
+    no_fillin = cast(ClassVar[Flags], ...)
+    no_parse = cast(ClassVar[Flags], ...)
+    no_buffer = cast(ClassVar[Flags], ...)
+    custom_io = cast(ClassVar[Flags], ...)
+    discard_corrupt = cast(ClassVar[Flags], ...)
+    flush_packets = cast(ClassVar[Flags], ...)
+    bitexact = cast(ClassVar[Flags], ...)
+    sort_dts = cast(ClassVar[Flags], ...)
+    fast_seek = cast(ClassVar[Flags], ...)
+    shortest = cast(ClassVar[Flags], ...)
+    auto_bsf = cast(ClassVar[Flags], ...)
+
+class AudioCodec(IntEnum):
+    none = cast(int, ...)
+    pcm_alaw = cast(int, ...)
+    pcm_bluray = cast(int, ...)
+    pcm_dvd = cast(int, ...)
+    pcm_f16le = cast(int, ...)
+    pcm_f24le = cast(int, ...)
+    pcm_f32be = cast(int, ...)
+    pcm_f32le = cast(int, ...)
+    pcm_f64be = cast(int, ...)
+    pcm_f64le = cast(int, ...)
+    pcm_lxf = cast(int, ...)
+    pcm_mulaw = cast(int, ...)
+    pcm_s16be = cast(int, ...)
+    pcm_s16be_planar = cast(int, ...)
+    pcm_s16le = cast(int, ...)
+    pcm_s16le_planar = cast(int, ...)
+    pcm_s24be = cast(int, ...)
+    pcm_s24daud = cast(int, ...)
+    pcm_s24le = cast(int, ...)
+    pcm_s24le_planar = cast(int, ...)
+    pcm_s32be = cast(int, ...)
+    pcm_s32le = cast(int, ...)
+    pcm_s32le_planar = cast(int, ...)
+    pcm_s64be = cast(int, ...)
+    pcm_s64le = cast(int, ...)
+    pcm_s8 = cast(int, ...)
+    pcm_s8_planar = cast(int, ...)
+    pcm_u16be = cast(int, ...)
+    pcm_u16le = cast(int, ...)
+    pcm_u24be = cast(int, ...)
+    pcm_u24le = cast(int, ...)
+    pcm_u32be = cast(int, ...)
+    pcm_u32le = cast(int, ...)
+    pcm_u8 = cast(int, ...)
+    pcm_vidc = cast(int, ...)
 
 class Container:
     writeable: bool
@@ -40,11 +80,12 @@ class Container:
     format: ContainerFormat
     options: dict[str, str]
     container_options: dict[str, str]
-    stream_options: list[str]
+    stream_options: list[dict[str, str]]
     streams: StreamContainer
     metadata: dict[str, str]
     open_timeout: Real | None
     read_timeout: Real | None
+    flags: int
 
     def __enter__(self) -> Container: ...
     def __exit__(
@@ -53,7 +94,6 @@ class Container:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> bool: ...
-    def err_check(self, value: int) -> int: ...
     def set_timeout(self, timeout: Real | None) -> None: ...
     def start_timeout(self) -> None: ...
 
@@ -70,6 +110,7 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
 @overload
 def open(
@@ -84,6 +125,7 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
 @overload
 def open(
@@ -98,6 +140,7 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> OutputContainer: ...
 @overload
 def open(
@@ -112,4 +155,5 @@ def open(
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
+    hwaccel: HWAccel | None = None,
 ) -> InputContainer | OutputContainer: ...

@@ -1,11 +1,11 @@
 PyAV
 ====
 
-[![GitHub Test Status][github-tests-badge]][github-tests]
-[![Gitter Chat][gitter-badge]][gitter] [![Documentation][docs-badge]][docs] \
-[![Python Package Index][pypi-badge]][pypi] [![Conda Forge][conda-badge]][conda]
-
 PyAV is a Pythonic binding for the [FFmpeg][ffmpeg] libraries. We aim to provide all of the power and control of the underlying library, but manage the gritty details as much as possible.
+
+---
+
+[![GitHub Test Status][github-tests-badge]][github-tests] [![Documentation][docs-badge]][docs] [![Python Package Index][pypi-badge]][pypi] [![Conda Forge][conda-badge]][conda]
 
 PyAV is for direct and precise access to your media via containers, streams, packets, codecs, and frames. It exposes a few transformations of that data, and helps you get your data to/from other packages (e.g. Numpy and Pillow).
 
@@ -17,22 +17,11 @@ But where you can't work without it, PyAV is a critical tool.
 Installation
 ------------
 
-Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. Since release 8.0.0 binary wheels are provided on [PyPI][pypi] for Linux, Mac and Windows linked against a modern FFmpeg. You can install these wheels by running:
+Binary wheels are provided on [PyPI][pypi] for Linux, MacOS and Windows linked against the latest stable version of ffmpeg. You can install these wheels by running:
 
 ```bash
 pip install av
 ```
-
-If you want to use your existing FFmpeg, the source version of PyAV is on [PyPI][pypi] too:
-
-```bash
-pip install av --no-binary av
-```
-
-Installing from source is not supported on Windows.
-
-Alternative installation methods
---------------------------------
 
 Another way of installing PyAV is via [conda-forge][conda-forge]:
 
@@ -42,26 +31,48 @@ conda install av -c conda-forge
 
 See the [Conda install][conda-install] docs to get started with (mini)Conda.
 
-And if you want to build from the absolute source (POSIX only):
+
+Alternative installation methods
+--------------------------------
+
+Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. If you want to use your existing ffmpeg (must be the correct major version), the source version of PyAV is on [PyPI][pypi]:
+
+> [!WARNING]
+> You must be in a posix env, and have the correct version of ffmpeg installed on your system.
+
+```bash
+pip install av --no-binary av
+```
+
+
+Installing From Source
+----------------------
+
+Here's how to build PyAV from source. You must use [MSYS2](https://www.msys2.org/) when using Windows.
 
 ```bash
 git clone https://github.com/PyAV-Org/PyAV.git
 cd PyAV
 source scripts/activate.sh
 
-# Either install the testing dependencies:
-pip install --upgrade -r tests/requirements.txt
-# or have it all, including FFmpeg, built/installed for you:
+# Build ffmpeg from source. You can skip this step
+# if ffmpeg is already installed.
 ./scripts/build-deps
 
-# Build PyAV.
+# Build PyAV
 make
+
+# Testing
+make test
+
+# Install globally
+deactivate
 pip install .
 ```
 
 ---
 
-Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
+Have fun, [read the docs][docs], [come chat with us][discuss], and good luck!
 
 
 
@@ -69,10 +80,9 @@ Have fun, [read the docs][docs], [come chat with us][gitter], and good luck!
 [conda]: https://anaconda.org/conda-forge/av
 [docs-badge]: https://img.shields.io/badge/docs-on%20pyav.basswood--io.com-blue.svg
 [docs]: https://pyav.basswood-io.com
-[gitter-badge]: https://img.shields.io/gitter/room/nwjs/nw.js.svg?logo=gitter&colorB=cc2b5e
-[gitter]: https://app.gitter.im/#/room/#PyAV-Org_User-Help:gitter.im
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
 [pypi]: https://pypi.org/project/av
+[discuss]: https://github.com/PyAV-Org/PyAV/discussions
 
 [github-tests-badge]: https://github.com/PyAV-Org/PyAV/workflows/tests/badge.svg
 [github-tests]: https://github.com/PyAV-Org/PyAV/actions?workflow=tests

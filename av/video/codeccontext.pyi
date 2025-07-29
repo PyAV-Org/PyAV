@@ -8,10 +8,10 @@ from .format import VideoFormat
 from .frame import VideoFrame
 
 class VideoCodecContext(CodecContext):
-    format: VideoFormat
+    format: VideoFormat | None
     width: int
     height: int
-    bits_per_codec_sample: int
+    bits_per_coded_sample: int
     pix_fmt: str | None
     framerate: Fraction
     rate: Fraction
@@ -19,12 +19,15 @@ class VideoCodecContext(CodecContext):
     sample_aspect_ratio: Fraction | None
     display_aspect_ratio: Fraction | None
     has_b_frames: bool
+    max_b_frames: int
     coded_width: int
     coded_height: int
     color_range: int
     color_primaries: int
     color_trc: int
     colorspace: int
+    qmin: int
+    qmax: int
     type: Literal["video"]
 
     def encode(self, frame: VideoFrame | None = None) -> list[Packet]: ...

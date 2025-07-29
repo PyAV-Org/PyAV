@@ -1,56 +1,75 @@
+from typing import cast
+
 import av
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
 
-from .common import TestCase, fate_suite
+from .common import fate_suite
 
 
-class TestSubtitle(TestCase):
-    def test_movtext(self):
+class TestSubtitle:
+    def test_movtext(self) -> None:
         path = fate_suite("sub/MovText_capability_tester.mp4")
 
-        subs = []
+        subs: list[AssSubtitle] = []
         with av.open(path) as container:
             for packet in container.demux():
-                subs.extend(packet.decode())
+                subs.extend(cast(list[AssSubtitle], packet.decode()))
 
-        self.assertEqual(len(subs), 3)
+        assert len(subs) == 3
 
-        subset = subs[0]
-        self.assertEqual(subset.format, 1)
-        self.assertEqual(subset.pts, 970000)
-        self.assertEqual(subset.start_display_time, 0)
-        self.assertEqual(subset.end_display_time, 1570)
+        sub = subs[0]
+        assert isinstance(sub, AssSubtitle)
+        assert sub.type == b"ass"
+        assert sub.text == b""
+        assert sub.ass == b"0,0,Default,,0,0,0,,- Test 1.\\N- Test 2."
+        assert sub.dialogue == b"- Test 1.\n- Test 2."
 
-        sub = subset[0]
-        self.assertIsInstance(sub, AssSubtitle)
-        self.assertEqual(sub.type, b"ass")
-        self.assertEqual(sub.ass, b"0,0,Default,,0,0,0,,- Test 1.\\N- Test 2.")
+    def test_subset(self) -> None:
+        path = fate_suite("sub/MovText_capability_tester.mp4")
 
-    def test_vobsub(self):
+        with av.open(path) as container:
+            subs = container.streams.subtitles[0]
+            for packet in container.demux(subs):
+                subset = subs.decode2(packet)
+                if subset is not None:
+                    assert not isinstance(subset, av.subtitles.subtitle.Subtitle)
+                    assert isinstance(subset, av.subtitles.subtitle.SubtitleSet)
+                    assert subset.format == 1
+                    assert hasattr(subset, "pts")
+                    assert subset.start_display_time == 0
+                    assert hasattr(subset, "end_display_time")
+
+    def test_vobsub(self) -> None:
         path = fate_suite("sub/vobsub.sub")
 
-        subs = []
+        subs: list[BitmapSubtitle] = []
         with av.open(path) as container:
             for packet in container.demux():
-                subs.extend(packet.decode())
+                subs.extend(cast(list[BitmapSubtitle], packet.decode()))
 
-        self.assertEqual(len(subs), 43)
+        assert len(subs) == 43
 
-        subset = subs[0]
-        self.assertEqual(subset.format, 0)
-        self.assertEqual(subset.pts, 132499044)
-        self.assertEqual(subset.start_display_time, 0)
-        self.assertEqual(subset.end_display_time, 4960)
-
-        sub = subset[0]
-        self.assertIsInstance(sub, BitmapSubtitle)
-        self.assertEqual(sub.type, b"bitmap")
-        self.assertEqual(sub.x, 259)
-        self.assertEqual(sub.y, 379)
-        self.assertEqual(sub.width, 200)
-        self.assertEqual(sub.height, 24)
-        self.assertEqual(sub.nb_colors, 4)
+        sub = subs[0]
+        assert isinstance(sub, BitmapSubtitle)
+        assert sub.type == b"bitmap"
+        assert sub.x == 259
+        assert sub.y == 379
+        assert sub.width == 200
+        assert sub.height == 24
+        assert sub.nb_colors == 4
 
         bms = sub.planes
-        self.assertEqual(len(bms), 1)
-        self.assertEqual(len(memoryview(bms[0])), 4800)
+        assert len(bms) == 1
+        assert len(memoryview(bms[0])) == 4800  # type: ignore
+
+    def test_subtitle_flush(self) -> None:
+        path = fate_suite("sub/MovText_capability_tester.mp4")
+
+        subs: list[object] = []
+        with av.open(path) as container:
+            stream = container.streams.subtitles[0]
+            for packet in container.demux(stream):
+                subs.extend(stream.decode(packet))
+                subs.extend(stream.decode())
+
+        assert len(subs) == 3

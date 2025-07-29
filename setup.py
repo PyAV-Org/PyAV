@@ -11,7 +11,6 @@ from Cython.Build import cythonize
 from Cython.Compiler.AutoDocTransforms import EmbedSignature
 from setuptools import Extension, find_packages, setup
 
-
 FFMPEG_LIBRARIES = [
     "avformat",
     "avcodec",
@@ -72,16 +71,17 @@ def get_config_from_pkg_config():
     """
     Get distutils-compatible extension arguments using pkg-config.
     """
+    pkg_config = os.environ.get("PKG_CONFIG", "pkg-config")
     try:
         raw_cflags = subprocess.check_output(
-            ["pkg-config", "--cflags", "--libs"]
+            [pkg_config, "--cflags", "--libs"]
             + ["lib" + name for name in FFMPEG_LIBRARIES]
         )
     except FileNotFoundError:
-        print("pkg-config is required for building PyAV")
+        print(f"{pkg_config} is required for building PyAV")
         exit(1)
     except subprocess.CalledProcessError:
-        print("pkg-config could not find libraries {}".format(FFMPEG_LIBRARIES))
+        print(f"{pkg_config} could not find libraries {FFMPEG_LIBRARIES}")
         exit(1)
 
     known, unknown = parse_cflags(raw_cflags.decode("utf-8"))
@@ -119,16 +119,10 @@ for i, arg in enumerate(sys.argv):
         FFMPEG_DIR = arg.split("=")[1]
         del sys.argv[i]
 
-# Do not cythonize or use pkg-config when cleaning.
-use_pkg_config = platform.system() != "Windows"
-if len(sys.argv) > 1 and sys.argv[1] == "clean":
-    cythonize = lambda ext, **kwargs: [ext]
-    use_pkg_config = False
-
-# Locate FFmpeg libraries and headers.
+# Locate ffmpeg libraries and headers.
 if FFMPEG_DIR is not None:
     extension_extra = get_config_from_directory(FFMPEG_DIR)
-elif use_pkg_config:
+elif platform.system() != "Windows":
     extension_extra = get_config_from_pkg_config()
 else:
     extension_extra = {
@@ -137,12 +131,43 @@ else:
         "library_dirs": [],
     }
 
-# Construct the modules that we find in the "av" directory.
-ext_modules = []
-for dirname, dirnames, filenames in os.walk("av"):
+IMPORT_NAME = "av"
+
+loudnorm_extension = Extension(
+    f"{IMPORT_NAME}.filter.loudnorm",
+    sources=[
+        f"{IMPORT_NAME}/filter/loudnorm.py",
+        f"{IMPORT_NAME}/filter/loudnorm_impl.c",
+    ],
+    include_dirs=[f"{IMPORT_NAME}/filter"] + extension_extra["include_dirs"],
+    libraries=extension_extra["libraries"],
+    library_dirs=extension_extra["library_dirs"],
+)
+
+compiler_directives = {
+    "c_string_type": "str",
+    "c_string_encoding": "ascii",
+    "embedsignature": True,
+    "binding": False,
+    "language_level": 3,
+}
+
+# Add the cythonized loudnorm extension to ext_modules
+ext_modules = cythonize(
+    loudnorm_extension,
+    compiler_directives=compiler_directives,
+    build_dir="src",
+    include_path=["include"],
+)
+
+for dirname, dirnames, filenames in os.walk(IMPORT_NAME):
     for filename in filenames:
         # We are looking for Cython sources.
-        if filename.startswith(".") or os.path.splitext(filename)[1] != ".pyx":
+        if filename.startswith("."):
+            continue
+        if filename in {"__init__.py", "__main__.py", "about.py", "datasets.py"}:
+            continue
+        if os.path.splitext(filename)[1] not in {".pyx", ".py"}:
             continue
 
         pyx_path = os.path.join(dirname, filename)
@@ -161,73 +186,19 @@ for dirname, dirnames, filenames in os.walk("av"):
                 library_dirs=extension_extra["library_dirs"],
                 sources=[pyx_path],
             ),
-            compiler_directives=dict(
-                c_string_type="str",
-                c_string_encoding="ascii",
-                embedsignature=True,
-                language_level=2,
-            ),
+            compiler_directives=compiler_directives,
             build_dir="src",
             include_path=["include"],
         )
 
 
-# Read package metadata
-about = {}
-about_file = os.path.join(os.path.dirname(__file__), "av", "about.py")
-with open(about_file, encoding="utf-8") as fp:
-    exec(fp.read(), about)
-
-package_folders = pathlib.Path("av").glob("**/")
-package_data = {".".join(pckg.parts): ["*.pxd", "*.pyi", "*.typed"] for pckg in package_folders}
-
-
-with open("README.md") as f:
-    long_description = f.read()
+package_folders = pathlib.Path(IMPORT_NAME).glob("**/")
+package_data = {
+    ".".join(pckg.parts): ["*.pxd", "*.pyi", "*.typed"] for pckg in package_folders
+}
 
 setup(
-    name="av",
-    version=about["__version__"],
-    description="Pythonic bindings for FFmpeg's libraries.",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    license="BSD",
-    project_urls={
-        "Bug Reports": "https://github.com/PyAV-Org/PyAV/issues",
-        "Documentation": "https://pyav.org/docs",
-        "Feedstock": "https://github.com/conda-forge/av-feedstock",
-        "Download": "https://pypi.org/project/av",
-    },
-    author="Mike Boers",
-    author_email="pyav@mikeboers.com",
-    url="https://github.com/PyAV-Org/PyAV",
-    packages=find_packages(exclude=["build*", "examples*", "scratchpad*", "tests*"]),
+    packages=find_packages(include=[f"{IMPORT_NAME}*"]),
     package_data=package_data,
-    python_requires=">=3.9",
-    zip_safe=False,
     ext_modules=ext_modules,
-    test_suite="tests",
-    entry_points={
-        "console_scripts": ["pyav = av.__main__:main"],
-    },
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: BSD License",
-        "Natural Language :: English",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Operating System :: Unix",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Cython",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Multimedia :: Sound/Audio",
-        "Topic :: Multimedia :: Sound/Audio :: Conversion",
-        "Topic :: Multimedia :: Video",
-        "Topic :: Multimedia :: Video :: Conversion",
-    ],
 )

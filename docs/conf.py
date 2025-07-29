@@ -1,23 +1,13 @@
-import logging
 import os
 import re
 import sys
-import xml.etree.ElementTree as etree
 
-from docutils import nodes
-from sphinx import addnodes
-from sphinx.util.docutils import SphinxDirective
 import sphinx
+from docutils import nodes
+from sphinx.util.docutils import SphinxDirective
 
-
-logging.basicConfig()
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath(".."))
 
-# -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -29,39 +19,27 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.extlinks",
     "sphinx.ext.doctest",
+    "sphinx_copybutton",  # Add copy button to code blocks
 ]
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-
-# The suffix of source filenames.
 source_suffix = ".rst"
-
-# The master toctree document.
 master_doc = "index"
-
-# General information about the project.
 project = "PyAV"
-copyright = "2024, The PyAV Team"
+copyright = "2025, The PyAV Team"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-#
+
 about = {}
 with open("../av/about.py") as fp:
     exec(fp.read(), about)
 
-# The full version, including alpha/beta/rc tags.
 release = about["__version__"]
-
-# The short X.Y version.
 version = release.split("-")[0]
-
 exclude_patterns = ["_build"]
-
-# The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 
 # -- Options for HTML output ---------------------------------------------------
@@ -71,7 +49,7 @@ html_theme_path = [os.path.abspath(os.path.join(__file__, "..", "_themes"))]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/logo-250.png"
+html_logo = "_static/logo.webp"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -83,9 +61,12 @@ html_favicon = "_static/favicon.png"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+html_theme_options = {
+    "sidebarwidth": "250px",
+}
+
 
 doctest_global_setup = """
-
 import errno
 import os
 
@@ -109,29 +90,18 @@ except OSError as e:
 os.chdir(here)
 
 video_path = curated('pexels/time-lapse-video-of-night-sky-857195.mp4')
-
 """
 
-doctest_global_cleanup = """
-
-os.chdir(_cwd)
-
-"""
-
-
+doctest_global_cleanup = "os.chdir(_cwd)"
 doctest_test_doctest_blocks = ""
 
-
 extlinks = {
-    "ffstruct": ("http://ffmpeg.org/doxygen/trunk/struct%s.html", "struct "),
-    "issue": ("https://github.com/PyAV-Org/PyAV/issues/%s", "#"),
-    "pr": ("https://github.com/PyAV-Org/PyAV/pull/%s", "#"),
-    "gh-user": ("https://github.com/%s", "@"),
+    "issue": ("https://github.com/PyAV-Org/PyAV/issues/%s", "#%s"),
+    "pr": ("https://github.com/PyAV-Org/PyAV/pull/%s", "#%s"),
+    "gh-user": ("https://github.com/%s", "@%s"),
 }
 
-intersphinx_mapping = {
-    "https://docs.python.org/3": None,
-}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 autodoc_member_order = "bysource"
 autodoc_default_options = {
@@ -238,8 +208,10 @@ class EnumTable(SphinxDirective):
         )
 
         seen = set()
-
-        for name, item in enum._by_name.items():
+        enum_items = [
+            (name, item) for name, item in vars(enum).items() if isinstance(item, enum)
+        ]
+        for name, item in enum_items:
             if name.lower() in seen:
                 continue
             seen.add(name.lower())
@@ -252,114 +224,66 @@ class EnumTable(SphinxDirective):
                 attr = None
 
             value = f"0x{item.value:X}"
-            doc = item.__doc__ or "-"
+            doc = enum.__annotations__.get(name, "---")[1:-1]
             tbody += makerow(attr, name, value, doc)
 
         return [table]
 
 
-doxylink = {}
-ffmpeg_tagfile = os.path.abspath(
-    os.path.join(__file__, "..", "_build", "doxygen", "tagfile.xml")
-)
-if not os.path.exists(ffmpeg_tagfile):
-    print("ERROR: Missing FFmpeg tagfile.")
-    exit(1)
-doxylink["ffmpeg"] = (ffmpeg_tagfile, "https://ffmpeg.org/doxygen/trunk/")
+def ffmpeg_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    """
+    Custom role for FFmpeg API links.
+    Converts :ffmpeg:`AVSomething` into proper FFmpeg API documentation links.
+    """
 
+    base_url = "https://ffmpeg.org/doxygen/7.0/struct{}.html"
 
-def doxylink_create_handler(app, file_name, url_base):
-    print("Finding all names in Doxygen tagfile", file_name)
+    try:
+        struct_name, member = text.split(".")
+    except Exception:
+        struct_name = None
 
-    doc = etree.parse(file_name)
-    root = doc.getroot()
+    if struct_name is None:
+        fragment = {
+            "avformat_seek_file": "group__lavf__decoding.html#ga3b40fc8d2fda6992ae6ea2567d71ba30",
+            "av_find_best_stream": "avformat_8c.html#a8d4609a8f685ad894c1503ffd1b610b4",
+            "av_frame_make_writable": "group__lavu__frame.html#gadd5417c06f5a6b419b0dbd8f0ff363fd",
+            "avformat_write_header": "group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb",
+            "av_guess_frame_rate": "group__lavf__misc.html#ga698e6aa73caa9616851092e2be15875d",
+            "av_guess_sample_aspect_ratio": "group__lavf__misc.html#gafa6fbfe5c1bf6792fd6e33475b6056bd",
+        }.get(text, f"struct{text}.html")
+        url = "https://ffmpeg.org/doxygen/7.0/" + fragment
+    else:
+        fragment = {
+            "AVCodecContext.thread_count": "#aa852b6227d0778b62e9cc4034ad3720c",
+            "AVCodecContext.thread_type": "#a7651614f4309122981d70e06a4b42fcb",
+            "AVCodecContext.skip_frame": "#af869b808363998c80adf7df6a944a5a6",
+            "AVCodecContext.qmin": "#a3f63bc9141e25bf7f1cda0cef7cd4a60",
+            "AVCodecContext.qmax": "#ab015db3b7fcd227193a7c17283914187",
+            "AVCodec.capabilities": "#af51f7ff3dac8b730f46b9713e49a2518",
+            "AVCodecDescriptor.props": "#a9949288403a12812cd6e3892ac45f40f",
+            "AVCodecContext.bits_per_coded_sample": "#a3866500f51fabfa90faeae894c6e955c",
+            "AVFrame.color_range": "#a853afbad220bbc58549b4860732a3aa5",
+            "AVFrame.color_primaries": "#a59a3f830494f2ed1133103a1bc9481e7",
+            "AVFrame.color_trc": "#ab09abb126e3922bc1d010cf044087939",
+            "AVFrame.colorspace": "#a9262c231f1f64869439b4fe587fe1710",
+        }.get(text, f"#{member}")
 
-    parent_map = {}  # ElementTree doesn't five us access to parents.
-    urls = {}
+        url = base_url.format(struct_name) + fragment
 
-    for node in root.findall(".//name/.."):
-        for child in node:
-            parent_map[child] = node
-
-        kind = node.attrib["kind"]
-        if kind not in ("function", "struct", "variable"):
-            continue
-
-        name = node.find("name").text
-
-        if kind not in ("function",):
-            parent = parent_map.get(node)
-            parent_name = parent.find("name") if parent else None
-            if parent_name is not None:
-                name = f"{parent_name.text}.{name}"
-
-        filenode = node.find("filename")
-        if filenode is not None:
-            url = filenode.text
-        else:
-            url = "{}#{}".format(
-                node.find("anchorfile").text,
-                node.find("anchor").text,
-            )
-
-        urls.setdefault(kind, {})[name] = url
-
-    def get_url(name):
-        # These are all the kinds that seem to exist.
-        for kind in (
-            "function",
-            "struct",
-            "variable",  # These are struct members.
-            # 'class',
-            # 'define',
-            # 'enumeration',
-            # 'enumvalue',
-            # 'file',
-            # 'group',
-            # 'page',
-            # 'typedef',
-            # 'union',
-        ):
-            try:
-                return urls[kind][name]
-            except KeyError:
-                pass
-
-    def _doxylink_handler(name, rawtext, text, lineno, inliner, options={}, content=[]):
-        m = re.match(r"^(.+?)(?:<(.+?)>)?$", text)
-        title, name = m.groups()
-        name = name or title
-
-        url = get_url(name)
-        if not url:
-            if name == "AVFrame.color_primaries":
-                url = "structAVFrame.html#a59a3f830494f2ed1133103a1bc9481e7"
-            elif name == "AVFrame.color_trc":
-                url = "structAVFrame.html#ab09abb126e3922bc1d010cf044087939"
-            else:
-                print("ERROR: Could not find", name)
-                exit(1)
-
-        node = addnodes.literal_strong(title, title)
-        if url:
-            url = url_base + url
-            node = nodes.reference("", "", node, refuri=url)
-
-        return [node], []
-
-    return _doxylink_handler
+    node = nodes.reference(rawtext, text, refuri=url, **options)
+    return [node], []
 
 
 def setup(app):
     app.add_css_file("custom.css")
-
+    app.add_role("ffmpeg", ffmpeg_role)
     app.add_directive("flagtable", EnumTable)
     app.add_directive("enumtable", EnumTable)
     app.add_directive("pyinclude", PyInclude)
 
-    skip = os.environ.get("PYAV_SKIP_DOXYLINK")
-    for role, (filename, url_base) in doxylink.items():
-        if skip:
-            app.add_role(role, lambda *args: ([], []))
-        else:
-            app.add_role(role, doxylink_create_handler(app, filename, url_base))
+    return {
+        "version": "1.0",
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }

@@ -47,17 +47,7 @@ cdef object avrational_to_fraction(const lib.AVRational *input):
         return Fraction(input.num, input.den)
 
 
-cdef object to_avrational(object value, lib.AVRational *input):
-    if value is None:
-        input.num = 0
-        input.den = 1
-        return
-
-    if isinstance(value, Fraction):
-        frac = value
-    else:
-        frac = Fraction(value)
-
+cdef void to_avrational(object frac, lib.AVRational *input):
     input.num = frac.numerator
     input.den = frac.denominator
 
@@ -76,14 +66,6 @@ cdef check_ndarray(object array, object dtype, int ndim):
         raise ValueError(f"Expected numpy array with ndim `{ndim}` but got `{array.ndim}`")
 
 
-cdef check_ndarray_shape(object array, bint ok):
-    """
-    Check a numpy array has the expected shape.
-    """
-    if not ok:
-        raise ValueError(f"Unexpected numpy array shape `{array.shape}`")
-
-
 cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
     # Not every flag exists in every version of FFMpeg, so we define them to 0.
     if not flag:
@@ -93,5 +75,4 @@ cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
 
 # === BACKWARDS COMPAT ===
 
-from .error import FFmpegError as AVError
 from .error import err_check

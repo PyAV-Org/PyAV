@@ -4,42 +4,11 @@ Installation
 Binary wheels
 -------------
 
-Since release 8.0.0 binary wheels are provided on PyPI for Linux, Mac and Windows linked against FFmpeg. The most straight-forward way to install PyAV is to run:
+Binary wheels are provided on PyPI for Linux, MacOS, and Windows linked against FFmpeg. The most straight-forward way to install PyAV is to run:
 
 .. code-block:: bash
 
     pip install av
-
-
-Currently FFmpeg 6.0 is used with the following features enabled for all platforms:
-
-- fontconfig
-- gmp
-- libaom
-- libass
-- libbluray
-- libdav1d
-- libfreetype
-- libmp3lame
-- libopencore-amrnb
-- libopencore-amrwb
-- libopenjpeg
-- libopus
-- libspeex
-- libtwolame
-- libvorbis
-- libvpx
-- libx264
-- libx265
-- libxml2
-- libxvid
-- lzma
-- zlib
-
-The following additional features are also enabled on Linux:
-
-- gnutls
-- libxcb
 
 
 Conda
@@ -49,18 +18,16 @@ Another way to install PyAV is via `conda-forge <https://conda-forge.github.io>`
 
     conda install av -c conda-forge
 
-See the `Conda quick install <https://conda.io/docs/install/quick.html>`_ docs to get started with (mini)Conda.
+See the `Conda quick install <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_ docs to get started with (mini)Conda.
 
 
 Bring your own FFmpeg
 ---------------------
 
-PyAV can also be compiled against your own build of FFmpeg ((version ``5.1`` or higher). You can force installing PyAV from source by running:
+PyAV can also be compiled against your own build of FFmpeg (version ``7.0`` or higher). You can force installing PyAV from source by running:
 
 .. code-block:: bash
-
     pip install av --no-binary av
-
 PyAV depends upon several libraries from FFmpeg:
 
 - ``libavcodec``
@@ -120,9 +87,6 @@ Building from the latest source
 
     # Prep a virtualenv.
     source scripts/activate.sh
-
-    # Install basic requirements.
-    pip install -r tests/requirements.txt
 
     # Optionally build FFmpeg.
     ./scripts/build-deps

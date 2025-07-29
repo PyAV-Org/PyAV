@@ -1,4 +1,6 @@
 cimport libav as lib
+from libc.stdio cimport fprintf, stderr
+from libc.stdlib cimport free, malloc
 
 from av.logging cimport get_last_error
 
@@ -7,8 +9,6 @@ import os
 import sys
 import traceback
 from threading import local
-
-from av.enum import define_enum
 
 # Will get extended with all of the exceptions.
 __all__ = [
@@ -63,10 +63,6 @@ class FFmpegError(Exception):
 
         The filename that was being operated on (if available).
 
-    .. attribute:: type
-
-        The :class:`av.error.ErrorType` enum value for the error type.
-
     .. attribute:: log
 
         The tuple from :func:`av.logging.get_last_log`, or ``None``.
@@ -74,6 +70,9 @@ class FFmpegError(Exception):
     """
 
     def __init__(self, code, message, filename=None, log=None):
+        self.errno = code
+        self.strerror = message
+
         args = [code, message]
         if filename or log:
             args.append(filename)
@@ -81,15 +80,6 @@ class FFmpegError(Exception):
                 args.append(log)
         super(FFmpegError, self).__init__(*args)
         self.args = tuple(args)  # FileNotFoundError/etc. only pulls 2 args.
-        self.type = ErrorType.get(code, create=True)
-
-    @property
-    def errno(self):
-        return self.args[0]
-
-    @property
-    def strerror(self):
-        return self.args[1]
 
     @property
     def filename(self):
@@ -106,11 +96,13 @@ class FFmpegError(Exception):
             pass
 
     def __str__(self):
-        msg = f"[Errno {self.errno}] {self.strerror}"
-
+        msg = ""
+        if self.errno is not None:
+            msg = f"{msg}[Errno {self.errno}] "
+        if self.strerror is not None:
+            msg = f"{msg}{self.strerror}"
         if self.filename:
             msg = f"{msg}: {self.filename!r}"
-
         if self.log:
             msg = f"{msg}; last error log: [{self.log[1].strip()}] {self.log[2].strip()}"
 
@@ -165,12 +157,77 @@ _ffmpeg_specs = (
     ("PYAV_CALLBACK", c_PYAV_STASHED_ERROR, "PyAVCallbackError", RuntimeError),
 )
 
+cdef sentinel = object()
 
-# The actual enum.
-ErrorType = define_enum("ErrorType", __name__, [x[:2] for x in _ffmpeg_specs])
 
-# It has to be monkey-patched.
-ErrorType.__doc__ = """An enumeration of FFmpeg's error types.
+class EnumType(type):
+    def __new__(mcl, name, bases, attrs, *args):
+        # Just adapting the method signature.
+        return super().__new__(mcl, name, bases, attrs)
+
+    def __init__(self, name, bases, attrs, items):
+        self._by_name = {}
+        self._by_value = {}
+        self._all = []
+
+        for spec in items:
+            self._create(*spec)
+
+    def _create(self, name, value, doc=None, by_value_only=False):
+        # We only have one instance per value.
+        try:
+            item = self._by_value[value]
+        except KeyError:
+            item = self(sentinel, name, value, doc)
+            self._by_value[value] = item
+
+        return item
+
+    def __len__(self):
+        return len(self._all)
+
+    def __iter__(self):
+        return iter(self._all)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            return self._by_name[key]
+
+        if isinstance(key, int):
+            try:
+                return self._by_value[key]
+            except KeyError:
+                pass
+
+            raise KeyError(key)
+
+        if isinstance(key, self):
+            return key
+
+        raise TypeError(f"{self.__name__} indices must be str, int, or itself")
+
+    def _get(self, long value, bint create=False):
+        try:
+            return self._by_value[value]
+        except KeyError:
+            pass
+
+        if not create:
+            return
+
+        return self._create(f"{self.__name__.upper()}_{value}", value, by_value_only=True)
+
+    def get(self, key, default=None, create=False):
+        try:
+            return self[key]
+        except KeyError:
+            if create:
+                return self._get(key, create=True)
+            return default
+
+
+cdef class EnumItem:
+    """An enumeration of FFmpeg's error types.
 
 .. attribute:: tag
 
@@ -181,7 +238,32 @@ ErrorType.__doc__ = """An enumeration of FFmpeg's error types.
     The error message that would be returned.
 
 """
-ErrorType.tag = property(lambda self: code_to_tag(self.value))
+    cdef readonly str name
+    cdef readonly int value
+
+    def __cinit__(self, sentinel_, str name, int value, doc=None):
+        if sentinel_ is not sentinel:
+            raise RuntimeError(f"Cannot instantiate {self.__class__.__name__}.")
+
+        self.name = name
+        self.value = value
+        self.__doc__ = doc
+
+    def __repr__(self):
+        return f"<{self.__class__.__module__}.{self.__class__.__name__}:{self.name}(0x{self.value:x})>"
+
+    def __str__(self):
+        return self.name
+
+    def __int__(self):
+        return self.value
+
+    @property
+    def tag(self):
+        return code_to_tag(self.value)
+
+
+ErrorType = EnumType("ErrorType", (EnumItem, ), {"__module__": __name__}, [x[:2] for x in _ffmpeg_specs])
 
 
 for enum in ErrorType:
@@ -250,8 +332,6 @@ _extend_builtin("ValueError", (errno.EINVAL, ))
 _extend_builtin("MemoryError", (errno.ENOMEM, ))
 _extend_builtin("NotImplementedError", (errno.ENOSYS, ))
 _extend_builtin("OverflowError", (errno.ERANGE, ))
-if IOError is not OSError:
-    _extend_builtin("IOError", (errno.EIO, ))
 
 # The rest of them (for now)
 _extend_builtin("OSError", [code for code in errno.errorcode if code not in classes])
@@ -261,13 +341,13 @@ for enum_name, code, name, base in _ffmpeg_specs:
     name = name or enum_name.title().replace("_", "") + "Error"
 
     if base is None:
-        bases = (FFmpegError, )
+        bases = (FFmpegError,)
     elif issubclass(base, FFmpegError):
-        bases = (base, )
+        bases = (base,)
     else:
         bases = (FFmpegError, base)
 
-    cls = type(name, bases, dict(__module__=__name__))
+    cls = type(name, bases, {"__module__": __name__})
 
     # Register in builder.
     classes[code] = cls
@@ -275,6 +355,8 @@ for enum_name, code, name, base in _ffmpeg_specs:
     # Register in module.
     globals()[name] = cls
     __all__.append(name)
+
+del _ffmpeg_specs
 
 
 # Storage for stashing.
@@ -286,7 +368,7 @@ cdef int stash_exception(exc_info=None):
 
     existing = getattr(_local, "exc_info", None)
     if existing is not None:
-        print >> sys.stderr, "PyAV library exception being dropped:"
+        fprintf(stderr, "PyAV library exception being dropped:\n")
         traceback.print_exception(*existing)
         _err_count -= 1  # Balance out the +=1 that is coming.
 
@@ -325,31 +407,25 @@ cpdef int err_check(int res, filename=None) except -1:
     else:
         log = None
 
-    raise make_error(res, filename, log)
+    cdef int code = -res
+    cdef char* error_buffer = <char*>malloc(lib.AV_ERROR_MAX_STRING_SIZE * sizeof(char))
+    if error_buffer == NULL:
+        raise MemoryError()
+
+    try:
+        if code == c_PYAV_STASHED_ERROR:
+            message = PYAV_STASHED_ERROR_message
+        else:
+            lib.av_strerror(res, error_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
+            # Fallback to OS error string if no message
+            message = error_buffer or os.strerror(code)
+
+        cls = classes.get(code, UndefinedError)
+        raise cls(code, message, filename, log)
+    finally:
+        free(error_buffer)
 
 
 class UndefinedError(FFmpegError):
     """Fallback exception type in case FFmpeg returns an error we don't know about."""
     pass
-
-
-cpdef make_error(int res, filename=None, log=None):
-    cdef int code = -res
-    cdef bytes py_buffer
-    cdef char *c_buffer
-
-    if code == c_PYAV_STASHED_ERROR:
-        message = PYAV_STASHED_ERROR_message
-    else:
-        # Jump through some hoops due to Python 2 in same codebase.
-        py_buffer = b"\0" * lib.AV_ERROR_MAX_STRING_SIZE
-        c_buffer = py_buffer
-        lib.av_strerror(res, c_buffer, lib.AV_ERROR_MAX_STRING_SIZE)
-        py_buffer = c_buffer
-        message = py_buffer.decode("latin1")
-
-        # Default to the OS if we have no message; this should not get called.
-        message = message or os.strerror(code)
-
-    cls = classes.get(code, UndefinedError)
-    return cls(code, message, filename, log)

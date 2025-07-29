@@ -45,6 +45,13 @@ cdef class Graph:
         # We get auto-inserted stuff here.
         self._auto_register()
 
+    def link_nodes(self, *nodes):
+        """
+        Links nodes together for simple filter graphs.
+        """
+        for c, n in zip(nodes, nodes[1:]):
+            c.link_to(n)
+        return self
 
     def add(self, filter, args=None, **kwargs):
         cdef Filter cy_filter
@@ -68,7 +75,7 @@ cdef class Graph:
 
         # There might have been automatic contexts added (e.g. resamplers,
         # fifos, and scalers). It is more likely to see them after the graph
-        # is configured, but we wan't to be safe.
+        # is configured, but we want to be safe.
         self._auto_register()
 
         return ctx
@@ -164,6 +171,19 @@ cdef class Graph:
 
         return self.add("abuffer", name=name, **kwargs)
 
+    def set_audio_frame_size(self, frame_size):
+        """
+        Set the audio frame size for the graphs `abuffersink`.
+        See `av_buffersink_set_frame_size <https://ffmpeg.org/doxygen/trunk/group__lavfi__buffersink.html#ga359d7d1e42c27ca14c07559d4e9adba7>`_.
+        """
+        if not self.configured:
+            raise ValueError("graph not configured")
+        sinks = self._context_by_type.get("abuffersink", [])
+        if not sinks:
+            raise ValueError("missing abuffersink filter")
+        for sink in sinks:
+            lib.av_buffersink_set_frame_size((<FilterContext>sink).ptr, frame_size)
+
     def push(self, frame):
         if frame is None:
             contexts = self._context_by_type.get("buffer", []) + self._context_by_type.get("abuffer", [])
@@ -174,11 +194,16 @@ cdef class Graph:
         else:
             raise ValueError(f"can only AudioFrame, VideoFrame or None; got {type(frame)}")
 
-        if len(contexts) != 1:
-            raise ValueError(f"can only auto-push with single buffer; found {len(contexts)}")
+        for ctx in contexts:
+            ctx.push(frame)
 
-        contexts[0].push(frame)
+    def vpush(self, VideoFrame frame):
+        """Like `push`, but only for VideoFrames."""
+        for ctx in self._context_by_type.get("buffer", []):
+            ctx.push(frame)
 
+
+    # TODO: Test complex filter graphs, add `at: int = 0` arg to pull() and vpull().
     def pull(self):
         vsinks = self._context_by_type.get("buffersink", [])
         asinks = self._context_by_type.get("abuffersink", [])
@@ -188,3 +213,12 @@ cdef class Graph:
             raise ValueError(f"can only auto-pull with single sink; found {nsinks}")
 
         return (vsinks or asinks)[0].pull()
+
+    def vpull(self):
+        """Like `pull`, but only for VideoFrames."""
+        vsinks = self._context_by_type.get("buffersink", [])
+        nsinks = len(vsinks)
+        if nsinks != 1:
+            raise ValueError(f"can only auto-pull with single sink; found {nsinks}")
+
+        return vsinks[0].pull()

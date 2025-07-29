@@ -1,40 +1,42 @@
-from av.enum import EnumItem
+from enum import IntEnum
+from typing import cast
 
 from .frame import VideoFrame
 
-class Interpolation(EnumItem):
-    FAST_BILINEAER: int
-    BILINEAR: int
-    BICUBIC: int
-    X: int
-    POINT: int
-    AREA: int
-    BICUBLIN: int
-    GAUSS: int
-    SINC: int
-    LANCZOS: int
-    SPLINE: int
+class Interpolation(IntEnum):
+    FAST_BILINEAER = cast(int, ...)
+    BILINEAR = cast(int, ...)
+    BICUBIC = cast(int, ...)
+    X = cast(int, ...)
+    POINT = cast(int, ...)
+    AREA = cast(int, ...)
+    BICUBLIN = cast(int, ...)
+    GAUSS = cast(int, ...)
+    SINC = cast(int, ...)
+    LANCZOS = cast(int, ...)
+    SPLINE = cast(int, ...)
 
-class Colorspace(EnumItem):
-    ITU709: int
-    FCC: int
-    ITU601: int
-    ITU624: int
-    SMPTE170M: int
-    SMPTE240M: int
-    DEFAULT: int
-    itu709: int
-    fcc: int
-    itu601: int
-    itu624: int
-    smpte240: int
-    default: int
+class Colorspace(IntEnum):
+    ITU709 = cast(int, ...)
+    FCC = cast(int, ...)
+    ITU601 = cast(int, ...)
+    ITU624 = cast(int, ...)
+    SMPTE170M = cast(int, ...)
+    SMPTE240M = cast(int, ...)
+    DEFAULT = cast(int, ...)
+    itu709 = cast(int, ...)
+    fcc = cast(int, ...)
+    itu601 = cast(int, ...)
+    itu624 = cast(int, ...)
+    smpte170m = cast(int, ...)
+    smpte240m = cast(int, ...)
+    default = cast(int, ...)
 
-class ColorRange(EnumItem):
-    UNSPECIFIED: int
-    MPEG: int
-    JPEG: int
-    NB: int
+class ColorRange(IntEnum):
+    UNSPECIFIED = 0
+    MPEG = 1
+    JPEG = 2
+    NB = 3
 
 class VideoReformatter:
     def reformat(

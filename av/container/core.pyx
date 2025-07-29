@@ -3,15 +3,16 @@ from libc.stdint cimport int64_t
 
 import os
 import time
+from enum import Flag, IntEnum
 from pathlib import Path
 
 cimport libav as lib
 
+from av.codec.hwaccel cimport HWAccel
 from av.container.core cimport timeout_info
 from av.container.input cimport InputContainer
 from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_close_custom_gil, pyio_close_gil
-from av.enum cimport define_enum
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
 from av.utils cimport avdict_to_dict
@@ -27,14 +28,12 @@ cdef object _cinit_sentinel = object()
 cdef object clock = getattr(time, "monotonic", time.time)
 
 cdef int interrupt_cb (void *p) noexcept nogil:
-
     cdef timeout_info info = dereference(<timeout_info*> p)
     if info.timeout < 0:  # timeout < 0 means no timeout
         return 0
 
     cdef double current_time
     with gil:
-
         current_time = clock()
 
         # Check if the clock has been changed.
@@ -96,77 +95,94 @@ cdef int pyav_io_open_gil(lib.AVFormatContext *s,
         pb[0] = pyio_file.iocontext
         return 0
 
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
-cdef void pyav_io_close(lib.AVFormatContext *s,
-                        lib.AVIOContext *pb) noexcept nogil:
+cdef int pyav_io_close(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept nogil:
     with gil:
-        pyav_io_close_gil(s, pb)
+        return pyav_io_close_gil(s, pb)
 
-
-cdef void pyav_io_close_gil(lib.AVFormatContext *s,
-                            lib.AVIOContext *pb) noexcept:
+cdef int pyav_io_close_gil(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept:
     cdef Container container
+    cdef int result = 0
     try:
         container = <Container>dereference(s).opaque
 
         if container.open_files is not None and <int64_t>pb.opaque in container.open_files:
-            pyio_close_custom_gil(pb)
+            result = pyio_close_custom_gil(pb)
 
             # Remove it from the container so that it can be deallocated
             del container.open_files[<int64_t>pb.opaque]
         else:
-            pyio_close_gil(pb)
+            result = pyio_close_gil(pb)
 
-    except Exception as e:
+    except Exception:
         stash_exception()
+        result = lib.AVERROR_UNKNOWN  # Or another appropriate error code
+
+    return result
 
 
-Flags = define_enum("Flags", __name__, (
-    ("GENPTS", lib.AVFMT_FLAG_GENPTS,
-        "Generate missing pts even if it requires parsing future frames."),
-    ("IGNIDX", lib.AVFMT_FLAG_IGNIDX,
-        "Ignore index."),
-    ("NONBLOCK", lib.AVFMT_FLAG_NONBLOCK,
-        "Do not block when reading packets from input."),
-    ("IGNDTS", lib.AVFMT_FLAG_IGNDTS,
-        "Ignore DTS on frames that contain both DTS & PTS."),
-    ("NOFILLIN", lib.AVFMT_FLAG_NOFILLIN,
-        "Do not infer any values from other values, just return what is stored in the container."),
-    ("NOPARSE", lib.AVFMT_FLAG_NOPARSE,
-        """Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fillin code works on frames and no parsing -> no frames.
+class Flags(Flag):
+    gen_pts: "Generate missing pts even if it requires parsing future frames." = lib.AVFMT_FLAG_GENPTS
+    ign_idx: "Ignore index." = lib.AVFMT_FLAG_IGNIDX
+    non_block: "Do not block when reading packets from input." = lib.AVFMT_FLAG_NONBLOCK
+    ign_dts: "Ignore DTS on frames that contain both DTS & PTS." = lib.AVFMT_FLAG_IGNDTS
+    no_fillin: "Do not infer any values from other values, just return what is stored in the container." = lib.AVFMT_FLAG_NOFILLIN
+    no_parse: "Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fillin code works on frames and no parsing -> no frames. Also seeking to frames can not work if parsing to find frame boundaries has been disabled." = lib.AVFMT_FLAG_NOPARSE
+    no_buffer: "Do not buffer frames when possible." = lib.AVFMT_FLAG_NOBUFFER
+    custom_io: "The caller has supplied a custom AVIOContext, don't avio_close() it." = lib.AVFMT_FLAG_CUSTOM_IO
+    discard_corrupt: "Discard frames marked corrupted." = lib.AVFMT_FLAG_DISCARD_CORRUPT
+    flush_packets: "Flush the AVIOContext every packet." = lib.AVFMT_FLAG_FLUSH_PACKETS
+    bitexact: "When muxing, try to avoid writing any random/volatile data to the output. This includes any random IDs, real-time timestamps/dates, muxer version, etc. This flag is mainly intended for testing." = lib.AVFMT_FLAG_BITEXACT
+    sort_dts: "Try to interleave outputted packets by dts (using this flag can slow demuxing down)." = lib.AVFMT_FLAG_SORT_DTS
+    fast_seek: "Enable fast, but inaccurate seeks for some formats." = lib.AVFMT_FLAG_FAST_SEEK
+    shortest: "Stop muxing when the shortest stream stops." = lib.AVFMT_FLAG_SHORTEST
+    auto_bsf: "Add bitstream filters as requested by the muxer." = lib.AVFMT_FLAG_AUTO_BSF
 
-        Also seeking to frames can not work if parsing to find frame boundaries has been disabled."""),
-    ("NOBUFFER", lib.AVFMT_FLAG_NOBUFFER,
-        "Do not buffer frames when possible."),
-    ("CUSTOM_IO", lib.AVFMT_FLAG_CUSTOM_IO,
-        "The caller has supplied a custom AVIOContext, don't avio_close() it."),
-    ("DISCARD_CORRUPT", lib.AVFMT_FLAG_DISCARD_CORRUPT,
-        "Discard frames marked corrupted."),
-    ("FLUSH_PACKETS", lib.AVFMT_FLAG_FLUSH_PACKETS,
-        "Flush the AVIOContext every packet."),
-    ("BITEXACT", lib.AVFMT_FLAG_BITEXACT,
-        """When muxing, try to avoid writing any random/volatile data to the output.
-
-        This includes any random IDs, real-time timestamps/dates, muxer version, etc.
-        This flag is mainly intended for testing."""),
-    ("SORT_DTS", lib.AVFMT_FLAG_SORT_DTS,
-        "Try to interleave outputted packets by dts (using this flag can slow demuxing down)."),
-    ("FAST_SEEK", lib.AVFMT_FLAG_FAST_SEEK,
-        "Enable fast, but inaccurate seeks for some formats."),
-    ("SHORTEST", lib.AVFMT_FLAG_SHORTEST,
-        "Stop muxing when the shortest stream stops."),
-    ("AUTO_BSF", lib.AVFMT_FLAG_AUTO_BSF,
-        "Add bitstream filters as requested by the muxer."),
-), is_flags=True)
+class AudioCodec(IntEnum):
+    """Enumeration for audio codec IDs."""
+    none = lib.AV_CODEC_ID_NONE  # No codec.
+    pcm_alaw = lib.AV_CODEC_ID_PCM_ALAW  # PCM A-law.
+    pcm_bluray = lib.AV_CODEC_ID_PCM_BLURAY  # PCM Blu-ray.
+    pcm_dvd = lib.AV_CODEC_ID_PCM_DVD  # PCM DVD.
+    pcm_f16le = lib.AV_CODEC_ID_PCM_F16LE  # PCM F16 little-endian.
+    pcm_f24le = lib.AV_CODEC_ID_PCM_F24LE  # PCM F24 little-endian.
+    pcm_f32be = lib.AV_CODEC_ID_PCM_F32BE  # PCM F32 big-endian.
+    pcm_f32le = lib.AV_CODEC_ID_PCM_F32LE  # PCM F32 little-endian.
+    pcm_f64be = lib.AV_CODEC_ID_PCM_F64BE  # PCM F64 big-endian.
+    pcm_f64le = lib.AV_CODEC_ID_PCM_F64LE  # PCM F64 little-endian.
+    pcm_lxf = lib.AV_CODEC_ID_PCM_LXF  # PCM LXF.
+    pcm_mulaw = lib.AV_CODEC_ID_PCM_MULAW  # PCM μ-law.
+    pcm_s16be = lib.AV_CODEC_ID_PCM_S16BE  # PCM signed 16-bit big-endian.
+    pcm_s16be_planar = lib.AV_CODEC_ID_PCM_S16BE_PLANAR  # PCM signed 16-bit big-endian planar.
+    pcm_s16le = lib.AV_CODEC_ID_PCM_S16LE  # PCM signed 16-bit little-endian.
+    pcm_s16le_planar = lib.AV_CODEC_ID_PCM_S16LE_PLANAR  # PCM signed 16-bit little-endian planar.
+    pcm_s24be = lib.AV_CODEC_ID_PCM_S24BE  # PCM signed 24-bit big-endian.
+    pcm_s24daud = lib.AV_CODEC_ID_PCM_S24DAUD  # PCM signed 24-bit D-Cinema audio.
+    pcm_s24le = lib.AV_CODEC_ID_PCM_S24LE  # PCM signed 24-bit little-endian.
+    pcm_s24le_planar = lib.AV_CODEC_ID_PCM_S24LE_PLANAR  # PCM signed 24-bit little-endian planar.
+    pcm_s32be = lib.AV_CODEC_ID_PCM_S32BE  # PCM signed 32-bit big-endian.
+    pcm_s32le = lib.AV_CODEC_ID_PCM_S32LE  # PCM signed 32-bit little-endian.
+    pcm_s32le_planar = lib.AV_CODEC_ID_PCM_S32LE_PLANAR  # PCM signed 32-bit little-endian planar.
+    pcm_s64be = lib.AV_CODEC_ID_PCM_S64BE  # PCM signed 64-bit big-endian.
+    pcm_s64le = lib.AV_CODEC_ID_PCM_S64LE  # PCM signed 64-bit little-endian.
+    pcm_s8 = lib.AV_CODEC_ID_PCM_S8  # PCM signed 8-bit.
+    pcm_s8_planar = lib.AV_CODEC_ID_PCM_S8_PLANAR  # PCM signed 8-bit planar.
+    pcm_u16be = lib.AV_CODEC_ID_PCM_U16BE  # PCM unsigned 16-bit big-endian.
+    pcm_u16le = lib.AV_CODEC_ID_PCM_U16LE  # PCM unsigned 16-bit little-endian.
+    pcm_u24be = lib.AV_CODEC_ID_PCM_U24BE  # PCM unsigned 24-bit big-endian.
+    pcm_u24le = lib.AV_CODEC_ID_PCM_U24LE  # PCM unsigned 24-bit little-endian.
+    pcm_u32be = lib.AV_CODEC_ID_PCM_U32BE  # PCM unsigned 32-bit big-endian.
+    pcm_u32le = lib.AV_CODEC_ID_PCM_U32LE  # PCM unsigned 32-bit little-endian.
+    pcm_u8 = lib.AV_CODEC_ID_PCM_U8  # PCM unsigned 8-bit.
+    pcm_vidc = lib.AV_CODEC_ID_PCM_VIDC  # PCM VIDC.
 
 
 cdef class Container:
-
     def __cinit__(self, sentinel, file_, format_name, options,
-                  container_options, stream_options,
+                  container_options, stream_options, hwaccel,
                   metadata_encoding, metadata_errors,
                   buffer_size, open_timeout, read_timeout,
                   io_open):
@@ -187,6 +203,8 @@ cdef class Container:
         self.container_options = dict(container_options or ())
         self.stream_options = [dict(x) for x in stream_options or ()]
 
+        self.hwaccel = hwaccel
+
         self.metadata_encoding = metadata_encoding
         self.metadata_errors = metadata_errors
 
@@ -196,7 +214,10 @@ cdef class Container:
         self.buffer_size = buffer_size
         self.io_open = io_open
 
+        acodec = None  # no audio codec specified
         if format_name is not None:
+            if ":" in format_name:
+                format_name, acodec = format_name.split(":")
             self.format = ContainerFormat(format_name)
 
         self.input_was_opened = False
@@ -231,6 +252,9 @@ cdef class Container:
                 self.ptr.interrupt_callback.callback = interrupt_cb
                 self.ptr.interrupt_callback.opaque = &self.interrupt_callback_info
 
+            if acodec is not None:
+                self.ptr.audio_codec_id = getattr(AudioCodec, acodec)
+
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = <void*>self
 
@@ -242,26 +266,19 @@ cdef class Container:
 
         if io_open is not None:
             self.ptr.io_open = pyav_io_open
-            self.ptr.io_close = pyav_io_close
+            self.ptr.io_close2 = pyav_io_close
             self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
         cdef lib.AVInputFormat *ifmt
         cdef _Dictionary c_options
         if not self.writeable:
-
             ifmt = self.format.iptr if self.format else NULL
-
             c_options = Dictionary(self.options, self.container_options)
 
             self.set_timeout(self.open_timeout)
             self.start_timeout()
             with nogil:
-                res = lib.avformat_open_input(
-                    &self.ptr,
-                    name,
-                    ifmt,
-                    &c_options.ptr
-                )
+                res = lib.avformat_open_input(&self.ptr, name, ifmt, &c_options.ptr)
             self.set_timeout(None)
             self.err_check(res)
             self.input_was_opened = True
@@ -304,36 +321,15 @@ cdef class Container:
         if self.ptr == NULL:
             raise AssertionError("Container is not open")
 
-    def _get_flags(self):
+    @property
+    def flags(self):
         self._assert_open()
         return self.ptr.flags
 
-    def _set_flags(self, value):
+    @flags.setter
+    def flags(self, int value):
         self._assert_open()
         self.ptr.flags = value
-
-    flags = Flags.property(
-        _get_flags,
-        _set_flags,
-        """Flags property of :class:`.Flags`"""
-    )
-
-    gen_pts = flags.flag_property("GENPTS")
-    ign_idx = flags.flag_property("IGNIDX")
-    non_block = flags.flag_property("NONBLOCK")
-    ign_dts = flags.flag_property("IGNDTS")
-    no_fill_in = flags.flag_property("NOFILLIN")
-    no_parse = flags.flag_property("NOPARSE")
-    no_buffer = flags.flag_property("NOBUFFER")
-    custom_io = flags.flag_property("CUSTOM_IO")
-    discard_corrupt = flags.flag_property("DISCARD_CORRUPT")
-    flush_packets = flags.flag_property("FLUSH_PACKETS")
-    bit_exact = flags.flag_property("BITEXACT")
-    sort_dts = flags.flag_property("SORT_DTS")
-    fast_seek = flags.flag_property("FAST_SEEK")
-    shortest = flags.flag_property("SHORTEST")
-    auto_bsf = flags.flag_property("AUTO_BSF")
-
 
 def open(
     file,
@@ -347,6 +343,7 @@ def open(
     buffer_size=32768,
     timeout=None,
     io_open=None,
+    hwaccel=None
 ):
     """open(file, mode='r', **kwargs)
 
@@ -365,7 +362,7 @@ def open(
     :param int buffer_size: Size of buffer for Python input/output operations in bytes.
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
     :param timeout: How many seconds to wait for data before giving up, as a float, or a
-        :ref:`(open timeout, read timeout) <timeouts>` tuple.
+        ``(open timeout, read timeout)`` tuple.
     :param callable io_open: Custom I/O callable for opening files/streams.
         This option is intended for formats that need to open additional
         file-like objects to ``file`` using custom I/O.
@@ -373,13 +370,14 @@ def open(
         ``url`` is the url to open, ``flags`` is a combination of AVIO_FLAG_* and
         ``options`` is a dictionary of additional options. The callable should return a
         file-like object.
+    :param HWAccel hwaccel: Optional settings for hardware-accelerated decoding.
     :rtype: Container
 
     For devices (via ``libavdevice``), pass the name of the device to ``format``,
     e.g.::
 
-        >>> # Open webcam on OS X.
-        >>> av.open(format='avfoundation', file='0') # doctest: +SKIP
+        >>> # Open webcam on MacOS.
+        >>> av.open('0', format='avfoundation') # doctest: +SKIP
 
     For DASH and custom I/O using ``io_open``, add a protocol prefix to the ``file`` to
     prevent the DASH encoder defaulting to the file protocol and using temporary files.
@@ -418,7 +416,7 @@ def open(
 
     if mode.startswith("r"):
         return InputContainer(_cinit_sentinel, file, format, options,
-            container_options, stream_options, metadata_encoding, metadata_errors,
+            container_options, stream_options, hwaccel, metadata_encoding, metadata_errors,
             buffer_size, open_timeout, read_timeout, io_open,
         )
 
@@ -427,6 +425,6 @@ def open(
             "Provide stream options via Container.add_stream(..., options={})."
         )
     return OutputContainer(_cinit_sentinel, file, format, options,
-        container_options, stream_options, metadata_encoding, metadata_errors,
+        container_options, stream_options, None, metadata_encoding, metadata_errors,
         buffer_size, open_timeout, read_timeout, io_open,
     )

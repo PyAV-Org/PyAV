@@ -5,9 +5,7 @@ from av.filter.graph cimport Graph
 
 
 cdef class AudioResampler:
-
     cdef readonly bint is_passthrough
-
     cdef AudioFrame template
 
     # Destination descriptors
@@ -17,5 +15,4 @@ cdef class AudioResampler:
     cdef readonly unsigned int frame_size
 
     cdef Graph graph
-
-    cpdef resample(self, AudioFrame)
+    cpdef list resample(self, AudioFrame)

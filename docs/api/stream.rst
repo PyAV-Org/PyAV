@@ -16,6 +16,8 @@ Dynamic Slicing
 
 .. automethod:: StreamContainer.get
 
+.. automethod:: StreamContainer.best
+
 
 Typed Collections
 ~~~~~~~~~~~~~~~~~
@@ -34,6 +36,10 @@ dynamic capabilities of :meth:`.get`:
 .. attribute:: StreamContainer.subtitles
 
     A tuple of :class:`SubtitleStream`.
+
+.. attribute:: StreamContainer.attachments
+
+    A tuple of :class:`AttachmentStream`.
 
 .. attribute:: StreamContainer.data
 

@@ -104,7 +104,12 @@ cdef class VideoFormat:
     def is_rgb(self):
         """The pixel format contains RGB-like data (as opposed to YUV/grayscale)."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_RGB)
+    
 
+    @property
+    def is_bayer(self):
+        """The pixel format contains Bayer data."""
+        return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BAYER)
 
     cpdef chroma_width(self, int luma_width=0):
         """chroma_width(luma_width=0)

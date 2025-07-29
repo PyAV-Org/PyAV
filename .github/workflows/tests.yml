@@ -2,175 +2,24 @@ name: tests
 on:
   release:
     types: [published]
-  push:
-    branches: main
-    paths-ignore:
-      - '**.md'
-      - '**.rst'
-      - '**.txt'
-  pull_request:
-    branches: main
-    paths-ignore:
-      - '**.md'
-      - '**.rst'
-      - '**.txt'
+  workflow_dispatch:
 jobs:
-  style:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-
-      - name: Packages
-        run: pip install -r tests/requirements.txt
-
-      - name: Linters
-        run: make lint
-
-  nix:
-    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {os: ubuntu-latest, python: 3.9, ffmpeg: "6.1", extras: true}
-          - {os: ubuntu-latest, python: 3.9, ffmpeg: "6.0"}
-          - {os: ubuntu-latest, python: 3.9, ffmpeg: "5.1"}
-          - {os: ubuntu-latest, python: pypy3.9, ffmpeg: "6.1"}
-          - {os: macos-latest,  python: 3.9, ffmpeg: "6.1"}
-
-    env:
-      PYAV_PYTHON: python${{ matrix.config.python }}
-      PYAV_LIBRARY: ffmpeg-${{ matrix.config.ffmpeg }}
-
-    steps:
-    - uses: actions/checkout@v4
-      name: Checkout
-
-    - name: Python ${{ matrix.config.python }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.config.python }}
-
-    - name: OS Packages
-      run: |
-        case ${{ matrix.config.os }} in
-          ubuntu-latest)
-            sudo apt-get update
-            sudo apt-get install autoconf automake build-essential cmake \
-              libtool mercurial pkg-config texinfo wget yasm zlib1g-dev
-            sudo apt-get install libass-dev libfreetype6-dev libjpeg-dev \
-              libtheora-dev libvorbis-dev libx264-dev
-            if [[ "${{ matrix.config.extras }}" ]]; then
-              sudo apt-get install doxygen
-            fi
-            ;;
-          macos-latest)
-            brew install automake libtool nasm pkg-config shtool texi2html wget
-            brew install libass libjpeg libpng libvorbis libvpx opus theora x264
-            ;;
-        esac
-
-    - name: Pip and FFmpeg
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build-deps
-
-    - name: Build
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build
-
-    - name: Test
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        python -m av --version # Assert it can import.
-        scripts/test
-
-    - name: Docs
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        make -C docs html
-
-    - name: Doctest
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        make -C docs test
-
-    - name: Examples
-      if: matrix.config.extras
-      run: |
-        . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/test examples
-
-  windows:
-    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
-    runs-on: ${{ matrix.config.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {os: windows-latest, python: 3.9, ffmpeg: "6.1"}
-          - {os: windows-latest, python: 3.9, ffmpeg: "6.0"}
-          - {os: windows-latest, python: 3.9, ffmpeg: "5.1"}
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Set up Conda
-      shell: bash
-      run: |
-        . $CONDA/etc/profile.d/conda.sh
-        conda config --set always_yes true
-        conda config --add channels conda-forge
-        conda create -q -n pyav \
-          cython \
-          numpy \
-          pillow \
-          python=${{ matrix.config.python }} \
-          setuptools
-
-    - name: Build
-      shell: bash
-      run: |
-        . $CONDA/etc/profile.d/conda.sh
-        conda activate pyav
-        python scripts\\fetch-vendor.py --config-file scripts\\ffmpeg-${{ matrix.config.ffmpeg }}.json $CONDA_PREFIX\\Library
-        python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX\\Library
-
-    - name: Test
-      shell: bash
-      run: |
-        . $CONDA/etc/profile.d/conda.sh
-        conda activate pyav
-        python setup.py test
-
   package-source:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: "3.13"
       - name: Build source package
         run: |
-          pip install cython
-          python scripts/fetch-vendor.py --config-file scripts/ffmpeg-6.1.json /tmp/vendor
+          pip install -U --pre cython setuptools
+          python scripts/fetch-vendor.py --config-file scripts/ffmpeg-7.1.json /tmp/vendor
           PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig python setup.py sdist
       - name: Upload source package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-source
           path: dist/
 
   package-wheel:
@@ -179,54 +28,55 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-14
             arch: arm64
-          - os: macos-latest
+          - os: macos-13
             arch: x86_64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             arch: aarch64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             arch: i686
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             arch: x86_64
           - os: windows-latest
             arch: AMD64
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.9
-      - name: Set up QEMU
-        if: matrix.os == 'ubuntu-latest'
-        uses: docker/setup-qemu-action@v3
+          python-version: "3.13"
       - name: Install packages
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         run: |
           brew update
           brew install pkg-config
+      - name: Set Minimum MacOS Target
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+        run: |
+          echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
       - name: Build wheels
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_BEFORE_ALL_LINUX: yum install -y alsa-lib libxcb
-          CIBW_BEFORE_BUILD: python scripts/fetch-vendor.py --config-file scripts/ffmpeg-6.1.json /tmp/vendor
-          CIBW_BEFORE_BUILD_WINDOWS: python scripts\fetch-vendor.py --config-file scripts\ffmpeg-6.1.json C:\cibw\vendor
+          CIBW_BEFORE_BUILD: python scripts/fetch-vendor.py --config-file scripts/ffmpeg-7.1.json /tmp/vendor
+          CIBW_BEFORE_BUILD_MACOS: python scripts/fetch-vendor.py --config-file scripts/ffmpeg-7.1.json /tmp/vendor
+          CIBW_BEFORE_BUILD_WINDOWS: python scripts\fetch-vendor.py --config-file scripts\ffmpeg-7.1.json C:\cibw\vendor
           CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:\cibw\vendor\bin -w {dest_dir} {wheel}
-          CIBW_SKIP: cp36-* pp36-* pp38-win* *-musllinux*
-          CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m unittest discover -t {project} -s tests && mv {project}/av.disabled {project}/av
-          CIBW_TEST_REQUIRES: numpy
+          CIBW_SKIP: "pp*"
+          CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
+          CIBW_TEST_REQUIRES: pytest numpy
           # skip tests when there are no binary wheels of numpy
-          CIBW_TEST_SKIP: pp* *_i686
+          CIBW_TEST_SKIP: "*_i686"
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
         shell: bash
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-${{ matrix.os }}-${{ matrix.arch }}
           path: dist/
 
   publish:
@@ -234,9 +84,9 @@ jobs:
     needs: [package-source, package-wheel]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: dist
+          merge-multiple: true
           path: dist/
       - name: Publish to PyPI
         if: github.event_name == 'release' && github.event.action == 'published'

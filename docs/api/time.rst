@@ -57,7 +57,7 @@ In many cases a stream has a time base of ``1 / frame_rate``, and then its frame
     1
 
 
-For convenince, :attr:`.Frame.time` is a ``float`` in seconds:
+For convenience, :attr:`.Frame.time` is a ``float`` in seconds:
 
 .. doctest::
 
@@ -65,10 +65,10 @@ For convenince, :attr:`.Frame.time` is a ``float`` in seconds:
     0.04
 
 
-FFMpeg Internals
+FFmpeg Internals
 ----------------
 
-.. note:: Time in FFmpeg is not 100% clear to us (see :ref:`authority_of_docs`). At times the FFmpeg documentation and canonical seeming posts in the forums appear contradictory. We've experiemented with it, and what follows is the picture that we are operating under.
+.. note:: Time in FFmpeg is not 100% clear to us (see :ref:`authority_of_docs`). At times the FFmpeg documentation and canonical seeming posts in the forums appear contradictory. We've experimented with it, and what follows is the picture that we are operating under.
 
 Both :ffmpeg:`AVStream` and :ffmpeg:`AVCodecContext` have a ``time_base`` member. However, they are used for different purposes, and (this author finds) it is too easy to abstract the concept too far.
 
@@ -81,9 +81,6 @@ Encoding
 For encoding, you (the PyAV developer / FFmpeg "user") must set :ffmpeg:`AVCodecContext.time_base`, ideally to the inverse of the frame rate (or so the library docs say to do if your frame rate is fixed; we're not sure what to do if it is not fixed), and you may set :ffmpeg:`AVStream.time_base` as a hint to the muxer. After you open all the codecs and call :ffmpeg:`avformat_write_header`, the stream time base may change, and you must respect it. We don't know if the codec time base may change, so we will make the safer assumption that it may and respect it as well.
 
 You then prepare :ffmpeg:`AVFrame.pts` in :ffmpeg:`AVCodecContext.time_base`. The encoded :ffmpeg:`AVPacket.pts` is simply copied from the frame by the library, and so is still in the codec's time base. You must rescale it to :ffmpeg:`AVStream.time_base` before muxing (as all stream operations assume the packet time is in stream time base).
-
-For fixed-fps content your frames' ``pts`` would be the frame or sample index (for video and audio, respectively). PyAV should attempt to do this.
-
 
 Decoding
 ........

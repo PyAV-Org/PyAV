@@ -17,23 +17,33 @@ _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.uint8]],  # u1
 ]
 
+class _Format:
+    def __get__(self, i: object | None, owner: type | None = None) -> AudioFormat: ...
+    def __set__(self, instance: object, value: AudioFormat | str) -> None: ...
+
+class _Layout:
+    def __get__(self, i: object | None, owner: type | None = None) -> AudioLayout: ...
+    def __set__(self, instance: object, value: AudioLayout | str) -> None: ...
+
 class AudioFrame(Frame):
     planes: tuple[AudioPlane, ...]
     samples: int
     sample_rate: int
     rate: int
-    format: AudioFormat
-    layout: AudioLayout
+    format: _Format
+    layout: _Layout
 
     def __init__(
         self,
-        format: str = "s16",
-        layout: str = "stereo",
+        format: AudioFormat | str = "s16",
+        layout: AudioLayout | str = "stereo",
         samples: int = 0,
         align: int = 1,
     ) -> None: ...
     @staticmethod
     def from_ndarray(
-        array: _SupportedNDarray, format: str = "s16", layout: str = "stereo"
+        array: _SupportedNDarray,
+        format: AudioFormat | str = "s16",
+        layout: AudioLayout | str = "stereo",
     ) -> AudioFrame: ...
     def to_ndarray(self) -> _SupportedNDarray: ...

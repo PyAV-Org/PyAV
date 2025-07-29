@@ -7,27 +7,45 @@ fi
 
 cd "$PYAV_ROOT"
 
-# Always try to install the Python dependencies they are cheap.
-$PYAV_PIP install --upgrade -r tests/requirements.txt
-
-
 # Skip the rest of the build if it already exists.
 if [[ -e "$PYAV_LIBRARY_PREFIX/bin/ffmpeg" ]]; then
-    echo "We have a cached build of $PYAV_LIBRARY; skipping re-build."
+    echo "We have a cached build of ffmpeg-$PYAV_LIBRARY; skipping re-build."
     exit 0
 fi
 
-
 mkdir -p "$PYAV_LIBRARY_ROOT"
 mkdir -p "$PYAV_LIBRARY_PREFIX"
-cd "$PYAV_LIBRARY_ROOT"
 
+# Add CUDA support if available
+CONFFLAGS_NVIDIA=""
+if [[ -e /usr/local/cuda ]]; then
+    # Get Nvidia headers for ffmpeg
+    cd $PYAV_LIBRARY_ROOT
+    if [[ ! -e "$PYAV_LIBRARY_ROOT/nv-codec-headers" ]]; then
+        git clone https://github.com/FFmpeg/nv-codec-headers.git
+        cd nv-codec-headers
+        make -j4
+        make PREFIX="$PYAV_LIBRARY_PREFIX" install
+    fi
+
+    PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+    CONFFLAGS_NVIDIA="--enable-cuda-nvcc \
+                      --enable-nonfree \
+                      --enable-libnpp \
+                      --extra-cflags=-I/usr/local/cuda/include \
+                      --extra-ldflags=-L/usr/local/cuda/lib64"
+else
+    echo "WARNING: Did not find cuda libraries in /usr/local/cuda..."
+    echo "         Building without NVIDIA NVENC/NVDEC support"
+fi
+
+cd "$PYAV_LIBRARY_ROOT"
 
 # Download and expand the source.
 if [[ ! -d $PYAV_LIBRARY ]]; then
     url="https://ffmpeg.org/releases/$PYAV_LIBRARY.tar.gz"
     echo Downloading $url
-    wget --no-check-certificate "$url" || exit 1
+    curl "$url" --output ${PYAV_LIBRARY}.tar.gz || exit 1
     tar -xzf $PYAV_LIBRARY.tar.gz
     rm $PYAV_LIBRARY.tar.gz
     echo
@@ -37,15 +55,18 @@ cd $PYAV_LIBRARY
 echo ./configure
 ./configure \
     --disable-doc \
-    --disable-mmx \
-    --disable-optimizations \
     --disable-static \
     --disable-stripping \
+    --disable-libxml2 \
     --enable-debug=3 \
     --enable-gpl \
+    --enable-version3 \
     --enable-libx264 \
-    --enable-libxml2 \
     --enable-shared \
+    --enable-sse \
+    --enable-avx \
+    --enable-avx2 \
+    $CONFFLAGS_NVIDIA \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo

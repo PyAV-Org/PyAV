@@ -21,6 +21,7 @@ Currently we provide:
 - ``libavcodec``:
   :class:`.Codec`,
   :class:`.CodecContext`,
+  :class:`.BitStreamFilterContext`,
   audio/video :class:`frames <.Frame>`,
   :class:`data planes <.Plane>`,
   :class:`subtitles <.Subtitle>`;
@@ -52,6 +53,7 @@ Basic Demo
 
     import av
 
+    av.logging.set_level(av.logging.VERBOSE)
     container = av.open(path_to_video)
 
     for index, frame in enumerate(container.decode(video=0)):

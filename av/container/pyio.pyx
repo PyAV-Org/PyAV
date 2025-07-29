@@ -47,7 +47,8 @@ cdef class PyIOFile:
         self.buffer = <unsigned char*>lib.av_malloc(buffer_size)
 
         self.iocontext = lib.avio_alloc_context(
-            self.buffer, buffer_size,
+            self.buffer,
+            buffer_size,
             writeable,
             <void*>self,  # User data.
             pyio_read,
@@ -88,15 +89,15 @@ cdef int pyio_read_gil(void *opaque, uint8_t *buf, int buf_size) noexcept:
         if not res:
             return lib.AVERROR_EOF
         return len(res)
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
-cdef int pyio_write(void *opaque, uint8_t *buf, int buf_size) noexcept nogil:
+cdef int pyio_write(void *opaque, const uint8_t *buf, int buf_size) noexcept nogil:
     with gil:
         return pyio_write_gil(opaque, buf, buf_size)
 
-cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size) noexcept:
+cdef int pyio_write_gil(void *opaque, const uint8_t *buf, int buf_size) noexcept:
     cdef PyIOFile self
     cdef bytes bytes_to_write
     cdef int bytes_written
@@ -107,7 +108,7 @@ cdef int pyio_write_gil(void *opaque, uint8_t *buf, int buf_size) noexcept:
         bytes_written = ret_value if isinstance(ret_value, int) else buf_size
         self.pos += bytes_written
         return bytes_written
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
@@ -139,19 +140,19 @@ cdef int64_t pyio_seek_gil(void *opaque, int64_t offset, int whence):
             else:
                 res = self.ftell()
         return res
-    except Exception as e:
+    except Exception:
         return stash_exception()
 
 
-cdef void pyio_close_gil(lib.AVIOContext *pb):
+cdef int pyio_close_gil(lib.AVIOContext *pb):
     try:
-        lib.avio_close(pb)
+        return lib.avio_close(pb)
 
-    except Exception as e:
+    except Exception:
         stash_exception()
 
 
-cdef void pyio_close_custom_gil(lib.AVIOContext *pb):
+cdef int pyio_close_custom_gil(lib.AVIOContext *pb):
     cdef PyIOFile self
     try:
         self = <PyIOFile>pb.opaque
@@ -162,5 +163,7 @@ cdef void pyio_close_custom_gil(lib.AVIOContext *pb):
         if self.fclose is not None:
             self.fclose()
 
-    except Exception as e:
+        return 0
+
+    except Exception:
         stash_exception()

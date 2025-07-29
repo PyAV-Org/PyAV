@@ -12,8 +12,8 @@ class AudioResampler:
 
     def __init__(
         self,
-        format: AudioFormat | None = None,
-        layout: AudioLayout | None = None,
+        format: str | int | AudioFormat | None = None,
+        layout: str | int | AudioLayout | None = None,
         rate: int | None = None,
         frame_size: int | None = None,
     ) -> None: ...

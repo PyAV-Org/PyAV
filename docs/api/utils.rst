@@ -14,5 +14,3 @@ Other
 
 .. automodule:: av.utils
     :members:
-
-    .. autoclass:: AVError

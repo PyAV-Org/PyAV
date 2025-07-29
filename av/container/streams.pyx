@@ -1,4 +1,3 @@
-
 cimport libav as lib
 
 
@@ -10,9 +9,21 @@ def _flatten(input_):
         else:
             yield x
 
+cdef lib.AVMediaType _get_media_type_enum(str type):
+    if type == "video":
+        return lib.AVMEDIA_TYPE_VIDEO
+    elif type == "audio":
+        return lib.AVMEDIA_TYPE_AUDIO
+    elif type == "subtitle":
+        return lib.AVMEDIA_TYPE_SUBTITLE
+    elif type == "attachment":
+        return lib.AVMEDIA_TYPE_ATTACHMENT
+    elif type == "data":
+        return lib.AVMEDIA_TYPE_DATA
+    else:
+        raise ValueError(f"Invalid stream type: {type}")
 
 cdef class StreamContainer:
-
     """
 
     A tuple-like container of :class:`Stream`.
@@ -33,6 +44,7 @@ cdef class StreamContainer:
         self.audio = ()
         self.subtitles = ()
         self.data = ()
+        self.attachments = ()
         self.other = ()
 
     cdef add_stream(self, Stream stream):
@@ -46,6 +58,8 @@ cdef class StreamContainer:
             self.audio = self.audio + (stream, )
         elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
             self.subtitles = self.subtitles + (stream, )
+        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
+            self.attachments = self.attachments + (stream, )
         elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA:
             self.data = self.data + (stream, )
         else:
@@ -119,3 +133,38 @@ cdef class StreamContainer:
                 raise TypeError("Argument must be Stream or int.", type(x))
 
         return selection or self._streams[:]
+
+    cdef int _get_best_stream_index(self, Container container, lib.AVMediaType type_enum, Stream related) noexcept:
+        cdef int stream_index
+
+        if related is None:
+            stream_index = lib.av_find_best_stream(container.ptr, type_enum, -1, -1, NULL, 0)
+        else:
+            stream_index = lib.av_find_best_stream(container.ptr, type_enum, -1, related.ptr.index, NULL, 0)
+
+        return stream_index
+
+    def best(self, str type, /, Stream related = None):
+        """best(type: Literal["video", "audio", "subtitle", "attachment", "data"], /, related: Stream | None)
+        Finds the "best" stream in the file. Wraps :ffmpeg:`av_find_best_stream`. Example::
+
+            stream = container.streams.best("video")
+
+        :param type: The type of stream to find
+        :param related: A related stream to use as a reference (optional)
+        :return: The best stream of the specified type
+        :rtype: Stream | None
+        """
+        cdef type_enum = _get_media_type_enum(type)
+
+        if len(self._streams) == 0:
+            return None
+
+        cdef container = self._streams[0].container
+
+        cdef int stream_index = self._get_best_stream_index(container, type_enum, related)
+
+        if stream_index < 0:
+            return None
+
+        return self._streams[stream_index]
