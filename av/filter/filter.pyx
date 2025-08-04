@@ -1,7 +1,7 @@
 cimport libav as lib
 
 from av.descriptor cimport wrap_avclass
-from av.filter.pad cimport alloc_filter_pads
+from av.filter.link cimport alloc_filter_pads
 
 
 cdef object _cinit_sentinel = object()
