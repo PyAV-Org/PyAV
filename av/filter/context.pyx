@@ -4,7 +4,7 @@ from av.audio.frame cimport alloc_audio_frame
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.error cimport err_check
-from av.filter.pad cimport alloc_filter_pads
+from av.filter.link cimport alloc_filter_pads
 from av.frame cimport Frame
 from av.utils cimport avrational_to_fraction
 from av.video.frame cimport alloc_video_frame
