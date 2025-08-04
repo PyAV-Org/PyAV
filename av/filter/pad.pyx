@@ -72,9 +72,7 @@ cdef tuple alloc_filter_pads(Filter filter, const lib.AVFilterPad *ptr, bint is_
     cdef int i = 0
     cdef int count
     if context is None:
-        # This is a custom function defined using a macro in avfilter.pxd. Its usage
-        # can be changed after we stop supporting FFmpeg < 5.0.
-        count = lib.pyav_get_num_pads(filter.ptr, not is_input, ptr)
+        count = lib.avfilter_filter_pad_count(filter.ptr, not is_input)
     else:
         count = (context.ptr.nb_inputs if is_input else context.ptr.nb_outputs)
 

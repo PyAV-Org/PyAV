@@ -1,14 +1,4 @@
-
 cdef extern from "libavfilter/avfilter.h" nogil:
-    """
-    #if (LIBAVFILTER_VERSION_INT >= 525156)
-        // avfilter_filter_pad_count is available since version 8.3.100 of libavfilter (FFmpeg 5.0)
-        #define _avfilter_get_num_pads(filter, is_output, pads) (avfilter_filter_pad_count(filter, is_output))
-    #else
-        // avfilter_filter_pad_count has been deprecated as of version 8.3.100 of libavfilter (FFmpeg 5.0)
-        #define _avfilter_get_num_pads(filter, is_output, pads) (avfilter_pad_count(pads))
-    #endif
-    """
     cdef int   avfilter_version()
     cdef char* avfilter_configuration()
     cdef char* avfilter_license()
@@ -20,10 +10,9 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     const char* avfilter_pad_get_name(const AVFilterPad *pads, int index)
     AVMediaType avfilter_pad_get_type(const AVFilterPad *pads, int index)
 
-    int pyav_get_num_pads "_avfilter_get_num_pads" (const AVFilter *filter, int is_output, const AVFilterPad *pads)
+    cdef unsigned avfilter_filter_pad_count(const AVFilter *filter, int is_output)
 
     cdef struct AVFilter:
-
         AVClass *priv_class
 
         const char *name
@@ -48,7 +37,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef struct AVFilterLink  # Defined later.
 
     cdef struct AVFilterContext:
-
         AVClass *av_class
         AVFilter *filter
 
@@ -68,7 +56,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef AVClass* avfilter_get_class()
 
     cdef struct AVFilterLink:
-
         AVFilterContext *src
         AVFilterPad *srcpad
         AVFilterContext *dst
