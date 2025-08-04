@@ -7,10 +7,6 @@ class Filter:
     descriptor: Descriptor
     options: tuple[Option, ...] | None
     flags: int
-    dynamic_inputs: bool
-    dynamic_outputs: bool
-    timeline_support: bool
-    slice_threads: bool
     command_support: bool
 
     def __init__(self, name: str) -> None: ...
