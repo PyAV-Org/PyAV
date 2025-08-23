@@ -494,7 +494,7 @@ cdef class CodecContext:
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
         cdef int i = 0
-        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN: 
             ret.append(desc.profiles[i].name)
             i += 1
 
@@ -509,7 +509,7 @@ cdef class CodecContext:
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
         cdef int i = 0
-        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN: 
             if desc.profiles[i].profile == self.ptr.profile:
                 return desc.profiles[i].name
             i += 1
@@ -523,7 +523,7 @@ cdef class CodecContext:
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
         cdef int i = 0
-        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN:
             if desc.profiles[i].name == value:
                 self.ptr.profile = desc.profiles[i].profile
                 return

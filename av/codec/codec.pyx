@@ -36,7 +36,6 @@ class Capabilities(IntEnum):
     delay = lib.AV_CODEC_CAP_DELAY
     small_last_frame = lib.AV_CODEC_CAP_SMALL_LAST_FRAME
     hwaccel_vdpau = 1 << 7
-    subframes = lib.AV_CODEC_CAP_SUBFRAMES
     experimental = lib.AV_CODEC_CAP_EXPERIMENTAL
     channel_conf = lib.AV_CODEC_CAP_CHANNEL_CONF
     neg_linesizes = 1 << 11

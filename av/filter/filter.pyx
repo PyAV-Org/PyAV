@@ -48,10 +48,6 @@ cdef class Filter:
         return self.ptr.flags
 
     @property
-    def command_support(self):
-        return self.ptr.process_command != NULL
-
-    @property
     def inputs(self):
         if self._inputs is None:
             self._inputs = alloc_filter_pads(self, self.ptr.inputs, True)
