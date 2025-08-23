@@ -31,7 +31,6 @@ class Flags(Flag):
     no_bin_search: "Format does not allow to fall back on binary search via read_timestamp" = lib.AVFMT_NOBINSEARCH
     no_gen_search: "Format does not allow to fall back on generic search" = lib.AVFMT_NOGENSEARCH
     no_byte_seek: "Format does not allow seeking by bytes" = lib.AVFMT_NO_BYTE_SEEK
-    allow_flush: "Format allows flushing. If not set, the muxer will not receive a NULL packet in the write_packet function." = lib.AVFMT_ALLOW_FLUSH
     ts_nonstrict: "Format does not require strictly increasing timestamps, but they must still be monotonic." = lib.AVFMT_TS_NONSTRICT
     ts_negative: "Format allows muxing negative timestamps." = lib.AVFMT_TS_NEGATIVE
     # If not set the timestamp will be shifted in `av_write_frame()` and `av_interleaved_write_frame()`

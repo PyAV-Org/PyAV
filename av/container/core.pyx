@@ -138,7 +138,6 @@ class Flags(Flag):
     bitexact: "When muxing, try to avoid writing any random/volatile data to the output. This includes any random IDs, real-time timestamps/dates, muxer version, etc. This flag is mainly intended for testing." = lib.AVFMT_FLAG_BITEXACT
     sort_dts: "Try to interleave outputted packets by dts (using this flag can slow demuxing down)." = lib.AVFMT_FLAG_SORT_DTS
     fast_seek: "Enable fast, but inaccurate seeks for some formats." = lib.AVFMT_FLAG_FAST_SEEK
-    shortest: "Stop muxing when the shortest stream stops." = lib.AVFMT_FLAG_SHORTEST
     auto_bsf: "Add bitstream filters as requested by the muxer." = lib.AVFMT_FLAG_AUTO_BSF
 
 class AudioCodec(IntEnum):

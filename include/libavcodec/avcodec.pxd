@@ -80,14 +80,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef enum:
         AV_CODEC_CAP_DRAW_HORIZ_BAND
         AV_CODEC_CAP_DR1
-        # AV_CODEC_CAP_HWACCEL
         AV_CODEC_CAP_DELAY
         AV_CODEC_CAP_SMALL_LAST_FRAME
-        # AV_CODEC_CAP_HWACCEL_VDPAU
-        AV_CODEC_CAP_SUBFRAMES
         AV_CODEC_CAP_EXPERIMENTAL
         AV_CODEC_CAP_CHANNEL_CONF
-        # AV_CODEC_CAP_NEG_LINESIZES
         AV_CODEC_CAP_FRAME_THREADS
         AV_CODEC_CAP_SLICE_THREADS
         AV_CODEC_CAP_PARAM_CHANGE
@@ -97,6 +93,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_CAP_HARDWARE
         AV_CODEC_CAP_HYBRID
         AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
+
+    cdef enum:
+        AV_PROFILE_UNKNOWN = -99
 
     cdef enum:
         FF_THREAD_FRAME
@@ -155,9 +154,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         FF_COMPLIANCE_NORMAL
         FF_COMPLIANCE_UNOFFICIAL
         FF_COMPLIANCE_EXPERIMENTAL
-
-    cdef enum:
-        FF_PROFILE_UNKNOWN = -99
 
     cdef enum AVCodecID:
         AV_CODEC_ID_NONE

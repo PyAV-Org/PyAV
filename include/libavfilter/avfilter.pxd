@@ -13,16 +13,12 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef unsigned avfilter_filter_pad_count(const AVFilter *filter, int is_output)
 
     cdef struct AVFilter:
-        AVClass *priv_class
-
         const char *name
         const char *description
-
-        const int flags
-
         const AVFilterPad *inputs
         const AVFilterPad *outputs
-        int (*process_command)(AVFilterContext *, const char *cmd, const char *arg, char *res, int res_len, int flags)
+        const AVClass *priv_class
+        int flags
 
     cdef AVFilter* avfilter_get_by_name(const char *name)
     cdef const AVFilter* av_filter_iterate(void **opaque)

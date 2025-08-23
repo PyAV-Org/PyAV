@@ -7,7 +7,6 @@ class Filter:
     descriptor: Descriptor
     options: tuple[Option, ...] | None
     flags: int
-    command_support: bool
 
     def __init__(self, name: str) -> None: ...
 

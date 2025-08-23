@@ -125,7 +125,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVFMT_NOBINSEARCH
         AVFMT_NOGENSEARCH
         AVFMT_NO_BYTE_SEEK
-        AVFMT_ALLOW_FLUSH
         AVFMT_TS_NONSTRICT
         AVFMT_TS_NEGATIVE
         AVFMT_SEEK_TO_PTS
@@ -145,7 +144,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVFMT_FLAG_BITEXACT
         AVFMT_FLAG_SORT_DTS
         AVFMT_FLAG_FAST_SEEK
-        AVFMT_FLAG_SHORTEST
         AVFMT_FLAG_AUTO_BSF
 
     cdef int av_probe_input_buffer(
