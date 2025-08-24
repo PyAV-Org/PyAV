@@ -173,6 +173,7 @@ cdef class InputContainer(Container):
                         ret = lib.av_read_frame(self.ptr, packet.ptr)
                     self.err_check(ret)
                 except EOFError:
+                    self.eof = True
                     break
 
                 if include_stream[packet.ptr.stream_index]:
@@ -276,7 +277,9 @@ cdef class InputContainer(Container):
             ret = lib.av_seek_frame(self.ptr, stream_index, c_offset, flags)
         err_check(ret)
 
-        self.flush_buffers()
+        # codec buffers must be cleared if file is at eof, 
+        if self.eof or lib.avio_feof(self.ptr.pb):
+            self.flush_buffers()
 
     cdef flush_buffers(self):
         self._assert_open()
