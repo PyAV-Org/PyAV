@@ -21,6 +21,7 @@ v15.1.0
 
 Features:
 
+- Support FFmpeg 8
 - Make the `Frame.key_frame` flag writable.
 
 v15.0.0
