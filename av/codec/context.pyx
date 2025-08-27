@@ -52,7 +52,6 @@ class Flags(IntEnum):
     four_mv = lib.AV_CODEC_FLAG_4MV
     output_corrupt = lib.AV_CODEC_FLAG_OUTPUT_CORRUPT
     qpel = lib.AV_CODEC_FLAG_QPEL
-    drop_changed = 1 << 5
     recon_frame = lib.AV_CODEC_FLAG_RECON_FRAME
     copy_opaque = lib.AV_CODEC_FLAG_COPY_OPAQUE
     frame_duration = lib.AV_CODEC_FLAG_FRAME_DURATION
