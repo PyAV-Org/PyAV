@@ -15,7 +15,12 @@ from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_close_custom_gil, pyio_close_gil
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
-from av.utils cimport avdict_to_dict, avrational_to_fraction
+from av.utils cimport (
+    avdict_to_dict,
+    avrational_to_fraction,
+    dict_to_avdict,
+    to_avrational,
+)
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
@@ -122,6 +127,17 @@ cdef int pyav_io_close_gil(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept
         result = lib.AVERROR_UNKNOWN  # Or another appropriate error code
 
     return result
+
+cdef void _free_chapters(lib.AVFormatContext *ctx) noexcept nogil:
+        cdef int i
+        if ctx.chapters != NULL:
+            for i in range(ctx.nb_chapters):
+                if ctx.chapters[i] != NULL:
+                    if ctx.chapters[i].metadata != NULL:
+                        lib.av_dict_free(&ctx.chapters[i].metadata)
+                    lib.av_freep(<void **>&ctx.chapters[i])
+            lib.av_freep(<void **>&ctx.chapters)
+        ctx.nb_chapters = 0
 
 
 class Flags(Flag):
@@ -345,6 +361,39 @@ cdef class Container:
                 "metadata": avdict_to_dict(ch.metadata, self.metadata_encoding, self.metadata_errors),
             })
         return result
+
+    def set_chapters(self, chapters):
+        self._assert_open()
+
+        cdef int count = len(chapters)
+        cdef int i
+        cdef lib.AVChapter **ch_array
+        cdef lib.AVChapter *ch
+        cdef dict entry
+
+        with nogil:
+            _free_chapters(self.ptr)
+
+        ch_array = <lib.AVChapter **>lib.av_malloc(count * sizeof(lib.AVChapter *))
+        if ch_array == NULL:
+            raise MemoryError("av_malloc failed for chapters")
+
+        for i in range(count):
+            entry = chapters[i]
+            ch = <lib.AVChapter *>lib.av_malloc(sizeof(lib.AVChapter))
+            if ch == NULL:
+                raise MemoryError("av_malloc failed for chapter")
+            ch.id = entry["id"]
+            ch.start = <int64_t>entry["start"]
+            ch.end = <int64_t>entry["end"]
+            to_avrational(entry["time_base"], &ch.time_base)
+            ch.metadata = NULL
+            if "metadata" in entry:
+                dict_to_avdict(&ch.metadata, entry["metadata"], self.metadata_encoding, self.metadata_errors)
+            ch_array[i] = ch
+
+        self.ptr.nb_chapters = count
+        self.ptr.chapters = ch_array
 
 def open(
     file,
