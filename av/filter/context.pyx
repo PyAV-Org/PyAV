@@ -136,8 +136,8 @@ cdef class FilterContext:
         return frame
 
     def process_command(self, cmd, arg=None, int res_len=1024, int flags=0):
-        if cmd is None:
-            raise ValueError("cmd is required")
+        if not cmd:
+            raise ValueError("Invalid cmd")
 
         cdef char *c_cmd = NULL
         cdef char *c_arg = NULL
@@ -170,5 +170,5 @@ cdef class FilterContext:
             if nul >= 0:
                 b = b[:nul]
             if b:
-                return b.decode('utf-8', 'strict')
+                return b.decode("utf-8", "strict")
         return None
