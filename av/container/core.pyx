@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 from cython.operator cimport dereference
 from libc.stdint cimport int64_t
 
@@ -329,6 +331,22 @@ cdef class Container:
     def flags(self, int value):
         self._assert_open()
         self.ptr.flags = value
+
+    def chapters(self):
+        self._assert_open()
+        cdef list result = []
+        cdef int i
+
+        for i in range(self.ptr.nb_chapters):
+            ch = self.ptr.chapters[i]
+            result.append({
+                "id": ch.id,
+                "start": ch.start,
+                "end": ch.end,
+                "time_base": Fraction(ch.time_base.num, ch.time_base.den),
+                "metadata": avdict_to_dict(ch.metadata, self.metadata_encoding, self.metadata_errors),
+            })
+        return result
 
 def open(
     file,
