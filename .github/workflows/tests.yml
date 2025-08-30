@@ -35,8 +35,6 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: aarch64
           - os: ubuntu-24.04
-            arch: i686
-          - os: ubuntu-24.04
             arch: x86_64
           - os: windows-latest
             arch: AMD64
@@ -67,8 +65,6 @@ jobs:
           CIBW_SKIP: "pp*"
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: pytest numpy
-          # skip tests when there are no binary wheels of numpy
-          CIBW_TEST_SKIP: "*_i686"
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
