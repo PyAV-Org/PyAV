@@ -55,7 +55,7 @@ class MotionVectors(_MotionVectors, Sequence):
 cdef class MotionVector:
     def __init__(self, sentinel, _MotionVectors parent, int index):
         if sentinel is not _cinit_bypass_sentinel:
-            raise RuntimeError("cannot manually instatiate MotionVector")
+            raise RuntimeError("cannot manually instantiate MotionVector")
         self.parent = parent
         cdef lib.AVMotionVector *base = <lib.AVMotionVector*>parent.ptr.data
         self.ptr = base + index

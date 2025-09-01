@@ -63,7 +63,7 @@ cdef int get_display_rotation(Frame frame):
 cdef class SideData(Buffer):
     def __init__(self, sentinel, Frame frame, int index):
         if sentinel is not _cinit_bypass_sentinel:
-            raise RuntimeError("cannot manually instatiate SideData")
+            raise RuntimeError("cannot manually instantiate SideData")
         self.frame = frame
         self.ptr = frame.ptr.side_data[index]
         self.metadata = wrap_dictionary(self.ptr.metadata)
