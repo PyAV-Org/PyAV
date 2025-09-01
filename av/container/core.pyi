@@ -2,7 +2,7 @@ from enum import Flag, IntEnum
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, ClassVar, Literal, Type, cast, overload
+from typing import Any, Callable, ClassVar, Literal, Type, TypedDict, cast, overload
 
 from av.codec.hwaccel import HWAccel
 from av.format import ContainerFormat
@@ -67,6 +67,13 @@ class AudioCodec(IntEnum):
     pcm_u8 = cast(int, ...)
     pcm_vidc = cast(int, ...)
 
+class _Chapter(TypedDict):
+    id: int
+    start: int
+    end: int
+    time_base: Fraction | None
+    metadata: dict[str, str]
+
 class Container:
     writeable: bool
     name: str
@@ -86,7 +93,6 @@ class Container:
     open_timeout: Real | None
     read_timeout: Real | None
     flags: int
-
     def __enter__(self) -> Container: ...
     def __exit__(
         self,
@@ -96,6 +102,7 @@ class Container:
     ) -> bool: ...
     def set_timeout(self, timeout: Real | None) -> None: ...
     def start_timeout(self) -> None: ...
+    def chapters(self) -> list[_Chapter]: ...
 
 @overload
 def open(
