@@ -94,7 +94,7 @@ for email, count in sorted(email_count.items(), key=lambda x: (-x[1], x[0])):
     github = github_map.get(email)
 
     # The '-' vs '*' is so that Sphinx treats them as different lists, and
-    # introduces a gap bettween them.
+    # introduces a gap between them.
     if github:
         print(
             "%s %s <%s>; `@%s <https://github.com/%s>`_"

@@ -415,7 +415,7 @@ def encode_frames_with_qminmax(
     frames: list[VideoFrame], shape: tuple[int, int, int], qminmax: tuple[int, int]
 ) -> int:
     """
-    Encode a video with the given quantiser limits, and return how many enocded
+    Encode a video with the given quantiser limits, and return how many encoded
     bytes we made in total.
 
     frames: the frames to encode

@@ -130,7 +130,7 @@ class Flags(Flag):
     non_block: "Do not block when reading packets from input." = lib.AVFMT_FLAG_NONBLOCK
     ign_dts: "Ignore DTS on frames that contain both DTS & PTS." = lib.AVFMT_FLAG_IGNDTS
     no_fillin: "Do not infer any values from other values, just return what is stored in the container." = lib.AVFMT_FLAG_NOFILLIN
-    no_parse: "Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fillin code works on frames and no parsing -> no frames. Also seeking to frames can not work if parsing to find frame boundaries has been disabled." = lib.AVFMT_FLAG_NOPARSE
+    no_parse: "Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fill in code works on frames and no parsing -> no frames. Also seeking to frames can not work if parsing to find frame boundaries has been disabled." = lib.AVFMT_FLAG_NOPARSE
     no_buffer: "Do not buffer frames when possible." = lib.AVFMT_FLAG_NOBUFFER
     custom_io: "The caller has supplied a custom AVIOContext, don't avio_close() it." = lib.AVFMT_FLAG_CUSTOM_IO
     discard_corrupt: "Discard frames marked corrupted." = lib.AVFMT_FLAG_DISCARD_CORRUPT

@@ -217,13 +217,13 @@ cdef class VideoCodecContext(CodecContext):
         :type: int
         """
         if self.is_decoder:
-            raise RuntimeError("Cannnot access 'gop_size' as a decoder")
+            raise RuntimeError("Cannot access 'gop_size' as a decoder")
         return self.ptr.gop_size
 
     @gop_size.setter
     def gop_size(self, int value):
         if self.is_decoder:
-            raise RuntimeError("Cannnot access 'gop_size' as a decoder")
+            raise RuntimeError("Cannot access 'gop_size' as a decoder")
         self.ptr.gop_size = value
 
     @property

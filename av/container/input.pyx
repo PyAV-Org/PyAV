@@ -241,7 +241,7 @@ cdef class InputContainer(Container):
 
         In most cases, the defaults of ``backwards = True`` and ``any_frame = False``
         are the best course of action, followed by you demuxing/decoding to
-        the position that you want. This is becase to properly decode video frames
+        the position that you want. This is because to properly decode video frames
         you need to start from the previous keyframe.
 
         .. seealso:: :ffmpeg:`avformat_seek_file` for discussion of the flags.

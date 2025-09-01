@@ -559,7 +559,7 @@ Build:
 Other:
 
 - Incremental improvements to docs and tests.
-- Examples directory will now always be runnable as-is, and embeded in the docs (in a copy-pastable form).
+- Examples directory will now always be runnable as-is, and embedded in the docs (in a copy-pastable form).
 
 
 v6.0.0

@@ -158,7 +158,7 @@ cdef class VideoFormatComponent:
 
     @property
     def is_luma(self):
-        """Is this compoment a luma channel?"""
+        """Is this component a luma channel?"""
         return self.index == 0 and (
             self.format.ptr.nb_components == 1 or
             self.format.ptr.nb_components == 2 or
