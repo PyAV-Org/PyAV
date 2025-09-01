@@ -15,7 +15,7 @@ from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_close_custom_gil, pyio_close_gil
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
-from av.utils cimport avdict_to_dict
+from av.utils cimport avdict_to_dict, avrational_to_fraction
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
@@ -329,6 +329,22 @@ cdef class Container:
     def flags(self, int value):
         self._assert_open()
         self.ptr.flags = value
+
+    def chapters(self):
+        self._assert_open()
+        cdef list result = []
+        cdef int i
+
+        for i in range(self.ptr.nb_chapters):
+            ch = self.ptr.chapters[i]
+            result.append({
+                "id": ch.id,
+                "start": ch.start,
+                "end": ch.end,
+                "time_base": avrational_to_fraction(&ch.time_base),
+                "metadata": avdict_to_dict(ch.metadata, self.metadata_encoding, self.metadata_errors),
+            })
+        return result
 
 def open(
     file,
