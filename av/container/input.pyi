@@ -36,6 +36,7 @@ class InputContainer(Container):
     def decode(
         self, *args: Any, **kwargs: Any
     ) -> Iterator[VideoFrame | AudioFrame | SubtitleSet]: ...
+    def chapters(self): ...
     def seek(
         self,
         offset: int,
