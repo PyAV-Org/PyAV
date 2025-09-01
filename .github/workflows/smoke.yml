@@ -109,7 +109,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, python: "3.9", ffmpeg: "8.0"}
+          - {os: windows-latest, python: "3.9", ffmpeg: "latest"}
 
     steps:
     - name: Checkout
