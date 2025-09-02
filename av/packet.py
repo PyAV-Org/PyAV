@@ -58,17 +58,13 @@ PacketSideDataTypeLiteral = Literal[
 def _packet_side_data_type_to_literal(
     data_type: lib.AVPacketSideDataType,
 ) -> PacketSideDataTypeLiteral:
-
     return get_args(PacketSideDataTypeLiteral)[cython.cast(int, data_type)]
 
 
 def _packet_side_data_type_from_literal(
     data_type: PacketSideDataTypeLiteral,
 ) -> lib.AVPacketSideDataType:
-
-    i = cython.declare(
-        cython.int, get_args(PacketSideDataTypeLiteral).index(data_type)
-    )
+    i = cython.declare(cython.int, get_args(PacketSideDataTypeLiteral).index(data_type))
 
     return cython.cast(lib.AVPacketSideDataType, i)
 
@@ -82,7 +78,6 @@ def packet_side_data_type_desc(data_type: PacketSideDataTypeLiteral) -> str | No
 
 @cython.cclass
 class PacketSideData:
-
     @staticmethod
     def from_packet(
         packet: "Packet", data_type: PacketSideDataTypeLiteral
@@ -185,7 +180,6 @@ class PacketSideData:
 def _packet_side_data_from_packet(
     packet: cython.pointer[lib.AVPacket], data_type: lib.AVPacketSideDataType
 ) -> PacketSideData:
-
     with cython.nogil:
         c_ptr = lib.av_packet_side_data_get(
             packet.side_data, packet.side_data_elems, data_type

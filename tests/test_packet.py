@@ -53,7 +53,6 @@ class TestProperties:
 
 
 class TestPacketSideData:
-
     def test_data_types(self):
         dtypes = get_args(av.packet.PacketSideDataTypeLiteral)
         ffmpeg_ver = [int(v) for v in av.ffmpeg_version_info.split(".", 2)[:2]]
@@ -74,9 +73,7 @@ class TestPacketSideData:
                     assert pkt.dts == 2 and sdata.data_type == "new_extradata"
 
     def test_palette(self):
-
         with av.open(fate_suite("h264/extradata-reload-multi-stsd.mov")) as container:
-
             iterpackets = container.demux()
             pkt = next(pkt for pkt in iterpackets if pkt.has_side_data("new_extradata"))
 
