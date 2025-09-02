@@ -1,13 +1,12 @@
+from typing import Iterator, Literal, get_args
+
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.bytesource import bytesource
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
 from cython.cimports.av.utils import avrational_to_fraction, to_avrational
-from cython.cimports.av.error import err_check
 from cython.cimports.libc.string import memcpy
-
-from typing import Literal, get_args, Iterator
 
 # check https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/packet.h#L41 for
 # new additions in the future FFmpeg releases

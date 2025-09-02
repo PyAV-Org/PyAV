@@ -1,8 +1,8 @@
+from typing import get_args
+
 import av
 
 from .common import fate_suite
-
-from typing import get_args
 
 
 class TestProperties:
