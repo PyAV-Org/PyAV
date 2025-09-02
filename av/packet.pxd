@@ -4,6 +4,12 @@ from av.buffer cimport Buffer
 from av.bytesource cimport ByteSource
 from av.stream cimport Stream
 
+from cython.cimports.libc.stdint import uint8_t
+
+cdef class PacketSideData:
+    cdef uint8_t *data
+    cdef size_t size
+    cdef lib.AVPacketSideDataType dtype
 
 cdef class Packet(Buffer):
     cdef lib.AVPacket* ptr
@@ -13,3 +19,7 @@ cdef class Packet(Buffer):
     cdef ByteSource source
     cdef size_t _buffer_size(self)
     cdef void* _buffer_ptr(self)
+
+cdef PacketSideData _packet_side_data_from_packet(
+    lib.AVPacket* packet, lib.AVPacketSideDataType data_type
+)
