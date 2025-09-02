@@ -59,7 +59,6 @@ class TestPacketSideData:
         for dtype in dtypes:
             av_enum = av.packet.packet_sidedata_type_from_literal(dtype)
             assert dtype == av.packet.packet_sidedata_type_to_literal(av_enum)
-            assert av.packet.sidedata_typedesc(dtype) is not None
 
             if (ffmpeg_ver[0] < 8 and dtype == "lcevc") or (
                 ffmpeg_ver[0] < 9 and dtype == "rtcp_sr"

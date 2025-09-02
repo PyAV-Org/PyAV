@@ -63,14 +63,6 @@ def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> lib.AVPacketSideDa
     return get_args(PktSideDataT).index(dtype)
 
 
-@cython.ccall
-def sidedata_typedesc(dtype: PktSideDataT) -> str | None:
-    """FFmpeg description of packet side data type"""
-    dtype2: lib.AVPacketSideDataType = packet_sidedata_type_from_literal(dtype)
-    res: cython.pointer[cython.char] = lib.av_packet_side_data_name(dtype2)
-    return res if res != cython.NULL else None
-
-
 @cython.cclass
 class PacketSideData:
     @staticmethod
