@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77.0", "cython>=3.1.0a1,<4"]
+requires = ["setuptools>=77.0", "cython>=3.1.0,<4"]
 
 [project]
 name = "av"
@@ -10,7 +10,7 @@ authors = [
     {name = "WyattBlue", email = "wyattblue@auto-editor.com"},
     {name = "Jeremy Lainé", email = "jeremy.laine@m4x.org"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -20,11 +20,11 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Cython",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Multimedia :: Sound/Audio",
     "Topic :: Multimedia :: Sound/Audio :: Conversion",
