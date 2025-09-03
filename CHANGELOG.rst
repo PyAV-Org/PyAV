@@ -16,6 +16,20 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v16.0.0
+-------
+(unreleased)
+
+Major:
+- Drop Python 3.9, Support Python 3.14.
+
+Features:
+- Declare free-threaded support and support 3.13t by :gh-user:`ngoldbaum` in (:pr:`2005`).
+- Add ``Filter.Context.process_command()`` method by :gh-user:`caffeinism` in (:pr:`2000`).
+
+Fixes:
+- Fix typos
+
 v15.1.0
 -------
 
