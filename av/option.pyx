@@ -1,6 +1,5 @@
 cimport libav as lib
-
-from av.utils cimport flag_in_bitfield
+from libc.stdint cimport uint64_t
 
 from enum import Enum, Flag
 
@@ -14,6 +13,13 @@ cdef Option wrap_option(tuple choices, const lib.AVOption *ptr):
     obj.ptr = ptr
     obj.choices = choices
     return obj
+
+
+cdef flag_in_bitfield(uint64_t bitfield, uint64_t flag):
+    # Not every flag exists in every version of FFMpeg, so we define them to 0.
+    if not flag:
+        return None
+    return bool(bitfield & flag)
 
 
 class OptionType(Enum):
