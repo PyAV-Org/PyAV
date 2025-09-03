@@ -34,6 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - {os: ubuntu-24.04, python: "3.14t", ffmpeg: "8.0", extras: true}
           - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.0", extras: true}
           - {os: ubuntu-24.04, python: "pypy3.10", ffmpeg: "8.0"}
           - {os: macos-14, python: "3.9", ffmpeg: "8.0"}
@@ -50,6 +51,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.config.python }}
+        allow-prereleases: true
 
     - name: OS Packages
       run: |
