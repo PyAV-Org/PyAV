@@ -1,6 +1,7 @@
 from fractions import Fraction
 
 import av
+from av import Chapter
 
 from .common import fate_suite
 
@@ -42,7 +43,7 @@ def test_chapters() -> None:
 
 
 def test_set_chapters() -> None:
-    chapters = [
+    chapters: list[Chapter] = [
         {
             "id": 1,
             "start": 0,
