@@ -39,3 +39,20 @@ def test_chapters() -> None:
     path = fate_suite("vorbis/vorbis_chapter_extension_demo.ogg")
     with av.open(path) as container:
         assert container.chapters() == expected
+
+
+def test_set_chapters() -> None:
+    chapters: list[av.container.Chapter] = [
+        {
+            "id": 1,
+            "start": 0,
+            "end": 5000,
+            "time_base": Fraction(1, 1000),
+            "metadata": {"title": "start"},
+        }
+    ]
+
+    path = fate_suite("h264/interlaced_crop.mp4")
+    with av.open(path) as container:
+        container.set_chapters(chapters)
+        assert container.chapters() == chapters
