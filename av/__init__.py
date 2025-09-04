@@ -18,7 +18,7 @@ from av.bitstream import BitStreamFilterContext, bitstream_filters_available
 from av.codec.codec import Codec, codecs_available
 from av.codec.context import CodecContext
 from av.codec.hwaccel import HWConfig
-from av.container import open, Chapter
+from av.container import open
 from av.format import ContainerFormat, formats_available
 from av.packet import Packet
 from av.error import *  # noqa: F403; This is limited to exception types.
@@ -41,7 +41,6 @@ __all__ = (
     "AudioStream",
     "BitStreamFilterContext",
     "bitstream_filters_available",
-    "Chapter",
     "Codec",
     "codecs_available",
     "CodecContext",
