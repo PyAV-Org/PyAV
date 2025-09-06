@@ -98,7 +98,7 @@ All contributors (by number of commits):
 * Brendan Long <self@brendanlong.com>; `@brendanlong <https://github.com/brendanlong>`_
 * Семён Марьясин <simeon@maryasin.name>
 * Stephen.Y <stepheny@users.noreply.github.com>
-* Tom Flanagan <theknio@gmail.com>
+* Tom Flanagan <tom@zkpq.ca> `@Knio <https://github.com/Knio>`_
 * Tim O'Shea <tim.oshea753@gmail.com>
 * Tim Ahpee <timah@blackmagicdesign.com>
 * Jonas Tingeborn <tinjon@gmail.com>
