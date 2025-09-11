@@ -15,7 +15,12 @@ from av.container.output cimport OutputContainer
 from av.container.pyio cimport pyio_close_custom_gil, pyio_close_gil
 from av.error cimport err_check, stash_exception
 from av.format cimport build_container_format
-from av.utils cimport avdict_to_dict
+from av.utils cimport (
+    avdict_to_dict,
+    avrational_to_fraction,
+    dict_to_avdict,
+    to_avrational,
+)
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
@@ -123,6 +128,17 @@ cdef int pyav_io_close_gil(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept
 
     return result
 
+cdef void _free_chapters(lib.AVFormatContext *ctx) noexcept nogil:
+        cdef int i
+        if ctx.chapters != NULL:
+            for i in range(ctx.nb_chapters):
+                if ctx.chapters[i] != NULL:
+                    if ctx.chapters[i].metadata != NULL:
+                        lib.av_dict_free(&ctx.chapters[i].metadata)
+                    lib.av_freep(<void **>&ctx.chapters[i])
+            lib.av_freep(<void **>&ctx.chapters)
+        ctx.nb_chapters = 0
+
 
 class Flags(Flag):
     gen_pts: "Generate missing pts even if it requires parsing future frames." = lib.AVFMT_FLAG_GENPTS
@@ -130,7 +146,7 @@ class Flags(Flag):
     non_block: "Do not block when reading packets from input." = lib.AVFMT_FLAG_NONBLOCK
     ign_dts: "Ignore DTS on frames that contain both DTS & PTS." = lib.AVFMT_FLAG_IGNDTS
     no_fillin: "Do not infer any values from other values, just return what is stored in the container." = lib.AVFMT_FLAG_NOFILLIN
-    no_parse: "Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fillin code works on frames and no parsing -> no frames. Also seeking to frames can not work if parsing to find frame boundaries has been disabled." = lib.AVFMT_FLAG_NOPARSE
+    no_parse: "Do not use AVParsers, you also must set AVFMT_FLAG_NOFILLIN as the fill in code works on frames and no parsing -> no frames. Also seeking to frames can not work if parsing to find frame boundaries has been disabled." = lib.AVFMT_FLAG_NOPARSE
     no_buffer: "Do not buffer frames when possible." = lib.AVFMT_FLAG_NOBUFFER
     custom_io: "The caller has supplied a custom AVIOContext, don't avio_close() it." = lib.AVFMT_FLAG_CUSTOM_IO
     discard_corrupt: "Discard frames marked corrupted." = lib.AVFMT_FLAG_DISCARD_CORRUPT
@@ -138,7 +154,6 @@ class Flags(Flag):
     bitexact: "When muxing, try to avoid writing any random/volatile data to the output. This includes any random IDs, real-time timestamps/dates, muxer version, etc. This flag is mainly intended for testing." = lib.AVFMT_FLAG_BITEXACT
     sort_dts: "Try to interleave outputted packets by dts (using this flag can slow demuxing down)." = lib.AVFMT_FLAG_SORT_DTS
     fast_seek: "Enable fast, but inaccurate seeks for some formats." = lib.AVFMT_FLAG_FAST_SEEK
-    shortest: "Stop muxing when the shortest stream stops." = lib.AVFMT_FLAG_SHORTEST
     auto_bsf: "Add bitstream filters as requested by the muxer." = lib.AVFMT_FLAG_AUTO_BSF
 
 class AudioCodec(IntEnum):
@@ -330,6 +345,55 @@ cdef class Container:
     def flags(self, int value):
         self._assert_open()
         self.ptr.flags = value
+
+    def chapters(self):
+        self._assert_open()
+        cdef list result = []
+        cdef int i
+
+        for i in range(self.ptr.nb_chapters):
+            ch = self.ptr.chapters[i]
+            result.append({
+                "id": ch.id,
+                "start": ch.start,
+                "end": ch.end,
+                "time_base": avrational_to_fraction(&ch.time_base),
+                "metadata": avdict_to_dict(ch.metadata, self.metadata_encoding, self.metadata_errors),
+            })
+        return result
+
+    def set_chapters(self, chapters):
+        self._assert_open()
+
+        cdef int count = len(chapters)
+        cdef int i
+        cdef lib.AVChapter **ch_array
+        cdef lib.AVChapter *ch
+        cdef dict entry
+
+        with nogil:
+            _free_chapters(self.ptr)
+
+        ch_array = <lib.AVChapter **>lib.av_malloc(count * sizeof(lib.AVChapter *))
+        if ch_array == NULL:
+            raise MemoryError("av_malloc failed for chapters")
+
+        for i in range(count):
+            entry = chapters[i]
+            ch = <lib.AVChapter *>lib.av_malloc(sizeof(lib.AVChapter))
+            if ch == NULL:
+                raise MemoryError("av_malloc failed for chapter")
+            ch.id = entry["id"]
+            ch.start = <int64_t>entry["start"]
+            ch.end = <int64_t>entry["end"]
+            to_avrational(entry["time_base"], &ch.time_base)
+            ch.metadata = NULL
+            if "metadata" in entry:
+                dict_to_avdict(&ch.metadata, entry["metadata"], self.metadata_encoding, self.metadata_errors)
+            ch_array[i] = ch
+
+        self.ptr.nb_chapters = count
+        self.ptr.chapters = ch_array
 
 def open(
     file,

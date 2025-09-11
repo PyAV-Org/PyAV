@@ -1,10 +1,12 @@
+cimport libav as lib
+
 import weakref
 
 from av.audio.frame cimport alloc_audio_frame
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
 from av.error cimport err_check
-from av.filter.pad cimport alloc_filter_pads
+from av.filter.link cimport alloc_filter_pads
 from av.frame cimport Frame
 from av.utils cimport avrational_to_fraction
 from av.video.frame cimport alloc_video_frame
@@ -132,3 +134,41 @@ cdef class FilterContext:
         frame._init_user_attributes()
         frame.time_base = avrational_to_fraction(&self.ptr.inputs[0].time_base)
         return frame
+
+    def process_command(self, cmd, arg=None, int res_len=1024, int flags=0):
+        if not cmd:
+            raise ValueError("Invalid cmd")
+
+        cdef char *c_cmd = NULL
+        cdef char *c_arg = NULL
+
+        c_cmd = cmd
+        if arg is not None:
+            c_arg = arg
+
+        cdef char *c_res = NULL
+        cdef int ret
+        cdef bytearray res_buf = None
+        cdef unsigned char[:] view
+        cdef bytes b
+        cdef int nul
+
+        if res_len > 0:
+            res_buf = bytearray(res_len)
+            view = res_buf
+            c_res = <char*>&view[0]
+        else:
+            c_res = NULL
+
+        with nogil:
+            ret = lib.avfilter_process_command(self.ptr, c_cmd, c_arg, c_res, res_len, flags)
+        err_check(ret)
+
+        if res_buf is not None:
+            b = bytes(res_buf)
+            nul = b.find(b'\x00')
+            if nul >= 0:
+                b = b[:nul]
+            if b:
+                return b.decode("utf-8", "strict")
+        return None

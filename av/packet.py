@@ -1,9 +1,183 @@
+from typing import Iterator, Literal, get_args
+
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.bytesource import bytesource
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
 from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.libc.string import memcpy
+
+# Check https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/packet.h#L41
+# for new additions in the future ffmpeg releases
+# Note: the order must follow that of the AVPacketSideDataType enum def
+PktSideDataT = Literal[
+    "palette",
+    "new_extradata",
+    "param_change",
+    "h263_mb_info",
+    "replay_gain",
+    "display_matrix",
+    "stereo_3d",
+    "audio_service_type",
+    "quality_stats",
+    "fallback_track",
+    "cpb_properties",
+    "skip_samples",
+    "jp_dual_mono",
+    "strings_metadata",
+    "subtitle_position",
+    "matroska_block_additional",
+    "webvtt_identifier",
+    "webvtt_settings",
+    "metadata_update",
+    "mpegts_stream_id",
+    "mastering_display_metadata",
+    "spherical",
+    "content_light_level",
+    "a53_cc",
+    "encryption_init_info",
+    "encryption_info",
+    "afd",
+    "prft",
+    "icc_profile",
+    "dovi_conf",
+    "s12m_timecode",
+    "dynamic_hdr10_plus",
+    "iamf_mix_gain_param",
+    "iamf_info_param",
+    "iamf_recon_gain_info_param",
+    "ambient_viewing_environment",
+    "frame_cropping",
+    "lcevc",
+    "3d_reference_displays",
+    "rtcp_sr",
+]
+
+
+def packet_sidedata_type_to_literal(dtype: lib.AVPacketSideDataType) -> PktSideDataT:
+    return get_args(PktSideDataT)[cython.cast(int, dtype)]
+
+
+def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> lib.AVPacketSideDataType:
+    return get_args(PktSideDataT).index(dtype)
+
+
+@cython.cclass
+class PacketSideData:
+    @staticmethod
+    def from_packet(packet: Packet, data_type: PktSideDataT) -> PacketSideData:
+        """create new PacketSideData by copying an existing packet's side data
+
+        :param packet: Source packet
+        :type packet: :class:`~av.packet.Packet`
+        :param data_type: side data type
+        :return: newly created copy of the side data if the side data of the
+                 requested type is found in the packet, else an empty object
+        :rtype: :class:`~av.packet.PacketSideData`
+        """
+
+        dtype = packet_sidedata_type_from_literal(data_type)
+        return _packet_sidedata_from_packet(packet.ptr, dtype)
+
+    def __cinit__(self, dtype: lib.AVPacketSideDataType, size: cython.size_t):
+        self.dtype = dtype
+        with cython.nogil:
+            if size:
+                self.data = cython.cast(cython.p_uchar, lib.av_malloc(size))
+                if self.data == cython.NULL:
+                    raise MemoryError("Failed to allocate memory")
+            else:
+                self.data = cython.NULL
+        self.size = size
+
+    def __dealloc__(self):
+        with cython.nogil:
+            lib.av_freep(cython.address(self.data))
+
+    def to_packet(self, packet: Packet, move: cython.bint = False):
+        """copy or move side data to the specified packet
+
+        :param packet: Target packet
+        :type packet: :class:`~av.packet.Packet`
+        :param move: True to move the data from this object to the packet,
+                     defaults to False.
+        :type move: bool
+        """
+        if self.size == 0:
+            # nothing to add, should clear existing side_data in packet?
+            return
+
+        data = self.data
+
+        with cython.nogil:
+            if not move:
+                data = cython.cast(cython.p_uchar, lib.av_malloc(self.size))
+                if data == cython.NULL:
+                    raise MemoryError("Failed to allocate memory")
+                memcpy(data, self.data, self.size)
+
+            res = lib.av_packet_add_side_data(packet.ptr, self.dtype, data, self.size)
+        err_check(res)
+
+        if move:
+            self.data = cython.NULL
+            self.size = 0
+
+    @property
+    def data_type(self) -> str:
+        """
+        The type of this packet side data.
+
+        :type: str
+        """
+        return packet_sidedata_type_to_literal(self.dtype)
+
+    @property
+    def data_desc(self) -> str:
+        """
+        The description of this packet side data type.
+
+        :type: str
+        """
+
+        return lib.av_packet_side_data_name(self.dtype)
+
+    @property
+    def data_size(self) -> int:
+        """
+        The size in bytes of this packet side data.
+
+        :type: int
+        """
+        return self.size
+
+    def __bool__(self) -> bool:
+        """
+        True if this object holds side data.
+
+        :type: bool
+        """
+        return self.data != cython.NULL
+
+
+@cython.cfunc
+def _packet_sidedata_from_packet(
+    packet: cython.pointer[lib.AVPacket], dtype: lib.AVPacketSideDataType
+) -> PacketSideData:
+    with cython.nogil:
+        c_ptr = lib.av_packet_side_data_get(
+            packet.side_data, packet.side_data_elems, dtype
+        )
+        found: cython.bint = c_ptr != cython.NULL
+
+    sdata = PacketSideData(dtype, c_ptr.size if found else 0)
+
+    with cython.nogil:
+        if found:
+            memcpy(sdata.data, c_ptr.data, c_ptr.size)
+
+    return sdata
 
 
 @cython.cclass
@@ -235,3 +409,48 @@ class Packet(Buffer):
         if v is None:
             return
         self.ptr.opaque_ref = opaque_container.add(v)
+
+    def has_sidedata(self, dtype: str) -> bool:
+        """True if this packet has the specified side data
+
+        :param dtype: side data type
+        :type dtype: str
+        """
+
+        dtype2 = packet_sidedata_type_from_literal(dtype)
+        return (
+            lib.av_packet_side_data_get(
+                self.ptr.side_data, self.ptr.side_data_elems, dtype2
+            )
+            != cython.NULL
+        )
+
+    def get_sidedata(self, dtype: str) -> PacketSideData:
+        """get a copy of the side data
+
+        :param dtype: side data type (:method:`~av.packet.PacketSideData.sidedata_types` for the full list of options)
+        :type dtype: str
+        :return: newly created copy of the side data if the side data of the
+                 requested type is found in the packet, else an empty object
+        :rtype: :class:`~av.packet.PacketSideData`
+        """
+        return PacketSideData.from_packet(self, dtype)
+
+    def set_sidedata(self, sidedata: PacketSideData, move: cython.bint = False):
+        """copy or move side data to this packet
+
+        :param sidedata: Source packet side data
+        :type sidedata: :class:`~av.packet.PacketSideData`
+        :param move: If True, move the data from `sidedata` object, defaults to False
+        :type move: bool
+        """
+        sidedata.to_packet(self, move)
+
+    def iter_sidedata(self) -> Iterator[PacketSideData]:
+        """iterate over side data of this packet.
+
+        :yield: :class:`~av.packet.PacketSideData` object
+        """
+
+        for i in range(self.ptr.side_data_elems):
+            yield _packet_sidedata_from_packet(self.ptr, self.ptr.side_data[i].type)

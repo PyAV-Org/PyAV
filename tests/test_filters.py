@@ -50,19 +50,6 @@ class TestFilters(TestCase):
         f = Filter("testsrc")
         assert f.name == "testsrc"
         assert f.description == "Generate test pattern."
-        assert not f.dynamic_inputs
-        assert len(f.inputs) == 0
-        assert not f.dynamic_outputs
-        assert len(f.outputs) == 1
-        assert f.outputs[0].name == "default"
-        assert f.outputs[0].type == "video"
-
-    def test_dynamic_filter_descriptor(self):
-        f = Filter("split")
-        assert not f.dynamic_inputs
-        assert len(f.inputs) == 1
-        assert f.dynamic_outputs
-        assert len(f.outputs) == 0
 
     def test_generator_graph(self):
         graph = Graph()

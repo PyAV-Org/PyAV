@@ -52,7 +52,6 @@ class Flags(IntEnum):
     four_mv = lib.AV_CODEC_FLAG_4MV
     output_corrupt = lib.AV_CODEC_FLAG_OUTPUT_CORRUPT
     qpel = lib.AV_CODEC_FLAG_QPEL
-    drop_changed = 1 << 5
     recon_frame = lib.AV_CODEC_FLAG_RECON_FRAME
     copy_opaque = lib.AV_CODEC_FLAG_COPY_OPAQUE
     frame_duration = lib.AV_CODEC_FLAG_FRAME_DURATION
@@ -494,7 +493,7 @@ cdef class CodecContext:
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
         cdef int i = 0
-        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN: 
             ret.append(desc.profiles[i].name)
             i += 1
 
@@ -509,7 +508,7 @@ cdef class CodecContext:
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
         cdef int i = 0
-        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN: 
             if desc.profiles[i].profile == self.ptr.profile:
                 return desc.profiles[i].name
             i += 1
@@ -523,7 +522,7 @@ cdef class CodecContext:
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
         cdef int i = 0
-        while desc.profiles[i].profile != lib.FF_PROFILE_UNKNOWN:
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN:
             if desc.profiles[i].name == value:
                 self.ptr.profile = desc.profiles[i].profile
                 return

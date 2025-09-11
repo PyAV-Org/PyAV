@@ -113,7 +113,7 @@ Enums
 .. autoclass:: av.video.reformatter.Colorspace
 
     Wraps the ``SWS_CS_*`` flags. There is a bit of overlap in
-    these names which comes from FFmpeg and backards compatibility.
+    these names which comes from FFmpeg and backwards compatibility.
 
     .. enumtable:: av.video.reformatter.Colorspace
 

@@ -1,12 +1,8 @@
 from av.filter import Graph
 from av.frame import Frame
 
-from .pad import FilterContextPad
-
 class FilterContext:
     name: str | None
-    inputs: tuple[FilterContextPad, ...]
-    outputs: tuple[FilterContextPad, ...]
 
     def init(self, args: str | None = None, **kwargs: str | None) -> None: ...
     def link_to(
@@ -16,3 +12,6 @@ class FilterContext:
     def graph(self) -> Graph: ...
     def push(self, frame: Frame) -> None: ...
     def pull(self) -> Frame: ...
+    def process_command(
+        self, cmd: str, arg: str | None = None, res_len: int = 1024, flags: int = 0
+    ) -> str | None: ...

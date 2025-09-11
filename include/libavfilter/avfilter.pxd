@@ -1,14 +1,4 @@
-
 cdef extern from "libavfilter/avfilter.h" nogil:
-    """
-    #if (LIBAVFILTER_VERSION_INT >= 525156)
-        // avfilter_filter_pad_count is available since version 8.3.100 of libavfilter (FFmpeg 5.0)
-        #define _avfilter_get_num_pads(filter, is_output, pads) (avfilter_filter_pad_count(filter, is_output))
-    #else
-        // avfilter_filter_pad_count has been deprecated as of version 8.3.100 of libavfilter (FFmpeg 5.0)
-        #define _avfilter_get_num_pads(filter, is_output, pads) (avfilter_pad_count(pads))
-    #endif
-    """
     cdef int   avfilter_version()
     cdef char* avfilter_configuration()
     cdef char* avfilter_license()
@@ -20,27 +10,15 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     const char* avfilter_pad_get_name(const AVFilterPad *pads, int index)
     AVMediaType avfilter_pad_get_type(const AVFilterPad *pads, int index)
 
-    int pyav_get_num_pads "_avfilter_get_num_pads" (const AVFilter *filter, int is_output, const AVFilterPad *pads)
+    cdef unsigned avfilter_filter_pad_count(const AVFilter *filter, int is_output)
 
     cdef struct AVFilter:
-
-        AVClass *priv_class
-
         const char *name
         const char *description
-
-        const int flags
-
         const AVFilterPad *inputs
         const AVFilterPad *outputs
-        int (*process_command)(AVFilterContext *, const char *cmd, const char *arg, char *res, int res_len, int flags)
-
-    cdef enum:
-        AVFILTER_FLAG_DYNAMIC_INPUTS
-        AVFILTER_FLAG_DYNAMIC_OUTPUTS
-        AVFILTER_FLAG_SLICE_THREADS
-        AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC
-        AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL
+        const AVClass *priv_class
+        int flags
 
     cdef AVFilter* avfilter_get_by_name(const char *name)
     cdef const AVFilter* av_filter_iterate(void **opaque)
@@ -48,7 +26,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef struct AVFilterLink  # Defined later.
 
     cdef struct AVFilterContext:
-
         AVClass *av_class
         AVFilter *filter
 
@@ -68,7 +45,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef AVClass* avfilter_get_class()
 
     cdef struct AVFilterLink:
-
         AVFilterContext *src
         AVFilterPad *srcpad
         AVFilterContext *dst
@@ -85,6 +61,15 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
     # custom
     cdef set pyav_get_available_filters()
+
+    int avfilter_process_command(AVFilterContext *filter,
+                                 const char *cmd,
+                                 const char *arg,
+                                 char *res,
+                                 int res_len,
+                                 int flags)
+
+    cdef int AVFILTER_CMD_FLAG_FAST
 
 
 cdef extern from "libavfilter/buffersink.h" nogil:

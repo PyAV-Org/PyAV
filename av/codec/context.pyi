@@ -25,7 +25,6 @@ class Flags(IntEnum):
     four_mv = cast(int, ...)
     output_corrupt = cast(int, ...)
     qpel = cast(int, ...)
-    drop_changed = cast(int, ...)
     recon_frame = cast(int, ...)
     copy_opaque = cast(int, ...)
     frame_duration = cast(int, ...)

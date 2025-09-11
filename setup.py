@@ -150,6 +150,7 @@ compiler_directives = {
     "embedsignature": True,
     "binding": False,
     "language_level": 3,
+    "freethreading_compatible": True,
 }
 
 # Add the cythonized loudnorm extension to ext_modules

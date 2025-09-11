@@ -1,4 +1,4 @@
-from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t
+from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t, uint8_t
 
 cdef extern from "libavcodec/codec.h":
     struct AVCodecTag:
@@ -17,6 +17,17 @@ cdef extern from "libavcodec/packet.h" nogil:
         int free_opaque
     )
 
+    const AVPacketSideData *av_packet_side_data_get(const AVPacketSideData *sd,
+                                                int nb_sd,
+                                                AVPacketSideDataType type)
+
+    uint8_t* av_packet_get_side_data(const AVPacket *pkt, AVPacketSideDataType type,
+                                    size_t *size)
+
+    int av_packet_add_side_data(AVPacket *pkt, AVPacketSideDataType type,
+                                uint8_t *data, size_t size)
+
+    const char *av_packet_side_data_name(AVPacketSideDataType type)
 
 cdef extern from "libavutil/channel_layout.h":
     ctypedef enum AVChannelOrder:
@@ -80,14 +91,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef enum:
         AV_CODEC_CAP_DRAW_HORIZ_BAND
         AV_CODEC_CAP_DR1
-        # AV_CODEC_CAP_HWACCEL
         AV_CODEC_CAP_DELAY
         AV_CODEC_CAP_SMALL_LAST_FRAME
-        # AV_CODEC_CAP_HWACCEL_VDPAU
-        AV_CODEC_CAP_SUBFRAMES
         AV_CODEC_CAP_EXPERIMENTAL
         AV_CODEC_CAP_CHANNEL_CONF
-        # AV_CODEC_CAP_NEG_LINESIZES
         AV_CODEC_CAP_FRAME_THREADS
         AV_CODEC_CAP_SLICE_THREADS
         AV_CODEC_CAP_PARAM_CHANGE
@@ -97,6 +104,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_CAP_HARDWARE
         AV_CODEC_CAP_HYBRID
         AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
+
+    cdef enum:
+        AV_PROFILE_UNKNOWN = -99
 
     cdef enum:
         FF_THREAD_FRAME
@@ -155,9 +165,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         FF_COMPLIANCE_NORMAL
         FF_COMPLIANCE_UNOFFICIAL
         FF_COMPLIANCE_EXPERIMENTAL
-
-    cdef enum:
-        FF_PROFILE_UNKNOWN = -99
 
     cdef enum AVCodecID:
         AV_CODEC_ID_NONE
@@ -473,6 +480,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int size
         int stream_index
         int flags
+        AVPacketSideData *side_data
+        int side_data_elems
         int duration
         int64_t pos
         void *opaque

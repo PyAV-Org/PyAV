@@ -267,7 +267,7 @@ ErrorType = EnumType("ErrorType", (EnumItem, ), {"__module__": __name__}, [x[:2]
 
 
 for enum in ErrorType:
-    # Mimick the errno module.
+    # Mimic the errno module.
     globals()[enum.name] = enum
     if enum.value == c_PYAV_STASHED_ERROR:
         enum.strerror = PYAV_STASHED_ERROR_message
@@ -275,7 +275,7 @@ for enum in ErrorType:
         enum.strerror = lib.av_err2str(-enum.value)
 
 
-# Mimick the builtin exception types.
+# Mimic the builtin exception types.
 # See https://www.python.org/dev/peps/pep-3151/#new-exception-classes
 # Use the named ones we have, otherwise default to OSError for anything in errno.
 
