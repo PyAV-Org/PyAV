@@ -145,7 +145,9 @@ class OutputContainer(Container):
             opaque = template.type != "video"
 
         if template.codec_context is None:
-            raise ValueError(f"template stream of type {template.type} has no codec context")
+            raise ValueError(
+                f"template stream of type {template.type} has no codec context"
+            )
 
         codec_obj: Codec
         if opaque:  # Copy ctx from template.
