@@ -104,6 +104,8 @@ class TestSeek(TestCase):
         frame_count = 0
 
         for frame in container.decode(video_stream):
+            assert frame.pts is not None
+
             if current_frame is None:
                 current_frame = timestamp_to_frame(frame.pts, video_stream)
             else:

@@ -32,7 +32,9 @@ def test_frame_duration_matches_packet() -> None:
         packet_durations.sort(key=lambda x: x[0])
 
     with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
-        frame_durations = [(f.pts, f.duration) for f in container.decode(video=0)]
+        frame_durations = [
+            (f.pts, f.duration) for f in container.decode(video=0) if f.pts is not None
+        ]
         frame_durations.sort(key=lambda x: x[0])
 
     assert len(packet_durations) == len(frame_durations)
