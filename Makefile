@@ -25,6 +25,7 @@ clean:
 
 fate-suite:
 	# Grab ALL of the samples from the ffmpeg site.
+	mkdir -p tests/assets/fate-suite/
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
