@@ -30,7 +30,7 @@ jobs:
         include:
           - os: macos-14
             arch: arm64
-          - os: macos-13
+          - os: macos-15-intel
             arch: x86_64
           - os: ubuntu-24.04-arm
             arch: aarch64
@@ -43,15 +43,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Install packages
-        if: matrix.os == 'macos-13'
-        run: |
-          brew update
-          brew install pkg-config
       - name: Set Minimum MacOS Target
-        if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+        if: runner.os == 'macOS'
         run: |
-          echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=14.0" >> $GITHUB_ENV
       - name: Build wheels
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
