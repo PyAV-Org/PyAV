@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /usr/bin/env bash
 
 # Make sure this is sourced.
 if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
@@ -77,7 +77,6 @@ print("{}{}.{}".format(platform.python_implementation().lower(), *sys.version_in
     fi
 
 fi
-
 
 # Just a flag so that we know this was supposedly run.
 export _PYAV_ACTIVATED=1
