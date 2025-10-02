@@ -46,7 +46,11 @@ jobs:
       - name: Set Minimum MacOS Target
         if: runner.os == 'macOS'
         run: |
-          echo "MACOSX_DEPLOYMENT_TARGET=14.0" >> $GITHUB_ENV
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
+          else
+            echo "MACOSX_DEPLOYMENT_TARGET=14.0" >> $GITHUB_ENV
+          fi
       - name: Build wheels
         env:
           CIBW_ARCHS: ${{ matrix.arch }}
