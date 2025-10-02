@@ -1,5 +1,6 @@
 import os
 from fractions import Fraction
+from typing import Any, cast
 
 import pytest
 
@@ -146,3 +147,23 @@ class TestStreams:
         assert repr.startswith("<av.DataStream #0") and repr.endswith(">")
 
         container.close()
+
+    def test_data_stream_from_template(self) -> None:
+        """Test that adding a data stream from a template raises ValueError."""
+
+        # Open an existing container with a data stream
+        input_container = av.open(fate_suite("mxf/track_01_v02.mxf"))
+        input_data_stream = input_container.streams.data[0]
+
+        # Create a new container and ensure using a data stream as a template raises ValueError
+        output_container = av.open("out.mkv", "w")
+        with pytest.raises(ValueError):
+            # input_data_stream is a DataStream at runtime; the test asserts that
+            # using it as a template raises ValueError. The static type stubs
+            # intentionally restrict which Stream subclasses are valid templates,
+            # so cast to Any here to keep the runtime check while satisfying
+            # the type checker.
+            output_container.add_stream_from_template(cast(Any, input_data_stream))
+
+        input_container.close()
+        output_container.close()
