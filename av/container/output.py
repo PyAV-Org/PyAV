@@ -134,7 +134,7 @@ class OutputContainer(Container):
         self, template: Stream, opaque: bool | None = None, **kwargs
     ):
         """
-        Creates a new stream from a template. Supports video, audio, and subtitle streams.
+        Creates a new stream from a template. Supports video, audio, subtitle, data and attachment streams.
 
         :param template: Copy codec from another :class:`~av.stream.Stream` instance.
         :param opaque: If True, copy opaque data from the template's codec context.
@@ -145,9 +145,7 @@ class OutputContainer(Container):
             opaque = template.type != "video"
 
         if template.codec_context is None:
-            raise ValueError(
-                f"template stream of type {template.type} has no codec context"
-            )
+            return self._add_stream_without_codec_from_template(template, **kwargs)
 
         codec_obj: Codec
         if opaque:  # Copy ctx from template.
@@ -194,6 +192,79 @@ class OutputContainer(Container):
         for k, v in kwargs.items():
             setattr(py_stream, k, v)
 
+        return py_stream
+
+    def _add_stream_without_codec_from_template(
+        self, template: Stream, **kwargs
+    ) -> Stream:
+        codec_type: cython.int = template.ptr.codecpar.codec_type
+        if codec_type not in {lib.AVMEDIA_TYPE_ATTACHMENT, lib.AVMEDIA_TYPE_DATA}:
+            raise ValueError(
+                f"template stream of type {template.type} has no codec context"
+            )
+
+        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(
+            self.ptr, cython.NULL
+        )
+        if stream == cython.NULL:
+            raise MemoryError("Could not allocate stream")
+
+        err_check(lib.avcodec_parameters_copy(stream.codecpar, template.ptr.codecpar))
+
+        # Mirror basic properties that are not derived from a codec context.
+        stream.time_base = template.ptr.time_base
+        stream.start_time = template.ptr.start_time
+        stream.duration = template.ptr.duration
+        stream.disposition = template.ptr.disposition
+
+        py_stream: Stream = wrap_stream(self, stream, None)
+        self.streams.add_stream(py_stream)
+
+        py_stream.metadata = dict(template.metadata)
+
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+
+        return py_stream
+
+    def add_attachment(self, name: str, mimetype: str, data: bytes):
+        """
+        Create an attachment stream and embed its payload into the container header.
+
+        - Only supported by formats that support attachments (e.g. Matroska).
+        - No per-packet muxing is required; attachments are written at header time.
+        """
+        # Create stream with no codec (attachments are codec-less).
+        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(
+            self.ptr, cython.NULL
+        )
+        if stream == cython.NULL:
+            raise MemoryError("Could not allocate stream")
+
+        stream.codecpar.codec_type = lib.AVMEDIA_TYPE_ATTACHMENT
+        stream.codecpar.codec_id = lib.AV_CODEC_ID_NONE
+
+        # Allocate and copy payload into codecpar.extradata.
+        payload_size: cython.size_t = len(data)
+        if payload_size:
+            buf = cython.cast(cython.p_uchar, lib.av_malloc(payload_size + 1))
+            if buf == cython.NULL:
+                raise MemoryError("Could not allocate attachment data")
+            # Copy bytes.
+            for i in range(payload_size):
+                buf[i] = data[i]
+            buf[payload_size] = 0
+            stream.codecpar.extradata = cython.cast(cython.p_uchar, buf)
+            stream.codecpar.extradata_size = payload_size
+
+        # Wrap as user-land stream.
+        meta_ptr = cython.address(stream.metadata)
+        err_check(lib.av_dict_set(meta_ptr, b"filename", name.encode(), 0))
+        mime_bytes = mimetype.encode()
+        err_check(lib.av_dict_set(meta_ptr, b"mimetype", mime_bytes, 0))
+
+        py_stream: Stream = wrap_stream(self, stream, None)
+        self.streams.add_stream(py_stream)
         return py_stream
 
     def add_data_stream(self, codec_name=None, options: dict | None = None):
@@ -270,21 +341,20 @@ class OutputContainer(Container):
         # Finalize and open all streams.
         for stream in self.streams:
             ctx = stream.codec_context
-            # Skip codec context handling for data streams without codecs
+            # Skip codec context handling for streams without codecs (e.g. data/attachments).
             if ctx is None:
-                if stream.type != "data":
+                if stream.type not in {"data", "attachment"}:
                     raise ValueError(f"Stream {stream.index} has no codec context")
-                continue
+            else:
+                if not ctx.is_open:
+                    for k, v in self.options.items():
+                        ctx.options.setdefault(k, v)
+                    ctx.open()
 
-            if not ctx.is_open:
-                for k, v in self.options.items():
-                    ctx.options.setdefault(k, v)
-                ctx.open()
-
-                # Track option consumption.
-                for k in self.options:
-                    if k not in ctx.options:
-                        used_options.add(k)
+                    # Track option consumption.
+                    for k in self.options:
+                        if k not in ctx.options:
+                            used_options.add(k)
 
             stream._finalize_for_output()
 

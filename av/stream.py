@@ -148,6 +148,9 @@ class Stream:
             errors=self.container.metadata_errors,
         )
 
+        if self.codec_context is None:
+            return
+
         if not self.ptr.time_base.num:
             self.ptr.time_base = self.codec_context.ptr.time_base
 
@@ -316,3 +319,17 @@ class AttachmentStream(Stream):
         :rtype: str | None
         """
         return self.metadata.get("mimetype")
+
+    @property
+    def data(self):
+        """Return the raw attachment payload as bytes."""
+        extradata: cython.p_uchar = self.ptr.codecpar.extradata
+        size: cython.Py_ssize_t = self.ptr.codecpar.extradata_size
+        if extradata == cython.NULL or size <= 0:
+            return b""
+
+        payload = bytearray(size)
+        for i in range(size):
+            payload[i] = extradata[i]
+
+        return bytes(payload)

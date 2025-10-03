@@ -4,14 +4,14 @@ from typing import Sequence, TypeVar, Union, overload
 from av.audio import _AudioCodecName
 from av.audio.stream import AudioStream
 from av.packet import Packet
-from av.stream import DataStream
+from av.stream import AttachmentStream, DataStream, Stream
 from av.subtitles.stream import SubtitleStream
 from av.video import _VideoCodecName
 from av.video.stream import VideoStream
 
 from .core import Container
 
-_StreamT = TypeVar("_StreamT", bound=Union[VideoStream, AudioStream, SubtitleStream])
+_StreamT = TypeVar("_StreamT", bound=Stream)
 
 class OutputContainer(Container):
     def __enter__(self) -> OutputContainer: ...
@@ -42,6 +42,9 @@ class OutputContainer(Container):
     def add_stream_from_template(
         self, template: _StreamT, opaque: bool | None = None, **kwargs
     ) -> _StreamT: ...
+    def add_attachment(
+        self, name: str, mimetype: str, data: bytes
+    ) -> AttachmentStream: ...
     def add_data_stream(
         self, codec_name: str | None = None, options: dict[str, str] | None = None
     ) -> DataStream: ...
