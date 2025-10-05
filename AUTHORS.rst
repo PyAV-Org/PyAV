@@ -28,6 +28,8 @@ All contributors (by number of commits):
 - Dan Allan <daniel.b.allan@gmail.com>; `@danielballan <https://github.com/danielballan>`_
 - Moonsik Park <moonsik.park@estsoft.com>
 - Santtu Keskinen <santtu.keskinen@gmail.com>
+- velsinki <40809145+velsinki@users.noreply.github.com>
+- Curtis Doty <Curtis@GreenKey.net>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
 - David Plowman <david.plowman@raspberrypi.com>
 - Alireza Davoudi <davoudialireza@gmail.com>; `@adavoudi <https://github.com/adavoudi>`_
@@ -43,6 +45,7 @@ All contributors (by number of commits):
 * zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 * Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
 * Dexer <73297572+DexerBR@users.noreply.github.com>
+* DE-AI <81620697+DE-AI@users.noreply.github.com>
 * rutsh <Eugene.Krokhalev@gmail.com>
 * Felix Vollmer <FelixVollmer@gmail.com>
 * Santiago Castro <bryant1410@gmail.com>
@@ -50,11 +53,13 @@ All contributors (by number of commits):
 * Ihor Liubymov <ihor.liubymov@ring.com>
 * Johannes Erdfelt <johannes@erdfelt.com>
 * Karl Litterfeldt <kalle.litterfeldt@gmail.com>; `@litterfeldt <https://github.com/litterfeldt>`_
+* Kim Minjong <make.dirty.code@gmail.com>
 * Martin Larralde <martin.larralde@ens-cachan.fr>
 * Simon-Martin Schröder <martin.schroeder@nerdluecht.de>
 * Matteo Destro <matteo.est@gmail.com>
 * mephi42 <mephi42@gmail.com>
 * Miles Kaufmann <mkfmnn@gmail.com>
+* Nathan Goldbaum <nathan.goldbaum@gmail.com>
 * Pablo Prietz <pablo@prietz.org>
 * Andrew Wason <rectalogic@rectalogic.com>
 * Radek Senfeld <rush@logic.cz>; `@radek-senfeld <https://github.com/radek-senfeld>`_
@@ -62,6 +67,7 @@ All contributors (by number of commits):
 * Benjamin Chrétien <2742231+bchretien@users.noreply.github.com>
 * davidplowman <38045873+davidplowman@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
+* Kesh Ikuma <79113787+tikuma-lsuhsc@users.noreply.github.com>
 * Artturin <Artturin@artturin.com>
 * Ian Lee <IanLee1521@gmail.com>
 * Ryan Huang <NPN@users.noreply.github.com>
@@ -76,8 +82,8 @@ All contributors (by number of commits):
 * henri-gasc <henri.gasc@eurecom.fr>
 * Jonathan Martin <homerunisgood@hotmail.com>
 * Johan Jeppsson Karlin <johjep@gmail.com>
+* Kian-Meng Ang <kianmeng@cpan.org>
 * Philipp Klaus <klaus@physik.uni-frankfurt.de>
-* Kim Minjong <make.dirty.code@gmail.com>
 * Marcell Pardavi <marcell.pardavi@gmail.com>
 * Matteo Destro <matteo@cerrion.com>
 * Mattias Wadman <mattias.wadman@gmail.com>
