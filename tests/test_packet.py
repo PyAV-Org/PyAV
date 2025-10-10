@@ -1,4 +1,5 @@
 from typing import get_args
+from unittest import SkipTest
 
 import av
 
@@ -55,6 +56,12 @@ class TestProperties:
 class TestPacketSideData:
     def test_data_types(self) -> None:
         dtypes = get_args(av.packet.PktSideDataT)
+
+        if av.ffmpeg_version_info.startswith("n") or av.ffmpeg_version_info.count(
+            "."
+        ) not in (1, 2):
+            raise SkipTest(f"Expect version to be SemVar: {av.ffmpeg_version_info}")
+
         ffmpeg_ver = [int(v) for v in av.ffmpeg_version_info.split(".", 2)[:2]]
         for dtype in dtypes:
             av_enum = av.packet.packet_sidedata_type_from_literal(dtype)

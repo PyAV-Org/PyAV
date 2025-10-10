@@ -25,6 +25,9 @@ class HWDeviceType(IntEnum):
     mediacodec = lib.AV_HWDEVICE_TYPE_MEDIACODEC
     vulkan = lib.AV_HWDEVICE_TYPE_VULKAN
     d3d12va = lib.AV_HWDEVICE_TYPE_D3D12VA
+    amf = 13  # FFmpeg >=8
+    ohcodec = 14
+    # TODO: When ffmpeg major is changed, check this enum.
 
 class HWConfigMethod(IntEnum):
     none = 0
