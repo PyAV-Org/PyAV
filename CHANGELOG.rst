@@ -16,6 +16,13 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+v16.0.1
+-------
+
+Fixes:
+
+- Add new hwaccel enums by :gh-user:`WyattBlue` in (:pr:`2030`).
+
 v16.0.0
 -------
 
