@@ -1,12 +1,17 @@
+"""Generate the AUTHORS.rst file from git commit history.
+
+This module reads git commit logs and produces a formatted list of contributors
+grouped by their contribution count, mapping email aliases and GitHub usernames.
+"""
 import math
-import subprocess
+import subprocess  # noqa: S404
 
 print(
     """Contributors
 ============
 
 All contributors (by number of commits):
-"""
+""",
 )
 
 
@@ -55,6 +60,7 @@ github_map = {
     "xxr@megvii.com": "xxr3376",
     "chaudominic2@gmail.com": "laggykiller",
     "wyattblue@auto-editor.com": "WyattBlue",
+    "Curtis@GreenKey.net": "dotysan",
 }
 
 
@@ -86,10 +92,7 @@ for email, count in sorted(email_count.items(), key=lambda x: (-x[1], x[0])):
     last = order
 
     names = name_map[email]
-    if isinstance(names, set):
-        name = ", ".join(sorted(names))
-    else:
-        name = names
+    name = ", ".join(sorted(names)) if isinstance(names, set) else names
 
     github = github_map.get(email)
 
@@ -97,15 +100,19 @@ for email, count in sorted(email_count.items(), key=lambda x: (-x[1], x[0])):
     # introduces a gap between them.
     if github:
         print(
-            "%s %s <%s>; `@%s <https://github.com/%s>`_"
-            % ("-*"[block_i % 2], name, email, github, github)
+            "{} {} <{}>; `@{} <https://github.com/{}>`_".format(
+               "-*"[block_i % 2],
+                name,
+                email,
+                github,
+                github,
+            ),
         )
     else:
         print(
-            "%s %s <%s>"
-            % (
+            "{} {} <{}>".format(
                 "-*"[block_i % 2],
                 name,
                 email,
-            )
+            ),
         )
