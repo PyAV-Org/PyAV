@@ -1,5 +1,6 @@
 name: smoke
 on:
+  workflow_dispatch:
   push:
     branches: main
     paths-ignore:
@@ -58,8 +59,18 @@ jobs:
         case ${{ matrix.config.os }} in
           ubuntu-24.04)
             sudo apt-get update
-            sudo apt-get install autoconf automake build-essential cmake \
-              libtool pkg-config nasm zlib1g-dev libvorbis-dev libx264-dev
+            sudo apt-get install \
+              autoconf \
+              automake \
+              build-essential \
+              cmake \
+              libjpeg-dev \
+              libtool \
+              libvorbis-dev \
+              libx264-dev \
+              nasm \
+              pkg-config \
+              zlib1g-dev
             if [[ "${{ matrix.config.extras }}" ]]; then
               sudo apt-get install doxygen wget
             fi
