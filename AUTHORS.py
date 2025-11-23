@@ -1,16 +1,23 @@
-import math
-import subprocess
+""" Generate the AUTHORS.rst file from git commit history.
 
-print(
-    """Contributors
-============
-
-All contributors (by number of commits):
+This module reads git commit logs and produces a formatted list of contributors
+grouped by their contribution count, mapping email aliases and GitHub usernames.
 """
-)
+
+from dataclasses import dataclass
+import math
+import subprocess  # noqa: S404
 
 
-email_map = {
+def main() -> None:
+    """ Generate and print the AUTHORS.rst content. """
+
+    contributors = get_git_contributors()
+    print_contributors(contributors)
+# ------------------------------------------------------------------------------
+
+
+EMAIL_ALIASES: dict[str, str | None] = {
     # Maintainers.
     "git@mikeboers.com": "github@mikeboers.com",
     "mboers@keypics.com": "github@mikeboers.com",
@@ -27,7 +34,7 @@ email_map = {
     "61652821+laggykiller@users.noreply.github.com": "chaudominic2@gmail.com",
 }
 
-name_map = {
+CANONICAL_NAMES: dict[str, str] = {
     "caspervdw@gmail.com": "Casper van der Wel",
     "daniel.b.allan@gmail.com": "Dan Allan",
     "mgoacolou@cls.fr": "Manuel Goacolou",
@@ -37,7 +44,7 @@ name_map = {
     "xxr@megvii.com": "Xinran Xu",
 }
 
-github_map = {
+GITHUB_USERNAMES: dict[str, str] = {
     "billy.shambrook@gmail.com": "billyshambrook",
     "daniel.b.allan@gmail.com": "danielballan",
     "davoudialireza@gmail.com": "adavoudi",
@@ -55,57 +62,121 @@ github_map = {
     "xxr@megvii.com": "xxr3376",
     "chaudominic2@gmail.com": "laggykiller",
     "wyattblue@auto-editor.com": "WyattBlue",
+    "Curtis@GreenKey.net": "dotysan",
 }
 
 
-email_count = {}
-for line in (
-    subprocess.check_output(["git", "log", "--format=%aN,%aE"]).decode().splitlines()
-):
-    name, email = line.strip().rsplit(",", 1)
+@dataclass
+class Contributor:
+    """ Represents a contributor with their email, names, and GitHub username. """
 
-    email = email_map.get(email, email)
-    if not email:
-        continue
+    email: str
+    names: set[str]
+    github: str | None = None
+    commit_count: int = 0
 
-    names = name_map.setdefault(email, set())
-    if isinstance(names, set):
-        names.add(name)
+    @property
+    def display_name(self) -> str:
+        """ Return the formatted display name for the contributor.
 
-    email_count[email] = email_count.get(email, 0) + 1
+        Returns:
+            Comma-separated sorted list of contributor names.
+        """
 
+        return ", ".join(sorted(self.names))
 
-last = None
-block_i = 0
-for email, count in sorted(email_count.items(), key=lambda x: (-x[1], x[0])):
-    # This is the natural log, because of course it should be. ;)
-    order = int(math.log(count))
-    if last and last != order:
-        block_i += 1
-        print()
-    last = order
+    def format_line(self, bullet: str) -> str:
+        """ Format the contributor line for RST output.
 
-    names = name_map[email]
-    if isinstance(names, set):
-        name = ", ".join(sorted(names))
-    else:
-        name = names
+        Args:
+            bullet: The bullet character to use (- or *).
 
-    github = github_map.get(email)
+        Returns:
+            Formatted RST line with contributor info.
+        """
 
-    # The '-' vs '*' is so that Sphinx treats them as different lists, and
-    # introduces a gap between them.
-    if github:
-        print(
-            "%s %s <%s>; `@%s <https://github.com/%s>`_"
-            % ("-*"[block_i % 2], name, email, github, github)
-        )
-    else:
-        print(
-            "%s %s <%s>"
-            % (
-                "-*"[block_i % 2],
-                name,
-                email,
+        if self.github:
+            return (
+                f"{bullet} {self.display_name} <{self.email}>; "
+                f"`@{self.github} <https://github.com/{self.github}>`_"
             )
-        )
+        return f"{bullet} {self.display_name} <{self.email}>"
+
+
+def get_git_contributors() -> dict[str, Contributor]:
+    """ Parse git log and return contributors grouped by canonical email.
+
+    Returns:
+        Dictionary mapping canonical emails to Contributor objects.
+    """
+
+    contributors: dict[str, Contributor] = {}
+    git_log = subprocess.check_output(
+        ["git", "log", "--format=%aN,%aE"],  # noqa: S607
+        text=True,
+    ).splitlines()
+
+    for line in git_log:
+        name, email = line.strip().rsplit(",", 1)
+        canonical_email = EMAIL_ALIASES.get(email, email)
+
+        if not canonical_email:
+            continue
+
+        if canonical_email not in contributors:
+            contributors[canonical_email] = Contributor(
+                email=canonical_email,
+                names=set(),
+                github=GITHUB_USERNAMES.get(canonical_email),
+            )
+
+        contributor = contributors[canonical_email]
+        contributor.names.add(name)
+        contributor.commit_count += 1
+
+    for email, canonical_name in CANONICAL_NAMES.items():
+        if email in contributors:
+            contributors[email].names = {canonical_name}
+
+    return contributors
+
+
+def print_contributors(contributors: dict[str, Contributor]) -> None:
+    """Print contributors grouped by logarithmic order of commits.
+
+    Args:
+        contributors: Dictionary of contributors to print.
+    """
+
+    print("""\
+        Contributors
+        ============
+
+        All contributors (by number of commits):
+        """.replace("        ", ""))
+
+    sorted_contributors = sorted(
+        contributors.values(),
+        key=lambda c: (-c.commit_count, c.email),
+    )
+
+    last_order: int | None = None
+    block_index = 0
+
+    for contributor in sorted_contributors:
+        # This is the natural log, because of course it should be. ;)
+        order = int(math.log(contributor.commit_count))
+
+        if last_order and last_order != order:
+            block_index += 1
+            print()
+        last_order = order
+
+        # The '-' vs '*' is so that Sphinx treats them as different lists, and
+        # introduces a gap between them.
+        bullet = "-*"[block_index % 2]
+        print(contributor.format_line(bullet))
+
+
+if __name__ == "__main__":
+    main()
