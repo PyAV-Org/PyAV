@@ -40,7 +40,7 @@ zip-safe = false
 version = {attr = "av.about.__version__"}
 
 [project.urls]
-"Bug Tracker" = "https://github.com/PyAV-Org/PyAV/discussions/new?category=4-bugs"
+"Bug Tracker" = "https://github.com/PyAV-Org/PyAV/issues"
 "Source Code" = "https://github.com/PyAV-Org/PyAV"
 homepage = "https://pyav.basswood-io.com"
 
