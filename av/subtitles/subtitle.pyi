@@ -5,8 +5,16 @@ class SubtitleSet:
     start_display_time: int
     end_display_time: int
     pts: int
-    rects: tuple[Subtitle]
+    rects: tuple[Subtitle, ...]
 
+    @staticmethod
+    def create(
+        text: bytes,
+        start: int,
+        end: int,
+        pts: int = 0,
+        subtitle_format: int = 1,
+    ) -> SubtitleSet: ...
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[Subtitle]: ...
     def __getitem__(self, i: int) -> Subtitle: ...

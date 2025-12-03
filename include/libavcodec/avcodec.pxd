@@ -289,6 +289,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int extradata_size
         uint8_t *extradata
 
+        # Subtitle header (ASS/SSA format for text subtitles)
+        uint8_t *subtitle_header
+        int subtitle_header_size
+
         int delay
 
         AVCodec *codec
