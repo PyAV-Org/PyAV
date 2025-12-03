@@ -1,12 +1,16 @@
 import cython
 from cython.cimports.cpython import PyBuffer_FillInfo, PyBytes_FromString
-from cython.cimports.libc.stdint import uint64_t
+from cython.cimports.libc.stdint import int64_t, uint64_t
+from cython.cimports.libc.string import memcpy, strlen
 
 
 @cython.cclass
 class SubtitleProxy:
     def __dealloc__(self):
         lib.avsubtitle_free(cython.address(self.struct))
+
+
+_cinit_bypass_sentinel = object()
 
 
 @cython.cclass
@@ -17,11 +21,94 @@ class SubtitleSet:
     Wraps :ffmpeg:`AVSubtitle`.
     """
 
-    def __cinit__(self, proxy: SubtitleProxy):
-        self.proxy = proxy
-        self.rects = tuple(
-            build_subtitle(self, i) for i in range(self.proxy.struct.num_rects)
+    def __cinit__(self, proxy_or_sentinel=None):
+        if proxy_or_sentinel is _cinit_bypass_sentinel:
+            # Creating empty SubtitleSet for encoding
+            self.proxy = SubtitleProxy()
+            self.rects = ()
+        elif isinstance(proxy_or_sentinel, SubtitleProxy):
+            # Creating from decoded subtitle
+            self.proxy = proxy_or_sentinel
+            self.rects = tuple(
+                build_subtitle(self, i) for i in range(self.proxy.struct.num_rects)
+            )
+        else:
+            raise TypeError(
+                "SubtitleSet requires a SubtitleProxy or use SubtitleSet.create()"
+            )
+
+    @staticmethod
+    def create(
+        text: bytes,
+        start: int,
+        end: int,
+        pts: int = 0,
+        subtitle_format: int = 1,
+    ) -> "SubtitleSet":
+        """
+        Create a SubtitleSet for encoding.
+
+        Args:
+            text: The subtitle text in ASS dialogue format
+                  (e.g. b"0,0,Default,,0,0,0,,Hello World")
+            start: Start display time as offset from pts (typically 0)
+            end: End display time as offset from pts (i.e., duration)
+            pts: Presentation timestamp in stream time_base units
+            subtitle_format: Subtitle format (default 1 for text)
+
+        Note:
+            All timing values should be in stream time_base units.
+            For MKV (time_base=1/1000), units are milliseconds.
+            For MP4 (time_base=1/1000000), units are microseconds.
+
+        Returns:
+            A SubtitleSet ready for encoding
+        """
+        subset: SubtitleSet = SubtitleSet(_cinit_bypass_sentinel)
+
+        subset.proxy.struct.format = subtitle_format
+        subset.proxy.struct.start_display_time = start
+        subset.proxy.struct.end_display_time = end
+        subset.proxy.struct.pts = pts
+
+        subset.proxy.struct.num_rects = 1
+        subset.proxy.struct.rects = cython.cast(
+            cython.pointer[cython.pointer[lib.AVSubtitleRect]],
+            lib.av_mallocz(cython.sizeof(cython.pointer[lib.AVSubtitleRect])),
         )
+        if subset.proxy.struct.rects == cython.NULL:
+            raise MemoryError("Failed to allocate subtitle rects array")
+
+        rect: cython.pointer[lib.AVSubtitleRect] = cython.cast(
+            cython.pointer[lib.AVSubtitleRect],
+            lib.av_mallocz(cython.sizeof(lib.AVSubtitleRect)),
+        )
+        if rect == cython.NULL:
+            lib.av_free(subset.proxy.struct.rects)
+            subset.proxy.struct.rects = cython.NULL
+            raise MemoryError("Failed to allocate subtitle rect")
+
+        subset.proxy.struct.rects[0] = rect
+
+        rect.x = 0
+        rect.y = 0
+        rect.w = 0
+        rect.h = 0
+        rect.nb_colors = 0
+        rect.type = lib.SUBTITLE_ASS
+        rect.text = cython.NULL
+        rect.flags = 0
+
+        text_len: cython.Py_ssize_t = len(text)
+        rect.ass = cython.cast(cython.p_char, lib.av_malloc(text_len + 1))
+        if rect.ass == cython.NULL:
+            raise MemoryError("Failed to allocate subtitle text")
+        memcpy(rect.ass, cython.cast(cython.p_char, text), text_len)
+        rect.ass[text_len] = 0
+
+        subset.rects = (AssSubtitle(subset, 0),)
+
+        return subset
 
     def __repr__(self):
         return (
@@ -32,18 +119,34 @@ class SubtitleSet:
     def format(self):
         return self.proxy.struct.format
 
+    @format.setter
+    def format(self, value: int):
+        self.proxy.struct.format = value
+
     @property
     def start_display_time(self):
         return self.proxy.struct.start_display_time
+
+    @start_display_time.setter
+    def start_display_time(self, value: int):
+        self.proxy.struct.start_display_time = value
 
     @property
     def end_display_time(self):
         return self.proxy.struct.end_display_time
 
+    @end_display_time.setter
+    def end_display_time(self, value: int):
+        self.proxy.struct.end_display_time = value
+
     @property
     def pts(self):
         """Same as packet pts, in av.time_base."""
         return self.proxy.struct.pts
+
+    @pts.setter
+    def pts(self, value: int):
+        self.proxy.struct.pts = value
 
     def __len__(self):
         return len(self.rects)
