@@ -119,7 +119,10 @@ class TestPacketSideData:
                     assert bytes(sdata)[:4] == b"\xde\xad\xbe\xef"
 
                     pkt.set_sidedata(sdata)
-                    assert bytes(pkt.get_sidedata("new_extradata"))[:4] == b"\xde\xad\xbe\xef"
+                    assert (
+                        bytes(pkt.get_sidedata("new_extradata"))[:4]
+                        == b"\xde\xad\xbe\xef"
+                    )
                     return
 
         raise AssertionError("No packet with new_extradata side data found")
@@ -157,4 +160,6 @@ class TestPacketSideData:
 
         assert modified_samples - original_samples == 706
 
+        assert original_duration is not None
+        assert modified_duration is not None
         assert modified_duration > original_duration
