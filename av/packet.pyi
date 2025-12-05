@@ -50,7 +50,7 @@ PktSideDataT = Literal[
     "rtcp_sr",
 ]
 
-class PacketSideData:
+class PacketSideData(Buffer):
     @staticmethod
     def from_packet(packet: Packet, dtype: PktSideDataT) -> PacketSideData: ...
     def to_packet(self, packet: Packet, move: bool = False): ...

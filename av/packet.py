@@ -2,6 +2,7 @@ from typing import Iterator, Literal, get_args
 
 import cython
 from cython.cimports import libav as lib
+from cython.cimports.av.buffer import Buffer
 from cython.cimports.av.bytesource import bytesource
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
@@ -64,7 +65,7 @@ def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> lib.AVPacketSideDa
 
 
 @cython.cclass
-class PacketSideData:
+class PacketSideData(Buffer):
     @staticmethod
     def from_packet(packet: Packet, data_type: PktSideDataT) -> PacketSideData:
         """create new PacketSideData by copying an existing packet's side data
@@ -151,6 +152,19 @@ class PacketSideData:
         :type: int
         """
         return self.size
+
+    # Buffer protocol implementation
+    @cython.cfunc
+    def _buffer_size(self) -> cython.size_t:
+        return self.size
+
+    @cython.cfunc
+    def _buffer_ptr(self) -> cython.p_void:
+        return self.data
+
+    @cython.cfunc
+    def _buffer_writable(self) -> cython.bint:
+        return True
 
     def __bool__(self) -> bool:
         """

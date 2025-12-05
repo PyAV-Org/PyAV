@@ -7,10 +7,14 @@ from av.bytesource cimport ByteSource
 from av.stream cimport Stream
 
 
-cdef class PacketSideData:
+cdef class PacketSideData(Buffer):
     cdef uint8_t *data
     cdef size_t size
     cdef lib.AVPacketSideDataType dtype
+
+    cdef size_t _buffer_size(self)
+    cdef void* _buffer_ptr(self)
+    cdef bint _buffer_writable(self)
 
 cdef class Packet(Buffer):
     cdef lib.AVPacket* ptr
