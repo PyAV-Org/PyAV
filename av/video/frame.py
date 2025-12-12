@@ -449,7 +449,13 @@ class VideoFrame(Frame):
         import numpy as np
 
         # check size
-        if frame.format.name in {"yuv420p", "yuvj420p", "yuyv422", "yuv422p10le"}:
+        if frame.format.name in {
+            "yuv420p",
+            "yuvj420p",
+            "yuyv422",
+            "yuv422p10le",
+            "yuv422p",
+        }:
             assert frame.width % 2 == 0, (
                 "the width has to be even for this pixel format"
             )
@@ -563,7 +569,7 @@ class VideoFrame(Frame):
             return array
 
         # special cases
-        if frame.format.name in {"yuv420p", "yuvj420p"}:
+        if frame.format.name in {"yuv420p", "yuvj420p", "yuv422p"}:
             return np.hstack(
                 [
                     useful_array(frame.planes[0]),
@@ -1017,6 +1023,19 @@ class VideoFrame(Frame):
             frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
             u_start = frame.width * frame.height
             v_start = 5 * u_start // 4
+            flat = array.reshape(-1)
+            copy_array_to_plane(flat[0:u_start], frame.planes[0], 1)
+            copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 1)
+            copy_array_to_plane(flat[v_start:], frame.planes[2], 1)
+            return frame
+        elif format == "yuv422p":
+            check_ndarray(array, "uint8", 2)
+            check_ndarray_shape(array, array.shape[0] % 4 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+
+            frame = VideoFrame(array.shape[1], array.shape[0] // 2, format)
+            u_start = frame.width * frame.height
+            v_start = u_start + u_start // 2
             flat = array.reshape(-1)
             copy_array_to_plane(flat[0:u_start], frame.planes[0], 1)
             copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 1)
