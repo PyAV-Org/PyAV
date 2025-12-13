@@ -120,4 +120,20 @@ def find_best_pix_fmt_of_list(
     pix_fmts: Sequence[PixFmtLike],
     src_pix_fmt: PixFmtLike,
     has_alpha: bool = False,
-) -> tuple[VideoFormat | None, int]: ...
+) -> tuple[VideoFormat | None, int]: 
+    """
+    Find the best pixel format to convert to given a source format.
+
+    Wraps :ffmpeg:`avcodec_find_best_pix_fmt_of_list`.
+
+    :param pix_fmts: Iterable of pixel formats to choose from (str or VideoFormat).
+    :param src_pix_fmt: Source pixel format (str or VideoFormat).
+    :param bool has_alpha: Whether the source alpha channel is used.
+    :return: (best_format, loss): best_format is the best matching pixel format from
+        the list, or None if no suitable format was found; loss is Combination of flags informing you what kind of losses will occur.
+    :rtype: (VideoFormat | None, int)
+
+    Note on loss: it is a bitmask of FFmpeg loss flags describing what kinds of information would be lost converting from src_pix_fmt to best_format (e.g. loss of alpha, chroma, colorspace, resolution, bit depth, etc.). Multiple losses can be present at once, so the value is meant to be interpreted with bitwise & against FFmpeg's FF_LOSS_* constants.
+    For exact behavior see: libavutil/pixdesc.c/get_pix_fmt_score() in ffmpeg source code.
+    """
+    ...
