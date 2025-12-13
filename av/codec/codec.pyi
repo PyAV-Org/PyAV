@@ -1,6 +1,6 @@
 from enum import Flag, IntEnum
 from fractions import Fraction
-from typing import ClassVar, Literal, cast, overload
+from typing import ClassVar, Literal, Sequence, cast, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
@@ -113,3 +113,11 @@ codecs_available: set[str]
 
 def dump_codecs() -> None: ...
 def dump_hwconfigs() -> None: ...
+
+PixFmtLike = str | VideoFormat
+
+def find_best_pix_fmt_of_list(
+    pix_fmts: Sequence[PixFmtLike],
+    src_pix_fmt: PixFmtLike,
+    has_alpha: bool = False,
+) -> tuple[VideoFormat | None, int]: ...

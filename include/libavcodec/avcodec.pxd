@@ -75,6 +75,13 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef char* avcodec_configuration()
     cdef char* avcodec_license()
 
+    AVPixelFormat avcodec_find_best_pix_fmt_of_list(
+        const AVPixelFormat *pix_fmt_list,
+        AVPixelFormat src_pix_fmt,
+        int has_alpha,
+        int *loss_ptr,
+    )
+
     cdef size_t AV_INPUT_BUFFER_PADDING_SIZE
     cdef int64_t AV_NOPTS_VALUE
 

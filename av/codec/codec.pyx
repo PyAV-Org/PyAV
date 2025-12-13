@@ -4,9 +4,10 @@ from av.audio.format cimport get_audio_format
 from av.codec.hwaccel cimport wrap_hwconfig
 from av.descriptor cimport wrap_avclass
 from av.utils cimport avrational_to_fraction
-from av.video.format cimport get_video_format
+from av.video.format cimport VideoFormat, get_pix_fmt, get_video_format
 
 from enum import Flag, IntEnum
+from libc.stdlib cimport free, malloc
 
 
 cdef object _cinit_sentinel = object()
@@ -387,3 +388,59 @@ def dump_hwconfigs():
         print("   ", codec.name)
         for config in configs:
             print("       ", config)
+
+
+def find_best_pix_fmt_of_list(pix_fmts, src_pix_fmt, has_alpha=False):
+    """
+    Find the best pixel format to convert to given a source format.
+
+    Wraps :ffmpeg:`avcodec_find_best_pix_fmt_of_list`.
+
+    :param pix_fmts: Iterable of pixel formats to choose from (str or VideoFormat).
+    :param src_pix_fmt: Source pixel format (str or VideoFormat).
+    :param bool has_alpha: Whether the source alpha channel is used.
+    :return: (best_format, loss)
+    :rtype: (VideoFormat | None, int)
+    """
+    cdef lib.AVPixelFormat src
+    cdef lib.AVPixelFormat best
+    cdef lib.AVPixelFormat *c_list = NULL
+    cdef Py_ssize_t n
+    cdef Py_ssize_t i
+    cdef object item
+    cdef int c_loss
+
+    if pix_fmts is None:
+        raise TypeError("pix_fmts must not be None")
+
+    pix_fmts = tuple(pix_fmts)
+    if not pix_fmts:
+        return None, 0
+
+    if isinstance(src_pix_fmt, VideoFormat):
+        src = (<VideoFormat>src_pix_fmt).pix_fmt
+    else:
+        src = get_pix_fmt(<str>src_pix_fmt)
+
+    n = len(pix_fmts)
+    c_list = <lib.AVPixelFormat *>malloc((n + 1) * sizeof(lib.AVPixelFormat))
+    if c_list == NULL:
+        raise MemoryError()
+
+    try:
+        for i in range(n):
+            item = pix_fmts[i]
+            if isinstance(item, VideoFormat):
+                c_list[i] = (<VideoFormat>item).pix_fmt
+            else:
+                c_list[i] = get_pix_fmt(<str>item)
+        c_list[n] = lib.AV_PIX_FMT_NONE
+
+        c_loss = 0
+        best = lib.avcodec_find_best_pix_fmt_of_list(
+            c_list, src, 1 if has_alpha else 0, &c_loss
+        )
+        return get_video_format(best, 0, 0), c_loss
+    finally:
+        if c_list != NULL:
+            free(c_list)
