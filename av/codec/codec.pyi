@@ -120,7 +120,7 @@ def find_best_pix_fmt_of_list(
     pix_fmts: Sequence[PixFmtLike],
     src_pix_fmt: PixFmtLike,
     has_alpha: bool = False,
-) -> tuple[VideoFormat | None, int]: 
+) -> tuple[VideoFormat | None, int]:
     """
     Find the best pixel format to convert to given a source format.
 
