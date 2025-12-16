@@ -1,0 +1,3 @@
+# POSIX-sensitive files: always LF
+*.sh        text eol=lf
+Makefile    text eol=lf
