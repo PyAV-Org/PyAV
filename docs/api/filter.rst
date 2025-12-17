@@ -24,11 +24,3 @@ Filters
     .. autoclass:: FilterLink
         :members:
 
-
-.. automodule:: av.filter.pad
-
-    .. autoclass:: FilterPad
-        :members:
-
-    .. autoclass:: FilterContextPad
-        :members:
