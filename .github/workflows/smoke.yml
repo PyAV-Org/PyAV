@@ -35,10 +35,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-24.04, python: "3.14t", ffmpeg: "8.0", extras: true}
-          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.0", extras: true}
-          - {os: ubuntu-24.04, python: "pypy3.10", ffmpeg: "8.0"}
-          - {os: macos-14, python: "3.10", ffmpeg: "8.0"}
+          - {os: ubuntu-24.04, python: "3.14t", ffmpeg: "8.0.1", extras: true}
+          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.0.1", extras: true}
+          - {os: ubuntu-24.04, python: "pypy3.10", ffmpeg: "8.0.1"}
+          - {os: macos-14, python: "3.10", ffmpeg: "8.0.1"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -76,7 +76,7 @@ jobs:
             fi
             ;;
           macos-14)
-            brew install automake libtool nasm libpng libvorbis libvpx opus x264
+            brew install automake libtool libpng libvorbis libvpx opus x264
             ;;
         esac
 
@@ -149,7 +149,6 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
         python scripts\\fetch-vendor.py --config-file scripts\\ffmpeg-${{ matrix.config.ffmpeg }}.json $CONDA_PREFIX\\Library
-        python scripts\\comptime.py  ${{ matrix.config.ffmpeg }}
         python setup.py build_ext --inplace --ffmpeg-dir=$CONDA_PREFIX\\Library
 
     - name: Test
