@@ -329,8 +329,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVBufferRef *hw_device_ctx
         AVPixelFormat (*get_format)(AVCodecContext *s, const AVPixelFormat *fmt)
 
-        # User Data
-        void *opaque
 
     cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
