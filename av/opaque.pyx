@@ -1,5 +1,5 @@
 cimport libav as lib
-from libc.stdint cimport intptr_t, uint8_t
+from libc.stdint cimport uint8_t, uintptr_t
 from libc.string cimport memcpy
 
 
@@ -15,18 +15,18 @@ cdef class OpaqueContainer:
 
     cdef lib.AVBufferRef *add(self, object v):
         # Use object's memory address as key
-        cdef intptr_t key = id(v)
+        cdef uintptr_t key = <uintptr_t><long long>id(v)
         self._objects[key] = v
 
-        cdef uint8_t *data = <uint8_t *>lib.av_malloc(sizeof(intptr_t))
+        cdef uint8_t *data = <uint8_t *>lib.av_malloc(sizeof(uintptr_t))
         if data == NULL:
             raise MemoryError("Failed to allocate memory for key")
 
-        memcpy(data, &key, sizeof(intptr_t))
+        memcpy(data, &key, sizeof(uintptr_t))
 
         # Create the buffer with our free callback
         cdef lib.AVBufferRef *buffer_ref = lib.av_buffer_create(
-            data, sizeof(intptr_t), key_free, NULL, 0
+            data, sizeof(uintptr_t), key_free, NULL, 0
         )
 
         if buffer_ref == NULL:
@@ -35,11 +35,11 @@ cdef class OpaqueContainer:
         return buffer_ref
 
     cdef object get(self, char *name):
-        cdef intptr_t key = (<intptr_t *>name)[0]
+        cdef uintptr_t key = (<uintptr_t *>name)[0]
         return self._objects.get(key)
 
     cdef object pop(self, char *name):
-        cdef intptr_t key = (<intptr_t *>name)[0]
+        cdef uintptr_t key = (<uintptr_t *>name)[0]
         return self._objects.pop(key, None)
 
 
