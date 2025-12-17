@@ -16,6 +16,22 @@ We are operating with `semantic versioning <https://semver.org>`_.
     Note that they these tags will not actually close the issue/PR until they
     are merged into the "default" branch.
 
+
+next
+----
+
+Features:
+
+- Add AMD AMF hardware decoding by :gh-user:`ladaapp2`.
+- Add subtitle encoding support by :gh-user:`skeskinen` in (:pr:`2050`).
+- Add read/write access to PacketSideData by :gh-user:`skeskinen` in (:pr:`2051`).
+- Add yuv422p support for video frame to_ndarray and from_ndarray by :gh-user:`wader` in (:pr:`2054`).
+- Add binding for ``avcodec_find_best_pix_fmt_of_list()`` by :gh-user:`ndeybach` (:pr:`2058`).
+
+Fixes:
+
+- Fix #2036, #2053, #2057 by :gh-user:`WyattBlue`.
+
 v16.0.1
 -------
 
@@ -34,7 +50,7 @@ Major:
 Features:
 
 - Add ``Filter.Context.process_command()`` method by :gh-user:`caffeinism` in (:pr:`2000`).
-- Add packet side-data handling mechanism by :gh-user:`tikuma-lsuhsc ` in (:pr:`2003`).
+- Add packet side-data handling mechanism by :gh-user:`tikuma-lsuhsc` in (:pr:`2003`).
 - Implemented set_chapters method by :gh-user:`DE-AI` in (:pr:`2004`).
 - Declare free-threaded support and support 3.13t by :gh-user:`ngoldbaum` in (:pr:`2005`).
 - Add writable and copyable attachment and data streams by :gh-user:`skeskinen` in (:pr:`2026`).
