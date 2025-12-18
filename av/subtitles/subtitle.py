@@ -44,7 +44,7 @@ class SubtitleSet:
         end: int,
         pts: int = 0,
         subtitle_format: int = 1,
-    ) -> "SubtitleSet":
+    ) -> SubtitleSet:
         """
         Create a SubtitleSet for encoding.
 
