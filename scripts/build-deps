@@ -62,6 +62,7 @@ echo ./configure
     --enable-gpl \
     --enable-version3 \
     --enable-libx264 \
+    --enable-libmp3lame \
     --enable-shared \
     --enable-sse \
     --enable-avx \
