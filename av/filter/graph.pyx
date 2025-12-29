@@ -1,3 +1,4 @@
+import os
 import warnings
 from fractions import Fraction
 
@@ -12,8 +13,29 @@ from av.video.frame cimport VideoFrame
 
 
 cdef class Graph:
-    def __cinit__(self):
+    def __cinit__(self, int nb_threads=0):
+        """
+        Create a filter graph.
+
+        Args:
+            nb_threads: Maximum number of threads used by the filter graph.
+                0 (default) means auto-detect based on available CPU cores.
+                1 means single-threaded execution (safer for some use cases).
+                Can also be set via PYAV_FILTERGRAPH_THREADS environment variable.
+        """
         self.ptr = lib.avfilter_graph_alloc()
+
+        # Allow environment variable to override
+        env_threads = os.environ.get("PYAV_FILTERGRAPH_THREADS")
+        if env_threads is not None:
+            try:
+                nb_threads = int(env_threads)
+            except ValueError:
+                pass
+
+        if nb_threads > 0:
+            lib.av_opt_set_int(self.ptr, "threads", nb_threads, 0)
+
         self.configured = False
         self._name_counts = {}
 
