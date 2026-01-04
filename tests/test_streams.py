@@ -17,6 +17,8 @@ class TestStreams:
             "data.ts",
             "data_source.ts",
             "data_copy.ts",
+            "data_with_codec.ts",
+            "data_invalid.ts",
             "out.mkv",
             "video_with_attachment.mkv",
             "remuxed_attachment.mkv",
@@ -200,6 +202,50 @@ class TestStreams:
                     remuxed_payloads.append(payload)
 
         assert remuxed_payloads == copied_payloads
+
+    def test_data_stream_with_codec(self) -> None:
+        """Test adding a data stream with a specific codec name."""
+        # Test that invalid codec names raise appropriate errors
+        with pytest.raises(ValueError, match="Unknown data codec"):
+            container = av.open("data_invalid.ts", "w")
+            try:
+                container.add_data_stream("not_a_real_codec_name_12345")
+            finally:
+                container.close()
+
+        # Test that add_data_stream with codec parameter works correctly
+        # We use "bin_data" which is a data codec that's always available
+        output_path = "data_with_codec.ts"
+        with av.open(output_path, "w") as container:
+            # Try to create a data stream with a codec
+            # bin_data is a simple passthrough codec for binary data
+            data_stream = container.add_data_stream("bin_data")
+            klv_stream = container.add_data_stream("klv")
+
+            assert data_stream.type == "data"
+            assert klv_stream.type == "data"
+            # Note: codec_context may be None for descriptor-only data codecs
+
+            test_data = [b"test1", b"test2", b"test3"]
+            for i, data in enumerate(test_data):
+                packet = av.Packet(data)
+                packet.pts = i
+                packet.stream = data_stream
+                container.mux(packet)
+
+        with av.open(output_path) as newcontainer:
+            data_stream = newcontainer.streams.data[0]
+            klv_stream = newcontainer.streams.data[1]
+            assert data_stream.type == "data"
+            assert klv_stream.type == "data"
+            assert "bin_data" in str(data_stream)
+            assert "klv" in str(klv_stream)
+            assert data_stream.name == "bin_data"
+            assert klv_stream.name == "klv"
+        try:
+            os.remove(output_path)
+        except Exception:
+            pass
 
     def test_attachment_stream(self) -> None:
         input_path = av.datasets.curated(
