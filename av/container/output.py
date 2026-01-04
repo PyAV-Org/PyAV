@@ -278,15 +278,23 @@ class OutputContainer(Container):
         :rtype: The new :class:`~av.data.stream.DataStream`.
         """
         codec: cython.pointer[cython.const[lib.AVCodec]] = cython.NULL
+        codec_descriptor: cython.pointer[lib.AVCodecDescriptor] = cython.NULL
 
         if codec_name is not None:
             codec = lib.avcodec_find_encoder_by_name(codec_name.encode())
             if codec == cython.NULL:
-                raise ValueError(f"Unknown data codec: {codec_name}")
+                codec = lib.avcodec_find_decoder_by_name(codec_name.encode())
+            if codec == cython.NULL:
+                codec_descriptor = lib.avcodec_descriptor_get_by_name(
+                    codec_name.encode()
+                )
+                if codec_descriptor == cython.NULL:
+                    raise ValueError(f"Unknown data codec: {codec_name}")
 
-            # Assert that this format supports the requested codec
+            # Verify format supports this codec
+            codec_id = codec.id if codec != cython.NULL else codec_descriptor.id
             if not lib.avformat_query_codec(
-                self.ptr.oformat, codec.id, lib.FF_COMPLIANCE_NORMAL
+                self.ptr.oformat, codec_id, lib.FF_COMPLIANCE_NORMAL
             ):
                 raise ValueError(
                     f"{self.format.name!r} format does not support {codec_name!r} codec"
@@ -297,7 +305,7 @@ class OutputContainer(Container):
         if stream == cython.NULL:
             raise MemoryError("Could not allocate stream")
 
-        # Set up codec context if we have a codec
+        # Set up codec context and parameters
         ctx: cython.pointer[lib.AVCodecContext] = cython.NULL
         if codec != cython.NULL:
             ctx = lib.avcodec_alloc_context3(codec)
@@ -311,8 +319,10 @@ class OutputContainer(Container):
             # Initialize stream codec parameters
             err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
         else:
-            # For raw data streams, just set the codec type
+            # No codec available - set basic parameters for data stream
             stream.codecpar.codec_type = lib.AVMEDIA_TYPE_DATA
+            if codec_descriptor != cython.NULL:
+                stream.codecpar.codec_id = codec_descriptor.id
 
         # Construct the user-land stream
         py_codec_context: CodecContext | None = None
