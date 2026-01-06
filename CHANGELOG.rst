@@ -17,11 +17,12 @@ We are operating with `semantic versioning <https://semver.org>`_.
     are merged into the "default" branch.
 
 
-next
-----
+v16.1.0
+-------
 
 Features:
 
+- Add support for Intel QSV codecs by :gh-user:`ladaapp`.
 - Add AMD AMF hardware decoding by :gh-user:`ladaapp2`.
 - Add subtitle encoding support by :gh-user:`skeskinen` in (:pr:`2050`).
 - Add read/write access to PacketSideData by :gh-user:`skeskinen` in (:pr:`2051`).
