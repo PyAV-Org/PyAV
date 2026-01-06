@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from enum import Enum
 
 from av.sidedata.motionvectors import MotionVectors
+from av.sidedata.encparams import VideoEncParams
 
 
 cdef object _cinit_bypass_sentinel = object()
@@ -49,6 +50,8 @@ class Type(Enum):
 cdef SideData wrap_side_data(Frame frame, int index):
     if frame.ptr.side_data[index].type == lib.AV_FRAME_DATA_MOTION_VECTORS:
         return MotionVectors(_cinit_bypass_sentinel, frame, index)
+    elif frame.ptr.side_data[index].type == lib.AV_FRAME_DATA_VIDEO_ENC_PARAMS:
+        return VideoEncParams(_cinit_bypass_sentinel, frame, index)
     else:
         return SideData(_cinit_bypass_sentinel, frame, index)
 

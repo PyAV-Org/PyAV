@@ -7,6 +7,7 @@ include "libavutil/frame.pxd"
 include "libavutil/hwcontext.pxd"
 include "libavutil/samplefmt.pxd"
 include "libavutil/motion_vector.pxd"
+include "libavutil/video_enc_params.pxd"
 
 include "libavcodec/avcodec.pxd"
 include "libavcodec/bsf.pxd"
