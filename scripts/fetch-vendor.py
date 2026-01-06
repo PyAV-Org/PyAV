@@ -9,25 +9,18 @@ import subprocess
 
 def get_platform():
     system = platform.system()
-    machine = platform.machine()
+    is_arm64 = platform.machine() in ("arm64", "aarch64")
     if system == "Linux":
         if platform.libc_ver()[0] == "glibc":
-            return f"manylinux_{machine}"
+            return "manylinux-aarch64" if is_arm64 else "manylinux-x86_64"
         else:
-            return f"musllinux_{machine}"
+            return "musllinux-aarch64" if is_arm64 else "musllinux-x86_64"
     elif system == "Darwin":
-        # cibuildwheel sets ARCHFLAGS:
-        # https://github.com/pypa/cibuildwheel/blob/5255155bc57eb6224354356df648dc42e31a0028/cibuildwheel/macos.py#L207-L220
-        if "ARCHFLAGS" in os.environ:
-            machine = os.environ["ARCHFLAGS"].split()[1]
-        return f"macosx_{machine}"
+        return "macos-arm64" if is_arm64 else "macos-x86_64"
     elif system == "Windows":
-        if struct.calcsize("P") * 8 == 64:
-            return "win_amd64"
-        else:
-            return "win32"
+        return "windows-aarch64" if is_arm64 else "windows-x86_64"
     else:
-        raise Exception(f"Unsupported system {system}")
+        return "unknown"
 
 
 parser = argparse.ArgumentParser(description="Fetch and extract tarballs")
@@ -58,6 +51,5 @@ if not os.path.exists(tarball_file):
         ["curl", "--location", "--output", tarball_file, "--silent", tarball_url]
     )
 
-# extract tarball
 logging.info(f"Extracting {tarball_name}")
 subprocess.check_call(["tar", "-C", args.destination_dir, "-xf", tarball_file])
