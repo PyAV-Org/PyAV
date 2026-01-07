@@ -3,7 +3,6 @@ from libc.stdint cimport int32_t, uint8_t
 
 from enum import IntEnum
 
-
 VideoEncParamsType = IntEnum(
     "AVVideoEncParamsType",
     {
