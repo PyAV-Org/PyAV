@@ -2,6 +2,7 @@ import functools
 import os
 import pathlib
 from fractions import Fraction
+from typing import cast
 
 import numpy as np
 import pytest
@@ -137,6 +138,32 @@ class TestDecode(TestCase):
             if not frame.key_frame:
                 assert vectors is None
                 return
+
+    def test_decoded_video_enc_params(self) -> None:
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams.video[0]
+        stream.codec_context.options = {"export_side_data": "venc_params"}
+
+        for frame in container.decode(stream):
+            video_enc_params = cast(
+                av.sidedata.encparams.VideoEncParams,
+                frame.side_data.get("VIDEO_ENC_PARAMS"),
+            )
+            assert video_enc_params is not None
+            assert video_enc_params.nb_blocks == 40 * 24
+
+            first_block = video_enc_params.block_params(0)
+            assert video_enc_params.qp + first_block.delta_qp == 29
+            return
+
+    def test_decoded_video_enc_params_no_flag(self) -> None:
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams.video[0]
+        # When no additional flag is given, there should be no side data with the video encoding params
+
+        for frame in container.decode(stream):
+            video_enc_params = frame.side_data.get("VIDEO_ENC_PARAMS")
+            assert video_enc_params is None
 
     def test_decode_video_corrupt(self) -> None:
         # write an empty file
