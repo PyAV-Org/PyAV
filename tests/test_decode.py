@@ -2,6 +2,7 @@ import functools
 import os
 import pathlib
 from fractions import Fraction
+from typing import cast
 
 import numpy as np
 import pytest
@@ -144,8 +145,9 @@ class TestDecode(TestCase):
         stream.codec_context.options = {"export_side_data": "venc_params"}
 
         for frame in container.decode(stream):
-            video_enc_params = frame.side_data.get(
-                av.sidedata.sidedata.Type.VIDEO_ENC_PARAMS
+            video_enc_params = cast(
+                av.sidedata.encparams.VideoEncParams,
+                frame.side_data.get("VIDEO_ENC_PARAMS"),
             )
             assert video_enc_params is not None
             assert video_enc_params.nb_blocks == 40 * 24
@@ -160,9 +162,7 @@ class TestDecode(TestCase):
         # When no additional flag is given, there should be no side data with the video encoding params
 
         for frame in container.decode(stream):
-            video_enc_params = frame.side_data.get(
-                av.sidedata.sidedata.Type.VIDEO_ENC_PARAMS
-            )
+            video_enc_params = frame.side_data.get("VIDEO_ENC_PARAMS")
             assert video_enc_params is None
 
     def test_decode_video_corrupt(self) -> None:

@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import cast
+from typing import Any, cast
 
 import numpy as np
 
@@ -17,7 +17,7 @@ class VideoEncParams:
     qp: int
     delta_qp: int
     def block_params(self, idx: int) -> VideoBlockParams: ...
-    def qp_map(self) -> np.ndarray[int, int]: ...
+    def qp_map(self) -> np.ndarray[Any, Any]: ...
 
 class VideoBlockParams:
     src_x: int
