@@ -2,7 +2,6 @@ cimport libav as lib
 from libc.stdint cimport uint8_t, int32_t
 
 from enum import IntEnum
-import numpy as np
 
 
 VideoEncParamsType = IntEnum(
@@ -85,6 +84,8 @@ cdef class VideoEncParams(SideData):
         Convenience method that creates a 2-D map with the quantization parameters per macroblock.
         Only for MPEG2 and H264 encoded videos.
         """
+        import numpy as np
+        
         cdef int mb_h = (self.frame.ptr.height + 15) // 16
         cdef int mb_w = (self.frame.ptr.width + 15) // 16
         cdef int nb_mb = mb_h * mb_w
