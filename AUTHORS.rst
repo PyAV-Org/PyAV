@@ -21,15 +21,15 @@ All contributors (by number of commits):
 * Justin Wong <46082645+uvjustin@users.noreply.github.com>
 * Mark Harfouche <mark.harfouche@gmail.com>
 
+- Santtu Keskinen <santtu.keskinen@gmail.com>
 - Alba Mendez <me@alba.sh>
+- Curtis Doty <Curtis@GreenKey.net>; `@dotysan <https://github.com/dotysan>`_
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
 - z-khan <zohaibkh_27@yahoo.com>
 - Marc Mueller <30130371+cdce8p@users.noreply.github.com>
 - Dan Allan <daniel.b.allan@gmail.com>; `@danielballan <https://github.com/danielballan>`_
 - Moonsik Park <moonsik.park@estsoft.com>
-- Santtu Keskinen <santtu.keskinen@gmail.com>
 - velsinki <40809145+velsinki@users.noreply.github.com>
-- Curtis Doty <Curtis@GreenKey.net>
 - Christoph Rackwitz <christoph.rackwitz@gmail.com>
 - David Plowman <david.plowman@raspberrypi.com>
 - Alireza Davoudi <davoudialireza@gmail.com>; `@adavoudi <https://github.com/adavoudi>`_
@@ -44,6 +44,7 @@ All contributors (by number of commits):
 
 * zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 * Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
+* Nils DEYBACH <68770774+ndeybach@users.noreply.github.com>
 * Dexer <73297572+DexerBR@users.noreply.github.com>
 * DE-AI <81620697+DE-AI@users.noreply.github.com>
 * rutsh <Eugene.Krokhalev@gmail.com>
@@ -57,6 +58,7 @@ All contributors (by number of commits):
 * Martin Larralde <martin.larralde@ens-cachan.fr>
 * Simon-Martin Schröder <martin.schroeder@nerdluecht.de>
 * Matteo Destro <matteo.est@gmail.com>
+* Mattias Wadman <mattias.wadman@gmail.com>
 * mephi42 <mephi42@gmail.com>
 * Miles Kaufmann <mkfmnn@gmail.com>
 * Nathan Goldbaum <nathan.goldbaum@gmail.com>
@@ -72,6 +74,7 @@ All contributors (by number of commits):
 * Ian Lee <IanLee1521@gmail.com>
 * Ryan Huang <NPN@users.noreply.github.com>
 * Arthur Barros <arthbarros@gmail.com>
+* benedikt-grl <benedikt@getreallabs.com>
 * Carlos Ruiz <carlos.r.domin@gmail.com>
 * Carlos Ruiz <carlos.ruiz.dominguez@west.cmu.edu>
 * Maxime Desroches <desroches.maxime@gmail.com>
@@ -86,7 +89,6 @@ All contributors (by number of commits):
 * Philipp Klaus <klaus@physik.uni-frankfurt.de>
 * Marcell Pardavi <marcell.pardavi@gmail.com>
 * Matteo Destro <matteo@cerrion.com>
-* Mattias Wadman <mattias.wadman@gmail.com>
 * Max Ehrlich <max.ehr@gmail.com>
 * Manuel Goacolou <mgoacolou@cls.fr>
 * Julian Schweizer <neuneck@gmail.com>
