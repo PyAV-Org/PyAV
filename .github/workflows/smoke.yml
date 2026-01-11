@@ -36,7 +36,7 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.0.1", extras: true}
-          # - {os: ubuntu-24.04, python: "pypy3.11", ffmpeg: "8.0.1"}
+          - {os: ubuntu-24.04, python: "pypy3.11", ffmpeg: "8.0.1"}
           - {os: macos-14, python: "3.11", ffmpeg: "8.0.1"}
 
     env:
