@@ -9,12 +9,11 @@ import subprocess
 
 def get_platform():
     system = platform.system()
-    is_arm64 = platform.machine() in ("arm64", "aarch64")
+    machine = platform.machine().lower()
+    is_arm64 = machine in {"arm64", "aarch64"}
     if system == "Linux":
-        if platform.libc_ver()[0] == "glibc":
-            return "manylinux-aarch64" if is_arm64 else "manylinux-x86_64"
-        else:
-            return "musllinux-aarch64" if is_arm64 else "musllinux-x86_64"
+        prefix = "manylinux-" if platform.libc_ver()[0] == "glibc" else "musllinux-"
+        return prefix + machine
     elif system == "Darwin":
         return "macos-arm64" if is_arm64 else "macos-x86_64"
     elif system == "Windows":
