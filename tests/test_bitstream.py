@@ -97,7 +97,7 @@ def test_filter_flush() -> None:
 
         container.seek(0)
         # Without flushing, we expect to get an error: "A non-NULL packet sent after an EOF."
-        with pytest.raises(ValueError):
+        with pytest.raises(av.ArgumentError):
             for p in container.demux(stream):
                 ctx.filter(p)
 

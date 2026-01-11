@@ -7,7 +7,7 @@ from .common import is_windows
 
 
 def test_stringify() -> None:
-    for cls in (av.ValueError, av.FileNotFoundError, av.DecoderNotFoundError):
+    for cls in (av.FileNotFoundError, av.DecoderNotFoundError):
         e = cls(1, "foo")
         assert f"{e}" == "[Errno 1] foo"
         assert f"{e!r}" == f"{cls.__name__}(1, 'foo')"
@@ -16,7 +16,7 @@ def test_stringify() -> None:
             == f"av.error.{cls.__name__}: [Errno 1] foo\n"
         )
 
-    for cls in (av.ValueError, av.FileNotFoundError, av.DecoderNotFoundError):
+    for cls in (av.FileNotFoundError, av.DecoderNotFoundError):
         e = cls(1, "foo", "bar.txt")
         assert f"{e}" == "[Errno 1] foo: 'bar.txt'"
         assert f"{e!r}" == f"{cls.__name__}(1, 'foo', 'bar.txt')"
@@ -27,9 +27,7 @@ def test_stringify() -> None:
 
 
 def test_bases() -> None:
-    assert issubclass(av.ValueError, ValueError)
-    assert issubclass(av.ValueError, av.FFmpegError)
-
+    assert issubclass(av.ArgumentError, av.FFmpegError)
     assert issubclass(av.FileNotFoundError, FileNotFoundError)
     assert issubclass(av.FileNotFoundError, OSError)
     assert issubclass(av.FileNotFoundError, av.FFmpegError)

@@ -323,7 +323,8 @@ class TestPythonIO(TestCase):
 
         buf = WriteOnlyPipe()
         with pytest.raises(
-            ValueError, match=escape("[mp4] muxer does not support non seekable output")
+            av.ArgumentError,
+            match=escape("[mp4] muxer does not support non seekable output"),
         ):
             write(buf)
 
