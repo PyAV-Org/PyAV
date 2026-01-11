@@ -35,10 +35,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-24.04, python: "3.14t", ffmpeg: "8.0.1", extras: true}
           - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.0.1", extras: true}
-          - {os: ubuntu-24.04, python: "pypy3.10", ffmpeg: "8.0.1"}
-          - {os: macos-14, python: "3.10", ffmpeg: "8.0.1"}
+          # - {os: ubuntu-24.04, python: "pypy3.11", ffmpeg: "8.0.1"}
+          - {os: macos-14, python: "3.11", ffmpeg: "8.0.1"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -122,7 +121,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, python: "3.10", ffmpeg: "latest"}
+          - {os: windows-latest, python: "3.11", ffmpeg: "latest"}
 
     steps:
     - name: Checkout
