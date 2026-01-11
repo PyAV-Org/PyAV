@@ -21,6 +21,12 @@ FFMPEG_LIBRARIES = [
     "swresample",
 ]
 
+if sys.implementation.name == "cpython":
+    py_limited_api = True
+    options = {"bdist_wheel": {"py_limited_api": "cp311"}}
+else:
+    py_limited_api = False
+    options = {}
 
 # Monkey-patch Cython to not overwrite embedded signatures.
 old_embed_signature = EmbedSignature._embed_signature
@@ -142,6 +148,8 @@ loudnorm_extension = Extension(
     include_dirs=[f"{IMPORT_NAME}/filter"] + extension_extra["include_dirs"],
     libraries=extension_extra["libraries"],
     library_dirs=extension_extra["library_dirs"],
+    define_macros=[("Py_LIMITED_API", 0x030B0000)],
+    py_limited_api=py_limited_api,
 )
 
 compiler_directives = {
@@ -186,6 +194,8 @@ for dirname, dirnames, filenames in os.walk(IMPORT_NAME):
                 libraries=extension_extra["libraries"],
                 library_dirs=extension_extra["library_dirs"],
                 sources=[pyx_path],
+                define_macros=[("Py_LIMITED_API", 0x030B0000)],
+                py_limited_api=py_limited_api,
             ),
             compiler_directives=compiler_directives,
             build_dir="src",
@@ -202,4 +212,5 @@ setup(
     packages=find_packages(include=[f"{IMPORT_NAME}*"]),
     package_data=package_data,
     ext_modules=ext_modules,
+    options=options,
 )

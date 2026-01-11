@@ -40,9 +40,9 @@ jobs:
             arch: AMD64
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - name: Set Minimum MacOS Target
         if: runner.os == 'macOS'
         run: |
@@ -61,10 +61,9 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:\cibw\vendor\bin -w {dest_dir} {wheel}
-          CIBW_SKIP: "pp*"
+          CIBW_SKIP: "pp* cp312* cp313* cp314*"
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: pytest numpy
-          CIBW_ENABLE: cpython-freethreading
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
