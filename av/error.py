@@ -1,37 +1,47 @@
-cimport libav as lib
-from libc.stdio cimport fprintf, stderr
-from libc.stdlib cimport free, malloc
-
-from av.logging cimport get_last_error
-
 import errno
 import os
 import sys
 import traceback
 from threading import local
 
+import cython
+from cython.cimports import libav as lib
+from cython.cimports.av.logging import get_last_error
+from cython.cimports.libc.stdio import fprintf, stderr
+from cython.cimports.libc.stdlib import free, malloc
+
 # Will get extended with all of the exceptions.
 __all__ = [
-    "ErrorType", "FFmpegError", "LookupError", "HTTPError", "HTTPClientError",
+    "ErrorType",
+    "FFmpegError",
+    "LookupError",
+    "HTTPError",
+    "HTTPClientError",
     "UndefinedError",
 ]
+sentinel = cython.declare(object, object())
 
 
-cpdef code_to_tag(int code):
+@cython.ccall
+def code_to_tag(code: cython.int) -> bytes:
     """Convert an integer error code into 4-byte tag.
 
     >>> code_to_tag(1953719668)
     b'test'
 
     """
-    return bytes((
-        code & 0xff,
-        (code >> 8) & 0xff,
-        (code >> 16) & 0xff,
-        (code >> 24) & 0xff,
-    ))
+    return bytes(
+        (
+            code & 0xFF,
+            (code >> 8) & 0xFF,
+            (code >> 16) & 0xFF,
+            (code >> 24) & 0xFF,
+        )
+    )
 
-cpdef tag_to_code(bytes tag):
+
+@cython.ccall
+def tag_to_code(tag: bytes) -> cython.int:
     """Convert a 4-byte error tag into an integer code.
 
     >>> tag_to_code(b'test')
@@ -40,12 +50,7 @@ cpdef tag_to_code(bytes tag):
     """
     if len(tag) != 4:
         raise ValueError("Error tags are 4 bytes.")
-    return (
-        (tag[0]) +
-        (tag[1] << 8) +
-        (tag[2] << 16) +
-        (tag[3] << 24)
-    )
+    return (tag[0]) + (tag[1] << 8) + (tag[2] << 16) + (tag[3] << 24)
 
 
 class FFmpegError(Exception):
@@ -78,8 +83,8 @@ class FFmpegError(Exception):
             args.append(filename)
             if log:
                 args.append(log)
-        super(FFmpegError, self).__init__(*args)
-        self.args = tuple(args)  # FileNotFoundError/etc. only pulls 2 args.
+        super().__init__(*args)
+        self.args = tuple(args)
 
     @property
     def filename(self):
@@ -104,14 +109,16 @@ class FFmpegError(Exception):
         if self.filename:
             msg = f"{msg}: {self.filename!r}"
         if self.log:
-            msg = f"{msg}; last error log: [{self.log[1].strip()}] {self.log[2].strip()}"
+            msg = (
+                f"{msg}; last error log: [{self.log[1].strip()}] {self.log[2].strip()}"
+            )
 
         return msg
 
 
 # Our custom error, used in callbacks.
-cdef int c_PYAV_STASHED_ERROR = tag_to_code(b"PyAV")
-cdef str PYAV_STASHED_ERROR_message = "Error in PyAV callback"
+c_PYAV_STASHED_ERROR: cython.int = tag_to_code(b"PyAV")
+PYAV_STASHED_ERROR_message: str = "Error in PyAV callback"
 
 
 # Bases for the FFmpeg-based exceptions.
@@ -128,6 +135,8 @@ class HTTPClientError(FFmpegError):
 
 
 # Tuples of (enum_name, enum_value, exc_name, exc_base).
+# tuple[str, int, str | None, Exception | none]
+# fmt: off
 _ffmpeg_specs = (
     ("BSF_NOT_FOUND", -lib.AVERROR_BSF_NOT_FOUND, "BSFNotFoundError", LookupError),
     ("BUG", -lib.AVERROR_BUG, None, RuntimeError),
@@ -156,8 +165,7 @@ _ffmpeg_specs = (
     ("HTTP_SERVER_ERROR", -lib.AVERROR_HTTP_SERVER_ERROR, "HTTPServerError", HTTPError),
     ("PYAV_CALLBACK", c_PYAV_STASHED_ERROR, "PyAVCallbackError", RuntimeError),
 )
-
-cdef sentinel = object()
+# fmt: on
 
 
 class EnumType(type):
@@ -189,59 +197,24 @@ class EnumType(type):
     def __iter__(self):
         return iter(self._all)
 
-    def __getitem__(self, key):
-        if isinstance(key, str):
-            return self._by_name[key]
 
-        if isinstance(key, int):
-            try:
-                return self._by_value[key]
-            except KeyError:
-                pass
-
-            raise KeyError(key)
-
-        if isinstance(key, self):
-            return key
-
-        raise TypeError(f"{self.__name__} indices must be str, int, or itself")
-
-    def _get(self, long value, bint create=False):
-        try:
-            return self._by_value[value]
-        except KeyError:
-            pass
-
-        if not create:
-            return
-
-        return self._create(f"{self.__name__.upper()}_{value}", value, by_value_only=True)
-
-    def get(self, key, default=None, create=False):
-        try:
-            return self[key]
-        except KeyError:
-            if create:
-                return self._get(key, create=True)
-            return default
-
-
-cdef class EnumItem:
+@cython.cclass
+class EnumItem:
     """An enumeration of FFmpeg's error types.
 
-.. attribute:: tag
+    .. attribute:: tag
 
-    The FFmpeg byte tag for the error.
+        The FFmpeg byte tag for the error.
 
-.. attribute:: strerror
+    .. attribute:: strerror
 
-    The error message that would be returned.
+        The error message that would be returned.
+    """
 
-"""
-    cdef readonly str name
-    cdef readonly int value
+    name = cython.declare(str, visibility="readonly")
+    value = cython.declare(cython.int, visibility="readonly")
 
-    def __cinit__(self, sentinel_, str name, int value, doc=None):
+    def __cinit__(self, sentinel_, name: str, value: cython.int, doc=None):
         if sentinel_ is not sentinel:
             raise RuntimeError(f"Cannot instantiate {self.__class__.__name__}.")
 
@@ -263,42 +236,25 @@ cdef class EnumItem:
         return code_to_tag(self.value)
 
 
-ErrorType = EnumType("ErrorType", (EnumItem, ), {"__module__": __name__}, [x[:2] for x in _ffmpeg_specs])
+ErrorType = EnumType(
+    "ErrorType", (EnumItem,), {"__module__": __name__}, [x[:2] for x in _ffmpeg_specs]
+)
 
 
 for enum in ErrorType:
-    # Mimic the errno module.
+    # Mimick the errno module.
     globals()[enum.name] = enum
     if enum.value == c_PYAV_STASHED_ERROR:
         enum.strerror = PYAV_STASHED_ERROR_message
     else:
         enum.strerror = lib.av_err2str(-enum.value)
 
-
-# Mimic the builtin exception types.
-# See https://www.python.org/dev/peps/pep-3151/#new-exception-classes
-# Use the named ones we have, otherwise default to OSError for anything in errno.
-
-# See this command for the count of POSIX codes used:
-#
-#    egrep -IR 'AVERROR\(E[A-Z]+\)' vendor/ffmpeg-4.2 |\
-#        sed -E 's/.*AVERROR\((E[A-Z]+)\).*/\1/' | \
-#        sort | uniq -c
-#
-# The biggest ones that don't map to PEP 3151 builtins:
-#
-#    2106 EINVAL -> ValueError
-#     649 EIO    -> IOError (if it is distinct from OSError)
-#    4080 ENOMEM -> MemoryError
-#     340 ENOSYS -> NotImplementedError
-#      35 ERANGE -> OverflowError
-
-classes = {}
+classes: dict = {}
 
 
 def _extend_builtin(name, codes):
     base = getattr(__builtins__, name, OSError)
-    cls = type(name, (FFmpegError, base), dict(__module__=__name__))
+    cls = type(name, (FFmpegError, base), {"__module__": __name__})
 
     # Register in builder.
     for code in codes:
@@ -311,30 +267,56 @@ def _extend_builtin(name, codes):
     return cls
 
 
-# PEP 3151 builtins.
 _extend_builtin("PermissionError", (errno.EACCES, errno.EPERM))
-_extend_builtin("BlockingIOError", (errno.EAGAIN, errno.EALREADY, errno.EINPROGRESS, errno.EWOULDBLOCK))
-_extend_builtin("ChildProcessError", (errno.ECHILD, ))
-_extend_builtin("ConnectionAbortedError", (errno.ECONNABORTED, ))
-_extend_builtin("ConnectionRefusedError", (errno.ECONNREFUSED, ))
-_extend_builtin("ConnectionResetError", (errno.ECONNRESET, ))
-_extend_builtin("FileExistsError", (errno.EEXIST, ))
-_extend_builtin("InterruptedError", (errno.EINTR, ))
-_extend_builtin("IsADirectoryError", (errno.EISDIR, ))
-_extend_builtin("FileNotFoundError", (errno.ENOENT, ))
-_extend_builtin("NotADirectoryError", (errno.ENOTDIR, ))
+_extend_builtin(
+    "BlockingIOError",
+    (errno.EAGAIN, errno.EALREADY, errno.EINPROGRESS, errno.EWOULDBLOCK),
+)
+_extend_builtin("ChildProcessError", (errno.ECHILD,))
+_extend_builtin("ConnectionAbortedError", (errno.ECONNABORTED,))
+_extend_builtin("ConnectionRefusedError", (errno.ECONNREFUSED,))
+_extend_builtin("ConnectionResetError", (errno.ECONNRESET,))
+_extend_builtin("FileExistsError", (errno.EEXIST,))
+_extend_builtin("InterruptedError", (errno.EINTR,))
+_extend_builtin("IsADirectoryError", (errno.EISDIR,))
+_extend_builtin("FileNotFoundError", (errno.ENOENT,))
+_extend_builtin("NotADirectoryError", (errno.ENOTDIR,))
 _extend_builtin("BrokenPipeError", (errno.EPIPE, errno.ESHUTDOWN))
-_extend_builtin("ProcessLookupError", (errno.ESRCH, ))
-_extend_builtin("TimeoutError", (errno.ETIMEDOUT, ))
-
-# Other obvious ones.
-_extend_builtin("ValueError", (errno.EINVAL, ))
-_extend_builtin("MemoryError", (errno.ENOMEM, ))
-_extend_builtin("NotImplementedError", (errno.ENOSYS, ))
-_extend_builtin("OverflowError", (errno.ERANGE, ))
-
-# The rest of them (for now)
+_extend_builtin("ProcessLookupError", (errno.ESRCH,))
+_extend_builtin("TimeoutError", (errno.ETIMEDOUT,))
+_extend_builtin("MemoryError", (errno.ENOMEM,))
+_extend_builtin("NotImplementedError", (errno.ENOSYS,))
+_extend_builtin("OverflowError", (errno.ERANGE,))
 _extend_builtin("OSError", [code for code in errno.errorcode if code not in classes])
+
+
+class ArgumentError(FFmpegError):
+    def __str__(self):
+        msg = ""
+        if self.strerror is not None:
+            msg = f"{msg}{self.strerror}"
+        if self.filename:
+            msg = f"{msg}: {self.filename!r}"
+        if self.errno is not None:
+            msg = f"{msg} returned {self.errno}"
+        if self.log:
+            msg = (
+                f"{msg}; last error log: [{self.log[1].strip()}] {self.log[2].strip()}"
+            )
+
+        return msg
+
+
+class UndefinedError(FFmpegError):
+    """Fallback exception type in case FFmpeg returns an error we don't know about."""
+
+    pass
+
+
+classes[errno.EINVAL] = ArgumentError
+globals()["ArgumentError"] = ArgumentError
+__all__.append("ArgumentError")
+
 
 # Classes for the FFmpeg errors.
 for enum_name, code, name, base in _ffmpeg_specs:
@@ -360,10 +342,12 @@ del _ffmpeg_specs
 
 
 # Storage for stashing.
-cdef object _local = local()
-cdef int _err_count = 0
+_local: object = local()
+_err_count: cython.int = 0
 
-cdef int stash_exception(exc_info=None):
+
+@cython.cfunc
+def stash_exception(exc_info=None) -> cython.int:
     global _err_count
 
     existing = getattr(_local, "exc_info", None)
@@ -380,9 +364,12 @@ cdef int stash_exception(exc_info=None):
     return -c_PYAV_STASHED_ERROR
 
 
-cdef int _last_log_count = 0
+_last_log_count: cython.int = 0
 
-cpdef int err_check(int res, filename=None) except -1:
+
+@cython.ccall
+@cython.exceptval(-1, check=False)
+def err_check(res: cython.int, filename=None) -> cython.int:
     """Raise appropriate exceptions from library return code."""
 
     global _err_count
@@ -394,7 +381,7 @@ cpdef int err_check(int res, filename=None) except -1:
         if exc_info is not None:
             _err_count -= 1
             _local.exc_info = None
-            raise exc_info[0], exc_info[1], exc_info[2]
+            raise exc_info[1].with_traceback(exc_info[2])
 
     if res >= 0:
         return res
@@ -407,9 +394,11 @@ cpdef int err_check(int res, filename=None) except -1:
     else:
         log = None
 
-    cdef int code = -res
-    cdef char* error_buffer = <char*>malloc(lib.AV_ERROR_MAX_STRING_SIZE * sizeof(char))
-    if error_buffer == NULL:
+    code: cython.int = -res
+    error_buffer: cython.p_char = cython.cast(
+        cython.p_char, malloc(lib.AV_ERROR_MAX_STRING_SIZE * cython.sizeof(char))
+    )
+    if error_buffer == cython.NULL:
         raise MemoryError()
 
     try:
@@ -424,8 +413,3 @@ cpdef int err_check(int res, filename=None) except -1:
         raise cls(code, message, filename, log)
     finally:
         free(error_buffer)
-
-
-class UndefinedError(FFmpegError):
-    """Fallback exception type in case FFmpeg returns an error we don't know about."""
-    pass
