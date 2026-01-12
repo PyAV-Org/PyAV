@@ -368,3 +368,21 @@ cdef class VideoCodecContext(CodecContext):
     @qmax.setter
     def qmax(self, value):
         self.ptr.qmax = value
+
+    @property
+    def global_quality(self):
+        """
+        Global quality for codecs which cannot change it per frame.
+        For example Intel QSV encoders like hevc_qsv.
+
+        Wraps :ffmpeg:`AVCodecContext.global_quality`.
+
+        :type: int
+        """
+        FF_QP2LAMBDA = 118 # from avutil.h
+        return int(self.ptr.global_quality / FF_QP2LAMBDA)
+
+    @global_quality.setter
+    def global_quality(self, value):
+        FF_QP2LAMBDA = 118 # from avutil.h
+        self.ptr.global_quality = int(value * FF_QP2LAMBDA)

@@ -29,6 +29,7 @@ class VideoCodecContext(CodecContext):
     qmin: int
     qmax: int
     type: Literal["video"]
+    global_quality: int
 
     def encode(self, frame: VideoFrame | None = None) -> list[Packet]: ...
     def encode_lazy(self, frame: VideoFrame | None = None) -> Iterator[Packet]: ...
