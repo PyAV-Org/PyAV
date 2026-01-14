@@ -4,6 +4,7 @@ from av.codec.context cimport CodecContext
 from av.container.core cimport Container
 from av.frame cimport Frame
 from av.packet cimport Packet
+from av.frameindex cimport FrameIndex
 
 
 cdef class Stream:
@@ -15,6 +16,8 @@ cdef class Stream:
 
     # CodecContext attributes.
     cdef readonly CodecContext codec_context
+
+    cdef readonly FrameIndex frame_index
 
     # Private API.
     cdef _init(self, Container, lib.AVStream*, CodecContext)

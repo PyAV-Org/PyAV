@@ -4,6 +4,7 @@ from typing import Literal, cast
 
 from .codec import Codec, CodecContext
 from .container import Container
+from .frameindex import FrameIndex
 
 class Disposition(Flag):
     default = cast(int, ...)
@@ -32,6 +33,7 @@ class Stream:
     codec: Codec
     codec_context: CodecContext
     metadata: dict[str, str]
+    frame_index: FrameIndex
     id: int
     profiles: list[str]
     profile: str | None
