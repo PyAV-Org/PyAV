@@ -1,7 +1,5 @@
 cimport libav as lib
 
-import weakref
-
 from av.audio.frame cimport alloc_audio_frame
 from av.dictionary cimport _Dictionary
 from av.dictionary import Dictionary
@@ -17,7 +15,7 @@ cdef object _cinit_sentinel = object()
 
 cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterContext *ptr):
     cdef FilterContext self = FilterContext(_cinit_sentinel)
-    self._graph = weakref.ref(graph)
+    self._graph = graph
     self.filter = filter
     self.ptr = ptr
     return self
@@ -79,10 +77,7 @@ cdef class FilterContext:
     
     @property
     def graph(self):
-        if (graph := self._graph()):
-            return graph
-        else:
-            raise RuntimeError("graph is unallocated")
+        return self._graph
 
     def push(self, Frame frame):
         cdef int res
