@@ -1,13 +1,17 @@
 
-import cython
 from cython.cimports import libav as lib
 
 cdef object _cinit_bypass_sentinel = object()
 
+cdef IndexEntry wrap_index_entry(lib.AVIndexEntry *ptr):
+    cdef IndexEntry obj = IndexEntry(_cinit_bypass_sentinel)
+    obj._init(ptr)
+    return obj
+
 cdef class IndexEntry:
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_bypass_sentinel:
-            raise RuntimeError("cannot manually instatiate IndexEntry")
+            raise RuntimeError("cannot manually instantiate IndexEntry")
 
     cdef _init(self, lib.AVIndexEntry *ptr):
         self.ptr = ptr
