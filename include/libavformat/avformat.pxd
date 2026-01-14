@@ -359,4 +359,5 @@ cdef extern from "libavformat/avformat.h" nogil:
         int min_distance
 
     cdef AVIndexEntry *avformat_index_get_entry(AVStream *st, int idx)
+    cdef int avformat_index_get_entries_count(AVStream *st)
     cdef int av_index_search_timestamp(AVStream *st, int64_t timestamp, int flags)
