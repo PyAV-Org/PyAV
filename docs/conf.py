@@ -27,7 +27,7 @@ templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
 project = "PyAV"
-copyright = "2025, The PyAV Team"
+copyright = "2026, The PyAV Team"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
