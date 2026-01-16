@@ -62,7 +62,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:\cibw\vendor\bin -w {dest_dir} {wheel}
-          CIBW_SKIP: "pp* cp312* cp313* cp314*"
+          CIBW_BUILD: "cp310* cp311* cp314t*"
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: pytest numpy
         run: |

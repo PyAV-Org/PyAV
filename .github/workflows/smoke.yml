@@ -7,12 +7,14 @@ on:
       - '**.md'
       - '**.rst'
       - '**.txt'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches: main
     paths-ignore:
       - '**.md'
       - '**.rst'
       - '**.txt'
+      - '.github/workflows/tests.yml'
 jobs:
   style:
     runs-on: ubuntu-slim
