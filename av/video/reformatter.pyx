@@ -165,12 +165,11 @@ cdef class VideoReformatter:
 
         if src_colorspace != dst_colorspace or src_color_range != dst_color_range:
             with nogil:
-                # Casts for const-ness, because Cython isn't expressive enough.
                 ret = lib.sws_getColorspaceDetails(
                     self.ptr,
-                    <int**>&inv_tbl,
+                    &inv_tbl,
                     &src_colorspace_range,
-                    <int**>&tbl,
+                    &tbl,
                     &dst_colorspace_range,
                     &brightness,
                     &contrast,
@@ -210,8 +209,7 @@ cdef class VideoReformatter:
         with nogil:
             lib.sws_scale(
                 self.ptr,
-                # Cast for const-ness, because Cython isn't expressive enough.
-                <const uint8_t**>frame.ptr.data,
+                frame.ptr.data,
                 frame.ptr.linesize,
                 0,  # slice Y
                 frame.ptr.height,
