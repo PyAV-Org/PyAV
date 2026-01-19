@@ -1,31 +1,39 @@
+import cython
+from cython import uint as cuint
 
-cdef object _cinit_bypass_sentinel = object()
+_cinit_bypass_sentinel = cython.declare(object, object())
 
-cdef VideoFormat get_video_format(lib.AVPixelFormat c_format, unsigned int width, unsigned int height):
+
+@cython.cfunc
+def get_video_format(
+    c_format: lib.AVPixelFormat, width: cuint, height: cuint
+) -> VideoFormat | None:
     if c_format == lib.AV_PIX_FMT_NONE:
         return None
 
-    cdef VideoFormat format = VideoFormat.__new__(VideoFormat, _cinit_bypass_sentinel)
+    format: VideoFormat = VideoFormat.__new__(VideoFormat, _cinit_bypass_sentinel)
     format._init(c_format, width, height)
     return format
 
-cdef lib.AVPixelFormat get_pix_fmt(const char *name) except lib.AV_PIX_FMT_NONE:
+
+@cython.cfunc
+@cython.exceptval(lib.AV_PIX_FMT_NONE, check=False)
+def get_pix_fmt(name: cython.p_const_char) -> lib.AVPixelFormat:
     """Wrapper for lib.av_get_pix_fmt with error checking."""
 
-    cdef lib.AVPixelFormat pix_fmt = lib.av_get_pix_fmt(name)
-
+    pix_fmt: lib.AVPixelFormat = lib.av_get_pix_fmt(name)
     if pix_fmt == lib.AV_PIX_FMT_NONE:
         raise ValueError("not a pixel format: %r" % name)
-
     return pix_fmt
 
 
-cdef class VideoFormat:
+@cython.cclass
+class VideoFormat:
     """
 
-        >>> format = VideoFormat('rgb24')
-        >>> format.name
-        'rgb24'
+    >>> format = VideoFormat('rgb24')
+    >>> format.name
+    'rgb24'
 
     """
 
@@ -33,23 +41,22 @@ cdef class VideoFormat:
         if name is _cinit_bypass_sentinel:
             return
 
-        cdef VideoFormat other
         if isinstance(name, VideoFormat):
-            other = <VideoFormat>name
+            other: VideoFormat = cython.cast(VideoFormat, name)
             self._init(other.pix_fmt, width or other.width, height or other.height)
             return
 
-        cdef lib.AVPixelFormat pix_fmt = get_pix_fmt(name)
+        pix_fmt: lib.AVPixelFormat = get_pix_fmt(name)
         self._init(pix_fmt, width, height)
 
-    cdef _init(self, lib.AVPixelFormat pix_fmt, unsigned int width, unsigned int height):
+    @cython.cfunc
+    def _init(self, pix_fmt: lib.AVPixelFormat, width: cuint, height: cuint):
         self.pix_fmt = pix_fmt
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
         self.components = tuple(
-            VideoFormatComponent(self, i)
-            for i in range(self.ptr.nb_components)
+            VideoFormatComponent(self, i) for i in range(self.ptr.nb_components)
         )
 
     def __repr__(self):
@@ -64,54 +71,48 @@ cdef class VideoFormat:
     @property
     def name(self):
         """Canonical name of the pixel format."""
-        return <str>self.ptr.name
+        return cython.cast(str, self.ptr.name)
 
     @property
     def bits_per_pixel(self):
         return lib.av_get_bits_per_pixel(self.ptr)
 
     @property
-    def padded_bits_per_pixel(self): return lib.av_get_padded_bits_per_pixel(self.ptr)
+    def padded_bits_per_pixel(self):
+        return lib.av_get_padded_bits_per_pixel(self.ptr)
 
     @property
     def is_big_endian(self):
         """Pixel format is big-endian."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BE)
 
-
     @property
     def has_palette(self):
         """Pixel format has a palette in data[1], values are indexes in this palette."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PAL)
-
 
     @property
     def is_bit_stream(self):
         """All values of a component are bit-wise packed end to end."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BITSTREAM)
 
-
-    # Skipping PIX_FMT_HWACCEL
-    # """Pixel format is an HW accelerated format."""
-
     @property
     def is_planar(self):
         """At least one pixel component is not in the first data plane."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_PLANAR)
 
-
     @property
     def is_rgb(self):
         """The pixel format contains RGB-like data (as opposed to YUV/grayscale)."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_RGB)
-    
 
     @property
     def is_bayer(self):
         """The pixel format contains Bayer data."""
         return bool(self.ptr.flags & lib.AV_PIX_FMT_FLAG_BAYER)
 
-    cpdef chroma_width(self, int luma_width=0):
+    @cython.ccall
+    def chroma_width(self, luma_width: cython.int = 0):
         """chroma_width(luma_width=0)
 
         Width of a chroma plane relative to a luma plane.
@@ -122,7 +123,8 @@ cdef class VideoFormat:
         luma_width = luma_width or self.width
         return -((-luma_width) >> self.ptr.log2_chroma_w) if luma_width else 0
 
-    cpdef chroma_height(self, int luma_height=0):
+    @cython.ccall
+    def chroma_height(self, luma_height: cython.int = 0):
         """chroma_height(luma_height=0)
 
         Height of a chroma plane relative to a luma plane.
@@ -134,11 +136,12 @@ cdef class VideoFormat:
         return -((-luma_height) >> self.ptr.log2_chroma_h) if luma_height else 0
 
 
-cdef class VideoFormatComponent:
-    def __cinit__(self, VideoFormat format, size_t index):
+@cython.cclass
+class VideoFormatComponent:
+    def __cinit__(self, format: VideoFormat, index: cython.size_t):
         self.format = format
         self.index = index
-        self.ptr = &format.ptr.comp[index]
+        self.ptr = cython.address(format.ptr.comp[index])
 
     @property
     def plane(self):
@@ -153,22 +156,25 @@ cdef class VideoFormatComponent:
     @property
     def is_alpha(self):
         """Is this component an alpha channel?"""
-        return ((self.index == 1 and self.format.ptr.nb_components == 2) or
-                (self.index == 3 and self.format.ptr.nb_components == 4))
+        return (self.index == 1 and self.format.ptr.nb_components == 2) or (
+            self.index == 3 and self.format.ptr.nb_components == 4
+        )
 
     @property
     def is_luma(self):
         """Is this component a luma channel?"""
         return self.index == 0 and (
-            self.format.ptr.nb_components == 1 or
-            self.format.ptr.nb_components == 2 or
-            not self.format.is_rgb
+            self.format.ptr.nb_components == 1
+            or self.format.ptr.nb_components == 2
+            or not self.format.is_rgb
         )
 
     @property
     def is_chroma(self):
         """Is this component a chroma channel?"""
-        return (self.index == 1 or self.index == 2) and (self.format.ptr.log2_chroma_w or self.format.ptr.log2_chroma_h)
+        return (self.index == 1 or self.index == 2) and (
+            self.format.ptr.log2_chroma_w or self.format.ptr.log2_chroma_h
+        )
 
     @property
     def width(self):
@@ -190,7 +196,7 @@ cdef class VideoFormatComponent:
 
 
 names = set()
-cdef const lib.AVPixFmtDescriptor *desc = NULL
+desc = cython.declare(cython.pointer[lib.AVPixFmtDescriptor], cython.NULL)
 while True:
     desc = lib.av_pix_fmt_desc_next(desc)
     if not desc:
