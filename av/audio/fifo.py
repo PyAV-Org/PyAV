@@ -1,8 +1,10 @@
-from av.audio.frame cimport alloc_audio_frame
-from av.error cimport err_check
+import cython
+from cython.cimports.av.audio.frame import alloc_audio_frame
+from cython.cimports.av.error import err_check
 
 
-cdef class AudioFifo:
+@cython.cclass
+class AudioFifo:
     """A simple audio sample FIFO (First In First Out) buffer."""
 
     def __repr__(self):
@@ -22,7 +24,8 @@ cdef class AudioFifo:
         if self.ptr:
             lib.av_audio_fifo_free(self.ptr)
 
-    cpdef write(self, AudioFrame frame):
+    @cython.ccall
+    def write(self, frame: AudioFrame | None):
         """write(frame)
 
         Push a frame of samples into the queue.
@@ -45,7 +48,6 @@ cdef class AudioFifo:
             return
 
         if not self.ptr:
-
             # Hold onto a copy of the attributes of the first frame to populate
             # output frames with.
             self.template = alloc_audio_frame()
@@ -60,9 +62,10 @@ cdef class AudioFifo:
                 self.pts_per_sample = 0
 
             self.ptr = lib.av_audio_fifo_alloc(
-                <lib.AVSampleFormat>frame.ptr.format,
+                cython.cast(lib.AVSampleFormat, frame.ptr.format),
                 frame.layout.nb_channels,
-                frame.ptr.nb_samples * 2,  # Just a default number of samples; it will adjust.
+                frame.ptr.nb_samples
+                * 2,  # Just a default number of samples; it will adjust.
             )
 
             if not self.ptr:
@@ -70,34 +73,43 @@ cdef class AudioFifo:
 
         # Make sure nothing changed.
         elif (
-            frame.ptr.format != self.template.ptr.format or
-            # TODO: frame.ptr.ch_layout != self.template.ptr.ch_layout or
-            frame.ptr.sample_rate != self.template.ptr.sample_rate or
-            (frame._time_base.num and self.template._time_base.num and (
-                frame._time_base.num != self.template._time_base.num or
-                frame._time_base.den != self.template._time_base.den
-            ))
+            frame.ptr.format != self.template.ptr.format
+            or frame.ptr.sample_rate != self.template.ptr.sample_rate
+            or (
+                frame._time_base.num
+                and self.template._time_base.num
+                and (
+                    frame._time_base.num != self.template._time_base.num
+                    or frame._time_base.den != self.template._time_base.den
+                )
+            )
         ):
             raise ValueError("Frame does not match AudioFifo parameters.")
 
         # Assert that the PTS are what we expect.
-        cdef int64_t expected_pts
+        expected_pts = cython.declare(int64_t)
         if self.pts_per_sample and frame.ptr.pts != lib.AV_NOPTS_VALUE:
-            expected_pts = <int64_t>(self.pts_per_sample * self.samples_written)
+            expected_pts = cython.cast(
+                int64_t, self.pts_per_sample * self.samples_written
+            )
             if frame.ptr.pts != expected_pts:
                 raise ValueError(
-                    "Frame.pts (%d) != expected (%d); fix or set to None." % (frame.ptr.pts, expected_pts)
+                    "Frame.pts (%d) != expected (%d); fix or set to None."
+                    % (frame.ptr.pts, expected_pts)
                 )
 
-        err_check(lib.av_audio_fifo_write(
-            self.ptr,
-            <void **>frame.ptr.extended_data,
-            frame.ptr.nb_samples,
-        ))
+        err_check(
+            lib.av_audio_fifo_write(
+                self.ptr,
+                cython.cast(cython.pointer[cython.p_void], frame.ptr.extended_data),
+                frame.ptr.nb_samples,
+            )
+        )
 
         self.samples_written += frame.ptr.nb_samples
 
-    cpdef read(self, int samples=0, bint partial=False):
+    @cython.ccall
+    def read(self, samples: cython.int = 0, partial: cython.bint = False):
         """read(samples=0, partial=False)
 
         Read samples from the queue.
@@ -115,7 +127,7 @@ cdef class AudioFifo:
         if not self.ptr:
             return
 
-        cdef int buffered_samples = lib.av_audio_fifo_size(self.ptr)
+        buffered_samples: cython.int = lib.av_audio_fifo_size(self.ptr)
         if buffered_samples < 1:
             return
 
@@ -127,31 +139,35 @@ cdef class AudioFifo:
             else:
                 return
 
-        cdef AudioFrame frame = alloc_audio_frame()
+        frame: AudioFrame = alloc_audio_frame()
         frame._copy_internal_attributes(self.template)
         frame._init(
-            <lib.AVSampleFormat>self.template.ptr.format,
-            <lib.AVChannelLayout>self.template.ptr.ch_layout,
+            cython.cast(lib.AVSampleFormat, self.template.ptr.format),
+            cython.cast(lib.AVChannelLayout, self.template.ptr.ch_layout),
             samples,
             1,  # Align?
         )
 
-        err_check(lib.av_audio_fifo_read(
-            self.ptr,
-            <void **>frame.ptr.extended_data,
-            samples,
-        ))
+        err_check(
+            lib.av_audio_fifo_read(
+                self.ptr,
+                cython.cast(cython.pointer[cython.p_void], frame.ptr.extended_data),
+                samples,
+            )
+        )
 
         if self.pts_per_sample:
-            frame.ptr.pts = <uint64_t>(self.pts_per_sample * self.samples_read)
+            frame.ptr.pts = cython.cast(
+                uint64_t, self.pts_per_sample * self.samples_read
+            )
         else:
             frame.ptr.pts = lib.AV_NOPTS_VALUE
 
         self.samples_read += samples
-
         return frame
 
-    cpdef read_many(self, int samples, bint partial=False):
+    @cython.ccall
+    def read_many(self, samples: cython.int, partial: cython.bint = False):
         """read_many(samples, partial=False)
 
         Read as many frames as we can.
@@ -162,8 +178,8 @@ cdef class AudioFifo:
 
         """
 
-        cdef AudioFrame frame
-        frames = []
+        frame: AudioFrame
+        frames: list = []
         while True:
             frame = self.read(samples, partial=partial)
             if frame is not None:
@@ -176,19 +192,15 @@ cdef class AudioFifo:
     @property
     def format(self):
         """The :class:`.AudioFormat` of this FIFO."""
-        if not self.ptr:
-            raise AttributeError(f"'{__name__}.AudioFifo' object has no attribute 'format'")
         return self.template.format
+
     @property
     def layout(self):
         """The :class:`.AudioLayout` of this FIFO."""
-        if not self.ptr:
-            raise AttributeError(f"'{__name__}.AudioFifo' object has no attribute 'layout'")
         return self.template.layout
+
     @property
     def sample_rate(self):
-        if not self.ptr:
-            raise AttributeError(f"'{__name__}.AudioFifo' object has no attribute 'sample_rate'")
         return self.template.sample_rate
 
     @property
