@@ -28,20 +28,14 @@ from av.logging import Capture as LogCapture
 
 cdef object _cinit_sentinel = object()
 
-
-# We want to use the monotonic clock if it is available.
-cdef object clock = getattr(time, "monotonic", time.time)
-
-cdef int interrupt_cb (void *p) noexcept nogil:
+cdef int interrupt_cb(void *p) noexcept nogil:
     cdef timeout_info info = dereference(<timeout_info*> p)
     if info.timeout < 0:  # timeout < 0 means no timeout
         return 0
 
     cdef double current_time
     with gil:
-        current_time = clock()
-
-        # Check if the clock has been changed.
+        current_time = time.monotonic()
         if current_time < info.start_time:
             # Raise this when we get back to Python.
             stash_exception((RuntimeError, RuntimeError("Clock has been changed to before timeout start"), None))
@@ -330,7 +324,7 @@ cdef class Container:
             self.interrupt_callback_info.timeout = timeout
 
     cdef start_timeout(self):
-        self.interrupt_callback_info.start_time = clock()
+        self.interrupt_callback_info.start_time = time.monotonic()
 
     cdef _assert_open(self):
         if self.ptr == NULL:

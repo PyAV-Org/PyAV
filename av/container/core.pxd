@@ -14,7 +14,6 @@ ctypedef struct timeout_info:
 
 
 cdef class Container:
-
     cdef readonly bint writeable
     cdef lib.AVFormatContext *ptr
 
