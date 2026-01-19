@@ -15,11 +15,6 @@ def _decode(s: cython.pointer[cython.char], encoding, errors) -> str:
 
 
 @cython.cfunc
-def _encode(s, encoding, errors) -> bytes:
-    return s.encode(encoding, errors)
-
-
-@cython.cfunc
 def avdict_to_dict(
     input: cython.pointer[lib.AVDictionary], encoding: str, errors: str
 ) -> dict:
