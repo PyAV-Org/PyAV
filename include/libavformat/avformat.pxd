@@ -6,7 +6,6 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int   avformat_version()
     cdef char* avformat_configuration()
     cdef char* avformat_license()
-    cdef void  avformat_network_init()
 
     cdef int64_t INT64_MIN
 
