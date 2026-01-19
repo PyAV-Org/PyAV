@@ -3,15 +3,6 @@ import cython.cimports.libav as lib
 from cython.cimports.av.stream import Stream
 
 
-def _flatten(input_):
-    for x in input_:
-        if isinstance(x, (tuple, list)):
-            for y in _flatten(x):
-                yield y
-        else:
-            yield x
-
-
 @cython.cfunc
 def _get_media_type_enum(type: str) -> lib.AVMediaType:
     if type == "video":
@@ -131,34 +122,35 @@ class StreamContainer:
         If nothing is selected, then all streams are returned.
 
         """
+        selection: list = []
 
-        selection = []
-
-        for x in _flatten((args, kwargs)):
+        def process(x):
             if x is None:
                 pass
-
             elif isinstance(x, Stream):
                 selection.append(x)
-
             elif isinstance(x, int):
                 selection.append(self._streams[x])
-
+            elif isinstance(x, (tuple, list)):
+                for item in x:
+                    process(item)
             elif isinstance(x, dict):
                 for type_, indices in x.items():
-                    if (
-                        type_ == "streams"
-                    ):  # For compatibility with the pseudo signature
-                        streams = self._streams
-                    else:
-                        streams = getattr(self, type_)
+                    # For compatibility with the pseudo signature
+                    streams = (
+                        self._streams if type_ == "streams" else getattr(self, type_)
+                    )
                     if not isinstance(indices, (tuple, list)):
                         indices = [indices]
                     for i in indices:
                         selection.append(streams[i])
-
             else:
                 raise TypeError("Argument must be Stream or int.", type(x))
+
+        for arg in args:
+            process(arg)
+        if kwargs:
+            process(kwargs)
 
         return selection or self._streams[:]
 
