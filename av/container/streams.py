@@ -1,4 +1,6 @@
-cimport libav as lib
+import cython
+import cython.cimports.libav as lib
+from cython.cimports.av.stream import Stream
 
 
 def _flatten(input_):
@@ -9,7 +11,9 @@ def _flatten(input_):
         else:
             yield x
 
-cdef lib.AVMediaType _get_media_type_enum(str type):
+
+@cython.cfunc
+def _get_media_type_enum(type: str) -> lib.AVMediaType:
     if type == "video":
         return lib.AVMEDIA_TYPE_VIDEO
     elif type == "audio":
@@ -23,7 +27,28 @@ cdef lib.AVMediaType _get_media_type_enum(str type):
     else:
         raise ValueError(f"Invalid stream type: {type}")
 
-cdef class StreamContainer:
+
+@cython.cfunc
+@cython.exceptval(check=False)
+def _get_best_stream_index(
+    fmtctx: cython.pointer[lib.AVFormatContext],
+    enumtype: lib.AVMediaType,
+    related: Stream | None,
+) -> cython.int:
+    stream_index: cython.int
+
+    if related is None:
+        stream_index = lib.av_find_best_stream(fmtctx, enumtype, -1, -1, cython.NULL, 0)
+    else:
+        stream_index = lib.av_find_best_stream(
+            fmtctx, enumtype, -1, related.ptr.index, cython.NULL, 0
+        )
+
+    return stream_index
+
+
+@cython.cclass
+class StreamContainer:
     """
 
     A tuple-like container of :class:`Stream`.
@@ -40,30 +65,11 @@ cdef class StreamContainer:
 
     def __cinit__(self):
         self._streams = []
-        self.video = ()
-        self.audio = ()
-        self.subtitles = ()
-        self.data = ()
-        self.attachments = ()
-        self.other = ()
 
-    cdef add_stream(self, Stream stream):
-
+    @cython.cfunc
+    def add_stream(self, stream: Stream) -> cython.void:
         assert stream.ptr.index == len(self._streams)
         self._streams.append(stream)
-
-        if stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_VIDEO:
-            self.video = self.video + (stream, )
-        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_AUDIO:
-            self.audio = self.audio + (stream, )
-        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
-            self.subtitles = self.subtitles + (stream, )
-        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_ATTACHMENT:
-            self.attachments = self.attachments + (stream, )
-        elif stream.ptr.codecpar.codec_type == lib.AVMEDIA_TYPE_DATA:
-            self.data = self.data + (stream, )
-        else:
-            self.other = self.other + (stream, )
 
     # Basic tuple interface.
     def __len__(self):
@@ -77,6 +83,26 @@ cdef class StreamContainer:
             return self.get(index)[0]
         else:
             return self.get(index)
+
+    @property
+    def video(self):
+        return tuple(s for s in self._streams if s.type == "video")
+
+    @property
+    def audio(self):
+        return tuple(s for s in self._streams if s.type == "audio")
+
+    @property
+    def subtitles(self):
+        return tuple(s for s in self._streams if s.type == "subtitle")
+
+    @property
+    def data(self):
+        return tuple(s for s in self._streams if s.type == "data")
+
+    @property
+    def attachments(self):
+        return tuple(s for s in self._streams if s.type == "attachment")
 
     def get(self, *args, **kwargs):
         """get(streams=None, video=None, audio=None, subtitles=None, data=None)
@@ -120,7 +146,9 @@ cdef class StreamContainer:
 
             elif isinstance(x, dict):
                 for type_, indices in x.items():
-                    if type_ == "streams":  # For compatibility with the pseudo signature
+                    if (
+                        type_ == "streams"
+                    ):  # For compatibility with the pseudo signature
                         streams = self._streams
                     else:
                         streams = getattr(self, type_)
@@ -134,17 +162,7 @@ cdef class StreamContainer:
 
         return selection or self._streams[:]
 
-    cdef int _get_best_stream_index(self, Container container, lib.AVMediaType type_enum, Stream related) noexcept:
-        cdef int stream_index
-
-        if related is None:
-            stream_index = lib.av_find_best_stream(container.ptr, type_enum, -1, -1, NULL, 0)
-        else:
-            stream_index = lib.av_find_best_stream(container.ptr, type_enum, -1, related.ptr.index, NULL, 0)
-
-        return stream_index
-
-    def best(self, str type, /, Stream related = None):
+    def best(self, type: str, /, related: Stream | None = None):
         """best(type: Literal["video", "audio", "subtitle", "attachment", "data"], /, related: Stream | None)
         Finds the "best" stream in the file. Wraps :ffmpeg:`av_find_best_stream`. Example::
 
@@ -155,14 +173,14 @@ cdef class StreamContainer:
         :return: The best stream of the specified type
         :rtype: Stream | None
         """
-        cdef type_enum = _get_media_type_enum(type)
-
         if len(self._streams) == 0:
             return None
 
-        cdef container = self._streams[0].container
-
-        cdef int stream_index = self._get_best_stream_index(container, type_enum, related)
+        first_stream: Stream = cython.cast(Stream, self._streams[0])
+        container: cython.pointer[lib.AVFormatContext] = first_stream.container.ptr
+        stream_index: cython.int = _get_best_stream_index(
+            container, _get_media_type_enum(type), related
+        )
 
         if stream_index < 0:
             return None
