@@ -36,7 +36,9 @@ static void logging_callback(void *ptr, int level, const char *fmt, va_list vl) 
         pthread_mutex_lock(&json_mutex);
         #endif
 
-        strncpy(json_buffer, json_start, sizeof(json_buffer) - 1);
+        size_t len = strnlen(json_start, sizeof(json_buffer) - 1);
+        memcpy(json_buffer, json_start, len);
+        json_buffer[len] = '\0';
         json_captured = 1;
 
         #ifdef _WIN32
