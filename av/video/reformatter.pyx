@@ -157,8 +157,8 @@ cdef class VideoReformatter:
         # We want to change the colorspace/color_range transforms.
         # We do that by grabbing all of the current settings, changing a
         # couple, and setting them all. We need a lot of state here.
-        cdef const int *inv_tbl
-        cdef const int *tbl
+        cdef int *inv_tbl
+        cdef int *tbl
         cdef int src_colorspace_range, dst_colorspace_range
         cdef int brightness, contrast, saturation
         cdef int ret
@@ -209,7 +209,7 @@ cdef class VideoReformatter:
         with nogil:
             lib.sws_scale(
                 self.ptr,
-                frame.ptr.data,
+                <const uint8_t *const *>frame.ptr.data,
                 frame.ptr.linesize,
                 0,  # slice Y
                 frame.ptr.height,
