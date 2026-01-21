@@ -1,13 +1,13 @@
-from libc.stdint cimport int32_t
-
 from collections.abc import Mapping
 from enum import Enum
+
+import cython
+from cython.cimports.libc.stdint import int32_t
 
 from av.sidedata.encparams import VideoEncParams
 from av.sidedata.motionvectors import MotionVectors
 
-
-cdef object _cinit_bypass_sentinel = object()
+_cinit_bypass_sentinel = cython.declare(object, object())
 
 
 class Type(Enum):
@@ -17,6 +17,7 @@ class Type(Enum):
 
     From: https://github.com/FFmpeg/FFmpeg/blob/master/libavutil/frame.h
     """
+
     PANSCAN = lib.AV_FRAME_DATA_PANSCAN
     A53_CC = lib.AV_FRAME_DATA_A53_CC
     STEREO3D = lib.AV_FRAME_DATA_STEREO3D
@@ -47,7 +48,8 @@ class Type(Enum):
     VIDEO_HINT = lib.AV_FRAME_DATA_VIDEO_HINT
 
 
-cdef SideData wrap_side_data(Frame frame, int index):
+@cython.cfunc
+def wrap_side_data(frame: Frame, index: cython.int) -> SideData:
     if frame.ptr.side_data[index].type == lib.AV_FRAME_DATA_MOTION_VECTORS:
         return MotionVectors(_cinit_bypass_sentinel, frame, index)
     elif frame.ptr.side_data[index].type == lib.AV_FRAME_DATA_VIDEO_ENC_PARAMS:
@@ -56,46 +58,60 @@ cdef SideData wrap_side_data(Frame frame, int index):
         return SideData(_cinit_bypass_sentinel, frame, index)
 
 
-cdef int get_display_rotation(Frame frame):
+@cython.cfunc
+def get_display_rotation(frame: Frame) -> cython.int:
     for i in range(frame.ptr.nb_side_data):
         if frame.ptr.side_data[i].type == lib.AV_FRAME_DATA_DISPLAYMATRIX:
-            return int(lib.av_display_rotation_get(<const int32_t *>frame.ptr.side_data[i].data))
+            return int(
+                lib.av_display_rotation_get(
+                    cython.cast(
+                        cython.pointer[cython.const[int32_t]],
+                        frame.ptr.side_data[i].data,
+                    )
+                )
+            )
     return 0
 
 
-cdef class SideData(Buffer):
-    def __init__(self, sentinel, Frame frame, int index):
+@cython.cclass
+class SideData(Buffer):
+    def __init__(self, sentinel, frame: Frame, index: cython.int):
         if sentinel is not _cinit_bypass_sentinel:
-            raise RuntimeError("cannot manually instantiate SideData")
+            raise RuntimeError("cannot manually instatiate SideData")
         self.frame = frame
         self.ptr = frame.ptr.side_data[index]
         self.metadata = wrap_dictionary(self.ptr.metadata)
 
-    cdef size_t _buffer_size(self):
+    @cython.cfunc
+    def _buffer_size(self) -> cython.size_t:
         return self.ptr.size
 
-    cdef void* _buffer_ptr(self):
+    @cython.cfunc
+    def _buffer_ptr(self) -> cython.p_void:
         return self.ptr.data
 
-    cdef bint _buffer_writable(self):
+    @cython.cfunc
+    def _buffer_writable(self) -> cython.bint:
         return False
 
     def __repr__(self):
-        return f"<av.sidedata.{self.__class__.__name__} {self.ptr.size} bytes of {self.type} at 0x{<unsigned int>self.ptr.data:0x}>"
+        return f"<av.sidedata.{self.__class__.__name__} {self.ptr.size} bytes of {self.type} at 0x{cython.cast(cython.uint, self.ptr.data):0x}>"
 
     @property
     def type(self):
         return Type(self.ptr.type)
 
 
-cdef class _SideDataContainer:
-    def __init__(self, Frame frame):
+@cython.cclass
+class _SideDataContainer:
+    def __init__(self, frame: Frame):
         self.frame = frame
-        self._by_index = []
-        self._by_type = {}
+        self._by_index: list = []
+        self._by_type: dict = {}
 
-        cdef int i
-        cdef SideData data
+        i: cython.Py_ssize_t
+        data: SideData
+
         for i in range(self.frame.ptr.nb_side_data):
             data = wrap_side_data(frame, i)
             self._by_index.append(data)

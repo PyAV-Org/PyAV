@@ -1,4 +1,3 @@
-
 cimport libav as lib
 
 from av.buffer cimport Buffer
@@ -18,6 +17,5 @@ cdef int get_display_rotation(Frame frame)
 
 cdef class _SideDataContainer:
     cdef Frame frame
-
     cdef list _by_index
     cdef dict _by_type
