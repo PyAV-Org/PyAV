@@ -1,3 +1,4 @@
+# type: ignore
 """
 FFmpeg has a logging system that it uses extensively. It's very noisy, so PyAV turns it
 off by default. This unfortunately has the effect of making raised errors have less
@@ -38,13 +39,14 @@ API Reference
 
 """
 
-cimport libav as lib
-from libc.stdio cimport fprintf, stderr
-from libc.stdlib cimport free, malloc
-
 import logging
 import sys
 from threading import Lock, get_ident
+
+import cython
+import cython.cimports.libav as lib
+from cython.cimports.libc.stdio import fprintf, stderr
+from cython.cimports.libc.stdlib import free, malloc
 
 # Library levels.
 PANIC = lib.AV_LOG_PANIC  # 0
@@ -60,9 +62,9 @@ TRACE = lib.AV_LOG_TRACE
 CRITICAL = FATAL
 
 
-cpdef adapt_level(int level):
+@cython.ccall
+def adapt_level(level: cython.int):
     """Convert a library log level to a Python log level."""
-
     if level <= lib.AV_LOG_FATAL:  # Includes PANIC
         return 50  # logging.CRITICAL
     elif level <= lib.AV_LOG_ERROR:
@@ -79,7 +81,7 @@ cpdef adapt_level(int level):
         return 1
 
 
-cdef object level_threshold = None
+level_threshold = cython.declare(object, None)
 
 # ... but lets limit ourselves to WARNING (assuming nobody already did this).
 if "libav" not in logging.Logger.manager.loggerDict:
@@ -133,10 +135,10 @@ def restore_default_callback():
     lib.av_log_set_callback(lib.av_log_default_callback)
 
 
-cdef bint skip_repeated = True
-cdef skip_lock = Lock()
-cdef object last_log = None
-cdef int skip_count = 0
+skip_repeated = cython.declare(cython.bint, True)
+skip_lock = cython.declare(object, Lock())
+last_log = cython.declare(object, None)
+skip_count = cython.declare(cython.int, 0)
 
 
 def get_skip_repeated():
@@ -151,10 +153,12 @@ def set_skip_repeated(v):
 
 
 # For error reporting.
-cdef object last_error = None
-cdef int error_count = 0
+last_error = cython.declare(object, None)
+error_count = cython.declare(cython.int, 0)
 
-cpdef get_last_error():
+
+@cython.ccall
+def get_last_error():
     """Get the last log that was at least ``ERROR``."""
     if error_count:
         with skip_lock:
@@ -163,10 +167,12 @@ cpdef get_last_error():
         return 0, None
 
 
-cdef global_captures = []
-cdef thread_captures = {}
+global_captures = cython.declare(list, [])
+thread_captures = cython.declare(dict, {})
 
-cdef class Capture:
+
+@cython.cclass
+class Capture:
     """A context manager for capturing logs.
 
     :param bool local: Should logs from all threads be captured, or just one
@@ -181,12 +187,11 @@ cdef class Capture:
 
     """
 
-    cdef readonly list logs
-    cdef list captures
+    logs = cython.declare(list, visibility="readonly")
+    captures = cython.declare(list, visibility="private")
 
-    def __init__(self, bint local=True):
+    def __init__(self, local: cython.bint = True):
         self.logs = []
-
         if local:
             self.captures = thread_captures.setdefault(get_ident(), [])
         else:
@@ -197,56 +202,73 @@ cdef class Capture:
         return self.logs
 
     def __exit__(self, type_, value, traceback):
-        self.captures.pop(-1)
+        self.captures.pop()
 
 
-cdef struct log_context:
-    lib.AVClass *class_
-    const char *name
+log_context = cython.struct(
+    class_=cython.pointer[lib.AVClass],
+    name=cython.p_char,
+)
 
-cdef const char *log_context_name(void *ptr) noexcept nogil:
-    cdef log_context *obj = <log_context*>ptr
+item_name_func = cython.typedef("const char *(*item_name_func)(void *) noexcept nogil")
+
+
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def log_context_name(ptr: cython.p_void) -> cython.p_char:
+    obj: cython.pointer[log_context] = cython.cast(cython.pointer[log_context], ptr)
     return obj.name
 
-cdef lib.AVClass log_class
-log_class.item_name = log_context_name
 
-cpdef log(int level, str name, str message):
+log_class = cython.declare(lib.AVClass)
+log_class.item_name = cython.cast(item_name_func, log_context_name)
+
+
+@cython.ccall
+def log(level: cython.int, name: str, message: str):
     """Send a log through the library logging system.
 
     This is mostly for testing.
-
     """
-
-    cdef log_context *obj = <log_context*>malloc(sizeof(log_context))
-    obj.class_ = &log_class
+    obj: cython.pointer[log_context] = cython.cast(
+        cython.pointer[log_context], malloc(cython.sizeof(log_context))
+    )
+    obj.class_ = cython.address(log_class)
     obj.name = name
-    cdef bytes message_bytes = message.encode("utf-8")
+    message_bytes: bytes = message.encode("utf-8")
 
-    lib.av_log(<void*>obj, level, "%s", <char*>message_bytes)
+    lib.av_log(
+        cython.cast(cython.p_void, obj),
+        level,
+        "%s",
+        cython.cast(cython.p_char, message_bytes),
+    )
     free(obj)
 
 
-cdef log_callback_gil(int level, const char *c_name, const char *c_message):
+@cython.cfunc
+def log_callback_gil(
+    level: cython.int, c_name: cython.p_const_char, c_message: cython.p_char
+):
     global error_count
     global skip_count
     global last_log
     global last_error
 
-    name = <str>c_name if c_name is not NULL else ""
-    message = (<bytes>c_message).decode("utf8", "backslashreplace")
+    name = cython.cast(str, c_name) if c_name is not cython.NULL else ""
+    message = cython.cast(bytes, c_message).decode("utf8", "backslashreplace")
     log = (level, name, message)
 
     # We have to filter it ourselves, but we will still process it in general so
     # it is available to our error handling.
     # Note that FFmpeg's levels are backwards from Python's.
-    cdef bint is_interesting = level <= level_threshold
+    is_interesting: cython.bint = level <= level_threshold
 
     # Skip messages which are identical to the previous.
     # TODO: Be smarter about threads.
-    cdef bint is_repeated = False
-
-    cdef object repeat_log = None
+    is_repeated: cython.bint = False
+    repeat_log: object = None
 
     with skip_lock:
         if is_interesting:
@@ -263,7 +285,7 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
                     repeat_log = (
                         last_log[0],
                         last_log[1],
-                        "%s (repeated %d more times)" % (last_log[2], skip_count)
+                        "%s (repeated %d more times)" % (last_log[2], skip_count),
                     )
                 skip_count = 0
 
@@ -281,7 +303,8 @@ cdef log_callback_gil(int level, const char *c_name, const char *c_message):
         log_callback_emit(log)
 
 
-cdef log_callback_emit(log):
+@cython.cfunc
+def log_callback_emit(log):
     lib_level, name, message = log
 
     captures = thread_captures.get(get_ident()) or global_captures
@@ -296,37 +319,63 @@ cdef log_callback_emit(log):
     logger.log(py_level, message.strip())
 
 
-cdef void log_callback(void *ptr, int level, const char *format, lib.va_list args) noexcept nogil:
-    cdef bint inited = lib.Py_IsInitialized()
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def log_callback(
+    ptr: cython.p_void,
+    level: cython.int,
+    format: cython.p_const_char,
+    args: lib.va_list,
+) -> cython.void:
+    inited: cython.bint = lib.Py_IsInitialized()
     if not inited:
         return
 
-    with gil:
+    with cython.gil:
         if level > level_threshold and level != lib.AV_LOG_ERROR:
             return
 
     # Format the message.
-    cdef char message[1024]
+    message: cython.char[1024]
     lib.vsnprintf(message, 1023, format, args)
 
     # Get the name.
-    cdef const char *name = NULL
-    cdef lib.AVClass *cls = (<lib.AVClass**>ptr)[0] if ptr else NULL
+    name: cython.p_const_char = cython.NULL
+    cls: cython.pointer[lib.AVClass] = (
+        cython.cast(cython.pointer[cython.pointer[lib.AVClass]], ptr)[0]
+        if ptr
+        else cython.NULL
+    )
     if cls and cls.item_name:
         name = cls.item_name(ptr)
 
-    with gil:
+    with cython.gil:
         try:
             log_callback_gil(level, name, message)
         except Exception:
-            fprintf(stderr, "av.logging: exception while handling %s[%d]: %s\n",
-                    name, level, message)
+            fprintf(
+                stderr,
+                "av.logging: exception while handling %s[%d]: %s\n",
+                name,
+                level,
+                message,
+            )
             # For some reason lib.PyErr_PrintEx(0) won't work.
             exc, type_, tb = sys.exc_info()
             lib.PyErr_Display(exc, type_, tb)
 
 
-cdef void nolog_callback(void *ptr, int level, const char *format, lib.va_list args) noexcept nogil:
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def nolog_callback(
+    ptr: cython.p_void,
+    level: cython.int,
+    format: cython.p_const_char,
+    args: lib.va_list,
+) -> cython.void:
     pass
+
 
 lib.av_log_set_callback(nolog_callback)
