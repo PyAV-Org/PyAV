@@ -236,11 +236,11 @@ class InputContainer(Container):
         self,
         offset,
         *,
-        backward: bint = True,
-        any_frame: bint = False,
+        backward: cython.bint = True,
+        any_frame: cython.bint = False,
         stream: Stream | None = None,
-        unsupported_frame_offset: bint = False,
-        unsupported_byte_offset: bint = False,
+        unsupported_frame_offset: cython.bint = False,
+        unsupported_byte_offset: cython.bint = False,
     ):
         """seek(offset, *, backward=True, any_frame=False, stream=None)
 
