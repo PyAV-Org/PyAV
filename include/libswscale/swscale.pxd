@@ -49,11 +49,11 @@ cdef extern from "libswscale/swscale.h" nogil:
 
     cdef int sws_scale(
         SwsContext *ctx,
-        unsigned char **src_slice,
-        int *src_stride,
+        const unsigned char *const *src_slice,
+        const int *src_stride,
         int src_slice_y,
         int src_slice_h,
-        unsigned char **dst_slice,
+        unsigned char *const *dst_slice,
         int *dst_stride,
     )
 
