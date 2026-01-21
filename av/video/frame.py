@@ -158,7 +158,9 @@ def copy_bytes_to_plane(
     for row in range(start_row, end_row, step):
         i_pos = row * i_stride
         if flip_horizontal:
+            i: cython.Py_ssize_t
             for i in range(0, i_stride, bytes_per_pixel):
+                j: cython.Py_ssize_t
                 for j in range(bytes_per_pixel):
                     o_buf[o_pos + i + j] = i_buf[
                         i_pos + i_stride - i - bytes_per_pixel + j
