@@ -8,6 +8,8 @@ import numpy as np
 import pytest
 
 import av
+from av.sidedata.encparams import VideoEncParams
+from av.subtitles.subtitle import SubtitleSet
 
 from .common import TestCase, fate_suite
 
@@ -109,7 +111,7 @@ class TestDecode(TestCase):
 
         for packet in container.demux(stream):
             for frame in packet.decode():
-                assert not isinstance(frame, av.subtitles.subtitle.SubtitleSet)
+                assert not isinstance(frame, SubtitleSet)
                 assert packet.time_base == frame.time_base
                 assert stream.time_base == frame.time_base
                 return
@@ -146,7 +148,7 @@ class TestDecode(TestCase):
 
         for frame in container.decode(stream):
             video_enc_params = cast(
-                av.sidedata.encparams.VideoEncParams,
+                VideoEncParams,
                 frame.side_data.get("VIDEO_ENC_PARAMS"),
             )
             assert video_enc_params is not None

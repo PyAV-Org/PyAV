@@ -4,7 +4,7 @@ from typing import cast
 import av
 from av.codec.context import CodecContext
 from av.subtitles.codeccontext import SubtitleCodecContext
-from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
+from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, Subtitle, SubtitleSet
 
 from .common import TestCase, fate_suite
 
@@ -35,8 +35,8 @@ class TestSubtitle:
             for packet in container.demux(subs):
                 subset = subs.decode2(packet)
                 if subset is not None:
-                    assert not isinstance(subset, av.subtitles.subtitle.Subtitle)
-                    assert isinstance(subset, av.subtitles.subtitle.SubtitleSet)
+                    assert not isinstance(subset, Subtitle)
+                    assert isinstance(subset, SubtitleSet)
                     assert subset.format == 1
                     assert hasattr(subset, "pts")
                     assert subset.start_display_time == 0

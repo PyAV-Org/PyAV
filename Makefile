@@ -29,7 +29,7 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
-	$(PIP) install -U ruff isort pillow numpy mypy==1.17.1 pytest
+	$(PIP) install -U ruff isort pillow numpy mypy==1.19.1 pytest
 	ruff format --check av examples tests setup.py
 	isort --check-only --diff av examples tests
 	mypy av tests
