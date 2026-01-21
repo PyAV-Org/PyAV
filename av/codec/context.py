@@ -386,7 +386,7 @@ class CodecContext:
         return out
 
     @cython.cfunc
-    def _prepare_frames_for_encode(self, frame: Frame | None):
+    def _prepare_frames_for_encode(self, frame: Frame | None) -> list:
         return [frame]
 
     @cython.cfunc

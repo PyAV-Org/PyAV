@@ -10,7 +10,7 @@ from cython.cimports.av.packet import Packet
 @cython.cclass
 class AudioCodecContext(CodecContext):
     @cython.cfunc
-    def _prepare_frames_for_encode(self, input_frame: Frame | None):
+    def _prepare_frames_for_encode(self, input_frame: Frame | None) -> list:
         frame: AudioFrame | None = input_frame
         allow_var_frame_size: cython.bint = (
             self.ptr.codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
