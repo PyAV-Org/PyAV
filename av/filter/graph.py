@@ -1,22 +1,23 @@
 import warnings
 from fractions import Fraction
 
-from av.audio.format cimport AudioFormat
-from av.audio.frame cimport AudioFrame
-from av.audio.layout cimport AudioLayout
-from av.error cimport err_check
-from av.filter.context cimport FilterContext, wrap_filter_context
-from av.filter.filter cimport Filter, wrap_filter
-from av.video.format cimport VideoFormat
-from av.video.frame cimport VideoFrame
+import cython
+from cython.cimports.av.audio.format import AudioFormat
+from cython.cimports.av.audio.frame import AudioFrame
+from cython.cimports.av.audio.layout import AudioLayout
+from cython.cimports.av.error import err_check
+from cython.cimports.av.filter.context import FilterContext, wrap_filter_context
+from cython.cimports.av.filter.filter import Filter, wrap_filter
+from cython.cimports.av.video.format import VideoFormat
+from cython.cimports.av.video.frame import VideoFrame
 
 
-cdef class Graph:
+@cython.cclass
+class Graph:
     def __cinit__(self):
         self.ptr = lib.avfilter_graph_alloc()
         self.configured = False
         self._name_counts = {}
-
         self._nb_filters_seen = 0
         self._context_by_ptr = {}
         self._context_by_name = {}
@@ -25,9 +26,10 @@ cdef class Graph:
     def __dealloc__(self):
         if self.ptr:
             # This frees the graph, filter contexts, links, etc..
-            lib.avfilter_graph_free(&self.ptr)
+            lib.avfilter_graph_free(cython.address(self.ptr))
 
-    cdef str _get_unique_name(self, str name):
+    @cython.cfunc
+    def _get_unique_name(self, name: str) -> str:
         count = self._name_counts.get(name, 0)
         self._name_counts[name] = count + 1
         if count:
@@ -35,11 +37,12 @@ cdef class Graph:
         else:
             return name
 
-    cpdef configure(self, bint auto_buffer=True, bint force=False):
+    @cython.ccall
+    def configure(self, auto_buffer: cython.bint = True, force: cython.bint = False):
         if self.configured and not force:
             return
 
-        err_check(lib.avfilter_graph_config(self.ptr, NULL))
+        err_check(lib.avfilter_graph_config(self.ptr, cython.NULL))
         self.configured = True
 
         # We get auto-inserted stuff here.
@@ -54,7 +57,7 @@ cdef class Graph:
         return self
 
     def add(self, filter, args=None, **kwargs):
-        cdef Filter cy_filter
+        cy_filter: Filter
         if isinstance(filter, str):
             cy_filter = Filter(filter)
         elif isinstance(filter, Filter):
@@ -62,14 +65,15 @@ cdef class Graph:
         else:
             raise TypeError("filter must be a string or Filter")
 
-        cdef str name = self._get_unique_name(kwargs.pop("name", None) or cy_filter.name)
-
-        cdef lib.AVFilterContext *ptr = lib.avfilter_graph_alloc_filter(self.ptr, cy_filter.ptr, name)
+        name: str = self._get_unique_name(kwargs.pop("name", None) or cy_filter.name)
+        ptr: cython.pointer[lib.AVFilterContext] = lib.avfilter_graph_alloc_filter(
+            self.ptr, cy_filter.ptr, name
+        )
         if not ptr:
             raise RuntimeError("Could not allocate AVFilterContext")
 
         # Manually construct this context (so we can return it).
-        cdef FilterContext ctx = wrap_filter_context(self, cy_filter, ptr)
+        ctx: FilterContext = wrap_filter_context(self, cy_filter, ptr)
         ctx.init(args, **kwargs)
         self._register_context(ctx)
 
@@ -80,28 +84,38 @@ cdef class Graph:
 
         return ctx
 
-    cdef _register_context(self, FilterContext ctx):
-        self._context_by_ptr[<long>ctx.ptr] = ctx
+    @cython.cfunc
+    def _register_context(self, ctx: FilterContext):
+        self._context_by_ptr[cython.cast(cython.long, ctx.ptr)] = ctx
         self._context_by_name[ctx.ptr.name] = ctx
         self._context_by_type.setdefault(ctx.filter.ptr.name, []).append(ctx)
 
-    cdef _auto_register(self):
-        cdef int i
-        cdef lib.AVFilterContext *c_ctx
-        cdef Filter filter_
-        cdef FilterContext py_ctx
+    @cython.cfunc
+    def _auto_register(self):
+        i: cython.int
+        c_ctx: cython.pointer[lib.AVFilterContext]
+        filter_: Filter
+        py_ctx: FilterContext
         # We assume that filters are never removed from the graph. At this
         # point we don't expose that in the API, so we should be okay...
         for i in range(self._nb_filters_seen, self.ptr.nb_filters):
             c_ctx = self.ptr.filters[i]
-            if <long>c_ctx in self._context_by_ptr:
+            if cython.cast(cython.long, c_ctx) in self._context_by_ptr:
                 continue
             filter_ = wrap_filter(c_ctx.filter)
             py_ctx = wrap_filter_context(self, filter_, c_ctx)
             self._register_context(py_ctx)
         self._nb_filters_seen = self.ptr.nb_filters
 
-    def add_buffer(self, template=None, width=None, height=None, format=None, name=None, time_base=None):
+    def add_buffer(
+        self,
+        template=None,
+        width=None,
+        height=None,
+        format=None,
+        name=None,
+        time_base=None,
+    ):
         if template is not None:
             if width is None:
                 width = template.width
@@ -119,9 +133,11 @@ cdef class Graph:
         if format is None:
             raise ValueError("missing format")
         if time_base is None:
-            warnings.warn("missing time_base. Guessing 1/1000 time base. "
-                          "This is deprecated and may be removed in future releases.",
-                          DeprecationWarning)
+            warnings.warn(
+                "missing time_base. Guessing 1/1000 time base. "
+                "This is deprecated and may be removed in future releases.",
+                DeprecationWarning,
+            )
             time_base = Fraction(1, 1000)
 
         return self.add(
@@ -133,7 +149,16 @@ cdef class Graph:
             pixel_aspect="1/1",
         )
 
-    def add_abuffer(self, template=None, sample_rate=None, format=None, layout=None, channels=None, name=None, time_base=None):
+    def add_abuffer(
+        self,
+        template=None,
+        sample_rate=None,
+        format=None,
+        layout=None,
+        channels=None,
+        name=None,
+        time_base=None,
+    ):
         """
         Convenience method for adding `abuffer <https://ffmpeg.org/ffmpeg-filters.html#abuffer>`_.
         """
@@ -159,15 +184,15 @@ cdef class Graph:
         if time_base is None:
             time_base = Fraction(1, sample_rate)
 
-        kwargs = dict(
-            sample_rate=str(sample_rate),
-            sample_fmt=AudioFormat(format).name,
-            time_base=str(time_base),
-        )
+        kwargs = {
+            "sample_rate": f"{sample_rate}",
+            "sample_fmt": AudioFormat(format).name,
+            "time_base": f"{time_base}",
+        }
         if layout:
             kwargs["channel_layout"] = AudioLayout(layout).name
         if channels:
-            kwargs["channels"] = str(channels)
+            kwargs["channels"] = f"{channels}"
 
         return self.add("abuffer", name=name, **kwargs)
 
@@ -182,26 +207,31 @@ cdef class Graph:
         if not sinks:
             raise ValueError("missing abuffersink filter")
         for sink in sinks:
-            lib.av_buffersink_set_frame_size((<FilterContext>sink).ptr, frame_size)
+            lib.av_buffersink_set_frame_size(
+                cython.cast(FilterContext, sink).ptr, frame_size
+            )
 
     def push(self, frame):
         if frame is None:
-            contexts = self._context_by_type.get("buffer", []) + self._context_by_type.get("abuffer", [])
+            contexts = self._context_by_type.get(
+                "buffer", []
+            ) + self._context_by_type.get("abuffer", [])
         elif isinstance(frame, VideoFrame):
             contexts = self._context_by_type.get("buffer", [])
         elif isinstance(frame, AudioFrame):
             contexts = self._context_by_type.get("abuffer", [])
         else:
-            raise ValueError(f"can only AudioFrame, VideoFrame or None; got {type(frame)}")
+            raise ValueError(
+                f"can only AudioFrame, VideoFrame or None; got {type(frame)}"
+            )
 
         for ctx in contexts:
             ctx.push(frame)
 
-    def vpush(self, VideoFrame frame):
+    def vpush(self, frame: VideoFrame | None):
         """Like `push`, but only for VideoFrames."""
         for ctx in self._context_by_type.get("buffer", []):
             ctx.push(frame)
-
 
     # TODO: Test complex filter graphs, add `at: int = 0` arg to pull() and vpull().
     def pull(self):
