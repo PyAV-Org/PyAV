@@ -1,25 +1,27 @@
-from cpython cimport PyBUF_WRITABLE, PyBuffer_FillInfo
-from libc.string cimport memcpy
+import cython
+from cython.cimports.av.bytesource import ByteSource, bytesource
+from cython.cimports.cpython import PyBUF_WRITABLE, PyBuffer_FillInfo
+from cython.cimports.libc.string import memcpy
 
-from av.bytesource cimport ByteSource, bytesource
 
-
-cdef class Buffer:
+@cython.cclass
+class Buffer:
     """A base class for PyAV objects which support the buffer protocol, such
     as :class:`.Packet` and :class:`.Plane`.
 
     """
 
-    cdef size_t _buffer_size(self):
+    @cython.cfunc
+    def _buffer_size(self) -> cython.size_t:
         return 0
 
-    cdef void* _buffer_ptr(self):
-        return NULL
+    def _buffer_ptr(self) -> cython.p_void:
+        return cython.NULL
 
-    cdef bint _buffer_writable(self):
+    def _buffer_writable(self) -> cython.bint:
         return True
 
-    def __getbuffer__(self, Py_buffer *view, int flags):
+    def __getbuffer__(self, view: cython.pointer[Py_buffer], flags: cython.int):
         if flags & PyBUF_WRITABLE and not self._buffer_writable():
             raise ValueError("buffer is not writable")
 
@@ -33,20 +35,20 @@ cdef class Buffer:
     @property
     def buffer_ptr(self):
         """The memory address of the buffer."""
-        return <size_t>self._buffer_ptr()
+        return cython.cast(cython.size_t, self._buffer_ptr())
 
     def update(self, input):
         """Replace the data in this object with the given buffer.
 
         Accepts anything that supports the `buffer protocol <https://docs.python.org/3/c-api/buffer.html>`_,
-        e.g. bytes, Numpy arrays, other :class:`Buffer` objects, etc..
+        e.g. bytes, NumPy arrays, other :class:`Buffer` objects, etc..
 
         """
         if not self._buffer_writable():
             raise ValueError("buffer is not writable")
 
-        cdef ByteSource source = bytesource(input)
-        cdef size_t size = self._buffer_size()
+        source: ByteSource = bytesource(input)
+        size: cython.size_t = self._buffer_size()
 
         if source.length != size:
             raise ValueError(f"got {source.length} bytes; need {size} bytes")
