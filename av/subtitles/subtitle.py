@@ -1,6 +1,5 @@
 import cython
 from cython.cimports.cpython import PyBuffer_FillInfo, PyBytes_FromString
-from cython.cimports.libc.stdint import int64_t, uint64_t
 from cython.cimports.libc.string import memcpy, strlen
 
 
@@ -10,7 +9,7 @@ class SubtitleProxy:
         lib.avsubtitle_free(cython.address(self.struct))
 
 
-_cinit_bypass_sentinel = object()
+_cinit_bypass_sentinel = cython.declare(object, object())
 
 
 @cython.cclass
@@ -293,7 +292,7 @@ class AssSubtitle(Subtitle):
         Extract the dialogue from the ass format. Strip comments.
         """
         comma_count: cython.short = 0
-        i: uint64_t = 0
+        i: cython.Py_ssize_t = 0
         state: cython.bint = False
         ass_text: bytes = self.ass
         char, next_char = cython.declare(cython.char)
