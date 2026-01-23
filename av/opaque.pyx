@@ -3,6 +3,10 @@ from libc.stdint cimport uint8_t, uintptr_t
 from libc.string cimport memcpy
 
 
+cdef void noop_free(void *opaque, uint8_t *data) noexcept nogil:
+    pass
+
+
 cdef void key_free(void *opaque, uint8_t *data) noexcept nogil:
     cdef char *name = <char *>data
     with gil:
