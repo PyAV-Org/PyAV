@@ -30,6 +30,14 @@ cdef class IndexEntry:
     @property
     def flags(self):
         return self.ptr.flags
+
+    @property
+    def is_keyframe(self):
+        return bool(self.ptr.flags & lib.AVINDEX_KEYFRAME)
+
+    @property
+    def is_discard(self):
+        return bool(self.ptr.flags & lib.AVINDEX_DISCARD_FRAME)
     
     @property
     def size(self):
