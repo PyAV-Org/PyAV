@@ -3,7 +3,7 @@ from enum import Flag
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.error import err_check
-from cython.cimports.av.frameindex import wrap_frame_index
+from cython.cimports.av.indexentries import wrap_index_entries
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.utils import (
     avdict_to_dict,
@@ -107,7 +107,7 @@ class Stream:
     ):
         self.container = container
         self.ptr = stream
-        self.frame_index = wrap_frame_index(self.ptr)
+        self.index_entries = wrap_index_entries(self.ptr)
 
         self.codec_context = codec_context
         if self.codec_context:

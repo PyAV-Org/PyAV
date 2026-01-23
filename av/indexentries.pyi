@@ -2,7 +2,7 @@ from typing import Iterator, overload
 
 from av.indexentry import IndexEntry
 
-class FrameIndex:
+class IndexEntries:
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[IndexEntry]: ...
     @overload

@@ -1,9 +1,9 @@
 cimport libav as lib
 
-cdef class FrameIndex:
+cdef class IndexEntries:
 
     cdef lib.AVStream *stream_ptr
     cdef _init(self, lib.AVStream *ptr)
 
 
-cdef FrameIndex wrap_frame_index(lib.AVStream *ptr)
+cdef IndexEntries wrap_index_entries(lib.AVStream *ptr)

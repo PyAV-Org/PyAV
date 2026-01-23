@@ -6,23 +6,23 @@ from av.indexentry cimport IndexEntry, wrap_index_entry
 
 cdef object _cinit_bypass_sentinel = object()
 
-cdef FrameIndex wrap_frame_index(lib.AVStream *ptr):
-    cdef FrameIndex obj = FrameIndex(_cinit_bypass_sentinel)
+cdef IndexEntries wrap_index_entries(lib.AVStream *ptr):
+    cdef IndexEntries obj = IndexEntries(_cinit_bypass_sentinel)
     obj._init(ptr)
     return obj
 
 
-cdef class FrameIndex:
+cdef class IndexEntries:
     def __cinit__(self, name):
         if name is _cinit_bypass_sentinel:
             return
-        raise RuntimeError("cannot manually instantiate FrameIndex")
+        raise RuntimeError("cannot manually instantiate IndexEntries")
 
     cdef _init(self, lib.AVStream *ptr):
         self.stream_ptr = ptr
 
     def __repr__(self):
-        return f"<av.Index[{len(self)}]>"
+        return f"<av.IndexEntries[{len(self)}]>"
 
     def __len__(self) -> int:
         with nogil:
