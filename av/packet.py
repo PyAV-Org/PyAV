@@ -3,9 +3,9 @@ from typing import Iterator, Literal, get_args
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.buffer import Buffer
-from cython.cimports.av.bytesource import bytesource
+from cython.cimports.av.bytesource import ByteSource, bytesource
 from cython.cimports.av.error import err_check
-from cython.cimports.av.opaque import opaque_container
+from cython.cimports.av.opaque import noop_free, opaque_container
 from cython.cimports.av.utils import avrational_to_fraction, to_avrational
 from cython.cimports.libc.string import memcpy
 
@@ -213,24 +213,29 @@ class Packet(Buffer):
     def __init__(self, input=None):
         size: cython.size_t = 0
         source: ByteSource = None
+        buf: cython.pointer[lib.AVBufferRef]
 
         if input is None:
             return
 
         if isinstance(input, int):
             size = input
+            if size:
+                err_check(lib.av_new_packet(self.ptr, size))
         else:
             source = bytesource(input)
             size = source.length
-
-        if size:
-            err_check(lib.av_new_packet(self.ptr, size))
-
-        if source is not None:
-            self.update(source)
-            # TODO: Hold onto the source, and copy its pointer
-            # instead of its data.
-            # self.source = source
+            if size:
+                # Create a buffer that references the source data directly.
+                # The noop_free callback is used because Python manages the memory
+                # via self.source keeping the ByteSource alive.
+                buf = lib.av_buffer_create(source.ptr, size, noop_free, cython.NULL, 0)
+                if buf == cython.NULL:
+                    raise MemoryError("Could not allocate AVBufferRef")
+                self.ptr.buf = buf
+                self.ptr.data = source.ptr
+                self.ptr.size = size
+                self.source = source
 
     def __repr__(self):
         stream = self._stream.index if self._stream else 0
