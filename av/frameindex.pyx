@@ -35,6 +35,11 @@ cdef class FrameIndex:
     def __getitem__(self, index: int | slice) -> IndexEntry | list[IndexEntry | None] | None:
         cdef int c_idx
         if isinstance(index, int):
+            if index < 0: 
+                index += len(self)
+            if index < 0 or index >= len(self):
+                raise IndexError(f"Frame index {index} out of bounds for size {len(self)}")
+
             c_idx = index
             with nogil:
                 entry = lib.avformat_index_get_entry(self.stream_ptr, c_idx)
