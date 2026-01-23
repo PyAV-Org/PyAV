@@ -32,7 +32,7 @@ cdef class IndexEntries:
         for i in range(len(self)):
             yield self[i]
 
-    def __getitem__(self, index: int | slice) -> IndexEntry | list[IndexEntry | None] | None:
+    def __getitem__(self, index: int | slice) -> IndexEntry | list[IndexEntry]:
         cdef int c_idx
         if isinstance(index, int):
             if index < 0: 
@@ -45,7 +45,7 @@ cdef class IndexEntries:
                 entry = lib.avformat_index_get_entry(self.stream_ptr, c_idx)
 
             if entry == NULL:
-                return None
+                raise IndexError(f"Index entry for {index} not found")
 
             return wrap_index_entry(entry)
         elif isinstance(index, slice):
@@ -67,4 +67,3 @@ cdef class IndexEntries:
             idx = lib.av_index_search_timestamp(self.stream_ptr, c_timestamp, flags)
 
         return idx
-
