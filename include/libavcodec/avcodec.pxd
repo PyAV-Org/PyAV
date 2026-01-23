@@ -1,9 +1,5 @@
 from libc.stdint cimport int64_t, uint16_t, uint32_t, uint8_t
 
-cdef extern from "libavcodec/codec.h":
-    struct AVCodecTag:
-        pass
-
 cdef extern from "libavcodec/packet.h" nogil:
     const AVPacketSideData *av_packet_side_data_get(const AVPacketSideData *sd,
                                                 int nb_sd,
@@ -430,8 +426,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVChannelLayout ch_layout
         int64_t duration
 
-    cdef AVFrame* avcodec_alloc_frame()
-
     cdef struct AVPacket:
         void *buf  # ptr[AVBufferRef]
         int64_t pts
@@ -456,8 +450,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int buf_size,
         int align
     )
-
-    cdef void avcodec_free_frame(AVFrame **frame)
 
     cdef AVPacket* av_packet_alloc()
     cdef void av_packet_free(AVPacket **)
@@ -531,13 +523,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         const uint8_t *buf, int buf_size,
         int64_t pts, int64_t dts,
         int64_t pos
-    )
-    cdef int av_parser_change(
-        AVCodecParserContext *s,
-        AVCodecContext *avctx,
-        uint8_t **poutbuf, int *poutbuf_size,
-        const uint8_t *buf, int buf_size,
-        int keyframe
     )
     cdef void av_parser_close(AVCodecParserContext *s)
 

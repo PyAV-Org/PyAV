@@ -26,37 +26,10 @@ cdef extern from "libavutil/samplefmt.h" nogil:
     cdef AVSampleFormat av_get_packed_sample_fmt(AVSampleFormat sample_fmt)
     cdef AVSampleFormat av_get_planar_sample_fmt(AVSampleFormat sample_fmt)
 
-    cdef int av_samples_alloc(
-        uint8_t** audio_data,
-        int* linesize,
-        int nb_channels,
-        int nb_samples,
-        AVSampleFormat sample_fmt,
-        int align
-    )
-
     cdef int av_samples_get_buffer_size(
         int *linesize,
         int nb_channels,
         int nb_samples,
         AVSampleFormat sample_fmt,
         int align
-    )
-
-    cdef int av_samples_fill_arrays(
-        uint8_t **audio_data,
-        int *linesize,
-        const uint8_t *buf,
-        int nb_channels,
-        int nb_samples,
-        AVSampleFormat sample_fmt,
-        int align
-    )
-
-    cdef int av_samples_set_silence(
-        uint8_t **audio_data,
-        int offset,
-        int nb_samples,
-        int nb_channels,
-        AVSampleFormat sample_fmt
     )
