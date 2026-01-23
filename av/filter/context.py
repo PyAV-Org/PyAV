@@ -1,57 +1,69 @@
-cimport libav as lib
-
 import weakref
 
-from av.audio.frame cimport alloc_audio_frame
-from av.dictionary cimport _Dictionary
+import cython
+import cython.cimports.libav as lib
+from cython.cimports.av.audio.frame import alloc_audio_frame
+from cython.cimports.av.dictionary import _Dictionary
+from cython.cimports.av.error import err_check
+from cython.cimports.av.filter.link import alloc_filter_pads
+from cython.cimports.av.frame import Frame
+from cython.cimports.av.utils import avrational_to_fraction
+from cython.cimports.av.video.frame import alloc_video_frame
+
 from av.dictionary import Dictionary
-from av.error cimport err_check
-from av.filter.link cimport alloc_filter_pads
-from av.frame cimport Frame
-from av.utils cimport avrational_to_fraction
-from av.video.frame cimport alloc_video_frame
+
+_cinit_sentinel = cython.declare(object, object())
 
 
-cdef object _cinit_sentinel = object()
-
-
-cdef FilterContext wrap_filter_context(Graph graph, Filter filter, lib.AVFilterContext *ptr):
-    cdef FilterContext self = FilterContext(_cinit_sentinel)
+@cython.cfunc
+def wrap_filter_context(
+    graph: Graph, filter: Filter, ptr: cython.pointer[lib.AVFilterContext]
+) -> FilterContext:
+    self: FilterContext = FilterContext(_cinit_sentinel)
     self._graph = weakref.ref(graph)
     self.filter = filter
     self.ptr = ptr
     return self
 
 
-cdef class FilterContext:
+@cython.cclass
+class FilterContext:
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("cannot construct FilterContext")
 
     def __repr__(self):
-        if self.ptr != NULL:
-            name = repr(self.ptr.name) if self.ptr.name != NULL else "<NULL>"
+        if self.ptr != cython.NULL:
+            name = repr(self.ptr.name) if self.ptr.name != cython.NULL else "<NULL>"
         else:
             name = "None"
 
-        parent = self.filter.ptr.name if self.filter and self.filter.ptr != NULL else None
+        parent = (
+            self.filter.ptr.name
+            if self.filter and self.filter.ptr != cython.NULL
+            else None
+        )
         return f"<av.FilterContext {name} of {parent!r} at 0x{id(self):x}>"
 
     @property
     def name(self):
-        if self.ptr.name != NULL:
+        if self.ptr.name != cython.NULL:
             return self.ptr.name
 
     @property
     def inputs(self):
         if self._inputs is None:
-            self._inputs = alloc_filter_pads(self.filter, self.ptr.input_pads, True, self)
+            self._inputs = alloc_filter_pads(
+                self.filter, self.ptr.input_pads, True, self
+            )
         return self._inputs
 
     @property
     def outputs(self):
         if self._outputs is None:
-            self._outputs = alloc_filter_pads(self.filter, self.ptr.output_pads, False, self)
+            self._outputs = alloc_filter_pads(
+                self.filter, self.ptr.output_pads, False, self
+            )
         return self._outputs
 
     def init(self, args=None, **kwargs):
@@ -60,40 +72,45 @@ cdef class FilterContext:
         if args and kwargs:
             raise ValueError("cannot init from args and kwargs")
 
-        cdef _Dictionary dict_ = None
-        cdef char *c_args = NULL
+        dict_: _Dictionary = None
+        c_args: cython.p_char = cython.NULL
         if args or not kwargs:
             if args:
                 c_args = args
             err_check(lib.avfilter_init_str(self.ptr, c_args))
         else:
             dict_ = Dictionary(kwargs)
-            err_check(lib.avfilter_init_dict(self.ptr, &dict_.ptr))
+            err_check(lib.avfilter_init_dict(self.ptr, cython.address(dict_.ptr)))
 
         self.inited = True
         if dict_:
             raise ValueError(f"unused config: {', '.join(sorted(dict_))}")
 
-    def link_to(self, FilterContext input_, int output_idx=0, int input_idx=0):
+    def link_to(
+        self,
+        input_: FilterContext,
+        output_idx: cython.int = 0,
+        input_idx: cython.int = 0,
+    ):
         err_check(lib.avfilter_link(self.ptr, output_idx, input_.ptr, input_idx))
-    
+
     @property
     def graph(self):
-        if (graph := self._graph()):
+        if graph := self._graph():
             return graph
         else:
             raise RuntimeError("graph is unallocated")
 
-    def push(self, Frame frame):
-        cdef int res
+    def push(self, frame: Frame | None):
+        res: cython.int
 
         if frame is None:
-            with nogil:
-                res = lib.av_buffersrc_write_frame(self.ptr, NULL)
+            with cython.nogil:
+                res = lib.av_buffersrc_write_frame(self.ptr, cython.NULL)
             err_check(res)
             return
         elif self.filter.name in ("abuffer", "buffer"):
-            with nogil:
+            with cython.nogil:
                 res = lib.av_buffersrc_write_frame(self.ptr, frame.ptr)
             err_check(res)
             return
@@ -108,9 +125,8 @@ cdef class FilterContext:
         self.inputs[0].linked.context.push(frame)
 
     def pull(self):
-        cdef Frame frame
-        cdef int res
-
+        frame: Frame
+        res: cython.int
         if self.filter.name == "buffersink":
             frame = alloc_video_frame()
         elif self.filter.name == "abuffersink":
@@ -127,46 +143,48 @@ cdef class FilterContext:
 
         self.graph.configure()
 
-        with nogil:
+        with cython.nogil:
             res = lib.av_buffersink_get_frame(self.ptr, frame.ptr)
         err_check(res)
 
         frame._init_user_attributes()
-        frame.time_base = avrational_to_fraction(&self.ptr.inputs[0].time_base)
+        frame.time_base = avrational_to_fraction(
+            cython.address(self.ptr.inputs[0].time_base)
+        )
         return frame
 
-    def process_command(self, cmd, arg=None, int res_len=1024, int flags=0):
+    def process_command(
+        self, cmd, arg=None, res_len: cython.int = 1024, flags: cython.int = 0
+    ):
         if not cmd:
             raise ValueError("Invalid cmd")
 
-        cdef char *c_cmd = NULL
-        cdef char *c_arg = NULL
-
-        c_cmd = cmd
+        c_arg: cython.p_char = cython.NULL
+        c_cmd: cython.p_char = cmd
         if arg is not None:
             c_arg = arg
 
-        cdef char *c_res = NULL
-        cdef int ret
-        cdef bytearray res_buf = None
-        cdef unsigned char[:] view
-        cdef bytes b
-        cdef int nul
+        c_res: cython.p_char = cython.NULL
+        ret: cython.int
+        res_buf: bytearray = None
+        view: cython.uchar[:]
+        b: bytes
+        nul: cython.int
 
         if res_len > 0:
             res_buf = bytearray(res_len)
             view = res_buf
-            c_res = <char*>&view[0]
-        else:
-            c_res = NULL
+            c_res = cython.cast(cython.p_char, cython.address(view[0]))
 
-        with nogil:
-            ret = lib.avfilter_process_command(self.ptr, c_cmd, c_arg, c_res, res_len, flags)
+        with cython.nogil:
+            ret = lib.avfilter_process_command(
+                self.ptr, c_cmd, c_arg, c_res, res_len, flags
+            )
         err_check(ret)
 
         if res_buf is not None:
             b = bytes(res_buf)
-            nul = b.find(b'\x00')
+            nul = b.find(b"\x00")
             if nul >= 0:
                 b = b[:nul]
             if b:
