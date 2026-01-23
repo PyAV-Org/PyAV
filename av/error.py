@@ -290,7 +290,7 @@ _extend_builtin("OverflowError", (errno.ERANGE,))
 _extend_builtin("OSError", [code for code in errno.errorcode if code not in classes])
 
 
-class ArgumentError(FFmpegError):
+class ArgumentError(FFmpegError, ValueError):
     def __str__(self):
         msg = ""
         if self.strerror is not None:
