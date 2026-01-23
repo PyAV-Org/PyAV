@@ -1,22 +1,10 @@
-from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t, uint8_t
+from libc.stdint cimport int64_t, uint16_t, uint32_t, uint8_t
 
 cdef extern from "libavcodec/codec.h":
     struct AVCodecTag:
         pass
 
-cdef extern from "libavcodec/codec_id.h":
-    AVCodecID av_codec_get_id(const AVCodecTag *const *tags, uint32_t tag)
-
-
 cdef extern from "libavcodec/packet.h" nogil:
-    AVPacketSideData* av_packet_side_data_new(
-        AVPacketSideData **sides,
-        int *nb_sides,
-        AVPacketSideDataType type,
-        size_t size,
-        int free_opaque
-    )
-
     const AVPacketSideData *av_packet_side_data_get(const AVPacketSideData *sd,
                                                 int nb_sd,
                                                 AVPacketSideDataType type)
@@ -41,12 +29,6 @@ cdef extern from "libavutil/channel_layout.h":
         AV_CHAN_FRONT_LEFT
         AV_CHAN_FRONT_RIGHT
         AV_CHAN_FRONT_CENTER
-        # ... other channel enum values ...
-
-    ctypedef struct AVChannelCustom:
-        AVChannel id
-        char name[16]
-        void *opaque
 
     ctypedef struct AVChannelLayout:
         AVChannelOrder order
