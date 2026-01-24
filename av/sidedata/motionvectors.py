@@ -1,5 +1,3 @@
-from collections.abc import Sequence
-
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.sidedata.sidedata import SideData
@@ -8,7 +6,7 @@ _cinit_bypass_sentinel = cython.declare(object, object())
 
 
 @cython.cclass
-class MotionVectors(SideData, Sequence):
+class MotionVectors(SideData):
     def __init__(self, sentinel, frame: Frame, index: cython.int):
         SideData.__init__(self, sentinel, frame, index)
         self._vectors = {}

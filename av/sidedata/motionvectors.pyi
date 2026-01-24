@@ -4,7 +4,7 @@ import numpy as np
 
 from .sidedata import SideData
 
-class MotionVectors(SideData, Sequence[MotionVector]):
+class MotionVectors(SideData):
     @overload
     def __getitem__(self, index: int) -> MotionVector: ...
     @overload
