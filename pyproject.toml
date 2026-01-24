@@ -36,6 +36,9 @@ dynamic = ["version"]
 [tool.setuptools]
 zip-safe = false
 
+[tool.setuptools.packages.find]
+include = ["av*"]
+
 [tool.setuptools.dynamic]
 version = {attr = "av.about.__version__"}
 
