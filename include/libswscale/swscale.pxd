@@ -1,6 +1,6 @@
+from libc.stdint cimport uint8_t
 
 cdef extern from "libswscale/swscale.h" nogil:
-
     cdef int   swscale_version()
     cdef char* swscale_configuration()
     cdef char* swscale_license()
@@ -13,7 +13,6 @@ cdef extern from "libswscale/swscale.h" nogil:
     cdef struct SwsFilter:
         pass
 
-    # Flags.
     cdef int SWS_FAST_BILINEAR
     cdef int SWS_BILINEAR
     cdef int SWS_BICUBIC
@@ -25,7 +24,6 @@ cdef extern from "libswscale/swscale.h" nogil:
     cdef int SWS_SINC
     cdef int SWS_LANCZOS
     cdef int SWS_SPLINE
-
     cdef int SWS_CS_ITU709
     cdef int SWS_CS_FCC
     cdef int SWS_CS_ITU601
@@ -36,16 +34,14 @@ cdef extern from "libswscale/swscale.h" nogil:
 
     cdef int sws_scale(
         SwsContext *ctx,
-        const unsigned char *const *src_slice,
+        const uint8_t *const *src_slice,
         const int *src_stride,
         int src_slice_y,
         int src_slice_h,
         unsigned char *const *dst_slice,
-        int *dst_stride,
+        const int *dst_stride,
     )
-
     cdef void sws_freeContext(SwsContext *ctx)
-
     cdef SwsContext *sws_getCachedContext(
         SwsContext *context,
         int src_width,
@@ -59,9 +55,7 @@ cdef extern from "libswscale/swscale.h" nogil:
         SwsFilter *dst_filter,
         double *param,
     )
-
-    cdef int* sws_getCoefficients(int colorspace)
-
+    cdef const int* sws_getCoefficients(int colorspace)
     cdef int sws_getColorspaceDetails(
         SwsContext *context,
         int **inv_table,
@@ -72,7 +66,6 @@ cdef extern from "libswscale/swscale.h" nogil:
         int *contrast,
         int *saturation
     )
-
     cdef int sws_setColorspaceDetails(
         SwsContext *context,
         const int inv_table[4],

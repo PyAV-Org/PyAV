@@ -234,8 +234,8 @@ class VideoReformatter:
         with cython.nogil:
             lib.sws_scale(
                 self.ptr,
-                frame.ptr.data,
-                frame.ptr.linesize,
+                cython.cast("const unsigned char *const *", frame.ptr.data),
+                cython.cast("const int *", frame.ptr.linesize),
                 0,  # slice Y
                 frame.ptr.height,
                 new_frame.ptr.data,
