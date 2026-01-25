@@ -109,8 +109,11 @@ class TestDecode(TestCase):
 
         assert stream.time_base == Fraction(1, 25)
 
+        video_frame: av.VideoFrame | None = None
+
         for packet in container.demux(stream):
             for frame in packet.decode():
+                video_frame = frame
                 assert not isinstance(frame, SubtitleSet)
                 assert packet.time_base == frame.time_base
                 assert stream.time_base == frame.time_base
