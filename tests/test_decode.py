@@ -72,11 +72,13 @@ class TestDecode(TestCase):
 
         packet_count = 0
         frame_count = 0
+        audio_frame: av.AudioFrame | None = None
 
         with av.open(path) as container:
             for packet in container.demux(audio=0):
                 for frame in packet.decode():
                     frame_count += 1
+                    audio_frame = frame
                 packet_count += 1
 
         assert packet_count == 1
