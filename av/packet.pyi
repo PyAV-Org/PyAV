@@ -90,7 +90,7 @@ class Packet(Buffer, Generic[StreamT]):
     is_trusted: bool
     is_disposable: bool
 
-    def __init__(self, input: int | bytes | None = None) -> None: ...
+    def __init__(self: Packet[Stream], input: int | bytes | None = None) -> None: ...
     
     # Overloads that return the same type as the stream's decode method
     @overload

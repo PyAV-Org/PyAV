@@ -179,15 +179,15 @@ class TestStreams:
                     input_data_stream
                 )
 
-                for packet in input_container.demux(input_data_stream):
-                    payload = bytes(packet)
+                for data_packet in input_container.demux(input_data_stream):
+                    payload = bytes(data_packet)
                     if not payload:
                         continue
                     copied_payloads.append(payload)
                     clone = av.Packet(payload)
-                    clone.pts = packet.pts
-                    clone.dts = packet.dts
-                    clone.time_base = packet.time_base
+                    clone.pts = data_packet.pts
+                    clone.dts = data_packet.dts
+                    clone.time_base = data_packet.time_base
                     clone.stream = output_data_stream
                     output_container.mux(clone)
 
@@ -196,8 +196,8 @@ class TestStreams:
             assert output_stream.codec_context is None
 
             remuxed_payloads: list[bytes] = []
-            for packet in remuxed.demux(output_stream):
-                payload = bytes(packet)
+            for data_packet in remuxed.demux(output_stream):
+                payload = bytes(data_packet)
                 if payload:
                     remuxed_payloads.append(payload)
 
