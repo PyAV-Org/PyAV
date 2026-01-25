@@ -3,11 +3,11 @@ from typing import Generic, Iterator, Literal, TypeVar, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
+from av.stream import AttachmentStream, DataStream, Stream
 from av.subtitles.stream import SubtitleStream
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, SubtitleSet
 from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
-from av.stream import Stream, DataStream, AttachmentStream
 
 from .buffer import Buffer
 from .stream import Stream
@@ -72,7 +72,7 @@ def packet_sidedata_type_to_literal(dtype: int) -> PktSideDataT: ...
 def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> int: ...
 
 # TypeVar for stream types - bound to Stream so it can be any stream type
-StreamT = TypeVar('StreamT', bound=Stream)
+StreamT = TypeVar("StreamT", bound=Stream)
 
 class Packet(Buffer, Generic[StreamT]):
     stream: StreamT
@@ -91,17 +91,20 @@ class Packet(Buffer, Generic[StreamT]):
     is_disposable: bool
 
     def __init__(self: Packet[Stream], input: int | bytes | None = None) -> None: ...
-    
+
     # Overloads that return the same type as the stream's decode method
     @overload
     def decode(self: Packet[VideoStream]) -> list[VideoFrame]: ...
-    @overload  
+    @overload
     def decode(self: Packet[AudioStream]) -> list[AudioFrame]: ...
     @overload
-    def decode(self: Packet[SubtitleStream]) -> list[AssSubtitle] | list[BitmapSubtitle]: ...
+    def decode(
+        self: Packet[SubtitleStream],
+    ) -> list[AssSubtitle] | list[BitmapSubtitle]: ...
     @overload
-    def decode(self) -> list[VideoFrame | AudioFrame | AssSubtitle | BitmapSubtitle]: ...
-
+    def decode(
+        self,
+    ) -> list[VideoFrame | AudioFrame | AssSubtitle | BitmapSubtitle]: ...
     def has_sidedata(self, dtype: PktSideDataT) -> bool: ...
     def get_sidedata(self, dtype: PktSideDataT) -> PacketSideData: ...
     def set_sidedata(self, sidedata: PacketSideData, move: bool = False) -> None: ...
