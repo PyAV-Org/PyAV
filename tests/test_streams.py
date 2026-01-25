@@ -287,7 +287,11 @@ class TestStreams:
             for packet in ic.demux(ic.streams.video):
                 if packet.dts is None:
                     continue
-                packet.stream = stream_map[packet.stream.index]
+                updated_stream = stream_map.get(packet.stream.index)
+                if isinstance(updated_stream, av.video.stream.VideoStream):
+                    packet.stream = updated_stream
+                else:
+                    raise ValueError("Expected a VideoStream")
                 oc.mux(packet)
 
         with av.open(out2_path) as c:

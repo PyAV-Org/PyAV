@@ -1,7 +1,13 @@
 from fractions import Fraction
-from typing import Iterator, Literal
+from typing import Generic, Iterator, Literal, TypeVar, overload
 
-from av.subtitles.subtitle import SubtitleSet
+from av.audio.frame import AudioFrame
+from av.audio.stream import AudioStream
+from av.subtitles.stream import SubtitleStream
+from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, SubtitleSet
+from av.video.frame import VideoFrame
+from av.video.stream import VideoStream
+from av.stream import Stream, DataStream, AttachmentStream
 
 from .buffer import Buffer
 from .stream import Stream
@@ -52,8 +58,8 @@ PktSideDataT = Literal[
 
 class PacketSideData(Buffer):
     @staticmethod
-    def from_packet(packet: Packet, dtype: PktSideDataT) -> PacketSideData: ...
-    def to_packet(self, packet: Packet, move: bool = False): ...
+    def from_packet(packet: Packet[Stream], dtype: PktSideDataT) -> PacketSideData: ...
+    def to_packet(self, packet: Packet[Stream], move: bool = False): ...
     @property
     def data_type(self) -> str: ...
     @property
@@ -65,8 +71,11 @@ class PacketSideData(Buffer):
 def packet_sidedata_type_to_literal(dtype: int) -> PktSideDataT: ...
 def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> int: ...
 
-class Packet(Buffer):
-    stream: Stream
+# TypeVar for stream types - bound to Stream so it can be any stream type
+StreamT = TypeVar('StreamT', bound=Stream)
+
+class Packet(Buffer, Generic[StreamT]):
+    stream: StreamT
     stream_index: int
     time_base: Fraction
     pts: int | None
@@ -82,7 +91,17 @@ class Packet(Buffer):
     is_disposable: bool
 
     def __init__(self, input: int | bytes | None = None) -> None: ...
-    def decode(self) -> list[SubtitleSet]: ...
+    
+    # Overloads that return the same type as the stream's decode method
+    @overload
+    def decode(self: Packet[VideoStream]) -> list[VideoFrame]: ...
+    @overload  
+    def decode(self: Packet[AudioStream]) -> list[AudioFrame]: ...
+    @overload
+    def decode(self: Packet[SubtitleStream]) -> list[AssSubtitle] | list[BitmapSubtitle]: ...
+    @overload
+    def decode(self) -> list[VideoFrame | AudioFrame | AssSubtitle | BitmapSubtitle]: ...
+
     def has_sidedata(self, dtype: PktSideDataT) -> bool: ...
     def get_sidedata(self, dtype: PktSideDataT) -> PacketSideData: ...
     def set_sidedata(self, sidedata: PacketSideData, move: bool = False) -> None: ...
