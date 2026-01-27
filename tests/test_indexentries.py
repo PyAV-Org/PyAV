@@ -68,7 +68,12 @@ class TestIndexEntries(TestCase):
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
             stream = container.streams.video[0]
 
-            individual_indices = [stream.index_entries[i] for i in range(1,5)]
+            individual_indices = [stream.index_entries[i] for i in range(1, 5)]
             slice_indices = stream.index_entries[1:5]
             assert len(individual_indices) == len(slice_indices) == 4
-            assert all([i.timestamp == j.timestamp for i, j in zip(individual_indices, slice_indices)])
+            assert all(
+                [
+                    i.timestamp == j.timestamp
+                    for i, j in zip(individual_indices, slice_indices)
+                ]
+            )

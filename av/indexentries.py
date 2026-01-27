@@ -1,9 +1,7 @@
 import cython
 import cython.cimports.libav as lib
-from cython.cimports.libc.stdint import int64_t
-
 from cython.cimports.av.indexentry import wrap_index_entry
-
+from cython.cimports.libc.stdint import int64_t
 
 _cinit_bypass_sentinel = cython.declare(object, object())
 
@@ -22,9 +20,10 @@ class IndexEntries:
     Exposed as :attr:`~av.stream.Stream.index_entries`.
 
     The index is provided by the demuxer and may be empty or incomplete depending
-    on the container format. This is useful for fast multi-seek loops (e.g., decoding 
+    on the container format. This is useful for fast multi-seek loops (e.g., decoding
     at a lower-than-native framerate).
     """
+
     def __cinit__(self, sentinel):
         if sentinel is _cinit_bypass_sentinel:
             return
@@ -69,7 +68,9 @@ class IndexEntries:
         else:
             raise TypeError("Index must be an integer or a slice")
 
-    def search_timestamp(self, timestamp, *, backward: bool = True, any_frame: bool = False):
+    def search_timestamp(
+        self, timestamp, *, backward: bool = True, any_frame: bool = False
+    ):
         """Search the underlying index for ``timestamp``.
 
         This wraps FFmpeg's ``av_index_search_timestamp``.

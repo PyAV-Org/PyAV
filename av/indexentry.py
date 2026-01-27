@@ -1,7 +1,6 @@
 import cython
 import cython.cimports.libav as lib
 
-
 _cinit_bypass_sentinel = cython.declare(object, object())
 
 
@@ -20,6 +19,7 @@ class IndexEntry:
 
     The exact meaning of the fields depends on the container/demuxer.
     """
+
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_bypass_sentinel:
             raise RuntimeError("cannot manually instantiate IndexEntry")
