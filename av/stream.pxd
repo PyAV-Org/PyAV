@@ -3,6 +3,7 @@ cimport libav as lib
 from av.codec.context cimport CodecContext
 from av.container.core cimport Container
 from av.frame cimport Frame
+from av.indexentries cimport IndexEntries
 from av.packet cimport Packet
 
 
@@ -15,6 +16,8 @@ cdef class Stream:
 
     # CodecContext attributes.
     cdef readonly CodecContext codec_context
+
+    cdef readonly IndexEntries index_entries
 
     # Private API.
     cdef _init(self, Container, lib.AVStream*, CodecContext)
