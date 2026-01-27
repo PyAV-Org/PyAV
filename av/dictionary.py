@@ -43,7 +43,7 @@ class _Dictionary:
             yield element.key
 
     def __repr__(self):
-        return f"bv.Dictionary({dict(self)!r})"
+        return f"av.Dictionary({dict(self)!r})"
 
     def copy(self):
         other = cython.declare(_Dictionary, Dictionary())

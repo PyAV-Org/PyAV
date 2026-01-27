@@ -1,22 +1,6 @@
-from libc.stdint cimport int8_t, int64_t, uint16_t, uint32_t, uint8_t
-
-cdef extern from "libavcodec/codec.h":
-    struct AVCodecTag:
-        pass
-
-cdef extern from "libavcodec/codec_id.h":
-    AVCodecID av_codec_get_id(const AVCodecTag *const *tags, uint32_t tag)
-
+from libc.stdint cimport int64_t, uint16_t, uint32_t, uint8_t
 
 cdef extern from "libavcodec/packet.h" nogil:
-    AVPacketSideData* av_packet_side_data_new(
-        AVPacketSideData **sides,
-        int *nb_sides,
-        AVPacketSideDataType type,
-        size_t size,
-        int free_opaque
-    )
-
     const AVPacketSideData *av_packet_side_data_get(const AVPacketSideData *sd,
                                                 int nb_sd,
                                                 AVPacketSideDataType type)
@@ -41,12 +25,6 @@ cdef extern from "libavutil/channel_layout.h":
         AV_CHAN_FRONT_LEFT
         AV_CHAN_FRONT_RIGHT
         AV_CHAN_FRONT_CENTER
-        # ... other channel enum values ...
-
-    ctypedef struct AVChannelCustom:
-        AVChannel id
-        char name[16]
-        void *opaque
 
     ctypedef struct AVChannelLayout:
         AVChannelOrder order
@@ -257,84 +235,63 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVClass *av_class
 
         AVMediaType codec_type
-        char codec_name[32]
-        unsigned int codec_tag
+        AVCodec *codec
         AVCodecID codec_id
-
-        int flags
-        int flags2
-        int thread_count
-        int thread_type
-
-        int profile
-        AVDiscard skip_frame
-
-        AVFrame* coded_frame
+        unsigned int codec_tag
 
         void* opaque
 
         int bit_rate
-        int bit_rate_tolerance
-        int mb_decision
-
-        int bits_per_coded_sample
-        int global_quality
-        int compression_level
-
-        int qmin
-        int qmax
-        int rc_max_rate
-        int rc_min_rate
-        int rc_buffer_size
-        float rc_max_available_vbv_use
-        float rc_min_vbv_overflow_use
-
-        AVRational framerate
-        AVRational pkt_timebase
-        AVRational time_base
-
-        int extradata_size
+        int flags
+        int flags2
         uint8_t *extradata
-
-        # Subtitle header (ASS/SSA format for text subtitles)
-        uint8_t *subtitle_header
-        int subtitle_header_size
-
+        int extradata_size
+        AVRational time_base
+        AVRational pkt_timebase
+        AVRational framerate
         int delay
-
-        AVCodec *codec
-
-        # Video.
         int width
         int height
         int coded_width
         int coded_height
-
+        AVRational sample_aspect_ratio
         AVPixelFormat pix_fmt
         AVPixelFormat sw_pix_fmt
-        AVRational sample_aspect_ratio
-        int gop_size  # The number of pictures in a group of pictures, or 0 for intra_only.
-        int max_b_frames
-        int has_b_frames
-        AVColorRange color_range
         AVColorPrimaries color_primaries
         AVColorTransferCharacteristic color_trc
         AVColorSpace colorspace
+        AVColorRange color_range
 
-        # Audio.
-        AVSampleFormat sample_fmt
+        int has_b_frames
+        AVPixelFormat (*get_format)(AVCodecContext *s, const AVPixelFormat *fmt)
+        int max_b_frames
+        int mb_decision
+        int gop_size
         int sample_rate
+        AVSampleFormat sample_fmt
         AVChannelLayout ch_layout
         int frame_size
 
-        #: .. todo:: ``get_buffer`` is deprecated for get_buffer2 in newer versions of FFmpeg.
-        int get_buffer(AVCodecContext *ctx, AVFrame *frame)
-        void release_buffer(AVCodecContext *ctx, AVFrame *frame)
+        int bit_rate_tolerance
+        int global_quality
+        int compression_level
+        int qmin
+        int qmax
+        int rc_buffer_size
+        int rc_max_rate
+        int rc_min_rate
 
-        # Hardware acceleration
         AVHWAccel *hwaccel
         AVBufferRef *hw_device_ctx
-        AVPixelFormat (*get_format)(AVCodecContext *s, const AVPixelFormat *fmt)
+
+        int thread_count
+        int thread_type
+        int bits_per_coded_sample
+        int profile
+        AVDiscard skip_frame
+
+        int subtitle_header_size
+        uint8_t *subtitle_header
 
 
     cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
@@ -354,8 +311,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef AVCodecDescriptor* avcodec_descriptor_get_by_name (char *name)
 
     cdef char* avcodec_get_name(AVCodecID id)
-
-    cdef char* av_get_profile_name(AVCodec *codec, int profile)
 
     cdef int avcodec_open2(
         AVCodecContext *ctx,
@@ -446,56 +401,46 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         uint8_t *data[4]
         int linesize[4]
         uint8_t **extended_data
-
-        int format  # Should be AVPixelFormat or AVSampleFormat
-        AVPictureType pict_type
-
         int width
         int height
-
-        int nb_side_data
-        AVFrameSideData **side_data
-
         int nb_samples
-        int sample_rate
-
-        AVChannelLayout ch_layout
+        int format  # -1 if unknown, AVPixelFormat or AVSampleFormat
+        AVPictureType pict_type
 
         int64_t pts
         int64_t pkt_dts
-
-        int pkt_size
-
-        uint8_t **base
         void *opaque
-        AVBufferRef *opaque_ref
-        AVDictionary *metadata
+        int sample_rate
+        int nb_side_data
+        AVFrameSideData **side_data
         int flags
-        int decode_error_flags
         AVColorRange color_range
         AVColorPrimaries color_primaries
         AVColorTransferCharacteristic color_trc
         AVColorSpace colorspace
 
+        AVDictionary *metadata
+        int decode_error_flags
+
+        AVBufferRef *opaque_ref
+        AVChannelLayout ch_layout
         int64_t duration
 
-    cdef AVFrame* avcodec_alloc_frame()
-
     cdef struct AVPacket:
+        void *buf  # ptr[AVBufferRef]
         int64_t pts
         int64_t dts
         uint8_t *data
-        AVRational time_base
         int size
         int stream_index
         int flags
         AVPacketSideData *side_data
         int side_data_elems
-        int duration
+        int64_t duration
         int64_t pos
         void *opaque
         AVBufferRef *opaque_ref
-
+        AVRational time_base
 
     cdef int avcodec_fill_audio_frame(
         AVFrame *frame,
@@ -505,8 +450,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int buf_size,
         int align
     )
-
-    cdef void avcodec_free_frame(AVFrame **frame)
 
     cdef AVPacket* av_packet_alloc()
     cdef void av_packet_free(AVPacket **)
@@ -556,14 +499,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     )
 
     cdef void avsubtitle_free(AVSubtitle*)
-
-    cdef void avcodec_get_frame_defaults(AVFrame* frame)
-
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
-
-    # TODO: avcodec_default_get_buffer is deprecated for avcodec_default_get_buffer2 in newer versions of FFmpeg
-    cdef int avcodec_default_get_buffer(AVCodecContext *ctx, AVFrame *frame)
-    cdef void avcodec_default_release_buffer(AVCodecContext *ctx, AVFrame *frame)
 
     # === New-style Transcoding
     cdef int avcodec_send_packet(AVCodecContext *avctx, AVPacket *packet)
@@ -576,8 +512,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef struct AVCodecParser:
         int codec_ids[5]
 
-    cdef AVCodecParser* av_parser_next(AVCodecParser *c)
-
     cdef struct AVCodecParserContext:
         pass
 
@@ -589,13 +523,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         const uint8_t *buf, int buf_size,
         int64_t pts, int64_t dts,
         int64_t pos
-    )
-    cdef int av_parser_change(
-        AVCodecParserContext *s,
-        AVCodecContext *avctx,
-        uint8_t **poutbuf, int *poutbuf_size,
-        const uint8_t *buf, int buf_size,
-        int keyframe
     )
     cdef void av_parser_close(AVCodecParserContext *s)
 

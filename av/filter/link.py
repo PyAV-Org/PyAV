@@ -1,12 +1,12 @@
-cimport libav as lib
+import cython
+import cython.cimports.libav as lib
+from cython.cimports.av.filter.graph import Graph
 
-from av.filter.graph cimport Graph
+_cinit_sentinel = cython.declare(object, object())
 
 
-cdef _cinit_sentinel = object()
-
-
-cdef class FilterLink:
+@cython.cclass
+class FilterLink:
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("cannot instantiate FilterLink")
@@ -15,14 +15,14 @@ cdef class FilterLink:
     def input(self):
         if self._input:
             return self._input
-        cdef lib.AVFilterContext *cctx = self.ptr.src
-        cdef unsigned int i
+        cctx: cython.pointer[lib.AVFilterContext] = self.ptr.src
+        i: cython.Py_ssize_t
         for i in range(cctx.nb_outputs):
             if self.ptr == cctx.outputs[i]:
                 break
-        else:
+        else:  # nobreak
             raise RuntimeError("could not find link in context")
-        ctx = self.graph._context_by_ptr[<long>cctx]
+        ctx = self.graph._context_by_ptr[cython.cast(cython.long, cctx)]
         self._input = ctx.outputs[i]
         return self._input
 
@@ -30,30 +30,33 @@ cdef class FilterLink:
     def output(self):
         if self._output:
             return self._output
-        cdef lib.AVFilterContext *cctx = self.ptr.dst
-        cdef unsigned int i
+        cctx: cython.pointer[lib.AVFilterContext] = self.ptr.dst
+        i: cython.Py_ssize_t
         for i in range(cctx.nb_inputs):
             if self.ptr == cctx.inputs[i]:
                 break
         else:
             raise RuntimeError("could not find link in context")
         try:
-            ctx = self.graph._context_by_ptr[<long>cctx]
+            ctx = self.graph._context_by_ptr[cython.cast(cython.long, cctx)]
         except KeyError:
-            raise RuntimeError("could not find context in graph", (cctx.name, cctx.filter.name))
+            raise RuntimeError(
+                "could not find context in graph", (cctx.name, cctx.filter.name)
+            )
         self._output = ctx.inputs[i]
         return self._output
 
 
-cdef FilterLink wrap_filter_link(Graph graph, lib.AVFilterLink *ptr):
-    cdef FilterLink link = FilterLink(_cinit_sentinel)
+@cython.cfunc
+def wrap_filter_link(graph: Graph, ptr: cython.pointer[lib.AVFilterLink]) -> FilterLink:
+    link: FilterLink = FilterLink(_cinit_sentinel)
     link.graph = graph
     link.ptr = ptr
     return link
 
 
-
-cdef class FilterPad:
+@cython.cclass
+class FilterPad:
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("cannot construct FilterPad")
@@ -62,7 +65,9 @@ cdef class FilterPad:
         _filter = self.filter.name
         _io = "inputs" if self.is_input else "outputs"
 
-        return f"<av.FilterPad {_filter}.{_io}[{self.index}]: {self.name} ({self.type})>"
+        return (
+            f"<av.FilterPad {_filter}.{_io}[{self.index}]: {self.name} ({self.type})>"
+        )
 
     @property
     def is_output(self):
@@ -73,7 +78,8 @@ cdef class FilterPad:
         return lib.avfilter_pad_get_name(self.base_ptr, self.index)
 
 
-cdef class FilterContextPad(FilterPad):
+@cython.cclass
+class FilterContextPad(FilterPad):
     def __repr__(self):
         _filter = self.filter.name
         _io = "inputs" if self.is_input else "outputs"
@@ -85,8 +91,10 @@ cdef class FilterContextPad(FilterPad):
     def link(self):
         if self._link:
             return self._link
-        cdef lib.AVFilterLink **links = self.context.ptr.inputs if self.is_input else self.context.ptr.outputs
-        cdef lib.AVFilterLink *link = links[self.index]
+        links: cython.pointer[cython.pointer[lib.AVFilterLink]] = (
+            self.context.ptr.inputs if self.is_input else self.context.ptr.outputs
+        )
+        link: cython.pointer[lib.AVFilterLink] = links[self.index]
         if not link:
             return
         self._link = wrap_filter_link(self.context.graph, link)
@@ -94,29 +102,39 @@ cdef class FilterContextPad(FilterPad):
 
     @property
     def linked(self):
-        cdef FilterLink link = self.link
+        link: FilterLink = self.link
         if link:
             return link.input if self.is_input else link.output
 
 
-cdef tuple alloc_filter_pads(Filter filter, const lib.AVFilterPad *ptr, bint is_input, FilterContext context=None):
+@cython.cfunc
+def alloc_filter_pads(
+    filter: Filter,
+    ptr: cython.pointer[cython.const[lib.AVFilterPad]],
+    is_input: cython.bint,
+    context: FilterContext | None = None,
+) -> tuple:
     if not ptr:
         return ()
 
-    pads = []
+    pads: list = []
 
     # We need to be careful and check our bounds if we know what they are,
     # since the arrays on a AVFilterContext are not NULL terminated.
-    cdef int i = 0
-    cdef int count
+    i: cython.int = 0
+    count: cython.int
     if context is None:
         count = lib.avfilter_filter_pad_count(filter.ptr, not is_input)
     else:
-        count = (context.ptr.nb_inputs if is_input else context.ptr.nb_outputs)
+        count = context.ptr.nb_inputs if is_input else context.ptr.nb_outputs
 
-    cdef FilterPad pad
-    while (i < count):
-        pad = FilterPad(_cinit_sentinel) if context is None else FilterContextPad(_cinit_sentinel)
+    pad: FilterPad
+    while i < count:
+        pad = (
+            FilterPad(_cinit_sentinel)
+            if context is None
+            else FilterContextPad(_cinit_sentinel)
+        )
         pads.append(pad)
         pad.filter = filter
         pad.context = context

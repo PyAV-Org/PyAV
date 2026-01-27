@@ -6,7 +6,6 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int   avformat_version()
     cdef char* avformat_configuration()
     cdef char* avformat_license()
-    cdef void  avformat_network_init()
 
     cdef int64_t INT64_MIN
 
@@ -94,16 +93,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         # const AVCodecTag* const *codec_tag
         const AVClass *priv_class
 
-    cdef struct AVProbeData:
-        unsigned char *buf
-        int buf_size
-        const char *filename
-
-    cdef AVInputFormat* av_probe_input_format(
-        AVProbeData *pd,
-        int is_opened
-    )
-
     # http://ffmpeg.org/doxygen/trunk/structAVOutputFormat.html
     cdef struct AVOutputFormat:
         const char *name
@@ -153,15 +142,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVFMT_FLAG_SORT_DTS
         AVFMT_FLAG_FAST_SEEK
         AVFMT_FLAG_AUTO_BSF
-
-    cdef int av_probe_input_buffer(
-        AVIOContext *pb,
-        AVInputFormat **fmt,
-        const char *filename,
-        void *logctx,
-        unsigned int offset,
-        unsigned int max_probe_size
-    )
 
     cdef int av_find_best_stream(
         AVFormatContext *ic,

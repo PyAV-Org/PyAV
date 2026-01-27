@@ -1,124 +1,148 @@
-from cython.operator cimport dereference
-from libc.stdint cimport int64_t
-
 import os
 import time
 from enum import Flag, IntEnum
 from pathlib import Path
 
-cimport libav as lib
-
-from av.codec.hwaccel cimport HWAccel
-from av.container.core cimport timeout_info
-from av.container.input cimport InputContainer
-from av.container.output cimport OutputContainer
-from av.container.pyio cimport pyio_close_custom_gil, pyio_close_gil
-from av.error cimport err_check, stash_exception
-from av.format cimport build_container_format
-from av.utils cimport (
+import cython
+import cython.cimports.libav as lib
+from cython.cimports.av.codec.hwaccel import HWAccel
+from cython.cimports.av.container.core import timeout_info
+from cython.cimports.av.container.input import InputContainer
+from cython.cimports.av.container.output import OutputContainer
+from cython.cimports.av.container.pyio import pyio_close_custom_gil, pyio_close_gil
+from cython.cimports.av.error import err_check, stash_exception
+from cython.cimports.av.format import build_container_format
+from cython.cimports.av.utils import (
     avdict_to_dict,
     avrational_to_fraction,
     dict_to_avdict,
     to_avrational,
 )
+from cython.cimports.libc.stdint import int64_t
+from cython.operator import dereference
 
 from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
 
+_cinit_sentinel = cython.declare(object, object())
 
-cdef object _cinit_sentinel = object()
+AVChapterPtrPtr = cython.typedef(cython.pointer[cython.pointer[lib.AVChapter]])
 
 
-# We want to use the monotonic clock if it is available.
-cdef object clock = getattr(time, "monotonic", time.time)
-
-cdef int interrupt_cb (void *p) noexcept nogil:
-    cdef timeout_info info = dereference(<timeout_info*> p)
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def interrupt_cb(p: cython.p_void) -> cython.int:
+    info: timeout_info = dereference(cython.cast(cython.pointer[timeout_info], p))
     if info.timeout < 0:  # timeout < 0 means no timeout
         return 0
 
-    cdef double current_time
-    with gil:
-        current_time = clock()
-
-        # Check if the clock has been changed.
+    current_time: cython.double
+    with cython.gil:
+        current_time = time.monotonic()
         if current_time < info.start_time:
             # Raise this when we get back to Python.
-            stash_exception((RuntimeError, RuntimeError("Clock has been changed to before timeout start"), None))
+            stash_exception(
+                (
+                    RuntimeError,
+                    RuntimeError("Clock has been changed to before timeout start"),
+                    None,
+                )
+            )
             return 1
 
     if current_time > info.start_time + info.timeout:
         return 1
-
     return 0
 
 
-cdef int pyav_io_open(lib.AVFormatContext *s,
-                      lib.AVIOContext **pb,
-                      const char *url,
-                      int flags,
-                      lib.AVDictionary **options) noexcept nogil:
-    with gil:
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def pyav_io_open(
+    s: cython.pointer[lib.AVFormatContext],
+    pb: cython.pointer[cython.pointer[lib.AVIOContext]],
+    url: cython.p_const_char,
+    flags: cython.int,
+    options: cython.pointer[cython.pointer[lib.AVDictionary]],
+) -> cython.int:
+    with cython.gil:
         return pyav_io_open_gil(s, pb, url, flags, options)
 
 
-cdef int pyav_io_open_gil(lib.AVFormatContext *s,
-                          lib.AVIOContext **pb,
-                          const char *url,
-                          int flags,
-                          lib.AVDictionary **options) noexcept:
-    cdef Container container
-    cdef object file
-    cdef PyIOFile pyio_file
+@cython.cfunc
+@cython.exceptval(check=False)
+def pyav_io_open_gil(
+    s: cython.pointer[lib.AVFormatContext],
+    pb: cython.pointer[cython.pointer[lib.AVIOContext]],
+    url: cython.p_const_char,
+    flags: cython.int,
+    options: cython.pointer[cython.pointer[lib.AVDictionary]],
+) -> cython.int:
+    container: Container
+    file: object
+    pyio_file: PyIOFile
     try:
-        container = <Container>dereference(s).opaque
+        container = cython.cast(Container, dereference(s).opaque)
 
-        if options is not NULL:
+        if options is not cython.NULL:
             options_dict = avdict_to_dict(
-                dereference(<lib.AVDictionary**>options),
+                dereference(
+                    cython.cast(
+                        cython.pointer[cython.pointer[lib.AVDictionary]], options
+                    )
+                ),
                 encoding=container.metadata_encoding,
-                errors=container.metadata_errors
+                errors=container.metadata_errors,
             )
         else:
             options_dict = {}
 
         file = container.io_open(
-            <str>url if url is not NULL else "",
-            flags,
-            options_dict
+            cython.cast(str, url) if url is not cython.NULL else "", flags, options_dict
         )
 
         pyio_file = PyIOFile(
-            file,
-            container.buffer_size,
-            (flags & lib.AVIO_FLAG_WRITE) != 0
+            file, container.buffer_size, (flags & lib.AVIO_FLAG_WRITE) != 0
         )
 
         # Add it to the container to avoid it being deallocated
-        container.open_files[<int64_t>pyio_file.iocontext.opaque] = pyio_file
-
+        container.open_files[cython.cast(int64_t, pyio_file.iocontext.opaque)] = (
+            pyio_file
+        )
         pb[0] = pyio_file.iocontext
         return 0
-
     except Exception:
         return stash_exception()
 
 
-cdef int pyav_io_close(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept nogil:
-    with gil:
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def pyav_io_close(
+    s: cython.pointer[lib.AVFormatContext], pb: cython.pointer[lib.AVIOContext]
+) -> cython.int:
+    with cython.gil:
         return pyav_io_close_gil(s, pb)
 
-cdef int pyav_io_close_gil(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept:
-    cdef Container container
-    cdef int result = 0
-    try:
-        container = <Container>dereference(s).opaque
 
-        if container.open_files is not None and <int64_t>pb.opaque in container.open_files:
+@cython.cfunc
+@cython.exceptval(check=False)
+def pyav_io_close_gil(
+    s: cython.pointer[lib.AVFormatContext], pb: cython.pointer[lib.AVIOContext]
+) -> cython.int:
+    container: Container
+    result: cython.int = 0
+    try:
+        container = cython.cast(Container, dereference(s).opaque)
+        if (
+            container.open_files is not None
+            and cython.cast(int64_t, pb.opaque) in container.open_files
+        ):
             result = pyio_close_custom_gil(pb)
 
             # Remove it from the container so that it can be deallocated
-            del container.open_files[<int64_t>pb.opaque]
+            del container.open_files[cython.cast(int64_t, pb.opaque)]
         else:
             result = pyio_close_gil(pb)
 
@@ -128,18 +152,25 @@ cdef int pyav_io_close_gil(lib.AVFormatContext *s, lib.AVIOContext *pb) noexcept
 
     return result
 
-cdef void _free_chapters(lib.AVFormatContext *ctx) noexcept nogil:
-        cdef int i
-        if ctx.chapters != NULL:
-            for i in range(ctx.nb_chapters):
-                if ctx.chapters[i] != NULL:
-                    if ctx.chapters[i].metadata != NULL:
-                        lib.av_dict_free(&ctx.chapters[i].metadata)
-                    lib.av_freep(<void **>&ctx.chapters[i])
-            lib.av_freep(<void **>&ctx.chapters)
-        ctx.nb_chapters = 0
+
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def _free_chapters(ctx: cython.pointer[lib.AVFormatContext]) -> cython.void:
+    i: cython.Py_ssize_t
+    if ctx.chapters != cython.NULL:
+        for i in range(ctx.nb_chapters):
+            if ctx.chapters[i] != cython.NULL:
+                if ctx.chapters[i].metadata != cython.NULL:
+                    lib.av_dict_free(cython.address(ctx.chapters[i].metadata))
+                lib.av_freep(
+                    cython.cast(cython.pp_void, cython.address(ctx.chapters[i]))
+                )
+        lib.av_freep(cython.cast(cython.pp_void, cython.address(ctx.chapters)))
+    ctx.nb_chapters = 0
 
 
+# fmt: off
 class Flags(Flag):
     gen_pts: "Generate missing pts even if it requires parsing future frames." = lib.AVFMT_FLAG_GENPTS
     ign_idx: "Ignore index." = lib.AVFMT_FLAG_IGNIDX
@@ -193,15 +224,27 @@ class AudioCodec(IntEnum):
     pcm_u32le = lib.AV_CODEC_ID_PCM_U32LE  # PCM unsigned 32-bit little-endian.
     pcm_u8 = lib.AV_CODEC_ID_PCM_U8  # PCM unsigned 8-bit.
     pcm_vidc = lib.AV_CODEC_ID_PCM_VIDC  # PCM VIDC.
+# fmt: on
 
 
-cdef class Container:
-    def __cinit__(self, sentinel, file_, format_name, options,
-                  container_options, stream_options, hwaccel,
-                  metadata_encoding, metadata_errors,
-                  buffer_size, open_timeout, read_timeout,
-                  io_open):
-
+@cython.cclass
+class Container:
+    def __cinit__(
+        self,
+        sentinel,
+        file_,
+        format_name,
+        options,
+        container_options,
+        stream_options,
+        hwaccel,
+        metadata_encoding,
+        metadata_errors,
+        buffer_size,
+        open_timeout,
+        read_timeout,
+        io_open,
+    ):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("cannot construct base Container")
 
@@ -236,28 +279,29 @@ cdef class Container:
             self.format = ContainerFormat(format_name)
 
         self.input_was_opened = False
-        cdef int res
+        res: cython.int
+        name_obj: bytes = os.fsencode(self.name)
+        name: cython.p_char = name_obj
+        ofmt: cython.pointer[lib.AVOutputFormat]
 
-        cdef bytes name_obj = os.fsencode(self.name)
-        cdef char *name = name_obj
-
-        cdef lib.AVOutputFormat *ofmt
         if self.writeable:
-
-            ofmt = self.format.optr if self.format else lib.av_guess_format(NULL, name, NULL)
-            if ofmt == NULL:
+            ofmt = (
+                self.format.optr
+                if self.format
+                else lib.av_guess_format(cython.NULL, name, cython.NULL)
+            )
+            if ofmt == cython.NULL:
                 raise ValueError("Could not determine output format")
 
-            with nogil:
+            with cython.nogil:
                 # This does not actually open the file.
                 res = lib.avformat_alloc_output_context2(
-                    &self.ptr,
+                    cython.address(self.ptr),
                     ofmt,
-                    NULL,
+                    cython.NULL,
                     name,
                 )
             self.err_check(res)
-
         else:
             # We need the context before we open the input AND setup Python IO.
             self.ptr = lib.avformat_alloc_context()
@@ -265,13 +309,15 @@ cdef class Container:
             # Setup interrupt callback
             if self.open_timeout is not None or self.read_timeout is not None:
                 self.ptr.interrupt_callback.callback = interrupt_cb
-                self.ptr.interrupt_callback.opaque = &self.interrupt_callback_info
+                self.ptr.interrupt_callback.opaque = cython.address(
+                    self.interrupt_callback_info
+                )
 
             if acodec is not None:
                 self.ptr.audio_codec_id = getattr(AudioCodec, acodec)
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
-        self.ptr.opaque = <void*>self
+        self.ptr.opaque = cython.cast(cython.p_void, self)
 
         # Setup Python IO.
         self.open_files = {}
@@ -284,16 +330,18 @@ cdef class Container:
             self.ptr.io_close2 = pyav_io_close
             self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
-        cdef lib.AVInputFormat *ifmt
-        cdef _Dictionary c_options
+        ifmt: cython.pointer[lib.AVInputFormat]
+        c_options: _Dictionary
         if not self.writeable:
-            ifmt = self.format.iptr if self.format else NULL
+            ifmt = self.format.iptr if self.format else cython.NULL
             c_options = Dictionary(self.options, self.container_options)
 
             self.set_timeout(self.open_timeout)
             self.start_timeout()
-            with nogil:
-                res = lib.avformat_open_input(&self.ptr, name, ifmt, &c_options.ptr)
+            with cython.nogil:
+                res = lib.avformat_open_input(
+                    cython.address(self.ptr), name, ifmt, cython.address(c_options.ptr)
+                )
             self.set_timeout(None)
             self.err_check(res)
             self.input_was_opened = True
@@ -302,7 +350,7 @@ cdef class Container:
             self.format = build_container_format(self.ptr.iformat, self.ptr.oformat)
 
     def __dealloc__(self):
-        with nogil:
+        with cython.nogil:
             lib.avformat_free_context(self.ptr)
 
     def __enter__(self):
@@ -314,7 +362,9 @@ cdef class Container:
     def __repr__(self):
         return f"<av.{self.__class__.__name__} {self.file or self.name!r}>"
 
-    cdef int err_check(self, int value) except -1:
+    @cython.cfunc
+    @cython.exceptval(-1, check=False)
+    def err_check(self, value: cython.int) -> cython.int:
         return err_check(value, filename=self.name)
 
     def dumps_format(self):
@@ -323,17 +373,20 @@ cdef class Container:
             lib.av_dump_format(self.ptr, 0, "", isinstance(self, OutputContainer))
         return "".join(log[2] for log in logs)
 
-    cdef set_timeout(self, timeout):
+    @cython.cfunc
+    def set_timeout(self, timeout):
         if timeout is None:
             self.interrupt_callback_info.timeout = -1.0
         else:
             self.interrupt_callback_info.timeout = timeout
 
-    cdef start_timeout(self):
-        self.interrupt_callback_info.start_time = clock()
+    @cython.cfunc
+    def start_timeout(self):
+        self.interrupt_callback_info.start_time = time.monotonic()
 
-    cdef _assert_open(self):
-        if self.ptr == NULL:
+    @cython.cfunc
+    def _assert_open(self):
+        if self.ptr == cython.NULL:
             raise AssertionError("Container is not open")
 
     @property
@@ -342,58 +395,73 @@ cdef class Container:
         return self.ptr.flags
 
     @flags.setter
-    def flags(self, int value):
+    def flags(self, value: cython.int):
         self._assert_open()
         self.ptr.flags = value
 
     def chapters(self):
         self._assert_open()
-        cdef list result = []
-        cdef int i
-
+        result: list = []
+        i: cython.Py_ssize_t
         for i in range(self.ptr.nb_chapters):
             ch = self.ptr.chapters[i]
-            result.append({
-                "id": ch.id,
-                "start": ch.start,
-                "end": ch.end,
-                "time_base": avrational_to_fraction(&ch.time_base),
-                "metadata": avdict_to_dict(ch.metadata, self.metadata_encoding, self.metadata_errors),
-            })
+            result.append(
+                {
+                    "id": ch.id,
+                    "start": ch.start,
+                    "end": ch.end,
+                    "time_base": avrational_to_fraction(cython.address(ch.time_base)),
+                    "metadata": avdict_to_dict(
+                        ch.metadata, self.metadata_encoding, self.metadata_errors
+                    ),
+                }
+            )
         return result
 
     def set_chapters(self, chapters):
         self._assert_open()
 
-        cdef int count = len(chapters)
-        cdef int i
-        cdef lib.AVChapter **ch_array
-        cdef lib.AVChapter *ch
-        cdef dict entry
+        count: cython.Py_ssize_t = len(chapters)
+        i: cython.Py_ssize_t
+        ch_array: AVChapterPtrPtr
+        ch: cython.pointer[lib.AVChapter]
+        entry: dict
 
-        with nogil:
+        with cython.nogil:
             _free_chapters(self.ptr)
 
-        ch_array = <lib.AVChapter **>lib.av_malloc(count * sizeof(lib.AVChapter *))
-        if ch_array == NULL:
+        ch_array = cython.cast(
+            AVChapterPtrPtr,
+            lib.av_malloc(count * cython.sizeof(cython.pointer[lib.AVChapter])),
+        )
+        if ch_array == cython.NULL:
             raise MemoryError("av_malloc failed for chapters")
 
         for i in range(count):
             entry = chapters[i]
-            ch = <lib.AVChapter *>lib.av_malloc(sizeof(lib.AVChapter))
-            if ch == NULL:
+            ch = cython.cast(
+                cython.pointer[lib.AVChapter],
+                lib.av_malloc(cython.sizeof(lib.AVChapter)),
+            )
+            if ch == cython.NULL:
                 raise MemoryError("av_malloc failed for chapter")
             ch.id = entry["id"]
-            ch.start = <int64_t>entry["start"]
-            ch.end = <int64_t>entry["end"]
-            to_avrational(entry["time_base"], &ch.time_base)
-            ch.metadata = NULL
+            ch.start = cython.cast(int64_t, entry["start"])
+            ch.end = cython.cast(int64_t, entry["end"])
+            to_avrational(entry["time_base"], cython.address(ch.time_base))
+            ch.metadata = cython.NULL
             if "metadata" in entry:
-                dict_to_avdict(&ch.metadata, entry["metadata"], self.metadata_encoding, self.metadata_errors)
+                dict_to_avdict(
+                    cython.address(ch.metadata),
+                    entry["metadata"],
+                    self.metadata_encoding,
+                    self.metadata_errors,
+                )
             ch_array[i] = ch
 
         self.ptr.nb_chapters = count
         self.ptr.chapters = ch_array
+
 
 def open(
     file,
@@ -407,7 +475,7 @@ def open(
     buffer_size=32768,
     timeout=None,
     io_open=None,
-    hwaccel=None
+    hwaccel=None,
 ):
     """open(file, mode='r', **kwargs)
 
@@ -479,16 +547,38 @@ def open(
         read_timeout = timeout
 
     if mode.startswith("r"):
-        return InputContainer(_cinit_sentinel, file, format, options,
-            container_options, stream_options, hwaccel, metadata_encoding, metadata_errors,
-            buffer_size, open_timeout, read_timeout, io_open,
+        return InputContainer(
+            _cinit_sentinel,
+            file,
+            format,
+            options,
+            container_options,
+            stream_options,
+            hwaccel,
+            metadata_encoding,
+            metadata_errors,
+            buffer_size,
+            open_timeout,
+            read_timeout,
+            io_open,
         )
 
     if stream_options:
         raise ValueError(
             "Provide stream options via Container.add_stream(..., options={})."
         )
-    return OutputContainer(_cinit_sentinel, file, format, options,
-        container_options, stream_options, None, metadata_encoding, metadata_errors,
-        buffer_size, open_timeout, read_timeout, io_open,
+    return OutputContainer(
+        _cinit_sentinel,
+        file,
+        format,
+        options,
+        container_options,
+        stream_options,
+        None,
+        metadata_encoding,
+        metadata_errors,
+        buffer_size,
+        open_timeout,
+        read_timeout,
+        io_open,
     )

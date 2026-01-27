@@ -1,36 +1,42 @@
-cimport libav as lib
-from libc.errno cimport EAGAIN
-from libc.stdint cimport uint8_t
-from libc.string cimport memcpy
-
-from av.bytesource cimport ByteSource, bytesource
-from av.codec.codec cimport Codec, wrap_codec
-from av.dictionary cimport _Dictionary
-from av.error cimport err_check
-from av.packet cimport Packet
-from av.utils cimport avrational_to_fraction, to_avrational
-
 from enum import Flag, IntEnum
+
+import cython
+from cython.cimports import libav as lib
+from cython.cimports.av.bytesource import ByteSource, bytesource
+from cython.cimports.av.codec.codec import Codec, wrap_codec
+from cython.cimports.av.dictionary import _Dictionary
+from cython.cimports.av.error import err_check
+from cython.cimports.av.packet import Packet
+from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.libc.errno import EAGAIN
+from cython.cimports.libc.stdint import uint8_t
+from cython.cimports.libc.string import memcpy
 
 from av.dictionary import Dictionary
 
+_cinit_sentinel = cython.declare(object, object())
 
-cdef object _cinit_sentinel = object()
 
-
-cdef CodecContext wrap_codec_context(lib.AVCodecContext *c_ctx, const lib.AVCodec *c_codec, HWAccel hwaccel):
-    """Build an av.CodecContext for an existing AVCodecContext."""
-
-    cdef CodecContext py_ctx
+@cython.cfunc
+def wrap_codec_context(
+    c_ctx: cython.pointer[lib.AVCodecContext],
+    c_codec: cython.pointer[cython.const[lib.AVCodec]],
+    hwaccel: HWAccel,
+) -> CodecContext:
+    """Build an bv.CodecContext for an existing AVCodecContext."""
+    py_ctx: CodecContext
 
     if c_ctx.codec_type == lib.AVMEDIA_TYPE_VIDEO:
         from av.video.codeccontext import VideoCodecContext
+
         py_ctx = VideoCodecContext(_cinit_sentinel)
     elif c_ctx.codec_type == lib.AVMEDIA_TYPE_AUDIO:
         from av.audio.codeccontext import AudioCodecContext
+
         py_ctx = AudioCodecContext(_cinit_sentinel)
     elif c_ctx.codec_type == lib.AVMEDIA_TYPE_SUBTITLE:
         from av.subtitles.codeccontext import SubtitleCodecContext
+
         py_ctx = SubtitleCodecContext(_cinit_sentinel)
     else:
         py_ctx = CodecContext(_cinit_sentinel)
@@ -44,7 +50,10 @@ class ThreadType(Flag):
     NONE = 0
     FRAME: "Decode more than one frame at once" = lib.FF_THREAD_FRAME
     SLICE: "Decode more than one part of a single frame at once" = lib.FF_THREAD_SLICE
-    AUTO: "Decode using both FRAME and SLICE methods." = lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME
+    AUTO: "Decode using both FRAME and SLICE methods." = (
+        lib.FF_THREAD_SLICE | lib.FF_THREAD_FRAME
+    )
+
 
 class Flags(IntEnum):
     unaligned = lib.AV_CODEC_FLAG_UNALIGNED
@@ -68,6 +77,7 @@ class Flags(IntEnum):
     interlaced_me = lib.AV_CODEC_FLAG_INTERLACED_ME
     closed_gop = lib.AV_CODEC_FLAG_CLOSED_GOP
 
+
 class Flags2(IntEnum):
     fast = lib.AV_CODEC_FLAG2_FAST
     no_output = lib.AV_CODEC_FLAG2_NO_OUTPUT
@@ -80,11 +90,14 @@ class Flags2(IntEnum):
     ro_flush_noop = lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP
 
 
-cdef class CodecContext:
+@cython.cclass
+class CodecContext:
     @staticmethod
     def create(codec, mode=None, hwaccel=None):
-        cdef Codec cy_codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
-        cdef lib.AVCodecContext *c_ctx = lib.avcodec_alloc_context3(cy_codec.ptr)
+        cy_codec: Codec = codec if isinstance(codec, Codec) else Codec(codec, mode)
+        c_ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(
+            cy_codec.ptr
+        )
         return wrap_codec_context(c_ctx, cy_codec.ptr, hwaccel)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
@@ -95,11 +108,17 @@ cdef class CodecContext:
         self.stream_index = -1  # This is set by the container immediately.
         self.is_open = False
 
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel):
+    @cython.cfunc
+    def _init(
+        self,
+        ptr: cython.pointer[lib.AVCodecContext],
+        codec: cython.pointer[cython.const[lib.AVCodec]],
+        hwaccel: HWAccel,
+    ):
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError("Wrapping CodecContext with mismatched codec.")
-        self.codec = wrap_codec(codec if codec != NULL else self.ptr.codec)
+        self.codec = wrap_codec(codec if codec != cython.NULL else self.ptr.codec)
         self.hwaccel = hwaccel
 
         # Set reasonable threading defaults.
@@ -116,7 +135,7 @@ cdef class CodecContext:
         return self.ptr.flags
 
     @flags.setter
-    def flags(self, int value):
+    def flags(self, value: cython.int):
         self.ptr.flags = value
 
     @property
@@ -156,25 +175,35 @@ cdef class CodecContext:
         return self.ptr.flags2
 
     @flags2.setter
-    def flags2(self, int value):
+    def flags2(self, value: cython.int):
         self.ptr.flags2 = value
 
     @property
     def extradata(self):
-        if self.ptr is NULL:
+        if self.ptr is cython.NULL:
             return None
         if self.ptr.extradata_size > 0:
-            return <bytes>(<uint8_t*>self.ptr.extradata)[:self.ptr.extradata_size]
+            return cython.cast(
+                bytes,
+                cython.cast(cython.pointer[uint8_t], self.ptr.extradata)[
+                    : self.ptr.extradata_size
+                ],
+            )
         return None
 
     @extradata.setter
     def extradata(self, data):
         if data is None:
-            lib.av_freep(&self.ptr.extradata)
+            lib.av_freep(cython.address(self.ptr.extradata))
             self.ptr.extradata_size = 0
         else:
             source = bytesource(data)
-            self.ptr.extradata = <uint8_t*>lib.av_realloc(self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE)
+            self.ptr.extradata = cython.cast(
+                cython.pointer[uint8_t],
+                lib.av_realloc(
+                    self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE
+                ),
+            )
             if not self.ptr.extradata:
                 raise MemoryError("Cannot allocate extradata")
             memcpy(self.ptr.extradata, source.ptr, source.length)
@@ -187,23 +216,24 @@ cdef class CodecContext:
 
     @property
     def is_encoder(self):
-        if self.ptr is NULL:
+        if self.ptr is cython.NULL:
             return False
         return lib.av_codec_is_encoder(self.ptr.codec)
 
     @property
     def is_decoder(self):
-        if self.ptr is NULL:
+        if self.ptr is cython.NULL:
             return False
         return lib.av_codec_is_decoder(self.ptr.codec)
 
-    cpdef open(self, bint strict=True):
+    @cython.ccall
+    def open(self, strict: cython.bint = True):
         if self.is_open:
             if strict:
                 raise ValueError("CodecContext is already open.")
             return
 
-        cdef _Dictionary options = Dictionary()
+        options: _Dictionary = Dictionary()
         options.update(self.options or {})
 
         if not self.ptr.time_base.num and self.is_encoder:
@@ -217,15 +247,18 @@ cdef class CodecContext:
                 self.ptr.time_base.num = 1
                 self.ptr.time_base.den = lib.AV_TIME_BASE
 
-        err_check(lib.avcodec_open2(self.ptr, self.codec.ptr, &options.ptr), "avcodec_open2(" + self.codec.name + ")")
+        err_check(
+            lib.avcodec_open2(self.ptr, self.codec.ptr, cython.address(options.ptr)),
+            f'avcodec_open2("{self.codec.name}", {self.options})',
+        )
         self.is_open = True
         self.options = dict(options)
 
     def __dealloc__(self):
         if self.ptr and self.extradata_set:
-            lib.av_freep(&self.ptr.extradata)
+            lib.av_freep(cython.address(self.ptr.extradata))
         if self.ptr:
-            lib.avcodec_free_context(&self.ptr)
+            lib.avcodec_free_context(cython.address(self.ptr))
         if self.parser:
             lib.av_parser_close(self.parser)
 
@@ -256,27 +289,29 @@ cdef class CodecContext:
             if not self.parser:
                 raise ValueError(f"No parser for {self.codec.name}")
 
-        cdef ByteSource source = bytesource(raw_input, allow_none=True)
+        source: ByteSource = bytesource(raw_input, allow_none=True)
 
-        cdef unsigned char *in_data = source.ptr if source is not None else NULL
-        cdef int in_size = source.length if source is not None else 0
+        in_data: cython.p_uchar = source.ptr if source is not None else cython.NULL
+        in_size: cython.int = source.length if source is not None else 0
 
-        cdef unsigned char *out_data
-        cdef int out_size
-        cdef int consumed
-        cdef Packet packet = None
-
-        packets = []
+        out_data: cython.p_uchar
+        out_size: cython.int
+        consumed: cython.int
+        packet: Packet = None
+        packets: list = []
 
         while True:
-            with nogil:
+            with cython.nogil:
                 consumed = lib.av_parser_parse2(
                     self.parser,
                     self.ptr,
-                    &out_data, &out_size,
-                    in_data, in_size,
-                    lib.AV_NOPTS_VALUE, lib.AV_NOPTS_VALUE,
-                    0
+                    cython.address(out_data),
+                    cython.address(out_size),
+                    in_data,
+                    in_size,
+                    lib.AV_NOPTS_VALUE,
+                    lib.AV_NOPTS_VALUE,
+                    0,
                 )
             err_check(consumed)
 
@@ -317,12 +352,13 @@ cdef class CodecContext:
         """
         return self.hwaccel_ctx is not None
 
-    def _send_frame_and_recv(self, Frame frame):
-        cdef Packet packet
-
-        cdef int res
-        with nogil:
-            res = lib.avcodec_send_frame(self.ptr, frame.ptr if frame is not None else NULL)
+    def _send_frame_and_recv(self, frame: Frame | None):
+        packet: Packet
+        res: cython.int
+        with cython.nogil:
+            res = lib.avcodec_send_frame(
+                self.ptr, frame.ptr if frame is not None else cython.NULL
+            )
         err_check(res, "avcodec_send_frame()")
 
         packet = self._recv_packet()
@@ -330,15 +366,17 @@ cdef class CodecContext:
             yield packet
             packet = self._recv_packet()
 
-    cdef _send_packet_and_recv(self, Packet packet):
-        cdef Frame frame
-
-        cdef int res
-        with nogil:
-            res = lib.avcodec_send_packet(self.ptr, packet.ptr if packet is not None else NULL)
+    @cython.cfunc
+    def _send_packet_and_recv(self, packet: Packet | None):
+        frame: Frame
+        res: cython.int
+        with cython.nogil:
+            res = lib.avcodec_send_packet(
+                self.ptr, packet.ptr if packet is not None else cython.NULL
+            )
         err_check(res, "avcodec_send_packet()")
 
-        out = []
+        out: list = []
         while True:
             frame = self._recv_frame()
             if frame:
@@ -347,48 +385,56 @@ cdef class CodecContext:
                 break
         return out
 
-    cdef _prepare_frames_for_encode(self, Frame frame):
+    @cython.cfunc
+    def _prepare_frames_for_encode(self, frame: Frame | None) -> list:
         return [frame]
 
-    cdef Frame _alloc_next_frame(self):
+    @cython.cfunc
+    def _alloc_next_frame(self) -> Frame:
         raise NotImplementedError("Base CodecContext cannot decode.")
 
-    cdef _recv_frame(self):
+    @cython.cfunc
+    def _recv_frame(self):
         if not self._next_frame:
             self._next_frame = self._alloc_next_frame()
-        cdef Frame frame = self._next_frame
 
-        cdef int res
-        with nogil:
+        frame: Frame = self._next_frame
+        res: cython.int
+
+        with cython.nogil:
             res = lib.avcodec_receive_frame(self.ptr, frame.ptr)
 
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
-        err_check(res, "avcodec_receive_frame()")
 
+        err_check(res, "avcodec_receive_frame()")
         frame = self._transfer_hwframe(frame)
 
         if not res:
             self._next_frame = None
             return frame
 
-    cdef _transfer_hwframe(self, Frame frame):
+    @cython.cfunc
+    def _transfer_hwframe(self, frame: Frame):
         return frame
 
-    cdef _recv_packet(self):
-        cdef Packet packet = Packet()
+    @cython.cfunc
+    def _recv_packet(self):
+        packet: Packet = Packet()
+        res: cython.int
 
-        cdef int res
-        with nogil:
+        with cython.nogil:
             res = lib.avcodec_receive_packet(self.ptr, packet.ptr)
+
         if res == -EAGAIN or res == lib.AVERROR_EOF:
             return
-        err_check(res, "avcodec_receive_packet()")
 
+        err_check(res, "avcodec_receive_packet()")
         if not res:
             return packet
 
-    cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame):
+    @cython.cfunc
+    def _prepare_and_time_rebase_frames_for_encode(self, frame: Frame):
         if self.ptr.codec_type not in [lib.AVMEDIA_TYPE_VIDEO, lib.AVMEDIA_TYPE_AUDIO]:
             raise NotImplementedError("Encoding is only supported for audio and video.")
 
@@ -404,7 +450,8 @@ cdef class CodecContext:
 
         return frames
 
-    cpdef encode(self, Frame frame=None):
+    @cython.ccall
+    def encode(self, frame: Frame | None = None):
         """Encode a list of :class:`.Packet` from the given :class:`.Frame`."""
         res = []
         for frame in self._prepare_and_time_rebase_frames_for_encode(frame):
@@ -413,13 +460,14 @@ cdef class CodecContext:
                 res.append(packet)
         return res
 
-    def encode_lazy(self, Frame frame=None):
+    def encode_lazy(self, frame: Frame | None = None):
         for frame in self._prepare_and_time_rebase_frames_for_encode(frame):
             for packet in self._send_frame_and_recv(frame):
                 self._setup_encoded_packet(packet)
                 yield packet
 
-    cdef _setup_encoded_packet(self, Packet packet):
+    @cython.cfunc
+    def _setup_encoded_packet(self, packet: Packet):
         # We coerced the frame's time_base into the CodecContext's during encoding,
         # and FFmpeg copied the frame's pts/dts to the packet, so keep track of
         # this time_base in case the frame needs to be muxed to a container with
@@ -429,7 +477,8 @@ cdef class CodecContext:
         # are off!
         packet.ptr.time_base = self.ptr.time_base
 
-    cpdef decode(self, Packet packet=None):
+    @cython.ccall
+    def decode(self, packet: Packet | None = None):
         """Decode a list of :class:`.Frame` from the given :class:`.Packet`.
 
         If the packet is None, the buffers will be flushed. This is useful if
@@ -437,20 +486,20 @@ cdef class CodecContext:
         (if they are encoded with a codec that has B-frames).
 
         """
-
         if not self.codec.ptr:
             raise ValueError("cannot decode unknown codec")
 
         self.open(strict=False)
 
-        res = []
+        res: list = []
         for frame in self._send_packet_and_recv(packet):
             if isinstance(frame, Frame):
                 self._setup_decoded_frame(frame, packet)
             res.append(frame)
         return res
 
-    cpdef flush_buffers(self):
+    @cython.ccall
+    def flush_buffers(self):
         """Reset the internal codec state and discard all internal buffers.
 
         Should be called before you start decoding from a new position e.g.
@@ -458,10 +507,11 @@ cdef class CodecContext:
 
         """
         if self.is_open:
-            with nogil:
+            with cython.nogil:
                 lib.avcodec_flush_buffers(self.ptr)
 
-    cdef _setup_decoded_frame(self, Frame frame, Packet packet):
+    @cython.cfunc
+    def _setup_decoded_frame(self, frame: Frame, packet: Packet | None):
         # Propagate our manual times.
         # While decoding, frame times are in stream time_base, which PyAV
         # is carrying around.
@@ -485,15 +535,15 @@ cdef class CodecContext:
 
         :type: list[str]
         """
-        ret = []
+        ret: list = []
         if not self.ptr.codec or not self.codec.desc or not self.codec.desc.profiles:
             return ret
 
         # Profiles are always listed in the codec descriptor, but not necessarily in
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
-        cdef int i = 0
-        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN: 
+        i: cython.int = 0
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN:
             ret.append(desc.profiles[i].name)
             i += 1
 
@@ -507,8 +557,8 @@ cdef class CodecContext:
         # Profiles are always listed in the codec descriptor, but not necessarily in
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
-        cdef int i = 0
-        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN: 
+        i: cython.int = 0
+        while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN:
             if desc.profiles[i].profile == self.ptr.profile:
                 return desc.profiles[i].name
             i += 1
@@ -521,7 +571,7 @@ cdef class CodecContext:
         # Profiles are always listed in the codec descriptor, but not necessarily in
         # the codec itself. So use the descriptor here.
         desc = self.codec.desc
-        cdef int i = 0
+        i: cython.int = 0
         while desc.profiles[i].profile != lib.AV_PROFILE_UNKNOWN:
             if desc.profiles[i].name == value:
                 self.ptr.profile = desc.profiles[i].profile
@@ -532,24 +582,26 @@ cdef class CodecContext:
     def time_base(self):
         if self.is_decoder:
             raise RuntimeError("Cannot access 'time_base' as a decoder")
-        return avrational_to_fraction(&self.ptr.time_base)
+        return avrational_to_fraction(cython.address(self.ptr.time_base))
 
     @time_base.setter
     def time_base(self, value):
         if self.is_decoder:
             raise RuntimeError("Cannot access 'time_base' as a decoder")
-        to_avrational(value, &self.ptr.time_base)
+        to_avrational(value, cython.address(self.ptr.time_base))
 
     @property
     def codec_tag(self):
         return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
-            encoding="ascii")
+            encoding="ascii"
+        )
 
     @codec_tag.setter
     def codec_tag(self, value):
         if isinstance(value, str) and len(value) == 4:
-            self.ptr.codec_tag = int.from_bytes(value.encode(encoding="ascii"),
-                                                byteorder="little", signed=False)
+            self.ptr.codec_tag = int.from_bytes(
+                value.encode(encoding="ascii"), byteorder="little", signed=False
+            )
         else:
             raise ValueError("Codec tag should be a 4 character string.")
 
@@ -558,7 +610,7 @@ cdef class CodecContext:
         return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
 
     @bit_rate.setter
-    def bit_rate(self, int value):
+    def bit_rate(self, value: cython.int):
         self.ptr.bit_rate = value
 
     @property
@@ -573,7 +625,7 @@ cdef class CodecContext:
         self.ptr.bit_rate_tolerance
 
     @bit_rate_tolerance.setter
-    def bit_rate_tolerance(self, int value):
+    def bit_rate_tolerance(self, value: cython.int):
         self.ptr.bit_rate_tolerance = value
 
     @property
@@ -586,7 +638,7 @@ cdef class CodecContext:
         return self.ptr.thread_count
 
     @thread_count.setter
-    def thread_count(self, int value):
+    def thread_count(self, value: cython.int):
         if self.is_open:
             raise RuntimeError("Cannot change thread_count after codec is open.")
         self.ptr.thread_count = value

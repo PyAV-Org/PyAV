@@ -28,6 +28,8 @@ def test_stringify() -> None:
 
 def test_bases() -> None:
     assert issubclass(av.ArgumentError, av.FFmpegError)
+    # Deprecated, assert false for Major 18.0:
+    assert issubclass(av.ArgumentError, ValueError)
     assert issubclass(av.FileNotFoundError, FileNotFoundError)
     assert issubclass(av.FileNotFoundError, OSError)
     assert issubclass(av.FileNotFoundError, av.FFmpegError)

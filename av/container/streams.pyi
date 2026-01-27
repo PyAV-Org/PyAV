@@ -11,7 +11,6 @@ class StreamContainer:
     subtitles: tuple[SubtitleStream, ...]
     attachments: tuple[AttachmentStream, ...]
     data: tuple[DataStream, ...]
-    other: tuple[Stream, ...]
 
     def __init__(self) -> None: ...
     def __len__(self) -> int: ...

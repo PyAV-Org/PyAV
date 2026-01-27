@@ -1,4 +1,8 @@
 cimport libav as lib
+from libc.stdint cimport uint8_t
+
+
+cdef void noop_free(void *opaque, uint8_t *data) noexcept nogil
 
 
 cdef class OpaqueContainer:
