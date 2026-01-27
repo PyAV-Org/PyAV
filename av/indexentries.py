@@ -17,6 +17,14 @@ def wrap_index_entries(ptr: cython.pointer[lib.AVStream]) -> IndexEntries:
 
 @cython.cclass
 class IndexEntries:
+    """A sequence-like view of FFmpeg's per-stream index entries.
+
+    Exposed as :attr:`~av.stream.Stream.index_entries`.
+
+    The index is provided by the demuxer and may be empty or incomplete depending
+    on the container format. This is useful for fast multi-seek loops (e.g., decoding 
+    at a lower-than-native framerate).
+    """
     def __cinit__(self, sentinel):
         if sentinel is _cinit_bypass_sentinel:
             return
@@ -62,6 +70,12 @@ class IndexEntries:
             raise TypeError("Index must be an integer or a slice")
 
     def search_timestamp(self, timestamp, *, backward: bool = True, any_frame: bool = False):
+        """Search the underlying index for ``timestamp``.
+
+        This wraps FFmpeg's ``av_index_search_timestamp``.
+
+        Returns an index into this object, or ``-1`` if no match is found.
+        """
         c_timestamp = cython.declare(int64_t, timestamp)
         flags = cython.declare(cython.int, 0)
 

@@ -14,6 +14,12 @@ def wrap_index_entry(ptr: cython.pointer[lib.AVIndexEntry]) -> IndexEntry:
 
 @cython.cclass
 class IndexEntry:
+    """A single entry from a stream's index.
+
+    This is a thin wrapper around FFmpeg's ``AVIndexEntry``.
+
+    The exact meaning of the fields depends on the container/demuxer.
+    """
     def __cinit__(self, sentinel):
         if sentinel is not _cinit_bypass_sentinel:
             raise RuntimeError("cannot manually instantiate IndexEntry")
