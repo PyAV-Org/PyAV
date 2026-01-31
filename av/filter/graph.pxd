@@ -12,7 +12,6 @@ cdef class Graph:
     cpdef configure(self, bint auto_buffer=*, bint force=*)
 
     cdef dict _name_counts
-    cdef str _get_unique_name(self, str name)
 
     cdef _register_context(self, FilterContext)
     cdef _auto_register(self)
