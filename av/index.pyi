@@ -1,6 +1,13 @@
 from typing import Iterator, overload
 
-from av.indexentry import IndexEntry
+class IndexEntry:
+    pos: int
+    timestamp: int
+    flags: int
+    is_keyframe: bool
+    is_discard: bool
+    size: int
+    min_distance: int
 
 class IndexEntries:
     def __len__(self) -> int: ...

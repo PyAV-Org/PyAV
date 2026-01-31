@@ -3,7 +3,7 @@ from enum import Flag
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.error import err_check
-from cython.cimports.av.indexentries import wrap_index_entries
+from cython.cimports.av.index import wrap_index_entries
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.utils import (
     avdict_to_dict,
