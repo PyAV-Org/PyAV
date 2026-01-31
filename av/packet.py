@@ -2,8 +2,7 @@ from typing import Iterator, Literal, get_args
 
 import cython
 from cython.cimports import libav as lib
-from cython.cimports.av.buffer import Buffer
-from cython.cimports.av.bytesource import ByteSource, bytesource
+from cython.cimports.av.buffer import Buffer, ByteSource, bytesource
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import noop_free, opaque_container
 from cython.cimports.av.utils import avrational_to_fraction, to_avrational

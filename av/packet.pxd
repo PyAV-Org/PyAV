@@ -2,8 +2,7 @@ from cython.cimports.libc.stdint import uint8_t
 
 cimport libav as lib
 
-from av.buffer cimport Buffer
-from av.bytesource cimport ByteSource
+from av.buffer cimport Buffer, ByteSource
 from av.stream cimport Stream
 
 

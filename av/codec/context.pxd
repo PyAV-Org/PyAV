@@ -1,7 +1,7 @@
 cimport libav as lib
 from libc.stdint cimport int64_t
 
-from av.bytesource cimport ByteSource
+from av.buffer cimport ByteSource
 from av.codec.codec cimport Codec
 from av.codec.hwaccel cimport HWAccel
 from av.frame cimport Frame
