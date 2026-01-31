@@ -2,7 +2,7 @@ from enum import Flag, IntEnum
 
 import cython
 from cython.cimports import libav as lib
-from cython.cimports.av.bytesource import ByteSource, bytesource
+from cython.cimports.av.buffer import ByteSource, bytesource
 from cython.cimports.av.codec.codec import Codec, wrap_codec
 from cython.cimports.av.dictionary import _Dictionary
 from cython.cimports.av.error import err_check

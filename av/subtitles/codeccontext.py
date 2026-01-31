@@ -1,6 +1,6 @@
 import cython
 from cython.cimports import libav as lib
-from cython.cimports.av.bytesource import ByteSource, bytesource
+from cython.cimports.av.buffer import ByteSource, bytesource
 from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.subtitles.subtitle import SubtitleProxy, SubtitleSet
