@@ -4,7 +4,7 @@ from typing import Literal, cast
 
 from .codec import Codec, CodecContext
 from .container import Container
-from .indexentries import IndexEntries
+from .index import IndexEntries
 
 class Disposition(Flag):
     default = cast(int, ...)
