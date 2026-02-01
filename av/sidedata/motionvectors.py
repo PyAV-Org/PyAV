@@ -1,6 +1,7 @@
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.sidedata.sidedata import SideData
+from cython.cimports.libc.stdint import uintptr_t
 
 _cinit_bypass_sentinel = cython.declare(object, object())
 
@@ -15,7 +16,7 @@ class MotionVectors(SideData):
     def __repr__(self):
         return (
             f"<av.sidedata.MotionVectors {self.ptr.size} bytes "
-            f"of {len(self)} vectors at 0x{cython.cast(cython.uint, self.ptr.data):0x}>"
+            f"of {len(self)} vectors at 0x{cython.cast(uintptr_t, self.ptr.data):0x}>"
         )
 
     def __len__(self):
