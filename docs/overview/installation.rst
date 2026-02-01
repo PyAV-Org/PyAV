@@ -24,7 +24,7 @@ See the `Conda quick install <https://docs.conda.io/projects/conda/en/latest/use
 Bring your own FFmpeg
 ---------------------
 
-PyAV can also be compiled against your own build of FFmpeg (version ``7.0`` or higher). You can force installing PyAV from source by running:
+PyAV can also be compiled against your own build of FFmpeg (version ``8.0`` or higher). You can force installing PyAV from source by running:
 
 .. code-block:: bash
     pip install av --no-binary av
@@ -52,20 +52,6 @@ On **MacOS**, Homebrew_ saves the day::
     brew install ffmpeg pkg-config
 
 .. _homebrew: http://brew.sh/
-
-
-Ubuntu >= 18.04 LTS
-^^^^^^^^^^^^^^^^^^^
-
-On **Ubuntu 18.04 LTS** everything can come from the default sources::
-
-    # General dependencies
-    sudo apt-get install -y python-dev pkg-config
-
-    # Library components
-    sudo apt-get install -y \
-        libavformat-dev libavcodec-dev libavdevice-dev \
-        libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
 
 
 Windows
