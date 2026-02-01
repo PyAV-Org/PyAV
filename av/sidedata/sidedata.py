@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from enum import Enum
 
 import cython
-from cython.cimports.libc.stdint import int32_t
+from cython.cimports.libc.stdint import int32_t, uintptr_t
 
 from av.sidedata.encparams import VideoEncParams
 from av.sidedata.motionvectors import MotionVectors
@@ -95,7 +95,7 @@ class SideData(Buffer):
         return False
 
     def __repr__(self):
-        return f"<av.sidedata.{self.__class__.__name__} {self.ptr.size} bytes of {self.type} at 0x{cython.cast(cython.uint, self.ptr.data):0x}>"
+        return f"<av.sidedata.{self.__class__.__name__} {self.ptr.size} bytes of {self.type} at 0x{cython.cast(uintptr_t, self.ptr.data):0x}>"
 
     @property
     def type(self):
