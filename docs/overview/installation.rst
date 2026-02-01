@@ -27,7 +27,9 @@ Bring your own FFmpeg
 PyAV can also be compiled against your own build of FFmpeg (version ``8.0`` or higher). You can force installing PyAV from source by running:
 
 .. code-block:: bash
+
     pip install av --no-binary av
+
 PyAV depends upon several libraries from FFmpeg:
 
 - ``libavcodec``

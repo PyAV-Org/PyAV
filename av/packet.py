@@ -446,7 +446,7 @@ class Packet(Buffer):
     def get_sidedata(self, dtype: str) -> PacketSideData:
         """get a copy of the side data
 
-        :param dtype: side data type (:method:`~av.packet.PacketSideData.sidedata_types` for the full list of options)
+        :param dtype: side data type (:meth:`~av.packet.PacketSideData.sidedata_types` for the full list of options)
         :type dtype: str
         :return: newly created copy of the side data if the side data of the
                  requested type is found in the packet, else an empty object
