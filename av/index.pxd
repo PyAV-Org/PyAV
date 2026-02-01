@@ -2,8 +2,8 @@ cimport libav as lib
 
 
 cdef class IndexEntry:
-    cdef lib.AVIndexEntry *ptr
-    cdef _init(self, lib.AVIndexEntry *ptr)
+    cdef const lib.AVIndexEntry *ptr
+    cdef _init(self, const lib.AVIndexEntry *ptr)
 
 cdef class IndexEntries:
     cdef lib.AVStream *stream_ptr

@@ -6,7 +6,7 @@ _cinit_bypass_sentinel = cython.declare(object, object())
 
 
 @cython.cfunc
-def wrap_index_entry(ptr: cython.pointer[lib.AVIndexEntry]) -> IndexEntry:
+def wrap_index_entry(ptr: cython.pointer[cython.const[lib.AVIndexEntry]]) -> IndexEntry:
     obj: IndexEntry = IndexEntry(_cinit_bypass_sentinel)
     obj._init(ptr)
     return obj
@@ -26,7 +26,7 @@ class IndexEntry:
             raise RuntimeError("cannot manually instantiate IndexEntry")
 
     @cython.cfunc
-    def _init(self, ptr: cython.pointer[lib.AVIndexEntry]):
+    def _init(self, ptr: cython.pointer[cython.const[lib.AVIndexEntry]]):
         self.ptr = ptr
 
     def __repr__(self):
@@ -110,19 +110,17 @@ class IndexEntries:
             if index < 0 or index >= n:
                 raise IndexError(f"Index entries {index} out of bounds for size {n}")
 
-            c_idx = cython.declare(cython.int, index)
+            c_idx: cython.int = index
+            entry: cython.pointer[cython.const[lib.AVIndexEntry]]
             with cython.nogil:
                 entry = lib.avformat_index_get_entry(self.stream_ptr, c_idx)
-
             if entry == cython.NULL:
                 raise IndexError("index entry not found")
 
             return wrap_index_entry(entry)
-
         elif isinstance(index, slice):
             start, stop, step = index.indices(len(self))
             return [self[i] for i in range(start, stop, step)]
-
         else:
             raise TypeError("Index must be an integer or a slice")
 
@@ -135,8 +133,8 @@ class IndexEntries:
 
         Returns an index into this object, or ``-1`` if no match is found.
         """
-        c_timestamp = cython.declare(int64_t, timestamp)
-        flags = cython.declare(cython.int, 0)
+        c_timestamp: int64_t = timestamp
+        flags: cython.int = 0
 
         if backward:
             flags |= lib.AVSEEK_FLAG_BACKWARD
