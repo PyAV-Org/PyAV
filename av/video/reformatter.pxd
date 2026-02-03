@@ -10,4 +10,5 @@ cdef class VideoReformatter:
     cdef _reformat(self, VideoFrame frame, int width, int height,
                    lib.AVPixelFormat format, int src_colorspace,
                    int dst_colorspace, int interpolation,
-                   int src_color_range, int dst_color_range)
+                   int src_color_range, int dst_color_range,
+                   bint set_dst_colorspace, bint set_dst_color_range)
