@@ -58,6 +58,21 @@ def _resolve_enum_value(value, enum_class, default):
     raise ValueError(f"Cannot convert {value} to {enum_class.__name__}")
 
 
+# Mapping from SWS_CS_* (swscale colorspace) to AVColorSpace (frame metadata).
+# Note: SWS_CS_ITU601, SWS_CS_ITU624, SWS_CS_SMPTE170M, and SWS_CS_DEFAULT all have
+# the same value (5), so we map 5 -> AVCOL_SPC_SMPTE170M as the most common case.
+# SWS_CS_DEFAULT is handled specially by not setting frame metadata.
+_SWS_CS_TO_AVCOL_SPC = cython.declare(
+    dict,
+    {
+        lib.SWS_CS_ITU709: lib.AVCOL_SPC_BT709,
+        lib.SWS_CS_FCC: lib.AVCOL_SPC_FCC,
+        lib.SWS_CS_ITU601: lib.AVCOL_SPC_SMPTE170M,
+        lib.SWS_CS_SMPTE240M: lib.AVCOL_SPC_SMPTE240M,
+    },
+)
+
+
 @cython.cclass
 class VideoReformatter:
     """An object for reformatting size and pixel format of :class:`.VideoFrame`.
@@ -123,6 +138,10 @@ class VideoReformatter:
             dst_color_range, ColorRange, 0
         )
 
+        # Track whether user explicitly specified destination metadata
+        set_dst_colorspace: cython.bint = dst_colorspace is not None
+        set_dst_color_range: cython.bint = dst_color_range is not None
+
         return self._reformat(
             frame,
             width or frame.ptr.width,
@@ -133,6 +152,8 @@ class VideoReformatter:
             c_interpolation,
             c_src_color_range,
             c_dst_color_range,
+            set_dst_colorspace,
+            set_dst_color_range,
         )
 
     @cython.cfunc
@@ -147,9 +168,15 @@ class VideoReformatter:
         interpolation: cython.int,
         src_color_range: cython.int,
         dst_color_range: cython.int,
+        set_dst_colorspace: cython.bint,
+        set_dst_color_range: cython.bint,
     ):
         if frame.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
+
+        # Save original values to set on the output frame (before swscale conversion)
+        frame_dst_colorspace = dst_colorspace
+        frame_dst_color_range = dst_color_range
 
         # The definition of color range in pixfmt.h and swscale.h is different.
         src_color_range = 1 if src_color_range == ColorRange.JPEG.value else 0
@@ -230,6 +257,16 @@ class VideoReformatter:
         new_frame: VideoFrame = alloc_video_frame()
         new_frame._copy_internal_attributes(frame)
         new_frame._init(dst_format, width, height)
+
+        # Set the colorspace and color_range on the output frame only if explicitly specified
+        if set_dst_colorspace and frame_dst_colorspace in _SWS_CS_TO_AVCOL_SPC:
+            new_frame.ptr.colorspace = cython.cast(
+                lib.AVColorSpace, _SWS_CS_TO_AVCOL_SPC[frame_dst_colorspace]
+            )
+        if set_dst_color_range:
+            new_frame.ptr.color_range = cython.cast(
+                lib.AVColorRange, frame_dst_color_range
+            )
 
         with cython.nogil:
             lib.sws_scale(
