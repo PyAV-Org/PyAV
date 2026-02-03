@@ -17,6 +17,7 @@ class Graph:
     def __cinit__(self):
         self.ptr = lib.avfilter_graph_alloc()
         self.configured = False
+        self._name_counts = {}
         self._nb_filters_seen = 0
         self._context_by_ptr = {}
         self._context_by_name = {}
@@ -27,10 +28,14 @@ class Graph:
             # This frees the graph, filter contexts, links, etc..
             lib.avfilter_graph_free(cython.address(self.ptr))
 
-    def _ctx_from_name_or_die(self, name: str) -> FilterContext:
-        if (ctx := self._context_by_name.get(name)) is None:
-            raise ValueError(f"'{name}' is not a valid filter context")
-        return ctx
+    @cython.cfunc
+    def _get_unique_name(self, name: str) -> str:
+        count = self._name_counts.get(name, 0)
+        self._name_counts[name] = count + 1
+        if count:
+            return "%s_%s" % (name, count)
+        else:
+            return name
 
     @cython.ccall
     def configure(self, auto_buffer: cython.bint = True, force: cython.bint = False):
@@ -48,10 +53,10 @@ class Graph:
         Links nodes together for simple filter graphs.
         """
         for c, n in zip(nodes, nodes[1:]):
-            self._ctx_from_name_or_die(c).link_to(self._ctx_from_name_or_die(n))
+            c.link_to(n)
         return self
 
-    def add(self, name, filter, args=None, **kwargs):
+    def add(self, filter, args=None, **kwargs):
         cy_filter: Filter
         if isinstance(filter, str):
             cy_filter = Filter(filter)
@@ -60,9 +65,7 @@ class Graph:
         else:
             raise TypeError("filter must be a string or Filter")
 
-        if name in self._context_by_name:
-            raise ValueError(f"Filter context name '{name}' already taken")
-
+        name: str = self._get_unique_name(kwargs.pop("name", None) or cy_filter.name)
         ptr: cython.pointer[lib.AVFilterContext] = lib.avfilter_graph_alloc_filter(
             self.ptr, cy_filter.ptr, name
         )
@@ -71,7 +74,7 @@ class Graph:
 
         # Manually construct this context (so we can return it).
         ctx: FilterContext = wrap_filter_context(self, cy_filter, ptr)
-        ctx.init(args, name=name, **kwargs)
+        ctx.init(args, **kwargs)
         self._register_context(ctx)
 
         # There might have been automatic contexts added (e.g. resamplers,
@@ -106,11 +109,11 @@ class Graph:
 
     def add_buffer(
         self,
-        name,
         template=None,
         width=None,
         height=None,
         format=None,
+        name=None,
         time_base=None,
     ):
         if template is not None:
@@ -138,8 +141,8 @@ class Graph:
             time_base = Fraction(1, 1000)
 
         return self.add(
-            name,
             "buffer",
+            name=name,
             video_size=f"{width}x{height}",
             pix_fmt=str(int(VideoFormat(format))),
             time_base=str(time_base),
@@ -148,12 +151,12 @@ class Graph:
 
     def add_abuffer(
         self,
-        name,
         template=None,
         sample_rate=None,
         format=None,
         layout=None,
         channels=None,
+        name=None,
         time_base=None,
     ):
         """
@@ -191,7 +194,7 @@ class Graph:
         if channels:
             kwargs["channels"] = f"{channels}"
 
-        return self.add(name, "abuffer", **kwargs)
+        return self.add("abuffer", name=name, **kwargs)
 
     def set_audio_frame_size(self, frame_size):
         """
@@ -208,10 +211,7 @@ class Graph:
                 cython.cast(FilterContext, sink).ptr, frame_size
             )
 
-    def filter_push(self, frame, name=None):
-        if name:
-            return self._ctx_from_name_or_die(name).push(frame)
-
+    def push(self, frame):
         if frame is None:
             contexts = self._context_by_type.get(
                 "buffer", []
@@ -228,16 +228,13 @@ class Graph:
         for ctx in contexts:
             ctx.push(frame)
 
-    def filter_vpush(self, frame: VideoFrame | None):
+    def vpush(self, frame: VideoFrame | None):
         """Like `push`, but only for VideoFrames."""
         for ctx in self._context_by_type.get("buffer", []):
             ctx.push(frame)
 
     # TODO: Test complex filter graphs, add `at: int = 0` arg to pull() and vpull().
-    def filter_pull(self, name=None):
-        if name:
-            return self._ctx_from_name_or_die(name).pull()
-
+    def pull(self):
         vsinks = self._context_by_type.get("buffersink", [])
         asinks = self._context_by_type.get("abuffersink", [])
 
@@ -247,7 +244,7 @@ class Graph:
 
         return (vsinks or asinks)[0].pull()
 
-    def filter_vpull(self):
+    def vpull(self):
         """Like `pull`, but only for VideoFrames."""
         vsinks = self._context_by_type.get("buffersink", [])
         nsinks = len(vsinks)
@@ -255,20 +252,3 @@ class Graph:
             raise ValueError(f"can only auto-pull with single sink; found {nsinks}")
 
         return vsinks[0].pull()
-
-    def filter_link_to(self, output_name, input_name, output_idx=0, input_idx=0):
-        self._ctx_from_name_or_die(output_name).link_to(
-            self._ctx_from_name_or_die(input_name),
-            output_idx,
-            input_idx
-        )
-
-    def filter_process_command(
-            self,
-            name,
-            cmd,
-            arg=None,
-            res_len=1024,
-            flags=0
-    ):
-        return self._ctx_from_name_or_die(name).process_command(cmd, arg, res_len, flags)
