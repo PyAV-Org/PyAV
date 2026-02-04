@@ -110,6 +110,7 @@ class HWAccel:
         allow_software_fallback=True,
         options=None,
         flags=None,
+        output_format="sw",
     ):
         if isinstance(device_type, HWDeviceType):
             self._device_type = device_type
@@ -119,6 +120,14 @@ class HWAccel:
             self._device_type = device_type
         else:
             raise ValueError("Unknown type for device_type")
+
+        if output_format is None:
+            output_format = "sw"
+        if isinstance(output_format, str):
+            output_format = output_format.lower()
+        if output_format not in {"sw", "hw"}:
+            raise ValueError("output_format must be 'sw' or 'hw'")
+        self.output_format = output_format
 
         self._device = device
         self.allow_software_fallback = allow_software_fallback
@@ -165,6 +174,7 @@ class HWAccel:
             device=self._device,
             allow_software_fallback=self.allow_software_fallback,
             options=self.options,
+            output_format=self.output_format,
         )
         ret._initialize_hw_context(codec)
         return ret

@@ -367,6 +367,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVBufferRef *opaque_ref
         AVChannelLayout ch_layout
         int64_t duration
+        AVBufferRef *hw_frames_ctx
 
     cdef struct AVPacket:
         void *buf

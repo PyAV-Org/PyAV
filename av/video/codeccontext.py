@@ -127,6 +127,9 @@ class VideoCodecContext(CodecContext):
             # need to transfer.
             return frame
 
+        if self.hwaccel_ctx.output_format == "hw":
+            return frame
+
         frame_sw: Frame = self._alloc_next_frame()
         err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
         # TODO: Is there anything else to transfer?

@@ -3,6 +3,7 @@ from enum import IntEnum
 
 import cython
 from cython.cimports.av.error import err_check
+from cython.cimports.av.hwcontext import AVHWFramesContext
 from cython.cimports.av.sidedata.sidedata import get_display_rotation
 from cython.cimports.av.utils import check_ndarray
 from cython.cimports.av.video.format import get_pix_fmt, get_video_format
@@ -261,12 +262,19 @@ class VideoFrame(Frame):
         # We need to detect which planes actually exist, but also constrain ourselves to
         # the maximum plane count (as determined only by VideoFrames so far), in case
         # the library implementation does not set the last plane to NULL.
+        fmt = self.format
+        if self.ptr.hw_frames_ctx:
+            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
+                cython.pointer[AVHWFramesContext], self.ptr.hw_frames_ctx.data
+            )
+            fmt = get_video_format(frames_ctx.sw_format, self.ptr.width, self.ptr.height)
+
         max_plane_count: cython.int = 0
-        for i in range(self.format.ptr.nb_components):
-            count = self.format.ptr.comp[i].plane + 1
+        for i in range(fmt.ptr.nb_components):
+            count = fmt.ptr.comp[i].plane + 1
             if max_plane_count < count:
                 max_plane_count = count
-        if self.format.name == "pal8":
+        if fmt.name == "pal8":
             max_plane_count = 2
 
         plane_count: cython.int = 0
@@ -446,7 +454,21 @@ class VideoFrame(Frame):
         .. note:: For ``gbrp`` formats, channels are flipped to RGB order.
 
         """
-        frame: VideoFrame = self.reformat(**kwargs)
+        kwargs2 = dict(kwargs)
+        if self.ptr.hw_frames_ctx and "format" not in kwargs2:
+            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
+                cython.pointer[AVHWFramesContext], self.ptr.hw_frames_ctx.data
+            )
+            kwargs2["format"] = get_video_format(
+                frames_ctx.sw_format, self.ptr.width, self.ptr.height
+            ).name
+
+        frame: VideoFrame = self.reformat(**kwargs2)
+        if frame.ptr.hw_frames_ctx:
+            raise ValueError(
+                "Cannot convert a hardware frame to numpy directly. "
+                "Specify a software format (e.g. format='rgb24') or decode with HWAccel(output_format='sw')."
+            )
 
         import numpy as np
 
