@@ -84,3 +84,12 @@ class VideoFrame(Frame):
         flip_horizontal: bool = False,
         flip_vertical: bool = False,
     ) -> VideoFrame: ...
+    @staticmethod
+    def from_dlpack(
+        planes: object | tuple[object, ...],
+        format: str = "nv12",
+        width: int = 0,
+        height: int = 0,
+        stream: int | None = None,
+        device_id: int | None = None,
+    ) -> "VideoFrame": ...

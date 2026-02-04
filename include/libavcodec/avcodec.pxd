@@ -353,8 +353,12 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int64_t pkt_dts
         void *opaque
         int sample_rate
-        int nb_side_data
+        AVBufferRef *buf[4]
+        AVBufferRef **extended_buf
+        int nb_extended_buf
+
         AVFrameSideData **side_data
+        int nb_side_data
         int flags
         AVColorRange color_range
         AVColorPrimaries color_primaries
@@ -364,10 +368,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDictionary *metadata
         int decode_error_flags
 
+        AVBufferRef *hw_frames_ctx
         AVBufferRef *opaque_ref
         AVChannelLayout ch_layout
         int64_t duration
-        AVBufferRef *hw_frames_ctx
 
     cdef struct AVPacket:
         void *buf

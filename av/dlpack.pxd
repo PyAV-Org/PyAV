@@ -32,7 +32,7 @@ cdef struct DLTensor:
 
 cdef struct DLManagedTensor
 
-ctypedef void (*DLManagedTensorDeleter)(DLManagedTensor*) nogil
+ctypedef void (*DLManagedTensorDeleter)(DLManagedTensor*) noexcept nogil
 
 cdef struct DLManagedTensor:
     DLTensor dl_tensor
