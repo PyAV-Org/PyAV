@@ -29,7 +29,9 @@ class VideoPlane(Plane):
             frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
                 cython.pointer[AVHWFramesContext], frame.ptr.hw_frames_ctx.data
             )
-            fmt = get_video_format(frames_ctx.sw_format, frame.ptr.width, frame.ptr.height)
+            fmt = get_video_format(
+                frames_ctx.sw_format, frame.ptr.width, frame.ptr.height
+            )
 
         if fmt.name == "pal8" and index == 1:
             self.width = 256
@@ -82,8 +84,12 @@ class VideoPlane(Plane):
 
     def __dlpack_device__(self):
         if self.frame.ptr.hw_frames_ctx:
-            if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(b"cuda"):
-                raise NotImplementedError("DLPack export is only implemented for CUDA hw frames")
+            if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(
+                b"cuda"
+            ):
+                raise NotImplementedError(
+                    "DLPack export is only implemented for CUDA hw frames"
+                )
 
             frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
                 cython.pointer[AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
@@ -97,15 +103,21 @@ class VideoPlane(Plane):
 
     def __dlpack__(self, stream=None):
         if self.frame.ptr.buf[0] == cython.NULL:
-            raise TypeError("DLPack export requires a refcounted AVFrame (frame.buf[0] is NULL)")
+            raise TypeError(
+                "DLPack export requires a refcounted AVFrame (frame.buf[0] is NULL)"
+            )
 
         device_type: cython.int
         device_id: cython.int
         sw_fmt: lib.AVPixelFormat
 
         if self.frame.ptr.hw_frames_ctx:
-            if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(b"cuda"):
-                raise NotImplementedError("DLPack export is only implemented for CUDA hw frames")
+            if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(
+                b"cuda"
+            ):
+                raise NotImplementedError(
+                    "DLPack export is only implemented for CUDA hw frames"
+                )
 
             frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
                 cython.pointer[AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
@@ -122,7 +134,9 @@ class VideoPlane(Plane):
 
         line_size = self.line_size
         if line_size < 0:
-            raise NotImplementedError("negative linesize is not supported for DLPack export")
+            raise NotImplementedError(
+                "negative linesize is not supported for DLPack export"
+            )
 
         nv12 = get_pix_fmt(b"nv12")
         p010le = get_pix_fmt(b"p010le")
@@ -187,8 +201,12 @@ class VideoPlane(Plane):
             raise MemoryError("av_frame_alloc() failed")
         err_check(lib.av_frame_ref(frame_ref, self.frame.ptr))
 
-        shape = cython.cast(cython.pointer[int64_t], malloc(ndim * cython.sizeof(int64_t)))
-        strides = cython.cast(cython.pointer[int64_t], malloc(ndim * cython.sizeof(int64_t)))
+        shape = cython.cast(
+            cython.pointer[int64_t], malloc(ndim * cython.sizeof(int64_t))
+        )
+        strides = cython.cast(
+            cython.pointer[int64_t], malloc(ndim * cython.sizeof(int64_t))
+        )
         if shape == cython.NULL or strides == cython.NULL:
             if shape != cython.NULL:
                 free(shape)
@@ -210,7 +228,9 @@ class VideoPlane(Plane):
             strides[1] = st1
             strides[2] = st2
 
-        ctx = cython.cast(cython.pointer[cython.p_void], malloc(3 * cython.sizeof(cython.p_void)))
+        ctx = cython.cast(
+            cython.pointer[cython.p_void], malloc(3 * cython.sizeof(cython.p_void))
+        )
         if ctx == cython.NULL:
             free(shape)
             free(strides)
@@ -221,7 +241,9 @@ class VideoPlane(Plane):
         ctx[1] = cython.cast(cython.p_void, shape)
         ctx[2] = cython.cast(cython.p_void, strides)
 
-        managed = cython.cast(cython.pointer[DLManagedTensor], malloc(cython.sizeof(DLManagedTensor)))
+        managed = cython.cast(
+            cython.pointer[DLManagedTensor], malloc(cython.sizeof(DLManagedTensor))
+        )
         if managed == cython.NULL:
             free(ctx)
             free(shape)
@@ -243,7 +265,11 @@ class VideoPlane(Plane):
         managed.deleter = _dlpack_managed_tensor_deleter
 
         try:
-            capsule = PyCapsule_New(cython.cast(cython.p_void, managed), b"dltensor", _dlpack_capsule_destructor)
+            capsule = PyCapsule_New(
+                cython.cast(cython.p_void, managed),
+                b"dltensor",
+                _dlpack_capsule_destructor,
+            )
         except Exception:
             _dlpack_managed_tensor_deleter(managed)
             raise
@@ -254,7 +280,9 @@ class VideoPlane(Plane):
 @cython.cfunc
 @cython.nogil
 @cython.exceptval(check=False)
-def _dlpack_managed_tensor_deleter(managed: cython.pointer[DLManagedTensor]) -> cython.void:
+def _dlpack_managed_tensor_deleter(
+    managed: cython.pointer[DLManagedTensor],
+) -> cython.void:
     ctx: cython.pointer[cython.p_void]
     frame_ref: cython.pointer[lib.AVFrame]
     shape: cython.pointer[int64_t]

@@ -1,5 +1,6 @@
 from libc.stdint cimport int64_t, uint8_t, uint16_t, uint64_t
 
+
 cdef enum DLDeviceType:
     kDLCPU = 1
     kDLCUDA = 2

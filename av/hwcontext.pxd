@@ -1,5 +1,6 @@
 cimport libav as lib
 
+
 cdef extern from "libavutil/hwcontext.h" nogil:
     ctypedef struct AVHWFramesContext:
         const void *av_class

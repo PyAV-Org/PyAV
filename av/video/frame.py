@@ -4,7 +4,7 @@ from enum import IntEnum
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.dictionary import Dictionary
-from cython.cimports.av.dlpack import DLManagedTensor, kDLCUDA, kDLUInt, kDLCPU
+from cython.cimports.av.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.av.error import err_check
 from cython.cimports.av.hwcontext import (
     AVHWFramesContext,
@@ -28,6 +28,7 @@ import av._hwdevice_registry as _hwreg
 _cuda_device_ctx_cache = {}
 _cuda_frames_ctx_cache = {}
 
+
 @cython.cfunc
 def _consume_dlpack(obj: object, stream: object) -> cython.pointer[DLManagedTensor]:
     capsule: object
@@ -40,7 +41,9 @@ def _consume_dlpack(obj: object, stream: object) -> cython.pointer[DLManagedTens
 
     if not PyCapsule_IsValid(capsule, b"dltensor"):
         PyErr_Clear()
-        raise TypeError("expected a DLPack capsule or an object implementing __dlpack__")
+        raise TypeError(
+            "expected a DLPack capsule or an object implementing __dlpack__"
+        )
 
     managed = cython.cast(
         cython.pointer[DLManagedTensor],
@@ -54,6 +57,7 @@ def _consume_dlpack(obj: object, stream: object) -> cython.pointer[DLManagedTens
 
     return managed
 
+
 @cython.cfunc
 @cython.nogil
 @cython.exceptval(check=False)
@@ -66,6 +70,7 @@ def _dlpack_avbuffer_free(
     )
     if managed != cython.NULL:
         managed.deleter(managed)
+
 
 @cython.cfunc
 def _get_cuda_device_ctx(
@@ -102,6 +107,7 @@ def _get_cuda_device_ctx(
 
     _cuda_device_ctx_cache[key] = cython.cast(cython.size_t, device_ref)
     return device_ref
+
 
 @cython.cfunc
 def _get_cuda_frames_ctx(
@@ -398,7 +404,9 @@ class VideoFrame(Frame):
             frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
                 cython.pointer[AVHWFramesContext], self.ptr.hw_frames_ctx.data
             )
-            fmt = get_video_format(frames_ctx.sw_format, self.ptr.width, self.ptr.height)
+            fmt = get_video_format(
+                frames_ctx.sw_format, self.ptr.width, self.ptr.height
+            )
 
         max_plane_count: cython.int = 0
         for i in range(fmt.ptr.nb_components):
@@ -1347,7 +1355,9 @@ class VideoFrame(Frame):
             planes = (planes,)
 
         if len(planes) != 2:
-            raise ValueError("from_dlpack currently supports 2-plane formats only (nv12/p010le/p016le)")
+            raise ValueError(
+                "from_dlpack currently supports 2-plane formats only (nv12/p010le/p016le)"
+            )
 
         sw_fmt: lib.AVPixelFormat = get_pix_fmt(format)
         nv12 = get_pix_fmt(b"nv12")
@@ -1373,7 +1383,9 @@ class VideoFrame(Frame):
             if dev_type0 != dev_type1:
                 raise ValueError("plane tensors must have the same device_type")
             if dev_type0 not in {kDLCUDA, kDLCPU}:
-                raise NotImplementedError("only CPU and CUDA DLPack tensors are supported")
+                raise NotImplementedError(
+                    "only CPU and CUDA DLPack tensors are supported"
+                )
 
             dev0 = m0.dl_tensor.device.device_id
             dev1 = m1.dl_tensor.device.device_id
@@ -1385,7 +1397,9 @@ class VideoFrame(Frame):
                 if device_id is None:
                     device_id = dev0
                 elif device_id != dev0:
-                    raise ValueError("device_id does not match the DLPack tensor device_id")
+                    raise ValueError(
+                        "device_id does not match the DLPack tensor device_id"
+                    )
             else:
                 if device_id not in (None, 0):
                     raise ValueError("device_id must be 0 for CPU tensors")
@@ -1445,7 +1459,9 @@ class VideoFrame(Frame):
                     raise ValueError("plane 1 must have shape (H/2, W) for 2D UV")
                 if m1.dl_tensor.strides != cython.NULL:
                     if m1.dl_tensor.strides[1] != 1:
-                        raise ValueError("plane 1 must be contiguous in the last dimension")
+                        raise ValueError(
+                            "plane 1 must be contiguous in the last dimension"
+                        )
                     uv_pitch_elems = cython.cast(int64_t, m1.dl_tensor.strides[0])
                 else:
                     uv_pitch_elems = cython.cast(int64_t, uv_w)
@@ -1457,7 +1473,9 @@ class VideoFrame(Frame):
                     raise ValueError("plane 1 must have shape (H/2, W/2, 2) for 3D UV")
                 if m1.dl_tensor.strides != cython.NULL:
                     if m1.dl_tensor.strides[2] != 1 or m1.dl_tensor.strides[1] != 2:
-                        raise ValueError("unexpected UV plane strides for (H/2, W/2, 2)")
+                        raise ValueError(
+                            "unexpected UV plane strides for (H/2, W/2, 2)"
+                        )
                     uv_pitch_elems = cython.cast(int64_t, m1.dl_tensor.strides[0])
                 else:
                     uv_pitch_elems = cython.cast(int64_t, width)
@@ -1477,7 +1495,9 @@ class VideoFrame(Frame):
                     raise TypeError("primary_ctx must be a bool")
                 primary_ctx = bool(primary_ctx)
 
-                frames_ref = _get_cuda_frames_ctx(device_id, primary_ctx, sw_fmt, width, height)
+                frames_ref = _get_cuda_frames_ctx(
+                    device_id, primary_ctx, sw_fmt, width, height
+                )
 
                 frame.ptr.format = get_pix_fmt(b"cuda")
                 frame.ptr.hw_frames_ctx = lib.av_buffer_ref(frames_ref)
@@ -1486,12 +1506,12 @@ class VideoFrame(Frame):
             else:
                 frame.ptr.format = sw_fmt
 
-            y_ptr = cython.cast(cython.pointer[uint8_t], m0.dl_tensor.data) + cython.cast(
-                cython.size_t, m0.dl_tensor.byte_offset
-            )
-            uv_ptr = cython.cast(cython.pointer[uint8_t], m1.dl_tensor.data) + cython.cast(
-                cython.size_t, m1.dl_tensor.byte_offset
-            )
+            y_ptr = cython.cast(
+                cython.pointer[uint8_t], m0.dl_tensor.data
+            ) + cython.cast(cython.size_t, m0.dl_tensor.byte_offset)
+            uv_ptr = cython.cast(
+                cython.pointer[uint8_t], m1.dl_tensor.data
+            ) + cython.cast(cython.size_t, m1.dl_tensor.byte_offset)
 
             frame.ptr.buf[0] = lib.av_buffer_create(
                 y_ptr, y_size, _dlpack_avbuffer_free, cython.cast(cython.p_void, m0), 0
@@ -1503,7 +1523,11 @@ class VideoFrame(Frame):
             m0 = cython.NULL
 
             frame.ptr.buf[1] = lib.av_buffer_create(
-                uv_ptr, uv_size, _dlpack_avbuffer_free, cython.cast(cython.p_void, m1), 0
+                uv_ptr,
+                uv_size,
+                _dlpack_avbuffer_free,
+                cython.cast(cython.p_void, m1),
+                0,
             )
             if frame.ptr.buf[1] == cython.NULL:
                 raise MemoryError("av_buffer_create failed for plane 1")
