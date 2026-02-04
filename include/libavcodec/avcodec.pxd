@@ -353,7 +353,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int64_t pkt_dts
         void *opaque
         int sample_rate
-        AVBufferRef *buf[4]
+        AVBufferRef *buf[8]
         AVBufferRef **extended_buf
         int nb_extended_buf
 

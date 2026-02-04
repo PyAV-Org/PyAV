@@ -92,4 +92,5 @@ class VideoFrame(Frame):
         height: int = 0,
         stream: int | None = None,
         device_id: int | None = None,
+        primary_ctx: bool = True,
     ) -> "VideoFrame": ...

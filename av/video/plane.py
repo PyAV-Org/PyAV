@@ -1,7 +1,7 @@
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.buffer import Buffer
-from cython.cimports.av.dlpack import DLManagedTensor, kDLCUDA, kDLUInt
+from cython.cimports.av.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.av.error import err_check
 from cython.cimports.av.hwcontext import AVHWFramesContext
 from cython.cimports.av.video.format import get_pix_fmt, get_video_format
@@ -16,6 +16,8 @@ from cython.cimports.cpython.pycapsule import (
 from cython.cimports.cpython.ref import PyObject
 from cython.cimports.libc.stdint import int64_t
 from cython.cimports.libc.stdlib import free, malloc
+
+import av._hwdevice_registry as _hwreg
 
 
 @cython.cclass
@@ -79,22 +81,44 @@ class VideoPlane(Plane):
         PyBuffer_FillInfo(view, self, self._buffer_ptr(), self._buffer_size(), 0, flags)
 
     def __dlpack_device__(self):
-        if not self.frame.ptr.hw_frames_ctx:
-            raise TypeError("DLPack export is only supported for hardware frames")
-        if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(b"cuda"):
-            raise NotImplementedError("DLPack export is only implemented for CUDA hw frames")
-        return (kDLCUDA, 0)
+        if self.frame.ptr.hw_frames_ctx:
+            if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(b"cuda"):
+                raise NotImplementedError("DLPack export is only implemented for CUDA hw frames")
+
+            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
+                cython.pointer[AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
+            )
+            device_id = _hwreg.lookup_cuda_device_id(
+                cython.cast(cython.size_t, frames_ctx.device_ref.data)
+            )
+            return (kDLCUDA, device_id)
+
+        return (kDLCPU, 0)
 
     def __dlpack__(self, stream=None):
-        if not self.frame.ptr.hw_frames_ctx:
-            raise TypeError("DLPack export is only supported for hardware frames")
-        if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(b"cuda"):
-            raise NotImplementedError("DLPack export is only implemented for CUDA hw frames")
+        if self.frame.ptr.buf[0] == cython.NULL:
+            raise TypeError("DLPack export requires a refcounted AVFrame (frame.buf[0] is NULL)")
 
-        frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
-            cython.pointer[AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
-        )
-        sw_fmt = frames_ctx.sw_format
+        device_type: cython.int
+        device_id: cython.int
+        sw_fmt: lib.AVPixelFormat
+
+        if self.frame.ptr.hw_frames_ctx:
+            if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(b"cuda"):
+                raise NotImplementedError("DLPack export is only implemented for CUDA hw frames")
+
+            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
+                cython.pointer[AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
+            )
+            sw_fmt = frames_ctx.sw_format
+            device_type = kDLCUDA
+            device_id = _hwreg.lookup_cuda_device_id(
+                cython.cast(cython.size_t, frames_ctx.device_ref.data)
+            )
+        else:
+            sw_fmt = cython.cast(lib.AVPixelFormat, self.frame.ptr.format)
+            device_type = kDLCPU
+            device_id = 0
 
         line_size = self.line_size
         if line_size < 0:
@@ -206,8 +230,8 @@ class VideoPlane(Plane):
             raise MemoryError("malloc() failed")
 
         managed.dl_tensor.data = cython.cast(cython.p_void, frame_ref.data[self.index])
-        managed.dl_tensor.device.device_type = kDLCUDA
-        managed.dl_tensor.device.device_id = 0
+        managed.dl_tensor.device.device_type = device_type
+        managed.dl_tensor.device.device_id = device_id
         managed.dl_tensor.ndim = ndim
         managed.dl_tensor.dtype.code = kDLUInt
         managed.dl_tensor.dtype.bits = bits
