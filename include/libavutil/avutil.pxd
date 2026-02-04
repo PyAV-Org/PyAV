@@ -1,9 +1,6 @@
 from libc.stdint cimport int64_t, uint8_t, uint64_t, int32_t
 
 
-cdef extern from "libavutil/mathematics.h" nogil:
-    pass
-
 cdef extern from "libavutil/display.h" nogil:
     cdef double av_display_rotation_get(const int32_t matrix[9])
 
@@ -12,7 +9,7 @@ cdef extern from "libavutil/rational.h" nogil:
 
 cdef extern from "libavutil/avutil.h" nogil:
     cdef const char* av_version_info()
-    cdef int   avutil_version()
+    cdef int avutil_version()
     cdef char* avutil_configuration()
     cdef char* avutil_license()
 
@@ -33,15 +30,6 @@ cdef extern from "libavutil/avutil.h" nogil:
         AV_PIX_FMT_RGB24
         PIX_FMT_RGB24
         PIX_FMT_RGBA
-
-    cdef enum AVRounding:
-        AV_ROUND_ZERO
-        AV_ROUND_INF
-        AV_ROUND_DOWN
-        AV_ROUND_UP
-        AV_ROUND_NEAR_INF
-        # This is nice, but only in FFMpeg:
-        # AV_ROUND_PASS_MINMAX
 
     cdef enum AVColorSpace:
         AVCOL_SPC_RGB
@@ -83,37 +71,14 @@ cdef extern from "libavutil/avutil.h" nogil:
         AVCOL_PRI_NB
 
     cdef enum AVColorTransferCharacteristic:
-        AVCOL_TRC_RESERVED0
-        AVCOL_TRC_BT709
-        AVCOL_TRC_UNSPECIFIED
-        AVCOL_TRC_RESERVED
-        AVCOL_TRC_GAMMA22
-        AVCOL_TRC_GAMMA28
-        AVCOL_TRC_SMPTE170M
-        AVCOL_TRC_SMPTE240M
-        AVCOL_TRC_LINEAR
-        AVCOL_TRC_LOG
-        AVCOL_TRC_LOG_SQRT
-        AVCOL_TRC_IEC61966_2_4
-        AVCOL_TRC_BT1361_ECG
-        AVCOL_TRC_IEC61966_2_1
-        AVCOL_TRC_BT2020_10
-        AVCOL_TRC_BT2020_12
-        AVCOL_TRC_SMPTE2084
-        AVCOL_TRC_SMPTEST2084
-        AVCOL_TRC_SMPTE428
-        AVCOL_TRC_SMPTEST428_1
-        AVCOL_TRC_ARIB_STD_B67
-        AVCOL_TRC_NB
+        pass
 
     cdef void* av_malloc(size_t size)
     cdef void* av_mallocz(size_t size)
     cdef void* av_realloc(void *ptr, size_t size)
     cdef void av_free(void *ptr)
     cdef void av_freep(void *ptr)
-
     cdef int av_get_bytes_per_sample(AVSampleFormat sample_fmt)
-
     cdef int av_samples_get_buffer_size(
         int *linesize,
         int nb_channels,
@@ -124,7 +89,6 @@ cdef extern from "libavutil/avutil.h" nogil:
     ctypedef struct AVRational:
         int num
         int den
-    cdef AVRational AV_TIME_BASE_Q
     cdef int64_t av_rescale_q(int64_t a, AVRational bq, AVRational cq)
     cdef int64_t av_rescale(int64_t a, int64_t b, int64_t c)
     cdef const char* av_get_media_type_string(AVMediaType media_type)
@@ -142,13 +106,9 @@ cdef extern from "libavutil/pixdesc.h" nogil:
         AV_PIX_FMT_FLAG_BE
         AV_PIX_FMT_FLAG_PAL
         AV_PIX_FMT_FLAG_BITSTREAM
-        AV_PIX_FMT_FLAG_HWACCEL
         AV_PIX_FMT_FLAG_PLANAR
         AV_PIX_FMT_FLAG_RGB
-        AV_PIX_FMT_FLAG_PSEUDOPAL
-        AV_PIX_FMT_FLAG_ALPHA
         AV_PIX_FMT_FLAG_BAYER
-        AV_PIX_FMT_FLAG_FLOAT
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVPixFmtDescriptor.html
     cdef struct AVPixFmtDescriptor:
@@ -161,10 +121,8 @@ cdef extern from "libavutil/pixdesc.h" nogil:
 
     cdef AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
     cdef AVPixFmtDescriptor* av_pix_fmt_desc_next(AVPixFmtDescriptor *prev)
-
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(char* name)
-
     int av_get_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
     int av_get_padded_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
 
@@ -185,14 +143,6 @@ cdef extern from "libavutil/audio_fifo.h" nogil:
 cdef extern from "stdarg.h" nogil:
     ctypedef struct va_list:
         pass
-
-
-cdef extern from "Python.h" nogil:
-    cdef int Py_AddPendingCall(void *, void *)
-    void PyErr_PrintEx(int set_sys_last_vars)
-    int Py_IsInitialized()
-    void PyErr_Display(object, object, object)
-
 
 cdef extern from "libavutil/opt.h" nogil:
     cdef enum AVOptionType:

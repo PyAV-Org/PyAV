@@ -1,5 +1,4 @@
 cdef extern from "libavutil/hwcontext.h" nogil:
-
     enum AVHWDeviceType:
         AV_HWDEVICE_TYPE_NONE
         AV_HWDEVICE_TYPE_VDPAU
