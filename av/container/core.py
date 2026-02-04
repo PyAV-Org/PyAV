@@ -21,7 +21,6 @@ from cython.cimports.av.utils import (
 from cython.cimports.libc.stdint import int64_t
 from cython.operator import dereference
 
-from av.dictionary import Dictionary
 from av.logging import Capture as LogCapture
 
 _cinit_sentinel = cython.declare(object, object())
@@ -331,7 +330,7 @@ class Container:
             self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
         ifmt: cython.pointer[lib.AVInputFormat]
-        c_options: _Dictionary
+        c_options: Dictionary
         if not self.writeable:
             ifmt = self.format.iptr if self.format else cython.NULL
             c_options = Dictionary(self.options, self.container_options)

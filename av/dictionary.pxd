@@ -1,9 +1,8 @@
 cimport libav as lib
 
 
-cdef class _Dictionary:
+cdef class Dictionary:
     cdef lib.AVDictionary *ptr
-    cpdef _Dictionary copy(self)
+    cpdef Dictionary copy(self)
 
-
-cdef _Dictionary wrap_dictionary(lib.AVDictionary *input_)
+cdef Dictionary wrap_dictionary(lib.AVDictionary *input_)

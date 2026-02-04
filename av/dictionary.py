@@ -1,11 +1,9 @@
-from collections.abc import MutableMapping
-
 import cython
 from cython.cimports.av.error import err_check
 
 
 @cython.cclass
-class _Dictionary:
+class Dictionary:
     def __cinit__(self, *args, **kwargs):
         for arg in args:
             self.update(arg)
@@ -17,9 +15,8 @@ class _Dictionary:
             lib.av_dict_free(cython.address(self.ptr))
 
     def __getitem__(self, key: cython.str):
-        element = cython.declare(
-            cython.pointer[lib.AVDictionaryEntry],
-            lib.av_dict_get(self.ptr, key, cython.NULL, 0),
+        element: cython.pointer[lib.AVDictionaryEntry] = lib.av_dict_get(
+            self.ptr, key, cython.NULL, 0
         )
         if element == cython.NULL:
             raise KeyError(key)
@@ -35,7 +32,7 @@ class _Dictionary:
         return err_check(lib.av_dict_count(self.ptr))
 
     def __iter__(self):
-        element = cython.declare(cython.pointer[lib.AVDictionaryEntry], cython.NULL)
+        element: cython.pointer[lib.AVDictionaryEntry] = cython.NULL
         while True:
             element = lib.av_dict_get(self.ptr, "", element, lib.AV_DICT_IGNORE_SUFFIX)
             if element == cython.NULL:
@@ -46,17 +43,32 @@ class _Dictionary:
         return f"av.Dictionary({dict(self)!r})"
 
     def copy(self):
-        other = cython.declare(_Dictionary, Dictionary())
+        other: Dictionary = Dictionary()
         lib.av_dict_copy(cython.address(other.ptr), self.ptr, 0)
         return other
 
+    def pop(self, key: str):
+        value = self[key]
+        del self[key]
+        return value
 
-class Dictionary(_Dictionary, MutableMapping):
-    pass
+    def update(self, other=(), /, **kwds):
+        if isinstance(other, Dictionary):
+            lib.av_dict_copy(
+                cython.address(self.ptr), cython.cast(Dictionary, other).ptr, 0
+            )
+        elif hasattr(other, "keys"):
+            for key in other.keys():
+                self[key] = other[key]
+        else:
+            for key, value in other:
+                self[key] = value
+        for key, value in kwds.items():
+            self[key] = value
 
 
 @cython.cfunc
-def wrap_dictionary(input_: cython.pointer[lib.AVDictionary]) -> _Dictionary:
-    output = cython.declare(_Dictionary, Dictionary())
+def wrap_dictionary(input_: cython.pointer[lib.AVDictionary]) -> Dictionary:
+    output: Dictionary = Dictionary()
     output.ptr = input_
     return output

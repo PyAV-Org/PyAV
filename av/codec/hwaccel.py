@@ -4,11 +4,9 @@ from enum import IntEnum
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.codec.codec import Codec
-from cython.cimports.av.dictionary import _Dictionary
+from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
 from cython.cimports.av.video.format import get_video_format
-
-from av.dictionary import Dictionary
 
 
 class HWDeviceType(IntEnum):
@@ -145,7 +143,7 @@ class HWAccel:
         if self._device:
             device_bytes = self._device.encode()
             c_device = device_bytes
-        c_options: _Dictionary = Dictionary(self.options)
+        c_options: Dictionary = Dictionary(self.options)
 
         err_check(
             lib.av_hwdevice_ctx_create(

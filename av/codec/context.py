@@ -4,15 +4,13 @@ import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.buffer import ByteSource, bytesource
 from cython.cimports.av.codec.codec import Codec, wrap_codec
-from cython.cimports.av.dictionary import _Dictionary
+from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.utils import avrational_to_fraction, to_avrational
 from cython.cimports.libc.errno import EAGAIN
 from cython.cimports.libc.stdint import uint8_t
 from cython.cimports.libc.string import memcpy
-
-from av.dictionary import Dictionary
 
 _cinit_sentinel = cython.declare(object, object())
 
@@ -233,7 +231,7 @@ class CodecContext:
                 raise ValueError("CodecContext is already open.")
             return
 
-        options: _Dictionary = Dictionary()
+        options: Dictionary = Dictionary()
         options.update(self.options or {})
 
         if not self.ptr.time_base.num and self.is_encoder:

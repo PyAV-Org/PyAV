@@ -3,7 +3,7 @@ cimport libav as lib
 from av.codec.hwaccel cimport HWAccel
 from av.container.pyio cimport PyIOFile
 from av.container.streams cimport StreamContainer
-from av.dictionary cimport _Dictionary
+from av.dictionary cimport Dictionary
 from av.format cimport ContainerFormat
 from av.stream cimport Stream
 
