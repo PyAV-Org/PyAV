@@ -2,7 +2,6 @@ from libc.stdint cimport int16_t, int32_t, uint8_t, uint16_t, uint64_t
 
 
 cdef extern from "libavutil/motion_vector.h" nogil:
-
     cdef struct AVMotionVector:
         int32_t     source
         uint8_t     w

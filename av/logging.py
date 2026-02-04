@@ -328,7 +328,7 @@ def log_callback(
     format: cython.p_const_char,
     args: lib.va_list,
 ) -> cython.void:
-    inited: cython.bint = lib.Py_IsInitialized()
+    inited: cython.bint = Py_IsInitialized()
     if not inited:
         return
 
@@ -361,9 +361,9 @@ def log_callback(
                 level,
                 message,
             )
-            # For some reason lib.PyErr_PrintEx(0) won't work.
+            # For some reason PyErr_PrintEx(0) won't work.
             exc, type_, tb = sys.exc_info()
-            lib.PyErr_Display(exc, type_, tb)
+            PyErr_Display(exc, type_, tb)
 
 
 @cython.cfunc
