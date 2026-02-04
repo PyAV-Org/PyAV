@@ -1,10 +1,9 @@
 cdef extern from "libavfilter/avfilter.h" nogil:
-    cdef int   avfilter_version()
+    cdef int avfilter_version()
     cdef char* avfilter_configuration()
     cdef char* avfilter_license()
 
     cdef struct AVFilterPad:
-        # This struct is opaque.
         pass
 
     const char* avfilter_pad_get_name(const AVFilterPad *pads, int index)

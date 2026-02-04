@@ -1,11 +1,16 @@
-from libc.stdint cimport int64_t, uint8_t, uint64_t, int32_t
+from libc.stdint cimport int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 
 
-cdef extern from "libavutil/display.h" nogil:
-    cdef double av_display_rotation_get(const int32_t matrix[9])
-
-cdef extern from "libavutil/rational.h" nogil:
-    cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
+cdef extern from "libavutil/audio_fifo.h" nogil:
+    cdef struct AVAudioFifo:
+        pass
+    cdef void av_audio_fifo_free(AVAudioFifo *af)
+    cdef AVAudioFifo* av_audio_fifo_alloc(
+        AVSampleFormat sample_fmt, int channels, int nb_samples
+    )
+    cdef int av_audio_fifo_write(AVAudioFifo *af, void **data, int nb_samples)
+    cdef int av_audio_fifo_read(AVAudioFifo *af, void **data, int nb_samples)
+    cdef int av_audio_fifo_size(AVAudioFifo *af)
 
 cdef extern from "libavutil/avutil.h" nogil:
     cdef const char* av_version_info()
@@ -26,10 +31,6 @@ cdef extern from "libavutil/avutil.h" nogil:
     cdef enum AVPixelFormat:
         AV_PIX_FMT_NONE
         AV_PIX_FMT_YUV420P
-        AV_PIX_FMT_RGBA
-        AV_PIX_FMT_RGB24
-        PIX_FMT_RGB24
-        PIX_FMT_RGBA
 
     cdef enum AVColorSpace:
         AVCOL_SPC_RGB
@@ -93,56 +94,156 @@ cdef extern from "libavutil/avutil.h" nogil:
     cdef int64_t av_rescale(int64_t a, int64_t b, int64_t c)
     cdef const char* av_get_media_type_string(AVMediaType media_type)
 
-cdef extern from "libavutil/pixdesc.h" nogil:
-    # See: http://ffmpeg.org/doxygen/trunk/structAVComponentDescriptor.html
-    cdef struct AVComponentDescriptor:
-        unsigned int plane
-        unsigned int step
-        unsigned int offset
-        unsigned int shift
-        unsigned int depth
+cdef extern from "libavutil/buffer.h" nogil:
+    AVBufferRef *av_buffer_create(uint8_t *data, size_t size, void (*free)(void *opaque, uint8_t *data), void *opaque, int flags)
+    AVBufferRef* av_buffer_ref(AVBufferRef *buf)
+    void av_buffer_unref(AVBufferRef **buf)
+    cdef struct AVBuffer:
+        uint8_t *data
+        int size
+        void (*free)(void *opaque, uint8_t *data)
+        void *opaque
+        int flags
+    cdef struct AVBufferRef:
+        AVBuffer *buffer
+        uint8_t *data
+        int size
 
-    cdef enum AVPixFmtFlags:
-        AV_PIX_FMT_FLAG_BE
-        AV_PIX_FMT_FLAG_PAL
-        AV_PIX_FMT_FLAG_BITSTREAM
-        AV_PIX_FMT_FLAG_PLANAR
-        AV_PIX_FMT_FLAG_RGB
-        AV_PIX_FMT_FLAG_BAYER
-
-    # See: http://ffmpeg.org/doxygen/trunk/structAVPixFmtDescriptor.html
-    cdef struct AVPixFmtDescriptor:
-        const char *name
-        uint8_t nb_components
-        uint8_t log2_chroma_w
-        uint8_t log2_chroma_h
-        uint8_t flags
-        AVComponentDescriptor comp[4]
-
-    cdef AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
-    cdef AVPixFmtDescriptor* av_pix_fmt_desc_next(AVPixFmtDescriptor *prev)
-    cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
-    cdef AVPixelFormat av_get_pix_fmt(char* name)
-    int av_get_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
-    int av_get_padded_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
-
-
-cdef extern from "libavutil/audio_fifo.h" nogil:
-    cdef struct AVAudioFifo:
+cdef extern from "libavutil/dict.h" nogil:
+    # See: http://ffmpeg.org/doxygen/trunk/structAVDictionary.html
+    ctypedef struct AVDictionary:
         pass
-
-    cdef void av_audio_fifo_free(AVAudioFifo *af)
-    cdef AVAudioFifo* av_audio_fifo_alloc(
-        AVSampleFormat sample_fmt, int channels, int nb_samples
+    # See: http://ffmpeg.org/doxygen/trunk/structAVDictionaryEntry.html
+    ctypedef struct AVDictionaryEntry:
+        char *key
+        char *value
+    cdef int AV_DICT_IGNORE_SUFFIX
+    cdef void av_dict_free(AVDictionary **)
+    cdef AVDictionaryEntry* av_dict_get(
+        AVDictionary *dict, char *key, AVDictionaryEntry *prev, int flags
     )
-    cdef int av_audio_fifo_write(AVAudioFifo *af, void **data, int nb_samples)
-    cdef int av_audio_fifo_read(AVAudioFifo *af, void **data, int nb_samples)
-    cdef int av_audio_fifo_size(AVAudioFifo *af)
+    cdef int av_dict_set(
+        AVDictionary **pm, const char *key, const char *value, int flags
+    )
+    cdef int av_dict_count(AVDictionary *m)
+    cdef int av_dict_copy(AVDictionary **dst, AVDictionary *src, int flags)
 
+cdef extern from "libavutil/display.h" nogil:
+    cdef double av_display_rotation_get(const int32_t matrix[9])
 
-cdef extern from "stdarg.h" nogil:
-    ctypedef struct va_list:
-        pass
+cdef extern from "libavutil/error.h" nogil:
+    cdef int AVERROR_BSF_NOT_FOUND
+    cdef int AVERROR_BUG
+    cdef int AVERROR_BUFFER_TOO_SMALL
+    cdef int AVERROR_DECODER_NOT_FOUND
+    cdef int AVERROR_DEMUXER_NOT_FOUND
+    cdef int AVERROR_ENCODER_NOT_FOUND
+    cdef int AVERROR_EOF
+    cdef int AVERROR_EXIT
+    cdef int AVERROR_EXTERNAL
+    cdef int AVERROR_FILTER_NOT_FOUND
+    cdef int AVERROR_INVALIDDATA
+    cdef int AVERROR_MUXER_NOT_FOUND
+    cdef int AVERROR_OPTION_NOT_FOUND
+    cdef int AVERROR_PATCHWELCOME
+    cdef int AVERROR_PROTOCOL_NOT_FOUND
+    cdef int AVERROR_UNKNOWN
+    cdef int AVERROR_EXPERIMENTAL
+    cdef int AVERROR_INPUT_CHANGED
+    cdef int AVERROR_OUTPUT_CHANGED
+    cdef int AVERROR_HTTP_BAD_REQUEST
+    cdef int AVERROR_HTTP_UNAUTHORIZED
+    cdef int AVERROR_HTTP_FORBIDDEN
+    cdef int AVERROR_HTTP_NOT_FOUND
+    cdef int AVERROR_HTTP_OTHER_4XX
+    cdef int AVERROR_HTTP_SERVER_ERROR
+    cdef int AV_ERROR_MAX_STRING_SIZE
+    cdef int av_strerror(int errno, char *output, size_t output_size)
+    cdef char* av_err2str(int errnum)
+
+cdef extern from "libavutil/frame.h" nogil:
+    cdef AVFrame* av_frame_alloc()
+    cdef void av_frame_free(AVFrame**)
+    cdef void av_frame_unref(AVFrame *frame)
+    cdef int av_frame_make_writable(AVFrame *frame)
+    cdef int av_frame_copy_props(AVFrame *dst, const AVFrame *src)
+    cdef AVFrameSideData* av_frame_get_side_data(AVFrame *frame, AVFrameSideDataType type)
+
+cdef extern from "libavutil/hwcontext.h" nogil:
+    enum AVHWDeviceType:
+        AV_HWDEVICE_TYPE_NONE
+        AV_HWDEVICE_TYPE_VDPAU
+        AV_HWDEVICE_TYPE_CUDA
+        AV_HWDEVICE_TYPE_VAAPI
+        AV_HWDEVICE_TYPE_DXVA2
+        AV_HWDEVICE_TYPE_QSV
+        AV_HWDEVICE_TYPE_VIDEOTOOLBOX
+        AV_HWDEVICE_TYPE_D3D11VA
+        AV_HWDEVICE_TYPE_DRM
+        AV_HWDEVICE_TYPE_OPENCL
+        AV_HWDEVICE_TYPE_MEDIACODEC
+        AV_HWDEVICE_TYPE_VULKAN
+        AV_HWDEVICE_TYPE_D3D12VA
+
+    cdef int av_hwdevice_ctx_create(AVBufferRef **device_ctx, AVHWDeviceType type, const char *device, AVDictionary *opts, int flags)
+    cdef AVHWDeviceType av_hwdevice_find_type_by_name(const char *name)
+    cdef const char *av_hwdevice_get_type_name(AVHWDeviceType type)
+    cdef AVHWDeviceType av_hwdevice_iterate_types(AVHWDeviceType prev)
+    cdef int av_hwframe_transfer_data(AVFrame *dst, const AVFrame *src, int flags)
+
+cdef extern from "libavutil/imgutils.h" nogil:
+    cdef int av_image_alloc(
+        uint8_t *pointers[4],
+        int linesizes[4],
+        int width,
+        int height,
+        AVPixelFormat pix_fmt,
+        int align
+    )
+    cdef int av_image_fill_pointers(
+        uint8_t *pointers[4],
+        AVPixelFormat pix_fmt,
+        int height,
+        uint8_t *ptr,
+        const int linesizes[4]
+    )
+
+cdef extern from "libavutil/log.h" nogil:
+    cdef struct AVClass:
+        const char *class_name
+        const char *(*item_name)(void*) nogil
+        const AVOption *option
+
+    cdef enum:
+        AV_LOG_QUIET
+        AV_LOG_PANIC
+        AV_LOG_FATAL
+        AV_LOG_ERROR
+        AV_LOG_WARNING
+        AV_LOG_INFO
+        AV_LOG_VERBOSE
+        AV_LOG_DEBUG
+        AV_LOG_TRACE
+
+    void av_log(void *ptr, int level, const char *fmt, ...)
+    ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
+    void av_log_default_callback(void *, int, const char *, va_list)
+    void av_log_set_callback (av_log_callback callback)
+    void av_log_set_level(int level)
+
+cdef extern from "libavutil/motion_vector.h" nogil:
+    cdef struct AVMotionVector:
+        int32_t source
+        uint8_t w
+        uint8_t h
+        int16_t src_x
+        int16_t src_y
+        int16_t dst_x
+        int16_t dst_y
+        uint64_t flags
+        int32_t motion_x
+        int32_t motion_y
+        uint16_t motion_scale
 
 cdef extern from "libavutil/opt.h" nogil:
     cdef enum AVOptionType:
@@ -187,53 +288,92 @@ cdef extern from "libavutil/opt.h" nogil:
         const char *help
         AVOptionType type
         int offset
-
         AVOption_default_val default_val
-
         double min
         double max
         int flags
         const char *unit
 
+cdef extern from "libavutil/pixdesc.h" nogil:
+    # See: http://ffmpeg.org/doxygen/trunk/structAVComponentDescriptor.html
+    cdef struct AVComponentDescriptor:
+        unsigned int plane
+        unsigned int step
+        unsigned int offset
+        unsigned int shift
+        unsigned int depth
 
-cdef extern from "libavutil/imgutils.h" nogil:
-    cdef int av_image_alloc(
-        uint8_t *pointers[4],
-        int linesizes[4],
-        int width,
-        int height,
-        AVPixelFormat pix_fmt,
+    cdef enum AVPixFmtFlags:
+        AV_PIX_FMT_FLAG_BE
+        AV_PIX_FMT_FLAG_PAL
+        AV_PIX_FMT_FLAG_BITSTREAM
+        AV_PIX_FMT_FLAG_PLANAR
+        AV_PIX_FMT_FLAG_RGB
+        AV_PIX_FMT_FLAG_BAYER
+
+    # See: http://ffmpeg.org/doxygen/trunk/structAVPixFmtDescriptor.html
+    cdef struct AVPixFmtDescriptor:
+        const char *name
+        uint8_t nb_components
+        uint8_t log2_chroma_w
+        uint8_t log2_chroma_h
+        uint8_t flags
+        AVComponentDescriptor comp[4]
+
+    cdef AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
+    cdef AVPixFmtDescriptor* av_pix_fmt_desc_next(AVPixFmtDescriptor *prev)
+    cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
+    cdef AVPixelFormat av_get_pix_fmt(char* name)
+    int av_get_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
+    int av_get_padded_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
+
+cdef extern from "libavutil/rational.h" nogil:
+    cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
+
+cdef extern from "libavutil/samplefmt.h" nogil:
+    cdef enum AVSampleFormat:
+        AV_SAMPLE_FMT_U8
+        AV_SAMPLE_FMT_S16
+        AV_SAMPLE_FMT_S32
+        AV_SAMPLE_FMT_FLT
+        AV_SAMPLE_FMT_DBL
+
+    cdef AVSampleFormat av_get_sample_fmt(char* name)
+    cdef char *av_get_sample_fmt_name(AVSampleFormat sample_fmt)
+    cdef int av_get_bytes_per_sample(AVSampleFormat sample_fmt)
+    cdef int av_sample_fmt_is_planar(AVSampleFormat sample_fmt)
+    cdef AVSampleFormat av_get_packed_sample_fmt(AVSampleFormat sample_fmt)
+    cdef AVSampleFormat av_get_planar_sample_fmt(AVSampleFormat sample_fmt)
+    cdef int av_samples_get_buffer_size(
+        int *linesize,
+        int nb_channels,
+        int nb_samples,
+        AVSampleFormat sample_fmt,
         int align
     )
-    cdef int av_image_fill_pointers(
-        uint8_t *pointers[4],
-        AVPixelFormat pix_fmt,
-        int height,
-        uint8_t *ptr,
-        const int linesizes[4]
-    )
 
-cdef extern from "libavutil/log.h" nogil:
-    cdef struct AVClass:
-        const char *class_name
-        const char *(*item_name)(void*) nogil
-        int parent_log_context_offset
-        const AVOption *option
+cdef extern from "libavutil/video_enc_params.h" nogil:
+    cdef enum AVVideoEncParamsType:
+        AV_VIDEO_ENC_PARAMS_NONE
+        AV_VIDEO_ENC_PARAMS_VP9
+        AV_VIDEO_ENC_PARAMS_H264
+        AV_VIDEO_ENC_PARAMS_MPEG2
 
-    cdef enum:
-        AV_LOG_QUIET
-        AV_LOG_PANIC
-        AV_LOG_FATAL
-        AV_LOG_ERROR
-        AV_LOG_WARNING
-        AV_LOG_INFO
-        AV_LOG_VERBOSE
-        AV_LOG_DEBUG
-        AV_LOG_TRACE
-        AV_LOG_MAX_OFFSET
+    cdef struct AVVideoEncParams:
+        uint32_t nb_blocks
+        size_t blocks_offset
+        size_t block_size
+        AVVideoEncParamsType type
+        int32_t qp
+        int32_t delta_qp[4][2]
 
-    void av_log(void *ptr, int level, const char *fmt, ...)
-    ctypedef void(*av_log_callback)(void *, int, const char *, va_list)
-    void av_log_default_callback(void *, int, const char *, va_list)
-    void av_log_set_callback (av_log_callback callback)
-    void av_log_set_level(int level)
+    cdef struct AVVideoBlockParams:
+        int32_t src_x
+        int32_t src_y
+        int32_t w
+        int32_t h
+        int32_t delta_qp
+
+cdef extern from "stdarg.h" nogil:
+    ctypedef struct va_list:
+        pass
