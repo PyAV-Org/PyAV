@@ -6,13 +6,11 @@ from cython.cimports import libav as lib
 from cython.cimports.av.codec.codec import Codec
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
 from cython.cimports.av.container.streams import StreamContainer
-from cython.cimports.av.dictionary import _Dictionary
+from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream, wrap_stream
 from cython.cimports.av.utils import dict_to_avdict, to_avrational
-
-from av.dictionary import Dictionary
 
 
 @cython.cfunc
@@ -384,8 +382,8 @@ class OutputContainer(Container):
             errors=self.metadata_errors,
         )
 
-        all_options: _Dictionary = Dictionary(self.options, self.container_options)
-        options: _Dictionary = all_options.copy()
+        all_options: Dictionary = Dictionary(self.options, self.container_options)
+        options: Dictionary = all_options.copy()
         self.err_check(lib.avformat_write_header(self.ptr, cython.address(options.ptr)))
 
         # Track option usage...

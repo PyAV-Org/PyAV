@@ -1,15 +1,13 @@
 import cython
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
 from cython.cimports.av.container.streams import StreamContainer
-from cython.cimports.av.dictionary import _Dictionary
+from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream, wrap_stream
 from cython.cimports.av.utils import avdict_to_dict
 from cython.cimports.libc.stdint import int64_t
 from cython.cimports.libc.stdlib import free, malloc
-
-from av.dictionary import Dictionary
 
 
 @cython.cfunc
@@ -34,8 +32,8 @@ class InputContainer(Container):
         # If we have either the global `options`, or a `stream_options`, prepare
         # a mashup of those options for each stream.
         c_options: cython.pointer[cython.pointer[lib.AVDictionary]] = cython.NULL
-        base_dict: _Dictionary
-        stream_dict: _Dictionary
+        base_dict: Dictionary
+        stream_dict: Dictionary
         if self.options or self.stream_options:
             base_dict = Dictionary(self.options)
             c_options = cython.cast(

@@ -3,14 +3,12 @@ import weakref
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.audio.frame import alloc_audio_frame
-from cython.cimports.av.dictionary import _Dictionary
+from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
 from cython.cimports.av.filter.link import alloc_filter_pads
 from cython.cimports.av.frame import Frame
 from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.frame import alloc_video_frame
-
-from av.dictionary import Dictionary
 
 _cinit_sentinel = cython.declare(object, object())
 
@@ -72,7 +70,7 @@ class FilterContext:
         if args and kwargs:
             raise ValueError("cannot init from args and kwargs")
 
-        dict_: _Dictionary = None
+        dict_: Dictionary = None
         c_args: cython.p_char = cython.NULL
         if args or not kwargs:
             if args:
