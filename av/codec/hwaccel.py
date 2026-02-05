@@ -112,7 +112,7 @@ class HWAccel:
         allow_software_fallback=True,
         options=None,
         flags=None,
-        output_format="sw",
+        output_format=None,
     ):
         if isinstance(device, int):
             device = str(device)

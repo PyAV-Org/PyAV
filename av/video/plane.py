@@ -1,3 +1,5 @@
+from typing import Any
+
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.buffer import Buffer
@@ -100,7 +102,7 @@ class VideoPlane(Plane):
 
         return (kDLCPU, 0)
 
-    def __dlpack__(self, stream=None):
+    def __dlpack__(self, stream: int | Any | None = None):
         if self.frame.ptr.buf[0] == cython.NULL:
             raise TypeError(
                 "DLPack export requires a refcounted AVFrame (frame.buf[0] is NULL)"
