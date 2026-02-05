@@ -1,5 +1,6 @@
 from libc.stdint cimport uint8_t
 
+
 cdef extern from "libswscale/swscale.h" nogil:
     cdef int   swscale_version()
     cdef char* swscale_configuration()

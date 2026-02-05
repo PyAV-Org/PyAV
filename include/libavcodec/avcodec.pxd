@@ -1,4 +1,5 @@
-from libc.stdint cimport int64_t, uint16_t, uint32_t, uint8_t
+from libc.stdint cimport int64_t, uint8_t, uint16_t, uint32_t
+
 
 cdef extern from "libavcodec/packet.h" nogil:
     const AVPacketSideData *av_packet_side_data_get(

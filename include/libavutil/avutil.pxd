@@ -1,4 +1,12 @@
-from libc.stdint cimport int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t
+from libc.stdint cimport (
+    int16_t,
+    int32_t,
+    int64_t,
+    uint8_t,
+    uint16_t,
+    uint32_t,
+    uint64_t,
+)
 
 
 cdef extern from "libavutil/audio_fifo.h" nogil:
@@ -186,11 +194,24 @@ cdef extern from "libavutil/hwcontext.h" nogil:
         AV_HWDEVICE_TYPE_VULKAN
         AV_HWDEVICE_TYPE_D3D12VA
 
+    ctypedef struct AVHWFramesContext:
+        const void *av_class
+        AVBufferRef *device_ref
+        void *device_ctx
+        void *hwctx
+        AVPixelFormat format
+        AVPixelFormat sw_format
+        int width
+        int height
+
     cdef int av_hwdevice_ctx_create(AVBufferRef **device_ctx, AVHWDeviceType type, const char *device, AVDictionary *opts, int flags)
     cdef AVHWDeviceType av_hwdevice_find_type_by_name(const char *name)
     cdef const char *av_hwdevice_get_type_name(AVHWDeviceType type)
     cdef AVHWDeviceType av_hwdevice_iterate_types(AVHWDeviceType prev)
     cdef int av_hwframe_transfer_data(AVFrame *dst, const AVFrame *src, int flags)
+
+    cdef AVBufferRef *av_hwframe_ctx_alloc(AVBufferRef *device_ref)
+    cdef int av_hwframe_ctx_init(AVBufferRef *ref)
 
 cdef extern from "libavutil/imgutils.h" nogil:
     cdef int av_image_alloc(

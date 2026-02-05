@@ -3,7 +3,6 @@ import cython.cimports.libav as lib
 from cython.cimports.av.buffer import Buffer
 from cython.cimports.av.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.av.error import err_check
-from cython.cimports.av.hwcontext import AVHWFramesContext
 from cython.cimports.av.video.format import get_pix_fmt, get_video_format
 from cython.cimports.av.video.frame import VideoFrame
 from cython.cimports.cpython import PyBUF_WRITABLE, PyBuffer_FillInfo
@@ -26,8 +25,8 @@ class VideoPlane(Plane):
         # The palette plane has no associated component or linesize; set fields manually
         fmt = frame.format
         if frame.ptr.hw_frames_ctx:
-            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
-                cython.pointer[AVHWFramesContext], frame.ptr.hw_frames_ctx.data
+            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+                cython.pointer[lib.AVHWFramesContext], frame.ptr.hw_frames_ctx.data
             )
             fmt = get_video_format(
                 frames_ctx.sw_format, frame.ptr.width, frame.ptr.height
@@ -91,8 +90,8 @@ class VideoPlane(Plane):
                     "DLPack export is only implemented for CUDA hw frames"
                 )
 
-            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
-                cython.pointer[AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
+            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+                cython.pointer[lib.AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
             )
             device_id = _hwreg.lookup_cuda_device_id(
                 cython.cast(cython.size_t, frames_ctx.device_ref.data)
@@ -119,8 +118,8 @@ class VideoPlane(Plane):
                     "DLPack export is only implemented for CUDA hw frames"
                 )
 
-            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
-                cython.pointer[AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
+            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+                cython.pointer[lib.AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
             )
             sw_fmt = frames_ctx.sw_format
             device_type = kDLCUDA

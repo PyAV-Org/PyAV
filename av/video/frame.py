@@ -6,11 +6,6 @@ import cython.cimports.libav as lib
 from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.av.error import err_check
-from cython.cimports.av.hwcontext import (
-    AVHWFramesContext,
-    av_hwframe_ctx_alloc,
-    av_hwframe_ctx_init,
-)
 from cython.cimports.av.sidedata.sidedata import get_display_rotation
 from cython.cimports.av.utils import check_ndarray
 from cython.cimports.av.video.format import get_pix_fmt, get_video_format
@@ -126,19 +121,19 @@ def _get_cuda_frames_ctx(
         )
 
     device_ref = _get_cuda_device_ctx(device_id, primary_ctx)
-    frames_ref = av_hwframe_ctx_alloc(device_ref)
+    frames_ref = lib.av_hwframe_ctx_alloc(device_ref)
     if frames_ref == cython.NULL:
         raise MemoryError("av_hwframe_ctx_alloc() failed")
 
     try:
-        frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
-            cython.pointer[AVHWFramesContext], frames_ref.data
+        frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+            cython.pointer[lib.AVHWFramesContext], frames_ref.data
         )
         frames_ctx.format = get_pix_fmt(b"cuda")
         frames_ctx.sw_format = sw_fmt
         frames_ctx.width = width
         frames_ctx.height = height
-        err_check(av_hwframe_ctx_init(frames_ref))
+        err_check(lib.av_hwframe_ctx_init(frames_ref))
     except Exception:
         lib.av_buffer_unref(cython.address(frames_ref))
         raise
@@ -401,8 +396,8 @@ class VideoFrame(Frame):
         # the library implementation does not set the last plane to NULL.
         fmt = self.format
         if self.ptr.hw_frames_ctx:
-            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
-                cython.pointer[AVHWFramesContext], self.ptr.hw_frames_ctx.data
+            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+                cython.pointer[lib.AVHWFramesContext], self.ptr.hw_frames_ctx.data
             )
             fmt = get_video_format(
                 frames_ctx.sw_format, self.ptr.width, self.ptr.height
@@ -595,8 +590,8 @@ class VideoFrame(Frame):
         """
         kwargs2 = dict(kwargs)
         if self.ptr.hw_frames_ctx and "format" not in kwargs2:
-            frames_ctx: cython.pointer[AVHWFramesContext] = cython.cast(
-                cython.pointer[AVHWFramesContext], self.ptr.hw_frames_ctx.data
+            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+                cython.pointer[lib.AVHWFramesContext], self.ptr.hw_frames_ctx.data
             )
             kwargs2["format"] = get_video_format(
                 frames_ctx.sw_format, self.ptr.width, self.ptr.height
