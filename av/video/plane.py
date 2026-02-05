@@ -253,8 +253,8 @@ class VideoPlane(Plane):
             raise MemoryError("malloc() failed")
 
         managed.dl_tensor.data = cython.cast(cython.p_void, frame_ref.data[self.index])
-        managed.dl_tensor.device.device_type = device_type
-        managed.dl_tensor.device.device_id = device_id
+        managed.dl_tensor.device_type = device_type
+        managed.dl_tensor.device_id = device_id
         managed.dl_tensor.ndim = ndim
         managed.dl_tensor.dtype.code = kDLUInt
         managed.dl_tensor.dtype.bits = bits

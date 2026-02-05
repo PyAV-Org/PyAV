@@ -1398,8 +1398,8 @@ class VideoFrame(Frame):
             m0 = _consume_dlpack(planes[0], stream)
             m1 = _consume_dlpack(planes[1], stream)
 
-            dev_type0 = m0.dl_tensor.device.device_type
-            dev_type1 = m1.dl_tensor.device.device_type
+            dev_type0 = m0.dl_tensor.device_type
+            dev_type1 = m1.dl_tensor.device_type
             if dev_type0 != dev_type1:
                 raise ValueError("plane tensors must have the same device_type")
             if dev_type0 not in {kDLCUDA, kDLCPU}:
@@ -1407,8 +1407,8 @@ class VideoFrame(Frame):
                     "only CPU and CUDA DLPack tensors are supported"
                 )
 
-            dev0 = m0.dl_tensor.device.device_id
-            dev1 = m1.dl_tensor.device.device_id
+            dev0 = m0.dl_tensor.device_id
+            dev1 = m1.dl_tensor.device_id
             if dev0 != dev1:
                 raise ValueError("plane tensors must be on the same CUDA device")
             if dev_type0 == kDLCUDA:

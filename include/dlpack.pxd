@@ -13,10 +13,6 @@ cdef enum DLDataTypeCode:
     kDLComplex = 5
     kDLBool = 6
 
-cdef struct DLDevice:
-    int device_type
-    int device_id
-
 cdef struct DLDataType:
     uint8_t code
     uint8_t bits
@@ -24,7 +20,8 @@ cdef struct DLDataType:
 
 cdef struct DLTensor:
     void* data
-    DLDevice device
+    int device_type
+    int device_id
     int ndim
     DLDataType dtype
     int64_t* shape
