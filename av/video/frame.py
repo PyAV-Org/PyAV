@@ -15,6 +15,7 @@ from cython.cimports.cpython.pycapsule import (
     PyCapsule_IsValid,
     PyCapsule_SetName,
 )
+from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF, PyObject
 from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.libc.stdint import int64_t, uint8_t
 
@@ -65,6 +66,18 @@ def _dlpack_avbuffer_free(
     )
     if managed != cython.NULL:
         managed.deleter(managed)
+
+
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def _numpy_avbuffer_free(
+    opaque: cython.p_void,
+    data: cython.pointer[uint8_t],
+) -> cython.void:
+    if opaque != cython.NULL:
+        with cython.gil:
+            Py_DECREF(cython.cast(object, opaque))
 
 
 @cython.cfunc
@@ -355,10 +368,7 @@ class VideoFrame(Frame):
             # We enforce aligned buffers, otherwise `sws_scale` can perform
             # poorly or even cause out-of-bounds reads and writes.
             if width and height:
-                res = lib.av_image_alloc(
-                    self.ptr.data, self.ptr.linesize, width, height, format, 16
-                )
-                self._buffer = self.ptr.data[0]
+                res = lib.av_frame_get_buffer(self.ptr, 16)
 
         if res:
             err_check(res)
@@ -376,7 +386,7 @@ class VideoFrame(Frame):
     def __dealloc__(self):
         # The `self._buffer` member is only set if *we* allocated the buffer in `_init`,
         # as opposed to a buffer allocated by a decoder.
-        lib.av_freep(cython.address(self._buffer))
+        lib.av_frame_unref(self.ptr)
         # Let go of the reference from the numpy buffers if we made one
         self._np_buffer = None
 
@@ -1015,9 +1025,9 @@ class VideoFrame(Frame):
         return frame
 
     def _image_fill_pointers_numpy(self, buffer, width, height, linesizes, format):
-        c_format: lib.AVPixelFormat
-        c_ptr: cython.pointer[uint8_t]
-        c_data: cython.size_t
+        c_data: cython.size_t = buffer.ctypes.data
+        c_ptr: cython.pointer[uint8_t] = cython.cast(cython.pointer[uint8_t], c_data)
+        c_format: lib.AVPixelFormat = get_pix_fmt(format)
 
         # If you want to use the numpy notation, then you need to include the following lines at the top of the file:
         #      cimport numpy as cnp
@@ -1038,26 +1048,41 @@ class VideoFrame(Frame):
         c_data = buffer.ctypes.data
         c_ptr = cython.cast(cython.pointer[uint8_t], c_data)
         c_format = get_pix_fmt(format)
-        lib.av_freep(cython.address(self._buffer))
+        lib.av_frame_unref(self.ptr)
+        self._np_buffer = None
 
         # Hold on to a reference for the numpy buffer so that it doesn't get accidentally garbage collected
-        self._np_buffer = buffer
         self.ptr.format = c_format
         self.ptr.width = width
         self.ptr.height = height
         for i, linesize in enumerate(linesizes):
             self.ptr.linesize[i] = linesize
 
-        res = lib.av_image_fill_pointers(
-            self.ptr.data,
-            cython.cast(lib.AVPixelFormat, self.ptr.format),
-            self.ptr.height,
-            c_ptr,
-            self.ptr.linesize,
+        required = err_check(
+            lib.av_image_fill_pointers(
+                self.ptr.data,
+                cython.cast(lib.AVPixelFormat, self.ptr.format),
+                self.ptr.height,
+                c_ptr,
+                self.ptr.linesize,
+            )
         )
 
-        if res:
-            err_check(res)
+        py_buf = cython.cast(object, buffer)
+        Py_INCREF(py_buf)
+
+        self.ptr.buf[0] = lib.av_buffer_create(
+            c_ptr,
+            required,
+            _numpy_avbuffer_free,
+            cython.cast(cython.p_void, py_buf),
+            0,
+        )
+        if self.ptr.buf[0] == cython.NULL:
+            Py_DECREF(py_buf)
+            raise MemoryError("av_buffer_create failed")
+
+        self._np_buffer = buffer
         self._init_user_attributes()
 
     @staticmethod
