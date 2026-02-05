@@ -4,7 +4,6 @@ from enum import IntEnum
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.dictionary import Dictionary
-from cython.cimports.av.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.av.error import err_check
 from cython.cimports.av.sidedata.sidedata import get_display_rotation
 from cython.cimports.av.utils import check_ndarray
@@ -16,6 +15,7 @@ from cython.cimports.cpython.pycapsule import (
     PyCapsule_IsValid,
     PyCapsule_SetName,
 )
+from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.libc.stdint import int64_t, uint8_t
 
 import av._hwdevice_registry as _hwreg

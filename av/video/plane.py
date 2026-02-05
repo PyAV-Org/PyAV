@@ -1,7 +1,6 @@
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.buffer import Buffer
-from cython.cimports.av.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.av.error import err_check
 from cython.cimports.av.video.format import get_pix_fmt, get_video_format
 from cython.cimports.av.video.frame import VideoFrame
@@ -13,6 +12,7 @@ from cython.cimports.cpython.pycapsule import (
     PyCapsule_New,
 )
 from cython.cimports.cpython.ref import PyObject
+from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.libc.stdint import int64_t
 from cython.cimports.libc.stdlib import free, malloc
 
