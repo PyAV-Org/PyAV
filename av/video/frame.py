@@ -15,7 +15,7 @@ from cython.cimports.cpython.pycapsule import (
     PyCapsule_IsValid,
     PyCapsule_SetName,
 )
-from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF, PyObject
+from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
 from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.libc.stdint import int64_t, uint8_t
 
@@ -1412,8 +1412,6 @@ class VideoFrame(Frame):
             if dev0 != dev1:
                 raise ValueError("plane tensors must be on the same CUDA device")
             if dev_type0 == kDLCUDA:
-                if dev0 != dev1:
-                    raise ValueError("plane tensors must be on the same CUDA device")
                 if device_id is None:
                     device_id = dev0
                 elif device_id != dev0:
@@ -1509,8 +1507,6 @@ class VideoFrame(Frame):
             frame.ptr.width = width
             frame.ptr.height = height
             if dev_type0 == kDLCUDA:
-                if primary_ctx is None:
-                    primary_ctx = True
                 if not isinstance(primary_ctx, (bool, int)):
                     raise TypeError("primary_ctx must be a bool")
                 primary_ctx = bool(primary_ctx)
