@@ -19,14 +19,12 @@ from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
 from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.libc.stdint import int64_t, uint8_t
 
-import av._hwdevice_registry as _hwreg
-
 
 @cython.cclass
 class CudaContext:
     def __cinit__(self, device_id=0, primary_ctx=True):
-        self.device_id = int(device_id)
-        self.primary_ctx = bool(primary_ctx)
+        self._device_id = int(device_id)
+        self._primary_ctx = bool(primary_ctx)
         self._device_ref = cython.NULL
         self._frames_cache = {}
 
@@ -45,6 +43,14 @@ class CudaContext:
         if ref != cython.NULL:
             lib.av_buffer_unref(cython.address(ref))
             self._device_ref = cython.NULL
+
+    @property
+    def device_id(self) -> int:
+        return self._device_id
+
+    @property
+    def primary_ctx(self) -> bool:
+        return self._primary_ctx
 
     @cython.cfunc
     def _get_device_ref(self) -> cython.pointer[lib.AVBufferRef]:
@@ -67,11 +73,6 @@ class CudaContext:
                 options.ptr,
                 0,
             )
-        )
-
-        _hwreg.register_cuda_hwdevice_data_ptr(
-            cython.cast(cython.size_t, device_ref.data),
-            self.device_id,
         )
 
         self._device_ref = device_ref
@@ -424,6 +425,10 @@ class VideoFrame(Frame):
             f"<av.{self.__class__.__name__}, pts={self.pts} {self.format.name} "
             f"{self.width}x{self.height} at 0x{id(self):x}>"
         )
+
+    @property
+    def device_id(self) -> int:
+        return self._device_id
 
     @property
     def planes(self):

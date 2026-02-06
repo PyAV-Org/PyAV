@@ -128,7 +128,8 @@ class VideoCodecContext(CodecContext):
             return frame
 
         if self.hwaccel_ctx.output_format == "hw":
-            frame.device_id = int(getattr(self.hwaccel_ctx, "device_id", 0))
+            vframe = cython.cast(VideoFrame, frame)
+            vframe._device_id = int(getattr(self.hwaccel_ctx, "device_id", 0))
             return frame
 
         frame_sw: Frame = self._alloc_next_frame()

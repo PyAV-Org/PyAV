@@ -37,10 +37,12 @@ class HWConfig:
     def is_supported(self) -> bool: ...
 
 class HWAccel:
-    output_format: Literal["sw", "hw"]
     options: dict[str, object]
-    device_id: int
 
+    @property
+    def output_format(self) -> Literal["sw", "hw"]: ...
+    @property
+    def device_id(self) -> int: ...
     def __init__(
         self,
         device_type: str | HWDeviceType,

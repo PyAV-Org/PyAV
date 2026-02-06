@@ -130,15 +130,15 @@ class HWAccel:
             output_format = output_format.lower()
         if output_format not in {"sw", "hw"}:
             raise ValueError("output_format must be 'sw' or 'hw'")
-        self.output_format = output_format
+        self._output_format = output_format
 
-        self.device_id = 0
+        self._device_id = 0
         if self._device_type == HWDeviceType.cuda:
             if device:
                 try:
-                    self.device_id = int(device)
+                    self._device_id = int(device)
                 except ValueError:
-                    self.device_id = 0
+                    self._device_id = 0
 
         self._device = device
         self.allow_software_fallback = allow_software_fallback
@@ -177,6 +177,14 @@ class HWAccel:
                 self.flags,
             )
         )
+
+    @property
+    def device_id(self) -> int:
+        return self._device_id
+
+    @property
+    def output_format(self) -> str:
+        return self._output_format
 
     def create(self, codec: Codec):
         """Create a new hardware accelerator context with the given codec"""
