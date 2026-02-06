@@ -28,6 +28,9 @@ class PictureType(IntEnum):
     SP = 6
     BI = 7
 
+class CudaContext:
+    def __init__(self, device_id: int = 0, primary_ctx: bool = True) -> None: ...
+
 class VideoFrame(Frame):
     format: VideoFormat
     planes: tuple[VideoPlane, ...]
@@ -93,4 +96,5 @@ class VideoFrame(Frame):
         stream: int | None = None,
         device_id: int | None = None,
         primary_ctx: bool = True,
+        cuda_context: CudaContext | None = None,
     ) -> "VideoFrame": ...

@@ -21,8 +21,112 @@ from cython.cimports.libc.stdint import int64_t, uint8_t
 
 import av._hwdevice_registry as _hwreg
 
-_cuda_device_ctx_cache = {}
-_cuda_frames_ctx_cache = {}
+
+@cython.cclass
+class CudaContext:
+    def __cinit__(self, device_id=0, primary_ctx=True):
+        self.device_id = int(device_id)
+        self.primary_ctx = bool(primary_ctx)
+        self._device_ref = cython.NULL
+        self._frames_cache = {}
+
+    def __dealloc__(self):
+        ref: cython.pointer[lib.AVBufferRef]
+
+        for v in self._frames_cache.values():
+            ref = cython.cast(
+                cython.pointer[lib.AVBufferRef],
+                cython.cast(cython.size_t, v),
+            )
+            lib.av_buffer_unref(cython.address(ref))
+        self._frames_cache.clear()
+
+        ref = self._device_ref
+        if ref != cython.NULL:
+            lib.av_buffer_unref(cython.address(ref))
+            self._device_ref = cython.NULL
+
+    @cython.cfunc
+    def _get_device_ref(self) -> cython.pointer[lib.AVBufferRef]:
+        device_ref: cython.pointer[lib.AVBufferRef] = self._device_ref
+        if device_ref != cython.NULL:
+            return device_ref
+
+        device_ref = cython.NULL
+        device_bytes = str(int(self.device_id)).encode()
+        c_device: cython.p_char = device_bytes
+        options: Dictionary = Dictionary(
+            {"primary_ctx": "1" if self.primary_ctx else "0"}
+        )
+
+        err_check(
+            lib.av_hwdevice_ctx_create(
+                cython.address(device_ref),
+                lib.AV_HWDEVICE_TYPE_CUDA,
+                c_device,
+                options.ptr,
+                0,
+            )
+        )
+
+        _hwreg.register_cuda_hwdevice_data_ptr(
+            cython.cast(cython.size_t, device_ref.data),
+            self.device_id,
+        )
+
+        self._device_ref = device_ref
+        return device_ref
+
+    @cython.cfunc
+    def get_frames_ctx(
+        self,
+        sw_fmt: lib.AVPixelFormat,
+        width: cython.int,
+        height: cython.int,
+    ) -> cython.pointer[lib.AVBufferRef]:
+        key = (int(sw_fmt), int(width), int(height))
+        cached = self._frames_cache.get(key)
+        cached_ref: cython.pointer[lib.AVBufferRef]
+        out_ref: cython.pointer[lib.AVBufferRef]
+
+        if cached is not None:
+            cached_ref = cython.cast(
+                cython.pointer[lib.AVBufferRef],
+                cython.cast(cython.size_t, cached),
+            )
+            out_ref = lib.av_buffer_ref(cached_ref)
+            if out_ref == cython.NULL:
+                raise MemoryError("av_buffer_ref() failed")
+            return out_ref
+
+        device_ref = self._get_device_ref()
+
+        frames_ref: cython.pointer[lib.AVBufferRef] = lib.av_hwframe_ctx_alloc(
+            device_ref
+        )
+        if frames_ref == cython.NULL:
+            raise MemoryError("av_hwframe_ctx_alloc() failed")
+
+        try:
+            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+                cython.pointer[lib.AVHWFramesContext], frames_ref.data
+            )
+            frames_ctx.format = get_pix_fmt(b"cuda")
+            frames_ctx.sw_format = sw_fmt
+            frames_ctx.width = int(width)
+            frames_ctx.height = int(height)
+            err_check(lib.av_hwframe_ctx_init(frames_ref))
+        except Exception:
+            lib.av_buffer_unref(cython.address(frames_ref))
+            raise
+
+        out_ref = lib.av_buffer_ref(frames_ref)
+        if out_ref == cython.NULL:
+            lib.av_buffer_unref(cython.address(frames_ref))
+            raise MemoryError("av_buffer_ref() failed")
+
+        self._frames_cache[key] = cython.cast(cython.size_t, frames_ref)
+        return out_ref
 
 
 @cython.cfunc
@@ -78,81 +182,6 @@ def _numpy_avbuffer_free(
     if opaque != cython.NULL:
         with cython.gil:
             Py_DECREF(cython.cast(object, opaque))
-
-
-@cython.cfunc
-def _get_cuda_device_ctx(
-    device_id: cython.int,
-    primary_ctx: cython.bint,
-) -> cython.pointer[lib.AVBufferRef]:
-    key = (int(device_id), int(primary_ctx))
-    cached = _cuda_device_ctx_cache.get(key)
-    if cached is not None:
-        return cython.cast(
-            cython.pointer[lib.AVBufferRef],
-            cython.cast(cython.size_t, cached),
-        )
-
-    device_ref: cython.pointer[lib.AVBufferRef] = cython.NULL
-    device_bytes = str(device_id).encode()
-    c_device: cython.p_char = device_bytes
-    options: Dictionary = Dictionary({"primary_ctx": "1" if primary_ctx else "0"})
-
-    err_check(
-        lib.av_hwdevice_ctx_create(
-            cython.address(device_ref),
-            lib.AV_HWDEVICE_TYPE_CUDA,
-            c_device,
-            options.ptr,
-            0,
-        )
-    )
-
-    _hwreg.register_cuda_hwdevice_data_ptr(
-        cython.cast(cython.size_t, device_ref.data),
-        device_id,
-    )
-
-    _cuda_device_ctx_cache[key] = cython.cast(cython.size_t, device_ref)
-    return device_ref
-
-
-@cython.cfunc
-def _get_cuda_frames_ctx(
-    device_id: cython.int,
-    primary_ctx: cython.bint,
-    sw_fmt: lib.AVPixelFormat,
-    width: cython.int,
-    height: cython.int,
-) -> cython.pointer[lib.AVBufferRef]:
-    key = (int(device_id), int(primary_ctx), int(sw_fmt), int(width), int(height))
-    cached = _cuda_frames_ctx_cache.get(key)
-    if cached is not None:
-        return cython.cast(
-            cython.pointer[lib.AVBufferRef],
-            cython.cast(cython.size_t, cached),
-        )
-
-    device_ref = _get_cuda_device_ctx(device_id, primary_ctx)
-    frames_ref = lib.av_hwframe_ctx_alloc(device_ref)
-    if frames_ref == cython.NULL:
-        raise MemoryError("av_hwframe_ctx_alloc() failed")
-
-    try:
-        frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
-            cython.pointer[lib.AVHWFramesContext], frames_ref.data
-        )
-        frames_ctx.format = get_pix_fmt(b"cuda")
-        frames_ctx.sw_format = sw_fmt
-        frames_ctx.width = width
-        frames_ctx.height = height
-        err_check(lib.av_hwframe_ctx_init(frames_ref))
-    except Exception:
-        lib.av_buffer_unref(cython.address(frames_ref))
-        raise
-
-    _cuda_frames_ctx_cache[key] = cython.cast(cython.size_t, frames_ref)
-    return frames_ref
 
 
 _cinit_bypass_sentinel = object()
@@ -1370,6 +1399,7 @@ class VideoFrame(Frame):
         stream=None,
         device_id: int | None = None,
         primary_ctx: bool = True,
+        cuda_context=None,
     ):
         if not isinstance(planes, (tuple, list)):
             planes = (planes,)
@@ -1507,18 +1537,31 @@ class VideoFrame(Frame):
             frame.ptr.width = width
             frame.ptr.height = height
             if dev_type0 == kDLCUDA:
+                ctx = cython.declare(CudaContext)
+                frames_ref = cython.declare(cython.pointer[lib.AVBufferRef])
                 if not isinstance(primary_ctx, (bool, int)):
                     raise TypeError("primary_ctx must be a bool")
                 primary_ctx = bool(primary_ctx)
 
-                frames_ref = _get_cuda_frames_ctx(
-                    device_id, primary_ctx, sw_fmt, width, height
-                )
+                if cuda_context is None:
+                    ctx = CudaContext(device_id=device_id, primary_ctx=primary_ctx)
+                else:
+                    if not isinstance(cuda_context, CudaContext):
+                        raise TypeError("cuda_context must be a CudaContext")
+                    if int(cuda_context.device_id) != int(device_id):
+                        raise ValueError(
+                            "cuda_context.device_id does not match the DLPack tensor device_id"
+                        )
+                    if bool(cuda_context.primary_ctx) != bool(primary_ctx):
+                        raise ValueError(
+                            "cuda_context.primary_ctx does not match primary_ctx"
+                        )
+                    ctx = cython.cast(CudaContext, cuda_context)
+
+                frames_ref = ctx.get_frames_ctx(sw_fmt, width, height)
 
                 frame.ptr.format = get_pix_fmt(b"cuda")
-                frame.ptr.hw_frames_ctx = lib.av_buffer_ref(frames_ref)
-                if frame.ptr.hw_frames_ctx == cython.NULL:
-                    raise MemoryError("av_buffer_ref(hw_frames_ctx) failed")
+                frame.ptr.hw_frames_ctx = frames_ref
             else:
                 frame.ptr.format = sw_fmt
 
