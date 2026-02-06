@@ -39,6 +39,7 @@ class HWConfig:
 class HWAccel:
     output_format: Literal["sw", "hw"]
     options: dict[str, object]
+    device_id: int
 
     def __init__(
         self,

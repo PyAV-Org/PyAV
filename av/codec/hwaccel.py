@@ -8,8 +8,6 @@ from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
 from cython.cimports.av.video.format import get_video_format
 
-import av._hwdevice_registry as _hwreg
-
 
 class HWDeviceType(IntEnum):
     none = lib.AV_HWDEVICE_TYPE_NONE
@@ -134,6 +132,14 @@ class HWAccel:
             raise ValueError("output_format must be 'sw' or 'hw'")
         self.output_format = output_format
 
+        self.device_id = 0
+        if self._device_type == HWDeviceType.cuda:
+            if device:
+                try:
+                    self.device_id = int(device)
+                except ValueError:
+                    self.device_id = 0
+
         self._device = device
         self.allow_software_fallback = allow_software_fallback
 
@@ -171,19 +177,6 @@ class HWAccel:
                 self.flags,
             )
         )
-
-        if config.ptr.device_type == lib.AV_HWDEVICE_TYPE_CUDA:
-            device_id = 0
-            if self._device:
-                try:
-                    device_id = int(self._device)
-                except ValueError:
-                    device_id = 0
-
-            _hwreg.register_cuda_hwdevice_data_ptr(
-                cython.cast(cython.size_t, self.ptr.data),
-                device_id,
-            )
 
     def create(self, codec: Codec):
         """Create a new hardware accelerator context with the given codec"""

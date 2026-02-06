@@ -20,3 +20,4 @@ cdef class HWAccel:
     cdef public dict options
     cdef public int flags
     cdef public str output_format
+    cdef public int device_id

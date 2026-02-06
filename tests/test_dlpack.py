@@ -49,16 +49,6 @@ def _get_cuda_backend():
     return None
 
 
-def test_hwdevice_registry_register_and_lookup() -> None:
-    import av._hwdevice_registry as hwreg
-
-    ptr = 0x1234_5678_9ABC_DEF0
-    hwreg.register_cuda_hwdevice_data_ptr(ptr, 7)
-    assert hwreg.lookup_cuda_device_id(ptr) == 7
-    assert hwreg.lookup_cuda_device_id(0) == 0
-    assert hwreg.lookup_cuda_device_id(ptr + 1) == 0
-
-
 def test_hwaccel_output_format_validation_and_primary_ctx() -> None:
     hw = HWAccel(device_type="cuda", output_format=None)
     assert hw.output_format == "sw"
@@ -85,6 +75,7 @@ def test_video_frame_from_dlpack_nv12_cpu_basic_zero_copy_and_lifetime() -> None
 
     frame = VideoFrame.from_dlpack((y, uv), format="nv12")
 
+    assert frame.device_id == 0
     assert frame.format.name == "nv12"
     assert frame.width == width
     assert frame.height == height

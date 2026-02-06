@@ -16,8 +16,6 @@ from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.libc.stdint import int64_t
 from cython.cimports.libc.stdlib import free, malloc
 
-import av._hwdevice_registry as _hwreg
-
 
 @cython.cclass
 class VideoPlane(Plane):
@@ -90,13 +88,7 @@ class VideoPlane(Plane):
                     "DLPack export is only implemented for CUDA hw frames"
                 )
 
-            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
-                cython.pointer[lib.AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
-            )
-            device_id = _hwreg.lookup_cuda_device_id(
-                cython.cast(cython.size_t, frames_ctx.device_ref.data)
-            )
-            return (kDLCUDA, device_id)
+            return (kDLCUDA, self.frame.device_id)
 
         return (kDLCPU, 0)
 
@@ -123,9 +115,7 @@ class VideoPlane(Plane):
             )
             sw_fmt = frames_ctx.sw_format
             device_type = kDLCUDA
-            device_id = _hwreg.lookup_cuda_device_id(
-                cython.cast(cython.size_t, frames_ctx.device_ref.data)
-            )
+            device_id = int(self.frame.device_id)
         else:
             sw_fmt = cython.cast(lib.AVPixelFormat, self.frame.ptr.format)
             device_type = kDLCPU

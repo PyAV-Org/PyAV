@@ -26,6 +26,7 @@ cdef class VideoFrame(Frame):
     cdef uint8_t *_buffer
     cdef object _np_buffer
 
+    cdef public int device_id
     cdef VideoReformatter reformatter
     cdef readonly VideoFormat format
 
