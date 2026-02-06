@@ -1600,6 +1600,7 @@ class VideoFrame(Frame):
             m1 = cython.NULL
 
             frame._init_user_attributes()
+            frame._device_id = device_id
             return frame
 
         except Exception:
