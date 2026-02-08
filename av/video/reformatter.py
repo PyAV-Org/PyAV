@@ -1,41 +1,40 @@
 from enum import IntEnum
 
 import cython
-import cython.cimports.libav as lib
 from cython.cimports.av.error import err_check
 from cython.cimports.av.video.format import VideoFormat
 from cython.cimports.av.video.frame import alloc_video_frame
 
 
 class Interpolation(IntEnum):
-    FAST_BILINEAR: "Fast bilinear" = lib.SWS_FAST_BILINEAR
-    BILINEAR: "Bilinear" = lib.SWS_BILINEAR
-    BICUBIC: "Bicubic" = lib.SWS_BICUBIC
-    X: "Experimental" = lib.SWS_X
-    POINT: "Nearest neighbor / point" = lib.SWS_POINT
-    AREA: "Area averaging" = lib.SWS_AREA
-    BICUBLIN: "Luma bicubic / chroma bilinear" = lib.SWS_BICUBLIN
-    GAUSS: "Gaussian" = lib.SWS_GAUSS
-    SINC: "Sinc" = lib.SWS_SINC
-    LANCZOS: "Bicubic spline" = lib.SWS_LANCZOS
+    FAST_BILINEAR: "Fast bilinear" = SWS_FAST_BILINEAR
+    BILINEAR: "Bilinear" = SWS_BILINEAR
+    BICUBIC: "Bicubic" = SWS_BICUBIC
+    X: "Experimental" = SWS_X
+    POINT: "Nearest neighbor / point" = SWS_POINT
+    AREA: "Area averaging" = SWS_AREA
+    BICUBLIN: "Luma bicubic / chroma bilinear" = SWS_BICUBLIN
+    GAUSS: "Gaussian" = SWS_GAUSS
+    SINC: "Sinc" = SWS_SINC
+    LANCZOS: "Bicubic spline" = SWS_LANCZOS
 
 
 class Colorspace(IntEnum):
-    ITU709 = lib.SWS_CS_ITU709
-    FCC = lib.SWS_CS_FCC
-    ITU601 = lib.SWS_CS_ITU601
-    ITU624 = lib.SWS_CS_ITU624
-    SMPTE170M = lib.SWS_CS_SMPTE170M
-    SMPTE240M = lib.SWS_CS_SMPTE240M
-    DEFAULT = lib.SWS_CS_DEFAULT
+    ITU709 = SWS_CS_ITU709
+    FCC = SWS_CS_FCC
+    ITU601 = SWS_CS_ITU601
+    ITU624 = SWS_CS_ITU624
+    SMPTE170M = SWS_CS_SMPTE170M
+    SMPTE240M = SWS_CS_SMPTE240M
+    DEFAULT = SWS_CS_DEFAULT
     # Lowercase for b/c.
-    itu709 = lib.SWS_CS_ITU709
-    fcc = lib.SWS_CS_FCC
-    itu601 = lib.SWS_CS_ITU601
-    itu624 = lib.SWS_CS_ITU624
-    smpte170m = lib.SWS_CS_SMPTE170M
-    smpte240m = lib.SWS_CS_SMPTE240M
-    default = lib.SWS_CS_DEFAULT
+    itu709 = SWS_CS_ITU709
+    fcc = SWS_CS_FCC
+    itu601 = SWS_CS_ITU601
+    itu624 = SWS_CS_ITU624
+    smpte170m = SWS_CS_SMPTE170M
+    smpte240m = SWS_CS_SMPTE240M
+    default = SWS_CS_DEFAULT
 
 
 class ColorRange(IntEnum):
@@ -65,10 +64,10 @@ def _resolve_enum_value(value, enum_class, default):
 _SWS_CS_TO_AVCOL_SPC = cython.declare(
     dict,
     {
-        lib.SWS_CS_ITU709: lib.AVCOL_SPC_BT709,
-        lib.SWS_CS_FCC: lib.AVCOL_SPC_FCC,
-        lib.SWS_CS_ITU601: lib.AVCOL_SPC_SMPTE170M,
-        lib.SWS_CS_SMPTE240M: lib.AVCOL_SPC_SMPTE240M,
+        SWS_CS_ITU709: lib.AVCOL_SPC_BT709,
+        SWS_CS_FCC: lib.AVCOL_SPC_FCC,
+        SWS_CS_ITU601: lib.AVCOL_SPC_SMPTE170M,
+        SWS_CS_SMPTE240M: lib.AVCOL_SPC_SMPTE240M,
     },
 )
 
@@ -84,7 +83,7 @@ class VideoReformatter:
 
     def __dealloc__(self):
         with cython.nogil:
-            lib.sws_freeContext(self.ptr)
+            sws_freeContext(self.ptr)
 
     def reformat(
         self,
@@ -212,7 +211,7 @@ class VideoReformatter:
             return frame
 
         with cython.nogil:
-            self.ptr = lib.sws_getCachedContext(
+            self.ptr = sws_getCachedContext(
                 self.ptr,
                 frame.ptr.width,
                 frame.ptr.height,
@@ -239,7 +238,7 @@ class VideoReformatter:
 
         if src_colorspace != dst_colorspace or src_color_range != dst_color_range:
             with cython.nogil:
-                ret = lib.sws_getColorspaceDetails(
+                ret = sws_getColorspaceDetails(
                     self.ptr,
                     cython.address(inv_tbl),
                     cython.address(src_colorspace_range),
@@ -254,16 +253,14 @@ class VideoReformatter:
             with cython.nogil:
                 # Grab the coefficients for the requested transforms.
                 # The inv_table brings us to linear, and `tbl` to the new space.
-                if src_colorspace != lib.SWS_CS_DEFAULT:
+                if src_colorspace != SWS_CS_DEFAULT:
                     inv_tbl = cython.cast(
-                        cython.p_int, lib.sws_getCoefficients(src_colorspace)
+                        cython.p_int, sws_getCoefficients(src_colorspace)
                     )
-                if dst_colorspace != lib.SWS_CS_DEFAULT:
-                    tbl = cython.cast(
-                        cython.p_int, lib.sws_getCoefficients(dst_colorspace)
-                    )
+                if dst_colorspace != SWS_CS_DEFAULT:
+                    tbl = cython.cast(cython.p_int, sws_getCoefficients(dst_colorspace))
 
-                ret = lib.sws_setColorspaceDetails(
+                ret = sws_setColorspaceDetails(
                     self.ptr,
                     inv_tbl,
                     src_color_range,
@@ -290,7 +287,7 @@ class VideoReformatter:
             )
 
         with cython.nogil:
-            lib.sws_scale(
+            sws_scale(
                 self.ptr,
                 cython.cast("const unsigned char *const *", frame.ptr.data),
                 cython.cast("const int *", frame.ptr.linesize),

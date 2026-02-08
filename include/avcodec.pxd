@@ -1,19 +1,6 @@
-from libc.stdint cimport int64_t, uint8_t, uint16_t, uint32_t
+from libc.stdint cimport int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 
-
-cdef extern from "libavcodec/packet.h" nogil:
-    const AVPacketSideData *av_packet_side_data_get(
-        const AVPacketSideData *sd, int nb_sd, AVPacketSideDataType type
-    )
-    uint8_t* av_packet_get_side_data(
-        const AVPacket *pkt, AVPacketSideDataType type, size_t *size
-    )
-    int av_packet_add_side_data(
-        AVPacket *pkt, AVPacketSideDataType type, uint8_t *data, size_t size
-    )
-    const char *av_packet_side_data_name(AVPacketSideDataType type)
-
-cdef extern from "libavutil/channel_layout.h":
+cdef extern from "libavutil/channel_layout.h" nogil:
     ctypedef enum AVChannelOrder:
         pass
     ctypedef enum AVChannel:
@@ -37,7 +24,6 @@ cdef extern from "libavutil/channel_layout.h":
     int av_channel_description(char *buf, size_t buf_size, AVChannel channel_id)
     AVChannel av_channel_layout_channel_from_index(AVChannelLayout *channel_layout, unsigned int idx)
 
-
 cdef extern from "libavcodec/avcodec.h" nogil:
     cdef set pyav_get_available_codecs()
     cdef int avcodec_version()
@@ -54,7 +40,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef size_t AV_INPUT_BUFFER_PADDING_SIZE
     cdef int64_t AV_NOPTS_VALUE
 
-    # AVCodecDescriptor.props
     cdef enum:
         AV_CODEC_PROP_INTRA_ONLY
         AV_CODEC_PROP_LOSSY
@@ -63,7 +48,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_PROP_BITMAP_SUB
         AV_CODEC_PROP_TEXT_SUB
 
-    # AVCodec.capabilities
     cdef enum:
         AV_CODEC_CAP_DRAW_HORIZ_BAND
         AV_CODEC_CAP_DR1
@@ -221,6 +205,20 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVProfile *profiles
 
     AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
+
+    cdef enum:
+        AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
+        AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX
+        AV_CODEC_HW_CONFIG_METHOD_INTERNAL
+        AV_CODEC_HW_CONFIG_METHOD_AD_HOC
+
+    cdef struct AVCodecHWConfig:
+        AVPixelFormat pix_fmt
+        int methods
+        AVHWDeviceType device_type
+    cdef const AVCodecHWConfig* avcodec_get_hw_config(const AVCodec *codec, int index)
+    cdef struct AVHWAccel:
+        pass
 
     cdef struct AVCodecContext:
         AVClass *av_class
@@ -474,3 +472,37 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef int avcodec_parameters_to_context(
         AVCodecContext *codec, const AVCodecParameters *par
     )
+
+
+cdef extern from "libavcodec/bsf.h" nogil:
+    cdef struct AVBitStreamFilter:
+        const char *name
+        AVCodecID *codec_ids
+
+    cdef struct AVCodecParameters:
+        pass
+
+    cdef struct AVBSFContext:
+        const AVBitStreamFilter *filter
+        const AVCodecParameters *par_in
+        const AVCodecParameters *par_out
+
+    cdef int av_bsf_list_parse_str(const char *str, AVBSFContext **bsf)
+    cdef int av_bsf_init(AVBSFContext *ctx)
+    cdef void av_bsf_free(AVBSFContext **ctx)
+    cdef AVBitStreamFilter* av_bsf_iterate(void **opaque)
+    cdef int av_bsf_send_packet(AVBSFContext *ctx, AVPacket *pkt)
+    cdef int av_bsf_receive_packet(AVBSFContext *ctx, AVPacket *pkt)
+    cdef void av_bsf_flush(AVBSFContext *ctx)
+
+cdef extern from "libavcodec/packet.h" nogil:
+    const AVPacketSideData *av_packet_side_data_get(
+        const AVPacketSideData *sd, int nb_sd, AVPacketSideDataType type
+    )
+    uint8_t* av_packet_get_side_data(
+        const AVPacket *pkt, AVPacketSideDataType type, size_t *size
+    )
+    int av_packet_add_side_data(
+        AVPacket *pkt, AVPacketSideDataType type, uint8_t *data, size_t size
+    )
+    const char *av_packet_side_data_name(AVPacketSideDataType type)

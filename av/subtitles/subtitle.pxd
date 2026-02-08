@@ -4,11 +4,9 @@ cimport libav as lib
 cdef class SubtitleProxy:
     cdef lib.AVSubtitle struct
 
-
 cdef class SubtitleSet:
     cdef SubtitleProxy proxy
     cdef readonly tuple rects
-
 
 cdef class Subtitle:
     cdef SubtitleProxy proxy

@@ -22,8 +22,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef AVFilter* avfilter_get_by_name(const char *name)
     cdef const AVFilter* av_filter_iterate(void **opaque)
 
-    cdef struct AVFilterLink  # Defined later.
-
     cdef struct AVFilterContext:
         AVClass *av_class
         AVFilter *filter
@@ -48,7 +46,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         AVFilterPad *srcpad
         AVFilterContext *dst
         AVFilterPad *dstpad
-
         AVMediaType Type
         int w
         int h
@@ -58,18 +55,46 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         int format
         AVRational time_base
 
-    # custom
-    cdef set pyav_get_available_filters()
+    cdef struct AVFilterGraph:
+        int nb_filters
+        AVFilterContext **filters
 
-    int avfilter_process_command(AVFilterContext *filter,
-                                 const char *cmd,
-                                 const char *arg,
-                                 char *res,
-                                 int res_len,
-                                 int flags)
+    cdef struct AVFilterInOut:
+        char *name
+        AVFilterContext *filter_ctx
+        int pad_idx
+        AVFilterInOut *next
 
-    cdef int AVFILTER_CMD_FLAG_FAST
-
+    cdef AVFilterGraph* avfilter_graph_alloc()
+    cdef void avfilter_graph_free(AVFilterGraph **ptr)
+    cdef AVFilterContext* avfilter_graph_alloc_filter(
+        AVFilterGraph *graph,
+        const AVFilter *filter,
+        const char *name
+    )
+    cdef int avfilter_graph_create_filter(
+        AVFilterContext **filt_ctx,
+        AVFilter *filt,
+        const char *name,
+        const char *args,
+        void *opaque,
+        AVFilterGraph *graph_ctx
+    )
+    cdef int avfilter_link(
+        AVFilterContext *src,
+        unsigned int srcpad,
+        AVFilterContext *dst,
+        unsigned int dstpad
+    )
+    cdef int avfilter_graph_config(AVFilterGraph *graph, void *logctx)
+    int avfilter_process_command(
+        AVFilterContext *filter, const char *cmd, const char *arg, char *res,
+        int res_len, int flags,
+    )
 
 cdef extern from "libavfilter/buffersink.h" nogil:
     cdef void av_buffersink_set_frame_size(AVFilterContext *ctx, unsigned frame_size)
+    int av_buffersink_get_frame(AVFilterContext *ctx, AVFrame *frame)
+
+cdef extern from "libavfilter/buffersrc.h" nogil:
+    int av_buffersrc_write_frame(AVFilterContext *ctx, const AVFrame *frame)
