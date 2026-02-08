@@ -86,7 +86,7 @@ class VideoPlane(Plane):
             return (kCuda, self.frame._device_id)
         return (kCPU, 0)
 
-    def __dlpack__(self, stream: int | None = None):
+    def __dlpack__(self, *, stream: int | None = None):
         if self.frame.ptr.buf[0] == cython.NULL:
             raise TypeError(
                 "DLPack export requires a refcounted AVFrame (frame.buf[0] is NULL)"
@@ -102,6 +102,11 @@ class VideoPlane(Plane):
             ):
                 raise NotImplementedError(
                     "DLPack export is only implemented for CUDA hw frames"
+                )
+            if stream is not None:
+                raise NotImplementedError(
+                    "CUDA stream synchronization is not supported. "
+                    "Pass stream=None and synchronize before calling __dlpack__."
                 )
 
             frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
