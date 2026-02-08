@@ -1,4 +1,4 @@
-from typing import Any, Sequence, overload
+from typing import Any, overload
 
 import numpy as np
 

@@ -1,8 +1,6 @@
 import os
-import re
 import sys
 
-import sphinx
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
 

@@ -11,7 +11,7 @@ import pytest
 
 import av
 
-from .common import TestCase, fate_png, fate_suite, has_pillow, run_in_sandbox
+from .common import TestCase, fate_png, fate_suite, has_pillow
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
 if TYPE_CHECKING:

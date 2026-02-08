@@ -4,7 +4,6 @@ import datetime
 import errno
 import functools
 import os
-import types
 import typing
 from typing import TYPE_CHECKING
 from unittest import TestCase as _Base

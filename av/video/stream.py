@@ -1,7 +1,7 @@
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.packet import Packet
-from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.frame import VideoFrame
 
 
