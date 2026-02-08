@@ -5,9 +5,6 @@ import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.error import err_check
 
-# === DICTIONARIES ===
-# ====================
-
 
 @cython.cfunc
 def _decode(s: cython.pointer[cython.char], encoding, errors) -> str:
@@ -45,10 +42,6 @@ def dict_to_avdict(
                 dst, key.encode(encoding, errors), value.encode(encoding, errors), 0
             )
         )
-
-
-# === FRACTIONS ===
-# =================
 
 
 @cython.cfunc

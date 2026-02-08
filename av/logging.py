@@ -44,7 +44,6 @@ import sys
 from threading import Lock, get_ident
 
 import cython
-import cython.cimports.libav as lib
 from cython.cimports.libc.stdio import fprintf, stderr
 from cython.cimports.libc.stdlib import free, malloc
 
@@ -338,7 +337,7 @@ def log_callback(
 
     # Format the message.
     message: cython.char[1024]
-    lib.vsnprintf(message, 1023, format, args)
+    vsnprintf(message, 1023, format, args)
 
     # Get the name.
     name: cython.p_const_char = cython.NULL

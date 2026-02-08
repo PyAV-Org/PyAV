@@ -1,7 +1,7 @@
 import cython
 import cython.cimports.libav as lib
 
-lib.avdevice_register_all()
+avdevice_register_all()
 
 # Exports.
 time_base = lib.AV_TIME_BASE
@@ -41,9 +41,9 @@ library_meta = {
         license=lib.avformat_license(),
     ),
     "libavdevice": dict(
-        version=decode_version(lib.avdevice_version()),
-        configuration=lib.avdevice_configuration(),
-        license=lib.avdevice_license(),
+        version=decode_version(avdevice_version()),
+        configuration=avdevice_configuration(),
+        license=avdevice_license(),
     ),
     "libavfilter": dict(
         version=decode_version(lib.avfilter_version()),
@@ -51,14 +51,14 @@ library_meta = {
         license=lib.avfilter_license(),
     ),
     "libswscale": dict(
-        version=decode_version(lib.swscale_version()),
-        configuration=lib.swscale_configuration(),
-        license=lib.swscale_license(),
+        version=decode_version(swscale_version()),
+        configuration=swscale_configuration(),
+        license=swscale_license(),
     ),
     "libswresample": dict(
-        version=decode_version(lib.swresample_version()),
-        configuration=lib.swresample_configuration(),
-        license=lib.swresample_license(),
+        version=decode_version(swresample_version()),
+        configuration=swresample_configuration(),
+        license=swresample_license(),
     ),
 }
 
