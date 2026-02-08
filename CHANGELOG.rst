@@ -4,7 +4,7 @@ Changelog
 We are operating with `semantic versioning <https://semver.org>`_.
 
 ..
-    Update this file in your commit that makes a change (besides maintainence).
+    Update this file in your commit that makes a change (besides maintenance).
 
     To make merging/rebasing easier, don't manually break lines in here when they are too long.
     To make tracking easier, please add either ``closes #123`` or ``fixes #123`` to the first line of the commit message, when closing/fixing a GitHub issue.
@@ -33,7 +33,18 @@ Major:
 - Limited API binary wheels are now built.
 - 3.13t (free-threading) will be dropped because of storage limitations.
 - When an FFmpeg C function indicates an error, raise av.ArgumentError instead of ValueError/av.ValueError. This helps disambiguate why an exception is being thrown.
-- Save space by removing libaom (av1 encoder/decoder); dav1d, stvav1, and hardware, are available.
+- Save space by removing libaom (av1 encoder/decoder); dav1d, stvav1, and hardware, are available alternatives.
+
+Features:
+
+- Use zero-copy for Packet init from buffer data by :gh-user:`WyattBlue` in (:pr:`2199`).
+- Expose AVIndexEntry by :gh-user:`Queuecumber` in (:pr:`2136`).
+- Preserving hardware memory during cuvid decoding, exporting/importing via dlpack by :gh-user:`WyattBlue` in (:pr:`2155`).
+
+Fixes:
+
+- Fix :issue:`2149` by :gh-user:`WyattBlue` in (:pr:`2155`).
+- Fix packet typing based on stream and specify InputContainer.demux based on incoming stream by :gh-user:`ntjohnson1` in (:pr:`2134`).
 
 v16.1.0
 -------
@@ -45,7 +56,7 @@ Features:
 - Add subtitle encoding support by :gh-user:`skeskinen` in (:pr:`2050`).
 - Add read/write access to PacketSideData by :gh-user:`skeskinen` in (:pr:`2051`).
 - Add yuv422p support for video frame to_ndarray and from_ndarray by :gh-user:`wader` in (:pr:`2054`).
-- Add binding for ``avcodec_find_best_pix_fmt_of_list()`` by :gh-user:`ndeybach` (:pr:`2058`).
+- Add binding for ``avcodec_find_best_pix_fmt_of_list()`` by :gh-user:`ndeybach` in (:pr:`2058`).
 
 Fixes:
 
