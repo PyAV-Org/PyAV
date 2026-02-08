@@ -628,10 +628,7 @@ class VideoFrame(Frame):
 
         frame: VideoFrame = self.reformat(**kwargs2)
         if frame.ptr.hw_frames_ctx:
-            raise ValueError(
-                "Cannot convert a hardware frame to numpy directly. "
-                "Specify a software format (e.g. format='rgb24') or decode with HWAccel(output_format='sw')."
-            )
+            raise ValueError("Cannot convert a hardware frame to numpy directly.")
 
         import numpy as np
 
@@ -1542,6 +1539,8 @@ class VideoFrame(Frame):
                 frames_ref = ctx.get_frames_ctx(sw_fmt, width, height)
                 frame.ptr.format = get_pix_fmt(b"cuda")
                 frame.ptr.hw_frames_ctx = frames_ref
+                frame._device_id = device_id
+                frame._cuda_ctx = ctx
             else:
                 frame.ptr.format = sw_fmt
 

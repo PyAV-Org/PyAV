@@ -130,7 +130,7 @@ class HWAccel:
         self.allow_software_fallback = allow_software_fallback
 
         self.options = {} if not options else dict(options)
-        if self._device_type == HWDeviceType.cuda and self.is_hw_owned == True:
+        if self._device_type == HWDeviceType.cuda and self.is_hw_owned:
             self.options.setdefault("primary_ctx", "1")
         self.flags = 0 if not flags else flags
         self.ptr = cython.NULL
@@ -174,7 +174,6 @@ class HWAccel:
             device=self._device,
             allow_software_fallback=self.allow_software_fallback,
             options=self.options,
-            output_format=self.output_format,
         )
         ret._initialize_hw_context(codec)
         return ret

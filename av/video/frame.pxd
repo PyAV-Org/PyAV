@@ -24,9 +24,11 @@ cdef class VideoFrame(Frame):
     # We don't ever actually access it directly.
     cdef uint8_t *_buffer
     cdef object _np_buffer
+    cdef object _cuda_ctx
 
     cdef VideoReformatter reformatter
     cdef readonly VideoFormat format
+    cdef readonly int _device_id
 
     cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
     cdef _init_user_attributes(self)

@@ -83,7 +83,7 @@ class VideoPlane(Plane):
                 raise NotImplementedError(
                     "DLPack export is only implemented for CUDA hw frames"
                 )
-            return (kCuda, self.frame.device_id)
+            return (kCuda, self.frame._device_id)
         return (kCPU, 0)
 
     def __dlpack__(self, stream: int | None = None):
@@ -109,7 +109,7 @@ class VideoPlane(Plane):
             )
             sw_fmt = frames_ctx.sw_format
             device_type = kCuda
-            device_id = self.frame.hwaccel_ctx.device_id
+            device_id = self.frame._device_id
         else:
             sw_fmt = cython.cast(lib.AVPixelFormat, self.frame.ptr.format)
             device_type = kCPU
