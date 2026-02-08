@@ -5,7 +5,6 @@ from pathlib import Path
 
 import cython
 import cython.cimports.libav as lib
-from cython.cimports.av.codec.hwaccel import HWAccel
 from cython.cimports.av.container.core import timeout_info
 from cython.cimports.av.container.input import InputContainer
 from cython.cimports.av.container.output import OutputContainer

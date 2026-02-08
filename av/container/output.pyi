@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Sequence, TypeVar, Union, overload
+from typing import Sequence, TypeVar, overload
 
 from av.audio import _AudioCodecName
 from av.audio.stream import AudioStream

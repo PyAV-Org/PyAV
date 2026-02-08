@@ -1,5 +1,4 @@
 import builtins
-from enum import Enum
 
 classes: dict[int, Exception]
 

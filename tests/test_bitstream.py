@@ -6,7 +6,7 @@ import av
 from av import Packet
 from av.bitstream import BitStreamFilterContext, bitstream_filters_available
 
-from .common import TestCase, fate_suite
+from .common import fate_suite
 
 
 def is_annexb(packet: Packet | bytes | None) -> bool:

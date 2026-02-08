@@ -1,7 +1,7 @@
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.codec.context import CodecContext
-from cython.cimports.av.codec.hwaccel import HWAccel, HWConfig
+from cython.cimports.av.codec.hwaccel import HWAccel
 from cython.cimports.av.error import err_check
 from cython.cimports.av.frame import Frame
 from cython.cimports.av.packet import Packet

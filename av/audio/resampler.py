@@ -1,7 +1,6 @@
 from errno import EAGAIN
 
 import cython
-from cython.cimports.av.filter.context import FilterContext
 from cython.cimports.av.filter.graph import Graph
 
 from av.error import FFmpegError

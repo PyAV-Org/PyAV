@@ -1,2 +1,2 @@
-from .frame import VideoFrame
-from .stream import VideoStream
+from .frame import VideoFrame as VideoFrame
+from .stream import VideoStream as VideoStream

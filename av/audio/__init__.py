@@ -1,2 +1,2 @@
-from .frame import AudioFrame
-from .stream import AudioStream
+from .frame import AudioFrame as AudioFrame
+from .stream import AudioStream as AudioStream

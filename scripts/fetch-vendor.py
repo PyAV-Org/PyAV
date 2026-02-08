@@ -3,7 +3,6 @@ import logging
 import json
 import os
 import platform
-import struct
 import subprocess
 
 

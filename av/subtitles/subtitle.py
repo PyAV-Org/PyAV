@@ -1,6 +1,6 @@
 import cython
 from cython.cimports.cpython import PyBuffer_FillInfo, PyBytes_FromString
-from cython.cimports.libc.string import memcpy, strlen
+from cython.cimports.libc.string import memcpy
 
 
 @cython.cclass

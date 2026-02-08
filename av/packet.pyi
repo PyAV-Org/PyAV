@@ -3,9 +3,9 @@ from typing import Generic, Iterator, Literal, TypeVar, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
-from av.stream import AttachmentStream, DataStream, Stream
+from av.stream import Stream
 from av.subtitles.stream import SubtitleStream
-from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, SubtitleSet
+from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
 from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
 

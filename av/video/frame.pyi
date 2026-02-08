@@ -1,6 +1,6 @@
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, ClassVar, Union
+from typing import Any, Union
 
 import numpy as np
 

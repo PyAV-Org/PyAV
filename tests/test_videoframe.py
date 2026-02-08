@@ -1,17 +1,14 @@
-import time
 from fractions import Fraction
-from unittest import SkipTest
 
 import numpy
 import pytest
 
 import av
 from av import VideoFrame
-from av.frame import Frame
 from av.video.frame import supported_np_pix_fmts
-from av.video.reformatter import ColorRange, Colorspace, Interpolation
+from av.video.reformatter import Colorspace, Interpolation
 
-from .common import TestCase, assertNdarraysEqual, fate_png, fate_suite
+from .common import assertNdarraysEqual, fate_png, fate_suite
 
 
 def assertPixelValue16(plane, expected, byteorder: str) -> None:
