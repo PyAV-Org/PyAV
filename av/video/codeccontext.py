@@ -127,9 +127,7 @@ class VideoCodecContext(CodecContext):
             # need to transfer.
             return frame
 
-        if self.hwaccel_ctx.output_format == "hw":
-            vframe = cython.cast(VideoFrame, frame)
-            vframe._device_id = int(getattr(self.hwaccel_ctx, "device_id", 0))
+        if self.hwaccel_ctx.is_hw_owned:
             return frame
 
         frame_sw: Frame = self._alloc_next_frame()

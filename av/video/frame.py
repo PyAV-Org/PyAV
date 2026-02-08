@@ -8,7 +8,7 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.sidedata.sidedata import get_display_rotation
 from cython.cimports.av.utils import check_ndarray
 from cython.cimports.av.video.format import get_pix_fmt, get_video_format
-from cython.cimports.av.video.plane import VideoPlane
+from cython.cimports.av.video.plane import DLManagedTensor, VideoPlane, kCPU, kCuda
 from cython.cimports.cpython.exc import PyErr_Clear
 from cython.cimports.cpython.pycapsule import (
     PyCapsule_GetPointer,
@@ -16,15 +16,14 @@ from cython.cimports.cpython.pycapsule import (
     PyCapsule_SetName,
 )
 from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
-from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
 from cython.cimports.libc.stdint import int64_t, uint8_t
 
 
 @cython.cclass
 class CudaContext:
-    def __cinit__(self, device_id=0, primary_ctx=True):
-        self._device_id = int(device_id)
-        self._primary_ctx = bool(primary_ctx)
+    def __cinit__(self, device_id: cython.int = 0, primary_ctx: cython.bint = True):
+        self.device_id = device_id
+        self.primary_ctx = primary_ctx
         self._device_ref = cython.NULL
         self._frames_cache = {}
 
@@ -44,14 +43,6 @@ class CudaContext:
             lib.av_buffer_unref(cython.address(ref))
             self._device_ref = cython.NULL
 
-    @property
-    def device_id(self) -> int:
-        return self._device_id
-
-    @property
-    def primary_ctx(self) -> bool:
-        return self._primary_ctx
-
     @cython.cfunc
     def _get_device_ref(self) -> cython.pointer[lib.AVBufferRef]:
         device_ref: cython.pointer[lib.AVBufferRef] = self._device_ref
@@ -59,12 +50,11 @@ class CudaContext:
             return device_ref
 
         device_ref = cython.NULL
-        device_bytes = str(int(self.device_id)).encode()
+        device_bytes = f"{self.device_id}".encode()
         c_device: cython.p_char = device_bytes
         options: Dictionary = Dictionary(
             {"primary_ctx": "1" if self.primary_ctx else "0"}
         )
-
         err_check(
             lib.av_hwdevice_ctx_create(
                 cython.address(device_ref),
@@ -74,7 +64,6 @@ class CudaContext:
                 0,
             )
         )
-
         self._device_ref = device_ref
         return device_ref
 
@@ -425,10 +414,6 @@ class VideoFrame(Frame):
             f"<av.{self.__class__.__name__}, pts={self.pts} {self.format.name} "
             f"{self.width}x{self.height} at 0x{id(self):x}>"
         )
-
-    @property
-    def device_id(self) -> int:
-        return self._device_id
 
     @property
     def planes(self):
@@ -1059,10 +1044,6 @@ class VideoFrame(Frame):
         return frame
 
     def _image_fill_pointers_numpy(self, buffer, width, height, linesizes, format):
-        c_data: cython.size_t = buffer.ctypes.data
-        c_ptr: cython.pointer[uint8_t] = cython.cast(cython.pointer[uint8_t], c_data)
-        c_format: lib.AVPixelFormat = get_pix_fmt(format)
-
         # If you want to use the numpy notation, then you need to include the following lines at the top of the file:
         #      cimport numpy as cnp
         #      cnp.import_array()
@@ -1079,9 +1060,9 @@ class VideoFrame(Frame):
         # Using buffer.ctypes.data helps avoid any kind of usage of the c-api from
         # numpy, which avoid the need to add numpy as a compile time dependency.
 
-        c_data = buffer.ctypes.data
-        c_ptr = cython.cast(cython.pointer[uint8_t], c_data)
-        c_format = get_pix_fmt(format)
+        c_data: cython.Py_ssize_t = buffer.ctypes.data
+        c_ptr: cython.pointer[uint8_t] = cython.cast(cython.pointer[uint8_t], c_data)
+        c_format: lib.AVPixelFormat = get_pix_fmt(format)
         lib.av_frame_unref(self.ptr)
         self._np_buffer = None
 
@@ -1419,7 +1400,7 @@ class VideoFrame(Frame):
         p010le = get_pix_fmt(b"p010le")
         p016le = get_pix_fmt(b"p016le")
 
-        if sw_fmt not in {nv12, p010le, p016le}:
+        if sw_fmt not in (nv12, p010le, p016le):
             raise NotImplementedError("from_dlpack supports nv12, p010le, p016le only")
 
         expected_bits = 8 if sw_fmt == nv12 else 16
@@ -1437,7 +1418,7 @@ class VideoFrame(Frame):
             dev_type1 = m1.dl_tensor.device_type
             if dev_type0 != dev_type1:
                 raise ValueError("plane tensors must have the same device_type")
-            if dev_type0 not in {kDLCUDA, kDLCPU}:
+            if dev_type0 not in (kCuda, kCPU):
                 raise NotImplementedError(
                     "only CPU and CUDA DLPack tensors are supported"
                 )
@@ -1446,7 +1427,7 @@ class VideoFrame(Frame):
             dev1 = m1.dl_tensor.device_id
             if dev0 != dev1:
                 raise ValueError("plane tensors must be on the same CUDA device")
-            if dev_type0 == kDLCUDA:
+            if dev_type0 == kCuda:
                 if device_id is None:
                     device_id = dev0
                 elif device_id != dev0:
@@ -1457,18 +1438,17 @@ class VideoFrame(Frame):
                 if device_id not in (None, 0):
                     raise ValueError("device_id must be 0 for CPU tensors")
                 device_id = 0
-            if dev_type0 == kDLCPU and (dev0 != 0 or dev1 != 0):
+            if dev_type0 == kCPU and (dev0 != 0 or dev1 != 0):
                 raise ValueError("CPU DLPack tensors must have device_id == 0")
 
             if (
-                m0.dl_tensor.dtype.code != kDLUInt
+                m0.dl_tensor.dtype.code != 1
                 or m0.dl_tensor.dtype.bits != expected_bits
                 or m0.dl_tensor.dtype.lanes != 1
             ):
                 raise TypeError("unexpected dtype for plane 0")
-
             if (
-                m1.dl_tensor.dtype.code != kDLUInt
+                m1.dl_tensor.dtype.code != 1
                 or m1.dl_tensor.dtype.bits != expected_bits
                 or m1.dl_tensor.dtype.lanes != 1
             ):
@@ -1541,13 +1521,9 @@ class VideoFrame(Frame):
             frame = alloc_video_frame()
             frame.ptr.width = width
             frame.ptr.height = height
-            if dev_type0 == kDLCUDA:
-                ctx = cython.declare(CudaContext)
-                frames_ref = cython.declare(cython.pointer[lib.AVBufferRef])
-                if not isinstance(primary_ctx, (bool, int)):
-                    raise TypeError("primary_ctx must be a bool")
-                primary_ctx = bool(primary_ctx)
-
+            if dev_type0 == kCuda:
+                ctx: CudaContext
+                frames_ref: cython.pointer[lib.AVBufferRef]
                 if cuda_context is None:
                     ctx = CudaContext(device_id=device_id, primary_ctx=primary_ctx)
                 else:
@@ -1564,7 +1540,6 @@ class VideoFrame(Frame):
                     ctx = cython.cast(CudaContext, cuda_context)
 
                 frames_ref = ctx.get_frames_ctx(sw_fmt, width, height)
-
                 frame.ptr.format = get_pix_fmt(b"cuda")
                 frame.ptr.hw_frames_ctx = frames_ref
             else:
@@ -1600,7 +1575,6 @@ class VideoFrame(Frame):
             m1 = cython.NULL
 
             frame._init_user_attributes()
-            frame._device_id = device_id
             return frame
 
         except Exception:

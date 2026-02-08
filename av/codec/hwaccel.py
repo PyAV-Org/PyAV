@@ -110,11 +110,8 @@ class HWAccel:
         allow_software_fallback=True,
         options=None,
         flags=None,
-        output_format=None,
+        is_hw_owned=False,
     ):
-        if isinstance(device, int):
-            device = str(device)
-
         if isinstance(device_type, HWDeviceType):
             self._device_type = device_type
         elif isinstance(device_type, str):
@@ -124,27 +121,16 @@ class HWAccel:
         else:
             raise ValueError("Unknown type for device_type")
 
-        if output_format is None:
-            output_format = "sw"
-        if isinstance(output_format, str):
-            output_format = output_format.lower()
-        if output_format not in {"sw", "hw"}:
-            raise ValueError("output_format must be 'sw' or 'hw'")
-        self._output_format = output_format
+        self.is_hw_owned = is_hw_owned
+        self.device_id = 0
+        if self._device_type == HWDeviceType.cuda and device:
+            self.device_id = int(device)
 
-        self._device_id = 0
-        if self._device_type == HWDeviceType.cuda:
-            if device:
-                try:
-                    self._device_id = int(device)
-                except ValueError:
-                    self._device_id = 0
-
-        self._device = device
+        self._device = None if device is None else f"{device}"
         self.allow_software_fallback = allow_software_fallback
 
         self.options = {} if not options else dict(options)
-        if self._device_type == HWDeviceType.cuda and self.output_format == "hw":
+        if self._device_type == HWDeviceType.cuda and self.is_hw_owned == True:
             self.options.setdefault("primary_ctx", "1")
         self.flags = 0 if not flags else flags
         self.ptr = cython.NULL
@@ -158,7 +144,7 @@ class HWAccel:
             if self._device_type and config.device_type != self._device_type:
                 continue
             break
-        else:
+        else:  # nobreak
             raise NotImplementedError(f"No supported hardware config for {codec}")
 
         self.config = config
@@ -178,15 +164,7 @@ class HWAccel:
             )
         )
 
-    @property
-    def device_id(self) -> int:
-        return self._device_id
-
-    @property
-    def output_format(self) -> str:
-        return self._output_format
-
-    def create(self, codec: Codec):
+    def create(self, codec: Codec) -> HWAccel:
         """Create a new hardware accelerator context with the given codec"""
         if self.ptr:
             raise RuntimeError("Hardware context already initialized")

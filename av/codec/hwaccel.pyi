@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Literal, cast
+from typing import cast
 
 from av.codec.codec import Codec
 from av.video.format import VideoFormat
@@ -40,7 +40,7 @@ class HWAccel:
     options: dict[str, object]
 
     @property
-    def output_format(self) -> Literal["sw", "hw"]: ...
+    def is_hw_owned(self) -> bool: ...
     @property
     def device_id(self) -> int: ...
     def __init__(
@@ -50,7 +50,7 @@ class HWAccel:
         allow_software_fallback: bool = False,
         options: dict[str, object] | None = None,
         flags: int | None = None,
-        output_format: Literal["sw", "hw"] | None = None,
+        is_hw_owned: bool = False,
     ) -> None: ...
     def create(self, codec: Codec) -> HWAccel: ...
 

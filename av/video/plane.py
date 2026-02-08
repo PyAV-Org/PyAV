@@ -1,5 +1,3 @@
-from typing import Any
-
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.error import err_check
@@ -12,8 +10,6 @@ from cython.cimports.cpython.pycapsule import (
     PyCapsule_IsValid,
     PyCapsule_New,
 )
-from cython.cimports.dlpack import DLManagedTensor, kDLCPU, kDLCUDA, kDLUInt
-from cython.cimports.libc.stdint import int64_t
 from cython.cimports.libc.stdlib import free, malloc
 
 
@@ -87,20 +83,18 @@ class VideoPlane(Plane):
                 raise NotImplementedError(
                     "DLPack export is only implemented for CUDA hw frames"
                 )
+            return (kCuda, self.frame.device_id)
+        return (kCPU, 0)
 
-            return (kDLCUDA, self.frame.device_id)
-
-        return (kDLCPU, 0)
-
-    def __dlpack__(self, stream: int | Any | None = None):
+    def __dlpack__(self, stream: int | None = None):
         if self.frame.ptr.buf[0] == cython.NULL:
             raise TypeError(
                 "DLPack export requires a refcounted AVFrame (frame.buf[0] is NULL)"
             )
 
+        sw_fmt: lib.AVPixelFormat
         device_type: cython.int
         device_id: cython.int
-        sw_fmt: lib.AVPixelFormat
 
         if self.frame.ptr.hw_frames_ctx:
             if cython.cast(lib.AVPixelFormat, self.frame.ptr.format) != get_pix_fmt(
@@ -114,11 +108,11 @@ class VideoPlane(Plane):
                 cython.pointer[lib.AVHWFramesContext], self.frame.ptr.hw_frames_ctx.data
             )
             sw_fmt = frames_ctx.sw_format
-            device_type = kDLCUDA
-            device_id = int(self.frame.device_id)
+            device_type = kCuda
+            device_id = self.frame.hwaccel_ctx.device_id
         else:
             sw_fmt = cython.cast(lib.AVPixelFormat, self.frame.ptr.format)
-            device_type = kDLCPU
+            device_type = kCPU
             device_id = 0
 
         line_size = self.line_size
@@ -131,16 +125,9 @@ class VideoPlane(Plane):
         p010le = get_pix_fmt(b"p010le")
         p016le = get_pix_fmt(b"p016le")
 
-        ndim: cython.int
-        bits: cython.int
-        itemsize: cython.int
-
-        s0: int64_t
-        s1: int64_t
-        s2: int64_t
-        st0: int64_t
-        st1: int64_t
-        st2: int64_t
+        ndim, bits, itemsize = cython.declare(cython.int)
+        s0, s1, s2 = cython.declare(int64_t)
+        st0, st1, st2 = cython.declare(int64_t)
 
         if sw_fmt == nv12:
             itemsize = 1
@@ -244,9 +231,7 @@ class VideoPlane(Plane):
         managed.dl_tensor.device_type = device_type
         managed.dl_tensor.device_id = device_id
         managed.dl_tensor.ndim = ndim
-        managed.dl_tensor.dtype.code = kDLUInt
-        managed.dl_tensor.dtype.bits = bits
-        managed.dl_tensor.dtype.lanes = 1
+        managed.dl_tensor.dtype = DLDataType(code=1, bits=bits, lanes=1)
         managed.dl_tensor.shape = shape
         managed.dl_tensor.strides = strides
         managed.dl_tensor.byte_offset = 0
@@ -272,14 +257,8 @@ class VideoPlane(Plane):
 def _dlpack_managed_tensor_deleter(
     managed: cython.pointer[DLManagedTensor],
 ) -> cython.void:
-    ctx: cython.pointer[cython.p_void]
-    frame_ref: cython.pointer[lib.AVFrame]
-    shape: cython.pointer[int64_t]
-    strides: cython.pointer[int64_t]
-
     if managed == cython.NULL:
         return
-
     ctx = cython.cast(cython.pointer[cython.p_void], managed.manager_ctx)
     if ctx != cython.NULL:
         frame_ref = cython.cast(cython.pointer[lib.AVFrame], ctx[0])
@@ -300,7 +279,6 @@ def _dlpack_managed_tensor_deleter(
 @cython.cfunc
 @cython.exceptval(check=False)
 def _dlpack_capsule_destructor(capsule: object) -> cython.void:
-    managed: cython.pointer[DLManagedTensor]
     if PyCapsule_IsValid(capsule, b"dltensor"):
         managed = cython.cast(
             cython.pointer[DLManagedTensor],

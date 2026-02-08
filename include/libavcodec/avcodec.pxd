@@ -355,8 +355,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         void *opaque
         int sample_rate
         AVBufferRef *buf[8]
-        AVBufferRef **extended_buf
-        int nb_extended_buf
 
         AVFrameSideData **side_data
         int nb_side_data

@@ -7,11 +7,10 @@ from av.video.reformatter cimport VideoReformatter
 
 
 cdef class CudaContext:
-    cdef int _device_id
-    cdef bool _primary_ctx
+    cdef readonly int device_id
+    cdef readonly bint primary_ctx
     cdef lib.AVBufferRef* _device_ref
     cdef dict _frames_cache
-
     cdef lib.AVBufferRef* _get_device_ref(self)
     cdef public lib.AVBufferRef* get_frames_ctx(
         self,
@@ -26,7 +25,6 @@ cdef class VideoFrame(Frame):
     cdef uint8_t *_buffer
     cdef object _np_buffer
 
-    cdef int _device_id
     cdef VideoReformatter reformatter
     cdef readonly VideoFormat format
 

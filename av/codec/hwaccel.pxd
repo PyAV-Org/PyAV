@@ -16,8 +16,8 @@ cdef class HWAccel:
     cdef readonly Codec codec
     cdef readonly HWConfig config
     cdef lib.AVBufferRef *ptr
+    cdef readonly int device_id
+    cdef readonly bint is_hw_owned
     cdef public bint allow_software_fallback
     cdef public dict options
     cdef public int flags
-    cdef str _output_format
-    cdef int _device_id

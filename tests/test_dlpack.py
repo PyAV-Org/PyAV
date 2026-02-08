@@ -49,23 +49,17 @@ def _get_cuda_backend():
     return None
 
 
-def test_hwaccel_output_format_validation_and_primary_ctx() -> None:
-    hw = HWAccel(device_type="cuda", output_format=None)
-    assert hw.output_format == "sw"
+def test_hwaccel_validation_and_primary_ctx() -> None:
+    hw = HWAccel(device_type="cuda")
+    assert hw.is_hw_owned == False
     assert "primary_ctx" not in hw.options
 
-    hw = HWAccel(device_type="cuda", output_format="hw")
-    assert hw.output_format == "hw"
+    hw = HWAccel(device_type="cuda", is_hw_owned=True)
+    assert hw.is_hw_owned == True
     assert hw.options.get("primary_ctx") == "1"
 
-    hw = HWAccel(device_type="cuda", output_format="hw", options={"primary_ctx": "0"})
+    hw = HWAccel(device_type="cuda", is_hw_owned=True, options={"primary_ctx": "0"})
     assert hw.options.get("primary_ctx") == "0"
-
-    hw = HWAccel(device_type="cuda", device=0, output_format="hw")
-    assert hw.output_format == "hw"
-
-    with pytest.raises(ValueError, match="output_format must be 'sw' or 'hw'"):
-        HWAccel(device_type="cuda", output_format="invalid")  # type: ignore[arg-type]
 
 
 def test_video_frame_from_dlpack_nv12_cpu_basic_zero_copy_and_lifetime() -> None:
@@ -75,7 +69,6 @@ def test_video_frame_from_dlpack_nv12_cpu_basic_zero_copy_and_lifetime() -> None
 
     frame = VideoFrame.from_dlpack((y, uv), format="nv12")
 
-    assert frame.device_id == 0
     assert frame.format.name == "nv12"
     assert frame.width == width
     assert frame.height == height
