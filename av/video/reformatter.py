@@ -255,9 +255,13 @@ class VideoReformatter:
                 # Grab the coefficients for the requested transforms.
                 # The inv_table brings us to linear, and `tbl` to the new space.
                 if src_colorspace != lib.SWS_CS_DEFAULT:
-                    inv_tbl = lib.sws_getCoefficients(src_colorspace)
+                    inv_tbl = cython.cast(
+                        cython.p_int, lib.sws_getCoefficients(src_colorspace)
+                    )
                 if dst_colorspace != lib.SWS_CS_DEFAULT:
-                    tbl = lib.sws_getCoefficients(dst_colorspace)
+                    tbl = cython.cast(
+                        cython.p_int, lib.sws_getCoefficients(dst_colorspace)
+                    )
 
                 ret = lib.sws_setColorspaceDetails(
                     self.ptr,
