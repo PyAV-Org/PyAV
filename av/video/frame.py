@@ -403,11 +403,7 @@ class VideoFrame(Frame):
         )
 
     def __dealloc__(self):
-        # The `self._buffer` member is only set if *we* allocated the buffer in `_init`,
-        # as opposed to a buffer allocated by a decoder.
         lib.av_frame_unref(self.ptr)
-        # Let go of the reference from the numpy buffers if we made one
-        self._np_buffer = None
 
     def __repr__(self):
         return (
@@ -1061,7 +1057,6 @@ class VideoFrame(Frame):
         c_ptr: cython.pointer[uint8_t] = cython.cast(cython.pointer[uint8_t], c_data)
         c_format: lib.AVPixelFormat = get_pix_fmt(format)
         lib.av_frame_unref(self.ptr)
-        self._np_buffer = None
 
         # Hold on to a reference for the numpy buffer so that it doesn't get accidentally garbage collected
         self.ptr.format = c_format
@@ -1094,7 +1089,6 @@ class VideoFrame(Frame):
             Py_DECREF(py_buf)
             raise MemoryError("av_buffer_create failed")
 
-        self._np_buffer = buffer
         self._init_user_attributes()
 
     @staticmethod
