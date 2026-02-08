@@ -229,8 +229,8 @@ class VideoReformatter:
         # We want to change the colorspace/color_range transforms.
         # We do that by grabbing all the current settings, changing a
         # couple, and setting them all. We need a lot of state here.
-        inv_tbl: cython.p_int
-        tbl: cython.p_int
+        inv_tbl: cython.p_const_int
+        tbl: cython.p_const_int
         src_colorspace_range: cython.int
         dst_colorspace_range: cython.int
         brightness: cython.int
