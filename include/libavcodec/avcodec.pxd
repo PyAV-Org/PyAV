@@ -1,4 +1,5 @@
-from libc.stdint cimport int64_t, uint16_t, uint32_t, uint8_t
+from libc.stdint cimport int64_t, uint8_t, uint16_t, uint32_t
+
 
 cdef extern from "libavcodec/packet.h" nogil:
     const AVPacketSideData *av_packet_side_data_get(
@@ -353,8 +354,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int64_t pkt_dts
         void *opaque
         int sample_rate
-        int nb_side_data
+        AVBufferRef *buf[8]
+
         AVFrameSideData **side_data
+        int nb_side_data
         int flags
         AVColorRange color_range
         AVColorPrimaries color_primaries
@@ -364,6 +367,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDictionary *metadata
         int decode_error_flags
 
+        AVBufferRef *hw_frames_ctx
         AVBufferRef *opaque_ref
         AVChannelLayout ch_layout
         int64_t duration

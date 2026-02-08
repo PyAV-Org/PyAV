@@ -127,6 +127,10 @@ class VideoCodecContext(CodecContext):
             # need to transfer.
             return frame
 
+        if self.hwaccel_ctx.is_hw_owned:
+            cython.cast(VideoFrame, frame)._device_id = self.hwaccel_ctx.device_id
+            return frame
+
         frame_sw: Frame = self._alloc_next_frame()
         err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
         # TODO: Is there anything else to transfer?

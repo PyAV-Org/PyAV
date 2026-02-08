@@ -110,6 +110,7 @@ class HWAccel:
         allow_software_fallback=True,
         options=None,
         flags=None,
+        is_hw_owned=False,
     ):
         if isinstance(device_type, HWDeviceType):
             self._device_type = device_type
@@ -120,9 +121,17 @@ class HWAccel:
         else:
             raise ValueError("Unknown type for device_type")
 
-        self._device = device
+        self.is_hw_owned = is_hw_owned
+        self.device_id = 0
+        if self._device_type == HWDeviceType.cuda and device:
+            self.device_id = int(device)
+
+        self._device = None if device is None else f"{device}"
         self.allow_software_fallback = allow_software_fallback
+
         self.options = {} if not options else dict(options)
+        if self._device_type == HWDeviceType.cuda and self.is_hw_owned:
+            self.options.setdefault("primary_ctx", "1")
         self.flags = 0 if not flags else flags
         self.ptr = cython.NULL
         self.config = None
@@ -135,7 +144,7 @@ class HWAccel:
             if self._device_type and config.device_type != self._device_type:
                 continue
             break
-        else:
+        else:  # nobreak
             raise NotImplementedError(f"No supported hardware config for {codec}")
 
         self.config = config
@@ -155,7 +164,7 @@ class HWAccel:
             )
         )
 
-    def create(self, codec: Codec):
+    def create(self, codec: Codec) -> HWAccel:
         """Create a new hardware accelerator context with the given codec"""
         if self.ptr:
             raise RuntimeError("Hardware context already initialized")
@@ -165,6 +174,7 @@ class HWAccel:
             device=self._device,
             allow_software_fallback=self.allow_software_fallback,
             options=self.options,
+            is_hw_owned=self.is_hw_owned,
         )
         ret._initialize_hw_context(codec)
         return ret
