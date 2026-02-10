@@ -275,7 +275,8 @@ class Stream:
 
         :type: Literal["audio", "video", "subtitle", "data", "attachment"]
         """
-        return lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
+        media_type = lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
+        return "unknown" if media_type == cython.NULL else media_type
 
 
 @cython.cclass
