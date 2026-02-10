@@ -48,7 +48,7 @@ class Stream:
     disposition: Disposition
     frames: int
     language: str | None
-    type: Literal["video", "audio", "data", "subtitle", "attachment"]
+    type: Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]
 
     # From context
     codec_tag: str

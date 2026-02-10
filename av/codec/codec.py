@@ -172,7 +172,8 @@ class Codec:
         E.g: ``'audio'``, ``'video'``, ``'subtitle'``.
 
         """
-        return lib.av_get_media_type_string(self.ptr.type)
+        media_type = lib.av_get_media_type_string(self.ptr.type)
+        return "unknown" if media_type == cython.NULL else media_type
 
     @property
     def id(self):
