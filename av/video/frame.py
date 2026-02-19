@@ -724,24 +724,21 @@ class VideoFrame(Frame):
         # cases planes are simply concatenated in shape (height, width, channels)
         if format_name in _np_pix_fmt_dtypes:
             itemsize, dtype = _np_pix_fmt_dtypes[format_name]
-            layers = [
-                useful_array(plan, itemsize, dtype).reshape(
-                    frame.height, frame.width, -1
+            if len(planes) == 1:  # shortcut, avoid memory copy
+                array = useful_array(planes[0], itemsize, dtype).reshape(
+                    height, width, -1
                 )
-                for plan in frame.planes
-            ]
-            if len(layers) == 1:  # shortcut, avoid memory copy
-                array = layers[0]
             else:  # general case
-                array = np.concatenate(layers, axis=2)
+                array = np.empty((height, width, len(planes)), dtype=dtype)
+                for i, plane in enumerate(planes):
+                    array[:, :, i] = useful_array(plane, itemsize, dtype).reshape(
+                        height, width
+                    )
             array = byteswap_array(array, format_name.endswith("be"))
             if array.shape[2] == 1:  # skip last channel for gray images
                 return array.squeeze(2)
             if format_name.startswith("gbr"):  # gbr -> rgb
-                buffer = array[:, :, 0].copy()
-                array[:, :, 0] = array[:, :, 2]
-                array[:, :, 2] = array[:, :, 1]
-                array[:, :, 1] = buffer
+                array[:, :, :3] = array[:, :, [2, 0, 1]]
             if not channel_last and format_name in {"yuv444p", "yuvj444p"}:
                 array = np.moveaxis(array, 2, 0)
             return array
