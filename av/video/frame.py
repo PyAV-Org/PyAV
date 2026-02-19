@@ -264,6 +264,90 @@ supported_np_pix_fmts = {
     "yuyv422",
 }
 
+# Mapping from format name to (itemsize, dtype) for formats where planes
+# are simply concatenated into shape (height, width, channels).
+_np_pix_fmt_dtypes: dict[str, tuple[cython.uint, str]] = {
+    "abgr": (4, "uint8"),
+    "argb": (4, "uint8"),
+    "bayer_bggr8": (1, "uint8"),
+    "bayer_gbrg8": (1, "uint8"),
+    "bayer_grbg8": (1, "uint8"),
+    "bayer_rggb8": (1, "uint8"),
+    "bayer_bggr16le": (2, "uint16"),
+    "bayer_bggr16be": (2, "uint16"),
+    "bayer_gbrg16le": (2, "uint16"),
+    "bayer_gbrg16be": (2, "uint16"),
+    "bayer_grbg16le": (2, "uint16"),
+    "bayer_grbg16be": (2, "uint16"),
+    "bayer_rggb16le": (2, "uint16"),
+    "bayer_rggb16be": (2, "uint16"),
+    "bgr24": (3, "uint8"),
+    "bgr48be": (6, "uint16"),
+    "bgr48le": (6, "uint16"),
+    "bgr8": (1, "uint8"),
+    "bgra": (4, "uint8"),
+    "bgra64be": (8, "uint16"),
+    "bgra64le": (8, "uint16"),
+    "gbrap": (1, "uint8"),
+    "gbrap10be": (2, "uint16"),
+    "gbrap10le": (2, "uint16"),
+    "gbrap12be": (2, "uint16"),
+    "gbrap12le": (2, "uint16"),
+    "gbrap14be": (2, "uint16"),
+    "gbrap14le": (2, "uint16"),
+    "gbrap16be": (2, "uint16"),
+    "gbrap16le": (2, "uint16"),
+    "gbrapf32be": (4, "float32"),
+    "gbrapf32le": (4, "float32"),
+    "gbrp": (1, "uint8"),
+    "gbrp10be": (2, "uint16"),
+    "gbrp10le": (2, "uint16"),
+    "gbrp12be": (2, "uint16"),
+    "gbrp12le": (2, "uint16"),
+    "gbrp14be": (2, "uint16"),
+    "gbrp14le": (2, "uint16"),
+    "gbrp16be": (2, "uint16"),
+    "gbrp16le": (2, "uint16"),
+    "gbrp9be": (2, "uint16"),
+    "gbrp9le": (2, "uint16"),
+    "gbrpf32be": (4, "float32"),
+    "gbrpf32le": (4, "float32"),
+    "gray": (1, "uint8"),
+    "gray10be": (2, "uint16"),
+    "gray10le": (2, "uint16"),
+    "gray12be": (2, "uint16"),
+    "gray12le": (2, "uint16"),
+    "gray14be": (2, "uint16"),
+    "gray14le": (2, "uint16"),
+    "gray16be": (2, "uint16"),
+    "gray16le": (2, "uint16"),
+    "gray8": (1, "uint8"),
+    "gray9be": (2, "uint16"),
+    "gray9le": (2, "uint16"),
+    "grayf32be": (4, "float32"),
+    "grayf32le": (4, "float32"),
+    "rgb24": (3, "uint8"),
+    "rgb48be": (6, "uint16"),
+    "rgb48le": (6, "uint16"),
+    "rgb8": (1, "uint8"),
+    "rgba": (4, "uint8"),
+    "rgba64be": (8, "uint16"),
+    "rgba64le": (8, "uint16"),
+    "rgbaf16be": (8, "float16"),
+    "rgbaf16le": (8, "float16"),
+    "rgbaf32be": (16, "float32"),
+    "rgbaf32le": (16, "float32"),
+    "rgbf32be": (12, "float32"),
+    "rgbf32le": (12, "float32"),
+    "yuv444p": (1, "uint8"),
+    "yuv444p16be": (2, "uint16"),
+    "yuv444p16le": (2, "uint16"),
+    "yuva444p16be": (2, "uint16"),
+    "yuva444p16le": (2, "uint16"),
+    "yuvj444p": (1, "uint8"),
+    "yuyv422": (2, "uint8"),
+}
+
 
 @cython.cfunc
 def alloc_video_frame() -> VideoFrame:
@@ -354,9 +438,10 @@ def useful_array(
 
     total_line_size: cython.size_t = abs(plane.line_size)
     useful_line_size: cython.size_t = plane.width * bytes_per_pixel
+    if total_line_size == useful_line_size:
+        return np.frombuffer(plane, dtype=dtype)
     arr = np.frombuffer(plane, np.uint8)
-    if total_line_size != useful_line_size:
-        arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
+    arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
     return arr.view(np.dtype(dtype))
 
 
@@ -613,161 +698,66 @@ class VideoFrame(Frame):
         .. note:: For ``gbrp`` formats, channels are flipped to RGB order.
 
         """
-        kwargs2 = dict(kwargs)
-        if self.ptr.hw_frames_ctx and "format" not in kwargs2:
+        if self.ptr.hw_frames_ctx and "format" not in kwargs:
             frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
                 cython.pointer[lib.AVHWFramesContext], self.ptr.hw_frames_ctx.data
             )
-            kwargs2["format"] = get_video_format(
+            kwargs = dict(kwargs)
+            kwargs["format"] = get_video_format(
                 frames_ctx.sw_format, self.ptr.width, self.ptr.height
             ).name
 
-        frame: VideoFrame = self.reformat(**kwargs2)
+        frame: VideoFrame = self.reformat(**kwargs)
         if frame.ptr.hw_frames_ctx:
             raise ValueError("Cannot convert a hardware frame to numpy directly.")
 
         import numpy as np
 
         # check size
-        if frame.format.name in {
-            "yuv420p",
-            "yuvj420p",
-            "yuyv422",
-            "yuv422p10le",
-            "yuv422p",
-        }:
-            assert frame.width % 2 == 0, (
-                "the width has to be even for this pixel format"
-            )
-            assert frame.height % 2 == 0, (
-                "the height has to be even for this pixel format"
-            )
+        format_name = frame.format.name
+        height, width = frame.ptr.height, frame.ptr.width
+        planes: tuple[VideoPlane, ...] = frame.planes
+        if format_name in {"yuv420p", "yuvj420p", "yuyv422", "yuv422p10le", "yuv422p"}:
+            assert width % 2 == 0, "the width has to be even for this pixel format"
+            assert height % 2 == 0, "the height has to be even for this pixel format"
 
         # cases planes are simply concatenated in shape (height, width, channels)
-        itemsize, dtype = {
-            "abgr": (4, "uint8"),
-            "argb": (4, "uint8"),
-            "bayer_bggr8": (1, "uint8"),
-            "bayer_gbrg8": (1, "uint8"),
-            "bayer_grbg8": (1, "uint8"),
-            "bayer_rggb8": (1, "uint8"),
-            "bayer_bggr16le": (2, "uint16"),
-            "bayer_bggr16be": (2, "uint16"),
-            "bayer_gbrg16le": (2, "uint16"),
-            "bayer_gbrg16be": (2, "uint16"),
-            "bayer_grbg16le": (2, "uint16"),
-            "bayer_grbg16be": (2, "uint16"),
-            "bayer_rggb16le": (2, "uint16"),
-            "bayer_rggb16be": (2, "uint16"),
-            "bgr24": (3, "uint8"),
-            "bgr48be": (6, "uint16"),
-            "bgr48le": (6, "uint16"),
-            "bgr8": (1, "uint8"),
-            "bgra": (4, "uint8"),
-            "bgra64be": (8, "uint16"),
-            "bgra64le": (8, "uint16"),
-            "gbrap": (1, "uint8"),
-            "gbrap10be": (2, "uint16"),
-            "gbrap10le": (2, "uint16"),
-            "gbrap12be": (2, "uint16"),
-            "gbrap12le": (2, "uint16"),
-            "gbrap14be": (2, "uint16"),
-            "gbrap14le": (2, "uint16"),
-            "gbrap16be": (2, "uint16"),
-            "gbrap16le": (2, "uint16"),
-            "gbrapf32be": (4, "float32"),
-            "gbrapf32le": (4, "float32"),
-            "gbrp": (1, "uint8"),
-            "gbrp10be": (2, "uint16"),
-            "gbrp10le": (2, "uint16"),
-            "gbrp12be": (2, "uint16"),
-            "gbrp12le": (2, "uint16"),
-            "gbrp14be": (2, "uint16"),
-            "gbrp14le": (2, "uint16"),
-            "gbrp16be": (2, "uint16"),
-            "gbrp16le": (2, "uint16"),
-            "gbrp9be": (2, "uint16"),
-            "gbrp9le": (2, "uint16"),
-            "gbrpf32be": (4, "float32"),
-            "gbrpf32le": (4, "float32"),
-            "gray": (1, "uint8"),
-            "gray10be": (2, "uint16"),
-            "gray10le": (2, "uint16"),
-            "gray12be": (2, "uint16"),
-            "gray12le": (2, "uint16"),
-            "gray14be": (2, "uint16"),
-            "gray14le": (2, "uint16"),
-            "gray16be": (2, "uint16"),
-            "gray16le": (2, "uint16"),
-            "gray8": (1, "uint8"),
-            "gray9be": (2, "uint16"),
-            "gray9le": (2, "uint16"),
-            "grayf32be": (4, "float32"),
-            "grayf32le": (4, "float32"),
-            "rgb24": (3, "uint8"),
-            "rgb48be": (6, "uint16"),
-            "rgb48le": (6, "uint16"),
-            "rgb8": (1, "uint8"),
-            "rgba": (4, "uint8"),
-            "rgba64be": (8, "uint16"),
-            "rgba64le": (8, "uint16"),
-            "rgbaf16be": (8, "float16"),
-            "rgbaf16le": (8, "float16"),
-            "rgbaf32be": (16, "float32"),
-            "rgbaf32le": (16, "float32"),
-            "rgbf32be": (12, "float32"),
-            "rgbf32le": (12, "float32"),
-            "yuv444p": (1, "uint8"),
-            "yuv444p16be": (2, "uint16"),
-            "yuv444p16le": (2, "uint16"),
-            "yuva444p16be": (2, "uint16"),
-            "yuva444p16le": (2, "uint16"),
-            "yuvj444p": (1, "uint8"),
-            "yuyv422": (2, "uint8"),
-        }.get(frame.format.name, (None, None))
-        if itemsize is not None:
-            layers = [
-                useful_array(plan, itemsize, dtype).reshape(
-                    frame.height, frame.width, -1
+        if format_name in _np_pix_fmt_dtypes:
+            itemsize: cython.uint
+            itemsize, dtype = _np_pix_fmt_dtypes[format_name]
+            if len(planes) == 1:  # shortcut, avoid memory copy
+                array = useful_array(planes[0], itemsize, dtype).reshape(
+                    height, width, -1
                 )
-                for plan in frame.planes
-            ]
-            if len(layers) == 1:  # shortcut, avoid memory copy
-                array = layers[0]
             else:  # general case
-                array = np.concatenate(layers, axis=2)
-            array = byteswap_array(array, frame.format.name.endswith("be"))
+                array = np.empty((height, width, len(planes)), dtype=dtype)
+                for i, plane in enumerate(planes):
+                    array[:, :, i] = useful_array(plane, itemsize, dtype).reshape(
+                        height, width
+                    )
+            array = byteswap_array(array, format_name.endswith("be"))
             if array.shape[2] == 1:  # skip last channel for gray images
                 return array.squeeze(2)
-            if frame.format.name.startswith("gbr"):  # gbr -> rgb
-                buffer = array[:, :, 0].copy()
-                array[:, :, 0] = array[:, :, 2]
-                array[:, :, 2] = array[:, :, 1]
-                array[:, :, 1] = buffer
-            if not channel_last and frame.format.name in {"yuv444p", "yuvj444p"}:
+            if format_name.startswith("gbr"):  # gbr -> rgb
+                array[:, :, :3] = array[:, :, [2, 0, 1]]
+            if not channel_last and format_name in {"yuv444p", "yuvj444p"}:
                 array = np.moveaxis(array, 2, 0)
             return array
 
         # special cases
-        if frame.format.name in {"yuv420p", "yuvj420p", "yuv422p"}:
+        if format_name in {"yuv420p", "yuvj420p", "yuv422p"}:
             return np.hstack(
                 [
-                    useful_array(frame.planes[0]),
-                    useful_array(frame.planes[1]),
-                    useful_array(frame.planes[2]),
+                    useful_array(planes[0]),
+                    useful_array(planes[1]),
+                    useful_array(planes[2]),
                 ]
-            ).reshape(-1, frame.width)
-        if frame.format.name == "yuv422p10le":
+            ).reshape(-1, width)
+        if format_name == "yuv422p10le":
             # Read planes as uint16 at their original width
-            y = useful_array(frame.planes[0], 2, "uint16").reshape(
-                frame.height, frame.width
-            )
-            u = useful_array(frame.planes[1], 2, "uint16").reshape(
-                frame.height, frame.width // 2
-            )
-            v = useful_array(frame.planes[2], 2, "uint16").reshape(
-                frame.height, frame.width // 2
-            )
+            y = useful_array(planes[0], 2, "uint16").reshape(height, width)
+            u = useful_array(planes[1], 2, "uint16").reshape(height, width // 2)
+            v = useful_array(planes[2], 2, "uint16").reshape(height, width // 2)
 
             # Double the width of U and V by repeating each value
             u_full = np.repeat(u, 2, axis=1)
@@ -775,25 +765,22 @@ class VideoFrame(Frame):
             if channel_last:
                 return np.stack([y, u_full, v_full], axis=2)
             return np.stack([y, u_full, v_full], axis=0)
-        if frame.format.name == "pal8":
-            image = useful_array(frame.planes[0]).reshape(frame.height, frame.width)
+        if format_name == "pal8":
+            image = useful_array(planes[0]).reshape(height, width)
             palette = (
-                np.frombuffer(frame.planes[1], "i4")
+                np.frombuffer(planes[1], "i4")
                 .astype(">i4")
                 .reshape(-1, 1)
                 .view(np.uint8)
             )
             return image, palette
-        if frame.format.name == "nv12":
+        if format_name == "nv12":
             return np.hstack(
-                [
-                    useful_array(frame.planes[0]),
-                    useful_array(frame.planes[1], 2),
-                ]
-            ).reshape(-1, frame.width)
+                [useful_array(planes[0]), useful_array(planes[1], 2)]
+            ).reshape(-1, width)
 
         raise ValueError(
-            f"Conversion to numpy array with format `{frame.format.name}` is not yet supported"
+            f"Conversion to numpy array with format `{format_name}` is not yet supported"
         )
 
     def set_image(self, img):
