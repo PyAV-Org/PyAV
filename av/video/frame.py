@@ -266,7 +266,7 @@ supported_np_pix_fmts = {
 
 # Mapping from format name to (itemsize, dtype) for formats where planes
 # are simply concatenated into shape (height, width, channels).
-_np_pix_fmt_dtypes: dict[str, tuple[int, str]] = {
+_np_pix_fmt_dtypes: dict[str, tuple[cython.uint, str]] = {
     "abgr": (4, "uint8"),
     "argb": (4, "uint8"),
     "bayer_bggr8": (1, "uint8"),
@@ -716,13 +716,14 @@ class VideoFrame(Frame):
         # check size
         format_name = frame.format.name
         height, width = frame.ptr.height, frame.ptr.width
-        planes = frame.planes
+        planes: tuple[VideoPlane, ...] = frame.planes
         if format_name in {"yuv420p", "yuvj420p", "yuyv422", "yuv422p10le", "yuv422p"}:
             assert width % 2 == 0, "the width has to be even for this pixel format"
             assert height % 2 == 0, "the height has to be even for this pixel format"
 
         # cases planes are simply concatenated in shape (height, width, channels)
         if format_name in _np_pix_fmt_dtypes:
+            itemsize: cython.uint
             itemsize, dtype = _np_pix_fmt_dtypes[format_name]
             if len(planes) == 1:  # shortcut, avoid memory copy
                 array = useful_array(planes[0], itemsize, dtype).reshape(
