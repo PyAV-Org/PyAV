@@ -151,12 +151,6 @@ class InputContainer(Container):
         """
         self._assert_open()
 
-        # For whatever reason, Cython does not like us directly passing kwargs
-        # from one method to another. Without kwargs, it ends up passing a
-        # NULL reference, which segfaults. So we force it to do something with it.
-        # This is a bug in Cython; see https://github.com/cython/cython/issues/2166
-        id(kwargs)
-
         streams = self.streams.get(*args, **kwargs)
         include_stream: cython.pointer[cython.bint] = cython.cast(
             cython.pointer[cython.bint],
@@ -225,7 +219,6 @@ class InputContainer(Container):
 
         """
         self._assert_open()
-        id(kwargs)  # Avoid Cython bug; see demux().
         for packet in self.demux(*args, **kwargs):
             for frame in packet.decode():
                 yield frame
