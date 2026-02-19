@@ -5,7 +5,7 @@ from cython.cimports.av.audio.plane import AudioPlane
 from cython.cimports.av.error import err_check
 from cython.cimports.av.utils import check_ndarray
 
-_cinit_bypass_sentinel = object()
+_cinit_bypass_sentinel = cython.declare(object, object())
 
 
 @cython.cfunc
