@@ -2,8 +2,10 @@ import sys
 
 import cython
 
-container_format_postfix: str = "le" if sys.byteorder == "little" else "be"
-_cinit_bypass_sentinel = object()
+container_format_postfix = cython.declare(
+    str, "le" if sys.byteorder == "little" else "be"
+)
+_cinit_bypass_sentinel = cython.declare(object, object())
 
 
 @cython.cfunc
