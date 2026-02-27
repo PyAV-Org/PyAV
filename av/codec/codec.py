@@ -182,56 +182,74 @@ class Codec:
     @property
     def frame_rates(self):
         """A list of supported frame rates (:class:`fractions.Fraction`), or ``None``."""
-        if not self.ptr.supported_framerates:
+        out: cython.p_void = cython.NULL
+        num: cython.int = 0
+        lib.avcodec_get_supported_config(
+            cython.NULL,
+            self.ptr,
+            lib.AV_CODEC_CONFIG_FRAME_RATE,
+            0,
+            cython.address(out),
+            cython.address(num),
+        )
+        if not out:
             return
-
-        ret: list = []
-        i: cython.int = 0
-        while self.ptr.supported_framerates[i].denum:
-            ret.append(
-                avrational_to_fraction(cython.address(self.ptr.supported_framerates[i]))
-            )
-            i += 1
-        return ret
+        rates = cython.cast(cython.pointer[lib.AVRational], out)
+        return [avrational_to_fraction(cython.address(rates[i])) for i in range(num)]
 
     @property
     def audio_rates(self):
         """A list of supported audio sample rates (``int``), or ``None``."""
-        if not self.ptr.supported_samplerates:
+        out: cython.p_void = cython.NULL
+        num: cython.int = 0
+        lib.avcodec_get_supported_config(
+            cython.NULL,
+            self.ptr,
+            lib.AV_CODEC_CONFIG_SAMPLE_RATE,
+            0,
+            cython.address(out),
+            cython.address(num),
+        )
+        if not out:
             return
-
-        ret: list = []
-        i: cython.int = 0
-        while self.ptr.supported_samplerates[i]:
-            ret.append(self.ptr.supported_samplerates[i])
-            i += 1
-        return ret
+        rates = cython.cast(cython.pointer[cython.int], out)
+        return [rates[i] for i in range(num)]
 
     @property
     def video_formats(self):
         """A list of supported :class:`.VideoFormat`, or ``None``."""
-        if not self.ptr.pix_fmts:
+        out: cython.p_void = cython.NULL
+        num: cython.int = 0
+        lib.avcodec_get_supported_config(
+            cython.NULL,
+            self.ptr,
+            lib.AV_CODEC_CONFIG_PIX_FORMAT,
+            0,
+            cython.address(out),
+            cython.address(num),
+        )
+        if not out:
             return
-
-        ret: list = []
-        i: cython.int = 0
-        while self.ptr.pix_fmts[i] != -1:
-            ret.append(get_video_format(self.ptr.pix_fmts[i], 0, 0))
-            i += 1
-        return ret
+        fmts = cython.cast(cython.pointer[lib.AVPixelFormat], out)
+        return [get_video_format(fmts[i], 0, 0) for i in range(num)]
 
     @property
     def audio_formats(self):
         """A list of supported :class:`.AudioFormat`, or ``None``."""
-        if not self.ptr.sample_fmts:
+        out: cython.p_void = cython.NULL
+        num: cython.int = 0
+        lib.avcodec_get_supported_config(
+            cython.NULL,
+            self.ptr,
+            lib.AV_CODEC_CONFIG_SAMPLE_FORMAT,
+            0,
+            cython.address(out),
+            cython.address(num),
+        )
+        if not out:
             return
-
-        ret: list = []
-        i: cython.int = 0
-        while self.ptr.sample_fmts[i] != -1:
-            ret.append(get_audio_format(self.ptr.sample_fmts[i]))
-            i += 1
-        return ret
+        fmts = cython.cast(cython.pointer[lib.AVSampleFormat], out)
+        return [get_audio_format(fmts[i]) for i in range(num)]
 
     @property
     def hardware_configs(self):
