@@ -196,7 +196,7 @@ class VideoFormatComponent:
 
 
 names = set()
-desc = cython.declare(cython.pointer[lib.AVPixFmtDescriptor], cython.NULL)
+desc = cython.declare(cython.pointer[cython.const[lib.AVPixFmtDescriptor]], cython.NULL)
 while True:
     desc = lib.av_pix_fmt_desc_next(desc)
     if not desc:

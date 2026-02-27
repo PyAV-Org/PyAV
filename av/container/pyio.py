@@ -183,7 +183,7 @@ def pyio_close_gil(pb: cython.pointer[lib.AVIOContext]) -> cython.int:
     try:
         return lib.avio_close(pb)
     except Exception:
-        stash_exception()
+        return stash_exception()
 
 
 @cython.cfunc

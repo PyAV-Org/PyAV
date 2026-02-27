@@ -9,7 +9,8 @@ _cinit_bypass_sentinel = cython.declare(object, object())
 
 @cython.cfunc
 def build_container_format(
-    iptr: cython.pointer[lib.AVInputFormat], optr: cython.pointer[lib.AVOutputFormat]
+    iptr: cython.pointer[cython.const[lib.AVInputFormat]],
+    optr: cython.pointer[cython.const[lib.AVOutputFormat]],
 ) -> ContainerFormat:
     if not iptr and not optr:
         raise ValueError("needs input format or output format")

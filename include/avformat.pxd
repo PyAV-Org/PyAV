@@ -137,7 +137,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
     ) 
 
-    cdef AVInputFormat* av_find_input_format(const char *name)
+    cdef const AVInputFormat* av_find_input_format(const char *name)
 
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
@@ -145,8 +145,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVStream **streams
         unsigned int nb_chapters
         AVChapter **chapters
-        AVInputFormat *iformat
-        AVOutputFormat *oformat
+        const AVInputFormat *iformat
+        const AVOutputFormat *oformat
         AVIOContext *pb
         AVIOInterruptCB interrupt_callback
         AVDictionary *metadata
@@ -170,7 +170,7 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int avformat_open_input(
         AVFormatContext **ctx,
         char *filename,
-        AVInputFormat *format,
+        const AVInputFormat *format,
         AVDictionary **options
     )
 
@@ -181,7 +181,7 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int av_write_frame(AVFormatContext *ctx, AVPacket *pkt)
     cdef int avio_open(AVIOContext **s, char *url, int flags)
     cdef int64_t avio_size(AVIOContext *s)
-    cdef AVOutputFormat* av_guess_format(
+    cdef const AVOutputFormat* av_guess_format(
         char *short_name, char *filename, char *mime_type
     )
     cdef int avformat_query_codec(
@@ -191,10 +191,10 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int avio_close(AVIOContext *s)
     cdef int avio_closep(AVIOContext **s)
     cdef int avformat_find_stream_info(AVFormatContext *ctx, AVDictionary **options)
-    cdef AVStream* avformat_new_stream(AVFormatContext *ctx, AVCodec *c)
+    cdef AVStream* avformat_new_stream(AVFormatContext *ctx, const AVCodec *c)
     cdef int avformat_alloc_output_context2(
         AVFormatContext **ctx,
-        AVOutputFormat *oformat,
+        const AVOutputFormat *oformat,
         char *format_name,
         char *filename
     )
