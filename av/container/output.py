@@ -87,7 +87,17 @@ class OutputContainer(Container):
 
         # Some sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
-            ctx.sample_fmt = codec.sample_fmts[0]
+            out: cython.p_void = cython.NULL
+            lib.avcodec_get_supported_config(
+                cython.NULL,
+                codec,
+                lib.AV_CODEC_CONFIG_SAMPLE_FORMAT,
+                0,
+                cython.address(out),
+                cython.NULL,
+            )
+            if out:
+                ctx.sample_fmt = cython.cast(cython.pointer[lib.AVSampleFormat], out)[0]
             ctx.bit_rate = kwargs.pop("bit_rate", 0)
             ctx.bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 32000)
             try:

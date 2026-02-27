@@ -179,18 +179,26 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         char *long_name
         AVMediaType type
         AVCodecID id
-
         int capabilities
-
-        AVRational* supported_framerates
-        AVSampleFormat* sample_fmts
-        AVPixelFormat* pix_fmts
-        int* supported_samplerates
-
         AVClass *priv_class
 
     cdef int av_codec_is_encoder(AVCodec*)
     cdef int av_codec_is_decoder(AVCodec*)
+
+    cdef enum AVCodecConfig:
+        AV_CODEC_CONFIG_PIX_FORMAT
+        AV_CODEC_CONFIG_FRAME_RATE
+        AV_CODEC_CONFIG_SAMPLE_RATE
+        AV_CODEC_CONFIG_SAMPLE_FORMAT
+
+    cdef int avcodec_get_supported_config(
+        const AVCodecContext *avctx,
+        const AVCodec *codec,
+        AVCodecConfig config,
+        unsigned flags,
+        const void **out_configs,
+        int *out_num_configs,
+    )
 
     cdef struct AVProfile:
         int profile
