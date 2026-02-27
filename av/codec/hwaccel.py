@@ -45,12 +45,12 @@ _singletons = cython.declare(object, weakref.WeakValueDictionary())
 @cython.cfunc
 def wrap_hwconfig(ptr: cython.pointer[lib.AVCodecHWConfig]) -> HWConfig:
     try:
-        return _singletons[cython.cast(cython.int, ptr)]
+        return _singletons[cython.cast(cython.Py_ssize_t, ptr)]
     except KeyError:
         pass
     config: HWConfig = HWConfig(_cinit_sentinel)
     config._init(ptr)
-    _singletons[cython.cast(cython.int, ptr)] = config
+    _singletons[cython.cast(cython.Py_ssize_t, ptr)] = config
     return config
 
 
@@ -69,7 +69,7 @@ class HWConfig:
             f"<av.{self.__class__.__name__} "
             f"device_type={lib.av_hwdevice_get_type_name(self.device_type)} "
             f"format={self.format.name if self.format else None} "
-            f"is_supported={self.is_supported} at 0x{cython.cast(int, self.ptr):x}>"
+            f"is_supported={self.is_supported} at 0x{cython.cast(cython.Py_ssize_t, self.ptr):x}>"
         )
 
     @property
