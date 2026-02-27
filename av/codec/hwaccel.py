@@ -43,7 +43,7 @@ _singletons = cython.declare(object, weakref.WeakValueDictionary())
 
 
 @cython.cfunc
-def wrap_hwconfig(ptr: cython.pointer[lib.AVCodecHWConfig]) -> HWConfig:
+def wrap_hwconfig(ptr: cython.pointer[cython.const[lib.AVCodecHWConfig]]) -> HWConfig:
     try:
         return _singletons[cython.cast(cython.Py_ssize_t, ptr)]
     except KeyError:
@@ -61,7 +61,9 @@ class HWConfig:
             raise RuntimeError("Cannot instantiate CodecContext")
 
     @cython.cfunc
-    def _init(self, ptr: cython.pointer[lib.AVCodecHWConfig]) -> cython.void:
+    def _init(
+        self, ptr: cython.pointer[cython.const[lib.AVCodecHWConfig]]
+    ) -> cython.void:
         self.ptr = ptr
 
     def __repr__(self):

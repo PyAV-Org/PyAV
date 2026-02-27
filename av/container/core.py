@@ -280,7 +280,7 @@ class Container:
         res: cython.int
         name_obj: bytes = os.fsencode(self.name)
         name: cython.p_char = name_obj
-        ofmt: cython.pointer[lib.AVOutputFormat]
+        ofmt: cython.pointer[cython.const[lib.AVOutputFormat]]
 
         if self.writeable:
             ofmt = (
@@ -328,7 +328,7 @@ class Container:
             self.ptr.io_close2 = pyav_io_close
             self.ptr.flags |= lib.AVFMT_FLAG_CUSTOM_IO
 
-        ifmt: cython.pointer[lib.AVInputFormat]
+        ifmt: cython.pointer[cython.const[lib.AVInputFormat]]
         c_options: Dictionary
         if not self.writeable:
             ifmt = self.format.iptr if self.format else cython.NULL

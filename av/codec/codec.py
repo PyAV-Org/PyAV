@@ -182,7 +182,7 @@ class Codec:
     @property
     def frame_rates(self):
         """A list of supported frame rates (:class:`fractions.Fraction`), or ``None``."""
-        out: cython.p_void = cython.NULL
+        out: cython.pointer[cython.const[cython.void]] = cython.NULL
         num: cython.int = 0
         lib.avcodec_get_supported_config(
             cython.NULL,
@@ -200,7 +200,7 @@ class Codec:
     @property
     def audio_rates(self):
         """A list of supported audio sample rates (``int``), or ``None``."""
-        out: cython.p_void = cython.NULL
+        out: cython.pointer[cython.const[cython.void]] = cython.NULL
         num: cython.int = 0
         lib.avcodec_get_supported_config(
             cython.NULL,
@@ -218,7 +218,7 @@ class Codec:
     @property
     def video_formats(self):
         """A list of supported :class:`.VideoFormat`, or ``None``."""
-        out: cython.p_void = cython.NULL
+        out: cython.pointer[cython.const[cython.void]] = cython.NULL
         num: cython.int = 0
         lib.avcodec_get_supported_config(
             cython.NULL,
@@ -236,7 +236,7 @@ class Codec:
     @property
     def audio_formats(self):
         """A list of supported :class:`.AudioFormat`, or ``None``."""
-        out: cython.p_void = cython.NULL
+        out: cython.pointer[cython.const[cython.void]] = cython.NULL
         num: cython.int = 0
         lib.avcodec_get_supported_config(
             cython.NULL,

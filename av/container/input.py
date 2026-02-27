@@ -26,7 +26,7 @@ class InputContainer(Container):
         py_codec_context: CodecContext
         i: cython.uint
         stream: cython.pointer[lib.AVStream]
-        codec: cython.pointer[lib.AVCodec]
+        codec: cython.pointer[cython.const[lib.AVCodec]]
         codec_context: cython.pointer[lib.AVCodecContext]
 
         # If we have either the global `options`, or a `stream_options`, prepare

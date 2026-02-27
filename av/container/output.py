@@ -87,7 +87,7 @@ class OutputContainer(Container):
 
         # Some sane audio defaults
         elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
-            out: cython.p_void = cython.NULL
+            out: cython.pointer[cython.const[cython.void]] = cython.NULL
             lib.avcodec_get_supported_config(
                 cython.NULL,
                 codec,
@@ -285,7 +285,9 @@ class OutputContainer(Container):
         :rtype: The new :class:`~av.data.stream.DataStream`.
         """
         codec: cython.pointer[cython.const[lib.AVCodec]] = cython.NULL
-        codec_descriptor: cython.pointer[lib.AVCodecDescriptor] = cython.NULL
+        codec_descriptor: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
+            cython.NULL
+        )
 
         if codec_name is not None:
             codec = lib.avcodec_find_encoder_by_name(codec_name.encode())

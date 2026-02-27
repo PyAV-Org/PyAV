@@ -335,12 +335,12 @@ cdef extern from "libavutil/pixdesc.h" nogil:
         uint8_t flags
         AVComponentDescriptor comp[4]
 
-    cdef AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
-    cdef AVPixFmtDescriptor* av_pix_fmt_desc_next(AVPixFmtDescriptor *prev)
+    cdef const AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
+    cdef const AVPixFmtDescriptor* av_pix_fmt_desc_next(const AVPixFmtDescriptor *prev)
     cdef char * av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(char* name)
-    int av_get_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
-    int av_get_padded_bits_per_pixel(AVPixFmtDescriptor *pixdesc)
+    int av_get_bits_per_pixel(const AVPixFmtDescriptor *pixdesc)
+    int av_get_padded_bits_per_pixel(const AVPixFmtDescriptor *pixdesc)
 
 cdef extern from "libavutil/rational.h" nogil:
     cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)

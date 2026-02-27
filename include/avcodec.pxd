@@ -290,18 +290,18 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int subtitle_header_size
         uint8_t *subtitle_header
 
-    cdef AVCodecContext* avcodec_alloc_context3(AVCodec *codec)
+    cdef AVCodecContext* avcodec_alloc_context3(const AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
     cdef AVClass* avcodec_get_class()
-    cdef AVCodec* avcodec_find_decoder(AVCodecID id)
-    cdef AVCodec* avcodec_find_encoder(AVCodecID id)
-    cdef AVCodec* avcodec_find_decoder_by_name(char *name)
-    cdef AVCodec* avcodec_find_encoder_by_name(char *name)
+    cdef const AVCodec* avcodec_find_decoder(AVCodecID id)
+    cdef const AVCodec* avcodec_find_encoder(AVCodecID id)
+    cdef const AVCodec* avcodec_find_decoder_by_name(char *name)
+    cdef const AVCodec* avcodec_find_encoder_by_name(char *name)
     cdef const AVCodec* av_codec_iterate(void **opaque)
-    cdef AVCodecDescriptor* avcodec_descriptor_get(AVCodecID id)
-    cdef AVCodecDescriptor* avcodec_descriptor_get_by_name(char *name)
+    cdef const AVCodecDescriptor* avcodec_descriptor_get(AVCodecID id)
+    cdef const AVCodecDescriptor* avcodec_descriptor_get_by_name(char *name)
     cdef char* avcodec_get_name(AVCodecID id)
-    cdef int avcodec_open2(AVCodecContext *ctx, AVCodec *codec, AVDictionary **options)
+    cdef int avcodec_open2(AVCodecContext *ctx, const AVCodec *codec, AVDictionary **options)
     cdef enum AVPacketSideDataType:
         pass
     cdef struct AVPacketSideData:
