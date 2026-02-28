@@ -10,7 +10,7 @@ from cython.cimports.av.logging import get_last_error
 from cython.cimports.libc.stdio import fprintf, stderr
 from cython.cimports.libc.stdlib import free, malloc
 
-# Will get extended with all of the exceptions.
+# Will get extended with all the exceptions.
 __all__ = [
     "ErrorType",
     "FFmpegError",
@@ -117,8 +117,8 @@ class FFmpegError(Exception):
 
 
 # Our custom error, used in callbacks.
-c_PYAV_STASHED_ERROR: cython.int = tag_to_code(b"PyAV")
-PYAV_STASHED_ERROR_message: str = "Error in PyAV callback"
+c_PYAV_STASHED_ERROR = cython.declare(cython.int, tag_to_code(b"PyAV"))
+PYAV_STASHED_ERROR_message = cython.declare(str, "Error in PyAV callback")
 
 
 # Bases for the FFmpeg-based exceptions.
@@ -342,8 +342,9 @@ del _ffmpeg_specs
 
 
 # Storage for stashing.
-_local: object = local()
-_err_count: cython.int = 0
+_local = cython.declare(object, local())
+_err_count = cython.declare(cython.int, 0)
+_last_log_count = cython.declare(cython.int, 0)
 
 
 @cython.cfunc
@@ -362,9 +363,6 @@ def stash_exception(exc_info=None) -> cython.int:
         _err_count += 1
 
     return -c_PYAV_STASHED_ERROR
-
-
-_last_log_count: cython.int = 0
 
 
 @cython.ccall
