@@ -234,7 +234,7 @@ def ffmpeg_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     Converts :ffmpeg:`AVSomething` into proper FFmpeg API documentation links.
     """
 
-    base_url = "https://ffmpeg.org/doxygen/7.0/struct{}.html"
+    base_url = "https://ffmpeg.org/doxygen/8.0/struct{}.html"
 
     try:
         struct_name, member = text.split(".")
@@ -250,7 +250,7 @@ def ffmpeg_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
             "av_guess_frame_rate": "group__lavf__misc.html#ga698e6aa73caa9616851092e2be15875d",
             "av_guess_sample_aspect_ratio": "group__lavf__misc.html#gafa6fbfe5c1bf6792fd6e33475b6056bd",
         }.get(text, f"struct{text}.html")
-        url = "https://ffmpeg.org/doxygen/7.0/" + fragment
+        url = "https://ffmpeg.org/doxygen/8.0/" + fragment
     else:
         fragment = {
             "AVCodecContext.thread_count": "#aa852b6227d0778b62e9cc4034ad3720c",
