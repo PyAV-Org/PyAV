@@ -53,10 +53,8 @@ cdef extern from "libavutil/avutil.h" nogil:
         AVCOL_RANGE_NB
 
     cdef enum AVColorPrimaries:
-        AVCOL_PRI_RESERVED0
         AVCOL_PRI_BT709
         AVCOL_PRI_UNSPECIFIED
-        AVCOL_PRI_RESERVED
         AVCOL_PRI_BT470M
         AVCOL_PRI_BT470BG
         AVCOL_PRI_SMPTE170M
@@ -69,10 +67,27 @@ cdef extern from "libavutil/avutil.h" nogil:
         AVCOL_PRI_SMPTE432
         AVCOL_PRI_EBU3213
         AVCOL_PRI_JEDEC_P22
-        AVCOL_PRI_NB
 
     cdef enum AVColorTransferCharacteristic:
-        pass
+        AVCOL_TRC_BT709
+        AVCOL_TRC_UNSPECIFIED
+        AVCOL_TRC_GAMMA22
+        AVCOL_TRC_GAMMA28
+        AVCOL_TRC_SMPTE170M
+        AVCOL_TRC_SMPTE240M
+        AVCOL_TRC_LINEAR
+        AVCOL_TRC_LOG
+        AVCOL_TRC_LOG_SQRT
+        AVCOL_TRC_IEC61966_2_4
+        AVCOL_TRC_BT1361_ECG
+        AVCOL_TRC_IEC61966_2_1
+        AVCOL_TRC_BT2020_10
+        AVCOL_TRC_BT2020_12
+        AVCOL_TRC_SMPTE2084
+        AVCOL_TRC_SMPTEST2084
+        AVCOL_TRC_SMPTE428
+        AVCOL_TRC_SMPTEST428_1
+        AVCOL_TRC_ARIB_STD_B67
 
     cdef void* av_malloc(size_t size)
     cdef void* av_mallocz(size_t size)

@@ -41,6 +41,7 @@ Features:
 - Expose AVIndexEntry by :gh-user:`Queuecumber` in (:pr:`2136`).
 - Preserving hardware memory during cuvid decoding, exporting/importing via dlpack by :gh-user:`WyattBlue` in (:pr:`2155`).
 - Add enumerate_input_devices and enumerate_output_devices API by :gh-user:`WyattBlue` in (:pr:`2174`).
+- Add ``ColorTrc`` and ``ColorPrimaries`` enums; add ``color_trc`` and ``color_primaries`` properties to ``VideoFrame``; add ``dst_color_trc`` and ``dst_color_primaries`` parameters to ``VideoFrame.reformat()``, addressing :issue:`1968` by :gh-user:`WyattBlue` in (:pr:`2175`).
 
 Fixes:
 

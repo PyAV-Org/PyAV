@@ -8,6 +8,7 @@ from av.frame import Frame
 
 from .format import VideoFormat
 from .plane import VideoPlane
+from .reformatter import ColorPrimaries, ColorTrc
 
 _SupportedNDarray = Union[
     np.ndarray[Any, np.dtype[np.uint8]],
@@ -41,6 +42,8 @@ class VideoFrame(Frame):
     pict_type: int
     colorspace: int
     color_range: int
+    color_trc: int
+    color_primaries: int
 
     @property
     def time(self) -> float: ...
@@ -65,6 +68,8 @@ class VideoFrame(Frame):
         interpolation: int | str | None = None,
         src_color_range: int | str | None = None,
         dst_color_range: int | str | None = None,
+        dst_color_trc: int | ColorTrc | None = None,
+        dst_color_primaries: int | ColorPrimaries | None = None,
     ) -> VideoFrame: ...
     def to_rgb(self, **kwargs: Any) -> VideoFrame: ...
     def save(self, filepath: str | Path) -> None: ...
