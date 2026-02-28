@@ -40,6 +40,7 @@ Features:
 - Use zero-copy for Packet init from buffer data by :gh-user:`WyattBlue` in (:pr:`2199`).
 - Expose AVIndexEntry by :gh-user:`Queuecumber` in (:pr:`2136`).
 - Preserving hardware memory during cuvid decoding, exporting/importing via dlpack by :gh-user:`WyattBlue` in (:pr:`2155`).
+- Add enumerate_input_devices and enumerate_output_devices API by :gh-user:`WyattBlue` in (:pr:`2155`).
 
 Fixes:
 

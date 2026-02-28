@@ -18,6 +18,7 @@ from av.bitstream import BitStreamFilterContext, bitstream_filters_available
 from av.codec.codec import Codec, codecs_available
 from av.codec.context import CodecContext
 from av.container import open
+from av.device import DeviceInfo, enumerate_input_devices, enumerate_output_devices
 from av.format import ContainerFormat, formats_available
 from av.packet import Packet
 from av.error import *  # noqa: F403; This is limited to exception types.
@@ -44,6 +45,9 @@ __all__ = (
     "codecs_available",
     "CodecContext",
     "open",
+    "DeviceInfo",
+    "enumerate_input_devices",
+    "enumerate_output_devices",
     "ContainerFormat",
     "formats_available",
     "Packet",

@@ -5,9 +5,9 @@ av.logging.set_level(av.logging.VERBOSE)
 
 """
 This is written for MacOS. Other platforms will need to init `input_` differently.
-You may need to change the file "0". Use this command to list all devices:
+You may need to change the file "0". Use this API to list all devices:
 
- ffmpeg -f avfoundation -list_devices true -i ""
+ av.enumerate_input_devices("avfoundation")
 
 """
 
