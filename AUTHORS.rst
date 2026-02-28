@@ -4,8 +4,8 @@ Contributors
 All contributors (by number of commits):
 
 - Mike Boers <github@mikeboers.com>; `@mikeboers <https://github.com/mikeboers>`_
+- WyattBlue <wyattblue@auto-editor.com>; `@WyattBlue <https://github.com/WyattBlue>`_
 
-* WyattBlue <wyattblue@auto-editor.com>; `@WyattBlue <https://github.com/WyattBlue>`_
 * Jeremy Lainé <jeremy.laine@m4x.org>; `@jlaine <https://github.com/jlaine>`_
 
 - Mark Reid <mindmark@gmail.com>; `@markreidvfx <https://github.com/markreidvfx>`_
@@ -24,6 +24,7 @@ All contributors (by number of commits):
 - Santtu Keskinen <santtu.keskinen@gmail.com>
 - Alba Mendez <me@alba.sh>
 - Curtis Doty <Curtis@GreenKey.net>; `@dotysan <https://github.com/dotysan>`_
+- Lukas Geiger <lukas.geiger94@gmail.com>
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
 - z-khan <zohaibkh_27@yahoo.com>
 - Marc Mueller <30130371+cdce8p@users.noreply.github.com>
@@ -34,8 +35,8 @@ All contributors (by number of commits):
 - David Plowman <david.plowman@raspberrypi.com>
 - Alireza Davoudi <davoudialireza@gmail.com>; `@adavoudi <https://github.com/adavoudi>`_
 - Jonathan Drolet <jonathan.drolet@riedel.net>
-- Lukas Geiger <lukas.geiger94@gmail.com>
 - Matthew Lai <m@matthewlai.ca>
+- Kim Minjong <make.dirty.code@gmail.com>
 - Moritz Kassner <moritzkassner@gmail.com>; `@mkassner <https://github.com/mkassner>`_
 - Thomas A Caswell <tcaswell@gmail.com>; `@tacaswell <https://github.com/tacaswell>`_
 - Ulrik Mikaelsson <ulrik.mikaelsson@magine.com>; `@rawler <https://github.com/rawler>`_
@@ -49,12 +50,12 @@ All contributors (by number of commits):
 * DE-AI <81620697+DE-AI@users.noreply.github.com>
 * rutsh <Eugene.Krokhalev@gmail.com>
 * Felix Vollmer <FelixVollmer@gmail.com>
+* Benedikt Lorch, benedikt-grl <benedikt@getreallabs.com>
 * Santiago Castro <bryant1410@gmail.com>
 * Christian Clauss <cclauss@me.com>
 * Ihor Liubymov <ihor.liubymov@ring.com>
 * Johannes Erdfelt <johannes@erdfelt.com>
 * Karl Litterfeldt <kalle.litterfeldt@gmail.com>; `@litterfeldt <https://github.com/litterfeldt>`_
-* Kim Minjong <make.dirty.code@gmail.com>
 * Martin Larralde <martin.larralde@ens-cachan.fr>
 * Simon-Martin Schröder <martin.schroeder@nerdluecht.de>
 * Matteo Destro <matteo.est@gmail.com>
@@ -66,7 +67,9 @@ All contributors (by number of commits):
 * Andrew Wason <rectalogic@rectalogic.com>
 * Radek Senfeld <rush@logic.cz>; `@radek-senfeld <https://github.com/radek-senfeld>`_
 * robinechuca <serveurpython.oz@gmail.com>
+* Nick <24689722+ntjohnson1@users.noreply.github.com>
 * Benjamin Chrétien <2742231+bchretien@users.noreply.github.com>
+* 吴小白 <296015668@qq.com>
 * davidplowman <38045873+davidplowman@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
 * Kesh Ikuma <79113787+tikuma-lsuhsc@users.noreply.github.com>
@@ -74,7 +77,6 @@ All contributors (by number of commits):
 * Ian Lee <IanLee1521@gmail.com>
 * Ryan Huang <NPN@users.noreply.github.com>
 * Arthur Barros <arthbarros@gmail.com>
-* benedikt-grl <benedikt@getreallabs.com>
 * Carlos Ruiz <carlos.r.domin@gmail.com>
 * Carlos Ruiz <carlos.ruiz.dominguez@west.cmu.edu>
 * Maxime Desroches <desroches.maxime@gmail.com>
@@ -97,6 +99,7 @@ All contributors (by number of commits):
 * Orivej Desh <orivej@gmx.fr>
 * Philipp Krähenbühl <philkr@users.noreply.github.com>
 * Mattia Procopio <promat85@gmail.com>
+* Max Ehrlich <queuecumber@protonmail.com>
 * ramoncaldeira <ramoncaldeira_328@hotmail.com>
 * Roland van Laar <roland@rolandvanlaar.nl>
 * Santiago Castro <sacastro@umich.edu>
