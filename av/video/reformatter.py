@@ -44,7 +44,55 @@ class ColorRange(IntEnum):
     NB: "Not part of ABI" = lib.AVCOL_RANGE_NB
 
 
-def _resolve_enum_value(value, enum_class, default):
+class ColorTrc(IntEnum):
+    """Transfer characteristic (gamma curve) of a video frame.
+
+    Maps to FFmpeg's ``AVColorTransferCharacteristic``.
+    """
+
+    BT709: "BT.709" = lib.AVCOL_TRC_BT709
+    UNSPECIFIED: "Unspecified" = lib.AVCOL_TRC_UNSPECIFIED
+    GAMMA22: "Gamma 2.2 (BT.470M)" = lib.AVCOL_TRC_GAMMA22
+    GAMMA28: "Gamma 2.8 (BT.470BG)" = lib.AVCOL_TRC_GAMMA28
+    SMPTE170M: "SMPTE 170M" = lib.AVCOL_TRC_SMPTE170M
+    SMPTE240M: "SMPTE 240M" = lib.AVCOL_TRC_SMPTE240M
+    LINEAR: "Linear" = lib.AVCOL_TRC_LINEAR
+    LOG: "Logarithmic (100:1 range)" = lib.AVCOL_TRC_LOG
+    LOG_SQRT: "Logarithmic (100*sqrt(10):1 range)" = lib.AVCOL_TRC_LOG_SQRT
+    IEC61966_2_4: "IEC 61966-2-4 (sRGB)" = lib.AVCOL_TRC_IEC61966_2_4
+    BT1361_ECG: "BT.1361 extended colour gamut" = lib.AVCOL_TRC_BT1361_ECG
+    IEC61966_2_1: "IEC 61966-2-1 (sYCC)" = lib.AVCOL_TRC_IEC61966_2_1
+    BT2020_10: "BT.2020 10-bit" = lib.AVCOL_TRC_BT2020_10
+    BT2020_12: "BT.2020 12-bit" = lib.AVCOL_TRC_BT2020_12
+    SMPTE2084: "SMPTE 2084 (PQ, HDR10)" = lib.AVCOL_TRC_SMPTE2084
+    SMPTE428: "SMPTE 428-1" = lib.AVCOL_TRC_SMPTE428
+    ARIB_STD_B67: "ARIB STD-B67 (HLG)" = lib.AVCOL_TRC_ARIB_STD_B67
+
+
+class ColorPrimaries(IntEnum):
+    """Color primaries of a video frame.
+
+    Maps to FFmpeg's ``AVColorPrimaries``.
+    """
+
+    BT709: "BT.709 / sRGB / sYCC" = lib.AVCOL_PRI_BT709
+    UNSPECIFIED: "Unspecified" = lib.AVCOL_PRI_UNSPECIFIED
+    BT470M: "BT.470M" = lib.AVCOL_PRI_BT470M
+    BT470BG: "BT.470BG / BT.601-6 625" = lib.AVCOL_PRI_BT470BG
+    SMPTE170M: "SMPTE 170M / BT.601-6 525" = lib.AVCOL_PRI_SMPTE170M
+    SMPTE240M: "SMPTE 240M" = lib.AVCOL_PRI_SMPTE240M
+    FILM: "Generic film (Illuminant C)" = lib.AVCOL_PRI_FILM
+    BT2020: "BT.2020 / BT.2100" = lib.AVCOL_PRI_BT2020
+    SMPTE428: "SMPTE 428-1 / XYZ" = lib.AVCOL_PRI_SMPTE428
+    SMPTE431: "SMPTE 431-2 (DCI-P3)" = lib.AVCOL_PRI_SMPTE431
+    SMPTE432: "SMPTE 432-1 (Display P3)" = lib.AVCOL_PRI_SMPTE432
+    EBU3213: "EBU 3213-E / JEDEC P22" = lib.AVCOL_PRI_EBU3213
+
+
+@cython.cfunc
+def _resolve_enum_value(
+    value: object, enum_class: object, default: cython.int
+) -> cython.int:
     # Helper function to resolve enum values from different input types.
     if value is None:
         return default
@@ -96,6 +144,8 @@ class VideoReformatter:
         interpolation=None,
         src_color_range=None,
         dst_color_range=None,
+        dst_color_trc=None,
+        dst_color_primaries=None,
     ):
         """Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
 
@@ -112,34 +162,43 @@ class VideoReformatter:
         :param interpolation: The interpolation method to use, or ``None`` for ``BILINEAR``.
         :type  interpolation: :class:`Interpolation` or ``str``
         :param src_color_range: Current color range, or ``None`` for the ``UNSPECIFIED``.
-        :type  src_color_range: :class:`color range` or ``str``
+        :type  src_color_range: :class:`ColorRange` or ``str``
         :param dst_color_range: Desired color range, or ``None`` for the ``UNSPECIFIED``.
-        :type  dst_color_range: :class:`color range` or ``str``
+        :type  dst_color_range: :class:`ColorRange` or ``str``
+        :param dst_color_trc: Desired transfer characteristic to tag on the output frame,
+            or ``None`` to preserve the source frame's value. This sets frame metadata only;
+            it does not perform a pixel-level transfer function conversion.
+        :type  dst_color_trc: :class:`ColorTrc` or ``int``
+        :param dst_color_primaries: Desired color primaries to tag on the output frame,
+            or ``None`` to preserve the source frame's value.
+        :type  dst_color_primaries: :class:`ColorPrimaries` or ``int``
 
         """
 
         video_format: VideoFormat = VideoFormat(
             format if format is not None else frame.format
         )
-        c_src_colorspace: cython.int = _resolve_enum_value(
+        c_src_colorspace = _resolve_enum_value(
             src_colorspace, Colorspace, frame.colorspace
         )
-        c_dst_colorspace: cython.int = _resolve_enum_value(
+        c_dst_colorspace = _resolve_enum_value(
             dst_colorspace, Colorspace, frame.colorspace
         )
-        c_interpolation: cython.int = _resolve_enum_value(
+        c_interpolation = _resolve_enum_value(
             interpolation, Interpolation, int(Interpolation.BILINEAR)
         )
-        c_src_color_range: cython.int = _resolve_enum_value(
-            src_color_range, ColorRange, 0
-        )
-        c_dst_color_range: cython.int = _resolve_enum_value(
-            dst_color_range, ColorRange, 0
+        c_src_color_range = _resolve_enum_value(src_color_range, ColorRange, 0)
+        c_dst_color_range = _resolve_enum_value(dst_color_range, ColorRange, 0)
+        c_dst_color_trc = _resolve_enum_value(dst_color_trc, ColorTrc, 0)
+        c_dst_color_primaries = _resolve_enum_value(
+            dst_color_primaries, ColorPrimaries, 0
         )
 
         # Track whether user explicitly specified destination metadata
         set_dst_colorspace: cython.bint = dst_colorspace is not None
         set_dst_color_range: cython.bint = dst_color_range is not None
+        set_dst_color_trc: cython.bint = dst_color_trc is not None
+        set_dst_color_primaries: cython.bint = dst_color_primaries is not None
 
         return self._reformat(
             frame,
@@ -153,6 +212,10 @@ class VideoReformatter:
             c_dst_color_range,
             set_dst_colorspace,
             set_dst_color_range,
+            c_dst_color_trc,
+            c_dst_color_primaries,
+            set_dst_color_trc,
+            set_dst_color_primaries,
         )
 
     @cython.cfunc
@@ -169,6 +232,10 @@ class VideoReformatter:
         dst_color_range: cython.int,
         set_dst_colorspace: cython.bint,
         set_dst_color_range: cython.bint,
+        dst_color_trc: cython.int,
+        dst_color_primaries: cython.int,
+        set_dst_color_trc: cython.bint,
+        set_dst_color_primaries: cython.bint,
     ):
         if frame.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
@@ -191,6 +258,8 @@ class VideoReformatter:
                 and height == frame.ptr.height
                 and dst_colorspace == src_colorspace
                 and src_color_range == dst_color_range
+                and not set_dst_color_trc
+                and not set_dst_color_primaries
             ):
                 return frame
 
@@ -207,6 +276,8 @@ class VideoReformatter:
             and height == frame.ptr.height
             and dst_colorspace == src_colorspace
             and src_color_range == dst_color_range
+            and not set_dst_color_trc
+            and not set_dst_color_primaries
         ):
             return frame
 
@@ -284,6 +355,14 @@ class VideoReformatter:
         if set_dst_color_range:
             new_frame.ptr.color_range = cython.cast(
                 lib.AVColorRange, frame_dst_color_range
+            )
+        if set_dst_color_trc:
+            new_frame.ptr.color_trc = cython.cast(
+                lib.AVColorTransferCharacteristic, dst_color_trc
+            )
+        if set_dst_color_primaries:
+            new_frame.ptr.color_primaries = cython.cast(
+                lib.AVColorPrimaries, dst_color_primaries
             )
 
         with cython.nogil:

@@ -595,6 +595,32 @@ class VideoFrame(Frame):
     def color_range(self, value):
         self.ptr.color_range = value
 
+    @property
+    def color_trc(self):
+        """Transfer characteristic of frame.
+
+        Wraps :ffmpeg:`AVFrame.color_trc`.
+
+        """
+        return self.ptr.color_trc
+
+    @color_trc.setter
+    def color_trc(self, value):
+        self.ptr.color_trc = value
+
+    @property
+    def color_primaries(self):
+        """Color primaries of frame.
+
+        Wraps :ffmpeg:`AVFrame.color_primaries`.
+
+        """
+        return self.ptr.color_primaries
+
+    @color_primaries.setter
+    def color_primaries(self, value):
+        self.ptr.color_primaries = value
+
     def reformat(self, *args, **kwargs):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None)
 
