@@ -52,13 +52,6 @@ class InputContainer(Container):
         self.set_timeout(self.open_timeout)
         self.start_timeout()
         with cython.nogil:
-            # This peeks are the first few frames to:
-            #   - set stream.disposition from codec.audio_service_type (not exposed);
-            #   - set stream.codec.bits_per_coded_sample;
-            #   - set stream.duration;
-            #   - set stream.start_time;
-            #   - set stream.r_frame_rate to average value;
-            #   - open and closes codecs with the options provided.
             ret = lib.avformat_find_stream_info(self.ptr, c_options)
         self.set_timeout(None)
         self.err_check(ret)
@@ -76,7 +69,6 @@ class InputContainer(Container):
             stream = self.ptr.streams[i]
             codec = lib.avcodec_find_decoder(stream.codecpar.codec_id)
             if codec:
-                # allocate and initialize decoder
                 codec_context = lib.avcodec_alloc_context3(codec)
                 err_check(
                     lib.avcodec_parameters_to_context(codec_context, stream.codecpar)
