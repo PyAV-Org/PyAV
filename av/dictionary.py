@@ -42,6 +42,9 @@ class Dictionary:
     def __repr__(self):
         return f"av.Dictionary({dict(self)!r})"
 
+    def keys(self):
+        return list(self)
+
     def copy(self):
         other: Dictionary = Dictionary()
         lib.av_dict_copy(cython.address(other.ptr), self.ptr, 0)
