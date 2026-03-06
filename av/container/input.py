@@ -227,7 +227,7 @@ class InputContainer(Container):
     ):
         """seek(offset, *, backward=True, any_frame=False, stream=None)
 
-        Seek to a (key)frame nearsest to the given timestamp.
+        Seek to a (key)frame nearest to the given timestamp.
 
         :param int offset: Time to seek to, expressed in``stream.time_base`` if ``stream``
             is given, otherwise in :data:`av.time_base`.
