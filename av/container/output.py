@@ -137,6 +137,83 @@ class OutputContainer(Container):
 
         return py_stream
 
+    def add_mux_stream(self, codec_name: str, rate=None, **kwargs) -> Stream:
+        """add_mux_stream(codec_name, rate=None)
+
+        Creates a new stream for muxing pre-encoded data without creating a
+        :class:`.CodecContext`. Use this when you want to mux packets that were
+        already encoded externally and no encoding/decoding is needed.
+
+        :param codec_name: The name of a codec.
+        :type codec_name: str
+        :param \\**kwargs: Set attributes for the stream (e.g. ``width``, ``height``,
+            ``time_base``).
+        :rtype: The new :class:`~av.stream.Stream`.
+
+        """
+        # Find the codec to get its id and type (try encoder first, then decoder).
+        codec_name_bytes: bytes = codec_name.encode()
+        codec: cython.pointer[cython.const[lib.AVCodec]] = (
+            lib.avcodec_find_encoder_by_name(codec_name_bytes)
+        )
+        codec_descriptor: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
+            cython.NULL
+        )
+        if codec == cython.NULL:
+            codec = lib.avcodec_find_decoder_by_name(codec_name_bytes)
+        if codec == cython.NULL:
+            codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name_bytes)
+            if codec_descriptor == cython.NULL:
+                raise ValueError(f"Unknown codec: {codec_name!r}")
+
+        codec_id: lib.AVCodecID
+        codec_type: lib.AVMediaType
+        if codec != cython.NULL:
+            codec_id = codec.id
+            codec_type = codec.type
+        else:
+            codec_id = codec_descriptor.id
+            codec_type = codec_descriptor.type
+
+        # Assert that this format supports the requested codec.
+        if not lib.avformat_query_codec(
+            self.ptr.oformat, codec_id, lib.FF_COMPLIANCE_NORMAL
+        ):
+            raise ValueError(
+                f"{self.format.name!r} format does not support {codec_name!r} codec"
+            )
+
+        # Create stream with no codec context.
+        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(
+            self.ptr, cython.NULL
+        )
+        if stream == cython.NULL:
+            raise MemoryError("Could not allocate stream")
+
+        stream.codecpar.codec_id = codec_id
+        stream.codecpar.codec_type = codec_type
+
+        if codec_type == lib.AVMEDIA_TYPE_VIDEO:
+            stream.codecpar.width = kwargs.pop("width", 0)
+            stream.codecpar.height = kwargs.pop("height", 0)
+            if rate is not None:
+                to_avrational(rate, cython.address(stream.avg_frame_rate))
+        elif codec_type == lib.AVMEDIA_TYPE_AUDIO:
+            if rate is not None:
+                if type(rate) is int:
+                    stream.codecpar.sample_rate = rate
+                else:
+                    raise TypeError("audio stream `rate` must be: int | None")
+
+        # Construct the user-land stream (no codec context).
+        py_stream: Stream = wrap_stream(self, stream, None)
+        self.streams.add_stream(py_stream)
+
+        for k, v in kwargs.items():
+            setattr(py_stream, k, v)
+
+        return py_stream
+
     def add_stream_from_template(
         self, template: Stream, opaque: bool | None = None, **kwargs
     ):
@@ -291,13 +368,12 @@ class OutputContainer(Container):
         )
 
         if codec_name is not None:
-            codec = lib.avcodec_find_encoder_by_name(codec_name.encode())
+            codec_name_bytes: bytes = codec_name.encode()
+            codec = lib.avcodec_find_encoder_by_name(codec_name_bytes)
             if codec == cython.NULL:
-                codec = lib.avcodec_find_decoder_by_name(codec_name.encode())
+                codec = lib.avcodec_find_decoder_by_name(codec_name_bytes)
             if codec == cython.NULL:
-                codec_descriptor = lib.avcodec_descriptor_get_by_name(
-                    codec_name.encode()
-                )
+                codec_descriptor = lib.avcodec_descriptor_get_by_name(codec_name_bytes)
                 if codec_descriptor == cython.NULL:
                     raise ValueError(f"Unknown data codec: {codec_name}")
 
@@ -361,22 +437,17 @@ class OutputContainer(Container):
         # Finalize and open all streams.
         for stream in self.streams:
             ctx = stream.codec_context
-            # Skip codec context handling for streams without codecs (e.g. data/attachments).
-            if ctx is None:
-                if stream.type not in {"data", "attachment"}:
-                    raise ValueError(f"Stream {stream.index} has no codec context")
-            else:
-                if not ctx.is_open:
-                    for k, v in self.options.items():
-                        ctx.options.setdefault(k, v)
+            if ctx is not None and not ctx.is_open:
+                for k, v in self.options.items():
+                    ctx.options.setdefault(k, v)
 
-                    if not ctx._template_initialized:
-                        ctx.open()
+                if not ctx._template_initialized:
+                    ctx.open()
 
-                        # Track option consumption.
-                        for k in self.options:
-                            if k not in ctx.options:
-                                used_options.add(k)
+                    # Track option consumption.
+                    for k in self.options:
+                        if k not in ctx.options:
+                            used_options.add(k)
 
             stream._finalize_for_output()
 

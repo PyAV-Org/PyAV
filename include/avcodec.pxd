@@ -206,6 +206,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef struct AVCodecDescriptor:
         AVCodecID id
+        AVMediaType type
         char *name
         char *long_name
         int props
@@ -470,6 +471,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVCodecID codec_id
         uint8_t *extradata
         int extradata_size
+        int width
+        int height
+        int sample_rate
 
     cdef int avcodec_parameters_copy(
         AVCodecParameters *dst, const AVCodecParameters *src
