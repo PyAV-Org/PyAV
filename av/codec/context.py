@@ -16,6 +16,112 @@ _cinit_sentinel = cython.declare(object, object())
 
 
 @cython.cfunc
+def _with_suffix_sei_moved(packet: Packet, is_hevc: cython.bint) -> Packet:
+    """Return a packet with suffix SEI NALUs moved to prefix position.
+
+    Suffix SEI NALUs (type 6 in H.264, type 40 in HEVC) appearing after VCL
+    (slice) NALUs are not attached to the decoded frame's side_data by FFmpeg.
+    Moving them to prefix position ensures they appear in frame.side_data.
+
+    Operates directly on the packet's C buffer — no Python bytes copy in the
+    common case (no suffix SEI found). Returns the same packet object unchanged
+    when no reordering is needed.
+    """
+    buf: cython.pointer[uint8_t] = packet.ptr.data
+    n: cython.size_t = packet.ptr.size
+    i: cython.size_t
+    hdr_pos: cython.size_t
+    nalu_type: cython.int
+    first_vcl: cython.int = -1
+    has_suffix_sei: cython.bint = False
+
+    if n < 5 or buf == cython.NULL:
+        return packet
+
+    # Only process Annex B format (starts with a start code)
+    if not (
+        (buf[0] == 0 and buf[1] == 0 and buf[2] == 0 and buf[3] == 1)
+        or (buf[0] == 0 and buf[1] == 0 and buf[2] == 1)
+    ):
+        return packet
+
+    # Collect NALU start positions from the raw C buffer (no Python bytes copy)
+    positions: list = []
+    i = 0
+    while i < n:
+        if i + 4 <= n and buf[i] == 0 and buf[i + 1] == 0 and buf[i + 2] == 0 and buf[i + 3] == 1:
+            positions.append((i, 4))
+            i += 4
+        elif i + 3 <= n and buf[i] == 0 and buf[i + 1] == 0 and buf[i + 2] == 1:
+            positions.append((i, 3))
+            i += 3
+        else:
+            i += 1
+
+    if len(positions) < 2:
+        return packet
+
+    # Build (nalu_type, start, end) tuples
+    nalus: list = []
+    j: cython.Py_ssize_t
+    for j in range(len(positions)):
+        pos, sc_len = positions[j]
+        hdr_pos = pos + sc_len
+        if hdr_pos >= n:
+            return packet
+        if is_hevc:
+            nalu_type = (buf[hdr_pos] >> 1) & 0x3F
+        else:
+            nalu_type = buf[hdr_pos] & 0x1F
+        end = positions[j + 1][0] if j + 1 < len(positions) else n
+        nalus.append((nalu_type, pos, end))
+
+    # Scan for first VCL NALU and any suffix SEI after it
+    sei_type: cython.int = 40 if is_hevc else 6
+    for j in range(len(nalus)):
+        ntype = nalus[j][0]
+        is_vcl = (ntype <= 31) if is_hevc else (1 <= ntype <= 5)
+        if is_vcl and first_vcl < 0:
+            first_vcl = j
+        elif first_vcl >= 0 and ntype == sei_type:
+            has_suffix_sei = True
+            break
+
+    if first_vcl < 0 or not has_suffix_sei:
+        return packet  # Common case: no suffix SEI, no allocation
+
+    # Reorder: prefix NALUs + suffix SEI NALUs + remaining NALUs.
+    # Use a memoryview of the packet for zero-copy slicing.
+    mv = memoryview(packet)
+    suffix_sei_idxs: list = [
+        j for j in range(first_vcl + 1, len(nalus)) if nalus[j][0] == sei_type
+    ]
+    suffix_sei_set = set(suffix_sei_idxs)
+
+    result = bytearray()
+    for _, pos, end in nalus[:first_vcl]:
+        result.extend(mv[pos:end])
+    for j in suffix_sei_idxs:
+        _, pos, end = nalus[j]
+        result.extend(mv[pos:end])
+    for j in range(first_vcl, len(nalus)):
+        if j not in suffix_sei_set:
+            _, pos, end = nalus[j]
+            result.extend(mv[pos:end])
+
+    new_packet = Packet(bytes(result))
+    new_packet.ptr.pts = packet.ptr.pts
+    new_packet.ptr.dts = packet.ptr.dts
+    new_packet.ptr.duration = packet.ptr.duration
+    new_packet.ptr.flags = packet.ptr.flags
+    new_packet.ptr.stream_index = packet.ptr.stream_index
+    new_packet.ptr.time_base = packet.ptr.time_base
+    new_packet.ptr.pos = packet.ptr.pos
+    new_packet._stream = packet._stream
+    return new_packet
+
+
+@cython.cfunc
 def wrap_codec_context(
     c_ctx: cython.pointer[lib.AVCodecContext],
     c_codec: cython.pointer[cython.const[lib.AVCodec]],
@@ -488,6 +594,11 @@ class CodecContext:
             raise ValueError("cannot decode unknown codec")
 
         self.open(strict=False)
+
+        if packet is not None:
+            codec_name = self.codec.name
+            if codec_name == "h264" or codec_name == "hevc":
+                packet = _with_suffix_sei_moved(packet, codec_name == "hevc")
 
         res: list = []
         for frame in self._send_packet_and_recv(packet):

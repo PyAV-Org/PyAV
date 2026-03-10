@@ -243,6 +243,45 @@ class TestDecode(TestCase):
         frame = next(container.decode(video=0))
         assert frame.rotation == -90
 
+    def test_suffix_sei_in_frame_side_data(self) -> None:
+        """Suffix SEI NALUs (after VCL) must appear in frame.side_data, closes #2160."""
+        # Encode a single frame to get a valid Annex B H.264 access unit
+        enc = av.CodecContext.create("libx264", "w")
+        enc.width = 32
+        enc.height = 32
+        enc.pix_fmt = "yuv420p"
+        enc.options = {"tune": "zerolatency"}
+        enc.open()
+        frame = av.VideoFrame(32, 32, "yuv420p")
+        packets = [bytes(pkt) for pkt in enc.encode(frame)]
+        packets += [bytes(pkt) for pkt in enc.encode(None)]
+        assert packets, "No packets encoded"
+        idr_data = next(p for p in packets if p[:4] == b"\x00\x00\x00\x01")
+
+        # Build a suffix SEI NALU (unregistered user data, nal_unit_type=6)
+        uuid = b"\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef"
+        payload = uuid + b"suffix_sei_test"
+        sei_msg = bytes([5, len(payload)]) + payload
+        sei_nalu = bytes([0x06]) + sei_msg + bytes([0x80])
+
+        # Append suffix SEI after slice NALUs (simulates suffix SEI position)
+        full_au = idr_data + b"\x00\x00\x01" + sei_nalu
+
+        dec = av.CodecContext.create("h264", "r")
+        dec.options["export_side_data"] = "all"
+        dec.open()
+
+        frames = dec.decode(av.packet.Packet(full_au))
+        assert frames, "No frames decoded"
+
+        found = any(
+            bytes(sd)[:16] == uuid
+            for frame in frames
+            for sd in frame.side_data
+            if sd.type.name == "SEI_UNREGISTERED"
+        )
+        assert found, "Suffix SEI NALU was not found in frame.side_data"
+
     def test_hardware_decode(self) -> None:
         hwdevices_available = av.codec.hwaccel.hwdevices_available()
         if "HWACCEL_DEVICE_TYPE" not in os.environ:
