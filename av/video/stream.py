@@ -8,6 +8,8 @@ from cython.cimports.av.video.frame import VideoFrame
 @cython.cclass
 class VideoStream(Stream):
     def __repr__(self):
+        if self.codec_context is None:
+            return f"<av.VideoStream #{self.index} video/<nocodec> at 0x{id(self):x}>"
         return (
             f"<av.VideoStream #{self.index} {self.name}, "
             f"{self.format.name if self.format else None} {self.codec_context.width}x"
@@ -19,7 +21,10 @@ class VideoStream(Stream):
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{name}'"
             )
-
+        if self.codec_context is None:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
         return getattr(self.codec_context, name)
 
     @cython.ccall

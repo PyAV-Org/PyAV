@@ -37,6 +37,7 @@ Major:
 
 Features:
 
+- Add ``OutputContainer.add_mux_stream()`` for creating codec-context-free streams, enabling muxing of pre-encoded packets without an encoder, addressing :issue:`1970` by :gh-user:`WyattBlue`.
 - Use zero-copy for Packet init from buffer data by :gh-user:`WyattBlue` in (:pr:`2199`).
 - Expose AVIndexEntry by :gh-user:`Queuecumber` in (:pr:`2136`).
 - Preserving hardware memory during cuvid decoding, exporting/importing via dlpack by :gh-user:`WyattBlue` in (:pr:`2155`).

@@ -6,6 +6,8 @@ from cython.cimports.av.packet import Packet
 @cython.cclass
 class AudioStream(Stream):
     def __repr__(self):
+        if self.codec_context is None:
+            return f"<av.AudioStream #{self.index} audio/<nocodec> at 0x{id(self):x}>"
         form = self.format.name if self.format else None
         return (
             f"<av.AudioStream #{self.index} {self.name} at {self.rate}Hz,"
@@ -13,6 +15,10 @@ class AudioStream(Stream):
         )
 
     def __getattr__(self, name):
+        if self.codec_context is None:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
         return getattr(self.codec_context, name)
 
     @cython.ccall
