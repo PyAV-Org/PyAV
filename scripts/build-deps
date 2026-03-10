@@ -58,6 +58,7 @@ echo ./configure
     --disable-static \
     --disable-stripping \
     --disable-libxml2 \
+    --disable-openssl \
     --enable-debug=3 \
     --enable-gpl \
     --enable-version3 \

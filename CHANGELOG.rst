@@ -47,6 +47,7 @@ Fixes:
 
 - Fix :issue:`2149` by :gh-user:`WyattBlue` in (:pr:`2155`).
 - Fix packet typing based on stream and specify InputContainer.demux based on incoming stream by :gh-user:`ntjohnson1` in (:pr:`2134`).
+- Explicitly disable OpenSSL in source builds (``scripts/build-deps``) to prevent accidental OpenSSL linkage that breaks FIPS-enabled systems, addressing :issue:`1972`.
 
 v16.1.0
 -------
