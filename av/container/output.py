@@ -193,6 +193,7 @@ class OutputContainer(Container):
 
         # Construct the user-land stream
         py_codec_context: CodecContext = wrap_codec_context(ctx, codec, None)
+        py_codec_context._template_initialized = True
         py_stream: Stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
 
@@ -368,12 +369,14 @@ class OutputContainer(Container):
                 if not ctx.is_open:
                     for k, v in self.options.items():
                         ctx.options.setdefault(k, v)
-                    ctx.open()
 
-                    # Track option consumption.
-                    for k in self.options:
-                        if k not in ctx.options:
-                            used_options.add(k)
+                    if not ctx._template_initialized:
+                        ctx.open()
+
+                        # Track option consumption.
+                        for k in self.options:
+                            if k not in ctx.options:
+                                used_options.add(k)
 
             stream._finalize_for_output()
 

@@ -14,6 +14,10 @@ cdef class CodecContext:
     # Whether AVCodecContext.extradata should be de-allocated upon destruction.
     cdef bint extradata_set
 
+    # True when created via add_stream_from_template(); start_encoding() skips
+    # avcodec_open2() and lets encode()/decode() open the codec lazily if needed.
+    cdef readonly bint _template_initialized
+
     # Used as a signal that this is within a stream, and also for us to access that
     # stream. This is set "manually" by the stream after constructing this object.
     cdef int stream_index
