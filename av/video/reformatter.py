@@ -1,6 +1,7 @@
 from enum import IntEnum
 
 import cython
+import cython.cimports.libav as lib
 from cython.cimports.av.error import err_check
 from cython.cimports.av.video.format import VideoFormat
 from cython.cimports.av.video.frame import alloc_video_frame
@@ -107,30 +108,25 @@ def _resolve_enum_value(
 
 @cython.cfunc
 def _set_frame_colorspace(
-    frame: VideoFrame, colorspace: cython.int, color_range: cython.int
+    frame: cython.pointer(lib.AVFrame),
+    colorspace: cython.int,
+    color_range: cython.int,
 ):
     """Set AVFrame colorspace/range from SWS_CS_* and AVColorRange values."""
-    if colorspace in _SWS_CS_TO_AVCOL_SPC:
-        frame.ptr.colorspace = cython.cast(
-            lib.AVColorSpace, _SWS_CS_TO_AVCOL_SPC[colorspace]
-        )
     if color_range != lib.AVCOL_RANGE_UNSPECIFIED:
-        frame.ptr.color_range = cython.cast(lib.AVColorRange, color_range)
-
-
-# Mapping from SWS_CS_* (swscale colorspace) to AVColorSpace (frame metadata).
-# Note: SWS_CS_ITU601, SWS_CS_ITU624, SWS_CS_SMPTE170M, and SWS_CS_DEFAULT all have
-# the same value (5), so we map 5 -> AVCOL_SPC_SMPTE170M as the most common case.
-# SWS_CS_DEFAULT is handled specially by not setting frame metadata.
-_SWS_CS_TO_AVCOL_SPC = cython.declare(
-    dict,
-    {
-        SWS_CS_ITU709: lib.AVCOL_SPC_BT709,
-        SWS_CS_FCC: lib.AVCOL_SPC_FCC,
-        SWS_CS_ITU601: lib.AVCOL_SPC_SMPTE170M,
-        SWS_CS_SMPTE240M: lib.AVCOL_SPC_SMPTE240M,
-    },
-)
+        frame.color_range = cython.cast(lib.AVColorRange, color_range)
+    # Mapping from SWS_CS_* (swscale colorspace) to AVColorSpace (frame metadata).
+    # Note: SWS_CS_ITU601, SWS_CS_ITU624, SWS_CS_SMPTE170M, and SWS_CS_DEFAULT all have
+    # the same value (5), so we map 5 -> AVCOL_SPC_SMPTE170M as the most common case.
+    # SWS_CS_DEFAULT is handled specially by not setting frame metadata.
+    if colorspace == SWS_CS_ITU709:
+        frame.colorspace = lib.AVCOL_SPC_BT709
+    elif colorspace == SWS_CS_FCC:
+        frame.colorspace = lib.AVCOL_SPC_FCC
+    elif colorspace == SWS_CS_ITU601:
+        frame.colorspace = lib.AVCOL_SPC_SMPTE170M
+    elif colorspace == SWS_CS_SMPTE240M:
+        frame.colorspace = lib.AVCOL_SPC_SMPTE240M
 
 
 @cython.cclass
@@ -300,8 +296,8 @@ class VideoReformatter:
         # Set source frame colorspace/range so sws_scale_frame can read it
         frame_src_colorspace: lib.AVColorSpace = frame.ptr.colorspace
         frame_src_color_range: lib.AVColorRange = frame.ptr.color_range
-        _set_frame_colorspace(frame, src_colorspace, src_color_range)
-        _set_frame_colorspace(new_frame, dst_colorspace, dst_color_range)
+        _set_frame_colorspace(frame.ptr, src_colorspace, src_color_range)
+        _set_frame_colorspace(new_frame.ptr, dst_colorspace, dst_color_range)
 
         with cython.nogil:
             ret = sws_scale_frame(self.ptr, new_frame.ptr, frame.ptr)
