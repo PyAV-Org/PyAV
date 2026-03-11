@@ -433,19 +433,26 @@ def useful_array(
     plane: VideoPlane, bytes_per_pixel: cython.uint = 1, dtype: str = "uint8"
 ):
     """
-    Return the useful part of the VideoPlane as a single dimensional array.
+    Return the useful part of the VideoPlane as a strided array.
 
-    We are simply discarding any padding which was added for alignment.
+    We are simply creating a view that discards any padding which was added for
+    alignment.
     """
     import numpy as np
 
-    total_line_size: cython.size_t = abs(plane.line_size)
-    useful_line_size: cython.size_t = plane.width * bytes_per_pixel
-    if total_line_size == useful_line_size:
-        return np.frombuffer(plane, dtype=dtype)
-    arr = np.frombuffer(plane, np.uint8)
-    arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
-    return arr.view(np.dtype(dtype))
+    dtype_obj = np.dtype(dtype)
+    total_line_size = abs(plane.frame.ptr.linesize[plane.index])
+    itemsize = dtype_obj.itemsize
+    channels = bytes_per_pixel // itemsize
+
+    if channels == 1:
+        shape = (plane.height, plane.width)
+        strides = (total_line_size, itemsize)
+    else:
+        shape = (plane.height, plane.width, channels)
+        strides = (total_line_size, bytes_per_pixel, itemsize)
+
+    return np.ndarray(shape, dtype=dtype_obj, buffer=plane, strides=strides)
 
 
 @cython.cfunc
@@ -755,19 +762,19 @@ class VideoFrame(Frame):
             itemsize: cython.uint
             itemsize, dtype = _np_pix_fmt_dtypes[format_name]
             if len(planes) == 1:  # shortcut, avoid memory copy
-                array = useful_array(planes[0], itemsize, dtype).reshape(
-                    height, width, -1
-                )
+                array = useful_array(planes[0], itemsize, dtype)
+                if array.ndim == 2:
+                    array = array[:, :, None]
             else:  # general case
                 array = np.empty((height, width, len(planes)), dtype=dtype)
                 for i, plane in enumerate(planes):
-                    array[:, :, i] = useful_array(plane, itemsize, dtype).reshape(
-                        height, width
-                    )
+                    array[:, :, i] = useful_array(plane, itemsize, dtype)
             array = byteswap_array(array, format_name.endswith("be"))
             if array.shape[2] == 1:  # skip last channel for gray images
                 return array.squeeze(2)
             if format_name.startswith("gbr"):  # gbr -> rgb
+                if len(planes) == 1:
+                    array = array.copy()  # prevent mutating FFmpeg frame in-place
                 array[:, :, :3] = array[:, :, [2, 0, 1]]
             if not channel_last and format_name in {"yuv444p", "yuvj444p"}:
                 array = np.moveaxis(array, 2, 0)
@@ -777,16 +784,16 @@ class VideoFrame(Frame):
         if format_name in {"yuv420p", "yuvj420p", "yuv422p"}:
             return np.hstack(
                 [
-                    useful_array(planes[0]),
-                    useful_array(planes[1]),
-                    useful_array(planes[2]),
+                    useful_array(planes[0]).reshape(-1),
+                    useful_array(planes[1]).reshape(-1),
+                    useful_array(planes[2]).reshape(-1),
                 ]
             ).reshape(-1, width)
         if format_name == "yuv422p10le":
             # Read planes as uint16 at their original width
-            y = useful_array(planes[0], 2, "uint16").reshape(height, width)
-            u = useful_array(planes[1], 2, "uint16").reshape(height, width // 2)
-            v = useful_array(planes[2], 2, "uint16").reshape(height, width // 2)
+            y = useful_array(planes[0], 2, "uint16")
+            u = useful_array(planes[1], 2, "uint16")
+            v = useful_array(planes[2], 2, "uint16")
 
             # Double the width of U and V by repeating each value
             u_full = np.repeat(u, 2, axis=1)
@@ -795,7 +802,7 @@ class VideoFrame(Frame):
                 return np.stack([y, u_full, v_full], axis=2)
             return np.stack([y, u_full, v_full], axis=0)
         if format_name == "pal8":
-            image = useful_array(planes[0]).reshape(height, width)
+            image = useful_array(planes[0])
             palette = (
                 np.frombuffer(planes[1], "i4")
                 .astype(">i4")
@@ -805,7 +812,10 @@ class VideoFrame(Frame):
             return image, palette
         if format_name == "nv12":
             return np.hstack(
-                [useful_array(planes[0]), useful_array(planes[1], 2)]
+                [
+                    useful_array(planes[0]).reshape(-1),
+                    useful_array(planes[1], 2).reshape(-1),
+                ]
             ).reshape(-1, width)
 
         raise ValueError(
