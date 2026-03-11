@@ -85,4 +85,5 @@ class VideoReformatter:
         dst_color_range: int | str | None = None,
         dst_color_trc: int | ColorTrc | None = None,
         dst_color_primaries: int | ColorPrimaries | None = None,
+        threads: int | None = None,
     ) -> VideoFrame: ...

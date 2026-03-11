@@ -159,6 +159,7 @@ class VideoReformatter:
         dst_color_range=None,
         dst_color_trc=None,
         dst_color_primaries=None,
+        threads=None,
     ):
         """Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
 
@@ -185,6 +186,8 @@ class VideoReformatter:
         :param dst_color_primaries: Desired color primaries to tag on the output frame,
             or ``None`` to preserve the source frame's value.
         :type  dst_color_primaries: :class:`ColorPrimaries` or ``int``
+        :param int threads: How many threads to use for scaling, or ``0`` for automatic
+            selection based on the number of available CPUs. Defaults to ``0`` (auto).
 
         """
 
@@ -206,6 +209,7 @@ class VideoReformatter:
         c_dst_color_primaries = _resolve_enum_value(
             dst_color_primaries, ColorPrimaries, 0
         )
+        c_threads: cython.int = threads if threads is not None else 0
 
         # Track whether user explicitly specified destination metadata
         set_dst_color_trc: cython.bint = dst_color_trc is not None
@@ -225,6 +229,7 @@ class VideoReformatter:
             c_dst_color_primaries,
             set_dst_color_trc,
             set_dst_color_primaries,
+            c_threads,
         )
 
     @cython.cfunc
@@ -243,6 +248,7 @@ class VideoReformatter:
         dst_color_primaries: cython.int,
         set_dst_color_trc: cython.bint,
         set_dst_color_primaries: cython.bint,
+        threads: cython.int,
     ):
         if frame.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
@@ -284,8 +290,7 @@ class VideoReformatter:
             self.ptr = sws_alloc_context()
             if self.ptr == cython.NULL:
                 raise MemoryError("Could not allocate SwsContext")
-            # TODO(lgeiger): Enable multi-threading for sws_scale_frame.
-            self.ptr.threads = 1
+        self.ptr.threads = threads
         self.ptr.flags = cython.cast(cython.uint, interpolation)
 
         new_frame: VideoFrame = alloc_video_frame()

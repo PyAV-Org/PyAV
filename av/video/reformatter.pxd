@@ -38,4 +38,5 @@ cdef class VideoReformatter:
                    int dst_colorspace, int interpolation,
                    int src_color_range, int dst_color_range,
                    int dst_color_trc, int dst_color_primaries,
-                   bint set_dst_color_trc, bint set_dst_color_primaries)
+                   bint set_dst_color_trc, bint set_dst_color_primaries,
+                   int threads)
