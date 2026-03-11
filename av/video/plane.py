@@ -26,7 +26,7 @@ class VideoPlane(Plane):
                 frames_ctx.sw_format, frame.ptr.width, frame.ptr.height
             )
 
-        if fmt.name == "pal8" and index == 1:
+        if index == 1 and fmt.name == "pal8":
             self.width = 256
             self.height = 1
             self.buffer_size = 256 * 4

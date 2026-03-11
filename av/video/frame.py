@@ -539,6 +539,8 @@ class VideoFrame(Frame):
         plane_count: cython.int = 0
         while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:
             plane_count += 1
+        if plane_count == 1:
+            return (VideoPlane(self, 0),)
         return tuple([VideoPlane(self, i) for i in range(plane_count)])
 
     @property
