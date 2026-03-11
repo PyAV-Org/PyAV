@@ -433,6 +433,7 @@ def copy_array_to_plane(array, plane: VideoPlane, bytes_per_pixel: cython.uint):
 
 
 @cython.cfunc
+@cython.inline
 def useful_array(
     plane: VideoPlane, bytes_per_pixel: cython.uint = 1, dtype: str = "uint8"
 ):
@@ -755,21 +756,21 @@ class VideoFrame(Frame):
 
         # check size
         format_name = frame.format.name
-        height, width = frame.ptr.height, frame.ptr.width
         planes: tuple[VideoPlane, ...] = frame.planes
-        if format_name in {"yuv420p", "yuvj420p", "yuyv422", "yuv422p10le", "yuv422p"}:
-            assert width % 2 == 0, "the width has to be even for this pixel format"
-            assert height % 2 == 0, "the height has to be even for this pixel format"
-
         # cases planes are simply concatenated in shape (height, width, channels)
         if format_name in _np_pix_fmt_dtypes:
+            if format_name == "yuyv422":
+                assert frame.ptr.width % 2 == 0, "width has to be even for yuyv422"
+                assert frame.ptr.height % 2 == 0, "height has to be even for yuyv422"
             itemsize: cython.uint
             itemsize, dtype = _np_pix_fmt_dtypes[format_name]
             num_planes: cython.size_t = len(planes)
             if num_planes == 1:  # shortcut, avoid memory copy
                 array = useful_array(planes[0], itemsize, dtype)
             else:  # general case
-                array = np.empty((height, width, num_planes), dtype=dtype)
+                array = np.empty(
+                    (frame.ptr.height, frame.ptr.width, num_planes), dtype=dtype
+                )
                 if format_name.startswith("gbr"):
                     plane_indices = (2, 0, 1, *range(3, num_planes))
                 else:
@@ -783,14 +784,18 @@ class VideoFrame(Frame):
 
         # special cases
         if format_name in {"yuv420p", "yuvj420p", "yuv422p"}:
+            assert frame.ptr.width % 2 == 0, "width has to be even for this format"
+            assert frame.ptr.height % 2 == 0, "height has to be even for this format"
             return np.hstack(
                 [
                     useful_array(planes[0]).reshape(-1),
                     useful_array(planes[1]).reshape(-1),
                     useful_array(planes[2]).reshape(-1),
                 ]
-            ).reshape(-1, width)
+            ).reshape(-1, frame.ptr.width)
         if format_name == "yuv422p10le":
+            assert frame.ptr.width % 2 == 0, "width has to be even for this format"
+            assert frame.ptr.height % 2 == 0, "height has to be even for this format"
             # Read planes as uint16 at their original width
             y = useful_array(planes[0], 2, "uint16")
             u = useful_array(planes[1], 2, "uint16")
@@ -817,7 +822,7 @@ class VideoFrame(Frame):
                     useful_array(planes[0]).reshape(-1),
                     useful_array(planes[1], 2).reshape(-1),
                 ]
-            ).reshape(-1, width)
+            ).reshape(-1, frame.ptr.width)
 
         raise ValueError(
             f"Conversion to numpy array with format `{format_name}` is not yet supported"
