@@ -17,7 +17,7 @@ class Interpolation(IntEnum):
     BICUBLIN: "Luma bicubic / chroma bilinear" = SWS_BICUBLIN
     GAUSS: "Gaussian" = SWS_GAUSS
     SINC: "Sinc" = SWS_SINC
-    LANCZOS: "Bicubic spline" = SWS_LANCZOS
+    LANCZOS: "Lanczos" = SWS_LANCZOS
     SPLINE: "Cubic Keys spline" = SWS_SPLINE
 
 
