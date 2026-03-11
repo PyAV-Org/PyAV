@@ -622,7 +622,7 @@ class VideoFrame(Frame):
         self.ptr.color_primaries = value
 
     def reformat(self, *args, **kwargs):
-        """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None)
+        """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None, threads=None)
 
         Create a new :class:`VideoFrame` with the given width/height/format/colorspace.
 
