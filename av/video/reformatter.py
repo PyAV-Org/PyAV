@@ -3,7 +3,7 @@ from enum import IntEnum
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.error import err_check
-from cython.cimports.av.video.format import VideoFormat
+from cython.cimports.av.video.format import VideoFormat, get_pix_fmt
 from cython.cimports.av.video.frame import alloc_video_frame
 
 
@@ -91,6 +91,7 @@ class ColorPrimaries(IntEnum):
 
 
 @cython.cfunc
+@cython.inline
 def _resolve_enum_value(
     value: object, enum_class: object, default: cython.int
 ) -> cython.int:
@@ -104,6 +105,16 @@ def _resolve_enum_value(
     if isinstance(value, str):
         return enum_class[value].value
     raise ValueError(f"Cannot convert {value} to {enum_class.__name__}")
+
+
+@cython.cfunc
+@cython.inline
+def _resolve_format(format: object, default: lib.AVPixelFormat) -> lib.AVPixelFormat:
+    if format is None:
+        return default
+    if isinstance(format, VideoFormat):
+        return cython.cast(VideoFormat, format).pix_fmt
+    return get_pix_fmt(format)
 
 
 @cython.cfunc
@@ -186,18 +197,15 @@ class VideoReformatter:
             selection based on the number of available CPUs. Defaults to ``0`` (auto).
 
         """
-
-        video_format: VideoFormat = VideoFormat(
-            format if format is not None else frame.format
-        )
+        c_dst_format = _resolve_format(format, frame.format.pix_fmt)
         c_src_colorspace = _resolve_enum_value(
-            src_colorspace, Colorspace, frame.colorspace
+            src_colorspace, Colorspace, frame.ptr.colorspace
         )
         c_dst_colorspace = _resolve_enum_value(
-            dst_colorspace, Colorspace, frame.colorspace
+            dst_colorspace, Colorspace, frame.ptr.colorspace
         )
         c_interpolation = _resolve_enum_value(
-            interpolation, Interpolation, int(Interpolation.BILINEAR)
+            interpolation, Interpolation, SWS_BILINEAR
         )
         c_src_color_range = _resolve_enum_value(src_color_range, ColorRange, 0)
         c_dst_color_range = _resolve_enum_value(dst_color_range, ColorRange, 0)
@@ -206,6 +214,8 @@ class VideoReformatter:
             dst_color_primaries, ColorPrimaries, 0
         )
         c_threads: cython.int = threads if threads is not None else 0
+        c_width: cython.int = width if width is not None else frame.ptr.width
+        c_height: cython.int = height if height is not None else frame.ptr.height
 
         # Track whether user explicitly specified destination metadata
         set_dst_color_trc: cython.bint = dst_color_trc is not None
@@ -213,9 +223,9 @@ class VideoReformatter:
 
         return self._reformat(
             frame,
-            width or frame.ptr.width,
-            height or frame.ptr.height,
-            video_format.pix_fmt,
+            c_width,
+            c_height,
+            c_dst_format,
             c_src_colorspace,
             c_dst_colorspace,
             c_interpolation,
@@ -252,25 +262,6 @@ class VideoReformatter:
         src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
 
         # Shortcut!
-        if frame.ptr.hw_frames_ctx:
-            if (
-                dst_format == src_format
-                and width == frame.ptr.width
-                and height == frame.ptr.height
-                and dst_colorspace == src_colorspace
-                and src_color_range == dst_color_range
-                and not set_dst_color_trc
-                and not set_dst_color_primaries
-            ):
-                return frame
-
-            frame_sw = alloc_video_frame()
-            err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
-            frame_sw.pts = frame.pts
-            frame_sw._init_user_attributes()
-            frame = frame_sw
-            src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
-
         if (
             dst_format == src_format
             and width == frame.ptr.width
@@ -281,6 +272,14 @@ class VideoReformatter:
             and not set_dst_color_primaries
         ):
             return frame
+
+        if frame.ptr.hw_frames_ctx:
+            frame_sw = alloc_video_frame()
+            err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
+            frame_sw.pts = frame.pts
+            frame_sw._init_user_attributes()
+            frame = frame_sw
+            src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
 
         if self.ptr == cython.NULL:
             self.ptr = sws_alloc_context()
