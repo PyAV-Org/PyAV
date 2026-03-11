@@ -105,6 +105,19 @@ def _resolve_enum_value(
     raise ValueError(f"Cannot convert {value} to {enum_class.__name__}")
 
 
+@cython.cfunc
+def _set_frame_colorspace(
+    frame: VideoFrame, colorspace: cython.int, color_range: cython.int
+):
+    """Set AVFrame colorspace/range from SWS_CS_* and AVColorRange values."""
+    if colorspace in _SWS_CS_TO_AVCOL_SPC:
+        frame.ptr.colorspace = cython.cast(
+            lib.AVColorSpace, _SWS_CS_TO_AVCOL_SPC[colorspace]
+        )
+    if color_range != lib.AVCOL_RANGE_UNSPECIFIED:
+        frame.ptr.color_range = cython.cast(lib.AVColorRange, color_range)
+
+
 # Mapping from SWS_CS_* (swscale colorspace) to AVColorSpace (frame metadata).
 # Note: SWS_CS_ITU601, SWS_CS_ITU624, SWS_CS_SMPTE170M, and SWS_CS_DEFAULT all have
 # the same value (5), so we map 5 -> AVCOL_SPC_SMPTE170M as the most common case.
@@ -131,7 +144,7 @@ class VideoReformatter:
 
     def __dealloc__(self):
         with cython.nogil:
-            sws_freeContext(self.ptr)
+            sws_free_context(cython.address(self.ptr))
 
     def reformat(
         self,
@@ -195,8 +208,6 @@ class VideoReformatter:
         )
 
         # Track whether user explicitly specified destination metadata
-        set_dst_colorspace: cython.bint = dst_colorspace is not None
-        set_dst_color_range: cython.bint = dst_color_range is not None
         set_dst_color_trc: cython.bint = dst_color_trc is not None
         set_dst_color_primaries: cython.bint = dst_color_primaries is not None
 
@@ -210,8 +221,6 @@ class VideoReformatter:
             c_interpolation,
             c_src_color_range,
             c_dst_color_range,
-            set_dst_colorspace,
-            set_dst_color_range,
             c_dst_color_trc,
             c_dst_color_primaries,
             set_dst_color_trc,
@@ -230,8 +239,6 @@ class VideoReformatter:
         interpolation: cython.int,
         src_color_range: cython.int,
         dst_color_range: cython.int,
-        set_dst_colorspace: cython.bint,
-        set_dst_color_range: cython.bint,
         dst_color_trc: cython.int,
         dst_color_primaries: cython.int,
         set_dst_color_trc: cython.bint,
@@ -239,14 +246,6 @@ class VideoReformatter:
     ):
         if frame.ptr.format < 0:
             raise ValueError("Frame does not have format set.")
-
-        # Save original values to set on the output frame (before swscale conversion)
-        frame_dst_colorspace = dst_colorspace
-        frame_dst_color_range = dst_color_range
-
-        # The definition of color range in pixfmt.h and swscale.h is different.
-        src_color_range = 1 if src_color_range == ColorRange.JPEG.value else 0
-        dst_color_range = 1 if dst_color_range == ColorRange.JPEG.value else 0
 
         src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
 
@@ -281,81 +280,34 @@ class VideoReformatter:
         ):
             return frame
 
-        with cython.nogil:
-            self.ptr = sws_getCachedContext(
-                self.ptr,
-                frame.ptr.width,
-                frame.ptr.height,
-                src_format,
-                width,
-                height,
-                dst_format,
-                interpolation,
-                cython.NULL,
-                cython.NULL,
-                cython.NULL,
-            )
-
-        # We want to change the colorspace/color_range transforms.
-        # We do that by grabbing all the current settings, changing a
-        # couple, and setting them all. We need a lot of state here.
-        inv_tbl: cython.p_int
-        tbl: cython.p_int
-        src_colorspace_range: cython.int
-        dst_colorspace_range: cython.int
-        brightness: cython.int
-        contrast: cython.int
-        saturation: cython.int
-
-        if src_colorspace != dst_colorspace or src_color_range != dst_color_range:
-            with cython.nogil:
-                ret = sws_getColorspaceDetails(
-                    self.ptr,
-                    cython.address(inv_tbl),
-                    cython.address(src_colorspace_range),
-                    cython.address(tbl),
-                    cython.address(dst_colorspace_range),
-                    cython.address(brightness),
-                    cython.address(contrast),
-                    cython.address(saturation),
-                )
-            err_check(ret)
-
-            with cython.nogil:
-                # Grab the coefficients for the requested transforms.
-                # The inv_table brings us to linear, and `tbl` to the new space.
-                if src_colorspace != SWS_CS_DEFAULT:
-                    inv_tbl = cython.cast(
-                        cython.p_int, sws_getCoefficients(src_colorspace)
-                    )
-                if dst_colorspace != SWS_CS_DEFAULT:
-                    tbl = cython.cast(cython.p_int, sws_getCoefficients(dst_colorspace))
-
-                ret = sws_setColorspaceDetails(
-                    self.ptr,
-                    inv_tbl,
-                    src_color_range,
-                    tbl,
-                    dst_color_range,
-                    brightness,
-                    contrast,
-                    saturation,
-                )
-            err_check(ret)
+        if self.ptr == cython.NULL:
+            self.ptr = sws_alloc_context()
+            if self.ptr == cython.NULL:
+                raise MemoryError("Could not allocate SwsContext")
+            # TODO(lgeiger): Enable multi-threading for sws_scale_frame.
+            self.ptr.threads = 1
+        self.ptr.flags = cython.cast(cython.uint, interpolation)
 
         new_frame: VideoFrame = alloc_video_frame()
         new_frame._copy_internal_attributes(frame)
         new_frame._init(dst_format, width, height)
 
-        # Set the colorspace and color_range on the output frame only if explicitly specified
-        if set_dst_colorspace and frame_dst_colorspace in _SWS_CS_TO_AVCOL_SPC:
-            new_frame.ptr.colorspace = cython.cast(
-                lib.AVColorSpace, _SWS_CS_TO_AVCOL_SPC[frame_dst_colorspace]
-            )
-        if set_dst_color_range:
-            new_frame.ptr.color_range = cython.cast(
-                lib.AVColorRange, frame_dst_color_range
-            )
+        # Set source frame colorspace/range so sws_scale_frame can read it
+        frame_src_colorspace: lib.AVColorSpace = frame.ptr.colorspace
+        frame_src_color_range: lib.AVColorRange = frame.ptr.color_range
+        _set_frame_colorspace(frame, src_colorspace, src_color_range)
+        _set_frame_colorspace(new_frame, dst_colorspace, dst_color_range)
+
+        with cython.nogil:
+            ret = sws_scale_frame(self.ptr, new_frame.ptr, frame.ptr)
+
+        # Restore source frame colorspace/range to avoid side effects
+        frame.ptr.colorspace = frame_src_colorspace
+        frame.ptr.color_range = frame_src_color_range
+
+        err_check(ret)
+
+        # Set metadata-only properties on the output frame if explicitly specified
         if set_dst_color_trc:
             new_frame.ptr.color_trc = cython.cast(
                 lib.AVColorTransferCharacteristic, dst_color_trc
@@ -363,17 +315,6 @@ class VideoReformatter:
         if set_dst_color_primaries:
             new_frame.ptr.color_primaries = cython.cast(
                 lib.AVColorPrimaries, dst_color_primaries
-            )
-
-        with cython.nogil:
-            sws_scale(
-                self.ptr,
-                cython.cast("const unsigned char *const *", frame.ptr.data),
-                cython.cast("const int *", frame.ptr.linesize),
-                0,  # slice Y
-                frame.ptr.height,
-                new_frame.ptr.data,
-                new_frame.ptr.linesize,
             )
 
         return new_frame
