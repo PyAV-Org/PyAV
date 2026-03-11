@@ -374,9 +374,13 @@ class PictureType(IntEnum):
     BI = lib.AV_PICTURE_TYPE_BI  # BI type
 
 
+_is_big_endian = cython.declare(cython.bint, sys.byteorder == "big")
+
+
 @cython.cfunc
+@cython.inline
 def byteswap_array(array, big_endian: cython.bint):
-    if (sys.byteorder == "big") != big_endian:
+    if _is_big_endian != big_endian:
         return array.byteswap()
     return array
 
@@ -761,21 +765,18 @@ class VideoFrame(Frame):
         if format_name in _np_pix_fmt_dtypes:
             itemsize: cython.uint
             itemsize, dtype = _np_pix_fmt_dtypes[format_name]
-            if len(planes) == 1:  # shortcut, avoid memory copy
+            num_planes: cython.size_t = len(planes)
+            if num_planes == 1:  # shortcut, avoid memory copy
                 array = useful_array(planes[0], itemsize, dtype)
-                if array.ndim == 2:
-                    array = array[:, :, None]
             else:  # general case
-                array = np.empty((height, width, len(planes)), dtype=dtype)
-                for i, plane in enumerate(planes):
-                    array[:, :, i] = useful_array(plane, itemsize, dtype)
+                array = np.empty((height, width, num_planes), dtype=dtype)
+                if format_name.startswith("gbr"):
+                    plane_indices = (2, 0, 1, *range(3, num_planes))
+                else:
+                    plane_indices = range(num_planes)
+                for i, p_idx in enumerate(plane_indices):
+                    array[:, :, i] = useful_array(planes[p_idx], itemsize, dtype)
             array = byteswap_array(array, format_name.endswith("be"))
-            if array.shape[2] == 1:  # skip last channel for gray images
-                return array.squeeze(2)
-            if format_name.startswith("gbr"):  # gbr -> rgb
-                if len(planes) == 1:
-                    array = array.copy()  # prevent mutating FFmpeg frame in-place
-                array[:, :, :3] = array[:, :, [2, 0, 1]]
             if not channel_last and format_name in {"yuv444p", "yuvj444p"}:
                 array = np.moveaxis(array, 2, 0)
             return array
