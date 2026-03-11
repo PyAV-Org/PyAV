@@ -260,25 +260,6 @@ class VideoReformatter:
         src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
 
         # Shortcut!
-        if frame.ptr.hw_frames_ctx:
-            if (
-                dst_format == src_format
-                and width == frame.ptr.width
-                and height == frame.ptr.height
-                and dst_colorspace == src_colorspace
-                and src_color_range == dst_color_range
-                and not set_dst_color_trc
-                and not set_dst_color_primaries
-            ):
-                return frame
-
-            frame_sw = alloc_video_frame()
-            err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
-            frame_sw.pts = frame.pts
-            frame_sw._init_user_attributes()
-            frame = frame_sw
-            src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
-
         if (
             dst_format == src_format
             and width == frame.ptr.width
@@ -289,6 +270,14 @@ class VideoReformatter:
             and not set_dst_color_primaries
         ):
             return frame
+
+        if frame.ptr.hw_frames_ctx:
+            frame_sw = alloc_video_frame()
+            err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
+            frame_sw.pts = frame.pts
+            frame_sw._init_user_attributes()
+            frame = frame_sw
+            src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
 
         if self.ptr == cython.NULL:
             self.ptr = sws_alloc_context()
