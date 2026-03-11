@@ -374,9 +374,13 @@ class PictureType(IntEnum):
     BI = lib.AV_PICTURE_TYPE_BI  # BI type
 
 
+_is_big_endian = cython.declare(cython.bint, sys.byteorder == "big")
+
+
 @cython.cfunc
+@cython.inline
 def byteswap_array(array, big_endian: cython.bint):
-    if (sys.byteorder == "big") != big_endian:
+    if _is_big_endian != big_endian:
         return array.byteswap()
     return array
 
@@ -429,23 +433,31 @@ def copy_array_to_plane(array, plane: VideoPlane, bytes_per_pixel: cython.uint):
 
 
 @cython.cfunc
+@cython.inline
 def useful_array(
     plane: VideoPlane, bytes_per_pixel: cython.uint = 1, dtype: str = "uint8"
 ):
     """
-    Return the useful part of the VideoPlane as a single dimensional array.
+    Return the useful part of the VideoPlane as a strided array.
 
-    We are simply discarding any padding which was added for alignment.
+    We are simply creating a view that discards any padding which was added for
+    alignment.
     """
     import numpy as np
 
-    total_line_size: cython.size_t = abs(plane.line_size)
-    useful_line_size: cython.size_t = plane.width * bytes_per_pixel
-    if total_line_size == useful_line_size:
-        return np.frombuffer(plane, dtype=dtype)
-    arr = np.frombuffer(plane, np.uint8)
-    arr = arr.reshape(-1, total_line_size)[:, 0:useful_line_size].reshape(-1)
-    return arr.view(np.dtype(dtype))
+    dtype_obj = np.dtype(dtype)
+    total_line_size = abs(plane.frame.ptr.linesize[plane.index])
+    itemsize = dtype_obj.itemsize
+    channels = bytes_per_pixel // itemsize
+
+    if channels == 1:
+        shape = (plane.height, plane.width)
+        strides = (total_line_size, itemsize)
+    else:
+        shape = (plane.height, plane.width, channels)
+        strides = (total_line_size, bytes_per_pixel, itemsize)
+
+    return np.ndarray(shape, dtype=dtype_obj, buffer=plane, strides=strides)
 
 
 @cython.cfunc
@@ -527,6 +539,8 @@ class VideoFrame(Frame):
         plane_count: cython.int = 0
         while plane_count < max_plane_count and self.ptr.extended_data[plane_count]:
             plane_count += 1
+        if plane_count == 1:
+            return (VideoPlane(self, 0),)
         return tuple([VideoPlane(self, i) for i in range(plane_count)])
 
     @property
@@ -744,49 +758,50 @@ class VideoFrame(Frame):
 
         # check size
         format_name = frame.format.name
-        height, width = frame.ptr.height, frame.ptr.width
         planes: tuple[VideoPlane, ...] = frame.planes
-        if format_name in {"yuv420p", "yuvj420p", "yuyv422", "yuv422p10le", "yuv422p"}:
-            assert width % 2 == 0, "the width has to be even for this pixel format"
-            assert height % 2 == 0, "the height has to be even for this pixel format"
-
         # cases planes are simply concatenated in shape (height, width, channels)
         if format_name in _np_pix_fmt_dtypes:
+            if format_name == "yuyv422":
+                assert frame.ptr.width % 2 == 0, "width has to be even for yuyv422"
+                assert frame.ptr.height % 2 == 0, "height has to be even for yuyv422"
             itemsize: cython.uint
             itemsize, dtype = _np_pix_fmt_dtypes[format_name]
-            if len(planes) == 1:  # shortcut, avoid memory copy
-                array = useful_array(planes[0], itemsize, dtype).reshape(
-                    height, width, -1
-                )
+            num_planes: cython.size_t = len(planes)
+            if num_planes == 1:  # shortcut, avoid memory copy
+                array = useful_array(planes[0], itemsize, dtype)
             else:  # general case
-                array = np.empty((height, width, len(planes)), dtype=dtype)
-                for i, plane in enumerate(planes):
-                    array[:, :, i] = useful_array(plane, itemsize, dtype).reshape(
-                        height, width
-                    )
+                array = np.empty(
+                    (frame.ptr.height, frame.ptr.width, num_planes), dtype=dtype
+                )
+                if format_name.startswith("gbr"):
+                    plane_indices = (2, 0, 1, *range(3, num_planes))
+                else:
+                    plane_indices = range(num_planes)
+                for i, p_idx in enumerate(plane_indices):
+                    array[:, :, i] = useful_array(planes[p_idx], itemsize, dtype)
             array = byteswap_array(array, format_name.endswith("be"))
-            if array.shape[2] == 1:  # skip last channel for gray images
-                return array.squeeze(2)
-            if format_name.startswith("gbr"):  # gbr -> rgb
-                array[:, :, :3] = array[:, :, [2, 0, 1]]
             if not channel_last and format_name in {"yuv444p", "yuvj444p"}:
                 array = np.moveaxis(array, 2, 0)
             return array
 
         # special cases
         if format_name in {"yuv420p", "yuvj420p", "yuv422p"}:
+            assert frame.ptr.width % 2 == 0, "width has to be even for this format"
+            assert frame.ptr.height % 2 == 0, "height has to be even for this format"
             return np.hstack(
                 [
-                    useful_array(planes[0]),
-                    useful_array(planes[1]),
-                    useful_array(planes[2]),
+                    useful_array(planes[0]).reshape(-1),
+                    useful_array(planes[1]).reshape(-1),
+                    useful_array(planes[2]).reshape(-1),
                 ]
-            ).reshape(-1, width)
+            ).reshape(-1, frame.ptr.width)
         if format_name == "yuv422p10le":
+            assert frame.ptr.width % 2 == 0, "width has to be even for this format"
+            assert frame.ptr.height % 2 == 0, "height has to be even for this format"
             # Read planes as uint16 at their original width
-            y = useful_array(planes[0], 2, "uint16").reshape(height, width)
-            u = useful_array(planes[1], 2, "uint16").reshape(height, width // 2)
-            v = useful_array(planes[2], 2, "uint16").reshape(height, width // 2)
+            y = useful_array(planes[0], 2, "uint16")
+            u = useful_array(planes[1], 2, "uint16")
+            v = useful_array(planes[2], 2, "uint16")
 
             # Double the width of U and V by repeating each value
             u_full = np.repeat(u, 2, axis=1)
@@ -795,7 +810,7 @@ class VideoFrame(Frame):
                 return np.stack([y, u_full, v_full], axis=2)
             return np.stack([y, u_full, v_full], axis=0)
         if format_name == "pal8":
-            image = useful_array(planes[0]).reshape(height, width)
+            image = useful_array(planes[0])
             palette = (
                 np.frombuffer(planes[1], "i4")
                 .astype(">i4")
@@ -805,8 +820,11 @@ class VideoFrame(Frame):
             return image, palette
         if format_name == "nv12":
             return np.hstack(
-                [useful_array(planes[0]), useful_array(planes[1], 2)]
-            ).reshape(-1, width)
+                [
+                    useful_array(planes[0]).reshape(-1),
+                    useful_array(planes[1], 2).reshape(-1),
+                ]
+            ).reshape(-1, frame.ptr.width)
 
         raise ValueError(
             f"Conversion to numpy array with format `{format_name}` is not yet supported"
