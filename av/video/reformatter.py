@@ -18,6 +18,7 @@ class Interpolation(IntEnum):
     GAUSS: "Gaussian" = SWS_GAUSS
     SINC: "Sinc" = SWS_SINC
     LANCZOS: "Bicubic spline" = SWS_LANCZOS
+    SPLINE: "Cubic Keys spline" = SWS_SPLINE
 
 
 class Colorspace(IntEnum):
