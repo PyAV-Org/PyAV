@@ -214,6 +214,8 @@ class VideoReformatter:
             dst_color_primaries, ColorPrimaries, 0
         )
         c_threads: cython.int = threads if threads is not None else 0
+        c_width: cython.int = width if width is not None else frame.ptr.width
+        c_height: cython.int = height if height is not None else frame.ptr.height
 
         # Track whether user explicitly specified destination metadata
         set_dst_color_trc: cython.bint = dst_color_trc is not None
@@ -221,8 +223,8 @@ class VideoReformatter:
 
         return self._reformat(
             frame,
-            width if width is not None else frame.ptr.width,
-            height if height is not None else frame.ptr.height,
+            c_width,
+            c_height,
             c_dst_format,
             c_src_colorspace,
             c_dst_colorspace,
