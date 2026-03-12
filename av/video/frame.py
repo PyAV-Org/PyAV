@@ -750,7 +750,7 @@ class VideoFrame(Frame):
                 frames_ctx.sw_format, self.ptr.width, self.ptr.height
             ).name
 
-        frame: VideoFrame = self.reformat(**kwargs)
+        frame: VideoFrame = self.reformat(**kwargs) if len(kwargs) > 0 else self
         if frame.ptr.hw_frames_ctx:
             raise ValueError("Cannot convert a hardware frame to numpy directly.")
 
