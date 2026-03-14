@@ -10,15 +10,15 @@ from cython.cimports.av.video.frame import alloc_video_frame
 class Interpolation(IntEnum):
     FAST_BILINEAR: "Fast bilinear" = SWS_FAST_BILINEAR
     BILINEAR: "Bilinear" = SWS_BILINEAR
-    BICUBIC: "Bicubic" = SWS_BICUBIC
+    BICUBIC: "2-tap cubic B-spline" = SWS_BICUBIC
     X: "Experimental" = SWS_X
     POINT: "Nearest neighbor / point" = SWS_POINT
     AREA: "Area averaging" = SWS_AREA
-    BICUBLIN: "Luma bicubic / chroma bilinear" = SWS_BICUBLIN
-    GAUSS: "Gaussian" = SWS_GAUSS
-    SINC: "Sinc" = SWS_SINC
+    BICUBLIN: "Bicubic luma / Bilinear chroma" = SWS_BICUBLIN
+    GAUSS: "Gaussian approximation" = SWS_GAUSS
+    SINC: "Unwindowed Sinc" = SWS_SINC
     LANCZOS: "3-tap sinc/sinc" = SWS_LANCZOS
-    SPLINE: "Cubic Keys spline" = SWS_SPLINE
+    SPLINE: "Unwindowed natural cubic spline" = SWS_SPLINE
 
 
 class Colorspace(IntEnum):
