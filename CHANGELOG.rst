@@ -25,6 +25,13 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
+v17.0.1 (next)
+--------------
+
+Fixes:
+
+- A cdivision decorator for faster division.
+
 v17.0.0
 -------
 
