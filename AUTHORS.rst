@@ -19,12 +19,12 @@ All contributors (by number of commits):
 * Dave Johansen <davejohansen@gmail.com>
 * JoeUgly <41972063+JoeUgly@users.noreply.github.com>
 * Justin Wong <46082645+uvjustin@users.noreply.github.com>
+* Lukas Geiger <lukas.geiger94@gmail.com>
 * Mark Harfouche <mark.harfouche@gmail.com>
+* Santtu Keskinen <santtu.keskinen@gmail.com>
 
-- Santtu Keskinen <santtu.keskinen@gmail.com>
 - Alba Mendez <me@alba.sh>
 - Curtis Doty <Curtis@GreenKey.net>; `@dotysan <https://github.com/dotysan>`_
-- Lukas Geiger <lukas.geiger94@gmail.com>
 - Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
 - z-khan <zohaibkh_27@yahoo.com>
 - Marc Mueller <30130371+cdce8p@users.noreply.github.com>
@@ -72,6 +72,7 @@ All contributors (by number of commits):
 * 吴小白 <296015668@qq.com>
 * davidplowman <38045873+davidplowman@users.noreply.github.com>
 * Hanz <40712686+HanzCEO@users.noreply.github.com>
+* Clay Castronovo <42858023+clayy24@users.noreply.github.com>
 * Kesh Ikuma <79113787+tikuma-lsuhsc@users.noreply.github.com>
 * Artturin <Artturin@artturin.com>
 * Ian Lee <IanLee1521@gmail.com>
