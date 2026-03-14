@@ -117,6 +117,7 @@ class Frame:
         self.ptr.duration = value
 
     @property
+    @cython.cdivision(True)
     def time(self):
         """
         The presentation time in seconds for this frame.
