@@ -15,11 +15,11 @@ All contributors (by number of commits):
 * Billy Shambrook <billy.shambrook@gmail.com>; `@billyshambrook <https://github.com/billyshambrook>`_
 * Casper van der Wel <caspervdw@gmail.com>
 * Philip de Nier <philipn@rd.bbc.co.uk>
+* Lukas Geiger <lukas.geiger94@gmail.com>
 * Tadas Dailyda <tadas@dailyda.com>
 * Dave Johansen <davejohansen@gmail.com>
 * JoeUgly <41972063+JoeUgly@users.noreply.github.com>
 * Justin Wong <46082645+uvjustin@users.noreply.github.com>
-* Lukas Geiger <lukas.geiger94@gmail.com>
 * Mark Harfouche <mark.harfouche@gmail.com>
 * Santtu Keskinen <santtu.keskinen@gmail.com>
 
