@@ -54,3 +54,10 @@ homepage = "https://pyav.basswood-io.com"
 profile = "black"
 known_first_party = ["av"]
 skip = ["av/__init__.py"]
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = '.git,.gitignore,.gitattributes,*.css'
+check-hidden = true
+# ignore-regex = ''
+# ignore-words-list = ''
