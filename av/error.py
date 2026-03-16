@@ -242,7 +242,7 @@ ErrorType = EnumType(
 
 
 for enum in ErrorType:
-    # Mimick the errno module.
+    # Mimic the errno module.
     globals()[enum.name] = enum
     if enum.value == c_PYAV_STASHED_ERROR:
         enum.strerror = PYAV_STASHED_ERROR_message
