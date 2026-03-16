@@ -57,7 +57,9 @@ skip = ["av/__init__.py"]
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git,.gitignore,.gitattributes,*.css'
+skip = '.git,.gitignore,.gitattributes,*.css,.npm,.cache,venvs,.venv,.tox'
 check-hidden = true
 # ignore-regex = ''
-# ignore-words-list = ''
+# wel - person's name "Casper van der Wel", domin/ehr/bu - parts of contributor emails
+# setts - FFmpeg bitstream filter name
+ignore-words-list = 'wel,domin,ehr,bu,setts'
