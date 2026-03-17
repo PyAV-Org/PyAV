@@ -195,7 +195,7 @@ class VideoReformatter:
             or ``None`` to preserve the source frame's value.
         :type  dst_color_primaries: :class:`ColorPrimaries` or ``int``
         :param int threads: How many threads to use for scaling, or ``0`` for automatic
-            selection based on the number of available CPUs. Defaults to ``0`` (auto).
+            selection based on the number of available CPUs. Defaults to ``1`` (single threaded).
 
         """
         c_dst_format = _resolve_format(format, frame.format.pix_fmt)
@@ -214,7 +214,7 @@ class VideoReformatter:
         c_dst_color_primaries = _resolve_enum_value(
             dst_color_primaries, ColorPrimaries, 0
         )
-        c_threads: cython.int = threads if threads is not None else 0
+        c_threads: cython.int = threads if threads is not None else 1
         c_width: cython.int = width if width is not None else frame.ptr.width
         c_height: cython.int = height if height is not None else frame.ptr.height
 
