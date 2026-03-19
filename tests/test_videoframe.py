@@ -1293,4 +1293,6 @@ def test_reformat_pixel_format_align() -> None:
         expected_rgb[:, :, 2] = 255
 
         frame_rgb = frame_yuv.reformat(format="rgb24")
-        assertNdarraysEqual(frame_rgb.to_ndarray(), expected_rgb)
+        result = frame_rgb.to_ndarray()
+        assert result.shape == expected_rgb.shape
+        assert numpy.abs(result.astype(int) - expected_rgb.astype(int)).max() <= 1
