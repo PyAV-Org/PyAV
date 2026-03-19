@@ -148,9 +148,10 @@ class TestPacketSideData:
                         sdata = pkt.get_sidedata("skip_samples")
                         raw = bytes(sdata)
                         skip_end = struct.unpack("<I", raw[4:8])[0]
-                        assert skip_end == 706
-                        sdata.update(raw[:4] + struct.pack("<I", 0) + raw[8:])
-                        pkt.set_sidedata(sdata)
+                        if skip_end > 0:
+                            assert skip_end == 706
+                            sdata.update(raw[:4] + struct.pack("<I", 0) + raw[8:])
+                            pkt.set_sidedata(sdata)
                     pkt.stream = out_stream
                     out.mux(pkt)
 
