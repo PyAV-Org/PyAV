@@ -55,9 +55,6 @@ class VideoFormat:
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width
         self.height = height
-        self.components = tuple(
-            VideoFormatComponent(self, i) for i in range(self.ptr.nb_components)
-        )
 
     def __repr__(self):
         if self.width or self.height:
@@ -72,6 +69,12 @@ class VideoFormat:
     def name(self):
         """Canonical name of the pixel format."""
         return cython.cast(str, self.ptr.name)
+
+    @property
+    def components(self):
+        return tuple(
+            VideoFormatComponent(self, i) for i in range(self.ptr.nb_components)
+        )
 
     @property
     def bits_per_pixel(self):
