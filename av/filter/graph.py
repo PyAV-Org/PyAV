@@ -1,4 +1,5 @@
 import warnings
+from enum import Flag
 from fractions import Fraction
 
 import cython
@@ -10,6 +11,19 @@ from cython.cimports.av.filter.context import FilterContext, wrap_filter_context
 from cython.cimports.av.filter.filter import Filter, wrap_filter
 from cython.cimports.av.video.format import VideoFormat
 from cython.cimports.av.video.frame import VideoFrame
+
+
+class ThreadType(Flag):
+    """Threading types for filter graphs.
+
+    Unlike codec threading, filter graphs only support slice-based threading
+    via :ffmpeg:`AVFILTER_THREAD_SLICE`.
+    """
+
+    NONE = 0
+    SLICE: "Process multiple parts of the frame concurrently" = (
+        lib.AVFILTER_THREAD_SLICE
+    )
 
 
 @cython.cclass
@@ -26,6 +40,45 @@ class Graph:
         if self.ptr:
             # This frees the graph, filter contexts, links, etc..
             lib.avfilter_graph_free(cython.address(self.ptr))
+
+    @property
+    def nb_threads(self):
+        """Maximum number of threads used by filters in this graph.
+
+        Set to 0 for automatic thread count. Must be set before adding any
+        filters to the graph.
+
+        Wraps :ffmpeg:`AVFilterGraph.nb_threads`.
+        """
+        return self.ptr.nb_threads
+
+    @nb_threads.setter
+    def nb_threads(self, value: cython.int):
+        if self.ptr.nb_filters:
+            raise RuntimeError(
+                "Cannot change nb_threads after filters have been added."
+            )
+        self.ptr.nb_threads = value
+
+    @property
+    def thread_type(self):
+        """One of :class:`.ThreadType`.
+
+        May be set at any point. The setting will apply to all filters
+        initialized after that.
+
+        Wraps :ffmpeg:`AVFilterGraph.thread_type`.
+        """
+        return ThreadType(self.ptr.thread_type)
+
+    @thread_type.setter
+    def thread_type(self, value):
+        if type(value) is int:
+            self.ptr.thread_type = value
+        elif type(value) is str:
+            self.ptr.thread_type = ThreadType[value].value
+        else:
+            self.ptr.thread_type = value.value
 
     @cython.cfunc
     def _get_unique_name(self, name: str) -> str:
