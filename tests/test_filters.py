@@ -6,7 +6,7 @@ import numpy as np
 import av
 from av import AudioFrame, VideoFrame
 from av.audio.frame import format_dtypes
-from av.filter import Filter, Graph
+from av.filter import Filter, Graph, ThreadType
 
 from .common import TestCase, has_pillow
 
@@ -193,11 +193,10 @@ class TestFilters(TestCase):
 
         assert np.allclose(input_data * 0.5, output_data)
 
-    def test_video_buffer(self):
+    def _test_video_buffer(self, graph):
         input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
         input_video_stream = input_container.streams.video[0]
 
-        graph = av.filter.Graph()
         buffer = graph.add_buffer(template=input_video_stream)
         bwdif = graph.add("bwdif", "send_field:tff:all")
         buffersink = graph.add("buffersink")
@@ -223,6 +222,15 @@ class TestFilters(TestCase):
                 assert filtered_frames[1].pts == (frame.pts - 1) * 2 + 1
                 assert filtered_frames[1].time_base == Fraction(1, 60)
 
+    def test_video_buffer(self):
+        self._test_video_buffer(av.filter.Graph())
+
+    def test_video_buffer_threading(self):
+        graph = av.filter.Graph()
+        graph.nb_threads = 4
+        graph.thread_type = ThreadType.SLICE
+        self._test_video_buffer(graph)
+
     def test_EOF(self) -> None:
         input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
         video_stream = input_container.streams.video[0]
@@ -246,3 +254,30 @@ class TestFilters(TestCase):
         assert isinstance(palette_frame, av.VideoFrame)
         assert palette_frame.width == 16
         assert palette_frame.height == 16
+
+    def test_graph_nb_threads(self) -> None:
+        graph = Graph()
+        assert graph.nb_threads == 0
+
+        graph.nb_threads = 4
+        assert graph.nb_threads == 4
+
+        graph.add("testsrc")
+
+        with self.assertRaises(RuntimeError):
+            graph.nb_threads = 2
+
+    def test_graph_thread_type(self) -> None:
+        graph = Graph()
+        assert graph.thread_type == ThreadType.SLICE
+
+        graph.thread_type = ThreadType.NONE
+        assert graph.thread_type == ThreadType.NONE
+
+        # thread_type can be set at any point, even after configuring
+        src = graph.add("testsrc")
+        src.link_to(graph.add("buffersink"))
+        graph.configure()
+
+        graph.thread_type = ThreadType.SLICE
+        assert graph.thread_type == ThreadType.SLICE

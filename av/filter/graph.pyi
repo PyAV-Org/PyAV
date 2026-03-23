@@ -1,5 +1,6 @@
+from enum import Flag
 from fractions import Fraction
-from typing import Any
+from typing import Any, ClassVar, cast
 
 from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
@@ -12,8 +13,16 @@ from av.video.stream import VideoStream
 from .context import FilterContext
 from .filter import Filter
 
+class ThreadType(Flag):
+    NONE = cast(ClassVar[ThreadType], ...)
+    SLICE = cast(ClassVar[ThreadType], ...)
+    def __get__(self, i: object | None, owner: type | None = None) -> ThreadType: ...
+    def __set__(self, instance: object, value: int | str | ThreadType) -> None: ...
+
 class Graph:
     configured: bool
+    nb_threads: int
+    thread_type: ThreadType
 
     def __init__(self) -> None: ...
     def configure(self, auto_buffer: bool = True, force: bool = False) -> None: ...
