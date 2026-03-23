@@ -13,10 +13,10 @@ cdef class Graph:
 
     cdef dict _name_counts
     cdef str _get_unique_name(self, str name)
+    cdef list[FilterContext] _get_context_by_type(self, str type)
 
     cdef _register_context(self, FilterContext)
     cdef _auto_register(self)
     cdef int _nb_filters_seen
-    cdef dict _context_by_ptr
-    cdef dict _context_by_name
-    cdef dict _context_by_type
+    cdef dict[long, FilterContext] _context_by_ptr
+    cdef dict[str, list[FilterContext]] _context_by_type
