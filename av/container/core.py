@@ -357,6 +357,9 @@ class Container:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+    def close(self):
+        raise NotImplementedError
+
     def __repr__(self):
         return f"<av.{self.__class__.__name__} {self.file or self.name!r}>"
 
