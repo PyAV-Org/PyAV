@@ -1,3 +1,5 @@
+from typing import Iterator
+
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.stream import Stream
@@ -95,6 +97,27 @@ class StreamContainer:
     def attachments(self):
         return tuple(s for s in self._streams if s.type == "attachment")
 
+    def _get_streams(self, x) -> Iterator[Stream]:
+        if x is None:
+            pass
+        elif isinstance(x, Stream):
+            yield x
+        elif isinstance(x, int):
+            yield self._streams[x]
+        elif isinstance(x, (tuple, list)):
+            for item in x:
+                yield from self._get_streams(item)
+        elif isinstance(x, dict):
+            for type_, indices in x.items():
+                # For compatibility with the pseudo signature
+                streams = self._streams if type_ == "streams" else getattr(self, type_)
+                if not isinstance(indices, (tuple, list)):
+                    indices = [indices]
+                for i in indices:
+                    yield streams[i]
+        else:
+            raise TypeError("Argument must be Stream or int.", type(x))
+
     def get(self, *args, **kwargs):
         """get(streams=None, video=None, audio=None, subtitles=None, data=None)
 
@@ -122,35 +145,9 @@ class StreamContainer:
         If nothing is selected, then all streams are returned.
 
         """
-        selection: list = []
-
-        def process(x):
-            if x is None:
-                pass
-            elif isinstance(x, Stream):
-                selection.append(x)
-            elif isinstance(x, int):
-                selection.append(self._streams[x])
-            elif isinstance(x, (tuple, list)):
-                for item in x:
-                    process(item)
-            elif isinstance(x, dict):
-                for type_, indices in x.items():
-                    # For compatibility with the pseudo signature
-                    streams = (
-                        self._streams if type_ == "streams" else getattr(self, type_)
-                    )
-                    if not isinstance(indices, (tuple, list)):
-                        indices = [indices]
-                    for i in indices:
-                        selection.append(streams[i])
-            else:
-                raise TypeError("Argument must be Stream or int.", type(x))
-
-        for arg in args:
-            process(arg)
+        selection = list(self._get_streams(args))
         if kwargs:
-            process(kwargs)
+            selection.extend(self._get_streams(kwargs))
 
         return selection or self._streams[:]
 
