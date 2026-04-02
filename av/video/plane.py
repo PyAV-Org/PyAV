@@ -1,7 +1,11 @@
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.error import err_check
-from cython.cimports.av.video.format import get_pix_fmt, get_video_format
+from cython.cimports.av.video.format import (
+    VideoFormatComponent,
+    get_pix_fmt,
+    get_video_format,
+)
 from cython.cimports.av.video.frame import VideoFrame
 from cython.cimports.cpython import PyBUF_WRITABLE, PyBuffer_FillInfo
 from cython.cimports.cpython.buffer import Py_buffer
@@ -34,7 +38,7 @@ class VideoPlane(Plane):
 
         for i in range(fmt.ptr.nb_components):
             if fmt.ptr.comp[i].plane == index:
-                component = fmt.components[i]
+                component = VideoFormatComponent(fmt, i)
                 self.width = component.width
                 self.height = component.height
                 break
