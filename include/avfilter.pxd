@@ -11,6 +11,9 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
     cdef unsigned avfilter_filter_pad_count(const AVFilter *filter, int is_output)
 
+    cdef enum:
+        AVFILTER_THREAD_SLICE
+
     cdef struct AVFilter:
         const char *name
         const char *description
@@ -58,6 +61,8 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef struct AVFilterGraph:
         int nb_filters
         AVFilterContext **filters
+        int thread_type
+        int nb_threads
 
     cdef struct AVFilterInOut:
         char *name
