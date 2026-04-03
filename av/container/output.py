@@ -22,7 +22,7 @@ def close_output(self: OutputContainer):
         try:
             self.err_check(lib.av_write_trailer(self.ptr))
         finally:
-            if self.file is None and not (self.ptr.oformat.flags & lib.AVFMT_NOFILE):
+            if self._avio_opened:
                 lib.avio_closep(cython.address(self.ptr.pb))
             self._done = True
 
@@ -458,6 +458,7 @@ class OutputContainer(Container):
             err_check(
                 lib.avio_open(cython.address(self.ptr.pb), name, lib.AVIO_FLAG_WRITE)
             )
+            self._avio_opened = True
 
         # Copy the metadata dict.
         dict_to_avdict(
