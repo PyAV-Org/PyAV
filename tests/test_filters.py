@@ -227,7 +227,7 @@ class TestFilters(TestCase):
 
     def test_video_buffer_threading(self):
         graph = av.filter.Graph()
-        graph.nb_threads = 4
+        graph.threads = 4
         self._test_video_buffer(graph)
 
     def test_EOF(self) -> None:
@@ -254,14 +254,14 @@ class TestFilters(TestCase):
         assert palette_frame.width == 16
         assert palette_frame.height == 16
 
-    def test_graph_nb_threads(self) -> None:
+    def test_graph_threads(self) -> None:
         graph = Graph()
-        assert graph.nb_threads == 0
+        assert graph.threads == 0
 
-        graph.nb_threads = 4
-        assert graph.nb_threads == 4
+        graph.threads = 4
+        assert graph.threads == 4
 
         graph.add("testsrc")
 
         with self.assertRaises(RuntimeError):
-            graph.nb_threads = 2
+            graph.threads = 2

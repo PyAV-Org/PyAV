@@ -14,7 +14,7 @@ from .filter import Filter
 
 class Graph:
     configured: bool
-    nb_threads: int
+    threads: int
 
     def __init__(self) -> None: ...
     def configure(self, auto_buffer: bool = True, force: bool = False) -> None: ...

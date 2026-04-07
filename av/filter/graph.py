@@ -28,7 +28,7 @@ class Graph:
             lib.avfilter_graph_free(cython.address(self.ptr))
 
     @property
-    def nb_threads(self):
+    def threads(self):
         """Maximum number of threads used by filters in this graph.
 
         Set to 0 for automatic thread count. Must be set before adding any
@@ -38,12 +38,10 @@ class Graph:
         """
         return self.ptr.nb_threads
 
-    @nb_threads.setter
-    def nb_threads(self, value: cython.int):
+    @threads.setter
+    def threads(self, value: cython.int):
         if self.ptr.nb_filters:
-            raise RuntimeError(
-                "Cannot change nb_threads after filters have been added."
-            )
+            raise RuntimeError("Cannot change threads after filters have been added.")
         self.ptr.nb_threads = value
 
     @cython.cfunc
