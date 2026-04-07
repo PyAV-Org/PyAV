@@ -35,8 +35,13 @@ class OutputContainer(Container):
         with cython.nogil:
             self.packet_ptr = lib.av_packet_alloc()
 
+    def __del__(self):
+        try:
+            close_output(self)
+        except Exception:
+            pass
+
     def __dealloc__(self):
-        close_output(self)
         with cython.nogil:
             lib.av_packet_free(cython.address(self.packet_ptr))
 
