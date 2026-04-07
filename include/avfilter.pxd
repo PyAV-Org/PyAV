@@ -58,6 +58,7 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef struct AVFilterGraph:
         int nb_filters
         AVFilterContext **filters
+        int nb_threads
 
     cdef struct AVFilterInOut:
         char *name

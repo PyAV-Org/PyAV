@@ -27,6 +27,23 @@ class Graph:
             # This frees the graph, filter contexts, links, etc..
             lib.avfilter_graph_free(cython.address(self.ptr))
 
+    @property
+    def threads(self):
+        """Maximum number of threads used by filters in this graph.
+
+        Set to 0 for automatic thread count. Must be set before adding any
+        filters to the graph.
+
+        Wraps :ffmpeg:`AVFilterGraph.nb_threads`.
+        """
+        return self.ptr.nb_threads
+
+    @threads.setter
+    def threads(self, value: cython.int):
+        if self.ptr.nb_filters:
+            raise RuntimeError("Cannot change threads after filters have been added.")
+        self.ptr.nb_threads = value
+
     @cython.cfunc
     def _get_unique_name(self, name: str) -> str:
         count = self._name_counts.get(name, 0)
