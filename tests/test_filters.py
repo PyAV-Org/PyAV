@@ -6,7 +6,7 @@ import numpy as np
 import av
 from av import AudioFrame, VideoFrame
 from av.audio.frame import format_dtypes
-from av.filter import Filter, Graph, ThreadType
+from av.filter import Filter, Graph
 
 from .common import TestCase, has_pillow
 
@@ -228,7 +228,6 @@ class TestFilters(TestCase):
     def test_video_buffer_threading(self):
         graph = av.filter.Graph()
         graph.nb_threads = 4
-        graph.thread_type = ThreadType.SLICE
         self._test_video_buffer(graph)
 
     def test_EOF(self) -> None:
@@ -266,18 +265,3 @@ class TestFilters(TestCase):
 
         with self.assertRaises(RuntimeError):
             graph.nb_threads = 2
-
-    def test_graph_thread_type(self) -> None:
-        graph = Graph()
-        assert graph.thread_type == ThreadType.SLICE
-
-        graph.thread_type = ThreadType.NONE
-        assert graph.thread_type == ThreadType.NONE
-
-        # thread_type can be set at any point, even after configuring
-        src = graph.add("testsrc")
-        src.link_to(graph.add("buffersink"))
-        graph.configure()
-
-        graph.thread_type = ThreadType.SLICE
-        assert graph.thread_type == ThreadType.SLICE
