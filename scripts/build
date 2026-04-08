@@ -17,9 +17,5 @@ echo PKG_CONFIG_PATH: $PKG_CONFIG_PATH
 echo LD_LIBRARY_PATH: $LD_LIBRARY_PATH
 echo
 
-which ffmpeg || exit 2
-ffmpeg -version || exit 3
-echo
-
 $PYAV_PIP install -U --pre cython setuptools 2> /dev/null
 "$PYAV_PYTHON" setup.py config build_ext --inplace || exit 1
