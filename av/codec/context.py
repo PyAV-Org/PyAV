@@ -206,7 +206,6 @@ class CodecContext:
                 raise MemoryError("Cannot allocate extradata")
             memcpy(self.ptr.extradata, source.ptr, source.length)
             self.ptr.extradata_size = source.length
-        self.extradata_set = True
 
     @property
     def extradata_size(self):
@@ -253,9 +252,8 @@ class CodecContext:
         self.options = dict(options)
 
     def __dealloc__(self):
-        if self.ptr and self.extradata_set:
-            lib.av_freep(cython.address(self.ptr.extradata))
         if self.ptr:
+            lib.av_freep(cython.address(self.ptr.extradata))
             lib.avcodec_free_context(cython.address(self.ptr))
         if self.parser:
             lib.av_parser_close(self.parser)

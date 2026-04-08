@@ -1,5 +1,5 @@
 cimport libav as lib
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint8_t
 
 from av.buffer cimport ByteSource
 from av.codec.codec cimport Codec
@@ -10,13 +10,6 @@ from av.packet cimport Packet
 
 cdef class CodecContext:
     cdef lib.AVCodecContext *ptr
-
-    # Whether AVCodecContext.extradata should be de-allocated upon destruction.
-    cdef bint extradata_set
-
-    # True when created via add_stream_from_template(); start_encoding() skips
-    # avcodec_open2() and lets encode()/decode() open the codec lazily if needed.
-    cdef readonly bint _template_initialized
 
     # Used as a signal that this is within a stream, and also for us to access that
     # stream. This is set "manually" by the stream after constructing this object.
@@ -39,6 +32,10 @@ cdef class CodecContext:
 
     # Used by hardware-accelerated decode.
     cdef HWAccel hwaccel_ctx
+
+    cdef uint8_t _ctxflags  # ctxEnum: template_initialized
+    # True when created via add_stream_from_template(); start_encoding() skips
+    # avcodec_open2() and lets encode()/decode() open the codec lazily if needed.
 
     # Used by both transcode APIs to setup user-land objects.
     # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing packets
