@@ -16,6 +16,11 @@ from cython.cimports.av.utils import dict_to_avdict, to_avrational
 def close_output(self: OutputContainer):
     self.streams = StreamContainer()
     if self._myflag & 12 == 4:  # enum.started and not enum.done
+        # If the underlying Python IO file was already closed (e.g. during GC
+        # finalization where cycle ordering is undefined), skip the trailer.
+        if self.file is not None and getattr(self.file.file, "closed", False):
+            self._myflag |= 8  # enum.done = True
+            return
         # We must only ever call av_write_trailer *once*, otherwise we get a
         # segmentation fault. Therefore no matter whether it succeeds or not
         # we must absolutely set enum.done.
@@ -36,10 +41,7 @@ class OutputContainer(Container):
             self.packet_ptr = lib.av_packet_alloc()
 
     def __del__(self):
-        try:
-            close_output(self)
-        except Exception:
-            pass
+        close_output(self)
 
     def __dealloc__(self):
         with cython.nogil:
