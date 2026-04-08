@@ -19,8 +19,6 @@ cdef class VideoCodecContext(CodecContext):
     cdef AVCodecPrivateData _private_data
     cdef VideoFormat _format
     cdef _build_format(self)
-    cdef int last_w
-    cdef int last_h
     cdef readonly VideoReformatter reformatter
     cdef readonly int encoded_frame_count
     cdef VideoFrame next_frame

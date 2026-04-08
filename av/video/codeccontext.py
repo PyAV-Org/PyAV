@@ -39,10 +39,6 @@ def _get_hw_format(
 
 @cython.cclass
 class VideoCodecContext(CodecContext):
-    def __cinit__(self, *args, **kwargs):
-        self.last_w = 0
-        self.last_h = 0
-
     @cython.cfunc
     def _init(
         self,
