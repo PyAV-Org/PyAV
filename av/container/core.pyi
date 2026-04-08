@@ -75,13 +75,11 @@ class Chapter(TypedDict):
     metadata: dict[str, str]
 
 class Container:
-    writeable: bool
     name: str
     metadata_encoding: str
     metadata_errors: str
     file: Any
     buffer_size: int
-    input_was_opened: bool
     io_open: Any
     open_files: Any
     format: ContainerFormat
@@ -100,6 +98,8 @@ class Container:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None: ...
+    @property
+    def input_was_opened(self) -> bool: ...
     def close(self) -> None: ...
     def chapters(self) -> list[Chapter]: ...
     def set_chapters(self, chapters: list[Chapter]) -> None: ...

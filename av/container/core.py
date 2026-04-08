@@ -246,8 +246,8 @@ class Container:
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("cannot construct base Container")
 
-        self.writeable = isinstance(self, OutputContainer)
-        if not self.writeable and not isinstance(self, InputContainer):
+        writeable: cython.bint = isinstance(self, OutputContainer)
+        if not writeable and not isinstance(self, InputContainer):
             raise RuntimeError("Container cannot be directly extended.")
 
         if isinstance(file_, str):
@@ -276,13 +276,13 @@ class Container:
                 format_name, acodec = format_name.split(":")
             self.format = ContainerFormat(format_name)
 
-        self.input_was_opened = False
         res: cython.int
         name_obj: bytes = os.fsencode(self.name)
         name: cython.p_char = name_obj
         ofmt: cython.pointer[cython.const[lib.AVOutputFormat]]
 
-        if self.writeable:
+        if writeable:
+            self._myflag |= 1  # enum.writeable = True
             ofmt = (
                 self.format.optr
                 if self.format
@@ -320,7 +320,7 @@ class Container:
         # Setup Python IO.
         self.open_files = {}
         if not isinstance(file_, basestring):
-            self.file = PyIOFile(file_, buffer_size, self.writeable)
+            self.file = PyIOFile(file_, buffer_size, writeable)
             self.ptr.pb = self.file.iocontext
 
         if io_open is not None:
@@ -330,7 +330,7 @@ class Container:
 
         ifmt: cython.pointer[cython.const[lib.AVInputFormat]]
         c_options: Dictionary
-        if not self.writeable:
+        if not writeable:
             ifmt = self.format.iptr if self.format else cython.NULL
             c_options = Dictionary(self.options, self.container_options)
 
@@ -342,7 +342,7 @@ class Container:
                 )
             self.set_timeout(None)
             self.err_check(res)
-            self.input_was_opened = True
+            self._myflag |= 2  # enum.input_was_opened = True
 
         if format_name is None:
             self.format = build_container_format(self.ptr.iformat, self.ptr.oformat)
@@ -399,6 +399,10 @@ class Container:
     def flags(self, value: cython.int):
         self._assert_open()
         self.ptr.flags = value
+
+    @property
+    def input_was_opened(self):
+        return self._myflag & 2
 
     def chapters(self):
         self._assert_open()

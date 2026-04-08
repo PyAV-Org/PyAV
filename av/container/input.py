@@ -13,11 +13,11 @@ from cython.cimports.libc.stdlib import free, malloc
 @cython.cfunc
 def close_input(self: InputContainer):
     self.streams = StreamContainer()
-    if self.input_was_opened:
-        with cython.nogil:
+    with cython.nogil:
+        if self._myflag & 2:
             # This causes `self.ptr` to be set to NULL.
             lib.avformat_close_input(cython.address(self.ptr))
-        self.input_was_opened = False
+            self._myflag &= ~2  # enum.input_was_opened = False
 
 
 @cython.cclass
