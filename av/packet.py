@@ -4,8 +4,10 @@ import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.buffer import Buffer, ByteSource, bytesource
 from cython.cimports.av.error import err_check
-from cython.cimports.av.opaque import noop_free, opaque_container
+from cython.cimports.av.opaque import opaque_container
 from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
+from cython.cimports.libc.stdint import uint8_t
 from cython.cimports.libc.string import memcpy
 
 # Check https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/packet.h#L41
@@ -193,6 +195,18 @@ def _packet_sidedata_from_packet(
     return sdata
 
 
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def _python_free(
+    opaque: cython.p_void,
+    data: cython.pointer[uint8_t],
+) -> cython.void:
+    if opaque != cython.NULL:
+        with cython.gil:
+            Py_DECREF(cython.cast(object, opaque))
+
+
 @cython.cclass
 class Packet(Buffer):
     """A packet of encoded data within a :class:`~av.format.Stream`.
@@ -226,15 +240,20 @@ class Packet(Buffer):
             size = source.length
             if size:
                 # Create a buffer that references the source data directly.
-                # The noop_free callback is used because Python manages the memory
-                # via self.source keeping the ByteSource alive.
-                buf = lib.av_buffer_create(source.ptr, size, noop_free, cython.NULL, 0)
+                Py_INCREF(source)
+                buf = lib.av_buffer_create(
+                    source.ptr,
+                    size,
+                    _python_free,
+                    cython.cast(cython.p_void, source),
+                    0,
+                )
                 if buf == cython.NULL:
+                    Py_DECREF(source)
                     raise MemoryError("Could not allocate AVBufferRef")
                 self.ptr.buf = buf
                 self.ptr.data = source.ptr
                 self.ptr.size = size
-                self.source = source
 
     def __repr__(self):
         stream = self._stream.index if self._stream else 0
