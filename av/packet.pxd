@@ -19,7 +19,5 @@ cdef class Packet(Buffer):
     cdef lib.AVPacket* ptr
     cdef Stream _stream
     cdef _rebase_time(self, lib.AVRational)
-    # Hold onto the original reference.
-    cdef ByteSource source
     cdef size_t _buffer_size(self)
     cdef void* _buffer_ptr(self)
