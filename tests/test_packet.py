@@ -1,10 +1,65 @@
+import fractions
+import io
+import json
 import struct
 from typing import get_args
 from unittest import SkipTest
 
+import numpy
+
 import av
 
 from .common import fate_suite, sandboxed
+
+
+class TestDataStreams:
+    def generate_container_with_data_packets(self):
+        file = io.BytesIO()
+        packet_datas_expected = dict[fractions.Fraction, bytes]()
+
+        container = av.open(file, format="mp4", mode="w")
+        stream = container.add_data_stream("bin_data")
+        vstream = container.add_stream("h264")
+
+        for i in range(10):
+            packet_data = json.dumps("This may not work", ensure_ascii=False).encode(
+                "utf-8"
+            )
+            if i % 2 == 0:
+                packet_data = b"This works fine"
+            packet = av.Packet(packet_data)
+            vframe = av.VideoFrame.from_ndarray(
+                numpy.random.randint(0, 255, size=(120, 120, 3), dtype=numpy.uint8)
+            )
+            packet.pts = i
+            packet.dts = i
+            packet.duration = 1
+            packet.stream = stream
+            container.mux(packet)
+            container.mux(vstream.encode(vframe))
+            # NOTE test passes if this is used
+            # packet_datas_expected[packet.pts * packet.time_base] = bytes(packet_data)
+
+        container.close()
+
+        container = av.open(file, format="mp4", mode="r")
+        return container, packet_datas_expected
+
+    def test_data_packet_bytes(self):
+        container, packet_datas_expected = self.generate_container_with_data_packets()
+
+        packet_datas = dict[fractions.Fraction, bytes]()
+        for packet in container.demux(container.streams.data[0]):
+            if packet.pts is None:
+                continue
+            assert bytes(packet) in (
+                b"This works fine",
+                json.dumps("This may not work", ensure_ascii=False).encode("utf-8"),
+            ), bytes(packet)
+            # NOTE test passes if this is used
+            # packet_datas[packet.pts * packet.time_base] = bytes(packet)
+
+        assert packet_datas == packet_datas_expected
 
 
 class TestProperties:
