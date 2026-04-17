@@ -31,6 +31,13 @@ v17.0.1 (next)
 Fixes:
 
 - A cdivision decorator for faster division.
+- Make VideoFormat.components lazy by :gh-user:`WyattBlue`.
+- Break reference cycle ``StreamContainer.get()`` by :gh-user:`lgeiger`.
+- Expose threads in filter graph by :gh-user:`lgeiger`.
+- Fix crash with container closing with GC by :gh-user:`WyattBlue`.
+- Fix regression in 17.0.0 :issue:`2223`.
+- Remove ``_send_packet_and_recv`` to simplify ``decode()`` by :gh-user:`lgeiger`.
+- Reuse a ``AVPacket`` read buffer when demuxing by :gh-user:`lgeiger` and :gh-user:`WyattBlue`.
 
 v17.0.0
 -------
