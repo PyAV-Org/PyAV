@@ -52,7 +52,6 @@ cdef class CodecContext:
     # send/recv buffer may be limited to a single frame. Ergo, we need to flush
     # the buffer as often as possible.
     cdef _recv_packet(self)
-    cdef _send_packet_and_recv(self, Packet packet)
     cdef _recv_frame(self)
 
     cdef _transfer_hwframe(self, Frame frame)
