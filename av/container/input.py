@@ -153,7 +153,7 @@ class InputContainer(Container):
 
         i: cython.uint
         packet: Packet
-        read_packet: Packet
+        read_packet: cython.pointer[lib.AVPacket]
         ret: cython.int
 
         self.set_timeout(self.read_timeout)
@@ -167,30 +167,34 @@ class InputContainer(Container):
                 include_stream[i] = True
 
             # Pre-allocate a AVPacket that is reused as the read buffer.
-            read_packet = Packet()
+            with cython.nogil:
+                read_packet = lib.av_packet_alloc()
+            if read_packet == cython.NULL:
+                raise MemoryError("Could not allocate packet")
+
             while True:
                 # Reset the read buffer
                 with cython.nogil:
-                    lib.av_packet_unref(read_packet.ptr)
+                    lib.av_packet_unref(read_packet)
                 try:
                     self.start_timeout()
                     with cython.nogil:
-                        ret = lib.av_read_frame(self.ptr, read_packet.ptr)
+                        ret = lib.av_read_frame(self.ptr, read_packet)
                     self.err_check(ret)
                 except EOFError:
                     break
 
-                if include_stream[read_packet.ptr.stream_index]:
+                if include_stream[read_packet.stream_index]:
                     # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
                     # may also appear in av_read_frame().
                     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
                     # TODO: find better way to handle this
-                    if read_packet.ptr.stream_index < len(self.streams):
+                    if read_packet.stream_index < len(self.streams):
                         # Move the encoded data out of the read buffer into a
                         # fresh Packet for the caller.
                         packet = Packet()
                         with cython.nogil:
-                            lib.av_packet_move_ref(packet.ptr, read_packet.ptr)
+                            lib.av_packet_move_ref(packet.ptr, read_packet)
                         packet._stream = self.streams[packet.ptr.stream_index]
                         # Keep track of this so that remuxing is easier.
                         packet.ptr.time_base = packet._stream.ptr.time_base
@@ -207,6 +211,8 @@ class InputContainer(Container):
         finally:
             self.set_timeout(None)
             free(include_stream)
+            if read_packet != cython.NULL:
+                lib.av_packet_free(cython.address(read_packet))
 
     def decode(self, *args, **kwargs):
         """decode(streams=None, video=None, audio=None, subtitles=None, data=None)
