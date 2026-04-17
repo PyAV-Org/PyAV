@@ -363,25 +363,6 @@ class CodecContext:
             packet = self._recv_packet()
 
     @cython.cfunc
-    def _send_packet_and_recv(self, packet: Packet | None):
-        frame: Frame
-        res: cython.int
-        with cython.nogil:
-            res = lib.avcodec_send_packet(
-                self.ptr, packet.ptr if packet is not None else cython.NULL
-            )
-        err_check(res, "avcodec_send_packet()")
-
-        out: list = []
-        while True:
-            frame = self._recv_frame()
-            if frame:
-                out.append(frame)
-            else:
-                break
-        return out
-
-    @cython.cfunc
     def _prepare_frames_for_encode(self, frame: Frame | None) -> list:
         return [frame]
 
@@ -487,12 +468,20 @@ class CodecContext:
 
         self.open(strict=False)
 
-        res: list = []
-        for frame in self._send_packet_and_recv(packet):
-            if isinstance(frame, Frame):
-                self._setup_decoded_frame(frame, packet)
-            res.append(frame)
-        return res
+        res: cython.int
+        with cython.nogil:
+            res = lib.avcodec_send_packet(
+                self.ptr, packet.ptr if packet is not None else cython.NULL
+            )
+        err_check(res, "avcodec_send_packet()")
+
+        out: list = []
+        frame = self._recv_frame()
+        while frame:
+            self._setup_decoded_frame(frame, packet)
+            out.append(frame)
+            frame = self._recv_frame()
+        return out
 
     @cython.ccall
     def flush_buffers(self):

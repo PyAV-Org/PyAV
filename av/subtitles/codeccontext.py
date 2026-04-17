@@ -1,6 +1,7 @@
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.buffer import ByteSource, bytesource
+from cython.cimports.av.codec.context import CodecContext
 from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.subtitles.subtitle import SubtitleProxy, SubtitleSet
@@ -103,11 +104,17 @@ class SubtitleCodecContext(CodecContext):
 
         return packet
 
-    @cython.cfunc
-    def _send_packet_and_recv(self, packet: Packet | None):
+    @cython.ccall
+    def decode(self, packet: Packet | None = None):
+        """Decode a subtitle packet, returning a list of :class:`.Subtitle` objects
+        if a subtitle was decoded, or an empty list otherwise."""
+        if not self.codec.ptr:
+            raise ValueError("cannot decode unknown codec")
+
         if packet is None:
             raise RuntimeError("packet cannot be None")
 
+        self.open(strict=False)
         proxy: SubtitleProxy = SubtitleProxy()
         got_frame: cython.int = 0
 
@@ -121,7 +128,7 @@ class SubtitleCodecContext(CodecContext):
         )
 
         if got_frame:
-            return SubtitleSet(proxy)
+            return list(SubtitleSet(proxy))
         return []
 
     @cython.ccall
