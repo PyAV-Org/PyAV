@@ -25,8 +25,14 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
-v17.0.1 (next)
+v17.0.2 (next)
 --------------
+
+Fixes:
+
+
+v17.0.1
+-------
 
 Fixes:
 
