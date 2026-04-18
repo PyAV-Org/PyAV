@@ -31,13 +31,16 @@ v17.0.1 (next)
 Fixes:
 
 - A cdivision decorator for faster division.
+- Adjust tests so they work with 8.1 by :gh-user:`strophy`.
 - Make VideoFormat.components lazy by :gh-user:`WyattBlue`.
 - Break reference cycle ``StreamContainer.get()`` by :gh-user:`lgeiger`.
 - Expose threads in filter graph by :gh-user:`lgeiger`.
 - Fix crash with container closing with GC by :gh-user:`WyattBlue`.
-- Fix regression in 17.0.0 :issue:`2223`.
+- Fix "Writing packets to data stream broken in av>=17" regression :issue:`2223` by :gh-user:`WyattBlue`.
 - Remove ``_send_packet_and_recv`` to simplify ``decode()`` by :gh-user:`lgeiger`.
 - Reuse a ``AVPacket`` read buffer when demuxing by :gh-user:`lgeiger` and :gh-user:`WyattBlue`.
+- Use ``AVCodecContext.frame_num`` instead of counting ourselves by :gh-user:`WyattBlue`.
+- Use ``av_channel_layout_compare()`` for ``AudioLayout.__eq__()`` by :gh-user:`WyattBlue`.
 
 v17.0.0
 -------

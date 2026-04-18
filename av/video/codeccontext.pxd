@@ -18,5 +18,4 @@ cdef struct AVCodecPrivateData:
 cdef class VideoCodecContext(CodecContext):
     cdef AVCodecPrivateData _private_data
     cdef readonly VideoReformatter reformatter
-    cdef readonly int encoded_frame_count
     cdef VideoFrame next_frame

@@ -72,15 +72,12 @@ class VideoCodecContext(CodecContext):
                 # is_hwaccel() function on each stream's codec context.
                 self.hwaccel_ctx = None
 
-        self.encoded_frame_count = 0
-
     @cython.cfunc
     def _prepare_frames_for_encode(self, input: Frame | None) -> list:
         if input is None or not input:
             return [None]
 
         vframe: VideoFrame = input
-        # Reformat if it doesn't match.
         if (
             vframe.format.pix_fmt != self.pix_fmt
             or vframe.width != self.ptr.width
@@ -97,11 +94,9 @@ class VideoCodecContext(CodecContext):
                 threads=self.ptr.thread_count,
             )
 
-        # There is no pts, so create one.
         if vframe.ptr.pts == lib.AV_NOPTS_VALUE:
-            vframe.ptr.pts = cython.cast(int64_t, self.encoded_frame_count)
+            vframe.ptr.pts = self.ptr.frame_num
 
-        self.encoded_frame_count += 1
         return [vframe]
 
     @cython.cfunc

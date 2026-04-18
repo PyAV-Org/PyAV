@@ -1,31 +1,23 @@
 from libc.stdint cimport int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 
 cdef extern from "libavutil/channel_layout.h" nogil:
-    ctypedef enum AVChannelOrder:
-        pass
     ctypedef enum AVChannel:
         AV_CHAN_NONE = -1
         AV_CHAN_FRONT_LEFT
         AV_CHAN_FRONT_RIGHT
         AV_CHAN_FRONT_CENTER
     ctypedef struct AVChannelLayout:
-        AVChannelOrder order
         int nb_channels
-        uint64_t mask
-        # union:
-        #     uint64_t mask
-        #     AVChannelCustom *map
-        void *opaque
 
     int av_channel_layout_default(AVChannelLayout *ch_layout, int nb_channels)
     int av_channel_layout_from_string(AVChannelLayout *channel_layout, const char *str)
     int av_channel_layout_describe(const AVChannelLayout *channel_layout, char *buf, size_t buf_size)
     int av_channel_name(char *buf, size_t buf_size, AVChannel channel_id)
     int av_channel_description(char *buf, size_t buf_size, AVChannel channel_id)
+    int av_channel_layout_compare(AVChannelLayout *chl, AVChannelLayout *chl1)
     AVChannel av_channel_layout_channel_from_index(AVChannelLayout *channel_layout, unsigned int idx)
 
 cdef extern from "libavcodec/avcodec.h" nogil:
-    cdef set pyav_get_available_codecs()
     cdef int avcodec_version()
     cdef char* avcodec_configuration()
     cdef char* avcodec_license()
@@ -290,6 +282,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int subtitle_header_size
         uint8_t *subtitle_header
+        int64_t frame_num
 
     cdef AVCodecContext* avcodec_alloc_context3(const AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
