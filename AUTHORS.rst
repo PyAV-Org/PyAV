@@ -10,12 +10,12 @@ All contributors (by number of commits):
 
 - Mark Reid <mindmark@gmail.com>; `@markreidvfx <https://github.com/markreidvfx>`_
 
+* Lukas Geiger <lukas.geiger94@gmail.com>
 * Vidar Tonaas Fauske <vidartf@gmail.com>; `@vidartf <https://github.com/vidartf>`_
 * laggykiller <chaudominic2@gmail.com>; `@laggykiller <https://github.com/laggykiller>`_
 * Billy Shambrook <billy.shambrook@gmail.com>; `@billyshambrook <https://github.com/billyshambrook>`_
 * Casper van der Wel <caspervdw@gmail.com>
 * Philip de Nier <philipn@rd.bbc.co.uk>
-* Lukas Geiger <lukas.geiger94@gmail.com>
 * Tadas Dailyda <tadas@dailyda.com>
 * Dave Johansen <davejohansen@gmail.com>
 * JoeUgly <41972063+JoeUgly@users.noreply.github.com>
@@ -56,6 +56,7 @@ All contributors (by number of commits):
 * Ihor Liubymov <ihor.liubymov@ring.com>
 * Johannes Erdfelt <johannes@erdfelt.com>
 * Karl Litterfeldt <kalle.litterfeldt@gmail.com>; `@litterfeldt <https://github.com/litterfeldt>`_
+* Leon White <l.white@interstellarlab.earth>
 * Martin Larralde <martin.larralde@ens-cachan.fr>
 * Simon-Martin Schröder <martin.schroeder@nerdluecht.de>
 * Matteo Destro <matteo.est@gmail.com>
@@ -78,6 +79,7 @@ All contributors (by number of commits):
 * Ian Lee <IanLee1521@gmail.com>
 * Ryan Huang <NPN@users.noreply.github.com>
 * Arthur Barros <arthbarros@gmail.com>
+* bdavid-evertz <bdavid@evertz.com>
 * Carlos Ruiz <carlos.r.domin@gmail.com>
 * Carlos Ruiz <carlos.ruiz.dominguez@west.cmu.edu>
 * Maxime Desroches <desroches.maxime@gmail.com>
