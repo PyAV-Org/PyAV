@@ -48,10 +48,14 @@ class AudioLayout:
         return f"<av.{self.__class__.__name__} {self.name!r}>"
 
     def __eq__(self, other):
+        if not isinstance(other, AudioLayout):
+            return False
+        c_other: lib.AVChannelLayout = cython.cast(AudioLayout, other).layout
         return (
-            isinstance(other, AudioLayout)
-            and self.name == other.name
-            and self.nb_channels == other.nb_channels
+            lib.av_channel_layout_compare(
+                cython.address(self.layout), cython.address(c_other)
+            )
+            == 0
         )
 
     @property
