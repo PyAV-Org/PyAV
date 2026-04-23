@@ -34,13 +34,21 @@ class InputContainer(Container):
         c_options: cython.pointer[cython.pointer[lib.AVDictionary]] = cython.NULL
         base_dict: Dictionary
         stream_dict: Dictionary
-        if self.options or self.stream_options:
+        nb_streams_before: cython.uint = self.ptr.nb_streams
+        if self.stream_options and nb_streams_before == 0:
+            raise ValueError(
+                "stream_options were provided, but this format does not expose "
+                "its streams before avformat_find_stream_info (e.g. MPEG). "
+                "Per-stream options cannot be applied."
+            )
+        # Only allocate c_options when streams are already known.
+        if (self.options or self.stream_options) and nb_streams_before > 0:
             base_dict = Dictionary(self.options)
             c_options = cython.cast(
                 cython.pointer[cython.pointer[lib.AVDictionary]],
-                malloc(self.ptr.nb_streams * cython.sizeof(cython.p_void)),
+                malloc(nb_streams_before * cython.sizeof(cython.p_void)),
             )
-            for i in range(self.ptr.nb_streams):
+            for i in range(nb_streams_before):
                 c_options[i] = cython.NULL
                 if i < len(self.stream_options) and self.stream_options:
                     stream_dict = base_dict.copy()
@@ -56,9 +64,8 @@ class InputContainer(Container):
         self.set_timeout(None)
         self.err_check(ret)
 
-        # Clean up all of our options.
         if c_options:
-            for i in range(self.ptr.nb_streams):
+            for i in range(nb_streams_before):
                 lib.av_dict_free(cython.address(c_options[i]))
             free(c_options)
 
