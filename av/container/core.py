@@ -435,6 +435,11 @@ class Container:
         with cython.nogil:
             _free_chapters(self.ptr)
 
+        if count == 0:
+            self.ptr.nb_chapters = 0
+            self.ptr.chapters = cython.NULL
+            return
+
         ch_array = cython.cast(
             AVChapterPtrPtr,
             lib.av_malloc(count * cython.sizeof(cython.pointer[lib.AVChapter])),
