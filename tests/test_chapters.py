@@ -56,3 +56,11 @@ def test_set_chapters() -> None:
     with av.open(path) as container:
         container.set_chapters(chapters)
         assert container.chapters() == chapters
+
+
+def test_set_chapters_empty() -> None:
+    path = fate_suite("vorbis/vorbis_chapter_extension_demo.ogg")
+    with av.open(path) as container:
+        assert len(container.chapters()) == 4
+        container.set_chapters([])
+        assert container.chapters() == []

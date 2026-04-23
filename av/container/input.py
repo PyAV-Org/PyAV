@@ -151,6 +151,8 @@ class InputContainer(Container):
         self._assert_open()
 
         streams: list[Stream] = self.streams.get(*args, **kwargs)
+        if self.ptr.nb_streams == 0:
+            return
         include_stream: cython.pointer[cython.bint] = cython.cast(
             cython.pointer[cython.bint],
             malloc(self.ptr.nb_streams * cython.sizeof(bint)),
