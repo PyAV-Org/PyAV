@@ -1,5 +1,7 @@
 from av import ContainerFormat, formats_available, open
 
+from .common import fate_suite
+
 
 def test_matroska() -> None:
     with open("test.mkv", "w") as container:
@@ -54,6 +56,23 @@ def test_stream_segment() -> None:
     assert fmt.long_name == "streaming segment muxer"
     assert fmt.extensions == set()
     assert fmt.no_file
+
+
+def test_video_codec_id() -> None:
+    # Regression test for https://github.com/PyAV-Org/PyAV/issues/2243
+    # video_codec_id allows overriding the codec used when opening a container.
+    AV_CODEC_ID_NONE = 0
+    AV_CODEC_ID_H264 = 27
+
+    with open(fate_suite("h264/interlaced_crop.mp4")) as container:
+        assert container.video_codec_id == AV_CODEC_ID_NONE
+        container.video_codec_id = AV_CODEC_ID_H264
+        assert container.video_codec_id == AV_CODEC_ID_H264
+
+    with open("test.mkv", "w") as container:
+        assert container.video_codec_id == AV_CODEC_ID_NONE
+        container.video_codec_id = AV_CODEC_ID_H264
+        assert container.video_codec_id == AV_CODEC_ID_H264
 
 
 def test_formats_available() -> None:

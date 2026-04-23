@@ -391,6 +391,16 @@ class Container:
             raise AssertionError("Container is not open")
 
     @property
+    def video_codec_id(self):
+        self._assert_open()
+        return self.ptr.video_codec_id
+
+    @video_codec_id.setter
+    def video_codec_id(self, value: lib.AVCodecID):
+        self._assert_open()
+        self.ptr.video_codec_id = value
+
+    @property
     def flags(self):
         self._assert_open()
         return self.ptr.flags
