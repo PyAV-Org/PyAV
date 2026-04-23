@@ -91,6 +91,7 @@ class Container:
     open_timeout: Real | None
     read_timeout: Real | None
     flags: int
+    video_codec_id: int
     def __enter__(self) -> Container: ...
     def __exit__(
         self,

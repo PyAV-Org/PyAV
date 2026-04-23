@@ -71,7 +71,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int64_t(*seek)(void *opaque, int64_t offset, int whence)
     )
 
-    # http://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
+    # https://ffmpeg.org/doxygen/trunk/structAVInputFormat.html
     cdef struct AVInputFormat:
         const char *name
         const char *long_name
@@ -79,13 +79,13 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
         const AVClass *priv_class
 
-    # http://ffmpeg.org/doxygen/trunk/structAVOutputFormat.html
+    # https://ffmpeg.org/doxygen/trunk/structAVOutputFormat.html
     cdef struct AVOutputFormat:
         const char *name
         const char *long_name
         const char *extensions
-        AVCodecID video_codec
         AVCodecID audio_codec
+        AVCodecID video_codec
         AVCodecID subtitle_codec
         int flags
         const AVClass *priv_class
@@ -156,6 +156,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int bit_rate
         int flags
         AVCodecID audio_codec_id
+        AVCodecID video_codec_id
         void *opaque
         int (*io_open)(
             AVFormatContext *s,
