@@ -62,6 +62,7 @@ class CodecContext:
     extradata: bytes | None
     time_base: Fraction
     codec_tag: str
+    global_quality: int
     bit_rate: int | None
     bit_rate_tolerance: int
     thread_count: int

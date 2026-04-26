@@ -18,6 +18,8 @@ cdef extern from "libavutil/avutil.h" nogil:
     cdef char* avutil_configuration()
     cdef char* avutil_license()
 
+    int FF_QP2LAMBDA
+
     cdef enum AVPictureType:
         AV_PICTURE_TYPE_NONE
         AV_PICTURE_TYPE_I
