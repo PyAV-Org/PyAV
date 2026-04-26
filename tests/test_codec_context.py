@@ -68,6 +68,11 @@ def iter_raw_frames(
 
 
 class TestCodecContext(TestCase):
+    def test_global_quality(self):
+        ctx = Codec("mpeg4", "w").create()
+        ctx.global_quality = 5
+        assert ctx.global_quality == 5
+
     def test_skip_frame_default(self):
         ctx = Codec("png", "w").create()
         assert ctx.skip_frame == "DEFAULT"

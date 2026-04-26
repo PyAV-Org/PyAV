@@ -28,6 +28,9 @@ We are operating with `semantic versioning <https://semver.org>`_.
 v17.0.2 (next)
 --------------
 
+Features:
+- Expose ``AVCodecContext.global_quality`` by :gh-user:`WyattBlue` in (:pr:`2246`).
+
 Fixes:
 
 

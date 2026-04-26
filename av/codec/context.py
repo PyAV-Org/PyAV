@@ -591,6 +591,23 @@ class CodecContext:
             raise ValueError("Codec tag should be a 4 character string.")
 
     @property
+    @cython.cdivision(True)
+    def global_quality(self):
+        """Global quality for codecs which cannot change it per frame.
+
+        Stored internally in lambda units; this property converts to/from
+        QP units using ``FF_QP2LAMBDA``.
+
+        Wraps :ffmpeg:`AVCodecContext.global_quality`.
+
+        """
+        return self.ptr.global_quality // lib.FF_QP2LAMBDA
+
+    @global_quality.setter
+    def global_quality(self, value: cython.int):
+        self.ptr.global_quality = value * lib.FF_QP2LAMBDA
+
+    @property
     def bit_rate(self):
         return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
 
