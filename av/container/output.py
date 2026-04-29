@@ -262,6 +262,10 @@ class OutputContainer(Container):
         # Reset the codec tag assuming we are remuxing.
         ctx.codec_tag = 0
 
+        # Copy the template's stream time_base
+        stream.time_base = template.ptr.time_base
+        ctx.time_base = template.ptr.time_base
+
         # Some formats want stream headers to be separate
         if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
             ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER

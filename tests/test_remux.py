@@ -3,6 +3,8 @@ import io
 import av
 import av.datasets
 
+from .common import fate_suite
+
 
 def test_video_remux() -> None:
     input_path = av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4")
@@ -79,3 +81,30 @@ def test_add_mux_stream_no_codec_context() -> None:
         # repr should not crash
         assert "video/<nocodec>" in repr(video_stream)
         assert "audio/<nocodec>" in repr(audio_stream)
+
+
+def test_add_stream_from_template_copies_time_base() -> None:
+    """add_stream_from_template must propagate the source stream's time_base.
+
+    AVCodecParameters does not carry time_base, so without an explicit copy
+    the output stream's time_base stays as None
+    """
+    video_path = av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4")
+    with (
+        av.open(video_path) as input_,
+        av.open(io.BytesIO(), "w", format="mp4") as output,
+    ):
+        in_video = input_.streams.video[0]
+        out_video = output.add_stream_from_template(in_video)
+        assert out_video.time_base is not None
+        assert out_video.time_base == in_video.time_base
+
+    audio_path = fate_suite("audio-reference/chorusnoise_2ch_44kHz_s16.wav")
+    with (
+        av.open(audio_path) as input_,
+        av.open(io.BytesIO(), "w", format="wav") as output,
+    ):
+        in_audio = input_.streams.audio[0]
+        out_audio = output.add_stream_from_template(in_audio)
+        assert out_audio.time_base is not None
+        assert out_audio.time_base == in_audio.time_base
