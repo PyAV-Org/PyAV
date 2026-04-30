@@ -6,7 +6,7 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.subtitles.subtitle import SubtitleProxy, SubtitleSet
 from cython.cimports.cpython.bytes import PyBytes_FromStringAndSize
-from cython.cimports.libc.string import memcpy, strlen
+from cython.cimports.libc.string import memcpy
 
 
 @cython.cclass
@@ -65,28 +65,16 @@ class SubtitleCodecContext(CodecContext):
 
         self.open(strict=False)
 
-        # Calculate buffer size from subtitle text length
-        buf_size: cython.size_t = 0
-        i: cython.uint
-        for i in range(subtitle.proxy.struct.num_rects):
-            rect = subtitle.proxy.struct.rects[i]
-            if rect.ass != cython.NULL:
-                buf_size += strlen(rect.ass)
-            if rect.text != cython.NULL:
-                buf_size += strlen(rect.text)
-        buf_size += 1024  # padding for format overhead
-
-        buf: cython.p_uchar = cython.cast(cython.p_uchar, lib.av_malloc(buf_size))
+        buf: cython.p_uchar = cython.cast(cython.p_uchar, lib.av_malloc(1024 * 1024))
         if buf == cython.NULL:
-            raise MemoryError("Failed to allocate subtitle encode buffer")
+            raise MemoryError()
 
         ret: cython.int = lib.avcodec_encode_subtitle(
             self.ptr,
             buf,
-            buf_size,
+            1024 * 1024,
             cython.address(subtitle.proxy.struct),
         )
-
         if ret < 0:
             lib.av_free(buf)
             err_check(ret, "avcodec_encode_subtitle()")
@@ -94,7 +82,6 @@ class SubtitleCodecContext(CodecContext):
         packet: Packet = Packet(ret)
         memcpy(packet.ptr.data, buf, ret)
         lib.av_free(buf)
-
         packet.ptr.pts = subtitle.proxy.struct.pts
         packet.ptr.dts = subtitle.proxy.struct.pts
         packet.ptr.duration = (
