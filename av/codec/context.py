@@ -462,6 +462,14 @@ class CodecContext:
         you do not want the library to automatically re-order frames for you
         (if they are encoded with a codec that has B-frames).
 
+        .. warning::
+
+            This method is **not thread-safe**. Calling :meth:`decode` concurrently
+            from multiple threads on the same :class:`CodecContext` will corrupt
+            internal FFmpeg state and likely cause a crash (segfault). FFmpeg 8.1
+            enforces this more strictly than earlier releases. If you need to decode
+            from multiple threads, give each thread its own :class:`CodecContext`.
+
         """
         if not self.codec.ptr:
             raise ValueError("cannot decode unknown codec")
