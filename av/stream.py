@@ -1,4 +1,4 @@
-from enum import Flag
+from enum import IntFlag
 
 import cython
 from cython.cimports import libav as lib
@@ -12,7 +12,7 @@ from cython.cimports.av.utils import (
 )
 
 
-class Disposition(Flag):
+class Disposition(IntFlag):
     default = 1 << 0
     dub = 1 << 1
     original = 1 << 2
