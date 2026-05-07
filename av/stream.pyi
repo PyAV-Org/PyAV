@@ -1,4 +1,4 @@
-from enum import Flag
+from enum import IntFlag
 from fractions import Fraction
 from typing import Literal, cast
 
@@ -6,7 +6,7 @@ from .codec import Codec, CodecContext
 from .container import Container
 from .index import IndexEntries
 
-class Disposition(Flag):
+class Disposition(IntFlag):
     default = cast(int, ...)
     dub = cast(int, ...)
     original = cast(int, ...)
