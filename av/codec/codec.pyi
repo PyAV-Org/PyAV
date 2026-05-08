@@ -4,7 +4,6 @@ from typing import ClassVar, Literal, Sequence, cast, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
-from av.descriptor import Descriptor
 from av.subtitles.codeccontext import SubtitleCodecContext
 from av.video.codeccontext import VideoCodecContext
 from av.video.format import VideoFormat
@@ -53,7 +52,6 @@ class Codec:
     def is_decoder(self) -> bool: ...
     @property
     def mode(self) -> Literal["r", "w"]: ...
-    descriptor: Descriptor
     @property
     def name(self) -> str: ...
     @property
@@ -106,10 +104,6 @@ class Codec:
     ) -> (
         VideoCodecContext | AudioCodecContext | SubtitleCodecContext | CodecContext
     ): ...
-
-class codec_descriptor:
-    name: str
-    options: tuple[int, ...]
 
 codecs_available: set[str]
 

@@ -1,6 +1,5 @@
 import cython
 from cython.cimports import libav as lib
-from cython.cimports.av.descriptor import wrap_avclass
 from cython.cimports.av.filter.link import alloc_filter_pads
 
 _cinit_sentinel = cython.declare(object, object())
@@ -25,18 +24,6 @@ class Filter:
         self.ptr = lib.avfilter_get_by_name(name)
         if not self.ptr:
             raise ValueError(f"no filter {name}")
-
-    @property
-    def descriptor(self):
-        if self._descriptor is None:
-            self._descriptor = wrap_avclass(self.ptr.priv_class)
-        return self._descriptor
-
-    @property
-    def options(self):
-        if self.descriptor is None:
-            return
-        return self.descriptor.options
 
     @property
     def name(self):
@@ -78,4 +65,3 @@ def get_filter_names() -> set:
 
 
 filters_available = get_filter_names()
-filter_descriptor = wrap_avclass(lib.avfilter_get_class())
