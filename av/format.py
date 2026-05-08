@@ -2,7 +2,6 @@ from enum import Flag
 
 import cython
 import cython.cimports.libav as lib
-from cython.cimports.av.descriptor import wrap_avclass
 
 _cinit_bypass_sentinel = cython.declare(object, object())
 
@@ -77,17 +76,6 @@ class ContainerFormat:
 
     def __repr__(self):
         return f"<av.{self.__class__.__name__} {self.name!r}>"
-
-    @property
-    def descriptor(self):
-        if self.iptr:
-            return wrap_avclass(self.iptr.priv_class)
-        else:
-            return wrap_avclass(self.optr.priv_class)
-
-    @property
-    def options(self):
-        return self.descriptor.options
 
     @property
     def input(self):
@@ -178,4 +166,3 @@ def get_input_format_names() -> set:
 
 formats_available = get_output_format_names()
 formats_available.update(get_input_format_names())
-format_descriptor = wrap_avclass(lib.avformat_get_class())

@@ -4,7 +4,6 @@ import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.audio.format import get_audio_format
 from cython.cimports.av.codec.hwaccel import wrap_hwconfig
-from cython.cimports.av.descriptor import wrap_avclass
 from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.format import VideoFormat, get_pix_fmt, get_video_format
 from cython.cimports.libc.stdlib import free, malloc
@@ -145,10 +144,6 @@ class Codec:
     @property
     def is_decoder(self):
         return not self.is_encoder
-
-    @property
-    def descriptor(self):
-        return wrap_avclass(self.ptr.priv_class)
 
     @property
     def name(self):
@@ -355,7 +350,6 @@ def get_codec_names():
 
 
 codecs_available = get_codec_names()
-codec_descriptor = wrap_avclass(lib.avcodec_get_class())
 
 
 def dump_codecs():
