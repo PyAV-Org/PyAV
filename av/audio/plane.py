@@ -2,6 +2,7 @@ import cython
 from cython.cimports.av.audio.frame import AudioFrame
 
 
+@cython.final
 @cython.cclass
 class AudioPlane(Plane):
     def __cinit__(self, frame: AudioFrame, index: cython.int):

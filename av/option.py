@@ -124,6 +124,7 @@ class BaseOption:
         return flag_in_bitfield(self.ptr.flags, lib.AV_OPT_FLAG_FILTERING_PARAM)
 
 
+@cython.final
 @cython.cclass
 class Option(BaseOption):
     @property
@@ -186,6 +187,7 @@ def wrap_option_choice(
     return obj
 
 
+@cython.final
 @cython.cclass
 class OptionChoice(BaseOption):
     """

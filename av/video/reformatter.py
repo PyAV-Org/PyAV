@@ -141,6 +141,7 @@ def _set_frame_colorspace(
         frame.colorspace = lib.AVCOL_SPC_SMPTE240M
 
 
+@cython.final
 @cython.cclass
 class VideoReformatter:
     """An object for reformatting size and pixel format of :class:`.VideoFrame`.

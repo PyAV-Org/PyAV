@@ -19,6 +19,7 @@ from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
 from cython.cimports.libc.stdint import int64_t, uint8_t
 
 
+@cython.final
 @cython.cclass
 class CudaContext:
     def __cinit__(self, device_id: cython.int = 0, primary_ctx: cython.bint = True):
@@ -466,6 +467,7 @@ def check_ndarray_shape(array: object, ok: cython.bint):
         raise ValueError(f"Unexpected numpy array shape `{array.shape}`")
 
 
+@cython.final
 @cython.cclass
 class VideoFrame(Frame):
     def __cinit__(self, width=0, height=0, format="yuv420p"):

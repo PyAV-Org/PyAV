@@ -9,6 +9,7 @@ from cython.cimports.cpython.bytes import PyBytes_FromStringAndSize
 from cython.cimports.libc.string import memcpy
 
 
+@cython.final
 @cython.cclass
 class SubtitleCodecContext(CodecContext):
     @property

@@ -27,6 +27,7 @@ def get_pix_fmt(name: cython.p_const_char) -> lib.AVPixelFormat:
     return pix_fmt
 
 
+@cython.final
 @cython.cclass
 class VideoFormat:
     """
@@ -139,6 +140,7 @@ class VideoFormat:
         return -((-luma_height) >> self.ptr.log2_chroma_h) if luma_height else 0
 
 
+@cython.final
 @cython.cclass
 class VideoFormatComponent:
     def __cinit__(self, format: VideoFormat, index: cython.size_t):

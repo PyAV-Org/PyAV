@@ -14,6 +14,7 @@ seek_func_t = cython.typedef(
 )
 
 
+@cython.final
 @cython.cclass
 class PyIOFile:
     def __cinit__(self, file, buffer_size, writeable=None):

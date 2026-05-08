@@ -3,6 +3,7 @@ from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream
 
 
+@cython.final
 @cython.cclass
 class SubtitleStream(Stream):
     def __getattr__(self, name):

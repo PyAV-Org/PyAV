@@ -17,6 +17,7 @@ def key_free(opaque: cython.p_void, data: u8ptr) -> cython.void:
         opaque_container.pop(name)
 
 
+@cython.final
 @cython.cclass
 class OpaqueContainer:
     def __cinit__(self):

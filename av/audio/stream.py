@@ -3,6 +3,7 @@ from cython.cimports.av.audio.frame import AudioFrame
 from cython.cimports.av.packet import Packet
 
 
+@cython.final
 @cython.cclass
 class AudioStream(Stream):
     def __repr__(self):

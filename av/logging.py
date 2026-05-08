@@ -170,6 +170,7 @@ global_captures = cython.declare(list, [])
 thread_captures = cython.declare(dict, {})
 
 
+@cython.final
 @cython.cclass
 class Capture:
     """A context manager for capturing logs.

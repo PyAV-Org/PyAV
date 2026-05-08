@@ -19,6 +19,7 @@ def wrap_avclass(ptr: cython.pointer[cython.const[lib.AVClass]]) -> Descriptor |
     return obj
 
 
+@cython.final
 @cython.cclass
 class Descriptor:
     def __cinit__(self, sentinel):

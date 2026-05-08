@@ -5,6 +5,7 @@ from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.frame import VideoFrame
 
 
+@cython.final
 @cython.cclass
 class VideoStream(Stream):
     def __repr__(self):

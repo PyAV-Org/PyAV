@@ -12,6 +12,7 @@ from cython.cimports.av.video.format import VideoFormat
 from cython.cimports.av.video.frame import VideoFrame
 
 
+@cython.final
 @cython.cclass
 class Graph:
     def __cinit__(self):

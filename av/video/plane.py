@@ -17,6 +17,7 @@ from cython.cimports.cpython.pycapsule import (
 from cython.cimports.libc.stdlib import free, malloc
 
 
+@cython.final
 @cython.cclass
 class VideoPlane(Plane):
     def __cinit__(self, frame: VideoFrame, index: cython.int):

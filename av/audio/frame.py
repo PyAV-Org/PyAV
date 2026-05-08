@@ -27,6 +27,7 @@ format_dtypes = {
 }
 
 
+@cython.final
 @cython.cclass
 class AudioFrame(Frame):
     """A frame of audio."""

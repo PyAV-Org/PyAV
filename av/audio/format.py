@@ -20,6 +20,7 @@ def get_audio_format(c_format: lib.AVSampleFormat) -> AudioFormat:
     return format
 
 
+@cython.final
 @cython.cclass
 class AudioFormat:
     """Descriptor of audio formats."""

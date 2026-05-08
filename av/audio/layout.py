@@ -25,6 +25,7 @@ def get_audio_layout(c_layout: lib.AVChannelLayout) -> AudioLayout:
     return layout
 
 
+@cython.final
 @cython.cclass
 class AudioLayout:
     def __cinit__(self, layout):

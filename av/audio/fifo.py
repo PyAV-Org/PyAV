@@ -3,6 +3,7 @@ from cython.cimports.av.audio.frame import alloc_audio_frame
 from cython.cimports.av.error import err_check
 
 
+@cython.final
 @cython.cclass
 class AudioFifo:
     """A simple audio sample FIFO (First In First Out) buffer."""
