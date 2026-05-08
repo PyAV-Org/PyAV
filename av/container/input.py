@@ -6,7 +6,7 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream, wrap_stream
 from cython.cimports.av.utils import avdict_to_dict
-from cython.cimports.libc.stdint import int64_t
+from cython.cimports.libc.stdint import int64_t, uint8_t
 from cython.cimports.libc.stdlib import free, malloc
 
 
@@ -153,9 +153,9 @@ class InputContainer(Container):
         streams: list[Stream] = self.streams.get(*args, **kwargs)
         if self.ptr.nb_streams == 0:
             return
-        include_stream: cython.pointer[cython.bint] = cython.cast(
-            cython.pointer[cython.bint],
-            malloc(self.ptr.nb_streams * cython.sizeof(bint)),
+        include_stream: cython.pointer[uint8_t] = cython.cast(
+            cython.pointer[uint8_t],
+            malloc(self.ptr.nb_streams * cython.sizeof(uint8_t)),
         )
         if include_stream == cython.NULL:
             raise MemoryError()
@@ -168,12 +168,12 @@ class InputContainer(Container):
         self.set_timeout(self.read_timeout)
         try:
             for i in range(self.ptr.nb_streams):
-                include_stream[i] = False
+                include_stream[i] = 0
             for stream in streams:
                 i = stream.index
                 if i >= self.ptr.nb_streams:
                     raise ValueError(f"stream index {i} out of range")
-                include_stream[i] = True
+                include_stream[i] = 1
 
             # Pre-allocate a AVPacket that is reused as the read buffer.
             with cython.nogil:
