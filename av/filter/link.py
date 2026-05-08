@@ -5,6 +5,7 @@ from cython.cimports.av.filter.graph import Graph
 _cinit_sentinel = cython.declare(object, object())
 
 
+@cython.final
 @cython.cclass
 class FilterLink:
     def __cinit__(self, sentinel):
@@ -78,6 +79,7 @@ class FilterPad:
         return lib.avfilter_pad_get_name(self.base_ptr, self.index)
 
 
+@cython.final
 @cython.cclass
 class FilterContextPad(FilterPad):
     def __repr__(self):

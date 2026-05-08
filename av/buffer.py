@@ -9,6 +9,7 @@ from cython.cimports.cpython.buffer import (
 from cython.cimports.libc.string import memcpy
 
 
+@cython.final
 @cython.cclass
 class ByteSource:
     def __cinit__(self, owner):

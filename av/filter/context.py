@@ -24,6 +24,7 @@ def wrap_filter_context(
     return self
 
 
+@cython.final
 @cython.cclass
 class FilterContext:
     def __cinit__(self, sentinel):

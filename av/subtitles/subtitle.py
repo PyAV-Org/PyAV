@@ -3,6 +3,7 @@ from cython.cimports.cpython import PyBuffer_FillInfo, PyBytes_FromString
 from cython.cimports.libc.string import memcpy
 
 
+@cython.final
 @cython.cclass
 class SubtitleProxy:
     def __dealloc__(self):
@@ -12,6 +13,7 @@ class SubtitleProxy:
 _cinit_bypass_sentinel = cython.declare(object, object())
 
 
+@cython.final
 @cython.cclass
 class SubtitleSet:
     """
@@ -204,6 +206,7 @@ class Subtitle:
         return f"<av.{self.__class__.__name__} at 0x{id(self):x}>"
 
 
+@cython.final
 @cython.cclass
 class BitmapSubtitle(Subtitle):
     def __cinit__(self, subtitle: SubtitleSet, index: cython.int):
@@ -247,6 +250,7 @@ class BitmapSubtitle(Subtitle):
         return self.planes[i]
 
 
+@cython.final
 @cython.cclass
 class BitmapSubtitlePlane:
     def __cinit__(self, subtitle: BitmapSubtitle, index: cython.int):
@@ -265,6 +269,7 @@ class BitmapSubtitlePlane:
         PyBuffer_FillInfo(view, self, self._buffer, self.buffer_size, 0, flags)
 
 
+@cython.final
 @cython.cclass
 class AssSubtitle(Subtitle):
     """

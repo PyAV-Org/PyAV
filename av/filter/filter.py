@@ -13,6 +13,7 @@ def wrap_filter(ptr: cython.pointer[cython.const[lib.AVFilter]]) -> Filter:
     return filter_
 
 
+@cython.final
 @cython.cclass
 class Filter:
     def __cinit__(self, name):

@@ -6,6 +6,7 @@ from cython.cimports.libc.stdint import uintptr_t
 _cinit_bypass_sentinel = cython.declare(object, object())
 
 
+@cython.final
 @cython.cclass
 class MotionVectors(SideData):
     def __init__(self, sentinel, frame: Frame, index: cython.int):
@@ -70,6 +71,7 @@ class MotionVectors(SideData):
         )
 
 
+@cython.final
 @cython.cclass
 class MotionVector:
     """

@@ -6,6 +6,7 @@ from cython.cimports.av.stream import Stream
 from cython.cimports.libc.errno import EAGAIN
 
 
+@cython.final
 @cython.cclass
 class BitStreamFilterContext:
     """

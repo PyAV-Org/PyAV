@@ -37,6 +37,7 @@ def _get_hw_format(
     )
 
 
+@cython.final
 @cython.cclass
 class VideoCodecContext(CodecContext):
     @cython.cfunc

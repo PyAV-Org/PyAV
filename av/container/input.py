@@ -20,6 +20,7 @@ def close_input(self: InputContainer):
             self._myflag &= ~2  # enum.input_was_opened = False
 
 
+@cython.final
 @cython.cclass
 class InputContainer(Container):
     def __cinit__(self, *args, **kwargs):

@@ -59,6 +59,7 @@ class UnknownCodecError(ValueError):
     pass
 
 
+@cython.final
 @cython.cclass
 class Codec:
     """Codec(name, mode='r')

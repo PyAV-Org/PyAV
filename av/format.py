@@ -46,6 +46,7 @@ class Flags(Flag):
 # fmt: on
 
 
+@cython.final
 @cython.cclass
 class ContainerFormat:
     """Descriptor of a container format.

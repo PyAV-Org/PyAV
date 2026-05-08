@@ -54,6 +54,7 @@ def wrap_hwconfig(ptr: cython.pointer[cython.const[lib.AVCodecHWConfig]]) -> HWC
     return config
 
 
+@cython.final
 @cython.cclass
 class HWConfig:
     def __init__(self, sentinel):
@@ -103,6 +104,7 @@ def hwdevices_available():
     return result
 
 
+@cython.final
 @cython.cclass
 class HWAccel:
     def __init__(

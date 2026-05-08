@@ -40,6 +40,7 @@ def _get_best_stream_index(
     return stream_index
 
 
+@cython.final
 @cython.cclass
 class StreamContainer:
     """

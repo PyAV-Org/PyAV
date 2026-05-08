@@ -65,6 +65,7 @@ def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> lib.AVPacketSideDa
     return get_args(PktSideDataT).index(dtype)
 
 
+@cython.final
 @cython.cclass
 class PacketSideData(Buffer):
     @staticmethod
@@ -207,6 +208,7 @@ def _python_free(
             Py_DECREF(cython.cast(object, opaque))
 
 
+@cython.final
 @cython.cclass
 class Packet(Buffer):
     """A packet of encoded data within a :class:`~av.format.Stream`.

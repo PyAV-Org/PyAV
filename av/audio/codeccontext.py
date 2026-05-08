@@ -7,6 +7,7 @@ from cython.cimports.av.frame import Frame
 from cython.cimports.av.packet import Packet
 
 
+@cython.final
 @cython.cclass
 class AudioCodecContext(CodecContext):
     @cython.cfunc

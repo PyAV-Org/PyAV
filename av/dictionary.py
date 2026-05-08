@@ -2,6 +2,7 @@ import cython
 from cython.cimports.av.error import err_check
 
 
+@cython.final
 @cython.cclass
 class Dictionary:
     def __cinit__(self, *args, **kwargs):

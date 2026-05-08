@@ -32,6 +32,7 @@ def close_output(self: OutputContainer):
             self._myflag |= 8  # enum.done = True
 
 
+@cython.final
 @cython.cclass
 class OutputContainer(Container):
     def __cinit__(self, *args, **kwargs):

@@ -279,6 +279,7 @@ class Stream:
         return "unknown" if media_type == cython.NULL else media_type
 
 
+@cython.final
 @cython.cclass
 class DataStream(Stream):
     def __repr__(self):
@@ -297,6 +298,7 @@ class DataStream(Stream):
         return desc.name
 
 
+@cython.final
 @cython.cclass
 class AttachmentStream(Stream):
     """

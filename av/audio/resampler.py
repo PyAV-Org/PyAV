@@ -6,6 +6,7 @@ from cython.cimports.av.filter.graph import Graph
 from av.error import FFmpegError
 
 
+@cython.final
 @cython.cclass
 class AudioResampler:
     """AudioResampler(format=None, layout=None, rate=None)

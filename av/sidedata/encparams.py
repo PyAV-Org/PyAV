@@ -13,6 +13,7 @@ class VideoEncParamsType(IntEnum):
     MPEG2 = lib.AV_VIDEO_ENC_PARAMS_MPEG2
 
 
+@cython.final
 @cython.cclass
 class VideoEncParams(SideData):
     def __repr__(self):
@@ -129,6 +130,7 @@ class VideoEncParams(SideData):
         return map
 
 
+@cython.final
 @cython.cclass
 class VideoBlockParams:
     def __init__(self, video_enc_params: VideoEncParams, idx: cython.int) -> None:

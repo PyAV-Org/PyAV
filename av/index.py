@@ -12,6 +12,7 @@ def wrap_index_entry(ptr: cython.pointer[cython.const[lib.AVIndexEntry]]) -> Ind
     return obj
 
 
+@cython.final
 @cython.cclass
 class IndexEntry:
     """A single entry from a stream's index.
@@ -71,6 +72,7 @@ def wrap_index_entries(ptr: cython.pointer[lib.AVStream]) -> IndexEntries:
     return obj
 
 
+@cython.final
 @cython.cclass
 class IndexEntries:
     """A sequence-like view of FFmpeg's per-stream index entries.
