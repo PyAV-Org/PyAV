@@ -161,6 +161,7 @@ _ffmpeg_specs = (
     ("HTTP_UNAUTHORIZED", -lib.AVERROR_HTTP_UNAUTHORIZED, "HTTPUnauthorizedError", HTTPClientError),
     ("HTTP_FORBIDDEN", -lib.AVERROR_HTTP_FORBIDDEN, "HTTPForbiddenError", HTTPClientError),
     ("HTTP_NOT_FOUND", -lib.AVERROR_HTTP_NOT_FOUND, "HTTPNotFoundError", HTTPClientError),
+    ("HTTP_TOO_MANY_REQUESTS", -lib.AVERROR_HTTP_TOO_MANY_REQUESTS, "HTTPTooManyRequestsError", HTTPClientError),
     ("HTTP_OTHER_4XX", -lib.AVERROR_HTTP_OTHER_4XX, "HTTPOtherClientError", HTTPClientError),
     ("HTTP_SERVER_ERROR", -lib.AVERROR_HTTP_SERVER_ERROR, "HTTPServerError", HTTPError),
     ("PYAV_CALLBACK", c_PYAV_STASHED_ERROR, "PyAVCallbackError", RuntimeError),

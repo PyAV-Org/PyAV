@@ -36,6 +36,7 @@ Fixes:
 - Add ``cython.final`` to leaf classes, ensuring that they are not subclassed.
 - Warn that ``CodecContext.decode()`` is not memory safe in some cases.
 - Fix ``enumerate_input_devices`` and ``enumerate_output_devices`` raising ``AttributeError`` (:issue:`2264`).
+- Map HTTP 429 to ``HTTPTooManyRequestsError`` instead of ``UndefinedError`` (:issue:`2267`).
 
 v17.0.1
 -------
