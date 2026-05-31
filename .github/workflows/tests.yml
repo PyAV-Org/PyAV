@@ -35,6 +35,8 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: aarch64
           - os: ubuntu-24.04
+            arch: armv7l
+          - os: ubuntu-24.04
             arch: x86_64
           - os: windows-latest
             arch: AMD64
@@ -45,6 +47,11 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
+      - name: Set up QEMU
+        if: matrix.arch == 'armv7l'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
       - name: Set Minimum MacOS Target
         if: runner.os == 'macOS'
         run: |
@@ -67,6 +74,7 @@ jobs:
           CIBW_SKIP: "cp310-win_arm64"
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: pytest numpy
+          CIBW_TEST_SKIP: "*_armv7l"
         run: |
           pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
