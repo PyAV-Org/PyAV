@@ -63,3 +63,16 @@ def test_buffertoosmall() -> None:
         assert e.errno == BUFFER_TOO_SMALL
     else:
         assert False, "No exception raised!"
+
+
+def test_http_too_many_requests() -> None:
+    """HTTP 429 maps to HTTPTooManyRequestsError, not UndefinedError."""
+
+    HTTP_TOO_MANY_REQUESTS = av.error.tag_to_code(b"\xf8429")
+    try:
+        av.error.err_check(-HTTP_TOO_MANY_REQUESTS)
+    except av.error.HTTPTooManyRequestsError as e:
+        assert e.errno == HTTP_TOO_MANY_REQUESTS
+        assert isinstance(e, av.error.HTTPClientError)
+    else:
+        assert False, "No exception raised!"

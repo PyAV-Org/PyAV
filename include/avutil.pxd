@@ -172,6 +172,7 @@ cdef extern from "libavutil/error.h" nogil:
     cdef int AVERROR_HTTP_UNAUTHORIZED
     cdef int AVERROR_HTTP_FORBIDDEN
     cdef int AVERROR_HTTP_NOT_FOUND
+    cdef int AVERROR_HTTP_TOO_MANY_REQUESTS
     cdef int AVERROR_HTTP_OTHER_4XX
     cdef int AVERROR_HTTP_SERVER_ERROR
     cdef int AV_ERROR_MAX_STRING_SIZE
