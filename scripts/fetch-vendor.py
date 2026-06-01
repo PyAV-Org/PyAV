@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import subprocess
+import time
 
 
 def get_platform():
@@ -51,3 +52,13 @@ if not os.path.exists(tarball_file):
 
 logging.info(f"Extracting {tarball_name}")
 subprocess.check_call(["tar", "-C", args.destination_dir, "-xf", tarball_file])
+
+# Some tarball members carry pre-1980 mtimes, which the ZIP format (and thus
+# delvewheel's wheel repackaging) cannot represent. Bump any such file to now.
+ZIP_EPOCH = 315532800  # 1980-01-01 00:00:00 UTC
+now = time.time()
+for root, _, files in os.walk(args.destination_dir):
+    for name in files:
+        path = os.path.join(root, name)
+        if os.path.getmtime(path) < ZIP_EPOCH:
+            os.utime(path, (now, now))
