@@ -297,7 +297,7 @@ class AssSubtitle(Subtitle):
         i: cython.Py_ssize_t = 0
         state: cython.bint = False
         ass_text: bytes = self.ass
-        char, next_char = cython.declare(cython.char)
+        char, next_char = cython.declare(cython.uchar)
         result: bytearray = bytearray()
         text_len: cython.Py_ssize_t = len(ass_text)
 
