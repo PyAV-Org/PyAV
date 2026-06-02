@@ -25,6 +25,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         int index
         int id
         int disposition
+        AVDiscard discard
         AVCodecParameters *codecpar
         AVRational time_base
         int64_t start_time
