@@ -92,5 +92,7 @@ Others
 
 .. autoattribute:: Stream.language
 
+.. autoattribute:: Stream.discard
+
 
 

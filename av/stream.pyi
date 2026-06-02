@@ -1,4 +1,4 @@
-from enum import IntFlag
+from enum import IntEnum, IntFlag
 from fractions import Fraction
 from typing import Literal, cast
 
@@ -27,6 +27,15 @@ class Disposition(IntFlag):
     still_image = cast(int, ...)
     multilayer = cast(int, ...)
 
+class Discard(IntEnum):
+    none = cast(int, ...)
+    default = cast(int, ...)
+    nonref = cast(int, ...)
+    bidir = cast(int, ...)
+    nonintra = cast(int, ...)
+    nonkey = cast(int, ...)
+    all = cast(int, ...)
+
 class Stream:
     name: str | None
     container: Container
@@ -46,6 +55,7 @@ class Stream:
     start_time: int | None
     duration: int | None
     disposition: Disposition
+    discard: Discard
     frames: int
     language: str | None
     type: Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]

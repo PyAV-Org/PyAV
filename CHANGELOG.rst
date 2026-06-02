@@ -31,6 +31,7 @@ v17.1.0 (next)
 Features:
 - Use FFmpeg 8.1.1 in the binary wheels.
 - Expose ``AVCodecContext.global_quality`` by :gh-user:`WyattBlue` in (:pr:`2246`).
+- Expose ``Stream.discard`` so demuxing and seeking can skip unwanted streams (:issue:`2272`).
 
 Fixes:
 - Add ``cython.final`` to leaf classes, ensuring that they are not subclassed.

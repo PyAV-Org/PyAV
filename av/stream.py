@@ -1,4 +1,4 @@
-from enum import IntFlag
+from enum import IntEnum, IntFlag
 
 import cython
 from cython.cimports import libav as lib
@@ -32,6 +32,16 @@ class Disposition(IntFlag):
     dependent = 1 << 19
     still_image = 1 << 20
     multilayer = 1 << 21
+
+
+class Discard(IntEnum):
+    none = lib.AVDISCARD_NONE
+    default = lib.AVDISCARD_DEFAULT
+    nonref = lib.AVDISCARD_NONREF
+    bidir = lib.AVDISCARD_BIDIR
+    nonintra = lib.AVDISCARD_NONINTRA
+    nonkey = lib.AVDISCARD_NONKEY
+    all = lib.AVDISCARD_ALL
 
 
 _cinit_bypass_sentinel = cython.declare(object, object())
@@ -131,6 +141,9 @@ class Stream:
             return
         if name == "disposition":
             self.ptr.disposition = value
+            return
+        if name == "discard":
+            self.ptr.discard = Discard(value).value
             return
         if name == "time_base":
             to_avrational(value, cython.address(self.ptr.time_base))
@@ -267,6 +280,19 @@ class Stream:
     @property
     def disposition(self):
         return Disposition(self.ptr.disposition)
+
+    @property
+    def discard(self):
+        """
+        Controls which packets of this stream are discarded by the demuxer.
+
+        Set this to e.g. :attr:`Discard.all` on streams you don't need so that
+        :meth:`.Container.demux` and :meth:`.Container.seek` skip them, avoiding
+        the cost of synchronizing streams you never read.
+
+        :type: Discard
+        """
+        return Discard(self.ptr.discard)
 
     @property
     def type(self):

@@ -136,6 +136,45 @@ class TestStreams:
         data = container.streams.data[0]
         assert data == container.streams.best("data")
 
+    def test_discard(self) -> None:
+        from av.stream import Discard
+
+        container = av.open(
+            fate_suite("amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv")
+        )
+        audio = container.streams.audio[0]
+
+        # Default discard policy.
+        assert audio.discard == Discard.default
+
+        # Setter accepts the enum and round-trips.
+        audio.discard = Discard.all
+        assert audio.discard == Discard.all
+
+        audio.discard = Discard.nonkey
+        assert audio.discard == Discard.nonkey
+        container.close()
+
+        # Discarding a stream makes demux skip (almost) all of its packets.
+        def audio_packets(discard: Discard | None) -> int:
+            c = av.open(
+                fate_suite(
+                    "amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv"
+                )
+            )
+            if discard is not None:
+                c.streams.audio[0].discard = discard
+            count = sum(
+                1 for p in c.demux() if p.dts is not None and p.stream.type == "audio"
+            )
+            c.close()
+            return count
+
+        baseline = audio_packets(None)
+        discarded = audio_packets(Discard.all)
+        assert baseline > 0
+        assert discarded < baseline
+
     def test_printing_video_stream(self) -> None:
         input_ = av.open(
             fate_suite("amv/MTV_high_res_320x240_sample_Penguin_Joke_MTV_from_WMV.amv")
