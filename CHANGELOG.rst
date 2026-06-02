@@ -38,6 +38,7 @@ Fixes:
 - Warn that ``CodecContext.decode()`` is not memory safe in some cases.
 - Fix ``enumerate_input_devices`` and ``enumerate_output_devices`` raising ``AttributeError`` (:issue:`2264`).
 - Map HTTP 429 to ``HTTPTooManyRequestsError`` instead of ``UndefinedError`` (:issue:`2267`).
+- Fix crash in ``VideoFrame.to_ndarray()`` and ``to_image()`` on bottom-up frames with a negative ``line_size`` (:issue:`2213`).
 
 v17.0.1
 -------

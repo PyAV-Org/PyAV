@@ -161,6 +161,49 @@ def test_basic_to_ndarray() -> None:
     assert array.shape == (480, 640, 3)
 
 
+def _vflip(frame: VideoFrame) -> VideoFrame:
+    """Vertically flip a frame, which yields a bottom-up frame with a negative
+    ``line_size`` (the same layout DirectShow produces, see GH-2213)."""
+    graph = av.filter.Graph()
+    src = graph.add_buffer(
+        template=None,
+        width=frame.width,
+        height=frame.height,
+        format=frame.format,
+        time_base=Fraction(1, 1000),
+    )
+    vflip = graph.add("vflip")
+    sink = graph.add("buffersink")
+    src.link_to(vflip)
+    vflip.link_to(sink)
+    graph.configure()
+    graph.push(frame)
+    out = graph.pull()
+    assert isinstance(out, VideoFrame)
+    return out
+
+
+@pytest.mark.parametrize("format", ["rgb24", "bgr24", "gray"])
+def test_negative_linesize_to_ndarray(format: str) -> None:
+    # Bottom-up packed frames have a negative line_size; to_ndarray() must read
+    # them without crashing (GH-2213) and in the correct top-down order.
+    height, width = 6, 4
+    if format == "gray":
+        array = numpy.arange(height * width, dtype=numpy.uint8).reshape(height, width)
+    else:
+        array = numpy.zeros((height, width, 3), dtype=numpy.uint8)
+        for row in range(height):
+            array[row, :, :] = row * 10
+
+    frame = _vflip(VideoFrame.from_ndarray(array, format=format))
+    assert frame.planes[0].line_size < 0
+
+    result = frame.to_ndarray(format=format)
+    assertNdarraysEqual(result, array[::-1])
+    # Fully materializing the array used to segfault on a bottom-up frame.
+    assert result.copy().sum() == int(array.sum())
+
+
 def test_ndarray_gray() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
     for format in ("gray", "gray8"):

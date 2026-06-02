@@ -447,7 +447,8 @@ def useful_array(
     import numpy as np
 
     dtype_obj = np.dtype(dtype)
-    total_line_size = abs(plane.frame.ptr.linesize[plane.index])
+    line_size = plane.frame.ptr.linesize[plane.index]
+    total_line_size = abs(line_size)
     itemsize = dtype_obj.itemsize
     channels = bytes_per_pixel // itemsize
 
@@ -457,6 +458,13 @@ def useful_array(
     else:
         shape = (plane.height, plane.width, channels)
         strides = (total_line_size, bytes_per_pixel, itemsize)
+
+    if line_size < 0:
+        offset = (plane.height - 1) * total_line_size
+        strides = (-total_line_size, *strides[1:])
+        return np.ndarray(
+            shape, dtype=dtype_obj, buffer=plane, offset=offset, strides=strides
+        )
 
     return np.ndarray(shape, dtype=dtype_obj, buffer=plane, strides=strides)
 
@@ -704,17 +712,24 @@ class VideoFrame(Frame):
         plane: VideoPlane = self.reformat(format="rgb24", **kwargs).planes[0]
 
         i_buf: cython.const[uint8_t][:] = plane
-        i_pos: cython.size_t = 0
-        i_stride: cython.size_t = plane.line_size
+        line_size: cython.int = plane.line_size
+        i_stride: cython.size_t = abs(line_size)
 
         o_pos: cython.size_t = 0
         o_stride: cython.size_t = plane.width * 3
         o_size: cython.size_t = plane.height * o_stride
         o_buf: bytearray = bytearray(o_size)
 
+        # For bottom-up frames (negative line_size) the buffer protocol exposes
+        # rows from the lowest address, so the top display row is at the far end.
+        i_pos: cython.size_t = (plane.height - 1) * i_stride if line_size < 0 else 0
+
         while o_pos < o_size:
             o_buf[o_pos : o_pos + o_stride] = i_buf[i_pos : i_pos + o_stride]
-            i_pos += i_stride
+            if line_size < 0:
+                i_pos -= i_stride
+            else:
+                i_pos += i_stride
             o_pos += o_stride
 
         return Image.frombytes(
