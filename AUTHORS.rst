@@ -89,6 +89,8 @@ All contributors (by number of commits):
 * Gemfield <gemfield@civilnet.cn>
 * henri-gasc <henri.gasc@eurecom.fr>
 * Jonathan Martin <homerunisgood@hotmail.com>
+* HotariTobu <hotari24tools@gmail.com>
+* Joshua <jbree@users.noreply.github.com>
 * Johan Jeppsson Karlin <johjep@gmail.com>
 * Kian-Meng Ang <kianmeng@cpan.org>
 * Philipp Klaus <klaus@physik.uni-frankfurt.de>
