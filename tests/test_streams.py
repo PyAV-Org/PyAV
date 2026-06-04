@@ -245,8 +245,8 @@ class TestStreams:
         # Verify we can read back all the packets, ignoring empty ones
         packets = [p for p in container.demux(data) if bytes(p)]
         assert len(packets) == len(test_data)
-        for packet, original_data in zip(packets, test_data):
-            assert bytes(packet) == original_data
+        for read_packet, original_data in zip(packets, test_data):
+            assert bytes(read_packet) == original_data
 
         # Test string representation
         repr = f"{data_stream}"
