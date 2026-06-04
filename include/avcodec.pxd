@@ -448,7 +448,13 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int codec_ids[5]
 
     cdef struct AVCodecParserContext:
-        pass
+        int64_t pts
+        int64_t dts
+        int64_t pos
+        int64_t last_pos
+        int64_t offset
+        int duration
+        int key_frame
 
     cdef AVCodecParserContext *av_parser_init(int codec_id)
     cdef int av_parser_parse2(
