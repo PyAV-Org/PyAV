@@ -81,6 +81,7 @@ def adapt_level(level: cython.int):
 
 
 level_threshold = cython.declare(object, None)
+c_level_threshold = cython.declare(cython.int, lib.AV_LOG_QUIET)
 
 # ... but lets limit ourselves to WARNING (assuming nobody already did this).
 if "libav" not in logging.Logger.manager.loggerDict:
@@ -107,12 +108,14 @@ def set_level(level):
     When developing your application.
     """
     global level_threshold
+    global c_level_threshold
 
     if level is None:
         level_threshold = level
         lib.av_log_set_callback(nolog_callback)
     elif type(level) is int:
         level_threshold = level
+        c_level_threshold = level
         lib.av_log_set_callback(log_callback)
     else:
         raise ValueError("level must be: int | None")
@@ -331,10 +334,8 @@ def log_callback(
     inited: cython.bint = Py_IsInitialized()
     if not inited:
         return
-
-    with cython.gil:
-        if level > level_threshold and level != lib.AV_LOG_ERROR:
-            return
+    if level > c_level_threshold and level != lib.AV_LOG_ERROR:
+        return
 
     # Format the message.
     message: cython.char[1024]
