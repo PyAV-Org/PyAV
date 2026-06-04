@@ -211,6 +211,22 @@ class TestCodecContext(TestCase):
             assert len(parsed_source) == len(full_source)
             assert full_source == parsed_source
 
+    def test_parse_assigns_packet_timing(self) -> None:
+        # Regression test for #1919: the parser-inferred timing information
+        # should be propagated onto the returned packets.
+        path = fate_suite("mpeg2/mpeg2_field_encoding.ts")
+        full_source = b"".join(bytes(p) for p in av.open(path).demux(video=0))
+
+        ctx = Codec("mpeg2video").create()
+        packets = []
+        for i in range(0, len(full_source), 4096):
+            packets.extend(ctx.parse(full_source[i : i + 4096]))
+        packets.extend(ctx.parse())
+
+        # The parser is able to determine the byte position for this stream,
+        # so at least some packets should carry it through.
+        assert any(p.pos is not None for p in packets)
+
 
 class TestEncoding(TestCase):
     def test_encoding_png(self) -> None:
