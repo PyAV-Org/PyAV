@@ -3,13 +3,14 @@ import io
 import av
 import av.datasets
 
-from .common import fate_suite
+from .common import fate_suite, sandboxed
 
 
 def test_video_remux() -> None:
     input_path = av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4")
+    output_path = sandboxed("remuxed.mkv")
     input_ = av.open(input_path)
-    output = av.open("remuxed.mkv", "w")
+    output = av.open(output_path, "w")
 
     in_stream = input_.streams.video[0]
     out_stream = output.add_stream_from_template(in_stream)
@@ -24,7 +25,7 @@ def test_video_remux() -> None:
     input_.close()
     output.close()
 
-    with av.open("remuxed.mkv") as container:
+    with av.open(output_path) as container:
         # Assert output is a valid media file
         assert len(container.streams.video) == 1
         assert len(container.streams.audio) == 0
