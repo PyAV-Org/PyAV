@@ -15,6 +15,7 @@ def key_free(opaque: cython.p_void, data: u8ptr) -> cython.void:
     name: cython.p_char = cython.cast(cython.p_char, data)
     with cython.gil:
         opaque_container.pop(name)
+    lib.av_free(data)
 
 
 @cython.final
