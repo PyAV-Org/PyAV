@@ -75,15 +75,15 @@ class FFmpegError(Exception):
     """
 
     def __init__(self, code, message, filename=None, log=None):
-        self.errno = code
-        self.strerror = message
-
         args = [code, message]
         if filename or log:
             args.append(filename)
             if log:
                 args.append(log)
         super().__init__(*args)
+
+        self.errno = code
+        self.strerror = message
         self.args = tuple(args)
 
     @property
