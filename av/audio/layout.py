@@ -28,6 +28,9 @@ def get_audio_layout(c_layout: lib.AVChannelLayout) -> AudioLayout:
 @cython.final
 @cython.cclass
 class AudioLayout:
+    def __dealloc__(self):
+        lib.av_channel_layout_uninit(cython.address(self.layout))
+
     def __cinit__(self, layout):
         if layout is _cinit_bypass_sentinel:
             return
