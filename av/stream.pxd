@@ -19,17 +19,9 @@ cdef class Stream:
 
     cdef readonly IndexEntries index_entries
 
-    # Display (rotation) matrix to write as AV_PKT_DATA_DISPLAYMATRIX coded
-    # side data at mux time. Exactly one of these is set at a time (or neither):
-    #   _display_matrix:   native-endian packed bytes (9 int32), raw form.
-    #   _display_rotation: (degrees, hflip, vflip), built via FFmpeg helpers.
-    cdef bytes _display_matrix
-    cdef object _display_rotation
-
     # Private API.
     cdef _init(self, Container, lib.AVStream*, CodecContext)
     cdef _finalize_for_output(self)
-    cdef _apply_display_matrix(self)
     cdef _set_id(self, value)
 
 

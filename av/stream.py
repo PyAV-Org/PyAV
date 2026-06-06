@@ -1,4 +1,3 @@
-import struct
 from enum import IntEnum, IntFlag
 
 import cython
@@ -11,7 +10,6 @@ from cython.cimports.av.utils import (
     dict_to_avdict,
     to_avrational,
 )
-from cython.cimports.libc.stdint import int32_t
 
 
 class Disposition(IntFlag):
@@ -176,80 +174,6 @@ class Stream:
                 self.ptr.codecpar, self.codec_context.ptr
             )
         )
-
-        # avcodec_parameters_from_context() frees and overwrites
-        # codecpar.coded_side_data, so the display matrix must be injected
-        # *after* it, right before avformat_write_header() consumes it.
-        if self._display_matrix is not None or self._display_rotation is not None:
-            self._apply_display_matrix()
-
-    @cython.cfunc
-    def _apply_display_matrix(self):
-        sd: cython.pointer[lib.AVPacketSideData] = lib.av_packet_side_data_new(
-            cython.address(self.ptr.codecpar.coded_side_data),
-            cython.address(self.ptr.codecpar.nb_coded_side_data),
-            lib.AV_PKT_DATA_DISPLAYMATRIX,
-            36,
-            0,
-        )
-        if sd == cython.NULL:
-            raise MemoryError("could not allocate display matrix side data")
-
-        if self._display_matrix is not None:
-            data: cython.pointer[cython.uchar] = sd.data
-            i: cython.int
-            for i in range(36):
-                data[i] = self._display_matrix[i]
-            return
-
-        # Convenience path: build the matrix in place with FFmpeg's helpers.
-        angle: cython.double = self._display_rotation[0]
-        hflip: cython.int = self._display_rotation[1]
-        vflip: cython.int = self._display_rotation[2]
-        matrix: cython.pointer[int32_t] = cython.cast(cython.pointer[int32_t], sd.data)
-        # av_display_rotation_set() takes a clockwise angle; negate so our public
-        # `degrees` is counter-clockwise, matching VideoFrame.rotation on read.
-        lib.av_display_rotation_set(matrix, -angle)
-        lib.av_display_matrix_flip(matrix, hflip, vflip)
-
-    def set_display_matrix(self, matrix):
-        """Set the display (rotation) matrix written to the container.
-
-        ``matrix`` is a sequence of 9 integers in FFmpeg's display-matrix
-        layout (16.16 fixed point for entries 0,1,3,4,6,7 and 2.30 fixed point
-        for entries 2,5,8), matching ``AV_PKT_DATA_DISPLAYMATRIX``. The values
-        are written, native-endian, as coded side data on the output stream so
-        the muxer records them in the container (e.g. the MP4/MOV ``tkhd``
-        transformation matrix). Pass ``None`` to clear.
-
-        Must be called before the first frame is encoded / the header is
-        written. See :meth:`set_display_rotation` for a higher-level helper.
-        """
-        self._display_rotation = None
-        if matrix is None:
-            self._display_matrix = None
-            return
-
-        vals = [int(v) for v in matrix]
-        if len(vals) != 9:
-            raise ValueError("display matrix must have exactly 9 elements")
-        self._display_matrix = struct.pack("=9i", *vals)
-
-    def set_display_rotation(self, degrees, hflip=False, vflip=False):
-        """Set the container display matrix from a rotation and optional flips.
-
-        ``degrees`` is a counter-clockwise rotation (matching the value read
-        back from :attr:`VideoFrame.rotation`); ``hflip`` / ``vflip`` apply a
-        horizontal / vertical mirror after the rotation. Together these express
-        all eight EXIF orientations. The matrix is built with FFmpeg's
-        ``av_display_rotation_set`` / ``av_display_matrix_flip`` and written as
-        coded side data on the output stream (e.g. the MP4/MOV ``tkhd`` matrix).
-
-        This is a convenience wrapper over :meth:`set_display_matrix`; it must
-        likewise be called before the first frame is encoded.
-        """
-        self._display_matrix = None
-        self._display_rotation = (float(degrees), bool(hflip), bool(vflip))
 
     @property
     def id(self):

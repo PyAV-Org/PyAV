@@ -1,8 +1,11 @@
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.packet import Packet
+from cython.cimports.av.stream import Stream
 from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.frame import VideoFrame
+from cython.cimports.libc.stdint import int32_t
+from cython.cimports.libc.string import memcpy
 
 
 @cython.final
@@ -55,6 +58,62 @@ class VideoStream(Stream):
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
         return self.codec_context.decode(packet)
+
+    @cython.cfunc
+    def _finalize_for_output(self):
+        Stream._finalize_for_output(self)
+        # avcodec_parameters_from_context() overwrites codecpar.coded_side_data,
+        # so inject the display matrix after it, before avformat_write_header().
+        if self.codec_context is not None and self._has_display_matrix:
+            self._apply_display_matrix()
+
+    @cython.cfunc
+    def _apply_display_matrix(self):
+        n: cython.int = 9 * cython.sizeof(int32_t)
+        sd: cython.pointer[lib.AVPacketSideData] = lib.av_packet_side_data_new(
+            cython.address(self.ptr.codecpar.coded_side_data),
+            cython.address(self.ptr.codecpar.nb_coded_side_data),
+            lib.AV_PKT_DATA_DISPLAYMATRIX,
+            n,
+            0,
+        )
+        if sd == cython.NULL:
+            raise MemoryError("could not allocate display matrix side data")
+
+        memcpy(sd.data, self._display_matrix, n)
+
+    def set_display_matrix(self, matrix):
+        """Set the display matrix written to the container as coded side data.
+
+        ``matrix`` is a sequence of 9 integers in FFmpeg's ``AV_PKT_DATA_DISPLAYMATRIX``
+        layout, or ``None`` to clear. Must be called before the first frame is
+        encoded. See :meth:`set_display_rotation` for a higher-level helper.
+        """
+        if matrix is None:
+            self._has_display_matrix = False
+            return
+
+        vals = [int(v) for v in matrix]
+        if len(vals) != 9:
+            raise ValueError("display matrix must have exactly 9 elements")
+        i: cython.int
+        for i in range(9):
+            self._display_matrix[i] = vals[i]
+        self._has_display_matrix = True
+
+    def set_display_rotation(self, degrees, hflip=False, vflip=False):
+        """Set the container display matrix from a rotation and optional flips.
+
+        ``degrees`` is a counter-clockwise rotation (matching the value read back
+        from :attr:`VideoFrame.rotation`); ``hflip`` / ``vflip`` mirror after it.
+        Together these express all eight EXIF orientations. Must be called before
+        the first frame is encoded.
+        """
+        # av_display_rotation_set() takes a clockwise angle; negate so our public
+        # `degrees` is counter-clockwise, matching VideoFrame.rotation on read.
+        lib.av_display_rotation_set(self._display_matrix, -float(degrees))
+        lib.av_display_matrix_flip(self._display_matrix, bool(hflip), bool(vflip))
+        self._has_display_matrix = True
 
     @property
     def average_rate(self):
