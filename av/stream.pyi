@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from enum import IntEnum, IntFlag
 from fractions import Fraction
 from typing import Literal, cast
@@ -62,6 +63,11 @@ class Stream:
 
     # From context
     codec_tag: str
+
+    def set_display_matrix(self, matrix: Sequence[int] | None) -> None: ...
+    def set_display_rotation(
+        self, degrees: float, hflip: bool = ..., vflip: bool = ...
+    ) -> None: ...
 
 class DataStream(Stream):
     type: Literal["data"]
