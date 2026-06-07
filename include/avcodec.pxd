@@ -298,7 +298,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef char* avcodec_get_name(AVCodecID id)
     cdef int avcodec_open2(AVCodecContext *ctx, const AVCodec *codec, AVDictionary **options)
     cdef enum AVPacketSideDataType:
-        pass
+        AV_PKT_DATA_DISPLAYMATRIX
     cdef struct AVPacketSideData:
         uint8_t *data
         size_t size
@@ -476,6 +476,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int width
         int height
         int sample_rate
+        AVPacketSideData *coded_side_data
+        int nb_coded_side_data
 
     cdef int avcodec_parameters_copy(
         AVCodecParameters *dst, const AVCodecParameters *src
@@ -512,6 +514,10 @@ cdef extern from "libavcodec/bsf.h" nogil:
 cdef extern from "libavcodec/packet.h" nogil:
     const AVPacketSideData *av_packet_side_data_get(
         const AVPacketSideData *sd, int nb_sd, AVPacketSideDataType type
+    )
+    AVPacketSideData *av_packet_side_data_new(
+        AVPacketSideData **psd, int *pnb_sd,
+        AVPacketSideDataType type, size_t size, int flags
     )
     uint8_t* av_packet_get_side_data(
         const AVPacket *pkt, AVPacketSideDataType type, size_t *size

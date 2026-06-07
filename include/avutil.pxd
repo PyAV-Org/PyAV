@@ -147,6 +147,8 @@ cdef extern from "libavutil/dict.h" nogil:
 
 cdef extern from "libavutil/display.h" nogil:
     cdef double av_display_rotation_get(const int32_t matrix[9])
+    cdef void av_display_rotation_set(int32_t matrix[9], double angle)
+    cdef void av_display_matrix_flip(int32_t matrix[9], int hflip, int vflip)
 
 cdef extern from "libavutil/error.h" nogil:
     cdef int AVERROR_BSF_NOT_FOUND
