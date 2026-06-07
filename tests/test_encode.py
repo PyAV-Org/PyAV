@@ -233,7 +233,7 @@ class TestSubtitleEncoding:
         out_stream = output.add_stream_from_template(in_stream)
 
         for packet in input_.demux(in_stream):
-            if packet.dts is None:
+            if packet.size == 0:
                 continue
             packet.stream = out_stream
             output.mux(packet)

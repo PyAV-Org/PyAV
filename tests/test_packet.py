@@ -197,7 +197,7 @@ class TestPacketSideData:
             with av.open(output_path, "w") as out:
                 out_stream = out.add_stream_from_template(audio_stream)
                 for pkt in inp.demux(audio_stream):
-                    if pkt.dts is None:
+                    if pkt.size == 0:
                         continue
                     if pkt.has_sidedata("skip_samples"):
                         sdata = pkt.get_sidedata("skip_samples")

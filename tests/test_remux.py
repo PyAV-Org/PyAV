@@ -1,5 +1,8 @@
 import io
 
+import numpy as np
+import pytest
+
 import av
 import av.datasets
 
@@ -16,7 +19,7 @@ def test_video_remux() -> None:
     out_stream = output.add_stream_from_template(in_stream)
 
     for packet in input_.demux(in_stream):
-        if packet.dts is None:
+        if packet.size == 0:  # skip the flushing packet, not keyframes with no DTS
             continue
 
         packet.stream = out_stream
@@ -58,7 +61,7 @@ def test_add_mux_stream_video() -> None:
             out_stream.time_base = in_stream.time_base
 
             for packet in input_.demux(in_stream):
-                if packet.dts is None:
+                if packet.size == 0:
                     continue
                 packet.stream = out_stream
                 output.mux(packet)
@@ -109,3 +112,79 @@ def test_add_stream_from_template_copies_time_base() -> None:
         out_audio = output.add_stream_from_template(in_audio)
         assert out_audio.time_base is not None
         assert out_audio.time_base == in_audio.time_base
+
+
+def _make_b_frame_mkv(n: int = 48) -> io.BytesIO:
+    """Encode `n` frames with B-frames into an in-memory MKV.
+
+    Matroska stores only presentation timestamps, so when this is demuxed again
+    libavformat cannot reconstruct a DTS for the leading reordered packets and
+    leaves it as None -- including on the very first packet, which is the
+    keyframe. That is exactly the layout that broke the remux example in #1917.
+    """
+    buf = io.BytesIO()
+    with av.open(buf, "w", format="matroska") as out:
+        stream = out.add_stream("h264", rate=30)
+        stream.width, stream.height, stream.pix_fmt = 160, 120, "yuv420p"
+        stream.options = {"bf": "3", "g": "30"}
+        for i in range(n):
+            img = np.full((120, 160, 3), (i * 5) % 256, dtype="uint8")
+            frame = av.VideoFrame.from_ndarray(img, format="rgb24")
+            for packet in stream.encode(frame):
+                out.mux(packet)
+        for packet in stream.encode(None):
+            out.mux(packet)
+    buf.seek(0)
+    return buf
+
+
+def _decoded_frame_count(buf: io.BytesIO) -> int:
+    buf.seek(0)
+    with av.open(buf, "r") as container:
+        return sum(1 for _ in container.decode(video=0))
+
+
+def test_remux_keeps_keyframe_with_none_dts() -> None:
+    """Regression test for #1917.
+
+    A keyframe can legitimately demux with ``dts is None`` (B-frame stream in a
+    PTS-only container like MKV). The remux loop must skip only the empty
+    flushing packet (``size == 0``), not every ``dts is None`` packet, otherwise
+    the keyframe is dropped and the output is undecodable.
+    """
+    if av.codec.Codec("h264", "w").name != "libx264":
+        pytest.skip("requires libx264")
+
+    source = _make_b_frame_mkv()
+    expected_frames = _decoded_frame_count(source)
+    assert expected_frames > 0
+
+    # Precondition: the first packet really is a keyframe without a DTS, which is
+    # what the old `dts is None` filter would have wrongly discarded.
+    source.seek(0)
+    with av.open(source, "r") as input_:
+        first = next(p for p in input_.demux(input_.streams.video[0]) if p.size)
+        assert first.is_keyframe
+        assert first.dts is None
+
+    source.seek(0)
+    output = io.BytesIO()
+    with (
+        av.open(source, "r") as input_,
+        av.open(output, "w", format="matroska") as out,
+    ):
+        in_video = input_.streams.video[0]
+        out_video = out.add_stream_from_template(in_video)
+        for packet in input_.demux(in_video):
+            if packet.size == 0:  # the flushing packet, not a keyframe with no DTS
+                continue
+            packet.stream = out_video
+            out.mux(packet)
+
+    # The keyframe survived: every frame still decodes and the first packet of
+    # the remuxed stream is a keyframe.
+    assert _decoded_frame_count(output) == expected_frames
+    output.seek(0)
+    with av.open(output, "r") as container:
+        first_out = next(p for p in container.demux(video=0) if p.size)
+        assert first_out.is_keyframe
