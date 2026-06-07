@@ -25,21 +25,36 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
-v17.1.0 (next)
---------------
+v17.1.0
+-------
+
+Breaking:
+- Remove the undertested ``av.option`` and ``av.descriptor`` APIs, along with the related ``Codec`` and ``Filter`` descriptor accessors.
 
 Features:
-- Use FFmpeg 8.1.1 in the binary wheels.
+- Use FFmpeg 8.1.1 in the binary wheels by :gh-user:`WyattBlue`.
+- Build Linux ARMv7 binary wheels by :gh-user:`WyattBlue`.
 - Expose ``AVCodecContext.global_quality`` by :gh-user:`WyattBlue` in (:pr:`2246`).
-- Expose ``Stream.discard`` so demuxing and seeking can skip unwanted streams (:issue:`2272`).
+- Expose ``Stream.discard`` so demuxing and seeking can skip unwanted streams by :gh-user:`WyattBlue` (:issue:`2272`).
 - Add ``Stream.set_display_matrix()`` and ``Stream.set_display_rotation()`` to write the container display (rotation) matrix on output streams by :gh-user:`hmaarrfk` in (:pr:`2287`).
+- Add ``Container.video_codec_id`` to force a specific video codec on a container by :gh-user:`WyattBlue` (:issue:`2243`).
 
 Fixes:
-- Add ``cython.final`` to leaf classes, ensuring that they are not subclassed.
+- Add ``cython.final`` to leaf classes, ensuring that they are not subclassed by :gh-user:`WyattBlue`.
 - Warn that ``CodecContext.decode()`` is not memory safe in some cases.
-- Fix ``enumerate_input_devices`` and ``enumerate_output_devices`` raising ``AttributeError`` (:issue:`2264`).
-- Map HTTP 429 to ``HTTPTooManyRequestsError`` instead of ``UndefinedError`` (:issue:`2267`).
-- Fix crash in ``VideoFrame.to_ndarray()`` and ``to_image()`` on bottom-up frames with a negative ``line_size`` (:issue:`2213`).
+- Fix memory leaks in ``FFmpegError``, ``AudioLayout`` channel layouts, and ``Frame.opaque``, and break a reference cycle between ``FilterLink`` and ``Graph`` by :gh-user:`lgeiger`.
+- Reduce excessive logging lock contention by :gh-user:`WyattBlue` (:issue:`2276`).
+- Fix a crash when accessing ``Stream`` from multiple threads under FFmpeg 8.1 by :gh-user:`WyattBlue` (:issue:`2247`).
+- Fix a crash during ``InputContainer`` initialization by :gh-user:`WyattBlue` (:issue:`2010`).
+- Fix ``enumerate_input_devices`` and ``enumerate_output_devices`` raising ``AttributeError`` by :gh-user:`WyattBlue` and :gh-user:`kazuki` (:issue:`2264`).
+- Map HTTP 429 to ``HTTPTooManyRequestsError`` instead of ``UndefinedError`` by :gh-user:`WyattBlue` (:issue:`2267`).
+- Fix crash in ``VideoFrame.to_ndarray()`` and ``to_image()`` on bottom-up frames with a negative ``line_size`` by :gh-user:`WyattBlue` (:issue:`2213`).
+- Make ``Disposition`` an ``IntFlag`` so ``Stream.disposition`` can be assigned without raising ``TypeError`` by :gh-user:`HotariTobu`.
+- Assign parser-inferred ``pts``, ``dts``, and ``duration`` to packets from ``CodecContext.parse()`` by :gh-user:`WyattBlue` (:issue:`1919`).
+- Copy ``time_base`` in ``add_stream_from_template()`` by :gh-user:`daveisfera` in (:pr:`2249`).
+- Fix the remux examples dropping keyframes that demux with no DTS, which produced audio-only output by :gh-user:`WyattBlue` (:issue:`1917`).
+- Fix subtitle UTF-8 handling by :gh-user:`jbree` in (:pr:`2271`).
+- Fix several incorrect ``malloc`` size calculations by :gh-user:`WyattBlue`.
 
 v17.0.1
 -------
