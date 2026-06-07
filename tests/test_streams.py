@@ -360,7 +360,7 @@ class TestStreams:
             out_v = out1.add_stream_from_template(in_v)
 
             for packet in input_.demux(in_v):
-                if packet.dts is None:
+                if packet.size == 0:
                     continue
                 packet.stream = out_v
                 out1.mux(packet)
@@ -382,7 +382,7 @@ class TestStreams:
                 stream_map[s.index] = oc.add_stream_from_template(s)
 
             for packet in ic.demux(ic.streams.video):
-                if packet.dts is None:
+                if packet.size == 0:
                     continue
                 updated_stream = stream_map.get(packet.stream.index)
                 if isinstance(updated_stream, av.video.stream.VideoStream):

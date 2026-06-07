@@ -14,8 +14,11 @@ out_stream = output.add_stream_from_template(in_stream)
 for packet in input_.demux(in_stream):
     print(packet)
 
-    # We need to skip the "flushing" packets that `demux` generates.
-    if packet.dts is None:
+    # We need to skip the empty "flushing" packet that `demux` generates at the
+    # end. Don't test `packet.dts is None` here: a valid keyframe can legitimately
+    # have no DTS (e.g. the leading reordered packets of a B-frame stream in MKV),
+    # and skipping it would drop the keyframe and corrupt the output.
+    if packet.size == 0:
         continue
 
     # We need to assign the packet to the new stream.
