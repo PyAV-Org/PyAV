@@ -59,8 +59,10 @@ def _build_device_list(device_list: cython.pointer[lib.AVDeviceInfoList]) -> lis
 
         devices.append(
             DeviceInfo(
-                name=device_info.device_name if device_info.device_name else "",
-                description=device_info.device_description
+                name=cython.cast(bytes, device_info.device_name).decode()
+                if device_info.device_name
+                else "",
+                description=cython.cast(bytes, device_info.device_description).decode()
                 if device_info.device_description
                 else "",
                 is_default=(i == device_list.default_device),
