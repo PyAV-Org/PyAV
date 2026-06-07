@@ -60,7 +60,6 @@ Formats
 .. autoattribute:: ContainerFormat.name
 .. autoattribute:: ContainerFormat.long_name
 
-.. autoattribute:: ContainerFormat.options
 .. autoattribute:: ContainerFormat.input
 .. autoattribute:: ContainerFormat.output
 .. autoattribute:: ContainerFormat.is_input

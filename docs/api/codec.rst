@@ -15,7 +15,6 @@ Descriptors
 .. autoattribute:: Codec.is_decoder
 .. autoattribute:: Codec.is_encoder
 
-.. autoattribute:: Codec.descriptor
 .. autoattribute:: Codec.name
 .. autoattribute:: Codec.long_name
 .. autoattribute:: Codec.type
