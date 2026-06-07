@@ -16,22 +16,42 @@ We are operating with `semantic versioning <https://semver.org>`_.
     v21.67.42
     ---------
     Major:
+
     - Breaking changes (MAJOR) go here, including for binary wheels.
 
     Features:
+
     - Features (MINOR) changes go here.
 
     Fixes:
+
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
+
+v18.0.0 (next)
+--------------
+
+Breaking:
+
+- Remove Python 3.10
+
+Features:
+
+- Nothing (yet)
+
+Fixes:
+
+- Nothing (yet)
 
 v17.1.0
 -------
 
 Breaking:
+
 - Remove the undertested ``av.option`` and ``av.descriptor`` APIs, along with the related ``Codec`` and ``Filter`` descriptor accessors.
 
 Features:
+
 - Use FFmpeg 8.1.1 in the binary wheels by :gh-user:`WyattBlue`.
 - Build Linux ARMv7 binary wheels by :gh-user:`WyattBlue`.
 - Expose ``AVCodecContext.global_quality`` by :gh-user:`WyattBlue` in (:pr:`2246`).
@@ -40,6 +60,7 @@ Features:
 - Add ``Container.video_codec_id`` to force a specific video codec on a container by :gh-user:`WyattBlue` (:issue:`2243`).
 
 Fixes:
+
 - Add ``cython.final`` to leaf classes, ensuring that they are not subclassed by :gh-user:`WyattBlue`.
 - Warn that ``CodecContext.decode()`` is not memory safe in some cases.
 - Fix memory leaks in ``FFmpegError``, ``AudioLayout`` channel layouts, and ``Frame.opaque``, and break a reference cycle between ``FilterLink`` and ``Graph`` by :gh-user:`lgeiger`.
