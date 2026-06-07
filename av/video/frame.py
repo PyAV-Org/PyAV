@@ -387,6 +387,18 @@ def byteswap_array(array, big_endian: cython.bint):
 
 
 @cython.cfunc
+def _check_out(out, shape, dtype):
+    import numpy as np
+
+    if not out.flags["C_CONTIGUOUS"]:
+        raise ValueError("out must be a C-contiguous array")
+    if tuple(out.shape) != tuple(shape):
+        raise ValueError(f"out must have shape {tuple(shape)}, got {tuple(out.shape)}")
+    if out.dtype != np.dtype(dtype):
+        raise ValueError(f"out must have dtype {np.dtype(dtype)}, got {out.dtype}")
+
+
+@cython.cfunc
 def copy_bytes_to_plane(
     img_bytes,
     plane: VideoPlane,
@@ -736,7 +748,7 @@ class VideoFrame(Frame):
             "RGB", (plane.width, plane.height), bytes(o_buf), "raw", "RGB", 0, 1
         )
 
-    def to_ndarray(self, channel_last=False, **kwargs):
+    def to_ndarray(self, channel_last=False, out=None, **kwargs):
         """Get a numpy array of this frame.
 
         Any ``**kwargs`` are passed to :meth:`.VideoReformatter.reformat`.
@@ -746,6 +758,12 @@ class VideoFrame(Frame):
         :param bool channel_last: If True, the shape of array will be
             (height, width, channels) rather than (channels, height, width) for
             the "yuv444p" and "yuvj444p" formats.
+        :param out: An optional, preallocated, C-contiguous numpy array to copy
+            the result into. It must have exactly the shape and dtype that this
+            method would otherwise allocate; ``out`` is then returned in place of
+            a freshly allocated array. This lets callers reuse a buffer and avoid
+            a per-frame allocation. Not supported for the ``pal8`` format, which
+            returns a tuple.
 
         .. note:: Numpy must be installed.
 
@@ -784,34 +802,80 @@ class VideoFrame(Frame):
             itemsize: cython.uint
             itemsize, dtype = _np_pix_fmt_dtypes[format_name]
             num_planes: cython.size_t = len(planes)
-            if num_planes == 1:  # shortcut, avoid memory copy
-                array = useful_array(planes[0], itemsize, dtype)
-            else:  # general case
-                array = np.empty(
-                    (frame.ptr.height, frame.ptr.width, num_planes), dtype=dtype
+            big_endian: cython.bint = format_name.endswith("be")
+            transpose: cython.bint = not channel_last and format_name in {
+                "yuv444p",
+                "yuvj444p",
+            }
+
+            if num_planes == 1:  # shortcut, avoid a memory copy when out is None
+                array = byteswap_array(
+                    useful_array(planes[0], itemsize, dtype), big_endian
                 )
-                if format_name.startswith("gbr"):
-                    plane_indices = (2, 0, 1, *range(3, num_planes))
-                else:
-                    plane_indices = range(num_planes)
-                for i, p_idx in enumerate(plane_indices):
-                    array[:, :, i] = useful_array(planes[p_idx], itemsize, dtype)
-            array = byteswap_array(array, format_name.endswith("be"))
-            if not channel_last and format_name in {"yuv444p", "yuvj444p"}:
-                array = np.moveaxis(array, 2, 0)
-            return array
+                if out is None:
+                    return array
+                _check_out(out, array.shape, dtype)
+                out[...] = array
+                return out
+
+            shape = (frame.ptr.height, frame.ptr.width, num_planes)
+            if transpose:
+                expected = (num_planes, frame.ptr.height, frame.ptr.width)
+            else:
+                expected = shape
+            if out is not None:
+                _check_out(out, expected, dtype)
+
+            # Fill the channels straight into `out` when its layout matches;
+            # only the (channel, height, width) transpose needs a scratch array.
+            array = np.empty(shape, dtype=dtype) if (out is None or transpose) else out
+            if format_name.startswith("gbr"):
+                plane_indices = (2, 0, 1, *range(3, num_planes))
+            else:
+                plane_indices = range(num_planes)
+            for i, p_idx in enumerate(plane_indices):
+                array[:, :, i] = byteswap_array(
+                    useful_array(planes[p_idx], itemsize, dtype), big_endian
+                )
+
+            if not transpose:
+                return array
+            if out is None:
+                return np.moveaxis(array, 2, 0)
+            out[...] = np.moveaxis(array, 2, 0)
+            return out
 
         # special cases
-        if format_name in {"yuv420p", "yuvj420p", "yuv422p"}:
+
+        # Planar formats we expose as a single (height * k, width) array by
+        # flattening and concatenating the planes. With `out`, copy each plane
+        # into its slice of `out` directly and skip the hstack allocation.
+        if format_name in {"yuv420p", "yuvj420p", "yuv422p", "nv12"}:
             assert frame.ptr.width % 2 == 0, "width has to be even for this format"
             assert frame.ptr.height % 2 == 0, "height has to be even for this format"
-            return np.hstack(
-                [
+            if format_name == "nv12":
+                flats = [
+                    useful_array(planes[0]).reshape(-1),
+                    useful_array(planes[1], 2).reshape(-1),
+                ]
+            else:
+                flats = [
                     useful_array(planes[0]).reshape(-1),
                     useful_array(planes[1]).reshape(-1),
                     useful_array(planes[2]).reshape(-1),
                 ]
-            ).reshape(-1, frame.ptr.width)
+            if out is None:
+                return np.hstack(flats).reshape(-1, frame.ptr.width)
+            total: cython.size_t = sum(flat.shape[0] for flat in flats)
+            # _check_out enforces C-contiguity, so reshape(-1) stays a view and
+            # the per-plane writes below land in `out`.
+            _check_out(out, (total // frame.ptr.width, frame.ptr.width), "uint8")
+            flat_out = out.reshape(-1)
+            offset: cython.size_t = 0
+            for flat in flats:
+                flat_out[offset : offset + flat.shape[0]] = flat
+                offset += flat.shape[0]
+            return out
         if format_name == "yuv422p10le":
             assert frame.ptr.width % 2 == 0, "width has to be even for this format"
             assert frame.ptr.height % 2 == 0, "height has to be even for this format"
@@ -823,10 +887,15 @@ class VideoFrame(Frame):
             # Double the width of U and V by repeating each value
             u_full = np.repeat(u, 2, axis=1)
             v_full = np.repeat(v, 2, axis=1)
-            if channel_last:
-                return np.stack([y, u_full, v_full], axis=2)
-            return np.stack([y, u_full, v_full], axis=0)
+            array = np.stack([y, u_full, v_full], axis=2 if channel_last else 0)
+            if out is None:
+                return array
+            _check_out(out, array.shape, "uint16")
+            out[...] = array
+            return out
         if format_name == "pal8":
+            if out is not None:
+                raise ValueError("out is not supported for the pal8 format")
             image = useful_array(planes[0])
             palette = (
                 np.frombuffer(planes[1], "i4")
@@ -835,13 +904,6 @@ class VideoFrame(Frame):
                 .view(np.uint8)
             )
             return image, palette
-        if format_name == "nv12":
-            return np.hstack(
-                [
-                    useful_array(planes[0]).reshape(-1),
-                    useful_array(planes[1], 2).reshape(-1),
-                ]
-            ).reshape(-1, frame.ptr.width)
 
         raise ValueError(
             f"Conversion to numpy array with format `{format_name}` is not yet supported"

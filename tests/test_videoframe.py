@@ -1339,3 +1339,152 @@ def test_reformat_pixel_format_align() -> None:
         result = frame_rgb.to_ndarray()
         assert result.shape == expected_rgb.shape
         assert numpy.abs(result.astype(int) - expected_rgb.astype(int)).max() <= 1
+
+
+@pytest.mark.parametrize("format", ["rgb24", "bgr24", "gray8", "yuv444p"])
+def test_to_ndarray_out(format: str) -> None:
+    # to_ndarray(out=...) writes into a preallocated buffer and returns it,
+    # producing the same result as the allocating path.
+    frame = VideoFrame(64, 48, format)
+    expected = frame.to_ndarray()
+    out = numpy.empty(expected.shape, dtype=expected.dtype)
+    result = frame.to_ndarray(out=out)
+    assert result is out
+    assertNdarraysEqual(result, expected)
+
+
+@pytest.mark.parametrize("format", ["yuv420p", "yuvj420p", "yuv422p", "nv12"])
+def test_to_ndarray_out_planar(format: str) -> None:
+    # The flattened/concatenated planar formats fill `out` slice by slice
+    # without the intermediate hstack allocation.
+    frame = VideoFrame(64, 48, format)
+    expected = frame.to_ndarray()
+    out = numpy.empty(expected.shape, dtype=expected.dtype)
+    result = frame.to_ndarray(out=out)
+    assert result is out
+    assertNdarraysEqual(result, expected)
+
+
+def test_to_ndarray_out_validation() -> None:
+    frame = VideoFrame(64, 48, "rgb24")
+    # Wrong shape.
+    with pytest.raises(ValueError):
+        frame.to_ndarray(out=numpy.empty((10, 10, 3), dtype=numpy.uint8))
+    # Wrong dtype.
+    with pytest.raises(ValueError):
+        frame.to_ndarray(out=numpy.empty((48, 64, 3), dtype=numpy.float32))
+    # Non-contiguous.
+    scratch = numpy.empty((48, 64, 6), dtype=numpy.uint8)
+    with pytest.raises(ValueError):
+        frame.to_ndarray(out=scratch[:, :, ::2])
+    # pal8 returns a tuple and does not support out.
+    with pytest.raises(ValueError):
+        VideoFrame(64, 48, "pal8").to_ndarray(
+            out=numpy.empty((48, 64), dtype=numpy.uint8)
+        )
+
+
+def test_plane_to_ndarray_luma() -> None:
+    # Reading just the Y plane of a planar YUV frame yields the luma image
+    # without touching the chroma planes -- it matches the top rows that
+    # VideoFrame.to_ndarray() returns for yuv420p.
+    height, width = 48, 64
+    full = numpy.random.randint(
+        0, 256, size=(height * 3 // 2, width), dtype=numpy.uint8
+    )
+    frame = VideoFrame.from_ndarray(full, format="yuv420p")
+
+    y = frame.planes[0].to_ndarray()
+    assert y.shape == (height, width)
+    assertNdarraysEqual(y, full[:height])
+    assertNdarraysEqual(y, frame.to_ndarray()[:height])
+
+    out = numpy.empty((height, width), dtype=numpy.uint8)
+    result = frame.planes[0].to_ndarray(out=out)
+    assert result is out
+    assertNdarraysEqual(out, full[:height])
+
+
+def test_plane_to_ndarray_gray_matches_frame() -> None:
+    array = numpy.random.randint(0, 256, size=(48, 64), dtype=numpy.uint8)
+    frame = VideoFrame.from_ndarray(array, format="gray8")
+    assertNdarraysEqual(frame.planes[0].to_ndarray(), frame.to_ndarray())
+
+
+def test_plane_to_ndarray_rejects_packed() -> None:
+    # rgb24 packs three components into one plane; there is no single-component
+    # interpretation, so it must be rejected with a helpful error.
+    frame = VideoFrame(64, 48, "rgb24")
+    with pytest.raises(ValueError):
+        frame.planes[0].to_ndarray()
+
+
+def test_plane_to_ndarray_out_validation() -> None:
+    frame = VideoFrame(64, 48, "yuv420p")
+    with pytest.raises(ValueError):
+        frame.planes[0].to_ndarray(out=numpy.empty((10, 10), dtype=numpy.uint8))
+    with pytest.raises(ValueError):
+        frame.planes[0].to_ndarray(out=numpy.empty((48, 64), dtype=numpy.uint16))
+
+
+def test_plane_to_ndarray_negative_linesize() -> None:
+    # A bottom-up (vflipped) gray frame has a negative line_size; the plane view
+    # must still come back top-down.
+    height, width = 6, 4
+    array = numpy.arange(height * width, dtype=numpy.uint8).reshape(height, width)
+    frame = _vflip(VideoFrame.from_ndarray(array, format="gray"))
+    assert frame.planes[0].line_size < 0
+    result = frame.planes[0].to_ndarray()
+    assertNdarraysEqual(result, array[::-1])
+    assert result.copy().sum() == int(array.sum())
+
+
+@pytest.mark.parametrize("format", ["gbrp", "yuv422p10le"])
+def test_to_ndarray_out_extra_formats(format: str) -> None:
+    # Cover the gbr plane-reorder and the yuv422p10le stack paths with out=.
+    frame = VideoFrame(64, 48, format)
+    expected = frame.to_ndarray()
+    out = numpy.empty(expected.shape, dtype=expected.dtype)
+    result = frame.to_ndarray(out=out)
+    assert result is out
+    assertNdarraysEqual(result, expected)
+
+
+def test_to_ndarray_out_channel_last() -> None:
+    frame = VideoFrame(64, 48, "yuv444p")
+    expected = frame.to_ndarray(channel_last=True)
+    out = numpy.empty(expected.shape, dtype=expected.dtype)
+    assert frame.to_ndarray(channel_last=True, out=out) is out
+    assertNdarraysEqual(out, expected)
+
+
+@pytest.mark.parametrize("format", ["rgb24", "yuv420p"])
+def test_to_ndarray_out_noncontiguous_rejected(format: str) -> None:
+    # to_ndarray(out=) requires a C-contiguous buffer for every format.
+    frame = VideoFrame(64, 48, format)
+    expected = frame.to_ndarray()
+    out = numpy.empty(expected.shape + (2,), dtype=expected.dtype)[..., 0]
+    assert not out.flags["C_CONTIGUOUS"]
+    with pytest.raises(ValueError):
+        frame.to_ndarray(out=out)
+
+
+def test_plane_to_ndarray_big_endian() -> None:
+    array = numpy.random.randint(0, 1024, size=(48, 64), dtype=numpy.uint16)
+    frame = VideoFrame.from_ndarray(array, format="gray16be")
+    result = frame.planes[0].to_ndarray()
+    assert result.dtype == numpy.uint16
+    assertNdarraysEqual(result, array)
+    out = numpy.empty((48, 64), dtype=numpy.uint16)
+    assert frame.planes[0].to_ndarray(out=out) is out
+    assertNdarraysEqual(out, array)
+
+
+def test_plane_to_ndarray_negative_linesize_out() -> None:
+    height, width = 6, 4
+    array = numpy.arange(height * width, dtype=numpy.uint8).reshape(height, width)
+    frame = _vflip(VideoFrame.from_ndarray(array, format="gray"))
+    assert frame.planes[0].line_size < 0
+    out = numpy.empty((height, width), dtype=numpy.uint8)
+    assert frame.planes[0].to_ndarray(out=out) is out
+    assertNdarraysEqual(out, array[::-1])

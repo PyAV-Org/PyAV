@@ -70,6 +70,87 @@ class VideoPlane(Plane):
             return False
         return True
 
+    def to_ndarray(self, out=None):
+        """Get a numpy array of this single plane, with line padding removed.
+
+        Unlike :meth:`.VideoFrame.to_ndarray`, which assembles every plane into
+        one array, this returns just this plane as a ``(height, width)`` array.
+        That makes it cheap to read a single component -- for example the luma
+        (Y) plane of a planar YUV frame as a grayscale image -- without ever
+        touching the chroma planes.
+
+        Only single-component planes are supported (the Y/U/V planes of planar
+        formats, or ``gray``). Packed or semi-planar planes (e.g. ``rgb24`` or
+        the interleaved chroma plane of ``nv12``) hold more than one component
+        per sample; use :meth:`.VideoFrame.to_ndarray` for those.
+
+        :param out: An optional, preallocated ``(height, width)`` numpy array of
+            the matching dtype to copy into; it is returned in place of a freshly
+            allocated array. When ``out`` is ``None`` a zero-copy view onto the
+            plane's buffer is returned: it shares memory with the frame, so
+            writing to it mutates the frame, and it is only valid until the
+            frame's buffer is reused (e.g. by decoding the next frame).
+
+        .. note:: Numpy must be installed.
+        """
+        import sys
+
+        import numpy as np
+
+        fmt = self.frame.format
+        components = [c for c in fmt.components if c.plane == self.index]
+        if len(components) != 1:
+            raise ValueError(
+                "VideoPlane.to_ndarray() only supports single-component planes; "
+                f"plane {self.index} of format {fmt.name!r} has "
+                f"{len(components)} component(s). Use VideoFrame.to_ndarray() "
+                "for packed or interleaved planes."
+            )
+
+        depth: cython.int = components[0].bits
+        if depth <= 8:
+            dtype = np.dtype("uint8")
+        elif depth <= 16:
+            dtype = np.dtype("uint16")
+        else:
+            raise ValueError(
+                f"Unsupported component depth {depth} for VideoPlane.to_ndarray()"
+            )
+
+        itemsize: cython.int = dtype.itemsize
+        line_size: cython.int = self.line_size
+        total_line_size: cython.int = abs(line_size)
+        shape = (self.height, self.width)
+        if line_size < 0:
+            offset = (self.height - 1) * total_line_size
+            array = np.ndarray(
+                shape,
+                dtype=dtype,
+                buffer=self,
+                offset=offset,
+                strides=(-total_line_size, itemsize),
+            )
+        else:
+            array = np.ndarray(
+                shape, dtype=dtype, buffer=self, strides=(total_line_size, itemsize)
+            )
+
+        if itemsize > 1 and fmt.name.endswith("be") != (sys.byteorder == "big"):
+            array = array.byteswap()
+
+        if out is None:
+            return array
+        if out.shape != array.shape:
+            raise ValueError(
+                f"out has shape {out.shape}, but this plane has shape {array.shape}"
+            )
+        if out.dtype != array.dtype:
+            raise ValueError(
+                f"out has dtype {out.dtype}, but this plane has dtype {array.dtype}"
+            )
+        out[...] = array
+        return out
+
     def __getbuffer__(self, view: cython.pointer[Py_buffer], flags: cython.int):
         if self.frame.ptr.hw_frames_ctx:
             raise TypeError(

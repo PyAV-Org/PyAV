@@ -37,7 +37,8 @@ Breaking:
 
 Features:
 
-- Nothing (yet)
+- Add an ``out`` parameter to :meth:`.VideoFrame.to_ndarray` to write into a preallocated array and avoid a per-frame allocation.
+- Add :meth:`.VideoPlane.to_ndarray` to read a single, single-component plane (e.g. just the luma plane of a planar YUV frame) as a 2D array, with an optional ``out`` buffer.
 
 Fixes:
 
