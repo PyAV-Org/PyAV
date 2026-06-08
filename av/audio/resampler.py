@@ -9,16 +9,23 @@ from av.error import FFmpegError
 @cython.final
 @cython.cclass
 class AudioResampler:
-    """AudioResampler(format=None, layout=None, rate=None)
+    """AudioResampler(format=None, layout=None, rate=None, frame_size=None, options=None)
 
     :param AudioFormat format: The target format, or string that parses to one
         (e.g. ``"s16"``).
     :param AudioLayout layout: The target layout, or an int/string that parses
         to one (e.g. ``"stereo"``).
     :param int rate: The target sample rate.
+    :param int frame_size: The number of samples per output frame.
+    :param dict options: ``libswresample`` options passed to the underlying
+        ``aresample`` filter (e.g. ``{"resampler": "soxr", "precision": "28"}``).
+        See the `FFmpeg resampler documentation
+        <https://ffmpeg.org/ffmpeg-resampler.html>`_ for the full list.
     """
 
-    def __cinit__(self, format=None, layout=None, rate=None, frame_size=None):
+    def __cinit__(
+        self, format=None, layout=None, rate=None, frame_size=None, options=None
+    ):
         if format is not None:
             self.format = (
                 format if isinstance(format, AudioFormat) else AudioFormat(format)
@@ -29,6 +36,7 @@ class AudioResampler:
 
         self.rate = int(rate) if rate else 0
         self.frame_size = int(frame_size) if frame_size else 0
+        self.options = {str(k): str(v) for k, v in options.items()} if options else {}
         self.graph = None
 
     @cython.ccall
@@ -91,7 +99,17 @@ class AudioResampler:
                 channel_layouts=self.layout.name,
             )
             abuffersink = self.graph.add("abuffersink")
-            abuffer.link_to(aformat)
+
+            # When libswresample options are given, do the conversion with an
+            # explicit aresample filter (which owns the SwrContext) instead of
+            # relying on the one FFmpeg auto-inserts before aformat.
+            if self.options:
+                aresample = self.graph.add("aresample", **self.options)
+                abuffer.link_to(aresample)
+                aresample.link_to(aformat)
+            else:
+                abuffer.link_to(aformat)
+
             aformat.link_to(abuffersink)
             self.graph.configure()
 

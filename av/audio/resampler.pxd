@@ -13,6 +13,7 @@ cdef class AudioResampler:
     cdef readonly AudioLayout layout
     cdef readonly int rate
     cdef readonly unsigned int frame_size
+    cdef readonly dict options
 
     cdef Graph graph
     cpdef list resample(self, AudioFrame)
