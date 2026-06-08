@@ -37,7 +37,7 @@ Breaking:
 
 Features:
 
-- Nothing (yet)
+- Add ``options`` parameter to ``AudioResampler`` for passing ``libswresample`` options (e.g. ``resampler``, ``filter_size``, ``cutoff``) by :gh-user:`WyattBlue` (:issue:`2262`).
 
 Fixes:
 

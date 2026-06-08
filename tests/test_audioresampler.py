@@ -269,6 +269,51 @@ def test_pts_missing_time_base() -> None:
     assert oframe.samples == 16
 
 
+def test_swr_options() -> None:
+    """
+    libswresample options are passed through to the underlying aresample filter.
+    """
+    resampler = AudioResampler(
+        "fltp",
+        "mono",
+        16000,
+        options={"filter_size": "32", "phase_shift": "12", "cutoff": "0.95"},
+    )
+    assert resampler.options == {
+        "filter_size": "32",
+        "phase_shift": "12",
+        "cutoff": "0.95",
+    }
+
+    iframe = AudioFrame("s16", "stereo", 1024)
+    iframe.sample_rate = 48000
+    iframe.time_base = Fraction(1, 48000)
+    iframe.pts = 0
+
+    oframes = resampler.resample(iframe)
+    assert len(oframes) == 1
+
+    oframe = oframes[0]
+    assert oframe.sample_rate == 16000
+    assert oframe.format.name == "fltp"
+    assert oframe.layout.name == "mono"
+
+
+def test_swr_options_invalid() -> None:
+    """
+    An unknown option is reported rather than silently ignored.
+    """
+    resampler = AudioResampler("s16", "mono", 44100, options={"not_a_real_option": "1"})
+
+    iframe = AudioFrame("s16", "stereo", 1024)
+    iframe.sample_rate = 48000
+    iframe.time_base = Fraction(1, 48000)
+    iframe.pts = 0
+
+    with pytest.raises(ValueError, match="unused config: not_a_real_option"):
+        resampler.resample(iframe)
+
+
 def test_mismatched_input() -> None:
     """
     Consecutive frames must have the same layout, sample format and sample rate.

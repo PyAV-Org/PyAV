@@ -8,6 +8,8 @@ class AudioResampler:
     rate: int
     frame_size: int
     format: AudioFormat
+    layout: AudioLayout
+    options: dict[str, str]
     graph: Graph | None
 
     def __init__(
@@ -16,5 +18,6 @@ class AudioResampler:
         layout: str | int | AudioLayout | None = None,
         rate: int | None = None,
         frame_size: int | None = None,
+        options: dict[str, str] | None = None,
     ) -> None: ...
     def resample(self, frame: AudioFrame | None) -> list[AudioFrame]: ...
