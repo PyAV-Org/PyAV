@@ -1,5 +1,6 @@
+from collections.abc import Iterator
 from fractions import Fraction
-from typing import Generic, Iterator, Literal, TypeVar, overload
+from typing import Generic, Literal, TypeVar, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream

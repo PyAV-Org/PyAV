@@ -1,6 +1,6 @@
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
-from typing import ClassVar, Iterator, Sequence, cast, overload
+from typing import ClassVar, cast, overload
 
 from av.buffer import Buffer
 from av.frame import Frame

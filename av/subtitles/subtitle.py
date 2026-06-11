@@ -172,7 +172,7 @@ def build_subtitle(subtitle: SubtitleSet, index: cython.int) -> Subtitle:
     if ptr.type == lib.SUBTITLE_ASS or ptr.type == lib.SUBTITLE_TEXT:
         return AssSubtitle(subtitle, index)
 
-    raise ValueError("unknown subtitle type %r" % ptr.type)
+    raise ValueError(f"unknown subtitle type {ptr.type!r}")
 
 
 @cython.cclass

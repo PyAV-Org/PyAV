@@ -123,11 +123,11 @@ class TestSubtitleEncoding(TestCase):
         """Test handling of extended UTF-8 characters in subtitle dialogue."""
         from av.subtitles.subtitle import SubtitleSet
 
-        text = "0,0,Default,,0,0,0,,♪ Hey, hey, hey ♪".encode("utf-8")
+        text = "0,0,Default,,0,0,0,,♪ Hey, hey, hey ♪".encode()
         subtitle = SubtitleSet.create(text=text, start=0, end=2000, pts=0)
         sub = cast(AssSubtitle, subtitle[0])
 
-        assert sub.dialogue == "♪ Hey, hey, hey ♪".encode("utf-8")
+        assert sub.dialogue == "♪ Hey, hey, hey ♪".encode()
 
     def test_subtitle_encode_mp4(self) -> None:
         """Test encoding subtitles to MP4 container."""

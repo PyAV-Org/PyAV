@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from fractions import Fraction
-from typing import Iterator, TypedDict, overload
+from typing import TypedDict, overload
 
 import pytest
 
@@ -273,12 +274,8 @@ class TestEncoding(TestCase):
             new_packet = new_packets[0]
 
             path = self.sandboxed(
-                "%s/encoder.%04d.%s"
-                % (
-                    codec_name,
-                    frame_count,
-                    codec_name if codec_name != "mjpeg" else "jpg",
-                )
+                f"{codec_name}/encoder.{frame_count:04d}."
+                f"{codec_name if codec_name != 'mjpeg' else 'jpg'}"
             )
             path_list.append(path)
             with open(path, "wb") as f:

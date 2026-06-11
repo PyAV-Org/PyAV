@@ -496,7 +496,7 @@ class OutputContainer(Container):
             import logging
 
             log = logging.getLogger(__name__)
-            log.warning("Some options were not used: %s" % unused_options)
+            log.warning(f"Some options were not used: {unused_options}")
 
         self._myflag |= 4
 

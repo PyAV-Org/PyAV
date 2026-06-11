@@ -1,4 +1,5 @@
-from typing import Iterator, Literal
+from collections.abc import Iterator
+from typing import Literal
 
 from av.codec.context import CodecContext
 from av.packet import Packet

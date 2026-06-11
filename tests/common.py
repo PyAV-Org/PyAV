@@ -20,7 +20,8 @@ except ImportError:
     has_pillow = False
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, TypeVar
+    from collections.abc import Callable
+    from typing import Any, TypeVar
 
     from PIL.Image import Image
 
@@ -105,11 +106,7 @@ def assertNdarraysEqual(a: np.ndarray, b: np.ndarray) -> None:
         msg = ""
         for equal in it:
             if not equal:
-                msg += "- arrays differ at index {}; {} {}\n".format(
-                    it.multi_index,
-                    a[it.multi_index],
-                    b[it.multi_index],
-                )
+                msg += f"- arrays differ at index {it.multi_index}; {a[it.multi_index]} {b[it.multi_index]}\n"
         assert False, f"ndarrays contents differ\n{msg}"
 
 

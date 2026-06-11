@@ -1,4 +1,5 @@
-from typing import Any, Iterator, overload
+from collections.abc import Iterator
+from typing import Any, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
@@ -17,7 +18,6 @@ class InputContainer(Container):
     bit_rate: int
     size: int
 
-    def __enter__(self) -> InputContainer: ...
     @overload
     def demux(self, video_stream: VideoStream) -> Iterator[Packet[VideoStream]]: ...
     @overload

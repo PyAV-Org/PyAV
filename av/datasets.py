@@ -2,7 +2,7 @@ import errno
 import logging
 import os
 import sys
-from typing import Iterator
+from collections.abc import Iterator
 from urllib.request import urlopen
 
 log = logging.getLogger(__name__)

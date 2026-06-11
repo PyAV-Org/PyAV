@@ -1,5 +1,6 @@
+from collections.abc import Iterator
 from fractions import Fraction
-from typing import Iterator, Literal
+from typing import Literal
 
 from av.codec.context import CodecContext
 from av.packet import Packet

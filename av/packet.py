@@ -1,4 +1,5 @@
-from typing import Iterator, Literal, get_args
+from collections.abc import Iterator
+from typing import Literal, get_args
 
 import cython
 from cython.cimports import libav as lib

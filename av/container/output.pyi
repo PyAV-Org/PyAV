@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from fractions import Fraction
-from typing import Sequence, TypeVar, overload
+from typing import TypeVar, overload
 
 from av.audio import _AudioCodecName
 from av.audio.stream import AudioStream
@@ -14,7 +15,6 @@ from .core import Container
 _StreamT = TypeVar("_StreamT", bound=Stream)
 
 class OutputContainer(Container):
-    def __enter__(self) -> OutputContainer: ...
     @overload
     def add_stream(
         self,

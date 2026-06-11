@@ -116,7 +116,7 @@ class Codec:
         if not self.desc:
             self.desc = lib.avcodec_descriptor_get(self.ptr.id)
             if not self.desc:
-                raise RuntimeError("No codec descriptor for %r." % name)
+                raise RuntimeError(f"No codec descriptor for {name!r}.")
 
         self.is_encoder = lib.av_codec_is_encoder(self.ptr)
 
@@ -384,17 +384,9 @@ def dump_codecs():
 
         try:
             print(
-                " %s%s%s%s%s%s %-18s %s"
-                % (
-                    ".D"[bool(d_codec)],
-                    ".E"[bool(e_codec)],
-                    codec.type[0].upper(),
-                    ".I"[codec.intra_only],
-                    ".L"[codec.lossy],
-                    ".S"[codec.lossless],
-                    codec.name,
-                    codec.long_name,
-                )
+                f" {'.D'[bool(d_codec)]}{'.E'[bool(e_codec)]}{codec.type[0].upper()}"
+                f"{'.I'[codec.intra_only]}{'.L'[codec.lossy]}{'.S'[codec.lossless]}"
+                f" {codec.name:<18} {codec.long_name}"
             )
         except Exception as e:
             print(f"...... {codec.name:<18} ERROR: {e}")

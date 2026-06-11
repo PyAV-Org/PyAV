@@ -1,4 +1,5 @@
-from typing import Iterator, Literal, overload
+from collections.abc import Iterator
+from typing import Literal, overload
 
 from av.audio.stream import AudioStream
 from av.stream import AttachmentStream, DataStream, Stream

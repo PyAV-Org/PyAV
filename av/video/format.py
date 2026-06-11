@@ -23,7 +23,7 @@ def get_pix_fmt(name: cython.p_const_char) -> lib.AVPixelFormat:
 
     pix_fmt: lib.AVPixelFormat = lib.av_get_pix_fmt(name)
     if pix_fmt == lib.AV_PIX_FMT_NONE:
-        raise ValueError("not a pixel format: %r" % name)
+        raise ValueError(f"not a pixel format: {name!r}")
     return pix_fmt
 
 

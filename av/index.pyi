@@ -1,4 +1,5 @@
-from typing import Iterator, overload
+from collections.abc import Iterator
+from typing import overload
 
 class IndexEntry:
     pos: int

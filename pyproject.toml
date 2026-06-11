@@ -10,7 +10,7 @@ authors = [
     {name = "WyattBlue", email = "wyattblue@auto-editor.com"},
     {name = "Jeremy Lainé", email = "jeremy.laine@m4x.org"},
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -20,7 +20,6 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Cython",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",

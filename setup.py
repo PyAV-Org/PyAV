@@ -94,7 +94,7 @@ def get_config_from_pkg_config():
 
     known, unknown = parse_cflags(raw_cflags.decode("utf-8"))
     if unknown:
-        print("pkg-config returned flags we don't understand: {}".format(unknown))
+        print(f"pkg-config returned flags we don't understand: {unknown}")
         if "-pthread" in unknown:
             print("Building PyAV against static FFmpeg libraries is not supported.")
         exit(1)
