@@ -1,6 +1,6 @@
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 
@@ -10,12 +10,12 @@ from .format import VideoFormat
 from .plane import VideoPlane
 from .reformatter import ColorPrimaries, ColorTrc
 
-_SupportedNDarray = Union[
-    np.ndarray[Any, np.dtype[np.uint8]],
-    np.ndarray[Any, np.dtype[np.uint16]],
-    np.ndarray[Any, np.dtype[np.float16]],
-    np.ndarray[Any, np.dtype[np.float32]],
-]
+_SupportedNDarray = (
+    np.ndarray[Any, np.dtype[np.uint8]]
+    | np.ndarray[Any, np.dtype[np.uint16]]
+    | np.ndarray[Any, np.dtype[np.float16]]
+    | np.ndarray[Any, np.dtype[np.float32]]
+)
 
 supported_np_pix_fmts: set[str]
 

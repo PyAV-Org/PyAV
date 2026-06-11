@@ -1,8 +1,9 @@
+from collections.abc import Callable
 from enum import Flag, IntEnum
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, ClassVar, Literal, Type, TypedDict, cast, overload
+from typing import Any, ClassVar, Literal, Self, TypedDict, cast, overload
 
 from av.codec.hwaccel import HWAccel
 from av.format import ContainerFormat
@@ -92,10 +93,10 @@ class Container:
     read_timeout: Real | None
     flags: int
     video_codec_id: int
-    def __enter__(self) -> Container: ...
+    def __enter__(self) -> Self: ...
     def __exit__(
         self,
-        exc_type: Type[BaseException] | None,
+        exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None: ...

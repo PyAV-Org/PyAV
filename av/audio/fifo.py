@@ -95,8 +95,8 @@ class AudioFifo:
             )
             if frame.ptr.pts != expected_pts:
                 raise ValueError(
-                    "Frame.pts (%d) != expected (%d); fix or set to None."
-                    % (frame.ptr.pts, expected_pts)
+                    f"Frame.pts ({frame.ptr.pts}) != expected ({expected_pts}); "
+                    "fix or set to None."
                 )
 
         err_check(

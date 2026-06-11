@@ -1,6 +1,6 @@
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from fractions import Fraction
-from typing import Iterator, Literal
+from typing import Literal
 
 from av.codec.context import ThreadType
 from av.packet import Packet

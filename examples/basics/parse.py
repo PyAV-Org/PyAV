@@ -31,7 +31,7 @@ while True:
     chunk = fh.read(1 << 16)
 
     packets = codec.parse(chunk)
-    print("Parsed {} packets from {} bytes:".format(len(packets), len(chunk)))
+    print(f"Parsed {len(packets)} packets from {len(chunk)} bytes:")
 
     for packet in packets:
         print("   ", packet)

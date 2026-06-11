@@ -238,8 +238,7 @@ class InputContainer(Container):
         """
         self._assert_open()
         for packet in self.demux(*args, **kwargs):
-            for frame in packet.decode():
-                yield frame
+            yield from packet.decode()
 
     def seek(
         self,

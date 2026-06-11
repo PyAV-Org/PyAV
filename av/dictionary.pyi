@@ -1,4 +1,4 @@
-from typing import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 
 class Dictionary:
     def __getitem__(self, key: str) -> str: ...

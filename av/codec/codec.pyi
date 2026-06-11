@@ -1,6 +1,7 @@
+from collections.abc import Sequence
 from enum import Flag, IntEnum
 from fractions import Fraction
-from typing import ClassVar, Literal, Sequence, cast, overload
+from typing import ClassVar, Literal, cast, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat

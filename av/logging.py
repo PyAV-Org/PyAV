@@ -288,7 +288,7 @@ def log_callback_gil(
                     repeat_log = (
                         last_log[0],
                         last_log[1],
-                        "%s (repeated %d more times)" % (last_log[2], skip_count),
+                        f"{last_log[2]} (repeated {skip_count} more times)",
                     )
                 skip_count = 0
 
