@@ -13,6 +13,7 @@ from av import (
     AudioFrame,
     AudioLayout,
     AudioResampler,
+    AudioStream,
     Codec,
     Packet,
     VideoCodecContext,
@@ -183,6 +184,79 @@ class TestCodecContext(TestCase):
 
             with pytest.raises(ValueError):
                 stream.codec_context.bits_per_coded_sample = 32
+
+    def test_decode_keeps_frames_before_error(self) -> None:
+        # Regression test for #2044: a single packet may contain a valid frame
+        # followed by undecodable bytes (e.g. a truncated final FLAC frame).
+        # FFmpeg yields the good frame and only reports the error on the next
+        # receive, so decode() must return what it already decoded instead of
+        # raising and discarding it.
+        import io
+
+        import numpy as np
+
+        # Build an in-memory FLAC stream with several independent frames.
+        buf = io.BytesIO()
+        with av.open(buf, "w", format="flac") as output:
+            stream = output.add_stream("flac", rate=44100)
+            assert isinstance(stream, AudioStream)
+            stream.format = "s16"
+            stream.layout = "mono"
+            n = 0
+            for _ in range(8):
+                samples = 4096
+                t = (np.arange(n, n + samples) / 44100).astype(np.float32)
+                sig = (np.sin(2 * np.pi * 440 * t) * 16000).astype(np.int16)
+                frame = AudioFrame.from_ndarray(
+                    sig.reshape(1, -1), format="s16", layout="mono"
+                )
+                frame.rate = 44100
+                frame.pts = n
+                for packet in stream.encode(frame):
+                    output.mux(packet)
+                n += samples
+            for packet in stream.encode(None):
+                output.mux(packet)
+
+        # Re-read the raw (parser-split) frame packets and decoder extradata.
+        buf.seek(0)
+        with av.open(buf, "r") as container:
+            audio = container.streams.audio[0]
+            extradata = audio.codec_context.extradata
+            packets = [bytes(p) for p in container.demux(audio) if p.size]
+
+        assert len(packets) >= 3
+
+        def make_ctx() -> AudioCodecContext:
+            ctx = Codec("flac", "r").create("audio")
+            assert isinstance(ctx, AudioCodecContext)
+            ctx.extradata = extradata
+            return ctx
+
+        # A leading frame that decodes cleanly on its own.
+        good_frames = make_ctx().decode(Packet(packets[0]))
+        good_samples = sum(f.samples for f in good_frames)
+        assert good_samples > 0
+
+        # Trailing bytes that are undecodable on their own.
+        corrupt: bytes | None = None
+        for raw in packets[1:]:
+            chunk = raw[: len(raw) // 2]
+            try:
+                make_ctx().decode(Packet(chunk))
+            except av.error.InvalidDataError:
+                corrupt = chunk
+                break
+        assert corrupt is not None, "could not construct an undecodable chunk"
+
+        # [valid frame][undecodable bytes] in one packet must still yield the
+        # valid frame rather than raising and dropping everything.
+        frames = make_ctx().decode(Packet(packets[0] + corrupt))
+        assert sum(f.samples for f in frames) >= good_samples
+
+        # A packet that is *only* undecodable bytes still raises.
+        with pytest.raises(av.error.InvalidDataError):
+            make_ctx().decode(Packet(corrupt))
 
     def test_parse(self) -> None:
         # This one parses into a single packet.

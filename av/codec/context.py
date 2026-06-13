@@ -12,6 +12,8 @@ from cython.cimports.libc.errno import EAGAIN
 from cython.cimports.libc.stdint import uint8_t
 from cython.cimports.libc.string import memcpy
 
+from av.error import InvalidDataError
+
 _cinit_sentinel = cython.declare(object, object())
 
 
@@ -498,11 +500,17 @@ class CodecContext:
         err_check(res, "avcodec_send_packet()")
 
         out: list = []
-        frame = self._recv_frame()
-        while frame:
+        while True:
+            try:
+                frame = self._recv_frame()
+            except InvalidDataError:
+                if out:
+                    break
+                raise
+            if frame is None:
+                break
             self._setup_decoded_frame(frame, packet)
             out.append(frame)
-            frame = self._recv_frame()
         return out
 
     @cython.ccall
