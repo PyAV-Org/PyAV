@@ -254,6 +254,7 @@ supported_np_pix_fmts = {
     "rgbf32be",
     "rgbf32le",
     "yuv420p",
+    "yuv420p10le",
     "yuv422p10le",
     "yuv444p",
     "yuv444p16be",
@@ -812,6 +813,16 @@ class VideoFrame(Frame):
                     useful_array(planes[2]).reshape(-1),
                 ]
             ).reshape(-1, frame.ptr.width)
+        if format_name == "yuv420p10le":
+            assert frame.ptr.width % 2 == 0, "width has to be even for this format"
+            assert frame.ptr.height % 2 == 0, "height has to be even for this format"
+            return np.hstack(
+                [
+                    useful_array(planes[0], 2, "uint16").reshape(-1),
+                    useful_array(planes[1], 2, "uint16").reshape(-1),
+                    useful_array(planes[2], 2, "uint16").reshape(-1),
+                ]
+            ).reshape(-1, frame.ptr.width)
         if format_name == "yuv422p10le":
             assert frame.ptr.width % 2 == 0, "width has to be even for this format"
             assert frame.ptr.height % 2 == 0, "height has to be even for this format"
@@ -1267,6 +1278,19 @@ class VideoFrame(Frame):
             copy_array_to_plane(flat[0:u_start], frame.planes[0], 1)
             copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 1)
             copy_array_to_plane(flat[v_start:], frame.planes[2], 1)
+            return frame
+        elif format == "yuv420p10le":
+            check_ndarray(array, "uint16", 2)
+            check_ndarray_shape(array, array.shape[0] % 3 == 0)
+            check_ndarray_shape(array, array.shape[1] % 2 == 0)
+
+            frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
+            u_start = frame.width * frame.height
+            v_start = 5 * u_start // 4
+            flat = array.reshape(-1)
+            copy_array_to_plane(flat[0:u_start], frame.planes[0], 2)
+            copy_array_to_plane(flat[u_start:v_start], frame.planes[1], 2)
+            copy_array_to_plane(flat[v_start:], frame.planes[2], 2)
             return frame
         elif format == "yuv422p":
             check_ndarray(array, "uint8", 2)

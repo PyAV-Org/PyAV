@@ -688,6 +688,23 @@ def test_ndarray_yuv420p() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
+def test_ndarray_yuv420p10le() -> None:
+    array = numpy.random.randint(0, 1024, size=(720, 640), dtype=numpy.uint16)
+    frame = VideoFrame.from_ndarray(array, format="yuv420p10le")
+    assert frame.width == 640 and frame.height == 480
+    assert frame.format.name == "yuv420p10le"
+    assert "yuv420p10le" in supported_np_pix_fmts
+    assertNdarraysEqual(frame.to_ndarray(), array)
+
+
+def test_ndarray_yuv420p10le_align() -> None:
+    array = numpy.random.randint(0, 1024, size=(357, 318), dtype=numpy.uint16)
+    frame = VideoFrame.from_ndarray(array, format="yuv420p10le")
+    assert frame.width == 318 and frame.height == 238
+    assert frame.format.name == "yuv420p10le"
+    assertNdarraysEqual(frame.to_ndarray(), array)
+
+
 def test_ndarray_yuv422p() -> None:
     array = numpy.random.randint(0, 256, size=(960, 640), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="yuv422p")

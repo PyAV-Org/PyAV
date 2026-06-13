@@ -38,6 +38,7 @@ Breaking:
 Features:
 
 - Add ``options`` parameter to ``AudioResampler`` for passing ``libswresample`` options (e.g. ``resampler``, ``filter_size``, ``cutoff``) by :gh-user:`WyattBlue` (:issue:`2262`).
+- Support ``yuv420p10le`` in ``VideoFrame.to_ndarray`` and ``VideoFrame.from_ndarray`` by :gh-user:`WyattBlue` (:issue:`1981`).
 
 Fixes:
 
