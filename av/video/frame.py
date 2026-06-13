@@ -737,6 +737,7 @@ class VideoFrame(Frame):
             "RGB", (plane.width, plane.height), bytes(o_buf), "raw", "RGB", 0, 1
         )
 
+    @cython.cdivision(True)
     def to_ndarray(self, channel_last=False, **kwargs):
         """Get a numpy array of this frame.
 
@@ -803,24 +804,19 @@ class VideoFrame(Frame):
             return array
 
         # special cases
-        if format_name in {"yuv420p", "yuvj420p", "yuv422p"}:
+        if format_name in {"yuv420p", "yuvj420p", "yuv422p", "yuv420p10le"}:
             assert frame.ptr.width % 2 == 0, "width has to be even for this format"
             assert frame.ptr.height % 2 == 0, "height has to be even for this format"
+            is_10bit: cython.bint = format_name == "yuv420p10le"
+            itemsize = 2 if is_10bit else 1
+            dtype = "uint16" if is_10bit else "uint8"
+            if frame.ptr.width == 0 or frame.ptr.height == 0:
+                return np.empty((0, frame.ptr.width), dtype=dtype)
             return np.hstack(
                 [
-                    useful_array(planes[0]).reshape(-1),
-                    useful_array(planes[1]).reshape(-1),
-                    useful_array(planes[2]).reshape(-1),
-                ]
-            ).reshape(-1, frame.ptr.width)
-        if format_name == "yuv420p10le":
-            assert frame.ptr.width % 2 == 0, "width has to be even for this format"
-            assert frame.ptr.height % 2 == 0, "height has to be even for this format"
-            return np.hstack(
-                [
-                    useful_array(planes[0], 2, "uint16").reshape(-1),
-                    useful_array(planes[1], 2, "uint16").reshape(-1),
-                    useful_array(planes[2], 2, "uint16").reshape(-1),
+                    useful_array(planes[0], itemsize, dtype).reshape(-1),
+                    useful_array(planes[1], itemsize, dtype).reshape(-1),
+                    useful_array(planes[2], itemsize, dtype).reshape(-1),
                 ]
             ).reshape(-1, frame.ptr.width)
         if format_name == "yuv422p10le":
@@ -1154,6 +1150,7 @@ class VideoFrame(Frame):
         self._init_user_attributes()
 
     @staticmethod
+    @cython.cdivision(True)
     def from_ndarray(array, format="rgb24", channel_last=False):
         """
         Construct a frame from a numpy array.
@@ -1272,6 +1269,8 @@ class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
 
             frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
+            if frame.width == 0 or frame.height == 0:
+                return frame
             u_start = frame.width * frame.height
             v_start = 5 * u_start // 4
             flat = array.reshape(-1)
@@ -1285,6 +1284,8 @@ class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
 
             frame = VideoFrame(array.shape[1], (array.shape[0] * 2) // 3, format)
+            if frame.width == 0 or frame.height == 0:
+                return frame
             u_start = frame.width * frame.height
             v_start = 5 * u_start // 4
             flat = array.reshape(-1)
@@ -1298,6 +1299,8 @@ class VideoFrame(Frame):
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
 
             frame = VideoFrame(array.shape[1], array.shape[0] // 2, format)
+            if frame.width == 0 or frame.height == 0:
+                return frame
             u_start = frame.width * frame.height
             v_start = u_start + u_start // 2
             flat = array.reshape(-1)

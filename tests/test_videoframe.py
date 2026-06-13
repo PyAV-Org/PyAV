@@ -705,6 +705,22 @@ def test_ndarray_yuv420p10le_align() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
+def test_ndarray_yuv420p10le_zero_size() -> None:
+    # A frame with zero width and/or height has no allocated planes; conversions
+    # should degrade gracefully instead of raising IndexError.
+    for w, h in ((0, 0), (0, 480), (640, 0)):
+        frame = VideoFrame(w, h, "yuv420p10le")
+        array = frame.to_ndarray()
+        assert array.dtype == numpy.uint16
+        assert array.size == 0
+
+    empty = numpy.empty((0, 0), dtype=numpy.uint16)
+    frame = VideoFrame.from_ndarray(empty, format="yuv420p10le")
+    assert frame.width == 0 and frame.height == 0
+    assert frame.format.name == "yuv420p10le"
+    assertNdarraysEqual(frame.to_ndarray(), empty)
+
+
 def test_ndarray_yuv422p() -> None:
     array = numpy.random.randint(0, 256, size=(960, 640), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="yuv422p")
