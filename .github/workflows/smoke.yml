@@ -67,7 +67,6 @@ jobs:
               cmake \
               libjpeg-dev \
               libtool \
-              libvorbis-dev \
               libx264-dev \
               nasm \
               pkg-config \
@@ -77,7 +76,7 @@ jobs:
             fi
             ;;
           macos-14)
-            brew install automake libtool libpng libvorbis libvpx opus x264
+            brew install automake libtool libpng libvpx opus x264
             ;;
         esac
 
@@ -88,6 +87,7 @@ jobs:
 
     - name: Build
       run: |
+        [ "${{ runner.os }}" = "macOS" ] && export ARCHFLAGS="-arch $(uname -m)"
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
         scripts/build
 
