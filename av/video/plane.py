@@ -194,8 +194,8 @@ class VideoPlane(Plane):
             # Y/U/V planes of planar YUV, gray, ...) become 2D (H, W), while
             # planes that interleave several components (packed RGB, the chroma
             # plane of NV12, ...) become 3D (H, W, C).
-            desc: cython.pointer[lib.AVPixFmtDescriptor] = lib.av_pix_fmt_desc_get(
-                sw_fmt
+            desc: cython.pointer[cython.const[lib.AVPixFmtDescriptor]] = (
+                lib.av_pix_fmt_desc_get(sw_fmt)
             )
             if desc == cython.NULL:
                 raise NotImplementedError("unknown pixel format for DLPack export")
