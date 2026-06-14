@@ -57,6 +57,20 @@ char* loudnorm_get_stats(
     const char* loudnorm_args
 ) {
     char* result = NULL;
+
+    // Bail out cleanly if FFmpeg was built without a filter we depend on,
+    // instead of dereferencing a NULL filter context further down. The caller
+    // turns a NULL return into a Python exception.
+    if (!avfilter_get_by_name("abuffer") ||
+        !avfilter_get_by_name("abuffersink") ||
+        !avfilter_get_by_name("loudnorm")) {
+        av_log(NULL, AV_LOG_ERROR,
+            "loudnorm: a required filter (abuffer/abuffersink/loudnorm) is not "
+            "available in this FFmpeg build\n");
+        avformat_close_input(&fmt_ctx);
+        return NULL;
+    }
+
     json_captured = 0;    // Reset the captured flag
     memset(json_buffer, 0, sizeof(json_buffer));  // Clear the buffer
 
@@ -76,7 +90,10 @@ char* loudnorm_get_stats(
 
     AVCodec *codec = NULL;
     AVCodecContext *codec_ctx = NULL;
+    AVPacket *packet = NULL;
+    AVFrame *frame = NULL, *filt_frame = NULL;
     int ret;
+    int graph_configured = 0;
 
     AVCodecParameters *codecpar = fmt_ctx->streams[audio_stream_index]->codecpar;
     codec = (AVCodec *)avcodec_find_decoder(codecpar->codec_id);
@@ -98,20 +115,25 @@ char* loudnorm_get_stats(
         av_get_sample_fmt_name(codec_ctx->sample_fmt),
         ch_layout_str);
 
-    avfilter_graph_create_filter(&src_ctx, avfilter_get_by_name("abuffer"),
-        "src", args, NULL, filter_graph);
-    avfilter_graph_create_filter(&sink_ctx, avfilter_get_by_name("abuffersink"),
-        "sink", NULL, NULL, filter_graph);
-    avfilter_graph_create_filter(&loudnorm_ctx, avfilter_get_by_name("loudnorm"),
-        "loudnorm", loudnorm_args, NULL, filter_graph);
+    if (avfilter_graph_create_filter(&src_ctx, avfilter_get_by_name("abuffer"),
+            "src", args, NULL, filter_graph) < 0 ||
+        avfilter_graph_create_filter(&sink_ctx, avfilter_get_by_name("abuffersink"),
+            "sink", NULL, NULL, filter_graph) < 0 ||
+        avfilter_graph_create_filter(&loudnorm_ctx, avfilter_get_by_name("loudnorm"),
+            "loudnorm", loudnorm_args, NULL, filter_graph) < 0) {
+        goto end;
+    }
 
-    avfilter_link(src_ctx, 0, loudnorm_ctx, 0);
-    avfilter_link(loudnorm_ctx, 0, sink_ctx, 0);
-    avfilter_graph_config(filter_graph, NULL);
+    if (avfilter_link(src_ctx, 0, loudnorm_ctx, 0) < 0 ||
+        avfilter_link(loudnorm_ctx, 0, sink_ctx, 0) < 0 ||
+        avfilter_graph_config(filter_graph, NULL) < 0) {
+        goto end;
+    }
+    graph_configured = 1;
 
-    AVPacket *packet = av_packet_alloc();
-    AVFrame *frame = av_frame_alloc();
-    AVFrame *filt_frame = av_frame_alloc();
+    packet = av_packet_alloc();
+    frame = av_frame_alloc();
+    filt_frame = av_frame_alloc();
 
     while ((ret = av_read_frame(fmt_ctx, packet)) >= 0) {
         if (packet->stream_index != audio_stream_index) {
@@ -157,46 +179,50 @@ char* loudnorm_get_stats(
         av_frame_unref(filt_frame);
     }
 
-    // Pushes graph
-    avfilter_graph_free(&filter_graph);
-
 end:
+    // Freeing the graph uninits the loudnorm filter, which is what makes it
+    // emit its JSON stats through our log callback. Safe to call on NULL.
+    avfilter_graph_free(&filter_graph);
     avcodec_free_context(&codec_ctx);
     avformat_close_input(&fmt_ctx);
     av_frame_free(&filt_frame);
     av_frame_free(&frame);
     av_packet_free(&packet);
 
-    #ifdef _WIN32
-    EnterCriticalSection(&json_mutex);
-    while (!json_captured) {
-        if (!SleepConditionVariableCS(&json_cond, &json_mutex, 5000)) { // 5 second timeout
-            fprintf(stderr, "Timeout waiting for JSON data\n");
-            break;
+    // If the graph never configured we produced no stats; don't block waiting
+    // for JSON that will never arrive. Leave result NULL so the caller raises.
+    if (graph_configured) {
+        #ifdef _WIN32
+        EnterCriticalSection(&json_mutex);
+        while (!json_captured) {
+            if (!SleepConditionVariableCS(&json_cond, &json_mutex, 5000)) { // 5 second timeout
+                fprintf(stderr, "Timeout waiting for JSON data\n");
+                break;
+            }
         }
-    }
-    if (json_captured) {
-        result = _strdup(json_buffer);  // Use _strdup on Windows
-    }
-    LeaveCriticalSection(&json_mutex);
-    #else
-    struct timespec timeout;
-    clock_gettime(CLOCK_REALTIME, &timeout);
-    timeout.tv_sec += 5;  // 5 second timeout
+        if (json_captured) {
+            result = _strdup(json_buffer);  // Use _strdup on Windows
+        }
+        LeaveCriticalSection(&json_mutex);
+        #else
+        struct timespec timeout;
+        clock_gettime(CLOCK_REALTIME, &timeout);
+        timeout.tv_sec += 5;  // 5 second timeout
 
-    pthread_mutex_lock(&json_mutex);
-    while (json_captured == 0) {
-        int ret = pthread_cond_timedwait(&json_cond, &json_mutex, &timeout);
-        if (ret == ETIMEDOUT) {
-            fprintf(stderr, "Timeout waiting for JSON data\n");
-            break;
+        pthread_mutex_lock(&json_mutex);
+        while (json_captured == 0) {
+            int ret = pthread_cond_timedwait(&json_cond, &json_mutex, &timeout);
+            if (ret == ETIMEDOUT) {
+                fprintf(stderr, "Timeout waiting for JSON data\n");
+                break;
+            }
         }
+        if (json_captured) {
+            result = strdup(json_buffer);
+        }
+        pthread_mutex_unlock(&json_mutex);
+        #endif
     }
-    if (json_captured) {
-        result = strdup(json_buffer);
-    }
-    pthread_mutex_unlock(&json_mutex);
-    #endif
 
     av_log_set_callback(av_log_default_callback);
     return result;
