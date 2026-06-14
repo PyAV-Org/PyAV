@@ -67,7 +67,7 @@ echo ./configure
     --enable-debug=3 \
     --enable-libx264 \
     --disable-bsfs \
-    --enable-bsf=chomp,h264_mp4toannexb,setts \
+    --enable-bsf=chomp,extract_extradata,h264_mp4toannexb,setts \
     --enable-sse \
     --enable-avx \
     --enable-avx2 \

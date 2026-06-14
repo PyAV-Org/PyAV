@@ -42,7 +42,7 @@ Features:
 
 Fixes:
 
-- Nothing (yet)
+- Fix ``add_mux_stream`` producing unwritable Matroska files by extracting codec extradata from the bitstream before the header is written by :gh-user:`WyattBlue` (:issue:`2198`).
 
 v17.1.0
 -------

@@ -1,4 +1,5 @@
 import io
+from fractions import Fraction
 
 import numpy as np
 import pytest
@@ -85,6 +86,47 @@ def test_add_mux_stream_no_codec_context() -> None:
         # repr should not crash
         assert "video/<nocodec>" in repr(video_stream)
         assert "audio/<nocodec>" in repr(audio_stream)
+
+
+def test_add_mux_stream_matroska_extradata() -> None:
+    """Regression test for #2198.
+
+    Muxing pre-encoded H.264 packets into Matroska used to fail in
+    ``avformat_write_header`` because the muxer needs ``CodecPrivate`` (the codec
+    extradata) before the first packet is written. When the packets are annex-b
+    with in-band parameter sets but the stream has no extradata,
+    ``add_mux_stream`` extracts it from the bitstream so the file is written and
+    stays decodable.
+    """
+    if av.codec.Codec("h264", "w").name != "libx264":
+        pytest.skip("requires libx264")
+
+    # Encode without a global header, so the packets carry annex-b parameter
+    # sets in-band and the codec context exposes no extradata to copy.
+    cc = av.CodecContext.create("libx264", "w")
+    cc.width, cc.height, cc.pix_fmt = 320, 240, "yuv420p"
+    cc.time_base = Fraction(1, 24)
+    cc.framerate = Fraction(24, 1)
+
+    packets = []
+    for i in range(24):
+        frame = av.VideoFrame.from_ndarray(
+            np.zeros((240, 320, 3), dtype="uint8"), format="rgb24"
+        )
+        frame.pts = i
+        frame.time_base = Fraction(1, 24)
+        packets.extend(cc.encode(frame))
+    packets.extend(cc.encode(None))
+    assert cc.extradata is None  # nothing to copy onto the stream
+
+    buf = io.BytesIO()
+    with av.open(buf, "w", format="matroska") as output:
+        out_stream = output.add_mux_stream("libx264", rate=24, width=320, height=240)
+        for packet in packets:
+            packet.stream = out_stream
+            output.mux(packet)
+
+    assert _decoded_frame_count(buf) == 24
 
 
 def test_add_stream_from_template_copies_time_base() -> None:

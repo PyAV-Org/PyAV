@@ -2,6 +2,7 @@ import os
 
 import cython
 from cython.cimports import libav as lib
+from cython.cimports.av.bitstream import BitStreamFilterContext
 from cython.cimports.av.codec.codec import Codec
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
 from cython.cimports.av.container.streams import StreamContainer
@@ -10,10 +11,39 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream, wrap_stream
 from cython.cimports.av.utils import dict_to_avdict, to_avrational
+from cython.cimports.libc.stdint import uint8_t
+from cython.cimports.libc.string import memcpy, memset
+
+
+@cython.cfunc
+def _set_codecpar_extradata(
+    stream: cython.pointer[lib.AVStream],
+    data: cython.pointer[uint8_t],
+    size: cython.int,
+):
+    buf: cython.p_uchar = cython.cast(
+        cython.p_uchar, lib.av_malloc(size + lib.AV_INPUT_BUFFER_PADDING_SIZE)
+    )
+    if buf == cython.NULL:
+        raise MemoryError("Could not allocate extradata")
+
+    memcpy(buf, data, size)
+    memset(buf + size, 0, lib.AV_INPUT_BUFFER_PADDING_SIZE)
+
+    lib.av_freep(cython.address(stream.codecpar.extradata))
+    stream.codecpar.extradata = buf
+    stream.codecpar.extradata_size = size
 
 
 @cython.cfunc
 def close_output(self: OutputContainer):
+    if self.packet_ptr != cython.NULL and self._buffered_packets:
+        buffered: list = self._buffered_packets
+        self._buffered_packets = []
+        packet: Packet
+        for packet in buffered:
+            self._mux_one(packet)
+
     self.streams = StreamContainer()
     if self._myflag & 12 == 4:  # enum.started and not enum.done
         # If the underlying Python IO file was already closed (e.g. during GC
@@ -38,6 +68,8 @@ class OutputContainer(Container):
     def __cinit__(self, *args, **kwargs):
         self.streams = StreamContainer()
         self.metadata = {}
+        self._extradata_bsfs = {}
+        self._buffered_packets = []
         with cython.nogil:
             self.packet_ptr = lib.av_packet_alloc()
 
@@ -558,6 +590,13 @@ class OutputContainer(Container):
                 self.mux_one(packet)
 
     def mux_one(self, packet: Packet):
+        if not (self._myflag & 4) and self._buffer_for_extradata(packet):
+            return
+
+        self._mux_one(packet)
+
+    @cython.cfunc
+    def _mux_one(self, packet: Packet):
         self.start_encoding()
 
         # Assert the packet is in stream time.
@@ -577,3 +616,86 @@ class OutputContainer(Container):
         with cython.nogil:
             ret: cython.int = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
         self.err_check(ret)
+
+    @cython.cfunc
+    def _buffer_for_extradata(self, packet: Packet):
+        """Buffer ``packet`` until extradata is known for all mux streams that
+        need it. Returns True if the packet was buffered (caller should stop)."""
+        if not (self._myflag & 16):  # extradata_planned
+            self._myflag |= 16
+            if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+                stream: Stream
+                for stream in self.streams:
+                    if (
+                        stream.codec_context is not None
+                        or stream.ptr.codecpar.extradata != cython.NULL
+                    ):
+                        continue
+                    try:
+                        bsf = BitStreamFilterContext(
+                            "extract_extradata", in_stream=stream
+                        )
+                    except Exception:
+                        continue  # Codec does not support extradata extraction.
+                    self._extradata_bsfs[stream.ptr.index] = bsf
+
+        if not self._extradata_bsfs:
+            return False  # Nothing to wait for; mux normally.
+
+        self._try_extract_extradata(packet)
+        self._buffered_packets.append(packet)
+        if self._extradata_bsfs:
+            return True  # Still waiting on some stream's extradata.
+
+        # All extradata is resolved: write the header and flush buffered packets.
+        buffered: list = self._buffered_packets
+        self._buffered_packets = []
+        buffered_packet: Packet
+        for buffered_packet in buffered:
+            self._mux_one(buffered_packet)
+        return True
+
+    @cython.cfunc
+    def _try_extract_extradata(self, packet: Packet):
+        idx: cython.int = packet.ptr.stream_index
+        if idx not in self._extradata_bsfs:
+            return
+
+        bsf_wrapper: BitStreamFilterContext = self._extradata_bsfs[idx]
+        bsf: cython.pointer[lib.AVBSFContext] = bsf_wrapper.ptr
+
+        tmp: cython.pointer[lib.AVPacket] = lib.av_packet_alloc()
+        if tmp == cython.NULL:
+            raise MemoryError("Could not allocate packet")
+
+        size: cython.size_t = 0
+        sd: cython.pointer[uint8_t]
+        try:
+            # Clone the packet so the filter does not consume the caller's data.
+            if lib.av_packet_ref(tmp, packet.ptr) < 0:
+                return
+
+            if lib.av_bsf_send_packet(bsf, tmp) < 0:
+                lib.av_packet_unref(tmp)  # send failed; we still own the ref
+                return
+
+            # The filter rejects packets that are already length-prefixed rather
+            # than annex-b, returning an error here; treat that and EOF/EAGAIN
+            # alike as "no in-band extradata".
+            while lib.av_bsf_receive_packet(bsf, tmp) == 0:
+                sd = lib.av_packet_get_side_data(
+                    tmp, lib.AV_PKT_DATA_NEW_EXTRADATA, cython.address(size)
+                )
+                if sd != cython.NULL and size > 0:
+                    _set_codecpar_extradata(
+                        self.ptr.streams[idx], sd, cython.cast(cython.int, size)
+                    )
+                    lib.av_packet_unref(tmp)
+                    break
+                lib.av_packet_unref(tmp)
+        finally:
+            lib.av_packet_free(cython.address(tmp))
+            # A stream's first packet is the only reliable place to find in-band
+            # parameter sets, so stop waiting on this stream regardless of the
+            # result, falling back to the muxer's default behavior.
+            del self._extradata_bsfs[idx]

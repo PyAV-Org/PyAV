@@ -298,6 +298,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef char* avcodec_get_name(AVCodecID id)
     cdef int avcodec_open2(AVCodecContext *ctx, const AVCodec *codec, AVDictionary **options)
     cdef enum AVPacketSideDataType:
+        AV_PKT_DATA_NEW_EXTRADATA
         AV_PKT_DATA_DISPLAYMATRIX
     cdef struct AVPacketSideData:
         uint8_t *data
