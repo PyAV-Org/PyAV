@@ -1459,18 +1459,20 @@ class VideoFrame(Frame):
         if not isinstance(planes, (tuple, list)):
             planes = (planes,)
 
-        if len(planes) != 2:
-            raise ValueError(
-                "from_dlpack currently supports 2-plane formats only (nv12/p010le/p016le)"
-            )
-
         sw_fmt: lib.AVPixelFormat = get_pix_fmt(format)
         nv12 = get_pix_fmt(b"nv12")
         p010le = get_pix_fmt(b"p010le")
         p016le = get_pix_fmt(b"p016le")
 
         if sw_fmt not in (nv12, p010le, p016le):
-            raise NotImplementedError("from_dlpack supports nv12, p010le, p016le only")
+            return VideoFrame._from_dlpack_planar(
+                planes, sw_fmt, format, width, height, stream, device_id
+            )
+
+        if len(planes) != 2:
+            raise ValueError(
+                "from_dlpack currently supports 2-plane formats only (nv12/p010le/p016le)"
+            )
 
         expected_bits = 8 if sw_fmt == nv12 else 16
         itemsize = 1 if expected_bits == 8 else 2
@@ -1655,4 +1657,153 @@ class VideoFrame(Frame):
                 m0.deleter(m0)
             if m1 != cython.NULL:
                 m1.deleter(m1)
+            raise
+
+    @staticmethod
+    def _from_dlpack_planar(planes, sw_fmt, format, width, height, stream, device_id):
+        # CPU-only import for planar formats whose planes each hold a single
+        # component: yuv420p/yuv422p/yuv444p, gray, gbrp, and their 16-bit
+        # little-endian variants. nv12/p010le/p016le keep their dedicated
+        # 2-plane path in from_dlpack().
+        desc: cython.pointer[cython.const[lib.AVPixFmtDescriptor]] = (
+            lib.av_pix_fmt_desc_get(sw_fmt)
+        )
+        if desc == cython.NULL:
+            raise NotImplementedError(f"unknown pixel format {format!r}")
+        if desc.flags & (
+            lib.AV_PIX_FMT_FLAG_BITSTREAM
+            | lib.AV_PIX_FMT_FLAG_PAL
+            | lib.AV_PIX_FMT_FLAG_BAYER
+        ):
+            raise NotImplementedError(
+                f"from_dlpack does not support bitstream, palette, or Bayer "
+                f"formats ({format!r})"
+            )
+
+        i: cython.int
+        nb_planes: cython.int = 0
+        for i in range(desc.nb_components):
+            if cython.cast(cython.int, desc.comp[i].plane) + 1 > nb_planes:
+                nb_planes = desc.comp[i].plane + 1
+
+        p: cython.int
+        count: cython.int
+        comp_of_plane = [0] * nb_planes
+        for p in range(nb_planes):
+            count = 0
+            for i in range(desc.nb_components):
+                if cython.cast(cython.int, desc.comp[i].plane) == p:
+                    comp_of_plane[p] = i
+                    count += 1
+            if count != 1:
+                raise NotImplementedError(
+                    "from_dlpack supports nv12/p010le/p016le and planar "
+                    f"single-component formats; {format!r} is not supported"
+                )
+
+        if len(planes) != nb_planes:
+            raise ValueError(
+                f"{format!r} requires {nb_planes} plane(s), got {len(planes)}"
+            )
+
+        itemsize: cython.int = desc.comp[0].step
+        if itemsize != 1 and itemsize != 2:
+            raise NotImplementedError(
+                "only 8- and 16-bit components are supported for DLPack import"
+            )
+        if itemsize == 2 and desc.flags & lib.AV_PIX_FMT_FLAG_BE:
+            raise NotImplementedError(
+                "big-endian formats are not supported for DLPack import"
+            )
+        expected_bits: cython.int = itemsize * 8
+
+        if device_id not in (None, 0):
+            raise ValueError("device_id must be 0 for CPU tensors")
+
+        log2_w: cython.int = desc.log2_chroma_w
+        log2_h: cython.int = desc.log2_chroma_h
+
+        frame: VideoFrame = None
+        m: cython.pointer[DLManagedTensor] = cython.NULL
+        try:
+            frame = alloc_video_frame()
+            frame.ptr.format = sw_fmt
+
+            for p in range(nb_planes):
+                m = _consume_dlpack(planes[p], stream)
+
+                if m.dl_tensor.device_type != kCPU:
+                    raise NotImplementedError(
+                        "only CPU DLPack tensors are supported for this format"
+                    )
+                if m.dl_tensor.device_id != 0:
+                    raise ValueError("CPU DLPack tensors must have device_id == 0")
+
+                if (
+                    m.dl_tensor.dtype.code != 1
+                    or m.dl_tensor.dtype.bits != expected_bits
+                    or m.dl_tensor.dtype.lanes != 1
+                ):
+                    raise TypeError(f"unexpected dtype for plane {p}")
+
+                if m.dl_tensor.ndim != 2:
+                    raise ValueError(f"plane {p} must be 2D (H, W)")
+
+                ph = cython.cast(int64_t, m.dl_tensor.shape[0])
+                pw = cython.cast(int64_t, m.dl_tensor.shape[1])
+
+                if p == 0:
+                    if width == 0 and height == 0:
+                        width = cython.cast(int, pw)
+                        height = cython.cast(int, ph)
+                    elif width == 0 or height == 0:
+                        raise ValueError("either specify both width/height or neither")
+                    elif pw != width or ph != height:
+                        raise ValueError("plane 0 shape does not match width/height")
+                    if (log2_w and width % 2) or (log2_h and height % 2):
+                        raise ValueError(f"width/height must be even for {format!r}")
+                    frame.ptr.width = width
+                    frame.ptr.height = height
+
+                comp_idx = comp_of_plane[p]
+                is_chroma = (comp_idx == 1 or comp_idx == 2) and (log2_w or log2_h)
+                exp_w = (-((-width) >> log2_w)) if is_chroma else width
+                exp_h = (-((-height) >> log2_h)) if is_chroma else height
+
+                if pw != exp_w or ph != exp_h:
+                    raise ValueError(f"plane {p} must have shape ({exp_h}, {exp_w})")
+
+                if m.dl_tensor.strides != cython.NULL:
+                    if m.dl_tensor.strides[1] != 1:
+                        raise ValueError(
+                            f"plane {p} must be contiguous in the last dimension"
+                        )
+                    pitch_elems = cython.cast(int64_t, m.dl_tensor.strides[0])
+                else:
+                    pitch_elems = cython.cast(int64_t, exp_w)
+
+                linesize = cython.cast(int, pitch_elems * itemsize)
+                size = cython.cast(int, linesize * exp_h)
+
+                ptr = cython.cast(
+                    cython.pointer[uint8_t], m.dl_tensor.data
+                ) + cython.cast(cython.size_t, m.dl_tensor.byte_offset)
+
+                frame.ptr.buf[p] = lib.av_buffer_create(
+                    ptr, size, _dlpack_avbuffer_free, cython.cast(cython.p_void, m), 0
+                )
+                if frame.ptr.buf[p] == cython.NULL:
+                    raise MemoryError(f"av_buffer_create failed for plane {p}")
+                frame.ptr.data[p] = ptr
+                frame.ptr.linesize[p] = linesize
+                m = cython.NULL
+
+            frame._init_user_attributes()
+            return frame
+
+        except Exception:
+            if frame is not None:
+                lib.av_frame_unref(frame.ptr)
+            if m != cython.NULL:
+                m.deleter(m)
             raise

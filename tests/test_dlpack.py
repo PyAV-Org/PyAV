@@ -289,13 +289,104 @@ def test_video_frame_from_dlpack_requires_two_planes() -> None:
         VideoFrame.from_dlpack(y, format="nv12")
 
 
-def test_video_frame_from_dlpack_rejects_unsupported_format() -> None:
-    width, height = 64, 48
-    y = numpy.zeros((height, width), dtype=numpy.uint8)
-    uv = numpy.zeros((height // 2, width // 2, 2), dtype=numpy.uint8)
+def test_video_frame_from_dlpack_rejects_packed_format() -> None:
+    # Packed formats interleave several components in one plane and cannot be
+    # imported (only planar single-component formats and the nv12 family are).
+    rgb = numpy.zeros((16, 16, 3), dtype=numpy.uint8)
 
-    with pytest.raises(NotImplementedError, match="supports nv12, p010le, p016le only"):
-        VideoFrame.from_dlpack((y, uv), format="yuv420p")
+    with pytest.raises(NotImplementedError, match="is not supported"):
+        VideoFrame.from_dlpack((rgb,), format="rgb24")
+
+
+@pytest.mark.parametrize(
+    "fmt,dtype,planes_hw",
+    [
+        ("yuv420p", numpy.uint8, [(48, 64), (24, 32), (24, 32)]),
+        ("yuv422p", numpy.uint8, [(48, 64), (48, 32), (48, 32)]),
+        ("yuv444p", numpy.uint8, [(48, 64), (48, 64), (48, 64)]),
+        ("gray", numpy.uint8, [(48, 64)]),
+        ("yuv420p10le", numpy.uint16, [(48, 64), (24, 32), (24, 32)]),
+    ],
+)
+def test_video_frame_from_dlpack_planar_cpu(fmt, dtype, planes_hw) -> None:
+    # Issue #2217: planar formats whose planes each hold one component round
+    # trip through DLPack without a NumPy intermediate.
+    width, height = 64, 48
+    make = _make_u16 if dtype == numpy.uint16 else _make_u8
+    src = [make((h, w)) for (h, w) in planes_hw]
+
+    frame = VideoFrame.from_dlpack(tuple(src), format=fmt)
+
+    assert frame.format.name == fmt
+    assert frame.width == width and frame.height == height
+    assert len(frame.planes) == len(src)
+
+    for i, plane in enumerate(frame.planes):
+        arr = numpy.from_dlpack(plane)
+        assert arr.dtype == dtype
+        assert arr.shape == planes_hw[i]
+        assertNdarraysEqual(arr, src[i])
+
+
+def test_video_frame_from_dlpack_yuv420p_zero_copy_and_lifetime() -> None:
+    width, height = 64, 48
+    y = _make_u8((height, width))
+    u = _make_u8((height // 2, width // 2))
+    v = _make_u8((height // 2, width // 2))
+
+    frame = VideoFrame.from_dlpack((y, u, v), format="yuv420p")
+
+    # Mutating the source is visible through the frame (zero copy).
+    y[0, 0] = 200
+    assert memoryview(frame.planes[0])[0] == 200
+
+    expected = [y.copy(), u.copy(), v.copy()]
+    del y, u, v
+    gc.collect()
+
+    for i, plane in enumerate(frame.planes):
+        assertNdarraysEqual(numpy.from_dlpack(plane), expected[i])
+
+
+def test_video_frame_from_dlpack_yuv420p_with_pitch() -> None:
+    width, height = 64, 48
+    pad = 16
+
+    y = _make_u8((height, width + pad))[:, :width]
+    u = _make_u8((height // 2, (width + pad) // 2))[:, : width // 2]
+    v = _make_u8((height // 2, (width + pad) // 2))[:, : width // 2]
+
+    frame = VideoFrame.from_dlpack((y, u, v), format="yuv420p")
+
+    assert frame.planes[0].line_size == width + pad
+    assert frame.planes[1].line_size == (width + pad) // 2
+    assertNdarraysEqual(numpy.from_dlpack(frame.planes[0]), y)
+    assertNdarraysEqual(numpy.from_dlpack(frame.planes[1]), u)
+    assertNdarraysEqual(numpy.from_dlpack(frame.planes[2]), v)
+
+
+def test_video_frame_from_dlpack_planar_wrong_plane_count() -> None:
+    y = numpy.zeros((48, 64), dtype=numpy.uint8)
+    u = numpy.zeros((24, 32), dtype=numpy.uint8)
+
+    with pytest.raises(ValueError, match=r"requires 3 plane\(s\), got 2"):
+        VideoFrame.from_dlpack((y, u), format="yuv420p")
+
+
+def test_video_frame_from_dlpack_planar_rejects_odd_dimensions() -> None:
+    y = numpy.zeros((48, 63), dtype=numpy.uint8)
+    u = numpy.zeros((24, 32), dtype=numpy.uint8)
+    v = numpy.zeros((24, 32), dtype=numpy.uint8)
+
+    with pytest.raises(ValueError, match="must be even"):
+        VideoFrame.from_dlpack((y, u, v), format="yuv420p")
+
+
+def test_video_frame_from_dlpack_planar_rejects_palette() -> None:
+    idx = numpy.zeros((16, 16), dtype=numpy.uint8)
+
+    with pytest.raises(NotImplementedError, match="palette"):
+        VideoFrame.from_dlpack((idx,), format="pal8")
 
 
 def test_video_frame_from_dlpack_rejects_device_id_for_cpu() -> None:
