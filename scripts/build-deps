@@ -68,6 +68,8 @@ echo ./configure
     --enable-libx264 \
     --disable-bsfs \
     --enable-bsf=chomp,extract_extradata,h264_mp4toannexb,setts \
+    --disable-filters \
+    --enable-filter=abuffer,abuffersink,aformat,aresample,atempo,buffer,buffersink,bwdif,color,lutrgb,palettegen,scale,testsrc,vflip,volume \
     --enable-sse \
     --enable-avx \
     --enable-avx2 \
