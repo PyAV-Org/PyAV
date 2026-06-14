@@ -186,8 +186,76 @@ class VideoPlane(Plane):
                 st2 = 1
             else:
                 raise ValueError("invalid plane index for P010/P016")
-        else:
+        elif device_type != kCPU:
             raise NotImplementedError("unsupported sw_format for DLPack export")
+        else:
+            # Generic CPU export. Describe the plane straight from its
+            # pixel-format descriptor: planes holding a single component (the
+            # Y/U/V planes of planar YUV, gray, ...) become 2D (H, W), while
+            # planes that interleave several components (packed RGB, the chroma
+            # plane of NV12, ...) become 3D (H, W, C).
+            desc: cython.pointer[lib.AVPixFmtDescriptor] = lib.av_pix_fmt_desc_get(
+                sw_fmt
+            )
+            if desc == cython.NULL:
+                raise NotImplementedError("unknown pixel format for DLPack export")
+            if desc.flags & (
+                lib.AV_PIX_FMT_FLAG_BITSTREAM
+                | lib.AV_PIX_FMT_FLAG_PAL
+                | lib.AV_PIX_FMT_FLAG_BAYER
+            ):
+                raise NotImplementedError(
+                    "bitstream, palette, and Bayer formats are not supported for "
+                    "DLPack export"
+                )
+
+            step_bytes: cython.int = 0
+            ncomp: cython.int = 0
+            i: cython.int
+            for i in range(desc.nb_components):
+                if desc.comp[i].plane != self.index:
+                    continue
+                if ncomp == 0:
+                    step_bytes = desc.comp[i].step
+                elif cython.cast(cython.int, desc.comp[i].step) != step_bytes:
+                    raise NotImplementedError(
+                        "mixed component step is not supported for DLPack export"
+                    )
+                ncomp += 1
+
+            if ncomp == 0:
+                raise ValueError(f"plane {self.index} has no components")
+            if step_bytes % ncomp:
+                raise NotImplementedError(
+                    "unsupported component packing for DLPack export"
+                )
+            itemsize = step_bytes // ncomp
+            if itemsize != 1 and itemsize != 2:
+                raise NotImplementedError(
+                    "only 8- and 16-bit components are supported for DLPack export"
+                )
+            if itemsize == 2 and desc.flags & lib.AV_PIX_FMT_FLAG_BE:
+                raise NotImplementedError(
+                    "big-endian formats are not supported for DLPack export"
+                )
+            bits = itemsize * 8
+            if line_size % itemsize:
+                raise ValueError("linesize is not aligned to dtype")
+
+            if ncomp == 1:
+                ndim = 2
+                s0 = self.height
+                s1 = self.width
+                st0 = line_size // itemsize
+                st1 = 1
+            else:
+                ndim = 3
+                s0 = self.height
+                s1 = self.width
+                s2 = ncomp
+                st0 = line_size // itemsize
+                st1 = ncomp
+                st2 = 1
 
         frame_ref: cython.pointer[lib.AVFrame] = lib.av_frame_alloc()
         if frame_ref == cython.NULL:
