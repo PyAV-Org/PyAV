@@ -235,13 +235,50 @@ def test_video_plane_dlpack_export_keeps_frame_alive_after_gc() -> None:
     assertNdarraysEqual(y_dl, expected)
 
 
-def test_video_plane_dlpack_unsupported_format_raises() -> None:
-    rgb = numpy.zeros((16, 16, 3), dtype=numpy.uint8)
+def test_video_plane_dlpack_export_packed_rgb_cpu() -> None:
+    # Packed formats interleave several components in one plane and export as
+    # a 3D (H, W, C) tensor (issue #2217).
+    rgb = (numpy.arange(16 * 24 * 3) % 251).astype(numpy.uint8).reshape(16, 24, 3)
     frame = VideoFrame.from_ndarray(rgb, format="rgb24")
+    plane = frame.planes[0]
+    assert plane.__dlpack_device__() == (1, 0)
+
+    arr = numpy.from_dlpack(plane)
+    assert arr.shape == (16, 24, 3)
+    assert arr.strides == (plane.line_size, 3, 1)
+    assert arr.dtype == numpy.uint8
+    assertNdarraysEqual(arr, rgb)
+
+
+def test_video_plane_dlpack_export_planar_yuv_cpu() -> None:
+    # Planar formats expose each single-component plane as a 2D (H, W) tensor
+    # (issue #2217).
+    frame = VideoFrame(16, 16, "yuv420p")
+    for index, (h, w) in enumerate([(16, 16), (8, 8), (8, 8)]):
+        plane = frame.planes[index]
+        assert plane.__dlpack_device__() == (1, 0)
+        arr = numpy.from_dlpack(plane)
+        assert arr.shape == (h, w)
+        assert arr.strides == (plane.line_size, 1)
+        assert arr.dtype == numpy.uint8
+
+
+def test_video_plane_dlpack_export_planar_yuv16_cpu() -> None:
+    # 16-bit planar formats export as uint16.
+    frame = VideoFrame(16, 16, "yuv420p10le")
+    arr = numpy.from_dlpack(frame.planes[0])
+    assert arr.shape == (16, 16)
+    assert arr.dtype == numpy.uint16
+
+
+def test_video_plane_dlpack_unsupported_format_raises() -> None:
+    # Palette formats still cannot be exported.
+    frame = VideoFrame(16, 16, "pal8")
     assert frame.planes[0].__dlpack_device__() == (1, 0)
 
     with pytest.raises(
-        NotImplementedError, match="unsupported sw_format for DLPack export"
+        NotImplementedError,
+        match="bitstream, palette, and Bayer formats are not supported",
     ):
         frame.planes[0].__dlpack__()
 
