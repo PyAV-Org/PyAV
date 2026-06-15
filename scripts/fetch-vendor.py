@@ -8,6 +8,12 @@ import time
 
 
 def get_platform():
+    # Allow forcing the target platform so we can fetch e.g. an armv7l build
+    # while running on an x86_64 host (cross-compilation).
+    forced = os.environ.get("PYAV_VENDOR_PLATFORM")
+    if forced:
+        return forced
+
     system = platform.system()
     machine = platform.machine().lower()
     is_arm64 = machine in {"arm64", "aarch64"}
