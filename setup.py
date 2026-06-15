@@ -163,7 +163,7 @@ loudnorm_extension = Extension(
 
 compiler_directives = {
     "c_string_type": "str",
-    "c_string_encoding": "ascii",
+    "c_string_encoding": "utf8",
     "embedsignature": True,
     "binding": False,
     "language_level": 3,

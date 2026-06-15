@@ -15,3 +15,12 @@ def test_dictionary() -> None:
     assert d.pop("key") == "value"
     pytest.raises(KeyError, d.pop, "key")
     assert len(d) == 0
+
+
+def test_dictionary_non_ascii() -> None:
+    d = Dictionary()
+    d["café"] = "naïve 日本語 🎵"
+
+    assert d["café"] == "naïve 日本語 🎵"
+    assert "café" in d
+    assert list(d) == ["café"]
