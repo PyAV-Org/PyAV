@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 
 import cython
 import cython.cimports.libav as lib
@@ -7,7 +7,7 @@ from cython.cimports.av.video.format import VideoFormat, get_pix_fmt
 from cython.cimports.av.video.frame import alloc_video_frame
 
 
-class Interpolation(IntEnum):
+class Interpolation(IntFlag):
     FAST_BILINEAR: "Fast bilinear" = SWS_FAST_BILINEAR
     BILINEAR: "Bilinear" = SWS_BILINEAR
     BICUBIC: "2-tap cubic B-spline" = SWS_BICUBIC
@@ -19,6 +19,13 @@ class Interpolation(IntEnum):
     SINC: "Unwindowed Sinc" = SWS_SINC
     LANCZOS: "3-tap sinc/sinc" = SWS_LANCZOS
     SPLINE: "Unwindowed natural cubic spline" = SWS_SPLINE
+    PRINT_INFO: "Emit verbose scaler info to the log" = SWS_PRINT_INFO
+    FULL_CHR_H_INT: "Full chroma interpolation" = SWS_FULL_CHR_H_INT
+    FULL_CHR_H_INP: "Full chroma input" = SWS_FULL_CHR_H_INP
+    DIRECT_BGR: "Direct BGR" = SWS_DIRECT_BGR
+    ACCURATE_RND: "Accurate rounding" = SWS_ACCURATE_RND
+    BITEXACT: "Bit-exact output" = SWS_BITEXACT
+    ERROR_DIFFUSION: "Error diffusion dither" = SWS_ERROR_DIFFUSION
 
 
 class Colorspace(IntEnum):
@@ -182,7 +189,9 @@ class VideoReformatter:
         :type  src_colorspace: :class:`Colorspace` or ``str``
         :param dst_colorspace: Desired colorspace, or ``None`` for the frame colorspace.
         :type  dst_colorspace: :class:`Colorspace` or ``str``
-        :param interpolation: The interpolation method to use, or ``None`` for ``BILINEAR``.
+        :param interpolation: The scaling algorithm to use, or ``None`` for ``BILINEAR``.
+            Option flags such as ``ACCURATE_RND`` or ``BITEXACT`` may be combined with
+            the algorithm using ``|``, e.g. ``Interpolation.BILINEAR | Interpolation.ACCURATE_RND``.
         :type  interpolation: :class:`Interpolation` or ``str``
         :param src_color_range: Current color range, or ``None`` for the ``UNSPECIFIED``.
         :type  src_color_range: :class:`ColorRange` or ``str``

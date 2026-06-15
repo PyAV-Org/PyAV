@@ -1,10 +1,10 @@
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from typing import cast
 
 from .frame import VideoFrame
 
-class Interpolation(IntEnum):
-    FAST_BILINEAER = cast(int, ...)
+class Interpolation(IntFlag):
+    FAST_BILINEAR = cast(int, ...)
     BILINEAR = cast(int, ...)
     BICUBIC = cast(int, ...)
     X = cast(int, ...)
@@ -15,6 +15,13 @@ class Interpolation(IntEnum):
     SINC = cast(int, ...)
     LANCZOS = cast(int, ...)
     SPLINE = cast(int, ...)
+    PRINT_INFO = cast(int, ...)
+    FULL_CHR_H_INT = cast(int, ...)
+    FULL_CHR_H_INP = cast(int, ...)
+    DIRECT_BGR = cast(int, ...)
+    ACCURATE_RND = cast(int, ...)
+    BITEXACT = cast(int, ...)
+    ERROR_DIFFUSION = cast(int, ...)
 
 class Colorspace(IntEnum):
     ITU709 = cast(int, ...)
@@ -80,7 +87,7 @@ class VideoReformatter:
         format: str | None = None,
         src_colorspace: int | None = None,
         dst_colorspace: int | None = None,
-        interpolation: int | str | None = None,
+        interpolation: Interpolation | int | str | None = None,
         src_color_range: int | str | None = None,
         dst_color_range: int | str | None = None,
         dst_color_trc: int | ColorTrc | None = None,
