@@ -78,8 +78,8 @@ Have fun, [read the docs][docs], [come chat with us][discuss], and good luck!
 
 [conda-badge]: https://img.shields.io/conda/vn/conda-forge/av.svg?colorB=CCB39A
 [conda]: https://anaconda.org/conda-forge/av
-[docs-badge]: https://img.shields.io/badge/docs-on%20pyav.basswood--io.com-blue.svg
-[docs]: https://pyav.basswood-io.com
+[docs-badge]: https://img.shields.io/badge/docs-on%20pyav.basswood.io-blue.svg
+[docs]: https://pyav.basswood.io
 [pypi-badge]: https://img.shields.io/pypi/v/av.svg?colorB=CCB39A
 [pypi]: https://pypi.org/project/av
 [discuss]: https://github.com/PyAV-Org/PyAV/discussions
