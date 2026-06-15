@@ -174,4 +174,4 @@ Fixes:
 ..
   or see older git commits
 
-`15.X Changelog <https://pyav.basswood-io.com/docs/15.1/development/changelog.html>`
+`15.X Changelog <https://pyav.basswood.io/docs/15.1/development/changelog.html>`
