@@ -19,6 +19,13 @@ cdef extern from "libswscale/swscale.h" nogil:
     cdef int SWS_SINC
     cdef int SWS_LANCZOS
     cdef int SWS_SPLINE
+    cdef int SWS_PRINT_INFO
+    cdef int SWS_FULL_CHR_H_INT
+    cdef int SWS_FULL_CHR_H_INP
+    cdef int SWS_DIRECT_BGR
+    cdef int SWS_ACCURATE_RND
+    cdef int SWS_BITEXACT
+    cdef int SWS_ERROR_DIFFUSION
     cdef int SWS_CS_ITU709
     cdef int SWS_CS_FCC
     cdef int SWS_CS_ITU601

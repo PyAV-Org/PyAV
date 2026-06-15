@@ -155,6 +155,13 @@ def test_interpolation() -> None:
     )
     assert img.width == 200 and img.height == 100
 
+    # Option flags can be combined with the scaling algorithm.
+    combined = Interpolation.BILINEAR | Interpolation.ACCURATE_RND
+    assert isinstance(combined, Interpolation)
+    assert combined & Interpolation.ACCURATE_RND
+    img = frame.reformat(width=200, height=100, interpolation=combined)
+    assert img.width == 200 and img.height == 100
+
 
 def test_basic_to_ndarray() -> None:
     array = VideoFrame(640, 480, "rgb24").to_ndarray()
