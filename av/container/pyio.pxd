@@ -20,5 +20,5 @@ cdef class PyIOFile:
     # Custom IO for above.
     cdef lib.AVIOContext *iocontext
     cdef unsigned char *buffer
-    cdef long pos
+    cdef int64_t pos
     cdef bint pos_is_valid
