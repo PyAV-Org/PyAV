@@ -38,7 +38,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVRational sample_aspect_ratio
 
     cdef struct AVChapter:
-        int id
+        int64_t id
         int64_t start
         int64_t end
         AVRational time_base

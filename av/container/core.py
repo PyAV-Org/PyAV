@@ -487,7 +487,7 @@ class Container:
                 )
             ch_array[i] = ch
 
-        self.ptr.nb_chapters = count
+        self.ptr.nb_chapters = cython.cast(cython.uint, count)
         self.ptr.chapters = ch_array
 
 

@@ -232,7 +232,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         void* opaque
 
-        int bit_rate
+        int64_t bit_rate
         int flags
         int flags2
         uint8_t *extradata
@@ -269,8 +269,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int qmin
         int qmax
         int rc_buffer_size
-        int rc_max_rate
-        int rc_min_rate
+        int64_t rc_max_rate
+        int64_t rc_min_rate
 
         AVHWAccel *hwaccel
         AVBufferRef *hw_device_ctx

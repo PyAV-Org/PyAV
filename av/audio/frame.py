@@ -78,7 +78,7 @@ class AudioFrame(Frame):
                     self.layout.nb_channels,
                     cython.cast(lib.AVSampleFormat, self.ptr.format),
                     self._buffer,
-                    self._buffer_size,
+                    cython.cast(cython.int, self._buffer_size),
                     align,
                 )
             )
