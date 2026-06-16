@@ -109,7 +109,7 @@ def pyio_read_gil(opaque: cython.p_void, buf: Buf, buf_size: cython.int) -> cyth
         self.pos += len(res)
         if not res:
             return lib.AVERROR_EOF
-        return len(res)
+        return cython.cast(cython.int, len(res))
     except Exception:
         return stash_exception()
 
