@@ -22,6 +22,8 @@ class Graph:
         self._nb_filters_seen = 0
         self._context_by_ptr = {}
         self._context_by_type = {}
+        self._video_sources = []
+        self._audio_sources = []
 
     def __dealloc__(self):
         if self.ptr:
@@ -108,8 +110,13 @@ class Graph:
 
     @cython.cfunc
     def _register_context(self, ctx: FilterContext):
+        name: str = ctx.filter.ptr.name
         self._context_by_ptr[cython.cast(cython.long, ctx.ptr)] = ctx
-        self._context_by_type.setdefault(ctx.filter.ptr.name, []).append(ctx)
+        self._context_by_type.setdefault(name, []).append(ctx)
+        if name == "buffer":
+            self._video_sources.append(ctx)
+        elif name == "abuffer":
+            self._audio_sources.append(ctx)
 
     @cython.cfunc
     def _auto_register(self):
@@ -234,13 +241,11 @@ class Graph:
 
     def push(self, frame, at: cython.int = -1):
         if frame is None:
-            contexts = self._get_context_by_type("buffer") + self._get_context_by_type(
-                "abuffer"
-            )
+            contexts = self._video_sources + self._audio_sources
         elif isinstance(frame, VideoFrame):
-            contexts = self._get_context_by_type("buffer")
+            contexts = self._video_sources
         elif isinstance(frame, AudioFrame):
-            contexts = self._get_context_by_type("abuffer")
+            contexts = self._audio_sources
         else:
             raise ValueError(
                 f"can only AudioFrame, VideoFrame or None; got {type(frame)}"
@@ -259,7 +264,7 @@ class Graph:
 
     def vpush(self, frame: VideoFrame | None, at: cython.int = -1):
         """Like `push`, but only for VideoFrames."""
-        contexts = self._get_context_by_type("buffer")
+        contexts = self._video_sources
         if at >= 0:
             if at >= len(contexts):
                 raise IndexError(

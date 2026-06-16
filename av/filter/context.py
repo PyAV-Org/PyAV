@@ -12,6 +12,11 @@ from cython.cimports.av.video.frame import alloc_video_frame
 
 _cinit_sentinel = cython.declare(object, object())
 
+_KIND_OTHER = cython.declare(cython.uchar, 0)
+_KIND_SOURCE = cython.declare(cython.uchar, 1)  # buffer / abuffer
+_KIND_VIDEO_SINK = cython.declare(cython.uchar, 2)  # buffersink
+_KIND_AUDIO_SINK = cython.declare(cython.uchar, 3)  # abuffersink
+
 
 @cython.cfunc
 def wrap_filter_context(
@@ -21,6 +26,16 @@ def wrap_filter_context(
     self._graph = weakref.ref(graph)
     self.filter = filter
     self.ptr = ptr
+
+    name: str = filter.name
+    if name == "buffer" or name == "abuffer":
+        self._kind = _KIND_SOURCE
+    elif name == "buffersink":
+        self._kind = _KIND_VIDEO_SINK
+    elif name == "abuffersink":
+        self._kind = _KIND_AUDIO_SINK
+    else:
+        self._kind = _KIND_OTHER
     return self
 
 
@@ -108,7 +123,7 @@ class FilterContext:
                 res = lib.av_buffersrc_write_frame(self.ptr, cython.NULL)
             err_check(res)
             return
-        elif self.filter.name in ("abuffer", "buffer"):
+        elif self._kind == _KIND_SOURCE:
             with cython.nogil:
                 res = lib.av_buffersrc_write_frame(self.ptr, frame.ptr)
             err_check(res)
@@ -126,9 +141,9 @@ class FilterContext:
     def pull(self):
         frame: Frame
         res: cython.int
-        if self.filter.name == "buffersink":
+        if self._kind == _KIND_VIDEO_SINK:
             frame = alloc_video_frame()
-        elif self.filter.name == "abuffersink":
+        elif self._kind == _KIND_AUDIO_SINK:
             frame = alloc_audio_frame()
         else:
             # Delegate to the output.
