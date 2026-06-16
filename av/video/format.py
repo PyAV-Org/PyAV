@@ -143,7 +143,7 @@ class VideoFormat:
 @cython.final
 @cython.cclass
 class VideoFormatComponent:
-    def __cinit__(self, format: VideoFormat, index: cython.size_t):
+    def __cinit__(self, format: VideoFormat, index: cython.uint):
         self.format = format
         self.index = index
         self.ptr = cython.address(format.ptr.comp[index])

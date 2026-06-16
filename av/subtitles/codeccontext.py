@@ -44,7 +44,7 @@ class SubtitleCodecContext(CodecContext):
             if not self.ptr.subtitle_header:
                 raise MemoryError("Cannot allocate subtitle_header")
             memcpy(self.ptr.subtitle_header, source.ptr, source.length)
-            self.ptr.subtitle_header_size = source.length
+            self.ptr.subtitle_header_size = cython.cast(cython.int, source.length)
         self.subtitle_header_set = True
 
     def __dealloc__(self) -> None:
