@@ -104,13 +104,16 @@ build_one() {
     # The _PYTHON_* vars make sysconfig report armv7l; zig does the compiling.
     # max-page-size=4096 aligns our extensions to the armv7l (4K) page size;
     # lld's default 64K alignment uses 4K file offsets, which the loader rejects.
+    # Setting CFLAGS replaces the target's default OPT flags, so -O2 -DNDEBUG
+    # must be passed explicitly (without NDEBUG the free-threaded build trips a
+    # Py_SET_REFCNT assertion that release wheels compile out).
     env \
         CC="$BIN_DIR/zig-cc" CXX="$BIN_DIR/zig-cxx" AR="$BIN_DIR/zig-ar" \
         LDSHARED="$BIN_DIR/zig-cc -shared -Wl,-z,max-page-size=4096" \
         _PYTHON_HOST_PLATFORM=linux-armv7l \
         _PYTHON_SYSCONFIGDATA_NAME="$(basename "${scd[0]}" .py)" \
         PYTHONPATH="$(dirname "${scd[0]}")" \
-        CFLAGS="-I${inc[0]} -Wno-error=incompatible-pointer-types" \
+        CFLAGS="-I${inc[0]} -O2 -DNDEBUG -Wno-error=incompatible-pointer-types" \
         PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig \
         LD_LIBRARY_PATH=/tmp/vendor/lib \
         "$host_py" -m pip wheel . --no-build-isolation --no-deps -w "$raw"
