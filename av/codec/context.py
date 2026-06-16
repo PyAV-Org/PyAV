@@ -207,7 +207,7 @@ class CodecContext:
             if not self.ptr.extradata:
                 raise MemoryError("Cannot allocate extradata")
             memcpy(self.ptr.extradata, source.ptr, source.length)
-            self.ptr.extradata_size = source.length
+            self.ptr.extradata_size = cython.cast(cython.int, source.length)
 
     @property
     def extradata_size(self):
@@ -294,7 +294,9 @@ class CodecContext:
         source: ByteSource = bytesource(raw_input, allow_none=True)
 
         in_data: cython.p_uchar = source.ptr if source is not None else cython.NULL
-        in_size: cython.int = source.length if source is not None else 0
+        in_size: cython.int = (
+            cython.cast(cython.int, source.length) if source is not None else 0
+        )
 
         out_data: cython.p_uchar
         out_size: cython.int
@@ -642,7 +644,7 @@ class CodecContext:
         return self.ptr.bit_rate if self.ptr.bit_rate > 0 else None
 
     @bit_rate.setter
-    def bit_rate(self, value: cython.int):
+    def bit_rate(self, value: cython.longlong):
         self.ptr.bit_rate = value
 
     @property
