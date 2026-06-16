@@ -237,7 +237,7 @@ class Packet(Buffer):
         if isinstance(input, int):
             size = input
             if size:
-                err_check(lib.av_new_packet(self.ptr, size))
+                err_check(lib.av_new_packet(self.ptr, cython.cast(cython.int, size)))
         else:
             source = bytesource(input)
             size = source.length
@@ -256,7 +256,7 @@ class Packet(Buffer):
                     raise MemoryError("Could not allocate AVBufferRef")
                 self.ptr.buf = buf
                 self.ptr.data = source.ptr
-                self.ptr.size = size
+                self.ptr.size = cython.cast(cython.int, size)
 
     def __repr__(self):
         stream = self._stream.index if self._stream else 0
