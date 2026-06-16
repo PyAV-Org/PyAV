@@ -27,7 +27,7 @@ class OpaqueContainer:
     @cython.cfunc
     def add(self, v: object) -> cython.pointer[lib.AVBufferRef]:
         # Use object's memory address as key
-        key: uintptr_t = cython.cast(cython.longlong, id(v))
+        key: uintptr_t = cython.cast(uintptr_t, id(v))
         self._objects[key] = v
 
         data: u8ptr = cython.cast(u8ptr, lib.av_malloc(sizeof(uintptr_t)))
