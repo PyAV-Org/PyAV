@@ -111,7 +111,7 @@ class Graph:
     @cython.cfunc
     def _register_context(self, ctx: FilterContext):
         name: str = ctx.filter.ptr.name
-        self._context_by_ptr[cython.cast(cython.long, ctx.ptr)] = ctx
+        self._context_by_ptr[cython.cast(cython.size_t, ctx.ptr)] = ctx
         self._context_by_type.setdefault(name, []).append(ctx)
         if name == "buffer":
             self._video_sources.append(ctx)
@@ -128,7 +128,7 @@ class Graph:
         # point we don't expose that in the API, so we should be okay...
         for i in range(self._nb_filters_seen, self.ptr.nb_filters):
             c_ctx = self.ptr.filters[i]
-            if cython.cast(cython.long, c_ctx) in self._context_by_ptr:
+            if cython.cast(cython.size_t, c_ctx) in self._context_by_ptr:
                 continue
             filter_ = wrap_filter(c_ctx.filter)
             py_ctx = wrap_filter_context(self, filter_, c_ctx)

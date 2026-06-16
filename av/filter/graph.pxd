@@ -18,7 +18,7 @@ cdef class Graph:
     cdef _register_context(self, FilterContext)
     cdef _auto_register(self)
     cdef int _nb_filters_seen
-    cdef dict[long, FilterContext] _context_by_ptr
+    cdef dict[size_t, FilterContext] _context_by_ptr
     cdef dict[str, list[FilterContext]] _context_by_type
     cdef list[FilterContext] _video_sources
     cdef list[FilterContext] _audio_sources

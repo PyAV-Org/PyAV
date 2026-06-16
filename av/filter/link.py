@@ -33,7 +33,7 @@ class FilterLink:
         else:  # nobreak
             raise RuntimeError("could not find link in context")
         graph: Graph = self.graph
-        ctx = graph._context_by_ptr[cython.cast(cython.long, cctx)]
+        ctx = graph._context_by_ptr[cython.cast(cython.size_t, cctx)]
         self._input = ctx.outputs[i]
         return self._input
 
@@ -50,7 +50,7 @@ class FilterLink:
             raise RuntimeError("could not find link in context")
         try:
             graph: Graph = self.graph
-            ctx = graph._context_by_ptr[cython.cast(cython.long, cctx)]
+            ctx = graph._context_by_ptr[cython.cast(cython.size_t, cctx)]
         except KeyError:
             raise RuntimeError(
                 "could not find context in graph", (cctx.name, cctx.filter.name)
