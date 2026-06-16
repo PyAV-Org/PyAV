@@ -102,21 +102,31 @@ build_one() {
     rm -rf "$raw"; mkdir -p "$raw"
 
     # The _PYTHON_* vars make sysconfig report armv7l; zig does the compiling.
+    # max-page-size=4096 aligns our extensions to the armv7l (4K) page size;
+    # lld's default 64K alignment uses 4K file offsets, which the loader rejects.
+    # Setting CFLAGS replaces the target's default OPT flags, so -O2 -DNDEBUG
+    # must be passed explicitly (without NDEBUG the free-threaded build trips a
+    # Py_SET_REFCNT assertion that release wheels compile out).
     env \
         CC="$BIN_DIR/zig-cc" CXX="$BIN_DIR/zig-cxx" AR="$BIN_DIR/zig-ar" \
-        LDSHARED="$BIN_DIR/zig-cc -shared" \
+        LDSHARED="$BIN_DIR/zig-cc -shared -Wl,-z,max-page-size=4096" \
         _PYTHON_HOST_PLATFORM=linux-armv7l \
         _PYTHON_SYSCONFIGDATA_NAME="$(basename "${scd[0]}" .py)" \
         PYTHONPATH="$(dirname "${scd[0]}")" \
-        CFLAGS="-I${inc[0]} -Wno-error=incompatible-pointer-types" \
+        CFLAGS="-I${inc[0]} -O2 -DNDEBUG -Wno-error=incompatible-pointer-types" \
         PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig \
         LD_LIBRARY_PATH=/tmp/vendor/lib \
         "$host_py" -m pip wheel . --no-build-isolation --no-deps -w "$raw"
 
     # Bundle FFmpeg + its armhf system deps and stamp the platform tag. The shim
     # lets auditwheel accept the armv7l --plat from an x86_64 host; --ldpaths
-    # points it at the target's libs instead of the host search path.
-    "$TOOLS_PY" scripts/auditwheel-cross.py armv7l glibc repair \
+    # points it at the target's libs instead of the host search path. Force the
+    # pip patchelf (<0.18, on PATH via the scripts dir) ahead of the system one:
+    # ubuntu-24.04 ships patchelf 0.18.0, which silently corrupts ELF files with
+    # large p_align, breaking the bundled FFmpeg libs at runtime.
+    local pe_dir
+    pe_dir="$("$TOOLS_PY" -c 'import sysconfig; print(sysconfig.get_path("scripts"))')"
+    PATH="$pe_dir:$PATH" "$TOOLS_PY" scripts/auditwheel-cross.py armv7l glibc repair \
         --ldpaths "/tmp/vendor/lib:$PY_DIR/syslib" \
         --plat "$PLAT" -w "$DIST_DIR" "$raw"/*.whl
 }

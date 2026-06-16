@@ -157,3 +157,45 @@ jobs:
         . $CONDA/etc/profile.d/conda.sh
         conda activate pyav
         python -m pytest
+
+  armv7:
+    name: "armv7 cross-build + qemu smoke"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up host Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Set up host Python 3.14t
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14t"
+      - name: Install build tooling
+        run: |
+          for py in python3.11 python3.14t; do
+            $py -m pip install -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
+          done
+          # patchelf 0.18 (ubuntu-24.04's system version) corrupts ELF files
+          # with large p_align; pin <0.18 for auditwheel to use.
+          python3.11 -m pip install -U ziglang auditwheel 'patchelf<0.18'
+      - name: Cross-compile armv7l wheels with zig
+        env:
+          HOST_PY311: python3.11
+          HOST_PY314T: python3.14t
+          TOOLS_PY: python3.11
+        run: bash scripts/build-armv7l-cross.sh
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+      - name: Import-test wheels under emulation
+        run: |
+          docker run --rm --platform linux/arm/v7 -v "$PWD/dist:/dist:ro" \
+            quay.io/pypa/manylinux_2_31_armv7l bash -ceu '
+              for py in /opt/python/cp311-cp311 /opt/python/cp314-cp314t; do
+                echo "::group::$("$py/bin/python" --version)"
+                "$py/bin/pip" install --no-index --find-links /dist av
+                "$py/bin/python" -m av --version
+                echo "::endgroup::"
+              done'

@@ -96,7 +96,9 @@ jobs:
           for py in python3.11 python3.14t; do
             $py -m pip install -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
           done
-          python3.11 -m pip install -U ziglang auditwheel
+          # patchelf 0.18 (ubuntu-24.04's system version) corrupts ELF files
+          # with large p_align; pin <0.18 for auditwheel to use.
+          python3.11 -m pip install -U ziglang auditwheel 'patchelf<0.18'
       - name: Cross-compile armv7l wheels with zig
         env:
           HOST_PY311: python3.11
