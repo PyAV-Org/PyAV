@@ -254,6 +254,50 @@ class TestFilters(TestCase):
         assert palette_frame.width == 16
         assert palette_frame.height == 16
 
+    def test_push_at_index(self) -> None:
+        # overlay has two video buffer sources; `at` targets a single one,
+        # instead of broadcasting the same frame to both (like auto-editor's
+        # pushIdx/flushIdx).
+        width, height = 16, 16
+
+        base = VideoFrame(width, height, "yuv420p")
+        for plane in base.planes:
+            plane.update(bytes(plane.buffer_size))
+        base.pts = 0
+        base.time_base = Fraction(1, 30)
+
+        top = VideoFrame(width, height, "yuv420p")
+        for i, plane in enumerate(top.planes):
+            plane.update(bytes([200 if i == 0 else 128]) * plane.buffer_size)
+        top.pts = 0
+        top.time_base = Fraction(1, 30)
+
+        graph = Graph()
+        b0 = graph.add_buffer(
+            width=width, height=height, format=base.format, time_base=base.time_base
+        )
+        b1 = graph.add_buffer(
+            width=width, height=height, format=top.format, time_base=top.time_base
+        )
+        overlay = graph.add("overlay", "x=0:y=0")
+        sink = graph.add("buffersink")
+        b0.link_to(overlay, 0, 0)
+        b1.link_to(overlay, 0, 1)
+        overlay.link_to(sink)
+        graph.configure()
+
+        graph.push(base, at=0)
+        graph.push(top, at=1)
+        graph.push(None, at=0)
+        graph.push(None, at=1)
+
+        out = graph.vpull()
+        assert isinstance(out, av.VideoFrame)
+        assert (out.width, out.height) == (width, height)
+
+        with self.assertRaises(IndexError):
+            graph.push(base, at=2)
+
     def test_graph_threads(self) -> None:
         graph = Graph()
         assert graph.threads == 0
