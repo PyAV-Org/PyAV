@@ -34,7 +34,7 @@ cdef class Container:
     cdef HWAccel hwaccel
 
     cdef readonly StreamContainer streams
-    cdef readonly dict metadata
+    cdef dict _metadata
 
     # Private API.
     cdef uint8_t _myflag  # enum: writeable, input_was_opened, started, done, extradata_planned

@@ -67,7 +67,6 @@ def close_output(self: OutputContainer):
 class OutputContainer(Container):
     def __cinit__(self, *args, **kwargs):
         self.streams = StreamContainer()
-        self.metadata = {}
         self._extradata_bsfs = {}
         self._buffered_packets = []
         with cython.nogil:
