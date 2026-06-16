@@ -154,7 +154,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         char filename
         int64_t start_time
         int64_t duration
-        int bit_rate
+        int64_t bit_rate
         int flags
         AVCodecID audio_codec_id
         AVCodecID video_codec_id

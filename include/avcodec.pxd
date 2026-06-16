@@ -338,7 +338,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef struct AVFrameSideData:
         AVFrameSideDataType type
         uint8_t *data
-        int size
+        size_t size
         AVDictionary *metadata
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html

@@ -383,7 +383,7 @@ class OutputContainer(Container):
                 buf[i] = data[i]
             buf[payload_size] = 0
             stream.codecpar.extradata = cython.cast(cython.p_uchar, buf)
-            stream.codecpar.extradata_size = payload_size
+            stream.codecpar.extradata_size = cython.cast(cython.int, payload_size)
 
         # Wrap as user-land stream.
         meta_ptr = cython.address(stream.metadata)

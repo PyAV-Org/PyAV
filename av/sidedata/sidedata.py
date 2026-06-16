@@ -109,7 +109,7 @@ class _SideDataContainer:
         self._by_index: list = []
         self._by_type: dict = {}
 
-        i: cython.Py_ssize_t
+        i: cython.int
         data: SideData
 
         for i in range(self.frame.ptr.nb_side_data):
