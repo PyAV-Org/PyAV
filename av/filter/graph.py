@@ -232,7 +232,7 @@ class Graph:
                 cython.cast(FilterContext, sink).ptr, frame_size
             )
 
-    def push(self, frame):
+    def push(self, frame, at: cython.int = -1):
         if frame is None:
             contexts = self._get_context_by_type("buffer") + self._get_context_by_type(
                 "abuffer"
@@ -246,12 +246,29 @@ class Graph:
                 f"can only AudioFrame, VideoFrame or None; got {type(frame)}"
             )
 
+        if at >= 0:
+            if at >= len(contexts):
+                raise IndexError(
+                    f"buffer source index {at} out of range; found {len(contexts)}"
+                )
+            contexts[at].push(frame)
+            return
+
         for ctx in contexts:
             ctx.push(frame)
 
-    def vpush(self, frame: VideoFrame | None):
+    def vpush(self, frame: VideoFrame | None, at: cython.int = -1):
         """Like `push`, but only for VideoFrames."""
-        for ctx in self._get_context_by_type("buffer"):
+        contexts = self._get_context_by_type("buffer")
+        if at >= 0:
+            if at >= len(contexts):
+                raise IndexError(
+                    f"buffer source index {at} out of range; found {len(contexts)}"
+                )
+            contexts[at].push(frame)
+            return
+
+        for ctx in contexts:
             ctx.push(frame)
 
     # TODO: Test complex filter graphs, add `at: int = 0` arg to pull() and vpull().
