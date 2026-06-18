@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from enum import Flag, IntEnum
+from enum import Flag, IntEnum, IntFlag
 from fractions import Fraction
 from typing import ClassVar, Literal, cast, overload
 
@@ -43,6 +43,15 @@ class Capabilities(IntEnum):
     encoder_reordered_opaque = cast(int, ...)
     encoder_flush = cast(int, ...)
     encoder_recon_frame = cast(int, ...)
+
+class PixFmtLoss(IntFlag):
+    NONE = cast(ClassVar[PixFmtLoss], ...)
+    RESOLUTION = cast(ClassVar[PixFmtLoss], ...)
+    DEPTH = cast(ClassVar[PixFmtLoss], ...)
+    COLORSPACE = cast(ClassVar[PixFmtLoss], ...)
+    ALPHA = cast(ClassVar[PixFmtLoss], ...)
+    COLORQUANT = cast(ClassVar[PixFmtLoss], ...)
+    CHROMA = cast(ClassVar[PixFmtLoss], ...)
 
 class UnknownCodecError(ValueError): ...
 
@@ -117,7 +126,7 @@ def find_best_pix_fmt_of_list(
     pix_fmts: Sequence[PixFmtLike],
     src_pix_fmt: PixFmtLike,
     has_alpha: bool = False,
-) -> tuple[VideoFormat | None, int]:
+) -> tuple[VideoFormat | None, PixFmtLoss]:
     """
     Find the best pixel format to convert to given a source format.
 
@@ -127,10 +136,15 @@ def find_best_pix_fmt_of_list(
     :param src_pix_fmt: Source pixel format (str or VideoFormat).
     :param bool has_alpha: Whether the source alpha channel is used.
     :return: (best_format, loss): best_format is the best matching pixel format from
-        the list, or None if no suitable format was found; loss is Combination of flags informing you what kind of losses will occur.
-    :rtype: (VideoFormat | None, int)
+        the list, or None if no suitable format was found; loss is a combination of
+        :class:`PixFmtLoss` flags informing you what kind of losses will occur.
+    :rtype: (VideoFormat | None, PixFmtLoss)
 
-    Note on loss: it is a bitmask of FFmpeg loss flags describing what kinds of information would be lost converting from src_pix_fmt to best_format (e.g. loss of alpha, chroma, colorspace, resolution, bit depth, etc.). Multiple losses can be present at once, so the value is meant to be interpreted with bitwise & against FFmpeg's FF_LOSS_* constants.
+    Note on loss: it is an :class:`enum.IntFlag` describing what kinds of information
+    would be lost converting from src_pix_fmt to best_format (e.g. loss of alpha,
+    chroma, colorspace, resolution, bit depth, etc.). Multiple losses can be present
+    at once, so the value can be tested with bitwise & against the :class:`PixFmtLoss`
+    members.
     For exact behavior see: libavutil/pixdesc.c/get_pix_fmt_score() in ffmpeg source code.
     """
     ...

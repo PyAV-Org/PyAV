@@ -43,6 +43,19 @@ Flags
 
     Note that ``ffmpeg -codecs`` prefers the properties versions of ``INTRA_ONLY`` and ``LOSSLESS``.
 
+Pixel Format Selection
+----------------------
+
+.. autofunction:: find_best_pix_fmt_of_list
+
+.. autoclass:: PixFmtLoss
+
+    Wraps FFmpeg's ``FF_LOSS_*`` flags. Returned by
+    :func:`find_best_pix_fmt_of_list` to describe what is lost when converting
+    from the source pixel format to the chosen one. Being an
+    :class:`enum.IntFlag`, members can be combined and tested with bitwise
+    operators.
+
 Contexts
 --------
 

@@ -40,6 +40,7 @@ Features:
 - Add ``options`` parameter to ``AudioResampler`` for passing ``libswresample`` options (e.g. ``resampler``, ``filter_size``, ``cutoff``) by :gh-user:`WyattBlue` (:issue:`2262`).
 - Support ``yuv420p10le`` in ``VideoFrame.to_ndarray`` and ``VideoFrame.from_ndarray`` by :gh-user:`WyattBlue` (:issue:`1981`).
 - Add ``at`` parameter to ``Graph.push`` and ``Graph.vpush`` to push a frame to a single buffer source by index, for multi-input filters like ``overlay`` by :gh-user:`WyattBlue`.
+- ``find_best_pix_fmt_of_list`` now returns the loss as a ``PixFmtLoss`` ``enum.IntFlag`` instead of a plain ``int`` by :gh-user:`WyattBlue` (:issue:`2300`).
 
 Fixes:
 

@@ -1,7 +1,7 @@
 import pytest
 
 from av import AudioFormat, Codec, VideoFormat, codecs_available
-from av.codec import find_best_pix_fmt_of_list
+from av.codec import PixFmtLoss, find_best_pix_fmt_of_list
 from av.codec.codec import UnknownCodecError
 
 
@@ -96,6 +96,7 @@ def test_find_best_pix_fmt_of_list_empty() -> None:
     best, loss = find_best_pix_fmt_of_list([], "rgb24")
     assert best is None
     assert loss == 0
+    assert loss is PixFmtLoss.NONE
 
 
 @pytest.mark.parametrize(
@@ -151,3 +152,16 @@ def test_find_best_pix_fmt_of_list_alpha_loss_flagged_when_used() -> None:
     assert best is not None
     assert best.name == "rgb24"
     assert loss != 0
+    assert isinstance(loss, PixFmtLoss)
+    assert loss & PixFmtLoss.ALPHA
+
+
+def test_find_best_pix_fmt_of_list_loss_flags() -> None:
+    # An identical format loses nothing.
+    _, loss = find_best_pix_fmt_of_list(["yuv420p"], "yuv420p")
+    assert loss is PixFmtLoss.NONE
+
+    # Converting color to grayscale drops the chroma planes.
+    _, loss = find_best_pix_fmt_of_list(["gray"], "rgb24")
+    assert isinstance(loss, PixFmtLoss)
+    assert loss & PixFmtLoss.CHROMA
