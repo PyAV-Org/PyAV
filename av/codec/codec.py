@@ -1,4 +1,4 @@
-from enum import Flag, IntEnum
+from enum import Flag, IntEnum, IntFlag
 
 import cython
 from cython.cimports import libav as lib
@@ -52,6 +52,22 @@ class Capabilities(IntEnum):
     encoder_reordered_opaque = 1 << 20
     encoder_flush = 1 << 21
     encoder_recon_frame = 1 << 22
+
+
+class PixFmtLoss(IntFlag):
+    """Flags describing what is lost when converting between pixel formats.
+
+    Returned by :func:`find_best_pix_fmt_of_list`. Mirrors FFmpeg's
+    ``FF_LOSS_*`` flags.
+    """
+
+    NONE = 0
+    RESOLUTION = 0x0001  # loss due to resolution change
+    DEPTH = 0x0002  # loss due to color depth change
+    COLORSPACE = 0x0004  # loss due to color space conversion
+    ALPHA = 0x0008  # loss of alpha bit
+    COLORQUANT = 0x0010  # loss due to color quantization
+    CHROMA = 0x0020  # loss of chroma (e.g. RGB to gray conversion)
 
 
 class UnknownCodecError(ValueError):
@@ -419,7 +435,7 @@ def find_best_pix_fmt_of_list(pix_fmts, src_pix_fmt, has_alpha=False):
     :param src_pix_fmt: Source pixel format (str or VideoFormat).
     :param bool has_alpha: Whether the source alpha channel is used.
     :return: (best_format, loss)
-    :rtype: (VideoFormat | None, int)
+    :rtype: (VideoFormat | None, PixFmtLoss)
     """
     src: lib.AVPixelFormat
     best: lib.AVPixelFormat
@@ -434,7 +450,7 @@ def find_best_pix_fmt_of_list(pix_fmts, src_pix_fmt, has_alpha=False):
 
     pix_fmts = tuple(pix_fmts)
     if not pix_fmts:
-        return None, 0
+        return None, PixFmtLoss.NONE
 
     if isinstance(src_pix_fmt, VideoFormat):
         src = cython.cast(VideoFormat, src_pix_fmt).pix_fmt
@@ -462,7 +478,7 @@ def find_best_pix_fmt_of_list(pix_fmts, src_pix_fmt, has_alpha=False):
         best = lib.avcodec_find_best_pix_fmt_of_list(
             c_list, src, 1 if has_alpha else 0, cython.address(c_loss)
         )
-        return get_video_format(best, 0, 0), c_loss
+        return get_video_format(best, 0, 0), PixFmtLoss(c_loss)
     finally:
         if c_list != cython.NULL:
             free(c_list)
