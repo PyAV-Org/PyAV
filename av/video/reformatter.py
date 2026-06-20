@@ -291,6 +291,19 @@ class VideoReformatter:
             frame = frame_sw
             src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
 
+            # Check for shortcut again, in case dst_format matches the downloaded frame's sw_format
+            if (
+                dst_format == src_format
+                and width == frame.ptr.width
+                and height == frame.ptr.height
+                and dst_colorspace == src_colorspace
+                and src_color_range == dst_color_range
+                and not set_dst_color_trc
+                and not set_dst_color_primaries
+            ):
+                frame._init_user_attributes()
+                return frame
+
         if self.ptr == cython.NULL:
             self.ptr = sws_alloc_context()
             if self.ptr == cython.NULL:
