@@ -272,3 +272,57 @@ class TestDecode(TestCase):
             frame_count += 1
 
         assert frame_count == video_stream.frames
+
+
+@pytest.mark.parametrize("is_hw_owned", [False, True])
+def test_hardware_decode_download_preserves_frame_props(is_hw_owned: bool) -> None:
+    hwdevices_available = av.codec.hwaccel.hwdevices_available()
+    if "HWACCEL_DEVICE_TYPE" not in os.environ:
+        pytest.skip(
+            "Set the HWACCEL_DEVICE_TYPE to run this test. "
+            f"Options are {' '.join(hwdevices_available)}"
+        )
+
+    hwaccel_device_type = os.environ["HWACCEL_DEVICE_TYPE"]
+    assert hwaccel_device_type in hwdevices_available, (
+        f"{hwaccel_device_type} not available"
+    )
+
+    test_video_path = fate_suite("hevc/hdr10_plus_h265_sample.hevc")
+    cpu_frame = decode_first_video_frame(test_video_path)
+    hw_frame = decode_first_video_frame(
+        test_video_path,
+        av.codec.hwaccel.HWAccel(
+            device_type=hwaccel_device_type,
+            is_hw_owned=is_hw_owned,
+            allow_software_fallback=False,
+        ),
+    )
+
+    # Ensure that hardware decoding preserves the frame properties, see #2231
+    assert_video_frame_color_props_match(hw_frame, cpu_frame)
+
+    # Ensure that reformatting also preserves them, even for hardware frames
+    cpu_frame = cpu_frame.reformat(format="bgr24")
+    hw_frame = hw_frame.reformat(format="bgr24")
+    assert_video_frame_color_props_match(hw_frame, cpu_frame)
+
+
+def decode_first_video_frame(
+    path: str, hwaccel: av.codec.hwaccel.HWAccel | None = None
+) -> av.VideoFrame:
+    with av.open(path, hwaccel=hwaccel) as container:
+        for packet in container.demux(video=0):
+            frames = packet.decode()
+            if frames:
+                return frames[0]
+    raise AssertionError("expected at least one decoded frame")
+
+
+def assert_video_frame_color_props_match(
+    actual: av.VideoFrame, expected: av.VideoFrame
+) -> None:
+    assert actual.color_range == expected.color_range
+    assert actual.colorspace == expected.colorspace
+    assert actual.color_primaries == expected.color_primaries
+    assert actual.color_trc == expected.color_trc

@@ -125,8 +125,7 @@ class VideoCodecContext(CodecContext):
 
         frame_sw: Frame = self._alloc_next_frame()
         err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
-        # TODO: Is there anything else to transfer?
-        frame_sw.pts = frame.pts
+        frame_sw._copy_internal_attributes(frame, data_layout=False)
         return frame_sw
 
     @property
