@@ -287,8 +287,7 @@ class VideoReformatter:
         if frame.ptr.hw_frames_ctx:
             frame_sw = alloc_video_frame()
             err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
-            frame_sw.pts = frame.pts
-            frame_sw._init_user_attributes()
+            frame_sw._copy_internal_attributes(frame, data_layout=False)
             frame = frame_sw
             src_format = cython.cast(lib.AVPixelFormat, frame.ptr.format)
 
