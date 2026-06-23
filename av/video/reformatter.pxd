@@ -33,6 +33,7 @@ cdef extern from "libswscale/swscale.h" nogil:
     cdef int SWS_CS_SMPTE170M
     cdef int SWS_CS_SMPTE240M
     cdef int SWS_CS_DEFAULT
+    cdef int SWS_CS_BT2020
 
     cdef SwsContext *sws_alloc_context()
     cdef void sws_free_context(SwsContext **ctx)

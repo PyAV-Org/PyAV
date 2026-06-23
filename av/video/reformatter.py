@@ -36,6 +36,7 @@ class Colorspace(IntEnum):
     SMPTE170M = SWS_CS_SMPTE170M
     SMPTE240M = SWS_CS_SMPTE240M
     DEFAULT = SWS_CS_DEFAULT
+    BT2020 = SWS_CS_BT2020
     # Lowercase for b/c.
     itu709 = SWS_CS_ITU709
     fcc = SWS_CS_FCC
@@ -44,6 +45,7 @@ class Colorspace(IntEnum):
     smpte170m = SWS_CS_SMPTE170M
     smpte240m = SWS_CS_SMPTE240M
     default = SWS_CS_DEFAULT
+    bt2020 = SWS_CS_BT2020
 
 
 class ColorRange(IntEnum):
@@ -146,6 +148,8 @@ def _set_frame_colorspace(
         frame.colorspace = lib.AVCOL_SPC_SMPTE170M
     elif colorspace == SWS_CS_SMPTE240M:
         frame.colorspace = lib.AVCOL_SPC_SMPTE240M
+    elif colorspace == SWS_CS_BT2020:
+        frame.colorspace = lib.AVCOL_SPC_BT2020_NCL
 
 
 @cython.final
