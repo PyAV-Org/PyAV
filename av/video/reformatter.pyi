@@ -31,6 +31,7 @@ class Colorspace(IntEnum):
     SMPTE170M = cast(int, ...)
     SMPTE240M = cast(int, ...)
     DEFAULT = cast(int, ...)
+    BT2020 = cast(int, ...)
     itu709 = cast(int, ...)
     fcc = cast(int, ...)
     itu601 = cast(int, ...)
@@ -38,6 +39,7 @@ class Colorspace(IntEnum):
     smpte170m = cast(int, ...)
     smpte240m = cast(int, ...)
     default = cast(int, ...)
+    bt2020 = cast(int, ...)
 
 class ColorRange(IntEnum):
     UNSPECIFIED = 0

@@ -1,3 +1,5 @@
+import pytest
+
 import av
 from av.video.reformatter import (
     ColorPrimaries,
@@ -101,3 +103,21 @@ def test_reformat_preserves_color_primaries() -> None:
     frame.color_primaries = ColorPrimaries.BT709
     rgb = frame.reformat(format="rgb24")
     assert rgb.color_primaries == ColorPrimaries.BT709
+
+
+@pytest.mark.parametrize(
+    ("colorspace", "expected"),
+    [
+        (Colorspace.ITU709, Colorspace.ITU709),
+        (Colorspace.FCC, Colorspace.FCC),
+        (Colorspace.ITU601, 6),  # AVCOL_SPC_SMPTE170M
+        (Colorspace.SMPTE240M, Colorspace.SMPTE240M),
+        (Colorspace.BT2020, Colorspace.BT2020),
+    ],
+)
+def test_reformat_dst_colorspace_metadata(
+    colorspace: Colorspace, expected: Colorspace | int
+) -> None:
+    frame = av.VideoFrame(width=64, height=64, format="yuv420p")
+    rgb = frame.reformat(format="rgb24", dst_colorspace=colorspace)
+    assert rgb.colorspace == expected
