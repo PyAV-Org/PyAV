@@ -36,6 +36,7 @@ cdef extern from "libswscale/swscale.h" nogil:
 
     cdef SwsContext *sws_alloc_context()
     cdef void sws_free_context(SwsContext **ctx)
+    cdef int sws_is_noop(const lib.AVFrame *dst, const lib.AVFrame *src)
     cdef int sws_scale_frame(SwsContext *c, lib.AVFrame *dst, const lib.AVFrame *src)
 
 cdef class VideoReformatter:
@@ -45,5 +46,4 @@ cdef class VideoReformatter:
                    int dst_colorspace, int interpolation,
                    int src_color_range, int dst_color_range,
                    int dst_color_trc, int dst_color_primaries,
-                   bint set_dst_color_trc, bint set_dst_color_primaries,
                    int threads)
