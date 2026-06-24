@@ -1,3 +1,4 @@
+import enum
 import errno
 import os
 import sys
@@ -19,7 +20,6 @@ __all__ = [
     "HTTPClientError",
     "UndefinedError",
 ]
-sentinel = cython.declare(object, object())
 
 
 @cython.ccall
@@ -169,86 +169,28 @@ _ffmpeg_specs = (
 # fmt: on
 
 
-class EnumType(type):
-    def __new__(mcl, name, bases, attrs, *args):
-        # Just adapting the method signature.
-        return super().__new__(mcl, name, bases, attrs)
-
-    def __init__(self, name, bases, attrs, items):
-        self._by_name = {}
-        self._by_value = {}
-        self._all = []
-
-        for spec in items:
-            self._create(*spec)
-
-    def _create(self, name, value, doc=None, by_value_only=False):
-        # We only have one instance per value.
-        try:
-            item = self._by_value[value]
-        except KeyError:
-            item = self(sentinel, name, value, doc)
-            self._by_value[value] = item
-
-        return item
-
-    def __len__(self):
-        return len(self._all)
-
-    def __iter__(self):
-        return iter(self._all)
-
-
-@cython.cclass
-class EnumItem:
-    """An enumeration of FFmpeg's error types.
-
-    .. attribute:: tag
-
-        The FFmpeg byte tag for the error.
-
-    .. attribute:: strerror
-
-        The error message that would be returned.
-    """
-
-    name = cython.declare(str, visibility="readonly")
-    value = cython.declare(cython.int, visibility="readonly")
-
-    def __cinit__(self, sentinel_, name: str, value: cython.int, doc=None):
-        if sentinel_ is not sentinel:
-            raise RuntimeError(f"Cannot instantiate {self.__class__.__name__}.")
-
-        self.name = name
-        self.value = value
-        self.__doc__ = doc
-
-    def __repr__(self):
-        return f"<{self.__class__.__module__}.{self.__class__.__name__}:{self.name}(0x{self.value:x})>"
-
-    def __str__(self):
-        return self.name
-
-    def __int__(self):
-        return self.value
-
-    @property
-    def tag(self):
-        return code_to_tag(self.value)
-
-
-ErrorType = EnumType(
-    "ErrorType", (EnumItem,), {"__module__": __name__}, [x[:2] for x in _ffmpeg_specs]
+ErrorType = enum.IntEnum(
+    "ErrorType",
+    [(name, value) for name, value, *_ in _ffmpeg_specs],
+    module=__name__,
 )
+ErrorType.__doc__ = "An enumeration of FFmpeg's error types."
 
 
-for enum in ErrorType:
-    # Mimick the errno module.
-    globals()[enum.name] = enum
-    if enum.value == c_PYAV_STASHED_ERROR:
-        enum.strerror = PYAV_STASHED_ERROR_message
-    else:
-        enum.strerror = lib.av_err2str(-enum.value)
+def _error_type_tag(self) -> bytes:
+    """The FFmpeg byte tag for the error."""
+    return code_to_tag(self.value)
+
+
+def _error_type_strerror(self) -> str:
+    """The error message that would be returned."""
+    if self.value == c_PYAV_STASHED_ERROR:
+        return PYAV_STASHED_ERROR_message
+    return lib.av_err2str(-self.value)
+
+
+ErrorType.tag = property(_error_type_tag)
+ErrorType.strerror = property(_error_type_strerror)
 
 classes: dict = {}
 
