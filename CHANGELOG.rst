@@ -47,6 +47,7 @@ Features:
 Fixes:
 
 - Fix ``add_mux_stream`` producing unwritable Matroska files by extracting codec extradata from the bitstream before the header is written by :gh-user:`WyattBlue` (:issue:`2198`).
+- Encode GPU frames (e.g. CUDA frames from DLPack) directly with ``pix_fmt="cuda"`` by adopting the frame's ``hw_frames_ctx`` before opening the encoder by :gh-user:`WyattBlue` (:issue:`2199`).
 
 v17.1.0
 -------
