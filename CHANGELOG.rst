@@ -34,6 +34,7 @@ v18.0.0 (next)
 Breaking:
 
 - Remove Python 3.10
+- Support HW encoding via a ``hwaccel`` parameter on ``OutputContainer.add_stream`` (e.g. ``h264_vaapi``, ``h264_nvenc``, ``h264_videotoolbox``); software frames passed to ``encode`` are uploaded to the device automatically by :gh-user:`WyattBlue` (:issue:`2156`).
 
 Features:
 

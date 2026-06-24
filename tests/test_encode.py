@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import io
 import math
+import os
 from fractions import Fraction
 
 import numpy as np
 import pytest
 
 import av
+import av.codec.hwaccel
 from av import AudioFrame, VideoFrame
 from av.audio.stream import AudioStream
 from av.video.stream import VideoStream
@@ -504,3 +506,66 @@ class TestProfiles(TestCase):
                 stream.profile = profile
                 print("Set", profile, "got", stream.profile)
                 assert stream.profile == profile
+
+
+# Map a hardware device type to a video encoder that uses it.
+_HWACCEL_ENCODERS = {
+    "vaapi": "h264_vaapi",
+    "cuda": "h264_nvenc",
+    "qsv": "h264_qsv",
+    "videotoolbox": "h264_videotoolbox",
+}
+
+
+def test_hardware_encode() -> None:
+    hwdevices_available = av.codec.hwaccel.hwdevices_available()
+    if "HWACCEL_DEVICE_TYPE" not in os.environ:
+        pytest.skip(
+            "Set the HWACCEL_DEVICE_TYPE to run this test. "
+            f"Options are {' '.join(hwdevices_available)}"
+        )
+
+    device_type = os.environ["HWACCEL_DEVICE_TYPE"]
+    assert device_type in hwdevices_available, f"{device_type} not available"
+
+    encoder = _HWACCEL_ENCODERS.get(device_type)
+    if encoder is None:
+        pytest.skip(f"No hardware encoder mapped for {device_type}")
+
+    width, height, n_frames = 320, 240, 24
+    hwaccel = av.codec.hwaccel.HWAccel(
+        device_type=device_type, allow_software_fallback=False
+    )
+
+    file = io.BytesIO()
+    container = av.open(file, mode="w", format="mp4")
+    stream = container.add_stream(encoder, rate=30, hwaccel=hwaccel)
+    assert isinstance(stream, VideoStream)
+    stream.width = width
+    stream.height = height
+    stream.pix_fmt = "nv12"
+
+    # Feed plain software frames; PyAV uploads them to the device for us.
+    muxed = 0
+    for i in range(n_frames):
+        array = np.full((height, width, 3), i * 8 % 256, dtype=np.uint8)
+        frame = VideoFrame.from_ndarray(array, format="rgb24")
+        for packet in stream.encode(frame):
+            container.mux(packet)
+            muxed += 1
+
+    # The hardware frames context must have been set up during open().
+    assert stream.codec_context.is_hwaccel
+
+    for packet in stream.encode():
+        container.mux(packet)
+        muxed += 1
+    container.close()
+
+    assert muxed > 0
+
+    # The result must be a valid, decodable H.264 stream.
+    file.seek(0)
+    with av.open(file, "r") as in_container:
+        decoded = sum(1 for _ in in_container.decode(video=0))
+    assert decoded == n_frames

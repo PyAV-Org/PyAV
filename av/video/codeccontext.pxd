@@ -19,3 +19,4 @@ cdef class VideoCodecContext(CodecContext):
     cdef AVCodecPrivateData _private_data
     cdef readonly VideoReformatter reformatter
     cdef VideoFrame next_frame
+    cdef VideoFrame _encode_upload_frame(self, VideoFrame vframe)

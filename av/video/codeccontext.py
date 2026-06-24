@@ -49,29 +49,79 @@ class VideoCodecContext(CodecContext):
     ):
         CodecContext._init(self, ptr, codec, hwaccel)
 
-        if hwaccel is not None:
-            try:
-                self.hwaccel_ctx = hwaccel.create(self.codec)
-                self.ptr.hw_device_ctx = lib.av_buffer_ref(self.hwaccel_ctx.ptr)
-                self.ptr.pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
-                self.ptr.get_format = _get_hw_format
-                self._private_data.hardware_pix_fmt = (
-                    self.hwaccel_ctx.config.ptr.pix_fmt
-                )
-                self._private_data.allow_software_fallback = (
-                    self.hwaccel.allow_software_fallback
-                )
-                self.ptr.opaque = cython.address(self._private_data)
-            except NotImplementedError:
-                # Some streams may not have a hardware decoder. For example, many action
-                # cam videos have a low resolution mjpeg stream, which is usually not
-                # compatible with hardware decoders.
-                # The user may have passed in a hwaccel because they want to decode the main
-                # stream with it, so we shouldn't abort even if we find a stream that can't
-                # be HW decoded.
-                # If the user wants to make sure hwaccel is actually used, they can check with the
-                # is_hwaccel() function on each stream's codec context.
-                self.hwaccel_ctx = None
+        if hwaccel is None:
+            return
+
+        if self.is_encoder:
+            # Hardware-accelerated encoding. We only attach the device context here;
+            # the hardware frames context depends on the final width/height/pixel
+            # format (set by the user after add_stream()), so it is built lazily in
+            # CodecContext.open() via _setup_encode_hwframes().
+            self.hwaccel_ctx = hwaccel.create(self.codec, for_encoding=True)
+            self.ptr.hw_device_ctx = lib.av_buffer_ref(self.hwaccel_ctx.ptr)
+            return
+
+        try:
+            self.hwaccel_ctx = hwaccel.create(self.codec)
+            self.ptr.hw_device_ctx = lib.av_buffer_ref(self.hwaccel_ctx.ptr)
+            self.ptr.pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
+            self.ptr.get_format = _get_hw_format
+            self._private_data.hardware_pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
+            self._private_data.allow_software_fallback = (
+                self.hwaccel.allow_software_fallback
+            )
+            self.ptr.opaque = cython.address(self._private_data)
+        except NotImplementedError:
+            # Some streams may not have a hardware decoder. For example, many action
+            # cam videos have a low resolution mjpeg stream, which is usually not
+            # compatible with hardware decoders.
+            # The user may have passed in a hwaccel because they want to decode the main
+            # stream with it, so we shouldn't abort even if we find a stream that can't
+            # be HW decoded.
+            # If the user wants to make sure hwaccel is actually used, they can check with the
+            # is_hwaccel() function on each stream's codec context.
+            self.hwaccel_ctx = None
+
+    @cython.cfunc
+    def _encode_upload_frame(self, vframe: VideoFrame) -> VideoFrame:
+        # Upload a software frame onto the device for hardware-accelerated encoding.
+        frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+            cython.pointer[lib.AVHWFramesContext], self.ptr.hw_frames_ctx.data
+        )
+
+        # If the user already handed us a matching hardware frame, pass it through.
+        if vframe.ptr.format == frames_ctx.format:
+            return vframe
+
+        # Convert to the frames context's software format and size before uploading,
+        # since av_hwframe_transfer_data() does not change pixel format or scale.
+        if (
+            vframe.ptr.format != frames_ctx.sw_format
+            or vframe.ptr.width != frames_ctx.width
+            or vframe.ptr.height != frames_ctx.height
+        ):
+            if not self.reformatter:
+                self.reformatter = VideoReformatter()
+            vframe = self.reformatter.reformat(
+                vframe,
+                frames_ctx.width,
+                frames_ctx.height,
+                get_video_format(
+                    frames_ctx.sw_format, frames_ctx.width, frames_ctx.height
+                ),
+                threads=self.ptr.thread_count,
+            )
+
+        hwframe: VideoFrame = alloc_video_frame()
+        err_check(lib.av_hwframe_get_buffer(self.ptr.hw_frames_ctx, hwframe.ptr, 0))
+        err_check(lib.av_hwframe_transfer_data(hwframe.ptr, vframe.ptr, 0))
+        hwframe._copy_internal_attributes(vframe, data_layout=False)
+        hwframe._init_user_attributes()
+
+        if hwframe.ptr.pts == lib.AV_NOPTS_VALUE:
+            hwframe.ptr.pts = self.ptr.frame_num
+
+        return hwframe
 
     @cython.cfunc
     def _prepare_frames_for_encode(self, input: Frame | None) -> list:
@@ -79,6 +129,11 @@ class VideoCodecContext(CodecContext):
             return [None]
 
         vframe: VideoFrame = input
+
+        # Hardware-accelerated encoding: upload the (software) frame to the device.
+        if self.ptr.hw_frames_ctx != cython.NULL:
+            return [self._encode_upload_frame(vframe)]
+
         if (
             vframe.format.pix_fmt != self.pix_fmt
             or vframe.width != self.ptr.width

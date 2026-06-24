@@ -274,6 +274,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         AVHWAccel *hwaccel
         AVBufferRef *hw_device_ctx
+        AVBufferRef *hw_frames_ctx
 
         int thread_count
         int thread_type
