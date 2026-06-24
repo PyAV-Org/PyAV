@@ -516,6 +516,22 @@ class VideoFrame(Frame):
     def __dealloc__(self):
         lib.av_frame_unref(self.ptr)
 
+    @property
+    def sw_format(self):
+        """
+        For a hardware frame (e.g. ``format.name == "cuda"``), the underlying
+        software pixel format (``nv12``, ``yuv444p``, ``p010le``, ...). ``None``
+        for a regular software frame.
+
+        :type: VideoFormat | None
+        """
+        if not self.ptr.hw_frames_ctx:
+            return None
+        frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+            cython.pointer[lib.AVHWFramesContext], self.ptr.hw_frames_ctx.data
+        )
+        return get_video_format(frames_ctx.sw_format, self.ptr.width, self.ptr.height)
+
     def __repr__(self):
         return (
             f"<av.{self.__class__.__name__}, pts={self.pts} {self.format.name} "

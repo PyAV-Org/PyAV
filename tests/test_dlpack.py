@@ -1,4 +1,6 @@
 import gc
+from fractions import Fraction
+from typing import cast
 
 import numpy
 import pytest
@@ -6,6 +8,7 @@ import pytest
 import av
 from av import VideoFrame
 from av.codec.hwaccel import HWAccel
+from av.video.codeccontext import VideoCodecContext
 
 from .common import assertNdarraysEqual, fate_png
 
@@ -281,6 +284,10 @@ def test_video_plane_dlpack_unsupported_format_raises() -> None:
         match="bitstream, palette, and Bayer formats are not supported",
     ):
         frame.planes[0].__dlpack__()
+
+
+def test_sw_format_none_for_software_frame() -> None:
+    assert VideoFrame(16, 16, "yuv420p").sw_format is None
 
 
 def test_video_frame_from_dlpack_requires_two_planes() -> None:
@@ -612,3 +619,39 @@ def test_video_frame_from_dlpack_cuda_hw_frame_behavior_if_available() -> None:
                 frame.to_ndarray(format="cuda")
     except av.FFmpegError as e:
         pytest.skip(f"CUDA hwcontext not available in this build/runtime: {e}")
+
+
+def test_encode_cuda_frame_with_nvenc_if_available() -> None:
+    # Issue #2199: a CUDA frame from DLPack should encode on the GPU directly.
+    # Its hw_frames_ctx must propagate to the encoder before avcodec_open2.
+    backend = _get_cuda_backend()
+    if backend is None:
+        pytest.skip("CUDA backend (cupy/torch) not available.")
+
+    name, mod = backend
+    width, height = 256, 256
+
+    try:
+        if name == "torch":
+            y = mod.zeros((height, width), dtype=mod.uint8, device="cuda")
+            uv = mod.zeros((height // 2, width // 2, 2), dtype=mod.uint8, device="cuda")
+        else:
+            y = mod.zeros((height, width), dtype=mod.uint8)
+            uv = mod.zeros((height // 2, width // 2, 2), dtype=mod.uint8)
+
+        frame = VideoFrame.from_dlpack((y, uv), format="nv12")
+        assert frame.format.name == "cuda"
+        assert frame.sw_format is not None and frame.sw_format.name == "nv12"
+
+        cc = cast(VideoCodecContext, av.CodecContext.create("h264_nvenc", "w"))
+        cc.width = width
+        cc.height = height
+        cc.time_base = Fraction(1, 24)
+        cc.framerate = Fraction(24, 1)
+        cc.pix_fmt = "cuda"
+
+        packets = cc.encode(frame)
+        packets += cc.encode(None)  # flush
+        assert any(p.size for p in packets)
+    except av.FFmpegError as e:
+        pytest.skip(f"nvenc/CUDA not available in this build/runtime: {e}")

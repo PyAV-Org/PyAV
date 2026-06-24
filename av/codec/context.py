@@ -481,6 +481,17 @@ class CodecContext:
         if self.ptr.codec_type not in [lib.AVMEDIA_TYPE_VIDEO, lib.AVMEDIA_TYPE_AUDIO]:
             raise NotImplementedError("Encoding is only supported for audio and video.")
 
+        # A hardware frame (e.g. a CUDA frame from DLPack) carries its own frames
+        # context. Encoders like h264_nvenc require hw_frames_ctx to be set before
+        # avcodec_open2, so adopt the frame's if we don't already have one.
+        if (
+            not self.is_open
+            and frame is not None
+            and frame.ptr.hw_frames_ctx != cython.NULL
+            and self.ptr.hw_frames_ctx == cython.NULL
+        ):
+            self.ptr.hw_frames_ctx = lib.av_buffer_ref(frame.ptr.hw_frames_ctx)
+
         self.open(strict=False)
 
         frames = self._prepare_frames_for_encode(frame)
