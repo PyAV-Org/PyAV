@@ -38,7 +38,7 @@ class PyIOFile:
             and self.ftell is not None
             and (seekable is None or seekable())
         ):
-            seek_func: seek_func_t = pyio_seek
+            seek_func = pyio_seek
 
         if writeable is None:
             writeable = self.fwrite is not None

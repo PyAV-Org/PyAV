@@ -55,4 +55,4 @@ class OpaqueContainer:
         return self._objects.pop(key, None)
 
 
-opaque_container: OpaqueContainer = OpaqueContainer()
+opaque_container = OpaqueContainer()
