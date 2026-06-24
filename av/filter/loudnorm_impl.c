@@ -3,51 +3,23 @@
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
+#include <stdarg.h>
 #include <string.h>
-
-#ifdef _WIN32
-    #include <windows.h>
-#else
-    #include <pthread.h>
-#endif
-
-#ifdef _WIN32
-    static CRITICAL_SECTION json_mutex;
-    static CONDITION_VARIABLE json_cond;
-    static int mutex_initialized = 0;
-#else
-    static pthread_mutex_t json_mutex = PTHREAD_MUTEX_INITIALIZER;
-    static pthread_cond_t json_cond = PTHREAD_COND_INITIALIZER;
-#endif
 
 static char json_buffer[2048] = {0};
 static int json_captured = 0;
 
-// Custom logging callback
+// Custom logging callback. The loudnorm filter prints its stats as a JSON line.
 static void logging_callback(void *ptr, int level, const char *fmt, va_list vl) {
     char line[2048];
     vsnprintf(line, sizeof(line), fmt, vl);
 
     const char *json_start = strstr(line, "{");
     if (json_start) {
-        #ifdef _WIN32
-        EnterCriticalSection(&json_mutex);
-        #else
-        pthread_mutex_lock(&json_mutex);
-        #endif
-
         size_t len = strnlen(json_start, sizeof(json_buffer) - 1);
         memcpy(json_buffer, json_start, len);
         json_buffer[len] = '\0';
         json_captured = 1;
-
-        #ifdef _WIN32
-        WakeConditionVariable(&json_cond);
-        LeaveCriticalSection(&json_mutex);
-        #else
-        pthread_cond_signal(&json_cond);
-        pthread_mutex_unlock(&json_mutex);
-        #endif
     }
 }
 
@@ -73,15 +45,6 @@ char* loudnorm_get_stats(
 
     json_captured = 0;    // Reset the captured flag
     memset(json_buffer, 0, sizeof(json_buffer));  // Clear the buffer
-
-    #ifdef _WIN32
-    // Initialize synchronization objects if needed
-    if (!mutex_initialized) {
-        InitializeCriticalSection(&json_mutex);
-        InitializeConditionVariable(&json_cond);
-        mutex_initialized = 1;
-    }
-    #endif
 
     av_log_set_callback(logging_callback);
 
@@ -181,7 +144,8 @@ char* loudnorm_get_stats(
 
 end:
     // Freeing the graph uninits the loudnorm filter, which is what makes it
-    // emit its JSON stats through our log callback. Safe to call on NULL.
+    // emit its JSON stats through our log callback. This happens synchronously
+    // on this thread, so json_buffer is populated by the time the call returns.
     avfilter_graph_free(&filter_graph);
     avcodec_free_context(&codec_ctx);
     avformat_close_input(&fmt_ctx);
@@ -189,39 +153,12 @@ end:
     av_frame_free(&frame);
     av_packet_free(&packet);
 
-    // If the graph never configured we produced no stats; don't block waiting
-    // for JSON that will never arrive. Leave result NULL so the caller raises.
-    if (graph_configured) {
-        #ifdef _WIN32
-        EnterCriticalSection(&json_mutex);
-        while (!json_captured) {
-            if (!SleepConditionVariableCS(&json_cond, &json_mutex, 5000)) { // 5 second timeout
-                fprintf(stderr, "Timeout waiting for JSON data\n");
-                break;
-            }
-        }
-        if (json_captured) {
-            result = _strdup(json_buffer);  // Use _strdup on Windows
-        }
-        LeaveCriticalSection(&json_mutex);
-        #else
-        struct timespec timeout;
-        clock_gettime(CLOCK_REALTIME, &timeout);
-        timeout.tv_sec += 5;  // 5 second timeout
-
-        pthread_mutex_lock(&json_mutex);
-        while (json_captured == 0) {
-            int ret = pthread_cond_timedwait(&json_cond, &json_mutex, &timeout);
-            if (ret == ETIMEDOUT) {
-                fprintf(stderr, "Timeout waiting for JSON data\n");
-                break;
-            }
-        }
-        if (json_captured) {
-            result = strdup(json_buffer);
-        }
-        pthread_mutex_unlock(&json_mutex);
-        #endif
+    if (graph_configured && json_captured) {
+#ifdef _WIN32
+        result = _strdup(json_buffer);
+#else
+        result = strdup(json_buffer);
+#endif
     }
 
     av_log_set_callback(av_log_default_callback);

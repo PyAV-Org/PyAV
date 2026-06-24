@@ -1,6 +1,7 @@
 import errno
 import logging
 import os
+import shutil
 import sys
 from collections.abc import Iterator
 from urllib.request import urlopen
@@ -85,12 +86,7 @@ def cached_download(url: str, name: str) -> str:
 
     tmp_path = path + ".tmp"
     with open(tmp_path, "wb") as fh:
-        while True:
-            chunk = response.read(8196)
-            if chunk:
-                fh.write(chunk)
-            else:
-                break
+        shutil.copyfileobj(response, fh)
 
     os.rename(tmp_path, path)
 
