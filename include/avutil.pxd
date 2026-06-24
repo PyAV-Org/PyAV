@@ -216,12 +216,14 @@ cdef extern from "libavutil/hwcontext.h" nogil:
         AVPixelFormat sw_format
         int width
         int height
+        int initial_pool_size
 
     cdef int av_hwdevice_ctx_create(AVBufferRef **device_ctx, AVHWDeviceType type, const char *device, AVDictionary *opts, int flags)
     cdef AVHWDeviceType av_hwdevice_find_type_by_name(const char *name)
     cdef const char *av_hwdevice_get_type_name(AVHWDeviceType type)
     cdef AVHWDeviceType av_hwdevice_iterate_types(AVHWDeviceType prev)
     cdef int av_hwframe_transfer_data(AVFrame *dst, const AVFrame *src, int flags)
+    cdef int av_hwframe_get_buffer(AVBufferRef *hwframe_ctx, AVFrame *frame, int flags)
 
     cdef AVBufferRef *av_hwframe_ctx_alloc(AVBufferRef *device_ref)
     cdef int av_hwframe_ctx_init(AVBufferRef *ref)

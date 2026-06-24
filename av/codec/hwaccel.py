@@ -140,10 +140,17 @@ class HWAccel:
         self.ptr = cython.NULL
         self.config = None
 
-    def _initialize_hw_context(self, codec: Codec):
+    def _initialize_hw_context(self, codec: Codec, for_encoding: bool = False):
+        # Decoders advertise the device-context method, while encoders (e.g.
+        # h264_vaapi) advertise the frames-context method. Accept either one when
+        # setting up an encoder.
+        supported_methods: cython.int = lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
+        if for_encoding:
+            supported_methods |= lib.AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX
+
         config: HWConfig
         for config in codec.hardware_configs:
-            if not (config.ptr.methods & lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX):
+            if not (config.ptr.methods & supported_methods):
                 continue
             if self._device_type and config.device_type != self._device_type:
                 continue
@@ -168,7 +175,7 @@ class HWAccel:
             )
         )
 
-    def create(self, codec: Codec) -> HWAccel:
+    def create(self, codec: Codec, for_encoding: bool = False) -> HWAccel:
         """Create a new hardware accelerator context with the given codec"""
         if self.ptr:
             raise RuntimeError("Hardware context already initialized")
@@ -180,7 +187,7 @@ class HWAccel:
             options=self.options,
             is_hw_owned=self.is_hw_owned,
         )
-        ret._initialize_hw_context(codec)
+        ret._initialize_hw_context(codec, for_encoding=for_encoding)
         return ret
 
     def __dealloc__(self):

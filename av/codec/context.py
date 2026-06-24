@@ -246,6 +246,8 @@ class CodecContext:
                 self.ptr.time_base.num = 1
                 self.ptr.time_base.den = lib.AV_TIME_BASE
 
+        self._setup_encode_hwframes()
+
         err_check(
             lib.avcodec_open2(self.ptr, self.codec.ptr, cython.address(options.ptr)),
             f'avcodec_open2("{self.codec.name}", {self.options})',
@@ -379,6 +381,52 @@ class CodecContext:
         while packet:
             yield packet
             packet = self._recv_packet()
+
+    @cython.cfunc
+    def _setup_encode_hwframes(self) -> cython.void:
+        # Build the hardware frames context for hardware-accelerated encoding.
+        #
+        # Unlike the device context (attached at construction time), the frames
+        # context depends on the final width/height/pixel format, which the user
+        # sets after add_stream(). We therefore defer it until just before the
+        # codec is opened.
+        if self.hwaccel_ctx is None or not self.is_encoder:
+            return
+        if self.ptr.hw_frames_ctx:
+            return  # Already set up.
+
+        hw_format: lib.AVPixelFormat = self.hwaccel_ctx.config.ptr.pix_fmt
+        sw_format: lib.AVPixelFormat = cython.cast(lib.AVPixelFormat, self.ptr.pix_fmt)
+
+        # The codec context's pix_fmt holds the *software* format the user feeds in.
+        # If they left it as the hardware format (or unset), pick a sane default.
+        if sw_format == hw_format or sw_format == lib.AV_PIX_FMT_NONE:
+            sw_format = lib.av_get_pix_fmt(b"nv12")
+
+        frames_ref: cython.pointer[lib.AVBufferRef] = lib.av_hwframe_ctx_alloc(
+            self.hwaccel_ctx.ptr
+        )
+        if frames_ref == cython.NULL:
+            raise MemoryError("av_hwframe_ctx_alloc() failed")
+
+        try:
+            frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+                cython.pointer[lib.AVHWFramesContext], frames_ref.data
+            )
+            frames_ctx.format = hw_format
+            frames_ctx.sw_format = sw_format
+            frames_ctx.width = self.ptr.width
+            frames_ctx.height = self.ptr.height
+            frames_ctx.initial_pool_size = 32
+            err_check(lib.av_hwframe_ctx_init(frames_ref))
+        except Exception:
+            lib.av_buffer_unref(cython.address(frames_ref))
+            raise
+
+        # Ownership of frames_ref transfers to the codec context.
+        self.ptr.hw_frames_ctx = frames_ref
+        self.ptr.sw_pix_fmt = sw_format
+        self.ptr.pix_fmt = hw_format
 
     @cython.cfunc
     def _prepare_frames_for_encode(self, frame: Frame | None) -> list:

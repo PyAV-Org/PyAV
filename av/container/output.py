@@ -5,6 +5,7 @@ from cython.cimports import libav as lib
 from cython.cimports.av.bitstream import BitStreamFilterContext
 from cython.cimports.av.codec.codec import Codec
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
+from cython.cimports.av.codec.hwaccel import HWAccel
 from cython.cimports.av.container.streams import StreamContainer
 from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
@@ -79,8 +80,15 @@ class OutputContainer(Container):
         with cython.nogil:
             lib.av_packet_free(cython.address(self.packet_ptr))
 
-    def add_stream(self, codec_name, rate=None, options: dict | None = None, **kwargs):
-        """add_stream(codec_name, rate=None)
+    def add_stream(
+        self,
+        codec_name,
+        rate=None,
+        options: dict | None = None,
+        hwaccel: HWAccel | None = None,
+        **kwargs,
+    ):
+        """add_stream(codec_name, rate=None, *, hwaccel=None)
 
         Creates a new stream from a codec name and returns it.
         Supports video, audio, and subtitle streams.
@@ -88,6 +96,10 @@ class OutputContainer(Container):
         :param codec_name: The name of a codec.
         :type codec_name: str
         :param dict options: Stream options.
+        :param HWAccel hwaccel: Optional settings for hardware-accelerated encoding.
+            Only applies to video streams (e.g. ``h264_vaapi``); software frames
+            passed to :meth:`~av.codec.context.CodecContext.encode` are uploaded to
+            the device automatically.
         :param \\**kwargs: Set attributes for the stream.
         :rtype: The new :class:`~av.stream.Stream`.
 
@@ -164,7 +176,7 @@ class OutputContainer(Container):
         err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
 
         # Construct the user-land stream
-        py_codec_context: CodecContext = wrap_codec_context(ctx, codec, None)
+        py_codec_context: CodecContext = wrap_codec_context(ctx, codec, hwaccel)
         py_stream: Stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
 
