@@ -252,6 +252,22 @@ class VideoCodecContext(CodecContext):
         self.ptr.pix_fmt = get_pix_fmt(value)
 
     @property
+    def sw_format(self):
+        """
+        For a hardware context (e.g. ``format.name == "cuda"``), the underlying
+        software pixel format (``nv12``, ``p010le``, ...). ``None`` for a regular
+        software context.
+
+        :type: VideoFormat | None
+        """
+        if not self.ptr.hw_frames_ctx:
+            return None
+        frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
+            cython.pointer[lib.AVHWFramesContext], self.ptr.hw_frames_ctx.data
+        )
+        return get_video_format(frames_ctx.sw_format, self.ptr.width, self.ptr.height)
+
+    @property
     def framerate(self):
         """
         The frame rate, in frames per second.
