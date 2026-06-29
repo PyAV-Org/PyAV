@@ -261,11 +261,21 @@ class VideoCodecContext(CodecContext):
         :type: VideoFormat | None
         """
         if not self.ptr.hw_frames_ctx:
+            if self.ptr.sw_pix_fmt != lib.AV_PIX_FMT_NONE:
+                return get_video_format(
+                    cython.cast(lib.AVPixelFormat, self.ptr.sw_pix_fmt),
+                    self.ptr.width,
+                    self.ptr.height,
+                )
             return None
         frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
             cython.pointer[lib.AVHWFramesContext], self.ptr.hw_frames_ctx.data
         )
         return get_video_format(frames_ctx.sw_format, self.ptr.width, self.ptr.height)
+
+    @sw_format.setter
+    def sw_format(self, value):
+        self.ptr.sw_pix_fmt = get_pix_fmt(value)
 
     @property
     def framerate(self):

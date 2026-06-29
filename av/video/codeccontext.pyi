@@ -14,7 +14,10 @@ class VideoCodecContext(CodecContext):
     height: int
     bits_per_coded_sample: int
     pix_fmt: str | None
-    sw_format: VideoFormat | None
+    @property
+    def sw_format(self) -> VideoFormat | None: ...
+    @sw_format.setter
+    def sw_format(self, value: str) -> None: ...
     framerate: Fraction
     rate: Fraction
     gop_size: int

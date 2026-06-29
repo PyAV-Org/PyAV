@@ -396,9 +396,16 @@ class CodecContext:
             return  # Already set up.
 
         hw_format: lib.AVPixelFormat = self.hwaccel_ctx.config.ptr.pix_fmt
-        sw_format: lib.AVPixelFormat = cython.cast(lib.AVPixelFormat, self.ptr.pix_fmt)
+        sw_format: lib.AVPixelFormat = cython.cast(
+            lib.AVPixelFormat, self.ptr.sw_pix_fmt
+        )
 
-        # The codec context's pix_fmt holds the *software* format the user feeds in.
+        # The codec context's sw_pix_fmt holds the software format the user
+        # wants the hardware frames context to use. Fall back to pix_fmt to
+        # preserve the existing stream.pix_fmt configuration path.
+        if sw_format == lib.AV_PIX_FMT_NONE:
+            sw_format = cython.cast(lib.AVPixelFormat, self.ptr.pix_fmt)
+
         # If they left it as the hardware format (or unset), pick a sane default.
         if sw_format == hw_format or sw_format == lib.AV_PIX_FMT_NONE:
             sw_format = lib.av_get_pix_fmt(b"nv12")
