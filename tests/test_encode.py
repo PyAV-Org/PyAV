@@ -517,6 +517,13 @@ _HWACCEL_ENCODERS = {
 }
 
 
+def get_hwaccel_format(encoder: str, device_type: str) -> str:
+    for config in av.Codec(encoder, "w").hardware_configs:
+        if config.device_type.name == device_type and config.format is not None:
+            return config.format.name
+    pytest.skip(f"No hardware format for {device_type} on {encoder}")
+
+
 def test_hardware_encode() -> None:
     hwdevices_available = av.codec.hwaccel.hwdevices_available()
     if "HWACCEL_DEVICE_TYPE" not in os.environ:
@@ -569,3 +576,45 @@ def test_hardware_encode() -> None:
     with av.open(file, "r") as in_container:
         decoded = sum(1 for _ in in_container.decode(video=0))
     assert decoded == n_frames
+
+
+def test_hardware_encode_honors_sw_format() -> None:
+    hwdevices_available = av.codec.hwaccel.hwdevices_available()
+    if "HWACCEL_DEVICE_TYPE" not in os.environ:
+        pytest.skip(
+            "Set the HWACCEL_DEVICE_TYPE to run this test. "
+            f"Options are {' '.join(hwdevices_available)}"
+        )
+
+    device_type = os.environ["HWACCEL_DEVICE_TYPE"]
+    assert device_type in hwdevices_available, f"{device_type} not available"
+
+    encoder = _HWACCEL_ENCODERS.get(device_type)
+    if encoder is None:
+        pytest.skip(f"No hardware encoder mapped for {device_type}")
+    hw_format = get_hwaccel_format(encoder, device_type)
+
+    hwaccel = av.codec.hwaccel.HWAccel(
+        device_type=device_type, allow_software_fallback=False
+    )
+    container = av.open(io.BytesIO(), mode="w", format="mp4")
+    stream = container.add_stream(encoder, rate=30, hwaccel=hwaccel)
+    assert isinstance(stream, VideoStream)
+    stream.width = 320
+    stream.height = 240
+    stream.pix_fmt = hw_format
+    stream.codec_context.sw_format = "yuv420p"
+
+    assert stream.codec_context.sw_format is not None
+    assert stream.codec_context.sw_format.name == "yuv420p"
+
+    frame = VideoFrame(320, 240, "rgb24")
+    for packet in stream.encode(frame):
+        container.mux(packet)
+
+    assert stream.codec_context.pix_fmt == hw_format
+    assert stream.codec_context.sw_format is not None
+    assert stream.codec_context.sw_format.name == "yuv420p"
+    for packet in stream.encode():
+        container.mux(packet)
+    container.close()

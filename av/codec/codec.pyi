@@ -10,6 +10,7 @@ from av.video.codeccontext import VideoCodecContext
 from av.video.format import VideoFormat
 
 from .context import CodecContext
+from .hwaccel import HWConfig
 
 class Properties(Flag):
     NONE = cast(ClassVar[Properties], ...)
@@ -78,6 +79,7 @@ class Codec:
     audio_rates: list[int] | None
     video_formats: list[VideoFormat] | None
     audio_formats: list[AudioFormat] | None
+    hardware_configs: list[HWConfig]
 
     @property
     def properties(self) -> int: ...
