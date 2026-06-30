@@ -113,7 +113,7 @@ build_one() {
         _PYTHON_HOST_PLATFORM=linux-armv7l \
         _PYTHON_SYSCONFIGDATA_NAME="$(basename "${scd[0]}" .py)" \
         PYTHONPATH="$(dirname "${scd[0]}")" \
-        CFLAGS="-I${inc[0]} -O2 -DNDEBUG -Wno-error=incompatible-pointer-types" \
+        CFLAGS="-I${inc[0]} -O2 -DNDEBUG" \
         PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig \
         LD_LIBRARY_PATH=/tmp/vendor/lib \
         "$host_py" -m pip wheel . --no-build-isolation --no-deps -w "$raw"
