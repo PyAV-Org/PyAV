@@ -150,6 +150,8 @@ class TestCodecContext(TestCase):
     def test_encoder_pix_fmt(self) -> None:
         ctx = av.codec.Codec("h264", "w").create("video")
 
+        assert ctx.pix_fmt is None
+
         # valid format
         ctx.pix_fmt = "yuv420p"
         assert ctx.pix_fmt == "yuv420p"
