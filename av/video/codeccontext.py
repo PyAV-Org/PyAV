@@ -245,6 +245,8 @@ class VideoCodecContext(CodecContext):
         desc: cython.pointer[cython.const[lib.AVPixFmtDescriptor]] = (
             lib.av_pix_fmt_desc_get(cython.cast(lib.AVPixelFormat, self.ptr.pix_fmt))
         )
+        if desc == cython.NULL:
+            return None
         return cython.cast(str, desc.name)
 
     @pix_fmt.setter
