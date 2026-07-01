@@ -43,6 +43,7 @@ Features:
 - Add ``at`` parameter to ``Graph.push`` and ``Graph.vpush`` to push a frame to a single buffer source by index, for multi-input filters like ``overlay`` by :gh-user:`WyattBlue`.
 - ``find_best_pix_fmt_of_list`` now returns the loss as a ``PixFmtLoss`` ``enum.IntFlag`` instead of a plain ``int`` by :gh-user:`WyattBlue` (:issue:`2300`).
 - Add ``Colorspace.BT2020`` by :gh-user:`mark-oshea`.
+- ``BitStreamFilterContext`` now accepts a ``Codec`` or a codec-name ``str`` as ``in_stream`` to pin the input codec without a full ``Stream`` by :gh-user:`WyattBlue`.
 
 Fixes:
 
