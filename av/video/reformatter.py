@@ -224,11 +224,14 @@ class VideoReformatter:
         )
         c_src_color_range = _resolve_enum_value(src_color_range, ColorRange, 0)
         c_dst_color_range = _resolve_enum_value(dst_color_range, ColorRange, 0)
+        # Default to UNSPECIFIED (not the source's value) so that a transfer /
+        # primaries conversion is only performed when explicitly requested. See
+        # _reformat for why.
         c_dst_color_trc = _resolve_enum_value(
-            dst_color_trc, ColorTrc, frame.ptr.color_trc
+            dst_color_trc, ColorTrc, lib.AVCOL_TRC_UNSPECIFIED
         )
         c_dst_color_primaries = _resolve_enum_value(
-            dst_color_primaries, ColorPrimaries, frame.ptr.color_primaries
+            dst_color_primaries, ColorPrimaries, lib.AVCOL_PRI_UNSPECIFIED
         )
         c_threads: cython.int = threads if threads is not None else 0
         c_width: cython.int = width if width is not None else frame.ptr.width
@@ -277,12 +280,37 @@ class VideoReformatter:
         new_frame.ptr.format = dst_format
         new_frame.ptr.width = width
         new_frame.ptr.height = height
-        new_frame.ptr.color_trc = cython.cast(
-            lib.AVColorTransferCharacteristic, dst_color_trc
+
+        # A transfer-characteristic / primaries conversion is opt-in. Unlike the
+        # pre-17.0 sws_scale, sws_scale_frame inspects color_trc/color_primaries
+        # and rejects RESERVED (and other unsupported) values with EOPNOTSUPP,
+        # which regressed plain reformats of e.g. VP9 / NVDEC frames (#2208). So
+        # only feed these fields to swscale when the caller explicitly requested a
+        # destination value; otherwise neutralize them for the scale (as the old
+        # sws_scale effectively did) while still preserving the source's tags on
+        # the returned frame's metadata.
+        convert_trc: cython.bint = dst_color_trc != lib.AVCOL_TRC_UNSPECIFIED
+        convert_primaries: cython.bint = (
+            dst_color_primaries != lib.AVCOL_PRI_UNSPECIFIED
         )
-        new_frame.ptr.color_primaries = cython.cast(
-            lib.AVColorPrimaries, dst_color_primaries
-        )
+        frame_src_color_trc: lib.AVColorTransferCharacteristic = frame.ptr.color_trc
+        frame_src_color_primaries: lib.AVColorPrimaries = frame.ptr.color_primaries
+
+        if convert_trc:
+            new_frame.ptr.color_trc = cython.cast(
+                lib.AVColorTransferCharacteristic, dst_color_trc
+            )
+        else:
+            frame.ptr.color_trc = lib.AVCOL_TRC_UNSPECIFIED
+            new_frame.ptr.color_trc = lib.AVCOL_TRC_UNSPECIFIED
+
+        if convert_primaries:
+            new_frame.ptr.color_primaries = cython.cast(
+                lib.AVColorPrimaries, dst_color_primaries
+            )
+        else:
+            frame.ptr.color_primaries = lib.AVCOL_PRI_UNSPECIFIED
+            new_frame.ptr.color_primaries = lib.AVCOL_PRI_UNSPECIFIED
 
         # Translate source and destination colorspace/range from SWS_CS_* to AVCOL_*
         # so sws_is_noop and sws_scale_frame understand them
@@ -294,9 +322,11 @@ class VideoReformatter:
         # Shortcut if sws_scale_frame would be a no-op
         is_noop: cython.bint = sws_is_noop(new_frame.ptr, frame.ptr) != 0
         if is_noop:
-            # Restore source frame colorspace/range to avoid side effects
+            # Restore source frame metadata to avoid side effects
             frame.ptr.colorspace = frame_src_colorspace
             frame.ptr.color_range = frame_src_color_range
+            frame.ptr.color_trc = frame_src_color_trc
+            frame.ptr.color_primaries = frame_src_color_primaries
             return frame
 
         if self.ptr == cython.NULL:
@@ -311,9 +341,18 @@ class VideoReformatter:
         with cython.nogil:
             ret = sws_scale_frame(self.ptr, new_frame.ptr, frame.ptr)
 
-        # Restore source frame colorspace/range to avoid side effects
+        # Restore source frame metadata to avoid side effects
         frame.ptr.colorspace = frame_src_colorspace
         frame.ptr.color_range = frame_src_color_range
+        frame.ptr.color_trc = frame_src_color_trc
+        frame.ptr.color_primaries = frame_src_color_primaries
+
+        # Preserve the source's transfer/primaries on the output when no explicit
+        # conversion was requested (the scale ran with neutralized tags).
+        if not convert_trc:
+            new_frame.ptr.color_trc = frame_src_color_trc
+        if not convert_primaries:
+            new_frame.ptr.color_primaries = frame_src_color_primaries
 
         err_check(ret)
 

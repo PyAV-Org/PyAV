@@ -46,6 +46,7 @@ Features:
 
 Fixes:
 
+- Fix ``VideoFrame.reformat`` (and ``to_ndarray``/``to_rgb``/``to_image``) raising ``OSError`` ``Operation not supported`` on frames tagged with reserved or otherwise unsupported ``color_primaries``/``color_trc`` values (e.g. VP9 and NVDEC output); a transfer/primaries conversion is now only performed when explicitly requested by :gh-user:`WyattBlue` (:issue:`2208`).
 - Fix ``add_mux_stream`` producing unwritable Matroska files by extracting codec extradata from the bitstream before the header is written by :gh-user:`WyattBlue` (:issue:`2198`).
 - Encode GPU frames (e.g. CUDA frames from DLPack) directly with ``pix_fmt="cuda"`` by adopting the frame's ``hw_frames_ctx`` before opening the encoder by :gh-user:`WyattBlue` (:issue:`2199`).
 

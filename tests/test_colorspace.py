@@ -121,3 +121,50 @@ def test_reformat_dst_colorspace_metadata(
     frame = av.VideoFrame(width=64, height=64, format="yuv420p")
     rgb = frame.reformat(format="rgb24", dst_colorspace=colorspace)
     assert rgb.colorspace == expected
+
+
+# RESERVED0 (0) and RESERVED (3) primaries/transfer values, plus a couple of
+# transfer functions swscale can't handle (LOG / LOG_SQRT). Real VP9 and NVDEC
+# streams routinely tag frames with these. sws_scale_frame (used since 17.0.0)
+# validates these fields and rejects them with EOPNOTSUPP, which regressed a
+# plain reformat/to_ndarray to "rgb24" (#2208). The pre-17.0 sws_scale ignored
+# them, and a transfer/primaries conversion should stay opt-in.
+@pytest.mark.parametrize(
+    ("color_primaries", "color_trc"),
+    [
+        (3, 3),  # RESERVED / RESERVED
+        (0, 0),  # RESERVED0 / RESERVED0
+        (3, 2),  # reserved primaries only
+        (2, 3),  # reserved transfer only
+        (2, 9),  # AVCOL_TRC_LOG (unsupported by swscale)
+        (2, 10),  # AVCOL_TRC_LOG_SQRT (unsupported by swscale)
+    ],
+)
+def test_reformat_unsupported_color_metadata(
+    color_primaries: int, color_trc: int
+) -> None:
+    frame = av.VideoFrame(width=64, height=64, format="yuv420p")
+    frame.colorspace = Colorspace.ITU709
+    frame.color_primaries = color_primaries
+    frame.color_trc = color_trc
+
+    # Neither of these should raise OSError(EOPNOTSUPP).
+    rgb = frame.reformat(format="rgb24")
+    assert rgb.format.name == "rgb24"
+    array = frame.to_ndarray(format="rgb24")
+    assert array.shape == (64, 64, 3)
+
+    # The reformat must not mutate the source frame's metadata.
+    assert frame.color_primaries == color_primaries
+    assert frame.color_trc == color_trc
+
+    # The BT.709 matrix is still applied even though the transfer/primaries are
+    # unsupported: a neutral gray must stay gray.
+    gray = av.VideoFrame(width=64, height=64, format="yuv420p")
+    gray.colorspace = Colorspace.ITU709
+    gray.color_primaries = color_primaries
+    gray.color_trc = color_trc
+    for plane, value in zip(gray.planes, (128, 128, 128)):
+        plane.update(bytes([value]) * plane.buffer_size)
+    out = gray.to_ndarray(format="rgb24")
+    assert out.min() == out.max() == out[0, 0, 0]
