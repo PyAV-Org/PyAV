@@ -72,6 +72,22 @@ def test_filter_h264_mp4toannexb() -> None:
             assert is_annexb(p)
 
 
+def test_filter_in_stream_codec_and_name() -> None:
+    # A Codec or codec-name str can stand in for a Stream to pin the input codec,
+    # which is all a codec-specific filter needs to initialize.
+    # (Filters that also need the stream's extradata, such as h264_mp4toannexb,
+    # still require a full Stream to convert correctly.)
+    for in_stream in ("h264", av.Codec("h264", "r")):
+        ctx = BitStreamFilterContext("h264_mp4toannexb", in_stream)
+        assert isinstance(ctx, BitStreamFilterContext)
+
+
+def test_filter_in_stream_wrong_codec() -> None:
+    # h264_mp4toannexb only supports h264, so a mismatched codec is rejected.
+    with pytest.raises(av.ArgumentError):
+        BitStreamFilterContext("h264_mp4toannexb", "hevc")
+
+
 def test_filter_output_parameters() -> None:
     with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
         stream = container.streams.video[0]

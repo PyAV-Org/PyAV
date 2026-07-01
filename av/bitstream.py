@@ -1,5 +1,6 @@
 import cython
 import cython.cimports.libav as lib
+from cython.cimports.av.codec.codec import Codec
 from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream
@@ -14,14 +15,18 @@ class BitStreamFilterContext:
 
     Wraps :ffmpeg:`AVBSFContext`
 
-    :param Stream in_stream: A stream that defines the input codec for the bitfilter.
+    :param in_stream: Defines the input codec for the bitfilter. A :class:`.Stream`
+        copies the full input codec parameters, while a :class:`.Codec` or a codec-name
+        ``str`` only pins the input codec, which is all a codec-specific filter (such as
+        ``h264_mp4toannexb``) needs to initialize.
+    :type in_stream: :class:`.Stream`, :class:`.Codec`, str, or None
     :param Stream out_stream: A stream whose codec is overwritten using the output parameters from the bitfilter.
     """
 
     def __cinit__(
         self,
         filter_description,
-        in_stream: Stream | None = None,
+        in_stream: Stream | Codec | str | None = None,
         out_stream: Stream | None = None,
     ):
         res: cython.int
@@ -31,12 +36,20 @@ class BitStreamFilterContext:
             res = lib.av_bsf_list_parse_str(filter_str, cython.address(self.ptr))
         err_check(res)
 
-        if in_stream is not None:
+        if isinstance(in_stream, Stream):
             with cython.nogil:
                 res = lib.avcodec_parameters_copy(
-                    self.ptr.par_in, in_stream.ptr.codecpar
+                    self.ptr.par_in, cython.cast(Stream, in_stream).ptr.codecpar
                 )
             err_check(res)
+        elif in_stream is not None:
+            # A Codec or codec name only pins the input codec, which is enough for
+            # codec-specific filters (e.g. h264_mp4toannexb) to initialize.
+            codec: Codec = (
+                in_stream if isinstance(in_stream, Codec) else Codec(in_stream)
+            )
+            self.ptr.par_in.codec_id = codec.ptr.id
+            self.ptr.par_in.codec_type = codec.ptr.type
 
         with cython.nogil:
             res = lib.av_bsf_init(self.ptr)
