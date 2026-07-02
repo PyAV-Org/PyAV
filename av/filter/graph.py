@@ -240,6 +240,15 @@ class Graph:
             )
 
     def push(self, frame, at: cython.int = -1):
+        """Push a frame into the graph's buffer source(s).
+
+        :param frame: An :class:`.AudioFrame` or :class:`.VideoFrame` to push into
+            the matching buffer sources, or ``None`` to signal end of stream to
+            every buffer source.
+        :param int at: Index of a single buffer source to push to, for graphs with
+            multiple inputs (e.g. ``overlay``). The default of ``-1`` pushes to
+            every buffer source matching the frame's type.
+        """
         if frame is None:
             contexts = self._video_sources + self._audio_sources
         elif isinstance(frame, VideoFrame):
@@ -263,7 +272,7 @@ class Graph:
             ctx.push(frame)
 
     def vpush(self, frame: VideoFrame | None, at: cython.int = -1):
-        """Like `push`, but only for VideoFrames."""
+        """Like :meth:`push`, but only for :class:`.VideoFrame`."""
         contexts = self._video_sources
         if at >= 0:
             if at >= len(contexts):

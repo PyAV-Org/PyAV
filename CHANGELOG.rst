@@ -28,16 +28,18 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
-v18.0.0 (next)
---------------
+v18.0.0
+-------
 
 Breaking:
 
 - Remove Python 3.10
-- Support HW encoding via a ``hwaccel`` parameter on ``OutputContainer.add_stream`` (e.g. ``h264_vaapi``, ``h264_nvenc``, ``h264_videotoolbox``); software frames passed to ``encode`` are uploaded to the device automatically by :gh-user:`WyattBlue` (:issue:`2156`).
 
 Features:
 
+- Support HW encoding via a ``hwaccel`` parameter on ``OutputContainer.add_stream`` (e.g. ``h264_vaapi``, ``h264_nvenc``, ``h264_videotoolbox``); software frames passed to ``encode`` are uploaded to the device automatically by :gh-user:`WyattBlue` (:issue:`2156`).
+- Use FFmpeg 8.1.2 in the binary wheels by :gh-user:`WyattBlue`.
+- Expose ``sw_format`` on ``VideoCodecContext``, and allow configuring the software format of hardware encoders by :gh-user:`WyattBlue`.
 - Add ``options`` parameter to ``AudioResampler`` for passing ``libswresample`` options (e.g. ``resampler``, ``filter_size``, ``cutoff``) by :gh-user:`WyattBlue` (:issue:`2262`).
 - Support ``yuv420p10le`` in ``VideoFrame.to_ndarray`` and ``VideoFrame.from_ndarray`` by :gh-user:`WyattBlue` (:issue:`1981`).
 - Add ``at`` parameter to ``Graph.push`` and ``Graph.vpush`` to push a frame to a single buffer source by index, for multi-input filters like ``overlay`` by :gh-user:`WyattBlue`.
@@ -50,6 +52,8 @@ Fixes:
 - Fix ``VideoFrame.reformat`` (and ``to_ndarray``/``to_rgb``/``to_image``) raising ``OSError`` ``Operation not supported`` on frames tagged with reserved or otherwise unsupported ``color_primaries``/``color_trc`` values (e.g. VP9 and NVDEC output); a transfer/primaries conversion is now only performed when explicitly requested by :gh-user:`WyattBlue` (:issue:`2208`).
 - Fix ``add_mux_stream`` producing unwritable Matroska files by extracting codec extradata from the bitstream before the header is written by :gh-user:`WyattBlue` (:issue:`2198`).
 - Encode GPU frames (e.g. CUDA frames from DLPack) directly with ``pix_fmt="cuda"`` by adopting the frame's ``hw_frames_ctx`` before opening the encoder by :gh-user:`WyattBlue` (:issue:`2199`).
+- Fix a crash when reading ``VideoCodecContext.pix_fmt`` before it is set; it now returns ``None`` by :gh-user:`CarlosRDomin`.
+- Preserve frame attributes (``pts``, ``time_base``, colorspace, etc.) when downloading hardware frames to system memory by :gh-user:`CarlosRDomin`.
 
 v17.1.0
 -------
