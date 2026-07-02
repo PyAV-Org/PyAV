@@ -94,6 +94,8 @@ class HWConfig:
 
 @cython.ccall
 def hwdevices_available():
+    """Return the names of the hardware device types FFmpeg was built with,
+    e.g. ``["cuda", "videotoolbox"]``."""
     result: list = []
     x: lib.AVHWDeviceType = lib.AV_HWDEVICE_TYPE_NONE
     while True:
@@ -107,6 +109,29 @@ def hwdevices_available():
 @cython.final
 @cython.cclass
 class HWAccel:
+    """HWAccel(device_type, device=None, allow_software_fallback=True, options=None, flags=None, is_hw_owned=False)
+
+    Settings for hardware-accelerated decoding and encoding. Pass an instance to
+    :func:`av.open` to decode on the device, or to
+    :meth:`OutputContainer.add_stream <av.container.OutputContainer.add_stream>`
+    to encode on it.
+
+    :param device_type: The kind of device, e.g. ``"cuda"``, ``"vaapi"``,
+        ``"videotoolbox"``. See :func:`hwdevices_available` for the types
+        supported by the loaded FFmpeg.
+    :type device_type: str or HWDeviceType
+    :param str device: An optional device identifier, e.g. a DRI render node path
+        (``"/dev/dri/renderD128"``) for VAAPI or a device index (``"1"``) for CUDA.
+        Uses the default device if ``None``.
+    :param bool allow_software_fallback: Whether decoding falls back to a software
+        decoder when the hardware decoder cannot handle the stream.
+    :param dict options: Options passed to ``av_hwdevice_ctx_create``.
+    :param int flags: Flags passed to ``av_hwdevice_ctx_create``.
+    :param bool is_hw_owned: If True, decoded frames stay on the device (for
+        consumption via DLPack, for example) instead of being downloaded to
+        system memory.
+    """
+
     def __init__(
         self,
         device_type,

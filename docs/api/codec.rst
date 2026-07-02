@@ -128,3 +128,37 @@ Enums and Flags
     .. enumtable:: av.codec.context.ThreadType
 
 
+Hardware Acceleration
+---------------------
+
+.. currentmodule:: av.codec.hwaccel
+.. automodule:: av.codec.hwaccel
+
+.. autoclass:: HWAccel
+
+.. autofunction:: hwdevices_available
+
+To decode on a hardware device, pass an :class:`HWAccel` to :func:`av.open`::
+
+    import av
+    from av.codec.hwaccel import HWAccel
+
+    hwaccel = HWAccel(device_type="videotoolbox")
+    with av.open("input.mp4", hwaccel=hwaccel) as container:
+        for frame in container.decode(video=0):
+            ...  # Frames are downloaded to system memory by default.
+
+To encode on a hardware device, pass one to :meth:`OutputContainer.add_stream
+<av.container.OutputContainer.add_stream>` with a hardware encoder. Software
+frames passed to ``encode`` are uploaded to the device automatically::
+
+    with av.open("output.mp4", "w") as container:
+        stream = container.add_stream(
+            "h264_videotoolbox", rate=30, hwaccel=HWAccel(device_type="videotoolbox")
+        )
+        ...
+
+See ``examples/basics/hw_decode.py`` for a complete example, including
+recommended device types per platform.
+
+
