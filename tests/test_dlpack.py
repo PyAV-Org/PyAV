@@ -531,6 +531,19 @@ def test_video_frame_from_dlpack_invalid_plane_object_raises_typeerror() -> None
         VideoFrame.from_dlpack((object(), object()), format="nv12", width=64, height=48)
 
 
+def test_cuda_context_flags() -> None:
+    default_ctx = av.video.frame.CudaContext()
+    assert default_ctx.primary_ctx is True
+    assert default_ctx.current_ctx is False
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        av.video.frame.CudaContext(primary_ctx=True, current_ctx=True)
+
+    ctx = av.video.frame.CudaContext(primary_ctx=False, current_ctx=True)
+    assert ctx.primary_ctx is False
+    assert ctx.current_ctx is True
+
+
 def test_video_frame_from_dlpack_cuda_hw_frame_behavior_if_available() -> None:
     backend = _get_cuda_backend()
     if backend is None:
@@ -621,7 +634,10 @@ def test_video_frame_from_dlpack_cuda_hw_frame_behavior_if_available() -> None:
         pytest.skip(f"CUDA hwcontext not available in this build/runtime: {e}")
 
 
-def test_encode_cuda_frame_with_nvenc_if_available() -> None:
+@pytest.mark.parametrize(
+    "use_current_ctx", [False, True], ids=["primary-context", "current-context"]
+)
+def test_encode_cuda_frame_with_nvenc_if_available(use_current_ctx: bool) -> None:
     # Issue #2199: a CUDA frame from DLPack should encode on the GPU directly.
     # Its hw_frames_ctx must propagate to the encoder before avcodec_open2.
     backend = _get_cuda_backend()
@@ -639,7 +655,21 @@ def test_encode_cuda_frame_with_nvenc_if_available() -> None:
             y = mod.zeros((height, width), dtype=mod.uint8)
             uv = mod.zeros((height // 2, width // 2, 2), dtype=mod.uint8)
 
-        frame = VideoFrame.from_dlpack((y, uv), format="nv12")
+        if use_current_ctx:
+            current_ctx = av.video.frame.CudaContext(
+                device_id=int(y.__dlpack_device__()[1]),
+                primary_ctx=False,
+                current_ctx=True,
+            )
+            frame = VideoFrame.from_dlpack(
+                (y, uv),
+                format="nv12",
+                primary_ctx=False,
+                cuda_context=current_ctx,
+                current_ctx=True,
+            )
+        else:
+            frame = VideoFrame.from_dlpack((y, uv), format="nv12")
         assert frame.format.name == "cuda"
         assert frame.sw_format is not None and frame.sw_format.name == "nv12"
 

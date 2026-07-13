@@ -34,7 +34,14 @@ class CudaContext:
     def device_id(self) -> int: ...
     @property
     def primary_ctx(self) -> bool: ...
-    def __init__(self, device_id: int = 0, primary_ctx: bool = True) -> None: ...
+    @property
+    def current_ctx(self) -> bool: ...
+    def __init__(
+        self,
+        device_id: int = 0,
+        primary_ctx: bool = True,
+        current_ctx: bool = False,
+    ) -> None: ...
 
 class VideoFrame(Frame):
     format: VideoFormat
@@ -109,4 +116,5 @@ class VideoFrame(Frame):
         device_id: int | None = None,
         primary_ctx: bool = True,
         cuda_context: CudaContext | None = None,
+        current_ctx: bool = False,
     ) -> VideoFrame: ...
