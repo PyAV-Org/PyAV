@@ -114,7 +114,7 @@ class VideoFrame(Frame):
         height: int = 0,
         stream: int | None = None,
         device_id: int | None = None,
-        primary_ctx: bool = True,
+        primary_ctx: bool | None = None,
         cuda_context: CudaContext | None = None,
-        current_ctx: bool = False,
+        current_ctx: bool | None = None,
     ) -> VideoFrame: ...

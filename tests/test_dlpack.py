@@ -662,11 +662,7 @@ def test_encode_cuda_frame_with_nvenc_if_available(use_current_ctx: bool) -> Non
                 current_ctx=True,
             )
             frame = VideoFrame.from_dlpack(
-                (y, uv),
-                format="nv12",
-                primary_ctx=False,
-                cuda_context=current_ctx,
-                current_ctx=True,
+                (y, uv), format="nv12", cuda_context=current_ctx
             )
         else:
             frame = VideoFrame.from_dlpack((y, uv), format="nv12")

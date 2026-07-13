@@ -28,6 +28,14 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
+v18.1.0 (Unreleased)
+--------------------
+
+Features:
+
+- Support reusing the thread's current CUDA context via a ``current_ctx`` flag on ``CudaContext`` and ``VideoFrame.from_dlpack``, for interop with libraries like PyTorch that initialize CUDA first by :gh-user:`Yozer` (:pr:`2339`).
+- ``VideoFrame.from_dlpack`` no longer requires restating ``primary_ctx``/``current_ctx`` when passing an explicit ``cuda_context``; the flags are only validated when explicitly given by :gh-user:`WyattBlue`.
+
 v18.0.0
 -------
 

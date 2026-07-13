@@ -1487,9 +1487,9 @@ class VideoFrame(Frame):
         height: int = 0,
         stream=None,
         device_id: int | None = None,
-        primary_ctx: bool = True,
+        primary_ctx: bool | None = None,
         cuda_context=None,
-        current_ctx: bool = False,
+        current_ctx: bool | None = None,
     ):
         if not isinstance(planes, (tuple, list)):
             planes = (planes,)
@@ -1633,8 +1633,10 @@ class VideoFrame(Frame):
                 if cuda_context is None:
                     ctx = CudaContext(
                         device_id=device_id,
-                        primary_ctx=primary_ctx,
-                        current_ctx=current_ctx,
+                        primary_ctx=(
+                            not current_ctx if primary_ctx is None else primary_ctx
+                        ),
+                        current_ctx=bool(current_ctx),
                     )
                 else:
                     if not isinstance(cuda_context, CudaContext):
@@ -1643,11 +1645,15 @@ class VideoFrame(Frame):
                         raise ValueError(
                             "cuda_context.device_id does not match the DLPack tensor device_id"
                         )
-                    if bool(cuda_context.primary_ctx) != bool(primary_ctx):
+                    if primary_ctx is not None and bool(
+                        cuda_context.primary_ctx
+                    ) != bool(primary_ctx):
                         raise ValueError(
                             "cuda_context.primary_ctx does not match primary_ctx"
                         )
-                    if bool(cuda_context.current_ctx) != bool(current_ctx):
+                    if current_ctx is not None and bool(
+                        cuda_context.current_ctx
+                    ) != bool(current_ctx):
                         raise ValueError(
                             "cuda_context.current_ctx does not match current_ctx"
                         )
