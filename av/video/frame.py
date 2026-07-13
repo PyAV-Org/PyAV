@@ -22,11 +22,28 @@ from cython.cimports.libc.stdint import int64_t, uint8_t
 @cython.final
 @cython.cclass
 class CudaContext:
-    def __cinit__(self, device_id: cython.int = 0, primary_ctx: cython.bint = True):
+    """A reusable FFmpeg CUDA context for frames imported with DLPack.
+
+    :param int device_id: CUDA device ordinal.
+    :param bool primary_ctx: Retain the device's primary CUDA context.
+    :param bool current_ctx: Wrap the CUDA context current on the calling thread
+        when this object is first used. This is mutually exclusive with
+        ``primary_ctx``.
+    """
+
+    def __cinit__(
+        self,
+        device_id: cython.int = 0,
+        primary_ctx: cython.bint = True,
+        current_ctx: cython.bint = False,
+    ):
         self.device_id = device_id
         self.primary_ctx = primary_ctx
+        self.current_ctx = current_ctx
         self._device_ref = cython.NULL
         self._frames_cache = {}
+        if primary_ctx and current_ctx:
+            raise ValueError("primary_ctx and current_ctx are mutually exclusive")
 
     def __dealloc__(self):
         ref: cython.pointer[lib.AVBufferRef]
@@ -53,9 +70,10 @@ class CudaContext:
         device_ref = cython.NULL
         device_bytes = f"{self.device_id}".encode()
         c_device: cython.p_char = device_bytes
-        options: Dictionary = Dictionary(
-            {"primary_ctx": "1" if self.primary_ctx else "0"}
-        )
+        options_dict = {"primary_ctx": "1" if self.primary_ctx else "0"}
+        if self.current_ctx:
+            options_dict["current_ctx"] = "1"
+        options: Dictionary = Dictionary(options_dict)
         err_check(
             lib.av_hwdevice_ctx_create(
                 cython.address(device_ref),
@@ -1471,6 +1489,7 @@ class VideoFrame(Frame):
         device_id: int | None = None,
         primary_ctx: bool = True,
         cuda_context=None,
+        current_ctx: bool = False,
     ):
         if not isinstance(planes, (tuple, list)):
             planes = (planes,)
@@ -1612,7 +1631,11 @@ class VideoFrame(Frame):
                 ctx: CudaContext
                 frames_ref: cython.pointer[lib.AVBufferRef]
                 if cuda_context is None:
-                    ctx = CudaContext(device_id=device_id, primary_ctx=primary_ctx)
+                    ctx = CudaContext(
+                        device_id=device_id,
+                        primary_ctx=primary_ctx,
+                        current_ctx=current_ctx,
+                    )
                 else:
                     if not isinstance(cuda_context, CudaContext):
                         raise TypeError("cuda_context must be a CudaContext")
@@ -1623,6 +1646,10 @@ class VideoFrame(Frame):
                     if bool(cuda_context.primary_ctx) != bool(primary_ctx):
                         raise ValueError(
                             "cuda_context.primary_ctx does not match primary_ctx"
+                        )
+                    if bool(cuda_context.current_ctx) != bool(current_ctx):
+                        raise ValueError(
+                            "cuda_context.current_ctx does not match current_ctx"
                         )
                     ctx = cython.cast(CudaContext, cuda_context)
 

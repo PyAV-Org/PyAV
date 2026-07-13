@@ -33,6 +33,9 @@ Video Frames
 
 .. automodule:: av.video.frame
 
+.. autoclass:: CudaContext
+    :members:
+
 .. autoclass:: VideoFrame
 
     A single video frame.
@@ -80,6 +83,7 @@ Conversions
 
 .. automethod:: VideoFrame.from_image
 .. automethod:: VideoFrame.from_ndarray
+.. automethod:: VideoFrame.from_dlpack
 
 
 
