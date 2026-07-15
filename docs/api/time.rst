@@ -12,6 +12,7 @@ Time is expressed as integer multiples of arbitrary units of time called a ``tim
 .. testsetup::
 
     import av
+    from fractions import Fraction
     path = av.datasets.curated('pexels/time-lapse-video-of-night-sky-857195.mp4')
 
     def get_nth_packet_and_frame(fh, skip):
@@ -26,8 +27,16 @@ Time is expressed as integer multiples of arbitrary units of time called a ``tim
     >>> fh = av.open(path)
     >>> video = fh.streams.video[0]
 
-    >>> video.time_base
-    Fraction(1, 25)
+    >>> video.time_base == Fraction(1, 25)
+    True
+
+Rational attributes like ``time_base`` may be unset. Test them by truthiness rather than
+``is None`` — an unset value is always falsy, both today (``None``) and as PyAV
+transitions these attributes to :class:`av.AVRational` (where unset is the falsy
+``AVRational(0, 1)``)::
+
+    if not stream.time_base:
+        ...  # unset; pick a default
 
 Attributes that represent time on those objects will be in that object's ``time_base``:
 
@@ -46,13 +55,13 @@ In many cases a stream has a time base of ``1 / frame_rate``, and then its frame
 
     >>> p, f = get_nth_packet_and_frame(fh, skip=1)
 
-    >>> p.time_base
-    Fraction(1, 25)
+    >>> p.time_base == Fraction(1, 25)
+    True
     >>> p.dts
     1
 
-    >>> f.time_base
-    Fraction(1, 25)
+    >>> f.time_base == Fraction(1, 25)
+    True
     >>> f.pts
     1
 

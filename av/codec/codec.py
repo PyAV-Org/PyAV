@@ -4,6 +4,7 @@ import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.audio.format import get_audio_format
 from cython.cimports.av.codec.hwaccel import wrap_hwconfig
+from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.format import VideoFormat, get_pix_fmt, get_video_format
 from cython.cimports.libc.stdlib import free, malloc
@@ -193,7 +194,7 @@ class Codec:
 
     @property
     def frame_rates(self):
-        """A list of supported frame rates (:class:`fractions.Fraction`), or ``None``."""
+        """A list of supported frame rates (:class:`av.AVRational`), or ``None``."""
         out: cython.pointer[cython.const[cython.void]] = cython.NULL
         num: cython.int = 0
         lib.avcodec_get_supported_config(
@@ -207,7 +208,7 @@ class Codec:
         if not out:
             return
         rates = cython.cast(cython.pointer[lib.AVRational], out)
-        return [avrational_to_fraction(cython.address(rates[i])) for i in range(num)]
+        return [from_avrational(rates[i]) for i in range(num)]
 
     @property
     def audio_rates(self):

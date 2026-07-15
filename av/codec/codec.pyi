@@ -1,10 +1,10 @@
 from collections.abc import Sequence
 from enum import Flag, IntEnum, IntFlag
-from fractions import Fraction
 from typing import ClassVar, Literal, cast, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
+from av.rational import AVRational
 from av.subtitles.codeccontext import SubtitleCodecContext
 from av.video.codeccontext import VideoCodecContext
 from av.video.format import VideoFormat
@@ -75,7 +75,7 @@ class Codec:
     ) -> Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]: ...
     @property
     def id(self) -> int: ...
-    frame_rates: list[Fraction] | None
+    frame_rates: list[AVRational] | None
     audio_rates: list[int] | None
     video_formats: list[VideoFormat] | None
     audio_formats: list[AudioFormat] | None
