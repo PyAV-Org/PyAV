@@ -21,6 +21,7 @@ from av.container import open
 from av.device import DeviceInfo, enumerate_input_devices, enumerate_output_devices
 from av.format import ContainerFormat, formats_available
 from av.packet import Packet
+from av.rational import AVRational
 from av.error import *  # noqa: F403; This is limited to exception types.
 from av.video.codeccontext import VideoCodecContext
 from av.video.format import VideoFormat

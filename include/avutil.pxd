@@ -366,6 +366,10 @@ cdef extern from "libavutil/pixdesc.h" nogil:
 
 cdef extern from "libavutil/rational.h" nogil:
     cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
+    cdef AVRational av_mul_q(AVRational b, AVRational c)
+    cdef AVRational av_div_q(AVRational b, AVRational c)
+    cdef AVRational av_add_q(AVRational b, AVRational c)
+    cdef AVRational av_sub_q(AVRational b, AVRational c)
 
 cdef extern from "libavutil/samplefmt.h" nogil:
     cdef enum AVSampleFormat:
