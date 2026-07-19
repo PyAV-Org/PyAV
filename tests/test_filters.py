@@ -193,6 +193,40 @@ class TestFilters(TestCase):
 
         assert np.allclose(input_data * 0.5, output_data)
 
+    def test_audio_frame_metadata(self) -> None:
+        graph = Graph()
+        graph.link_nodes(
+            graph.add_abuffer(
+                format="fltp",
+                sample_rate=48000,
+                layout="stereo",
+                time_base=Fraction(1, 48000),
+            ),
+            graph.add("ebur128", "metadata=1"),
+            graph.add("abuffersink"),
+        ).configure()
+
+        frame = AudioFrame.from_ndarray(
+            np.zeros((2, 4800), dtype=np.float32),
+            format="fltp",
+            layout="stereo",
+        )
+        frame.sample_rate = 48000
+        frame.time_base = Fraction(1, 48000)
+        frame.pts = 0
+
+        graph.push(frame)
+        graph.push(None)
+        output = graph.pull()
+        metadata = output.metadata
+
+        assert "lavfi.r128.I" in metadata
+        assert "lavfi.r128.LRA" in metadata
+
+        # Frame.metadata returns a copy of the underlying AVDictionary.
+        metadata.clear()
+        assert "lavfi.r128.I" in output.metadata
+
     def _test_video_buffer(self, graph):
         input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
         input_video_stream = input_container.streams.video[0]

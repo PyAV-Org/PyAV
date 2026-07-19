@@ -1,7 +1,11 @@
 import cython
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
-from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.av.utils import (
+    avdict_to_dict,
+    avrational_to_fraction,
+    to_avrational,
+)
 
 from av.sidedata.sidedata import SideDataContainer
 
@@ -177,6 +181,11 @@ class Frame:
         if self._side_data is None:
             self._side_data = SideDataContainer(self)
         return self._side_data
+
+    @property
+    def metadata(self):
+        """Metadata attached to the frame by FFmpeg."""
+        return avdict_to_dict(self.ptr.metadata, "utf-8", "strict")
 
     def make_writable(self):
         """
