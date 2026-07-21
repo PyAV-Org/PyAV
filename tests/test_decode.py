@@ -1,4 +1,5 @@
 import functools
+import io
 import os
 import pathlib
 from fractions import Fraction
@@ -189,6 +190,56 @@ class TestDecode(TestCase):
 
         assert packet_count == 1
         assert frame_count == 0
+
+    def test_decode_truncated_no_codec_context_raises(self) -> None:
+        # A bitstream truncated inside its first coded frame can leave the
+        # container able to open but unable to establish codec parameters
+        # (`stream.codec_context is None`). Decoding it previously ran FFmpeg's
+        # multithreaded decoder over unvalidated state and crashed the whole
+        # process (SIGSEGV/SIGBUS) on a broad class of such inputs; it must now
+        # raise a catchable error instead.
+        try:
+            av.codec.Codec("libx264", "w")
+        except Exception:
+            pytest.skip("libx264 not available")
+
+        # Build a short faststart H.264/mp4 (moov up front, so a prefix still
+        # opens while its first frame is incomplete). faststart rewrites the
+        # file on close, so encode to a real path rather than a BytesIO.
+        path = self.sandboxed("truncation_fixture.mp4")
+        with av.open(path, "w", format="mp4", options={"movflags": "faststart"}) as out:
+            stream = out.add_stream("libx264", rate=30)
+            stream.width, stream.height, stream.pix_fmt = 320, 240, "yuv420p"
+            for _ in range(30):
+                frame = av.VideoFrame.from_ndarray(
+                    np.zeros((240, 320, 3), dtype=np.uint8), format="rgb24"
+                )
+                for packet in stream.encode(frame):
+                    out.mux(packet)
+            for packet in stream.encode():
+                out.mux(packet)
+        with open(path, "rb") as fh:
+            data = fh.read()
+
+        # Find a prefix that opens but yields no codec context.
+        target = None
+        for cut in range(200, len(data)):
+            try:
+                with av.open(io.BytesIO(data[:cut])) as c:
+                    if c.streams.video and c.streams.video[0].codec_context is None:
+                        target = cut
+                        break
+            except av.FFmpegError:
+                continue
+        assert target is not None, "expected a prefix that opens with no codec context"
+
+        with av.open(io.BytesIO(data[:target])) as container:
+            stream = container.streams.video[0]
+            assert stream.codec_context is None
+            # Must raise (not crash the process) when asked to decode.
+            with pytest.raises(ValueError):
+                for packet in container.demux(stream):
+                    packet.decode()
 
     def test_decode_close_then_use(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))

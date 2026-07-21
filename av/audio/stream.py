@@ -49,5 +49,11 @@ class AudioStream(Stream):
 
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
-
+        if self.codec_context is None:
+            raise ValueError(
+                "cannot decode: stream has no codec context (the container could "
+                "not identify a decoder for this stream, e.g. a truncated or "
+                "corrupt bitstream). Decoding it would run FFmpeg's multithreaded "
+                "decoder on unvalidated state, which can crash the process."
+            )
         return self.codec_context.decode(packet)

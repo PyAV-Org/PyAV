@@ -36,6 +36,10 @@ Features:
 - Support reusing the thread's current CUDA context via a ``current_ctx`` flag on ``CudaContext`` and ``VideoFrame.from_dlpack``, for interop with libraries like PyTorch that initialize CUDA first by :gh-user:`Yozer` (:pr:`2339`).
 - ``VideoFrame.from_dlpack`` no longer requires restating ``primary_ctx``/``current_ctx`` when passing an explicit ``cuda_context``; the flags are only validated when explicitly given by :gh-user:`WyattBlue`.
 
+Fixes:
+
+- ``VideoStream.decode`` and ``AudioStream.decode`` now raise ``ValueError`` instead of crashing the process when the stream has no codec context (e.g. a bitstream truncated inside its first coded frame); decoding such input ran FFmpeg 8.1's slice-multithreaded decoder over unvalidated state, which could perform an out-of-bounds read and abort the process with ``SIGSEGV``/``SIGBUS`` by :gh-user:`justinrmiller` in (:pr:`2345`).
+
 v18.0.0
 -------
 
