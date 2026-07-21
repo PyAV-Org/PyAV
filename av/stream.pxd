@@ -21,6 +21,7 @@ cdef class Stream:
 
     # Private API.
     cdef _init(self, Container, lib.AVStream*, CodecContext)
+    cdef _assert_has_codec_context(self, int err=*)
     cdef _finalize_for_output(self)
     cdef _set_id(self, value)
 

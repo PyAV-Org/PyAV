@@ -36,6 +36,10 @@ Features:
 - Support reusing the thread's current CUDA context via a ``current_ctx`` flag on ``CudaContext`` and ``VideoFrame.from_dlpack``, for interop with libraries like PyTorch that initialize CUDA first by :gh-user:`Yozer` (:pr:`2339`).
 - ``VideoFrame.from_dlpack`` no longer requires restating ``primary_ctx``/``current_ctx`` when passing an explicit ``cuda_context``; the flags are only validated when explicitly given by :gh-user:`WyattBlue`.
 
+Fixes:
+
+- Fix a crash when using a stream that has no ``CodecContext`` (a demuxed stream with no available decoder, such as one from a truncated file, or a stream created by ``add_mux_stream``); decoding now raises ``DecoderNotFoundError``, encoding now raises ``EncoderNotFoundError``, and ``BitStreamFilterContext`` accepts such a stream as ``out_stream`` by :gh-user:`WyattBlue`, reported by :gh-user:`justinrmiller` (:issue:`2344`).
+
 v18.0.0
 -------
 

@@ -128,6 +128,14 @@ class Stream:
             errors=self.container.metadata_errors,
         )
 
+    @cython.cfunc
+    def _assert_has_codec_context(
+        self, err: cython.int = lib.AVERROR_DECODER_NOT_FOUND
+    ):
+        # Calling into a NULL codec_context is a segfault, not an AttributeError.
+        if self.codec_context is None:
+            err_check(err)
+
     def __repr__(self):
         name = getattr(self, "name", None)
         return (

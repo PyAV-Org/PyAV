@@ -1,4 +1,5 @@
 import functools
+import io
 import os
 import pathlib
 from fractions import Fraction
@@ -52,6 +53,34 @@ def make_h264_test_video(path: str) -> None:
 
 
 class TestDecode(TestCase):
+    def test_decode_stream_without_codec_context(self) -> None:
+        buffer = io.BytesIO()
+        with av.open(buffer, "w", format="mp4") as output:
+            stream = output.add_mux_stream("h264", width=16, height=16)
+            packet = av.Packet(b"invalid")
+            packet.stream = stream
+            packet.pts = packet.dts = 0
+            packet.time_base = Fraction(1, 1000)
+            output.mux(packet)
+
+        # Keep the MP4 video stream while making its codec unknown to FFmpeg.
+        data = buffer.getvalue().replace(b"avc1", b"zzzz")
+        with av.open(io.BytesIO(data)) as container:
+            stream = container.streams.video[0]
+            assert stream.codec_context is None
+            with pytest.raises(av.DecoderNotFoundError):
+                list(container.decode(stream))
+
+    def test_mux_stream_without_codec_context(self) -> None:
+        with av.open(io.BytesIO(), "w", format="mp4") as output:
+            stream = output.add_mux_stream("h264", width=16, height=16)
+            assert stream.codec_context is None
+            with pytest.raises(av.EncoderNotFoundError):
+                stream.encode(None)
+
+            # A bitstream filter only needs to update codecpar for a mux stream.
+            av.BitStreamFilterContext("h264_mp4toannexb", "h264", out_stream=stream)
+
     def test_decoded_video_frame_count(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         video_stream = next(s for s in container.streams if s.type == "video")

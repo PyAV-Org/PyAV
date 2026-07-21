@@ -18,6 +18,7 @@ class SubtitleStream(Stream):
 
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
+        self._assert_has_codec_context()
         if not packet:
             packet = Packet()
 
