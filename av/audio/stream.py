@@ -1,4 +1,5 @@
 import cython
+from cython.cimports import libav as lib
 from cython.cimports.av.audio.frame import AudioFrame
 from cython.cimports.av.packet import Packet
 
@@ -31,7 +32,7 @@ class AudioStream(Stream):
 
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode`.
         """
-
+        self._assert_has_codec_context(lib.AVERROR_ENCODER_NOT_FOUND)
         packets = self.codec_context.encode(frame)
         packet: Packet
         for packet in packets:
@@ -49,5 +50,5 @@ class AudioStream(Stream):
 
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
-
+        self._assert_has_codec_context()
         return self.codec_context.decode(packet)
