@@ -2,9 +2,9 @@ from libc.stdint cimport int64_t, uint64_t
 
 
 cdef extern from "libavformat/avformat.h" nogil:
-    cdef int avformat_version()
-    cdef char* avformat_configuration()
-    cdef char* avformat_license()
+    cdef unsigned int avformat_version()
+    cdef const char* avformat_configuration()
+    cdef const char* avformat_license()
 
     cdef int AV_TIME_BASE
     cdef int AVSEEK_FLAG_BACKWARD
@@ -91,8 +91,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         int flags
         const AVClass *priv_class
 
-    int avformat_query_codec(const AVOutputFormat *oformat, AVCodecID codec_id, int std_compliance)
-
     # AVInputFormat.flags and AVOutputFormat.flags
     cdef enum:
         AVFMT_NOFILE
@@ -134,7 +132,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVMediaType type,
         int wanted_stream_nb,
         int related_stream,
-        AVCodec **decoder_ret,
+        const AVCodec **decoder_ret,
         int flags
     ) 
 
@@ -142,6 +140,7 @@ cdef extern from "libavformat/avformat.h" nogil:
 
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
+        const AVClass *av_class
         unsigned int nb_streams
         AVStream **streams
         unsigned int nb_chapters
@@ -151,7 +150,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVIOContext *pb
         AVIOInterruptCB interrupt_callback
         AVDictionary *metadata
-        char filename
         int64_t start_time
         int64_t duration
         int64_t bit_rate
@@ -171,23 +169,23 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef AVFormatContext* avformat_alloc_context()
     cdef int avformat_open_input(
         AVFormatContext **ctx,
-        char *filename,
+        const char *filename,
         const AVInputFormat *format,
         AVDictionary **options
     )
 
-    cdef int avformat_close_input(AVFormatContext **ctx)
+    cdef void avformat_close_input(AVFormatContext **ctx)
     cdef int avformat_write_header(AVFormatContext *ctx, AVDictionary **options)
     cdef int av_write_trailer(AVFormatContext *ctx)
     cdef int av_interleaved_write_frame(AVFormatContext *ctx, AVPacket *pkt)
     cdef int av_write_frame(AVFormatContext *ctx, AVPacket *pkt)
-    cdef int avio_open(AVIOContext **s, char *url, int flags)
+    cdef int avio_open(AVIOContext **s, const char *url, int flags)
     cdef int64_t avio_size(AVIOContext *s)
     cdef const AVOutputFormat* av_guess_format(
-        char *short_name, char *filename, char *mime_type
+        const char *short_name, const char *filename, const char *mime_type
     )
     cdef int avformat_query_codec(
-        AVOutputFormat *ofmt, AVCodecID codec_id, int std_compliance
+        const AVOutputFormat *ofmt, AVCodecID codec_id, int std_compliance
     )
     cdef void avio_flush(AVIOContext *s)
     cdef int avio_close(AVIOContext *s)
@@ -197,12 +195,12 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int avformat_alloc_output_context2(
         AVFormatContext **ctx,
         const AVOutputFormat *oformat,
-        char *format_name,
-        char *filename
+        const char *format_name,
+        const char *filename
     )
-    cdef int avformat_free_context(AVFormatContext *ctx)
-    cdef AVClass* avformat_get_class()
-    cdef void av_dump_format(AVFormatContext *ctx, int index, char *url, int is_output)
+    cdef void avformat_free_context(AVFormatContext *ctx)
+    cdef const AVClass* avformat_get_class()
+    cdef void av_dump_format(AVFormatContext *ctx, int index, const char *url, int is_output)
     cdef int av_read_frame(AVFormatContext *ctx, AVPacket *packet)
     cdef int av_seek_frame(
         AVFormatContext *ctx, int stream_index, int64_t timestamp, int flags
@@ -237,6 +235,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVINDEX_KEYFRAME
         AVINDEX_DISCARD_FRAME
 
-    cdef AVIndexEntry *avformat_index_get_entry(AVStream *st, int idx)
-    cdef int avformat_index_get_entries_count(AVStream *st)
+    cdef const AVIndexEntry *avformat_index_get_entry(AVStream *st, int idx)
+    cdef int avformat_index_get_entries_count(const AVStream *st)
     cdef int av_index_search_timestamp(AVStream *st, int64_t timestamp, int flags)

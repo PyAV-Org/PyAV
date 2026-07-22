@@ -1,7 +1,7 @@
 cdef extern from "libavdevice/avdevice.h" nogil:
-    cdef int avdevice_version()
-    cdef char* avdevice_configuration()
-    cdef char* avdevice_license()
+    cdef unsigned int avdevice_version()
+    cdef const char* avdevice_configuration()
+    cdef const char* avdevice_license()
     void avdevice_register_all()
 
     cdef struct AVDeviceInfo:
