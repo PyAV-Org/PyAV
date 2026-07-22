@@ -6,6 +6,7 @@ from typing import get_args
 from unittest import SkipTest
 
 import numpy
+import pytest
 
 import av
 
@@ -63,6 +64,45 @@ class TestDataStreams:
 
 
 class TestProperties:
+    def test_rescale_ts(self) -> None:
+        packet = av.Packet()
+        packet.time_base = fractions.Fraction(1, 1000)
+        packet.pts = 1000
+        packet.dts = 900
+        packet.duration = 40
+
+        packet.rescale_ts(av.AVRational(1, 100))
+
+        assert packet.time_base == fractions.Fraction(1, 100)
+        assert packet.pts == 100
+        assert packet.dts == 90
+        assert packet.duration == 4
+
+    def test_rescale_ts_without_source_time_base(self) -> None:
+        packet = av.Packet()
+        packet.pts = 1000
+        packet.dts = 900
+        packet.duration = 40
+
+        packet.rescale_ts(av.AVRational(1, 100))
+
+        assert packet.time_base == fractions.Fraction(1, 100)
+        assert packet.pts == 1000
+        assert packet.dts == 900
+        assert packet.duration == 40
+
+    def test_rescale_ts_rejects_zero_time_base(self) -> None:
+        packet = av.Packet()
+
+        with pytest.raises(ValueError, match="Cannot rebase to zero time"):
+            packet.rescale_ts(av.AVRational(0, 1))
+
+    def test_rescale_ts_requires_avrational(self) -> None:
+        packet = av.Packet()
+
+        with pytest.raises(TypeError, match="time_base must be an AVRational"):
+            packet.rescale_ts(fractions.Fraction(1, 100))  # type: ignore[arg-type]
+
     def test_is_keyframe(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
             stream = container.streams.video[0]

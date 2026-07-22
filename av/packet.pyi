@@ -4,6 +4,7 @@ from typing import Generic, Literal, TypeVar, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
+from av.rational import AVRational
 from av.stream import Stream
 from av.subtitles.stream import SubtitleStream
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
@@ -92,6 +93,7 @@ class Packet(Buffer, Generic[StreamT]):
     is_disposable: bool
 
     def __init__(self: Packet[Stream], input: int | bytes | None = None) -> None: ...
+    def rescale_ts(self, time_base: AVRational) -> None: ...
 
     # Overloads that return the same type as the stream's decode method
     @overload
