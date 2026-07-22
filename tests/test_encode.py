@@ -162,6 +162,26 @@ class TestBasicVideoEncoding(TestCase):
                 assert packet.time_base == Fraction(1, 24)
                 output.mux(packet)
 
+    def test_set_rate_after_add_stream(self) -> None:
+        path = self.sandboxed("deferred_rate.mp4")
+
+        with av.open(path, "w") as output:
+            stream = output.add_stream("mpeg4")
+            stream.codec_context.framerate = Fraction(30, 1)
+            stream.width = 16
+            stream.height = 16
+
+            for i in range(30):
+                frame = VideoFrame(16, 16, "yuv420p")
+                frame.pts = i
+                frame.time_base = Fraction(1, 30)
+                output.mux(stream.encode(frame))
+
+            output.mux(stream.encode(None))
+
+        with av.open(path) as input_:
+            assert input_.streams.video[0].average_rate == 30
+
     def test_encoding_with_unicode_filename(self) -> None:
         path = self.sandboxed("¢∞§¶•ªº.mov")
 

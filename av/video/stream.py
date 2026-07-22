@@ -63,6 +63,8 @@ class VideoStream(Stream):
     @cython.cfunc
     def _finalize_for_output(self):
         Stream._finalize_for_output(self)
+        if self.codec_context is not None:
+            self.ptr.avg_frame_rate = self.codec_context.ptr.framerate
         # avcodec_parameters_from_context() overwrites codecpar.coded_side_data,
         # so inject the display matrix after it, before avformat_write_header().
         if self.codec_context is not None and self._has_display_matrix:
