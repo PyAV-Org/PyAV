@@ -33,6 +33,7 @@ v18.1.0 (Unreleased)
 
 Features:
 
+- Add ``CodecContext.supported_options`` to discover generic and codec-specific options by :gh-user:`WyattBlue` (:issue:`2032`).
 - Add ``Packet.rescale_ts()`` to rescale packet PTS, DTS, and duration to a new ``AVRational`` time base by :gh-user:`WyattBlue`.
 - Support reusing the thread's current CUDA context via a ``current_ctx`` flag on ``CudaContext`` and ``VideoFrame.from_dlpack``, for interop with libraries like PyTorch that initialize CUDA first by :gh-user:`Yozer` (:pr:`2339`).
 - ``VideoFrame.from_dlpack`` no longer requires restating ``primary_ctx``/``current_ctx`` when passing an explicit ``cuda_context``; the flags are only validated when explicitly given by :gh-user:`WyattBlue`.

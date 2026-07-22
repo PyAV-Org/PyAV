@@ -305,6 +305,8 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_COLOR
         AV_OPT_TYPE_CHLAYOUT
         AV_OPT_TYPE_BOOL
+        AV_OPT_TYPE_UINT
+        AV_OPT_TYPE_FLAG_ARRAY
 
     cdef union AVOption_default_val:
         int64_t i64
@@ -320,7 +322,11 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_FLAG_SUBTITLE_PARAM
         AV_OPT_FLAG_EXPORT
         AV_OPT_FLAG_READONLY
+        AV_OPT_FLAG_BSF_PARAM
+        AV_OPT_FLAG_RUNTIME_PARAM
         AV_OPT_FLAG_FILTERING_PARAM
+        AV_OPT_FLAG_DEPRECATED
+        AV_OPT_FLAG_CHILD_CONSTS
 
     cdef struct AVOption:
         const char *name
@@ -332,6 +338,12 @@ cdef extern from "libavutil/opt.h" nogil:
         double max
         int flags
         const char *unit
+
+    cdef const AVOption *av_opt_next(const void *obj, const AVOption *prev)
+    cdef void *av_opt_child_next(void *obj, void *prev)
+    cdef int av_opt_get(
+        void *obj, const char *name, int search_flags, uint8_t **out_val
+    )
 
 cdef extern from "libavutil/pixdesc.h" nogil:
     # See: http://ffmpeg.org/doxygen/trunk/structAVComponentDescriptor.html

@@ -1,4 +1,5 @@
-from enum import Flag, IntEnum
+from dataclasses import dataclass
+from enum import Flag, IntEnum, IntFlag
 from fractions import Fraction
 from typing import ClassVar, Literal, cast, overload
 
@@ -52,10 +53,70 @@ class Flags2(IntEnum):
     skip_manual = cast(int, ...)
     ro_flush_noop = cast(int, ...)
 
+class OptionType(IntEnum):
+    FLAGS = cast(int, ...)
+    INT = cast(int, ...)
+    INT64 = cast(int, ...)
+    DOUBLE = cast(int, ...)
+    FLOAT = cast(int, ...)
+    STRING = cast(int, ...)
+    RATIONAL = cast(int, ...)
+    BINARY = cast(int, ...)
+    DICT = cast(int, ...)
+    UINT64 = cast(int, ...)
+    CONST = cast(int, ...)
+    IMAGE_SIZE = cast(int, ...)
+    PIXEL_FMT = cast(int, ...)
+    SAMPLE_FMT = cast(int, ...)
+    VIDEO_RATE = cast(int, ...)
+    DURATION = cast(int, ...)
+    COLOR = cast(int, ...)
+    CHANNEL_LAYOUT = cast(int, ...)
+    BOOL = cast(int, ...)
+    UINT = cast(int, ...)
+
+class OptionFlags(IntFlag):
+    ENCODING_PARAM = cast(int, ...)
+    DECODING_PARAM = cast(int, ...)
+    AUDIO_PARAM = cast(int, ...)
+    VIDEO_PARAM = cast(int, ...)
+    SUBTITLE_PARAM = cast(int, ...)
+    EXPORT = cast(int, ...)
+    READONLY = cast(int, ...)
+    BITSTREAM_FILTER_PARAM = cast(int, ...)
+    RUNTIME_PARAM = cast(int, ...)
+    FILTERING_PARAM = cast(int, ...)
+    DEPRECATED = cast(int, ...)
+    CHILD_CONSTS = cast(int, ...)
+
+@dataclass(frozen=True, slots=True)
+class CodecOptionChoice:
+    name: str
+    help: str
+
+@dataclass(frozen=True, slots=True)
+class CodecOption:
+    name: str
+    help: str
+    type: OptionType | int
+    is_array: bool
+    default: str | None
+    min: float
+    max: float
+    flags: OptionFlags
+    choices: tuple[CodecOptionChoice, ...]
+
+@dataclass(frozen=True, slots=True)
+class CodecOptionSet:
+    generic: tuple[CodecOption, ...]
+    private: tuple[CodecOption, ...]
+
 class CodecContext:
     name: str
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
     options: dict[str, str]
+    @property
+    def supported_options(self) -> CodecOptionSet: ...
     profile: str | None
     level: int
     @property
