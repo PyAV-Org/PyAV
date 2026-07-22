@@ -141,12 +141,6 @@ else:
 
 IMPORT_NAME = "av"
 
-# Newer compilers treat incompatible pointer types as an error by default;
-# downgrade it back to a warning so FFmpeg API churn doesn't break the build.
-extra_compile_args = []
-if platform.system() != "Windows":
-    extra_compile_args.append("-Wno-error=incompatible-pointer-types")
-
 loudnorm_extension = Extension(
     f"{IMPORT_NAME}.filter.loudnorm",
     sources=[
@@ -157,7 +151,6 @@ loudnorm_extension = Extension(
     libraries=extension_extra["libraries"],
     library_dirs=extension_extra["library_dirs"],
     define_macros=define_macros,
-    extra_compile_args=extra_compile_args,
     py_limited_api=py_limited_api,
 )
 
@@ -204,7 +197,6 @@ for dirname, dirnames, filenames in os.walk(IMPORT_NAME):
                 library_dirs=extension_extra["library_dirs"],
                 sources=[pyx_path],
                 define_macros=define_macros,
-                extra_compile_args=extra_compile_args,
                 py_limited_api=py_limited_api,
             ),
             compiler_directives=compiler_directives,

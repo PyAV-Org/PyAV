@@ -555,6 +555,10 @@ class CodecContext:
             from multiple threads, give each thread its own :class:`CodecContext`.
 
         """
+        return self._decode(packet)
+
+    @cython.cfunc
+    def _decode(self, packet: Packet | None):
         if not self.codec.ptr:
             raise ValueError("cannot decode unknown codec")
 

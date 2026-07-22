@@ -92,8 +92,8 @@ class SubtitleCodecContext(CodecContext):
 
         return packet
 
-    @cython.ccall
-    def decode(self, packet: Packet | None = None):
+    @cython.cfunc
+    def _decode(self, packet: Packet | None):
         """Decode a subtitle packet, returning a list of :class:`.Subtitle` objects
         if a subtitle was decoded, or an empty list otherwise."""
         if not self.codec.ptr:
