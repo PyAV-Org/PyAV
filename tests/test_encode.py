@@ -4,6 +4,7 @@ import io
 import math
 import os
 from fractions import Fraction
+from typing import cast
 
 import numpy as np
 import pytest
@@ -268,6 +269,30 @@ class TestSubtitleEncoding:
 
 
 class TestEncodeStreamSemantics(TestCase):
+    def test_reconfigure_stream_after_mux(self) -> None:
+        output_bytes = io.BytesIO()
+        with av.open(output_bytes, "w", format="mp4") as output:
+            first = cast(VideoStream, output.add_stream("ffv1", rate=30))
+            second = cast(VideoStream, output.add_stream("ffv1", rate=30))
+
+            first.format = av.VideoFormat("bgr0", width=16, height=16)
+            frame = VideoFrame(16, 16, "bgr0")
+            frame.pts = 0
+            frame.time_base = Fraction(1, 30)
+            output.mux(first.encode(frame))
+
+            # Muxing the first packet writes the header and opens every stream.
+            # Changing the second encoder now used to corrupt FFV1 state and crash.
+            assert second.codec_context.is_open
+            with pytest.raises(RuntimeError, match="Cannot change format"):
+                second.format = av.VideoFormat("bgr0", width=16, height=16)
+            with pytest.raises(RuntimeError, match="Cannot change width"):
+                second.width = 16
+            with pytest.raises(RuntimeError, match="Cannot change height"):
+                second.height = 16
+            with pytest.raises(RuntimeError, match="Cannot change pix_fmt"):
+                second.pix_fmt = "bgr0"
+
     def test_stream_index(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             vstream = output.add_stream("mpeg4", 24)

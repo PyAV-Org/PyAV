@@ -40,6 +40,7 @@ Features:
 
 Fixes:
 
+- Prevent crashes and corrupted output when structural codec properties are changed after an output stream has been opened by :gh-user:`WyattBlue`, reported by :gh-user:`oakaigh` (:issue:`2232`).
 - Fix a crash when using a stream that has no ``CodecContext`` (a demuxed stream with no available decoder, such as one from a truncated file, or a stream created by ``add_mux_stream``); decoding now raises ``DecoderNotFoundError``, encoding now raises ``EncoderNotFoundError``, and ``BitStreamFilterContext`` accepts such a stream as ``out_stream`` by :gh-user:`WyattBlue`, reported by :gh-user:`justinrmiller` (:issue:`2344`).
 
 v18.0.0
