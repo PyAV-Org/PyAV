@@ -252,6 +252,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVColorTransferCharacteristic color_trc
         AVColorSpace colorspace
         AVColorRange color_range
+        int field_order
 
         int has_b_frames
         AVPixelFormat (*get_format)(AVCodecContext *s, const AVPixelFormat *fmt)
