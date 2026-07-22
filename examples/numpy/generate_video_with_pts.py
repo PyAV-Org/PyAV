@@ -2,6 +2,7 @@
 
 import colorsys
 from fractions import Fraction
+from math import lcm
 
 import numpy as np
 
@@ -9,9 +10,17 @@ import av
 
 (width, height) = (640, 360)
 total_frames = 20
-fps = 30
+fps = Fraction(30, 1)
 
-container = av.open("generate_video_with_pts.mp4", mode="w")
+# MP4 stores a nonzero starting offset in an edit list using the movie timescale,
+# which defaults to 1000. Choose a timescale that can represent frame-aligned
+# offsets exactly; otherwise, a starting PTS such as 1 at 30 fps is rounded.
+movie_timescale = lcm(1000, fps.numerator)
+container = av.open(
+    "generate_video_with_pts.mp4",
+    mode="w",
+    container_options={"movie_timescale": str(movie_timescale)},
+)
 
 stream = container.add_stream("mpeg4", rate=fps)  # alibi frame rate
 stream.width = width
