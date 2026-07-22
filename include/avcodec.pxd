@@ -280,6 +280,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int thread_type
         int bits_per_coded_sample
         int profile
+        int level
         AVDiscard skip_frame
 
         int subtitle_header_size

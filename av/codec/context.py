@@ -662,6 +662,19 @@ class CodecContext:
             i += 1
 
     @property
+    def level(self):
+        """Codec level.
+
+        Wraps :ffmpeg:`AVCodecContext.level`.
+
+        """
+        return self.ptr.level
+
+    @level.setter
+    def level(self, value: cython.int):
+        self.ptr.level = value
+
+    @property
     def time_base(self):
         if self.is_decoder:
             raise RuntimeError("Cannot access 'time_base' as a decoder")
