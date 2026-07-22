@@ -6,6 +6,8 @@ from typing import ClassVar, Literal, cast, overload
 from av.audio import _AudioCodecName
 from av.audio.codeccontext import AudioCodecContext
 from av.packet import Packet
+from av.subtitles import _SubtitleCodecName
+from av.subtitles.codeccontext import SubtitleCodecContext
 from av.video import _VideoCodecName
 from av.video.codeccontext import VideoCodecContext
 
@@ -167,6 +169,13 @@ class CodecContext:
         mode: Literal["r", "w"] | None = None,
         hwaccel: HWAccel | None = None,
     ) -> VideoCodecContext: ...
+    @overload
+    @staticmethod
+    def create(
+        codec: _SubtitleCodecName,
+        mode: Literal["r", "w"] | None = None,
+        hwaccel: HWAccel | None = None,
+    ) -> SubtitleCodecContext: ...
     @overload
     @staticmethod
     def create(

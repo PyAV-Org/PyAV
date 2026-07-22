@@ -7,6 +7,7 @@ from av.audio.stream import AudioStream
 from av.codec.hwaccel import HWAccel
 from av.packet import Packet
 from av.stream import AttachmentStream, DataStream, Stream
+from av.subtitles import _SubtitleCodecName
 from av.subtitles.stream import SubtitleStream
 from av.video import _VideoCodecName
 from av.video.stream import VideoStream
@@ -33,6 +34,14 @@ class OutputContainer(Container):
         hwaccel: HWAccel | None = None,
         **kwargs,
     ) -> VideoStream: ...
+    @overload
+    def add_stream(
+        self,
+        codec_name: _SubtitleCodecName,
+        rate: Fraction | int | None = None,
+        options: dict[str, str] | None = None,
+        **kwargs,
+    ) -> SubtitleStream: ...
     @overload
     def add_stream(
         self,

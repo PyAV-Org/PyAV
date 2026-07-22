@@ -3,7 +3,6 @@ from typing import cast
 
 import av
 from av.codec.context import CodecContext
-from av.subtitles.codeccontext import SubtitleCodecContext
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, Subtitle, SubtitleSet
 
 from .common import TestCase, fate_suite
@@ -83,13 +82,13 @@ class TestSubtitle:
 
         with av.open(path) as container:
             stream = container.streams.subtitles[0]
-            ctx = cast(SubtitleCodecContext, stream.codec_context)
+            ctx = stream.codec_context
             header = ctx.subtitle_header
             assert header is None or isinstance(header, bytes)
 
     def test_subtitle_header_write(self) -> None:
         """Test setting subtitle_header on encoder context."""
-        ctx = cast(SubtitleCodecContext, CodecContext.create("mov_text", "w"))
+        ctx = CodecContext.create("mov_text", "w")
         assert ctx.subtitle_header is None
 
         ass_header = b"[Script Info]\nScriptType: v4.00+\n"
@@ -155,7 +154,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             video_stream.pix_fmt = "yuv420p"
 
             sub_stream = container.add_stream("mov_text")
-            sub_ctx = cast(SubtitleCodecContext, sub_stream.codec_context)
+            sub_ctx = sub_stream.codec_context
             sub_ctx.subtitle_header = ass_header
 
             container.start_encoding()
@@ -193,7 +192,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         output = io.BytesIO()
         with av.open(output, "w", format="matroska") as container:
             sub_stream = container.add_stream("srt")
-            sub_ctx = cast(SubtitleCodecContext, sub_stream.codec_context)
+            sub_ctx = sub_stream.codec_context
             sub_ctx.subtitle_header = minimal_header
 
             container.start_encoding()
