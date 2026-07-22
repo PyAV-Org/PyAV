@@ -1,7 +1,7 @@
 cdef extern from "libavfilter/avfilter.h" nogil:
-    cdef int avfilter_version()
-    cdef char* avfilter_configuration()
-    cdef char* avfilter_license()
+    cdef unsigned int avfilter_version()
+    cdef const char* avfilter_configuration()
+    cdef const char* avfilter_license()
 
     cdef struct AVFilterPad:
         pass
@@ -19,12 +19,12 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         const AVClass *priv_class
         int flags
 
-    cdef AVFilter* avfilter_get_by_name(const char *name)
+    cdef const AVFilter* avfilter_get_by_name(const char *name)
     cdef const AVFilter* av_filter_iterate(void **opaque)
 
     cdef struct AVFilterContext:
-        AVClass *av_class
-        AVFilter *filter
+        const AVClass *av_class
+        const AVFilter *filter
 
         char *name
 
@@ -39,24 +39,24 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     cdef int avfilter_init_str(AVFilterContext *ctx, const char *args)
     cdef int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options)
     cdef void avfilter_free(AVFilterContext*)
-    cdef AVClass* avfilter_get_class()
+    cdef const AVClass* avfilter_get_class()
 
     cdef struct AVFilterLink:
         AVFilterContext *src
         AVFilterPad *srcpad
         AVFilterContext *dst
         AVFilterPad *dstpad
-        AVMediaType Type
+        AVMediaType type
         int w
         int h
         AVRational sample_aspect_ratio
-        uint64_t channel_layout
+        AVChannelLayout ch_layout
         int sample_rate
         int format
         AVRational time_base
 
     cdef struct AVFilterGraph:
-        int nb_filters
+        unsigned int nb_filters
         AVFilterContext **filters
         int nb_threads
 
@@ -75,7 +75,7 @@ cdef extern from "libavfilter/avfilter.h" nogil:
     )
     cdef int avfilter_graph_create_filter(
         AVFilterContext **filt_ctx,
-        AVFilter *filt,
+        const AVFilter *filt,
         const char *name,
         const char *args,
         void *opaque,

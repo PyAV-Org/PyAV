@@ -445,7 +445,7 @@ class VideoCodecContext(CodecContext):
 
     @field_order.setter
     def field_order(self, value: cython.int):
-        self.ptr.field_order = value
+        self.ptr.field_order = cython.cast(lib.AVFieldOrder, value)
 
     @property
     def max_b_frames(self):

@@ -9,19 +9,19 @@ cdef extern from "libavutil/channel_layout.h" nogil:
     ctypedef struct AVChannelLayout:
         int nb_channels
 
-    int av_channel_layout_default(AVChannelLayout *ch_layout, int nb_channels)
+    void av_channel_layout_default(AVChannelLayout *ch_layout, int nb_channels)
     int av_channel_layout_from_string(AVChannelLayout *channel_layout, const char *str)
     int av_channel_layout_describe(const AVChannelLayout *channel_layout, char *buf, size_t buf_size)
     int av_channel_name(char *buf, size_t buf_size, AVChannel channel_id)
     int av_channel_description(char *buf, size_t buf_size, AVChannel channel_id)
-    int av_channel_layout_compare(AVChannelLayout *chl, AVChannelLayout *chl1)
-    AVChannel av_channel_layout_channel_from_index(AVChannelLayout *channel_layout, unsigned int idx)
+    int av_channel_layout_compare(const AVChannelLayout *chl, const AVChannelLayout *chl1)
+    AVChannel av_channel_layout_channel_from_index(const AVChannelLayout *channel_layout, unsigned int idx)
     void av_channel_layout_uninit(AVChannelLayout *channel_layout)
 
 cdef extern from "libavcodec/avcodec.h" nogil:
-    cdef int avcodec_version()
-    cdef char* avcodec_configuration()
-    cdef char* avcodec_license()
+    cdef unsigned int avcodec_version()
+    cdef const char* avcodec_configuration()
+    cdef const char* avcodec_license()
 
     AVPixelFormat avcodec_find_best_pix_fmt_of_list(
         const AVPixelFormat *pix_fmt_list,
@@ -71,7 +71,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG_4MV
         AV_CODEC_FLAG_OUTPUT_CORRUPT
         AV_CODEC_FLAG_QPEL
-        AV_CODEC_FLAG_DROPCHANGED
         AV_CODEC_FLAG_RECON_FRAME
         AV_CODEC_FLAG_COPY_OPAQUE
         AV_CODEC_FLAG_FRAME_DURATION
@@ -168,15 +167,15 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVDISCARD_ALL
 
     cdef struct AVCodec:
-        char *name
-        char *long_name
+        const char *name
+        const char *long_name
         AVMediaType type
         AVCodecID id
         int capabilities
-        AVClass *priv_class
+        const AVClass *priv_class
 
-    cdef int av_codec_is_encoder(AVCodec*)
-    cdef int av_codec_is_decoder(AVCodec*)
+    cdef int av_codec_is_encoder(const AVCodec*)
+    cdef int av_codec_is_decoder(const AVCodec*)
 
     cdef enum AVCodecConfig:
         AV_CODEC_CONFIG_PIX_FORMAT
@@ -195,18 +194,18 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef struct AVProfile:
         int profile
-        char *name
+        const char *name
 
     cdef struct AVCodecDescriptor:
         AVCodecID id
         AVMediaType type
-        char *name
-        char *long_name
+        const char *name
+        const char *long_name
         int props
-        char **mime_types
-        AVProfile *profiles
+        const char *const *mime_types
+        const AVProfile *profiles
 
-    AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
+    const AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
 
     cdef enum:
         AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
@@ -222,11 +221,14 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef struct AVHWAccel:
         pass
 
+    cdef enum AVFieldOrder:
+        pass
+
     cdef struct AVCodecContext:
-        AVClass *av_class
+        const AVClass *av_class
 
         AVMediaType codec_type
-        AVCodec *codec
+        const AVCodec *codec
         AVCodecID codec_id
         unsigned int codec_tag
 
@@ -252,7 +254,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVColorTransferCharacteristic color_trc
         AVColorSpace colorspace
         AVColorRange color_range
-        int field_order
+        AVFieldOrder field_order
 
         int has_b_frames
         AVPixelFormat (*get_format)(AVCodecContext *s, const AVPixelFormat *fmt)
@@ -273,7 +275,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int64_t rc_max_rate
         int64_t rc_min_rate
 
-        AVHWAccel *hwaccel
+        const AVHWAccel *hwaccel
         AVBufferRef *hw_device_ctx
         AVBufferRef *hw_frames_ctx
 
@@ -290,15 +292,15 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef AVCodecContext* avcodec_alloc_context3(const AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
-    cdef AVClass* avcodec_get_class()
+    cdef const AVClass* avcodec_get_class()
     cdef const AVCodec* avcodec_find_decoder(AVCodecID id)
     cdef const AVCodec* avcodec_find_encoder(AVCodecID id)
-    cdef const AVCodec* avcodec_find_decoder_by_name(char *name)
-    cdef const AVCodec* avcodec_find_encoder_by_name(char *name)
+    cdef const AVCodec* avcodec_find_decoder_by_name(const char *name)
+    cdef const AVCodec* avcodec_find_encoder_by_name(const char *name)
     cdef const AVCodec* av_codec_iterate(void **opaque)
     cdef const AVCodecDescriptor* avcodec_descriptor_get(AVCodecID id)
-    cdef const AVCodecDescriptor* avcodec_descriptor_get_by_name(char *name)
-    cdef char* avcodec_get_name(AVCodecID id)
+    cdef const AVCodecDescriptor* avcodec_descriptor_get_by_name(const char *name)
+    cdef const char* avcodec_get_name(AVCodecID id)
     cdef int avcodec_open2(AVCodecContext *ctx, const AVCodec *codec, AVDictionary **options)
     cdef enum AVPacketSideDataType:
         AV_PKT_DATA_NEW_EXTRADATA
@@ -346,8 +348,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
     cdef struct AVFrame:
-        uint8_t *data[4]
-        int linesize[4]
+        uint8_t *data[8]
+        int linesize[8]
         uint8_t **extended_data
         int width
         int height
@@ -378,7 +380,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int64_t duration
 
     cdef struct AVPacket:
-        void *buf
+        AVBufferRef *buf
         int64_t pts
         int64_t dts
         uint8_t *data
@@ -397,7 +399,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVFrame *frame,
         int nb_channels,
         AVSampleFormat sample_fmt,
-        uint8_t *buf,
+        const uint8_t *buf,
         int buf_size,
         int align
     )
@@ -437,20 +439,20 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int64_t pts
 
     cdef int avcodec_decode_subtitle2(
-        AVCodecContext *ctx, AVSubtitle *sub, int *done, AVPacket *pkt,
+        AVCodecContext *ctx, AVSubtitle *sub, int *done, const AVPacket *pkt,
     )
     cdef int avcodec_encode_subtitle(
-        AVCodecContext *avctx, uint8_t *buf, int buf_size, AVSubtitle *sub
+        AVCodecContext *avctx, uint8_t *buf, int buf_size, const AVSubtitle *sub
     )
     cdef void avsubtitle_free(AVSubtitle*)
     cdef void avcodec_flush_buffers(AVCodecContext *ctx)
-    cdef int avcodec_send_packet(AVCodecContext *avctx, AVPacket *packet)
+    cdef int avcodec_send_packet(AVCodecContext *avctx, const AVPacket *packet)
     cdef int avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame)
-    cdef int avcodec_send_frame(AVCodecContext *avctx, AVFrame *frame)
+    cdef int avcodec_send_frame(AVCodecContext *avctx, const AVFrame *frame)
     cdef int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt)
 
     cdef struct AVCodecParser:
-        int codec_ids[5]
+        int codec_ids[7]
 
     cdef struct AVCodecParserContext:
         int64_t pts
@@ -497,7 +499,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 cdef extern from "libavcodec/bsf.h" nogil:
     cdef struct AVBitStreamFilter:
         const char *name
-        AVCodecID *codec_ids
+        const AVCodecID *codec_ids
 
     cdef struct AVCodecParameters:
         pass
@@ -510,7 +512,7 @@ cdef extern from "libavcodec/bsf.h" nogil:
     cdef int av_bsf_list_parse_str(const char *str, AVBSFContext **bsf)
     cdef int av_bsf_init(AVBSFContext *ctx)
     cdef void av_bsf_free(AVBSFContext **ctx)
-    cdef AVBitStreamFilter* av_bsf_iterate(void **opaque)
+    cdef const AVBitStreamFilter* av_bsf_iterate(void **opaque)
     cdef int av_bsf_send_packet(AVBSFContext *ctx, AVPacket *pkt)
     cdef int av_bsf_receive_packet(AVBSFContext *ctx, AVPacket *pkt)
     cdef void av_bsf_flush(AVBSFContext *ctx)
