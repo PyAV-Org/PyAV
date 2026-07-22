@@ -57,6 +57,7 @@ class CodecContext:
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
     options: dict[str, str]
     profile: str | None
+    level: int
     @property
     def profiles(self) -> list[str]: ...
     extradata: bytes | None
