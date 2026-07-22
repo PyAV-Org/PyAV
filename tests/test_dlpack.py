@@ -1,6 +1,5 @@
 import gc
 from fractions import Fraction
-from typing import cast
 
 import numpy
 import pytest
@@ -8,7 +7,6 @@ import pytest
 import av
 from av import VideoFrame
 from av.codec.hwaccel import HWAccel
-from av.video.codeccontext import VideoCodecContext
 
 from .common import assertNdarraysEqual, fate_png
 
@@ -669,7 +667,7 @@ def test_encode_cuda_frame_with_nvenc_if_available(use_current_ctx: bool) -> Non
         assert frame.format.name == "cuda"
         assert frame.sw_format is not None and frame.sw_format.name == "nv12"
 
-        cc = cast(VideoCodecContext, av.CodecContext.create("h264_nvenc", "w"))
+        cc = av.CodecContext.create("h264_nvenc", "w")
         cc.width = width
         cc.height = height
         cc.time_base = Fraction(1, 24)

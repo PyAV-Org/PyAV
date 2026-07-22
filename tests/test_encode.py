@@ -4,7 +4,6 @@ import io
 import math
 import os
 from fractions import Fraction
-from typing import cast
 
 import numpy as np
 import pytest
@@ -272,8 +271,8 @@ class TestEncodeStreamSemantics(TestCase):
     def test_reconfigure_stream_after_mux(self) -> None:
         output_bytes = io.BytesIO()
         with av.open(output_bytes, "w", format="mp4") as output:
-            first = cast(VideoStream, output.add_stream("ffv1", rate=30))
-            second = cast(VideoStream, output.add_stream("ffv1", rate=30))
+            first = output.add_stream("ffv1", rate=30)
+            second = output.add_stream("ffv1", rate=30)
 
             first.format = av.VideoFormat("bgr0", width=16, height=16)
             frame = VideoFrame(16, 16, "bgr0")
