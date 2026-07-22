@@ -11,6 +11,8 @@ from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
 from cython.cimports.libc.stdint import uint8_t
 from cython.cimports.libc.string import memcpy
 
+from av.rational import AVRational
+
 # Check https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/packet.h#L41
 # for new additions in the future ffmpeg releases
 # Note: the order must follow that of the AVPacketSideDataType enum def
@@ -288,6 +290,25 @@ class Packet(Buffer):
 
         lib.av_packet_rescale_ts(self.ptr, self.ptr.time_base, dst)
         self.ptr.time_base = dst
+
+    def rescale_ts(self, time_base):
+        """Rescale the packet timestamps to a new time base.
+
+        This rescales :attr:`pts`, :attr:`dts`, and :attr:`duration`, then updates
+        :attr:`time_base`. If the current time base is unset, the timestamp values
+        are unchanged and the new time base is assigned.
+
+        :meth:`~av.container.OutputContainer.mux` already performs this operation
+        automatically when necessary.
+
+        Wraps :ffmpeg:`av_packet_rescale_ts`.
+        """
+        if not isinstance(time_base, AVRational):
+            raise TypeError("time_base must be an AVRational")
+
+        dst: lib.AVRational
+        to_avrational(time_base, cython.address(dst))
+        self._rebase_time(dst)
 
     def decode(self):
         """
