@@ -83,6 +83,14 @@ class TestCodecContext(TestCase):
         ctx.level = 5
         assert ctx.level == 5
 
+    def test_field_order(self):
+        with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+            assert container.streams.video[0].codec_context.field_order == 2
+
+        ctx = Codec("mpeg4", "w").create()
+        ctx.field_order = 1
+        assert ctx.field_order == 1
+
     def test_skip_frame_default(self):
         ctx = Codec("png", "w").create()
         assert ctx.skip_frame == "DEFAULT"

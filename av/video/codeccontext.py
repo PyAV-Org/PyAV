@@ -435,6 +435,19 @@ class VideoCodecContext(CodecContext):
         self.ptr.colorspace = value
 
     @property
+    def field_order(self):
+        """The video field order as FFmpeg's raw integer value.
+
+        Wraps :ffmpeg:`AVCodecContext.field_order`.
+
+        """
+        return self.ptr.field_order
+
+    @field_order.setter
+    def field_order(self, value: cython.int):
+        self.ptr.field_order = value
+
+    @property
     def max_b_frames(self):
         """
         The maximum run of consecutive B frames when encoding a video.
