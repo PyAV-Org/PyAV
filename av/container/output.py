@@ -103,6 +103,12 @@ class OutputContainer(Container):
         :param \\**kwargs: Set attributes for the stream.
         :rtype: The new :class:`~av.stream.Stream`.
 
+        .. warning::
+
+            Configure every output stream before muxing the first packet. Writing
+            the file header opens all stream codec contexts, after which structural
+            properties such as format, dimensions, layout, and rate cannot change.
+
         """
 
         codec_obj: Codec = Codec(codec_name, "w")

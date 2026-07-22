@@ -62,6 +62,7 @@ class AudioCodecContext(CodecContext):
 
     @sample_rate.setter
     def sample_rate(self, value: cython.int):
+        self._assert_not_open("sample_rate")
         self.ptr.sample_rate = value
 
     @property
@@ -88,6 +89,7 @@ class AudioCodecContext(CodecContext):
 
     @layout.setter
     def layout(self, value):
+        self._assert_not_open("layout")
         layout: AudioLayout = AudioLayout(value)
         self.ptr.ch_layout = layout.layout
 
@@ -102,5 +104,6 @@ class AudioCodecContext(CodecContext):
 
     @format.setter
     def format(self, value):
+        self._assert_not_open("format")
         format: AudioFormat = AudioFormat(value)
         self.ptr.sample_fmt = format.sample_fmt

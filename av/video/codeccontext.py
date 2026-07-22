@@ -193,6 +193,7 @@ class VideoCodecContext(CodecContext):
 
     @format.setter
     def format(self, format: VideoFormat):
+        self._assert_not_open("format")
         self.ptr.pix_fmt = format.pix_fmt
         self.ptr.width = format.width
         self.ptr.height = format.height
@@ -205,6 +206,7 @@ class VideoCodecContext(CodecContext):
 
     @width.setter
     def width(self, value: cython.uint):
+        self._assert_not_open("width")
         self.ptr.width = value
 
     @property
@@ -215,6 +217,7 @@ class VideoCodecContext(CodecContext):
 
     @height.setter
     def height(self, value: cython.uint):
+        self._assert_not_open("height")
         self.ptr.height = value
 
     @property
@@ -251,6 +254,7 @@ class VideoCodecContext(CodecContext):
 
     @pix_fmt.setter
     def pix_fmt(self, value):
+        self._assert_not_open("pix_fmt")
         self.ptr.pix_fmt = get_pix_fmt(value)
 
     @property
@@ -277,6 +281,7 @@ class VideoCodecContext(CodecContext):
 
     @sw_format.setter
     def sw_format(self, value):
+        self._assert_not_open("sw_format")
         self.ptr.sw_pix_fmt = get_pix_fmt(value)
 
     @property
@@ -290,6 +295,7 @@ class VideoCodecContext(CodecContext):
 
     @framerate.setter
     def framerate(self, value):
+        self._assert_not_open("framerate")
         to_avrational(value, cython.address(self.ptr.framerate))
 
     @property

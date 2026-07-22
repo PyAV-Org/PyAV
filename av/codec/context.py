@@ -287,6 +287,11 @@ class CodecContext:
         self.ptr.thread_count = 0  # use as many threads as there are CPUs.
         self.ptr.thread_type = 0x02  # thread within a frame. Does not change the API.
 
+    @cython.cfunc
+    def _assert_not_open(self, name):
+        if self.is_open:
+            raise RuntimeError(f"Cannot change {name} after codec is open.")
+
     @property
     def flags(self):
         """
