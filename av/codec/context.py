@@ -1,4 +1,5 @@
-from enum import Flag, IntEnum
+from dataclasses import dataclass
+from enum import Flag, IntEnum, IntFlag
 
 import cython
 from cython.cimports import libav as lib
@@ -10,7 +11,7 @@ from cython.cimports.av.packet import Packet
 from cython.cimports.av.utils import avrational_to_fraction, to_avrational
 from cython.cimports.libc.errno import EAGAIN
 from cython.cimports.libc.stdint import uint8_t
-from cython.cimports.libc.string import memcpy
+from cython.cimports.libc.string import memcpy, strcmp
 
 from av.error import InvalidDataError
 
@@ -90,6 +91,142 @@ class Flags2(IntEnum):
     ro_flush_noop = lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP
 
 
+class OptionType(IntEnum):
+    FLAGS = lib.AV_OPT_TYPE_FLAGS
+    INT = lib.AV_OPT_TYPE_INT
+    INT64 = lib.AV_OPT_TYPE_INT64
+    DOUBLE = lib.AV_OPT_TYPE_DOUBLE
+    FLOAT = lib.AV_OPT_TYPE_FLOAT
+    STRING = lib.AV_OPT_TYPE_STRING
+    RATIONAL = lib.AV_OPT_TYPE_RATIONAL
+    BINARY = lib.AV_OPT_TYPE_BINARY
+    DICT = lib.AV_OPT_TYPE_DICT
+    UINT64 = lib.AV_OPT_TYPE_UINT64
+    CONST = lib.AV_OPT_TYPE_CONST
+    IMAGE_SIZE = lib.AV_OPT_TYPE_IMAGE_SIZE
+    PIXEL_FMT = lib.AV_OPT_TYPE_PIXEL_FMT
+    SAMPLE_FMT = lib.AV_OPT_TYPE_SAMPLE_FMT
+    VIDEO_RATE = lib.AV_OPT_TYPE_VIDEO_RATE
+    DURATION = lib.AV_OPT_TYPE_DURATION
+    COLOR = lib.AV_OPT_TYPE_COLOR
+    CHANNEL_LAYOUT = lib.AV_OPT_TYPE_CHLAYOUT
+    BOOL = lib.AV_OPT_TYPE_BOOL
+    UINT = lib.AV_OPT_TYPE_UINT
+
+
+class OptionFlags(IntFlag):
+    ENCODING_PARAM = lib.AV_OPT_FLAG_ENCODING_PARAM
+    DECODING_PARAM = lib.AV_OPT_FLAG_DECODING_PARAM
+    AUDIO_PARAM = lib.AV_OPT_FLAG_AUDIO_PARAM
+    VIDEO_PARAM = lib.AV_OPT_FLAG_VIDEO_PARAM
+    SUBTITLE_PARAM = lib.AV_OPT_FLAG_SUBTITLE_PARAM
+    EXPORT = lib.AV_OPT_FLAG_EXPORT
+    READONLY = lib.AV_OPT_FLAG_READONLY
+    BITSTREAM_FILTER_PARAM = lib.AV_OPT_FLAG_BSF_PARAM
+    RUNTIME_PARAM = lib.AV_OPT_FLAG_RUNTIME_PARAM
+    FILTERING_PARAM = lib.AV_OPT_FLAG_FILTERING_PARAM
+    DEPRECATED = lib.AV_OPT_FLAG_DEPRECATED
+    CHILD_CONSTS = lib.AV_OPT_FLAG_CHILD_CONSTS
+
+
+@dataclass(frozen=True, slots=True)
+class CodecOptionChoice:
+    """A named value accepted by a codec option."""
+
+    name: str
+    help: str
+
+
+@dataclass(frozen=True, slots=True)
+class CodecOption:
+    """Description of a generic or codec-specific option."""
+
+    name: str
+    help: str
+    type: OptionType | int
+    is_array: bool
+    default: str | None
+    min: float
+    max: float
+    flags: OptionFlags
+    choices: tuple[CodecOptionChoice, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CodecOptionSet:
+    """Generic and codec-specific options supported by a codec context."""
+
+    generic: tuple[CodecOption, ...]
+    private: tuple[CodecOption, ...]
+
+
+@cython.cfunc
+def _get_option_default(
+    obj: cython.p_void, name: cython.pointer[cython.const[cython.char]]
+):
+    value: cython.pointer[uint8_t] = cython.NULL
+    if lib.av_opt_get(obj, name, 0, cython.address(value)) < 0:
+        return None
+    try:
+        return cython.cast(cython.p_char, value) if value != cython.NULL else None
+    finally:
+        lib.av_free(value)
+
+
+@cython.cfunc
+def _get_supported_options(obj: cython.p_void):
+    options: list = []
+    ptr: cython.pointer[cython.const[lib.AVOption]] = lib.av_opt_next(obj, cython.NULL)
+    choice_ptr: cython.pointer[cython.const[lib.AVOption]]
+    option_type: object
+
+    while ptr != cython.NULL:
+        if ptr.type != lib.AV_OPT_TYPE_CONST:
+            choices: list = []
+            if ptr.unit != cython.NULL:
+                choice_ptr = lib.av_opt_next(obj, cython.NULL)
+                while choice_ptr != cython.NULL:
+                    if (
+                        choice_ptr.type == lib.AV_OPT_TYPE_CONST
+                        and choice_ptr.unit != cython.NULL
+                        and strcmp(choice_ptr.unit, ptr.unit) == 0
+                    ):
+                        choices.append(
+                            CodecOptionChoice(
+                                choice_ptr.name,
+                                choice_ptr.help
+                                if choice_ptr.help != cython.NULL
+                                else "",
+                            )
+                        )
+                    choice_ptr = lib.av_opt_next(obj, choice_ptr)
+
+            raw_type = cython.cast(cython.int, ptr.type)
+            is_array = bool(raw_type & lib.AV_OPT_TYPE_FLAG_ARRAY)
+            raw_type &= ~lib.AV_OPT_TYPE_FLAG_ARRAY
+            try:
+                option_type = OptionType(raw_type)
+            except ValueError:
+                option_type = raw_type
+
+            options.append(
+                CodecOption(
+                    ptr.name,
+                    ptr.help if ptr.help != cython.NULL else "",
+                    option_type,
+                    is_array,
+                    _get_option_default(obj, ptr.name),
+                    ptr.min,
+                    ptr.max,
+                    OptionFlags(ptr.flags),
+                    tuple(choices),
+                )
+            )
+        ptr = lib.av_opt_next(obj, ptr)
+
+    return tuple(options)
+
+
 @cython.cclass
 class CodecContext:
     @staticmethod
@@ -107,6 +244,31 @@ class CodecContext:
         self.options = {}
         self.stream_index = -1  # This is set by the container immediately.
         self.is_open = False
+
+    @property
+    def supported_options(self):
+        """Options supported by this codec context.
+
+        ``generic`` contains options provided by :ffmpeg:`AVCodecContext`, while
+        ``private`` contains options provided by the selected codec. Values are
+        descriptors only; set options through :attr:`options`.
+        """
+        ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(
+            self.codec.ptr
+        )
+        child: cython.p_void
+        private: list = []
+        if ctx == cython.NULL:
+            raise MemoryError("Cannot allocate codec context")
+        try:
+            generic = _get_supported_options(ctx)
+            child = lib.av_opt_child_next(ctx, cython.NULL)
+            while child != cython.NULL:
+                private.extend(_get_supported_options(child))
+                child = lib.av_opt_child_next(ctx, child)
+            return CodecOptionSet(generic, tuple(private))
+        finally:
+            lib.avcodec_free_context(cython.address(ctx))
 
     @cython.cfunc
     def _init(

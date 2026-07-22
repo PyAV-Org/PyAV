@@ -66,6 +66,13 @@ Contexts
 
 .. autoattribute:: CodecContext.codec
 .. autoattribute:: CodecContext.options
+.. autoattribute:: CodecContext.supported_options
+
+.. autoclass:: CodecOptionSet
+.. autoclass:: CodecOption
+.. autoclass:: CodecOptionChoice
+.. autoclass:: OptionType
+.. autoclass:: OptionFlags
 
 .. automethod:: CodecContext.create
 .. automethod:: CodecContext.open
@@ -160,5 +167,4 @@ frames passed to ``encode`` are uploaded to the device automatically::
 
 See ``examples/basics/hw_decode.py`` for a complete example, including
 recommended device types per platform.
-
 
