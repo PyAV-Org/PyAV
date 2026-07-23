@@ -1,4 +1,4 @@
-Numpy
+NumPy
 =====
 
 
@@ -20,5 +20,4 @@ Generating Video
 ----------------
 
 .. literalinclude:: ../../examples/numpy/generate_video.py
-
 

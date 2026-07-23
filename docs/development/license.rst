@@ -6,7 +6,7 @@
 License
 =======
 
-From `LICENSE.txt <https://github.com/PyAV-Org/PyAV/blob/master/LICENSE.txt>`_:
+From `LICENSE.txt <https://github.com/PyAV-Org/PyAV/blob/main/LICENSE.txt>`_:
 
 .. literalinclude:: ../../LICENSE.txt
     :language: text
