@@ -20,16 +20,7 @@ Our goal is to provide all of the features that make sense for the contexts that
 Sub-Interpreters
 ----------------
 
-Since we rely upon C callbacks in a few locations, PyAV is not fully compatible with sub-interpreters. Users have experienced lockups in WSGI web applications, for example.
-
-This is due to the ``PyGILState_Ensure`` calls made by Cython in a C callback from FFmpeg. If this is called in a thread that was not started by Python, it is very likely to break. There is no current instrumentation to detect such events.
-
-The two main features that can cause lockups are:
-
-1. Python IO (passing a file-like object to ``av.open``). While this is in theory possible, so far it seems like the callbacks are made in the calling thread, and so are safe.
-
-2. Logging. If you have logging enabled (disabled by default), those log messages could cause lockups when using threads.
-
+PyAV can enable Cython's per-interpreter module state as experimental groundwork, but it still cannot be imported by CPython sub-interpreters with their own GIL. Cython extension types continue to share internal vtable state between interpreters; repeated or concurrent interpreter creation can crash the process (`Cython issue #6445 <https://github.com/cython/cython/issues/6445>`__). PyAV will not declare compatibility with own-GIL sub-interpreters until Cython supports extension types safely across interpreters.
 
 .. _garbage_collection:
 
