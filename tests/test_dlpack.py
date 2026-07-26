@@ -546,7 +546,7 @@ def test_cuda_context_flags() -> None:
     assert ctx.cuda_stream == 1234
 
     with pytest.raises(TypeError, match="integer or None"):
-        av.video.frame.CudaContext(cuda_stream="1234")
+        av.video.frame.CudaContext(cuda_stream="1234")  # type: ignore[arg-type]
 
     with pytest.raises(ValueError, match="non-negative"):
         av.video.frame.CudaContext(cuda_stream=-1)
