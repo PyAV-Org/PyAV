@@ -36,11 +36,14 @@ class CudaContext:
     def primary_ctx(self) -> bool: ...
     @property
     def current_ctx(self) -> bool: ...
+    @property
+    def cuda_stream(self) -> int: ...
     def __init__(
         self,
         device_id: int = 0,
         primary_ctx: bool = True,
         current_ctx: bool = False,
+        cuda_stream: int | None = None,
     ) -> None: ...
 
 class VideoFrame(Frame):

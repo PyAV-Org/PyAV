@@ -533,13 +533,23 @@ def test_cuda_context_flags() -> None:
     default_ctx = av.video.frame.CudaContext()
     assert default_ctx.primary_ctx is True
     assert default_ctx.current_ctx is False
+    assert default_ctx.cuda_stream == 0
 
     with pytest.raises(ValueError, match="mutually exclusive"):
         av.video.frame.CudaContext(primary_ctx=True, current_ctx=True)
 
-    ctx = av.video.frame.CudaContext(primary_ctx=False, current_ctx=True)
+    ctx = av.video.frame.CudaContext(
+        primary_ctx=False, current_ctx=True, cuda_stream=1234
+    )
     assert ctx.primary_ctx is False
     assert ctx.current_ctx is True
+    assert ctx.cuda_stream == 1234
+
+    with pytest.raises(TypeError, match="integer or None"):
+        av.video.frame.CudaContext(cuda_stream="1234")
+
+    with pytest.raises(ValueError, match="non-negative"):
+        av.video.frame.CudaContext(cuda_stream=-1)
 
 
 def test_video_frame_from_dlpack_cuda_hw_frame_behavior_if_available() -> None:
@@ -676,6 +686,54 @@ def test_encode_cuda_frame_with_nvenc_if_available(use_current_ctx: bool) -> Non
 
         packets = cc.encode(frame)
         packets += cc.encode(None)  # flush
+        assert any(p.size for p in packets)
+    except av.FFmpegError as e:
+        pytest.skip(f"nvenc/CUDA not available in this build/runtime: {e}")
+
+
+def test_encode_cuda_frame_with_nvenc_external_stream_if_available() -> None:
+    try:
+        import torch  # type: ignore
+    except Exception:
+        pytest.skip("PyTorch is not available.")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is not available.")
+
+    width, height = 256, 256
+    stream = torch.cuda.Stream()
+    stream_ptr = int(stream.cuda_stream)
+
+    try:
+        with torch.cuda.stream(stream):
+            y = torch.zeros((height, width), dtype=torch.uint8, device="cuda")
+            uv = torch.zeros(
+                (height // 2, width // 2, 2),
+                dtype=torch.uint8,
+                device="cuda",
+            )
+            cuda_context = av.video.frame.CudaContext(
+                device_id=int(y.__dlpack_device__()[1]),
+                primary_ctx=False,
+                current_ctx=True,
+                cuda_stream=stream_ptr,
+            )
+            frame = VideoFrame.from_dlpack(
+                (y, uv),
+                format="nv12",
+                stream=stream_ptr,
+                cuda_context=cuda_context,
+            )
+
+        assert cuda_context.cuda_stream == stream_ptr
+        cc = cast(VideoCodecContext, av.CodecContext.create("h264_nvenc", "w"))
+        cc.width = width
+        cc.height = height
+        cc.time_base = Fraction(1, 24)
+        cc.framerate = Fraction(24, 1)
+        cc.pix_fmt = "cuda"
+
+        packets = cc.encode(frame)
+        packets += cc.encode(None)
         assert any(p.size for p in packets)
     except av.FFmpegError as e:
         pytest.skip(f"nvenc/CUDA not available in this build/runtime: {e}")

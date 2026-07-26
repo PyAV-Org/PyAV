@@ -192,7 +192,7 @@ cdef extern from "libavutil/frame.h" nogil:
 
 cdef extern from "libavutil/hwcontext.h" nogil:
     cdef struct AVHWDeviceContext:
-        pass
+        void *hwctx
 
     enum AVHWDeviceType:
         AV_HWDEVICE_TYPE_NONE

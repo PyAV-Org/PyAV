@@ -16,7 +16,8 @@ from cython.cimports.cpython.pycapsule import (
     PyCapsule_SetName,
 )
 from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
-from cython.cimports.libc.stdint import int64_t, uint8_t
+from cython.cimports.hwcontext_cuda import AVCUDADeviceContext, CUstream
+from cython.cimports.libc.stdint import int64_t, uint8_t, uintptr_t
 
 
 @cython.final
@@ -29,6 +30,9 @@ class CudaContext:
     :param bool current_ctx: Wrap the CUDA context current on the calling thread
         when this object is first used. This is mutually exclusive with
         ``primary_ctx``.
+    :param int cuda_stream: Optional raw ``CUstream`` pointer for FFmpeg CUDA
+        operations, including NVENC input and output. The caller owns the
+        stream and must keep it alive as long as this context can be used.
     """
 
     def __cinit__(
@@ -36,14 +40,22 @@ class CudaContext:
         device_id: cython.int = 0,
         primary_ctx: cython.bint = True,
         current_ctx: cython.bint = False,
+        cuda_stream: object = None,
     ):
         self.device_id = device_id
         self.primary_ctx = primary_ctx
         self.current_ctx = current_ctx
+        self.cuda_stream = 0
         self._device_ref = cython.NULL
         self._frames_cache = {}
         if primary_ctx and current_ctx:
             raise ValueError("primary_ctx and current_ctx are mutually exclusive")
+        if cuda_stream is not None:
+            if not isinstance(cuda_stream, int):
+                raise TypeError("cuda_stream must be an integer or None")
+            if cuda_stream < 0:
+                raise ValueError("cuda_stream must be non-negative")
+            self.cuda_stream = cython.cast(uintptr_t, cuda_stream)
 
     def __dealloc__(self):
         ref: cython.pointer[lib.AVBufferRef]
@@ -83,6 +95,14 @@ class CudaContext:
                 0,
             )
         )
+        if self.cuda_stream:
+            device_ctx: cython.pointer[lib.AVHWDeviceContext] = cython.cast(
+                cython.pointer[lib.AVHWDeviceContext], device_ref.data
+            )
+            cuda_ctx: cython.pointer[AVCUDADeviceContext] = cython.cast(
+                cython.pointer[AVCUDADeviceContext], device_ctx.hwctx
+            )
+            cuda_ctx.stream = cython.cast(CUstream, self.cuda_stream)
         self._device_ref = device_ref
         return device_ref
 
