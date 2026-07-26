@@ -700,11 +700,12 @@ def test_encode_cuda_frame_with_nvenc_external_stream_if_available() -> None:
         pytest.skip("CUDA is not available.")
 
     width, height = 256, 256
-    stream = torch.cuda.Stream()
-    stream_ptr = int(stream.cuda_stream)
+    producer_stream = torch.cuda.Stream()
+    encoder_stream = torch.cuda.Stream()
+    encoder_stream_ptr = int(encoder_stream.cuda_stream)
 
     try:
-        with torch.cuda.stream(stream):
+        with torch.cuda.stream(producer_stream):
             y = torch.zeros((height, width), dtype=torch.uint8, device="cuda")
             uv = torch.zeros(
                 (height // 2, width // 2, 2),
@@ -715,17 +716,17 @@ def test_encode_cuda_frame_with_nvenc_external_stream_if_available() -> None:
                 device_id=int(y.__dlpack_device__()[1]),
                 primary_ctx=False,
                 current_ctx=True,
-                cuda_stream=stream_ptr,
+                cuda_stream=encoder_stream_ptr,
             )
             frame = VideoFrame.from_dlpack(
                 (y, uv),
                 format="nv12",
-                stream=stream_ptr,
+                stream=encoder_stream_ptr,
                 cuda_context=cuda_context,
             )
 
-        assert cuda_context.cuda_stream == stream_ptr
-        cc = cast(VideoCodecContext, av.CodecContext.create("h264_nvenc", "w"))
+        assert cuda_context.cuda_stream == encoder_stream_ptr
+        cc = av.CodecContext.create("h264_nvenc", "w")
         cc.width = width
         cc.height = height
         cc.time_base = Fraction(1, 24)
