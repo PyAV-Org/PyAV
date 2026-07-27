@@ -551,6 +551,16 @@ def test_cuda_context_flags() -> None:
     with pytest.raises(ValueError, match="non-negative"):
         av.video.frame.CudaContext(cuda_stream=-1)
 
+    with pytest.raises(ValueError, match="requires device_id 0.*CUDA_VISIBLE_DEVICES"):
+        av.video.frame.CudaContext(device_id=1, cuda_stream=1234)
+
+    for default_stream in (None, 0):
+        nonzero_device_ctx = av.video.frame.CudaContext(
+            device_id=1, cuda_stream=default_stream
+        )
+        assert nonzero_device_ctx.device_id == 1
+        assert nonzero_device_ctx.cuda_stream == 0
+
 
 def test_video_frame_from_dlpack_cuda_hw_frame_behavior_if_available() -> None:
     backend = _get_cuda_backend()
@@ -700,17 +710,18 @@ def test_encode_cuda_frame_with_nvenc_external_stream_if_available() -> None:
         pytest.skip("CUDA is not available.")
 
     width, height = 256, 256
-    producer_stream = torch.cuda.Stream()
-    encoder_stream = torch.cuda.Stream()
+    with torch.cuda.device(0):
+        producer_stream = torch.cuda.Stream()
+        encoder_stream = torch.cuda.Stream()
     encoder_stream_ptr = int(encoder_stream.cuda_stream)
 
     try:
-        with torch.cuda.stream(producer_stream):
-            y = torch.zeros((height, width), dtype=torch.uint8, device="cuda")
+        with torch.cuda.device(0), torch.cuda.stream(producer_stream):
+            y = torch.zeros((height, width), dtype=torch.uint8, device="cuda:0")
             uv = torch.zeros(
                 (height // 2, width // 2, 2),
                 dtype=torch.uint8,
-                device="cuda",
+                device="cuda:0",
             )
             cuda_context = av.video.frame.CudaContext(
                 device_id=int(y.__dlpack_device__()[1]),

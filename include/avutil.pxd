@@ -193,6 +193,8 @@ cdef extern from "libavutil/frame.h" nogil:
 cdef extern from "libavutil/hwcontext.h" nogil:
     cdef struct AVHWDeviceContext:
         void *hwctx
+        void (*free)(AVHWDeviceContext *ctx)
+        void *user_opaque
 
     enum AVHWDeviceType:
         AV_HWDEVICE_TYPE_NONE
@@ -220,6 +222,8 @@ cdef extern from "libavutil/hwcontext.h" nogil:
         int width
         int height
 
+    cdef AVBufferRef *av_hwdevice_ctx_alloc(AVHWDeviceType type)
+    cdef int av_hwdevice_ctx_init(AVBufferRef *ref)
     cdef int av_hwdevice_ctx_create(AVBufferRef **device_ctx, AVHWDeviceType type, const char *device, AVDictionary *opts, int flags)
     cdef AVHWDeviceType av_hwdevice_find_type_by_name(const char *name)
     cdef const char *av_hwdevice_get_type_name(AVHWDeviceType type)

@@ -12,6 +12,8 @@ cdef extern from *:
     #undef PYAV_CUDA_TYPES
     #endif
     """
+    ctypedef void *CUcontext
     ctypedef void *CUstream
     ctypedef struct AVCUDADeviceContext:
+        CUcontext cuda_ctx
         CUstream stream

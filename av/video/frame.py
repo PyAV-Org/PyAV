@@ -20,6 +20,60 @@ from cython.cimports.hwcontext_cuda import AVCUDADeviceContext, CUstream
 from cython.cimports.libc.stdint import int64_t, uint8_t, uintptr_t
 
 
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def _cuda_device_ctx_free(
+    device_ctx: cython.pointer[lib.AVHWDeviceContext],
+) -> cython.void:
+    owner_ref: cython.pointer[lib.AVBufferRef] = cython.cast(
+        cython.pointer[lib.AVBufferRef], device_ctx.user_opaque
+    )
+    lib.av_buffer_unref(cython.address(owner_ref))
+    device_ctx.user_opaque = cython.NULL
+
+
+@cython.cfunc
+def _check_current_ctx_is_device0_primary(
+    owner_ref: cython.pointer[lib.AVBufferRef],
+) -> cython.void:
+    # The manually initialized device context below cannot populate FFmpeg's
+    # private cuda_device field, which stays 0. Requiring the wrapped context
+    # to be the primary context of device 0 keeps that metadata correct.
+    probe_ref: cython.pointer[lib.AVBufferRef] = cython.NULL
+    probe_device: cython.p_char = b"0"
+    options: Dictionary = Dictionary({"primary_ctx": "1"})
+    err_check(
+        lib.av_hwdevice_ctx_create(
+            cython.address(probe_ref),
+            lib.AV_HWDEVICE_TYPE_CUDA,
+            probe_device,
+            options.ptr,
+            0,
+        )
+    )
+    owner_device_ctx: cython.pointer[lib.AVHWDeviceContext] = cython.cast(
+        cython.pointer[lib.AVHWDeviceContext], owner_ref.data
+    )
+    owner_cuda_ctx: cython.pointer[AVCUDADeviceContext] = cython.cast(
+        cython.pointer[AVCUDADeviceContext], owner_device_ctx.hwctx
+    )
+    probe_device_ctx: cython.pointer[lib.AVHWDeviceContext] = cython.cast(
+        cython.pointer[lib.AVHWDeviceContext], probe_ref.data
+    )
+    probe_cuda_ctx: cython.pointer[AVCUDADeviceContext] = cython.cast(
+        cython.pointer[AVCUDADeviceContext], probe_device_ctx.hwctx
+    )
+    matches: cython.bint = probe_cuda_ctx.cuda_ctx == owner_cuda_ctx.cuda_ctx
+    lib.av_buffer_unref(cython.address(probe_ref))
+    if not matches:
+        raise ValueError(
+            "cuda_stream with current_ctx requires the calling thread's current "
+            "CUDA context to be the primary context of CUDA device 0; expose the "
+            "desired physical GPU as logical device 0 via CUDA_VISIBLE_DEVICES"
+        )
+
+
 @cython.final
 @cython.cclass
 class CudaContext:
@@ -33,6 +87,11 @@ class CudaContext:
     :param int cuda_stream: Optional raw ``CUstream`` pointer for FFmpeg CUDA
         operations, including NVENC input and output. The caller owns the
         stream and must keep it alive as long as this context can be used.
+        Nonzero stream pointers are currently supported only for logical CUDA
+        device 0; with ``current_ctx``, the calling thread's current CUDA
+        context must be the primary context of device 0 (the context used by
+        runtime-API libraries such as PyTorch or CuPy). To use another physical
+        GPU, expose it as logical device 0 via ``CUDA_VISIBLE_DEVICES``.
     """
 
     def __cinit__(
@@ -56,6 +115,11 @@ class CudaContext:
             if cuda_stream < 0:
                 raise ValueError("cuda_stream must be non-negative")
             self.cuda_stream = cython.cast(uintptr_t, cuda_stream)
+        if self.cuda_stream and self.device_id != 0:
+            raise ValueError(
+                "cuda_stream currently requires device_id 0; expose the desired "
+                "physical GPU as logical device 0 via CUDA_VISIBLE_DEVICES"
+            )
 
     def __dealloc__(self):
         ref: cython.pointer[lib.AVBufferRef]
@@ -76,10 +140,11 @@ class CudaContext:
     @cython.cfunc
     def _get_device_ref(self) -> cython.pointer[lib.AVBufferRef]:
         device_ref: cython.pointer[lib.AVBufferRef] = self._device_ref
+        owner_ref: cython.pointer[lib.AVBufferRef]
         if device_ref != cython.NULL:
             return device_ref
 
-        device_ref = cython.NULL
+        owner_ref = cython.NULL
         device_bytes = f"{self.device_id}".encode()
         c_device: cython.p_char = device_bytes
         options_dict = {"primary_ctx": "1" if self.primary_ctx else "0"}
@@ -88,21 +153,53 @@ class CudaContext:
         options: Dictionary = Dictionary(options_dict)
         err_check(
             lib.av_hwdevice_ctx_create(
-                cython.address(device_ref),
+                cython.address(owner_ref),
                 lib.AV_HWDEVICE_TYPE_CUDA,
                 c_device,
                 options.ptr,
                 0,
             )
         )
-        if self.cuda_stream:
+        if not self.cuda_stream:
+            self._device_ref = owner_ref
+            return owner_ref
+
+        if self.current_ctx:
+            try:
+                _check_current_ctx_is_device0_primary(owner_ref)
+            except Exception:
+                lib.av_buffer_unref(cython.address(owner_ref))
+                raise
+
+        device_ref = lib.av_hwdevice_ctx_alloc(lib.AV_HWDEVICE_TYPE_CUDA)
+        if device_ref == cython.NULL:
+            lib.av_buffer_unref(cython.address(owner_ref))
+            raise MemoryError("av_hwdevice_ctx_alloc() failed")
+
+        try:
+            owner_device_ctx: cython.pointer[lib.AVHWDeviceContext] = cython.cast(
+                cython.pointer[lib.AVHWDeviceContext], owner_ref.data
+            )
+            owner_cuda_ctx: cython.pointer[AVCUDADeviceContext] = cython.cast(
+                cython.pointer[AVCUDADeviceContext], owner_device_ctx.hwctx
+            )
             device_ctx: cython.pointer[lib.AVHWDeviceContext] = cython.cast(
                 cython.pointer[lib.AVHWDeviceContext], device_ref.data
             )
             cuda_ctx: cython.pointer[AVCUDADeviceContext] = cython.cast(
                 cython.pointer[AVCUDADeviceContext], device_ctx.hwctx
             )
+            cuda_ctx.cuda_ctx = owner_cuda_ctx.cuda_ctx
             cuda_ctx.stream = cython.cast(CUstream, self.cuda_stream)
+            device_ctx.free = _cuda_device_ctx_free
+            device_ctx.user_opaque = cython.cast(cython.p_void, owner_ref)
+            owner_ref = cython.NULL
+            err_check(lib.av_hwdevice_ctx_init(device_ref))
+        except Exception:
+            lib.av_buffer_unref(cython.address(device_ref))
+            lib.av_buffer_unref(cython.address(owner_ref))
+            raise
+
         self._device_ref = device_ref
         return device_ref
 
