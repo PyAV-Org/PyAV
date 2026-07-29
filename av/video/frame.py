@@ -33,47 +33,6 @@ def _cuda_device_ctx_free(
     device_ctx.user_opaque = cython.NULL
 
 
-@cython.cfunc
-def _check_current_ctx_is_device0_primary(
-    owner_ref: cython.pointer[lib.AVBufferRef],
-) -> cython.void:
-    # The manually initialized device context below cannot populate FFmpeg's
-    # private cuda_device field, which stays 0. Requiring the wrapped context
-    # to be the primary context of device 0 keeps that metadata correct.
-    probe_ref: cython.pointer[lib.AVBufferRef] = cython.NULL
-    probe_device: cython.p_char = b"0"
-    options: Dictionary = Dictionary({"primary_ctx": "1"})
-    err_check(
-        lib.av_hwdevice_ctx_create(
-            cython.address(probe_ref),
-            lib.AV_HWDEVICE_TYPE_CUDA,
-            probe_device,
-            options.ptr,
-            0,
-        )
-    )
-    owner_device_ctx: cython.pointer[lib.AVHWDeviceContext] = cython.cast(
-        cython.pointer[lib.AVHWDeviceContext], owner_ref.data
-    )
-    owner_cuda_ctx: cython.pointer[AVCUDADeviceContext] = cython.cast(
-        cython.pointer[AVCUDADeviceContext], owner_device_ctx.hwctx
-    )
-    probe_device_ctx: cython.pointer[lib.AVHWDeviceContext] = cython.cast(
-        cython.pointer[lib.AVHWDeviceContext], probe_ref.data
-    )
-    probe_cuda_ctx: cython.pointer[AVCUDADeviceContext] = cython.cast(
-        cython.pointer[AVCUDADeviceContext], probe_device_ctx.hwctx
-    )
-    matches: cython.bint = probe_cuda_ctx.cuda_ctx == owner_cuda_ctx.cuda_ctx
-    lib.av_buffer_unref(cython.address(probe_ref))
-    if not matches:
-        raise ValueError(
-            "cuda_stream with current_ctx requires the calling thread's current "
-            "CUDA context to be the primary context of CUDA device 0; expose the "
-            "desired physical GPU as logical device 0 via CUDA_VISIBLE_DEVICES"
-        )
-
-
 @cython.final
 @cython.cclass
 class CudaContext:
@@ -88,10 +47,8 @@ class CudaContext:
         operations, including NVENC input and output. The caller owns the
         stream and must keep it alive as long as this context can be used.
         Nonzero stream pointers are currently supported only for logical CUDA
-        device 0; with ``current_ctx``, the calling thread's current CUDA
-        context must be the primary context of device 0 (the context used by
-        runtime-API libraries such as PyTorch or CuPy). To use another physical
-        GPU, expose it as logical device 0 via ``CUDA_VISIBLE_DEVICES``.
+        device 0. To use another physical GPU, expose it as logical device 0
+        via ``CUDA_VISIBLE_DEVICES``.
     """
 
     def __cinit__(
@@ -163,13 +120,6 @@ class CudaContext:
         if not self.cuda_stream:
             self._device_ref = owner_ref
             return owner_ref
-
-        if self.current_ctx:
-            try:
-                _check_current_ctx_is_device0_primary(owner_ref)
-            except Exception:
-                lib.av_buffer_unref(cython.address(owner_ref))
-                raise
 
         device_ref = lib.av_hwdevice_ctx_alloc(lib.AV_HWDEVICE_TYPE_CUDA)
         if device_ref == cython.NULL:
