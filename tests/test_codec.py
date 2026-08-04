@@ -18,7 +18,7 @@ def test_codec_mpeg4_decoder() -> None:
     assert c.name == "mpeg4"
     assert c.long_name == "MPEG-4 part 2"
     assert c.type == "video"
-    assert c.id in (12, 13)
+    assert c.id == Codec("mpeg4", "w").id  # ids are not stable across FFmpeg versions
     assert c.is_decoder
     assert not c.is_encoder
     assert c.delay
@@ -38,7 +38,7 @@ def test_codec_mpeg4_encoder() -> None:
     assert c.name == "mpeg4"
     assert c.long_name == "MPEG-4 part 2"
     assert c.type == "video"
-    assert c.id in (12, 13)
+    assert c.id == Codec("mpeg4").id  # ids are not stable across FFmpeg versions
     assert c.is_encoder
     assert not c.is_decoder
     assert c.delay
