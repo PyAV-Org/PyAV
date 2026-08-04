@@ -1,4 +1,4 @@
-from av import ContainerFormat, formats_available, open
+from av import Codec, ContainerFormat, formats_available, open
 
 from .common import fate_suite
 
@@ -62,7 +62,7 @@ def test_video_codec_id() -> None:
     # Regression test for https://github.com/PyAV-Org/PyAV/issues/2243
     # video_codec_id allows overriding the codec used when opening a container.
     AV_CODEC_ID_NONE = 0
-    AV_CODEC_ID_H264 = 27
+    AV_CODEC_ID_H264 = Codec("h264").id
 
     with open(fate_suite("h264/interlaced_crop.mp4")) as container:
         assert container.video_codec_id == AV_CODEC_ID_NONE
