@@ -1379,3 +1379,21 @@ def test_reformat_pixel_format_align() -> None:
         result = frame_rgb.to_ndarray()
         assert result.shape == expected_rgb.shape
         assert numpy.abs(result.astype(int) - expected_rgb.astype(int)).max() <= 1
+
+
+def test_save_options(tmp_path) -> None:
+    y, x = numpy.mgrid[0:240, 0:320]
+    array = numpy.dstack([x % 256, y % 256, (x + y) % 256]).astype(numpy.uint8)
+    frame = VideoFrame.from_ndarray(array, format="rgb24")
+
+    default = tmp_path / "default.png"
+    unfiltered = tmp_path / "unfiltered.png"
+    frame.save(default)
+    frame.save(unfiltered, pred="none")
+
+    # pred="none" skips the row filter: much faster, much bigger.
+    assert unfiltered.stat().st_size > 4 * default.stat().st_size
+
+    # Non-str values are coerced.
+    frame.save(tmp_path / "q.jpg", qscale=2)
+    assert (tmp_path / "q.jpg").stat().st_size > 0

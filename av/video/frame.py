@@ -773,17 +773,21 @@ class VideoFrame(Frame):
         """
         return self.reformat(format="rgb24", **kwargs)
 
-    @cython.ccall
-    def save(self, filepath: object):
+    def save(self, filepath: object, **options):
         """Save a VideoFrame as a JPG or PNG.
 
         :param filepath: str | Path
+        :param \\**options: Encoder options, e.g. ``pred="none"`` or
+            ``compression_level=1`` for PNG, ``qscale=2`` for JPG. Values are
+            coerced to ``str``. The PNG defaults favor file size over speed;
+            ``pred="none"`` is roughly 3x faster and 2x larger.
         """
         is_jpg: cython.bint
+        name: str = str(filepath)
 
-        if filepath.endswith(".png"):
+        if name.endswith(".png"):
             is_jpg = False
-        elif filepath.endswith(".jpg") or filepath.endswith(".jpeg"):
+        elif name.endswith(".jpg") or name.endswith(".jpeg"):
             is_jpg = True
         else:
             raise ValueError("filepath must end with png or jpg.")
@@ -794,7 +798,11 @@ class VideoFrame(Frame):
         from av.container.core import open
 
         with open(filepath, "w", options={"update": "1"}) as output:
-            output_stream = output.add_stream(encoder, pix_fmt=pix_fmt)
+            output_stream = output.add_stream(
+                encoder,
+                pix_fmt=pix_fmt,
+                options={k: str(v) for k, v in options.items()},
+            )
             output_stream.width = self.width
             output_stream.height = self.height
 
