@@ -40,6 +40,7 @@ Features:
 - ``VideoFrame.from_dlpack`` no longer requires restating ``primary_ctx``/``current_ctx`` when passing an explicit ``cuda_context``; the flags are only validated when explicitly given by :gh-user:`WyattBlue`.
 - Support passing an explicit CUDA stream to FFmpeg CUDA operations, including NVENC input and output, via a ``cuda_stream`` parameter on ``CudaContext``; currently limited to logical CUDA device 0 by :gh-user:`Yozer` (:pr:`2360`).
 - ``VideoFrame.save`` now forwards keyword arguments to the encoder, letting callers trade file size for speed (e.g. ``pred="none"`` or ``compression_level=1`` for PNG, ``qscale=2`` for JPG) by :gh-user:`WyattBlue`.
+- Add ``InputContainer.start_time_realtime``, the stream's start time in microseconds since the Unix epoch, which RTSP derives from RTCP sender reports, by :gh-user:`WyattBlue` (:issue:`2365`).
 
 Fixes:
 
