@@ -18,6 +18,8 @@ class TestAudioProbe(TestCase):
         assert self.file.metadata == {}
         assert self.file.size == 207740
         assert self.file.start_time == 1400000
+        # Only RTSP-like inputs carry a wall clock; a plain file has none.
+        assert self.file.start_time_realtime is None
         assert len(self.file.streams) == 1
 
     def test_stream_probing(self) -> None:

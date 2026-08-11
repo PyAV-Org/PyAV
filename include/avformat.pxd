@@ -151,6 +151,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVIOInterruptCB interrupt_callback
         AVDictionary *metadata
         int64_t start_time
+        int64_t start_time_realtime
         int64_t duration
         int64_t bit_rate
         int flags

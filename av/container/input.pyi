@@ -14,6 +14,7 @@ from .core import Container
 
 class InputContainer(Container):
     start_time: int
+    start_time_realtime: int | None
     duration: int | None
     bit_rate: int
     size: int

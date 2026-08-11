@@ -115,6 +115,20 @@ class InputContainer(Container):
             return self.ptr.start_time
 
     @property
+    def start_time_realtime(self):
+        """Start time of the stream in real world time, in microseconds since the
+        Unix epoch, or ``None`` if unknown.
+
+        Only a few demuxers know this; RTSP computes it from RTCP sender reports,
+        which is what makes it useful for aligning analytics with a camera's clock.
+
+        Wraps :ffmpeg:`AVFormatContext.start_time_realtime`.
+        """
+        self._assert_open()
+        if self.ptr.start_time_realtime != lib.AV_NOPTS_VALUE:
+            return self.ptr.start_time_realtime
+
+    @property
     def duration(self):
         self._assert_open()
         if self.ptr.duration != lib.AV_NOPTS_VALUE:
