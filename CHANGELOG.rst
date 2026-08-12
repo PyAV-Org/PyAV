@@ -28,8 +28,8 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
-v18.1.0 (Unreleased)
---------------------
+v18.1.0
+-------
 
 Features:
 
@@ -50,6 +50,10 @@ Fixes:
 
 - Fix ``VideoFrame.save`` raising ``AttributeError`` when given a ``Path`` rather than a ``str`` by :gh-user:`WyattBlue`.
 - Fix a frame rate assigned to a ``VideoStream`` after ``add_stream`` being dropped from the output; the codec context's frame rate is now copied to the stream before the header is written by :gh-user:`WyattBlue` (:issue:`2301`).
+
+Misc.:
+
+- Support building from source against FFmpeg 9.0 by :gh-user:`WyattBlue`. The binary wheels still ship FFmpeg 8.1.2.
 
 - Prevent crashes and corrupted output when structural codec properties are changed after an output stream has been opened by :gh-user:`WyattBlue`, reported by :gh-user:`oakaigh` (:issue:`2232`).
 - Fix a crash when using a stream that has no ``CodecContext`` (a demuxed stream with no available decoder, such as one from a truncated file, or a stream created by ``add_mux_stream``); decoding now raises ``DecoderNotFoundError``, encoding now raises ``EncoderNotFoundError``, and ``BitStreamFilterContext`` accepts such a stream as ``out_stream`` by :gh-user:`WyattBlue`, reported by :gh-user:`justinrmiller` (:issue:`2344`).
