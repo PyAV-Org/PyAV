@@ -282,6 +282,8 @@ class OutputContainer(Container):
         :param \\**kwargs: Set attributes for the stream.
         :rtype: The new :class:`~av.stream.Stream`.
         """
+        template.container._assert_open()
+
         if opaque is None:
             opaque = template.type != "video"
 
