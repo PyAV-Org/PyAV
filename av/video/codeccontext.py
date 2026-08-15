@@ -68,7 +68,7 @@ class VideoCodecContext(CodecContext):
             self.ptr.get_format = _get_hw_format
             self._private_data.hardware_pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
             self._private_data.allow_software_fallback = (
-                self.hwaccel.allow_software_fallback
+                self.hwaccel_ctx.allow_software_fallback
             )
             self.ptr.opaque = cython.address(self._private_data)
         except NotImplementedError:

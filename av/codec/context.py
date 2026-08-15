@@ -279,7 +279,6 @@ class CodecContext:
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError("Wrapping CodecContext with mismatched codec.")
-        self.hwaccel = hwaccel
 
         # Set reasonable threading defaults.
         self.ptr.thread_count = 0  # use as many threads as there are CPUs.
