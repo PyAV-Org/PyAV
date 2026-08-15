@@ -17,7 +17,7 @@ But where you can't work without it, PyAV is a critical tool.
 Installation
 ------------
 
-PyAV requires Python 3.11 or later. Binary wheels are provided on [PyPI][pypi] for Linux, macOS, and Windows with FFmpeg bundled. You can install these wheels by running:
+PyAV requires Python 3.12 or later. Binary wheels are provided on [PyPI][pypi] for Linux, macOS, and Windows with FFmpeg bundled. You can install these wheels by running:
 
 ```bash
 pip install av
@@ -74,7 +74,7 @@ On Windows, use a Conda environment and the FFmpeg development files maintained 
 ```powershell
 git clone https://github.com/PyAV-Org/PyAV.git
 cd PyAV
-conda create --name pyav-dev --channel conda-forge python=3.11 cython setuptools numpy pillow pytest
+conda create --name pyav-dev --channel conda-forge python=3.12 cython setuptools numpy pillow pytest
 conda activate pyav-dev
 $ffmpegDir = Join-Path $env:CONDA_PREFIX "Library"
 python scripts\fetch-vendor.py --config-file scripts\ffmpeg-latest.json $ffmpegDir

@@ -36,7 +36,7 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-24.04, python: "3.14", ffmpeg: "8.1.2", extras: true}
-          - {os: ubuntu-24.04, python: "3.11", ffmpeg: "8.0.3"}
+          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.0.3"}
           - {os: ubuntu-24.04, python: "3.13", ffmpeg: "9.0"}
           - {os: macos-14, python: "3.12", ffmpeg: "8.0.3"}
           - {os: macos-14, python: "3.14", ffmpeg: "8.1.2"}
@@ -122,7 +122,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, python: "3.11", ffmpeg: "latest"}
+          - {os: windows-latest, python: "3.12", ffmpeg: "latest"}
 
     steps:
     - name: Checkout
@@ -163,27 +163,27 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - name: Set up host Python 3.11
+      - name: Set up host Python 3.12
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - name: Set up host Python 3.14t
         uses: actions/setup-python@v6
         with:
           python-version: "3.14t"
       - name: Install build tooling
         run: |
-          for py in python3.11 python3.14t; do
+          for py in python3.12 python3.14t; do
             $py -m pip install -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
           done
           # patchelf 0.18 (ubuntu-24.04's system version) corrupts ELF files
           # with large p_align; pin <0.18 for auditwheel to use.
-          python3.11 -m pip install -U ziglang auditwheel 'patchelf<0.18'
+          python3.12 -m pip install -U ziglang auditwheel 'patchelf<0.18'
       - name: Cross-compile armv7l wheels with zig
         env:
-          HOST_PY311: python3.11
+          HOST_PY312: python3.12
           HOST_PY314T: python3.14t
-          TOOLS_PY: python3.11
+          TOOLS_PY: python3.12
         run: bash scripts/build-armv7l-cross.sh
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -193,7 +193,7 @@ jobs:
         run: |
           docker run --rm --platform linux/arm/v7 -v "$PWD/dist:/dist:ro" \
             quay.io/pypa/manylinux_2_31_armv7l bash -ceu '
-              for py in /opt/python/cp311-cp311 /opt/python/cp314-cp314t; do
+              for py in /opt/python/cp312-cp312 /opt/python/cp314-cp314t; do
                 echo "::group::$("$py/bin/python" --version)"
                 "$py/bin/pip" install --no-index --find-links /dist av
                 "$py/bin/python" -m av --version

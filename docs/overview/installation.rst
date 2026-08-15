@@ -4,7 +4,7 @@ Installation
 Binary wheels
 -------------
 
-PyAV requires Python 3.11 or later. Binary wheels are provided on PyPI for Linux, macOS, and Windows with FFmpeg bundled. The most straightforward way to install PyAV is to run:
+PyAV requires Python 3.12 or later. Binary wheels are provided on PyPI for Linux, macOS, and Windows with FFmpeg bundled. The most straightforward way to install PyAV is to run:
 
 .. code-block:: bash
 
@@ -63,7 +63,7 @@ The Windows build uses FFmpeg development files maintained by the PyAV project. 
 
 .. code-block:: powershell
 
-    conda create --name pyav-dev --channel conda-forge python=3.11 cython setuptools numpy pillow pytest
+    conda create --name pyav-dev --channel conda-forge python=3.12 cython setuptools numpy pillow pytest
     conda activate pyav-dev
     $ffmpegDir = Join-Path $env:CONDA_PREFIX "Library"
     python scripts\fetch-vendor.py --config-file scripts\ffmpeg-latest.json $ffmpegDir

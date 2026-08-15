@@ -31,6 +31,10 @@ We are operating with `semantic versioning <https://semver.org>`_.
 v19.0.0 (Unreleased)
 --------------------
 
+Major:
+
+- Drop support for Python 3.11. Binary wheels are now built for Python 3.12 and later.
+
 Fixes:
 
 - 
