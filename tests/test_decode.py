@@ -93,6 +93,24 @@ class TestDecode(TestCase):
 
         assert frame_count == video_stream.frames
 
+    def test_flushed_frames_keep_time_base(self) -> None:
+        # `decode()` with no packet has no packet to take the time base from;
+        # it must fall back to the one the container set on the context.
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams.video[0]
+        ctx = stream.codec_context
+        assert ctx is not None
+
+        for packet in container.demux(stream):
+            if packet.dts is None:  # the dummy flush packet
+                break
+            ctx.decode(packet)
+
+        flushed = ctx.decode()
+        assert flushed
+        for frame in flushed:
+            assert frame.time_base == stream.time_base
+
     def test_decode_audio_corrupt(self) -> None:
         # write an empty file
         path = self.sandboxed("empty.flac")
@@ -256,8 +274,9 @@ class TestDecode(TestCase):
         assert output_count < input_count
 
         for frame in video_stream.decode(None):
-            # The Frame._time_base is not set by PyAV
-            assert frame.time_base is None
+            # Flushing has no packet to take the time base from, so it comes
+            # from the context.
+            assert frame.time_base == video_stream.time_base
             output_count += 1
 
         assert output_count == input_count
