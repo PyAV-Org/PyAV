@@ -71,7 +71,7 @@ class AudioLayout:
         buf: cython.char[16]
         buf2: cython.char[128]
 
-        results: list = []
+        results: list[AudioChannel] = []
         for index in range(self.layout.nb_channels):
             size = lib.av_channel_name(
                 buf,

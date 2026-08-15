@@ -96,7 +96,7 @@ class HWConfig:
 def hwdevices_available():
     """Return the names of the hardware device types FFmpeg was built with,
     e.g. ``["cuda", "videotoolbox"]``."""
-    result: list = []
+    result: list[str] = []
     x: lib.AVHWDeviceType = lib.AV_HWDEVICE_TYPE_NONE
     while True:
         x = lib.av_hwdevice_iterate_types(x)

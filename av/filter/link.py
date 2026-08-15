@@ -126,11 +126,11 @@ def alloc_filter_pads(
     ptr: cython.pointer[cython.const[lib.AVFilterPad]],
     is_input: cython.bint,
     context: FilterContext | None = None,
-) -> tuple:
+) -> tuple[FilterPad, ...]:
     if not ptr:
         return ()
 
-    pads: list = []
+    pads: list[FilterPad] = []
 
     # We need to be careful and check our bounds if we know what they are,
     # since the arrays on a AVFilterContext are not NULL terminated.

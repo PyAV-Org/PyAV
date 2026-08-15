@@ -3,7 +3,7 @@ from enum import Flag, IntEnum, IntFlag
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.audio.format import get_audio_format
-from cython.cimports.av.codec.hwaccel import wrap_hwconfig
+from cython.cimports.av.codec.hwaccel import HWConfig, wrap_hwconfig
 from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.format import VideoFormat, get_pix_fmt, get_video_format
@@ -268,7 +268,7 @@ class Codec:
     def hardware_configs(self):
         if self._hardware_configs:
             return self._hardware_configs
-        ret: list = []
+        ret: list[HWConfig] = []
         i: cython.int = 0
         ptr: cython.pointer[cython.const[lib.AVCodecHWConfig]]
         while True:

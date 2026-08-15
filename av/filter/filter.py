@@ -51,8 +51,8 @@ class Filter:
 
 
 @cython.cfunc
-def get_filter_names() -> set:
-    names: set = set()
+def get_filter_names() -> set[str]:
+    names: set[str] = set()
     ptr: cython.pointer[cython.const[lib.AVFilter]]
     opaque: cython.p_void = cython.NULL
     while True:

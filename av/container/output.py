@@ -39,7 +39,7 @@ def _set_codecpar_extradata(
 @cython.cfunc
 def close_output(self: OutputContainer):
     if self.packet_ptr != cython.NULL and self._buffered_packets:
-        buffered: list = self._buffered_packets
+        buffered: list[Packet] = self._buffered_packets
         self._buffered_packets = []
         packet: Packet
         for packet in buffered:
@@ -492,7 +492,7 @@ class OutputContainer(Container):
 
         # TODO: This does NOT handle options coming from 3 sources.
         # This is only a rough approximation of what would be cool to do.
-        used_options: set = set()
+        used_options: set[str] = set()
         stream: Stream
 
         # Finalize and open all streams.
@@ -554,7 +554,7 @@ class OutputContainer(Container):
         """
         Returns a set of all codecs this format supports.
         """
-        result: set = set()
+        result: set[str] = set()
         codec: cython.pointer[cython.const[lib.AVCodec]] = cython.NULL
         opaque: cython.p_void = cython.NULL
 
@@ -665,7 +665,7 @@ class OutputContainer(Container):
             return True  # Still waiting on some stream's extradata.
 
         # All extradata is resolved: write the header and flush buffered packets.
-        buffered: list = self._buffered_packets
+        buffered: list[Packet] = self._buffered_packets
         self._buffered_packets = []
         buffered_packet: Packet
         for buffered_packet in buffered:

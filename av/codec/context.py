@@ -175,14 +175,14 @@ def _get_option_default(
 
 @cython.cfunc
 def _get_supported_options(obj: cython.p_void):
-    options: list = []
+    options: list[CodecOption] = []
     ptr: cython.pointer[cython.const[lib.AVOption]] = lib.av_opt_next(obj, cython.NULL)
     choice_ptr: cython.pointer[cython.const[lib.AVOption]]
     option_type: object
 
     while ptr != cython.NULL:
         if ptr.type != lib.AV_OPT_TYPE_CONST:
-            choices: list = []
+            choices: list[CodecOptionChoice] = []
             if ptr.unit != cython.NULL:
                 choice_ptr = lib.av_opt_next(obj, cython.NULL)
                 while choice_ptr != cython.NULL:
@@ -257,7 +257,7 @@ class CodecContext:
             self.codec.ptr
         )
         child: cython.p_void
-        private: list = []
+        private: list[CodecOption] = []
         if ctx == cython.NULL:
             raise MemoryError("Cannot allocate codec context")
         try:
@@ -471,7 +471,7 @@ class CodecContext:
         out_size: cython.int
         consumed: cython.int
         packet: Packet = None
-        packets: list = []
+        packets: list[Packet] = []
 
         while True:
             with cython.nogil:
@@ -603,7 +603,7 @@ class CodecContext:
         self.ptr.pix_fmt = hw_format
 
     @cython.cfunc
-    def _prepare_frames_for_encode(self, frame: Frame | None) -> list:
+    def _prepare_frames_for_encode(self, frame: Frame | None) -> list[Frame | None]:
         return [frame]
 
     @cython.cfunc
@@ -738,7 +738,7 @@ class CodecContext:
             )
         err_check(res, "avcodec_send_packet()")
 
-        out: list = []
+        out: list[Frame] = []
         while True:
             try:
                 frame = self._recv_frame()
@@ -789,7 +789,7 @@ class CodecContext:
 
         :type: list[str]
         """
-        ret: list = []
+        ret: list[str] = []
         if not self.ptr.codec or not self.codec.desc or not self.codec.desc.profiles:
             return ret
 

@@ -15,5 +15,5 @@ cdef int get_display_rotation(Frame frame)
 
 cdef class _SideDataContainer:
     cdef Frame frame
-    cdef list _by_index
+    cdef list[SideData] _by_index
     cdef dict _by_type

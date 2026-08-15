@@ -180,7 +180,7 @@ class AudioFifo:
         """
 
         frame: AudioFrame
-        frames: list = []
+        frames: list[AudioFrame] = []
         while True:
             frame = self.read(samples, partial=partial)
             if frame is not None:

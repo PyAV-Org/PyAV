@@ -29,4 +29,4 @@ cdef class FilterContextPad(FilterPad):
     cdef FilterLink _link
 
 
-cdef tuple alloc_filter_pads(Filter, const lib.AVFilterPad *ptr, bint is_input, FilterContext context=?)
+cdef tuple[FilterPad, ...] alloc_filter_pads(Filter, const lib.AVFilterPad *ptr, bint is_input, FilterContext context=?)
