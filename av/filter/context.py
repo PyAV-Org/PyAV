@@ -113,6 +113,11 @@ class FilterContext:
     def push(self, frame: Frame | None):
         res: cython.int
 
+        # av_buffersrc_write_frame() dereferences graph internals that only
+        # exist after configuration; pushing first would segfault.
+        if self._kind == _KIND_SOURCE or frame is None:
+            self._graph.configure()
+
         if frame is None:
             with cython.nogil:
                 res = lib.av_buffersrc_write_frame(self.ptr, cython.NULL)
