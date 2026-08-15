@@ -38,7 +38,7 @@ Major:
 
 Fixes:
 
-- 
+- Frames returned by flushing a codec context directly (``CodecContext.decode()`` with no packet) now carry the stream's ``time_base`` instead of ``None``.
 
 
 18.X and Below
