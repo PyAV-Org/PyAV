@@ -1,5 +1,3 @@
-import weakref
-
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.audio.frame import alloc_audio_frame
@@ -23,7 +21,7 @@ def wrap_filter_context(
     graph: Graph, filter: Filter, ptr: cython.pointer[lib.AVFilterContext]
 ) -> FilterContext:
     self: FilterContext = FilterContext(_cinit_sentinel)
-    self._graph = weakref.ref(graph)
+    self._graph = graph
     self.filter = filter
     self.ptr = ptr
 
@@ -110,10 +108,7 @@ class FilterContext:
 
     @property
     def graph(self):
-        if graph := self._graph():
-            return graph
-        else:
-            raise RuntimeError("graph is unallocated")
+        return self._graph
 
     def push(self, frame: Frame | None):
         res: cython.int
