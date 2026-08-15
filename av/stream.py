@@ -119,8 +119,6 @@ class Stream:
         self.index_entries = wrap_index_entries(self.ptr)
 
         self.codec_context = codec_context
-        if self.codec_context:
-            self.codec_context.stream_index = stream.index
 
         self.metadata = avdict_to_dict(
             stream.metadata,
