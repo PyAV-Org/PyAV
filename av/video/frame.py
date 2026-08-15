@@ -1,4 +1,5 @@
 import sys
+import threading
 from enum import IntEnum
 
 import cython
@@ -18,6 +19,9 @@ from cython.cimports.cpython.pycapsule import (
 from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
 from cython.cimports.hwcontext_cuda import AVCUDADeviceContext, CUstream
 from cython.cimports.libc.stdint import int64_t, uint8_t, uintptr_t
+
+# Holds the VideoReformatter shared by all frames converted on this thread.
+_thread_local = threading.local()
 
 
 @cython.cfunc
@@ -759,9 +763,14 @@ class VideoFrame(Frame):
         .. seealso:: :meth:`.VideoReformatter.reformat` for arguments.
 
         """
-        if not self.reformatter:
-            self.reformatter = VideoReformatter()
-        return self.reformatter.reformat(self, *args, **kwargs)
+        # One SwsContext per thread rather than per frame: FFmpeg 8's swscale
+        # retains ~15MB of graph state for a context's lifetime, so a context
+        # per live frame is far too expensive. See #2320.
+        reformatter: VideoReformatter = getattr(_thread_local, "reformatter", None)
+        if reformatter is None:
+            reformatter = VideoReformatter()
+            _thread_local.reformatter = reformatter
+        return reformatter.reformat(self, *args, **kwargs)
 
     def to_rgb(self, **kwargs):
         """Get an RGB version of this frame.

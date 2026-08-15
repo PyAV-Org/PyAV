@@ -1347,6 +1347,33 @@ def test_reformat_identity() -> None:
     assert frame1 is frame2
 
 
+def test_reformat_shares_one_context_per_thread() -> None:
+    # An SwsContext retains megabytes of graph state, so frames must not each
+    # hold their own. See #2320.
+    from threading import Thread
+
+    from av.video.frame import _thread_local  # type: ignore[attr-defined]
+
+    for _ in range(3):
+        VideoFrame(640, 480, "yuv420p").reformat(format="rgb24")
+    mine = _thread_local.reformatter
+    assert mine is not None
+
+    theirs = []
+
+    def other() -> None:
+        VideoFrame(640, 480, "yuv420p").reformat(format="rgb24")
+        theirs.append(_thread_local.reformatter)
+
+    thread = Thread(target=other)
+    thread.start()
+    thread.join()
+
+    assert theirs, "worker thread failed"
+    assert _thread_local.reformatter is mine
+    assert theirs[0] is not mine
+
+
 def test_reformat_colorspace() -> None:
     frame = VideoFrame(640, 480, "rgb24")
     frame.reformat(src_colorspace=None, dst_colorspace="smpte240m")
