@@ -61,7 +61,7 @@ class VideoStream(Stream):
         return self.codec_context.decode(packet)
 
     @cython.cfunc
-    def _finalize_for_output(self):
+    def _finalize_for_output(self) -> cython.void:
         Stream._finalize_for_output(self)
         if self.codec_context is not None:
             self.ptr.avg_frame_rate = self.codec_context.ptr.framerate
@@ -71,7 +71,7 @@ class VideoStream(Stream):
             self._apply_display_matrix()
 
     @cython.cfunc
-    def _apply_display_matrix(self):
+    def _apply_display_matrix(self) -> cython.void:
         n: cython.int = 9 * cython.sizeof(int32_t)
         sd: cython.pointer[lib.AVPacketSideData] = lib.av_packet_side_data_new(
             cython.address(self.ptr.codecpar.coded_side_data),

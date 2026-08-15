@@ -125,7 +125,7 @@ class Codec:
             raise RuntimeError("Found codec does not match mode.", name, mode)
 
     @cython.cfunc
-    def _init(self, name=None):
+    def _init(self, name=None) -> cython.void:
         if not self.ptr:
             raise UnknownCodecError(name)
 

@@ -51,7 +51,9 @@ class VideoFormat:
         self._init(pix_fmt, width, height)
 
     @cython.cfunc
-    def _init(self, pix_fmt: lib.AVPixelFormat, width: cuint, height: cuint):
+    def _init(
+        self, pix_fmt: lib.AVPixelFormat, width: cuint, height: cuint
+    ) -> cython.void:
         self.pix_fmt = pix_fmt
         self.ptr = lib.av_pix_fmt_desc_get(pix_fmt)
         self.width = width

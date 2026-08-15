@@ -20,10 +20,10 @@ cdef class Stream:
     cdef readonly IndexEntries index_entries
 
     # Private API.
-    cdef _init(self, Container, lib.AVStream*, CodecContext)
-    cdef _assert_has_codec_context(self, int err=*)
-    cdef _finalize_for_output(self)
-    cdef _set_id(self, value)
+    cdef void _init(self, Container, lib.AVStream*, CodecContext)
+    cdef void _assert_has_codec_context(self, int err=*)
+    cdef void _finalize_for_output(self)
+    cdef void _set_id(self, value)
 
 
 cdef Stream wrap_stream(Container, lib.AVStream*, CodecContext)

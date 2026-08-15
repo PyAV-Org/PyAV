@@ -11,7 +11,7 @@ from cython.cimports.libc.stdlib import free, malloc
 
 
 @cython.cfunc
-def close_input(self: InputContainer):
+def close_input(self: InputContainer) -> cython.void:
     self.streams = StreamContainer()
     with cython.nogil:
         if self._myflag & 2:
@@ -319,7 +319,7 @@ class InputContainer(Container):
         self.flush_buffers()
 
     @cython.cfunc
-    def flush_buffers(self):
+    def flush_buffers(self) -> cython.void:
         self._assert_open()
 
         stream: Stream

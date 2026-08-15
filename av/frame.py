@@ -30,7 +30,9 @@ class Frame:
         return f"<av.{self.__class__.__name__} pts={self.pts} at 0x{id(self):x}>"
 
     @cython.cfunc
-    def _copy_internal_attributes(self, source: Frame, data_layout: cython.bint = True):
+    def _copy_internal_attributes(
+        self, source: Frame, data_layout: cython.bint = True
+    ) -> cython.void:
         # Mimic another frame
         self._time_base = source._time_base
         lib.av_frame_copy_props(self.ptr, source.ptr)
@@ -42,11 +44,11 @@ class Frame:
             self.ptr.ch_layout = source.ptr.ch_layout
 
     @cython.cfunc
-    def _init_user_attributes(self):
+    def _init_user_attributes(self) -> cython.void:
         pass  # Dummy to match the API of the others.
 
     @cython.cfunc
-    def _rebase_time(self, dst: lib.AVRational):
+    def _rebase_time(self, dst: lib.AVRational) -> cython.void:
         if not dst.num:
             raise ValueError("Cannot rebase to zero time.")
 

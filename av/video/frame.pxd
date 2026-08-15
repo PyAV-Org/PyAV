@@ -23,7 +23,7 @@ cdef class VideoFrame(Frame):
     cdef VideoReformatter reformatter
     cdef readonly VideoFormat format
     cdef readonly int _device_id
-    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
-    cdef _init_user_attributes(self)
+    cdef void _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
+    cdef void _init_user_attributes(self)
 
 cdef VideoFrame alloc_video_frame()

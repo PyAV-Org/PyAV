@@ -18,6 +18,6 @@ cdef class PacketSideData(Buffer):
 cdef class Packet(Buffer):
     cdef lib.AVPacket* ptr
     cdef Stream _stream
-    cdef _rebase_time(self, lib.AVRational)
+    cdef void _rebase_time(self, lib.AVRational)
     cdef size_t _buffer_size(self)
     cdef void* _buffer_ptr(self)

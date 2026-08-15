@@ -21,7 +21,7 @@ def _set_codecpar_extradata(
     stream: cython.pointer[lib.AVStream],
     data: cython.pointer[uint8_t],
     size: cython.int,
-):
+) -> cython.void:
     buf: cython.p_uchar = cython.cast(
         cython.p_uchar, lib.av_malloc(size + lib.AV_INPUT_BUFFER_PADDING_SIZE)
     )
@@ -37,7 +37,7 @@ def _set_codecpar_extradata(
 
 
 @cython.cfunc
-def close_output(self: OutputContainer):
+def close_output(self: OutputContainer) -> cython.void:
     if self.packet_ptr != cython.NULL and self._buffered_packets:
         buffered: list[Packet] = self._buffered_packets
         self._buffered_packets = []
@@ -613,7 +613,7 @@ class OutputContainer(Container):
         self._mux_one(packet)
 
     @cython.cfunc
-    def _mux_one(self, packet: Packet):
+    def _mux_one(self, packet: Packet) -> cython.void:
         self.start_encoding()
 
         # Assert the packet is in stream time.
@@ -673,7 +673,7 @@ class OutputContainer(Container):
         return True
 
     @cython.cfunc
-    def _try_extract_extradata(self, packet: Packet):
+    def _try_extract_extradata(self, packet: Packet) -> cython.void:
         idx: cython.int = packet.ptr.stream_index
         if idx not in self._extradata_bsfs:
             return

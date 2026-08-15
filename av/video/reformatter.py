@@ -132,7 +132,7 @@ def _set_frame_colorspace(
     frame: cython.pointer(lib.AVFrame),
     colorspace: cython.int,
     color_range: cython.int,
-):
+) -> cython.void:
     """Set AVFrame colorspace/range from SWS_CS_* and AVColorRange values."""
     if color_range != lib.AVCOL_RANGE_UNSPECIFIED:
         frame.color_range = cython.cast(lib.AVColorRange, color_range)

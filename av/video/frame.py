@@ -479,7 +479,7 @@ def copy_bytes_to_plane(
     bytes_per_pixel: cython.uint,
     flip_horizontal: cython.bint,
     flip_vertical: cython.bint,
-):
+) -> cython.void:
     i_buf: cython.const[uint8_t][:] = img_bytes
     i_pos: cython.size_t = 0
     i_stride: cython.size_t = plane.width * bytes_per_pixel
@@ -514,7 +514,9 @@ def copy_bytes_to_plane(
 
 
 @cython.cfunc
-def copy_array_to_plane(array, plane: VideoPlane, bytes_per_pixel: cython.uint):
+def copy_array_to_plane(
+    array, plane: VideoPlane, bytes_per_pixel: cython.uint
+) -> cython.void:
     imgbytes: bytes = array.tobytes()
     copy_bytes_to_plane(imgbytes, plane, bytes_per_pixel, False, False)
 
@@ -556,7 +558,7 @@ def useful_array(
 
 
 @cython.cfunc
-def check_ndarray_shape(array: object, ok: cython.bint):
+def check_ndarray_shape(array: object, ok: cython.bint) -> cython.void:
     if not ok:
         raise ValueError(f"Unexpected numpy array shape `{array.shape}`")
 
@@ -572,7 +574,9 @@ class VideoFrame(Frame):
         self._init(c_format, width, height)
 
     @cython.cfunc
-    def _init(self, format: lib.AVPixelFormat, width: cython.uint, height: cython.uint):
+    def _init(
+        self, format: lib.AVPixelFormat, width: cython.uint, height: cython.uint
+    ) -> cython.void:
         res: cython.int = 0
 
         with cython.nogil:
@@ -591,7 +595,7 @@ class VideoFrame(Frame):
         self._init_user_attributes()
 
     @cython.cfunc
-    def _init_user_attributes(self):
+    def _init_user_attributes(self) -> cython.void:
         self.format = get_video_format(
             cython.cast(lib.AVPixelFormat, self.ptr.format),
             self.ptr.width,

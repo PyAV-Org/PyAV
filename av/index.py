@@ -27,7 +27,7 @@ class IndexEntry:
             raise RuntimeError("cannot manually instantiate IndexEntry")
 
     @cython.cfunc
-    def _init(self, ptr: cython.pointer[cython.const[lib.AVIndexEntry]]):
+    def _init(self, ptr: cython.pointer[cython.const[lib.AVIndexEntry]]) -> cython.void:
         self.ptr = ptr
 
     def __repr__(self):
@@ -90,7 +90,7 @@ class IndexEntries:
         raise RuntimeError("cannot manually instantiate IndexEntries")
 
     @cython.cfunc
-    def _init(self, ptr: cython.pointer[lib.AVStream]):
+    def _init(self, ptr: cython.pointer[lib.AVStream]) -> cython.void:
         self.stream_ptr = ptr
 
     def __repr__(self):

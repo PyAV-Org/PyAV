@@ -113,7 +113,7 @@ class Stream:
         container: Container,
         stream: cython.pointer[lib.AVStream],
         codec_context: CodecContext,
-    ):
+    ) -> cython.void:
         self.container = container
         self.ptr = stream
         self.index_entries = wrap_index_entries(self.ptr)
@@ -129,7 +129,7 @@ class Stream:
     @cython.cfunc
     def _assert_has_codec_context(
         self, err: cython.int = lib.AVERROR_DECODER_NOT_FOUND
-    ):
+    ) -> cython.void:
         # Calling into a NULL codec_context is a segfault, not an AttributeError.
         if self.codec_context is None:
             err_check(err)
@@ -160,7 +160,7 @@ class Stream:
             setattr(self.codec_context, name, value)
 
     @cython.cfunc
-    def _finalize_for_output(self):
+    def _finalize_for_output(self) -> cython.void:
         dict_to_avdict(
             cython.address(self.ptr.metadata),
             self.metadata,
@@ -192,7 +192,7 @@ class Stream:
         return self.ptr.id
 
     @cython.cfunc
-    def _set_id(self, value):
+    def _set_id(self, value) -> cython.void:
         if value is None:
             self.ptr.id = 0
         else:

@@ -5,4 +5,4 @@ from av.stream cimport Stream
 
 
 cdef class InputContainer(Container):
-    cdef flush_buffers(self)
+    cdef void flush_buffers(self)
