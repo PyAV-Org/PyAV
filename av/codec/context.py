@@ -242,7 +242,6 @@ class CodecContext:
             raise RuntimeError("Cannot instantiate CodecContext")
 
         self.options = {}
-        self.stream_index = -1  # This is set by the container immediately.
 
     @property
     def supported_options(self):
