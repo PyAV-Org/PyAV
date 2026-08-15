@@ -39,7 +39,7 @@ class AudioCodecContext(CodecContext):
         return alloc_audio_frame()
 
     @cython.cfunc
-    def _setup_decoded_frame(self, frame: Frame, packet: Packet):
+    def _setup_decoded_frame(self, frame: Frame, packet: Packet) -> cython.void:
         CodecContext._setup_decoded_frame(self, frame, packet)
         aframe: AudioFrame = frame
         aframe._init_user_attributes()

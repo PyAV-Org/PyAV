@@ -46,7 +46,7 @@ class VideoCodecContext(CodecContext):
         ptr: cython.pointer[lib.AVCodecContext],
         codec: cython.pointer[cython.const[lib.AVCodec]],
         hwaccel: HWAccel | None,
-    ):
+    ) -> cython.void:
         CodecContext._init(self, ptr, codec, hwaccel)
 
         if hwaccel is None:
@@ -160,7 +160,7 @@ class VideoCodecContext(CodecContext):
         return alloc_video_frame()
 
     @cython.cfunc
-    def _setup_decoded_frame(self, frame: Frame, packet: Packet):
+    def _setup_decoded_frame(self, frame: Frame, packet: Packet) -> cython.void:
         CodecContext._setup_decoded_frame(self, frame, packet)
         vframe: VideoFrame = frame
         vframe._init_user_attributes()

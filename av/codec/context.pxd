@@ -21,8 +21,8 @@ cdef class CodecContext:
     # True when created via add_stream_from_template(); start_encoding() skips
     # avcodec_open2() and lets encode()/decode() open the codec lazily if needed.
 
-    cdef _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel)
-    cdef _assert_not_open(self, name)
+    cdef void _init(self, lib.AVCodecContext *ptr, const lib.AVCodec *codec, HWAccel hwaccel)
+    cdef void _assert_not_open(self, name)
 
     cpdef open(self, bint strict=?)
     cpdef encode(self, Frame frame=?)
@@ -32,8 +32,8 @@ cdef class CodecContext:
     cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame)
     cdef void _setup_encode_hwframes(self)
     cdef list[Frame | None] _prepare_frames_for_encode(self, Frame frame)
-    cdef _setup_encoded_packet(self, Packet)
-    cdef _setup_decoded_frame(self, Frame, Packet)
+    cdef void _setup_encoded_packet(self, Packet)
+    cdef void _setup_decoded_frame(self, Frame, Packet)
 
     # Implemented by base for the generic send/recv API.
     # Note that the user cannot send without receiving. This is because
