@@ -243,7 +243,6 @@ class CodecContext:
 
         self.options = {}
         self.stream_index = -1  # This is set by the container immediately.
-        self.is_open = False
 
     @property
     def supported_options(self):
@@ -289,7 +288,7 @@ class CodecContext:
 
     @cython.cfunc
     def _assert_not_open(self, name):
-        if self.is_open:
+        if lib.avcodec_is_open(self.ptr):
             raise RuntimeError(f"Cannot change {name} after codec is open.")
 
     @property
@@ -392,9 +391,15 @@ class CodecContext:
             return False
         return lib.av_codec_is_decoder(self.ptr.codec)
 
+    @property
+    def is_open(self):
+        if self.ptr is cython.NULL:
+            return False
+        return bool(lib.avcodec_is_open(self.ptr))
+
     @cython.ccall
     def open(self, strict: cython.bint = True):
-        if self.is_open:
+        if lib.avcodec_is_open(self.ptr):
             if strict:
                 raise ValueError("CodecContext is already open.")
             return
@@ -419,7 +424,6 @@ class CodecContext:
             lib.avcodec_open2(self.ptr, self.codec.ptr, cython.address(options.ptr)),
             f'avcodec_open2("{self.codec.name}", {self.options})',
         )
-        self.is_open = True
         self.options = dict(options)
 
     def __dealloc__(self):
@@ -659,7 +663,7 @@ class CodecContext:
         # context. Encoders like h264_nvenc require hw_frames_ctx to be set before
         # avcodec_open2, so adopt the frame's if we don't already have one.
         if (
-            not self.is_open
+            not lib.avcodec_is_open(self.ptr)
             and frame is not None
             and frame.ptr.hw_frames_ctx != cython.NULL
             and self.ptr.hw_frames_ctx == cython.NULL
@@ -760,7 +764,7 @@ class CodecContext:
         when seeking or when switching to a different stream.
 
         """
-        if self.is_open:
+        if lib.avcodec_is_open(self.ptr):
             with cython.nogil:
                 lib.avcodec_flush_buffers(self.ptr)
 
@@ -923,7 +927,7 @@ class CodecContext:
 
     @thread_count.setter
     def thread_count(self, value: cython.int):
-        if self.is_open:
+        if lib.avcodec_is_open(self.ptr):
             raise RuntimeError("Cannot change thread_count after codec is open.")
         self.ptr.thread_count = value
 
@@ -938,7 +942,7 @@ class CodecContext:
 
     @thread_type.setter
     def thread_type(self, value):
-        if self.is_open:
+        if lib.avcodec_is_open(self.ptr):
             raise RuntimeError("Cannot change thread_type after codec is open.")
         if type(value) is int:
             self.ptr.thread_type = value

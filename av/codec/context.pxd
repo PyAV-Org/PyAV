@@ -20,7 +20,6 @@ cdef class CodecContext:
     cdef _assert_not_open(self, name)
 
     # Public API.
-    cdef readonly bint is_open
     cdef readonly Codec codec
     cdef readonly HWAccel hwaccel
     cdef public dict options
