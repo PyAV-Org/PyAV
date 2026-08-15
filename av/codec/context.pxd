@@ -37,8 +37,6 @@ cdef class CodecContext:
     # avcodec_open2() and lets encode()/decode() open the codec lazily if needed.
 
     # Used by both transcode APIs to setup user-land objects.
-    # TODO: Remove the `Packet` from `_setup_decoded_frame` (because flushing packets
-    # are bogus). It should take all info it needs from the context and/or stream.
     cdef _prepare_and_time_rebase_frames_for_encode(self, Frame frame)
     cdef void _setup_encode_hwframes(self)
     cdef list[Frame | None] _prepare_frames_for_encode(self, Frame frame)

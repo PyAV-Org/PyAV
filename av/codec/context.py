@@ -774,11 +774,13 @@ class CodecContext:
     def _setup_decoded_frame(self, frame: Frame, packet: Packet | None):
         # Propagate our manual times.
         # While decoding, frame times are in stream time_base, which PyAV
-        # is carrying around.
-        # TODO: Somehow get this from the stream so we can not pass the
-        # packet here (because flushing packets are bogus).
+        # is carrying around. `packet` is None when flushing directly with
+        # `decode()`, so fall back to the time base the container set on the
+        # context; `demux()`'s flush packets carry it themselves.
         if packet is not None:
             frame._time_base = packet.ptr.time_base
+        else:
+            frame._time_base = self.ptr.pkt_timebase
 
     @property
     def name(self):
