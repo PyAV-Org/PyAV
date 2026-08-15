@@ -89,6 +89,13 @@ class FilterPad:
     def name(self):
         return lib.avfilter_pad_get_name(self.base_ptr, self.index)
 
+    @property
+    def type(self):
+        media_type = lib.av_get_media_type_string(
+            lib.avfilter_pad_get_type(self.base_ptr, self.index)
+        )
+        return "unknown" if media_type == cython.NULL else media_type
+
 
 @cython.final
 @cython.cclass
