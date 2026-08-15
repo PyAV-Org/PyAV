@@ -7,9 +7,9 @@
 # armv7l without running any armv7l code. The target Python trees + system libs
 # are copied out of the manylinux armv7l image with `docker cp` (no execution).
 #
-# Builds two manylinux (glibc) wheels: cp311-abi3 (covers 3.11-3.13) and cp314t.
-# musllinux armv7l is skipped: the musl FFmpeg needs system libs (libdrm,
-# libxcb*, libbz2) the musllinux image doesn't ship for auditwheel to bundle.
+# Builds two manylinux (glibc) wheels: cp312-abi3 and cp314t.
+# musllinux armv7l is skipped: musl ffmpeg needs system libs (libdrm, libxcb*, 
+# libbz2) the musllinux image doesn't ship for auditwheel to bundle.
 
 set -euo pipefail
 
@@ -17,9 +17,9 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/.." && pwd)"
 cd "$root"
 
-# Host interpreters that drive each build (must match the wheel's Python: 3.11
-# emits cp311-abi3, 3.14t emits cp314t). zig/auditwheel run from TOOLS_PY.
-HOST_PY311="${HOST_PY311:-python3.11}"
+# Host interpreters that drive each build (must match the wheel's Python: 3.12
+# emits cp312-abi3, 3.14t emits cp314t). zig/auditwheel run from TOOLS_PY.
+HOST_PY312="${HOST_PY312:-python3.12}"
 HOST_PY314T="${HOST_PY314T:-python3.14t}"
 TOOLS_PY="${TOOLS_PY:-python3}"
 
@@ -132,7 +132,7 @@ build_one() {
 }
 
 extract_image
-build_one "$HOST_PY311" "cp311-cp311"
+build_one "$HOST_PY312" "cp312-cp312"
 build_one "$HOST_PY314T" "cp314*-cp314t"
 
 echo
