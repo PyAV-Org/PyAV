@@ -274,7 +274,7 @@ class CodecContext:
         ptr: cython.pointer[lib.AVCodecContext],
         codec: cython.pointer[cython.const[lib.AVCodec]],
         hwaccel: HWAccel,
-    ):
+    ) -> cython.void:
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError("Wrapping CodecContext with mismatched codec.")
@@ -284,7 +284,7 @@ class CodecContext:
         self.ptr.thread_type = 0x02  # thread within a frame. Does not change the API.
 
     @cython.cfunc
-    def _assert_not_open(self, name):
+    def _assert_not_open(self, name) -> cython.void:
         if lib.avcodec_is_open(self.ptr):
             raise RuntimeError(f"Cannot change {name} after codec is open.")
 
@@ -700,7 +700,7 @@ class CodecContext:
                 yield packet
 
     @cython.cfunc
-    def _setup_encoded_packet(self, packet: Packet):
+    def _setup_encoded_packet(self, packet: Packet) -> cython.void:
         # We coerced the frame's time_base into the CodecContext's during encoding,
         # and FFmpeg copied the frame's pts/dts to the packet, so keep track of
         # this time_base in case the frame needs to be muxed to a container with
@@ -770,7 +770,7 @@ class CodecContext:
                 lib.avcodec_flush_buffers(self.ptr)
 
     @cython.cfunc
-    def _setup_decoded_frame(self, frame: Frame, packet: Packet | None):
+    def _setup_decoded_frame(self, frame: Frame, packet: Packet | None) -> cython.void:
         # Propagate our manual times.
         # While decoding, frame times are in stream time_base, which PyAV
         # is carrying around. `packet` is None when flushing directly with
