@@ -34,6 +34,7 @@ v19.0.0 (Unreleased)
 Major:
 
 - Drop support for Python 3.11. Binary wheels are now built for Python 3.12 and later.
+- Remove the undocumented ``CodecContext.hwaccel`` attribute. It held the ``HWAccel`` settings object passed in, not the live device context; use ``CodecContext.is_hwaccel`` to check whether hardware acceleration is in use.
 
 Fixes:
 
