@@ -20,7 +20,6 @@ cdef class CudaContext:
 
 cdef class VideoFrame(Frame):
     cdef CudaContext _cuda_ctx
-    cdef VideoReformatter reformatter
     cdef readonly VideoFormat format
     cdef readonly int _device_id
     cdef void _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
