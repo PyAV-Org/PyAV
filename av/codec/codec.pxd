@@ -1,5 +1,7 @@
 cimport libav as lib
 
+from av.codec.hwaccel cimport HWConfig
+
 
 cdef class Codec:
 
@@ -7,7 +9,7 @@ cdef class Codec:
     cdef const lib.AVCodecDescriptor *desc
     cdef readonly bint is_encoder
 
-    cdef tuple _hardware_configs
+    cdef tuple[HWConfig, ...] _hardware_configs
 
     cdef _init(self, name=?)
 

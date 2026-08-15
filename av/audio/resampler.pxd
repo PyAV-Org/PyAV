@@ -16,4 +16,4 @@ cdef class AudioResampler:
     cdef readonly dict options
 
     cdef Graph graph
-    cpdef list resample(self, AudioFrame)
+    cpdef list[AudioFrame] resample(self, AudioFrame)

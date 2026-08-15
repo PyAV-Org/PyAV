@@ -106,7 +106,7 @@ class SideData(Buffer):
 class _SideDataContainer:
     def __init__(self, frame: Frame):
         self.frame = frame
-        self._by_index: list = []
+        self._by_index: list[SideData] = []
         self._by_type: dict = {}
 
         i: cython.int

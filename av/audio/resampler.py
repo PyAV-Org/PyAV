@@ -40,7 +40,7 @@ class AudioResampler:
         self.graph = None
 
     @cython.ccall
-    def resample(self, frame: AudioFrame | None) -> list:
+    def resample(self, frame: AudioFrame | None) -> list[AudioFrame]:
         """resample(frame)
 
         Convert the ``sample_rate``, ``channel_layout`` and/or ``format`` of
@@ -126,7 +126,7 @@ class AudioResampler:
 
         self.graph.push(frame)
 
-        output: list = []
+        output: list[AudioFrame] = []
         while True:
             try:
                 output.append(self.graph.pull())

@@ -113,7 +113,7 @@ class ContainerFormat:
 
     @property
     def extensions(self):
-        exts: set = set()
+        exts: set[str] = set()
         if self.iptr and self.iptr.extensions:
             exts.update(self.iptr.extensions.split(","))
         if self.optr and self.optr.extensions:
@@ -137,8 +137,8 @@ class ContainerFormat:
 
 
 @cython.cfunc
-def get_output_format_names() -> set:
-    names: set = set()
+def get_output_format_names() -> set[str]:
+    names: set[str] = set()
     ptr: cython.pointer[cython.const[lib.AVOutputFormat]]
     opaque: cython.p_void = cython.NULL
     while True:
@@ -151,8 +151,8 @@ def get_output_format_names() -> set:
 
 
 @cython.cfunc
-def get_input_format_names() -> set:
-    names: set = set()
+def get_input_format_names() -> set[str]:
+    names: set[str] = set()
     ptr: cython.pointer[cython.const[lib.AVInputFormat]]
     opaque: cython.p_void = cython.NULL
     while True:

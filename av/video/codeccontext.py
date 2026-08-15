@@ -124,7 +124,7 @@ class VideoCodecContext(CodecContext):
         return hwframe
 
     @cython.cfunc
-    def _prepare_frames_for_encode(self, input: Frame | None) -> list:
+    def _prepare_frames_for_encode(self, input: Frame | None) -> list[Frame | None]:
         if input is None or not input:
             return [None]
 

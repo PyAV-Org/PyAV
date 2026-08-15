@@ -89,7 +89,7 @@ class BitStreamFilterContext:
             )
         err_check(res)
 
-        output: list = []
+        output: list[Packet] = []
         while True:
             new_packet = Packet()
             with cython.nogil:
@@ -115,8 +115,8 @@ class BitStreamFilterContext:
 
 
 @cython.cfunc
-def get_filter_names() -> set:
-    names: set = set()
+def get_filter_names() -> set[str]:
+    names: set[str] = set()
     ptr: cython.pointer[cython.const[lib.AVBitStreamFilter]]
     opaque: cython.p_void = cython.NULL
     while True:

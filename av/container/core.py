@@ -424,7 +424,7 @@ class Container:
 
     def chapters(self):
         self._assert_open()
-        result: list = []
+        result: list[dict] = []
         i: cython.Py_ssize_t
         for i in range(self.ptr.nb_chapters):
             ch = self.ptr.chapters[i]

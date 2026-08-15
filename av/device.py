@@ -39,8 +39,10 @@ class DeviceInfo:
 
 
 @cython.cfunc
-def _build_device_list(device_list: cython.pointer[lib.AVDeviceInfoList]) -> list:
-    devices: list = []
+def _build_device_list(
+    device_list: cython.pointer[lib.AVDeviceInfoList],
+) -> list[DeviceInfo]:
+    devices: list[DeviceInfo] = []
     i: cython.int
     j: cython.int
     device_info: cython.pointer[lib.AVDeviceInfo]
@@ -50,7 +52,7 @@ def _build_device_list(device_list: cython.pointer[lib.AVDeviceInfoList]) -> lis
     for i in range(device_list.nb_devices):
         device_info = device_list.devices[i]
 
-        media_types: list = []
+        media_types: list[str] = []
         for j in range(device_info.nb_media_types):
             mt = device_info.media_types[j]
             s = lib.av_get_media_type_string(mt)
