@@ -9,7 +9,7 @@ cdef class Codec:
     cdef const lib.AVCodecDescriptor *desc
     cdef tuple[HWConfig, ...] _hardware_configs
 
-    cdef _init(self, name=?)
+    cdef void _init(self, name=?)
 
 
 cdef Codec wrap_codec(const lib.AVCodec *ptr)

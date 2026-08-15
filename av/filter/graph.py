@@ -109,7 +109,7 @@ class Graph:
         return ctx
 
     @cython.cfunc
-    def _register_context(self, ctx: FilterContext):
+    def _register_context(self, ctx: FilterContext) -> cython.void:
         name: str = ctx.filter.ptr.name
         self._context_by_ptr[cython.cast(cython.size_t, ctx.ptr)] = ctx
         self._context_by_type.setdefault(name, []).append(ctx)
@@ -119,7 +119,7 @@ class Graph:
             self._audio_sources.append(ctx)
 
     @cython.cfunc
-    def _auto_register(self):
+    def _auto_register(self) -> cython.void:
         i: cython.int
         c_ctx: cython.pointer[lib.AVFilterContext]
         filter_: Filter

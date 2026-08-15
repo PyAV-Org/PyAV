@@ -12,7 +12,7 @@ cdef class VideoStream(Stream):
     cdef int32_t _display_matrix[9]
     cdef uint8_t _has_display_matrix
 
-    cdef _apply_display_matrix(self)
+    cdef void _apply_display_matrix(self)
 
     cpdef encode(self, VideoFrame frame=?)
     cpdef decode(self, Packet packet=?)

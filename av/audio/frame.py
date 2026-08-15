@@ -47,7 +47,7 @@ class AudioFrame(Frame):
         layout: lib.AVChannelLayout,
         nb_samples: cython.uint,
         align: cython.uint,
-    ):
+    ) -> cython.void:
         self.ptr.nb_samples = nb_samples
         self.ptr.format = format
         self.ptr.ch_layout = layout
@@ -87,7 +87,7 @@ class AudioFrame(Frame):
         lib.av_freep(cython.address(self._buffer))
 
     @cython.cfunc
-    def _init_user_attributes(self):
+    def _init_user_attributes(self) -> cython.void:
         self.layout = get_audio_layout(self.ptr.ch_layout)
         self.format = get_audio_format(cython.cast(lib.AVSampleFormat, self.ptr.format))
 

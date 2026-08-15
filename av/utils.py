@@ -34,7 +34,7 @@ def dict_to_avdict(
     src: dict,
     encoding: str,
     errors: str,
-):
+) -> cython.void:
     lib.av_dict_free(dst)
     for key, value in src.items():
         err_check(

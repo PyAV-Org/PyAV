@@ -375,18 +375,18 @@ class Container:
         return "".join(log[2] for log in logs)
 
     @cython.cfunc
-    def set_timeout(self, timeout):
+    def set_timeout(self, timeout) -> cython.void:
         if timeout is None:
             self.interrupt_callback_info.timeout = -1.0
         else:
             self.interrupt_callback_info.timeout = timeout
 
     @cython.cfunc
-    def start_timeout(self):
+    def start_timeout(self) -> cython.void:
         self.interrupt_callback_info.start_time = time.monotonic()
 
     @cython.cfunc
-    def _assert_open(self):
+    def _assert_open(self) -> cython.void:
         if self.ptr == cython.NULL:
             raise AssertionError("Container is not open")
 

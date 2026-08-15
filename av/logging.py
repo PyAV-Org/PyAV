@@ -253,7 +253,7 @@ def log(level: cython.int, name: str, message: str):
 @cython.cfunc
 def log_callback_gil(
     level: cython.int, c_name: cython.p_const_char, c_message: cython.p_char
-):
+) -> cython.void:
     global error_count
     global skip_count
     global last_log
@@ -307,7 +307,7 @@ def log_callback_gil(
 
 
 @cython.cfunc
-def log_callback_emit(log):
+def log_callback_emit(log) -> cython.void:
     lib_level, name, message = log
 
     captures = thread_captures.get(get_ident()) or global_captures

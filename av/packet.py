@@ -277,7 +277,7 @@ class Packet(Buffer):
         return self.ptr.data
 
     @cython.cfunc
-    def _rebase_time(self, dst: lib.AVRational):
+    def _rebase_time(self, dst: lib.AVRational) -> cython.void:
         if not dst.num:
             raise ValueError("Cannot rebase to zero time.")
 

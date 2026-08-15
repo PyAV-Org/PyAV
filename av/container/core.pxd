@@ -38,12 +38,12 @@ cdef class Container:
 
     # Private API.
     cdef uint8_t _myflag  # enum: writeable, input_was_opened, started, done, extradata_planned
-    cdef _assert_open(self)
+    cdef void _assert_open(self)
     cdef int err_check(self, int value) except -1
 
     # Timeouts
     cdef readonly object open_timeout
     cdef readonly object read_timeout
     cdef timeout_info interrupt_callback_info
-    cdef set_timeout(self, object)
-    cdef start_timeout(self)
+    cdef void set_timeout(self, object)
+    cdef void start_timeout(self)

@@ -25,7 +25,7 @@ cdef class AudioFrame(Frame):
     :type: AudioFormat
     """
 
-    cdef _init(self, lib.AVSampleFormat format, lib.AVChannelLayout layout, unsigned int nb_samples, unsigned int align)
-    cdef _init_user_attributes(self)
+    cdef void _init(self, lib.AVSampleFormat format, lib.AVChannelLayout layout, unsigned int nb_samples, unsigned int align)
+    cdef void _init_user_attributes(self)
 
 cdef AudioFrame alloc_audio_frame()
