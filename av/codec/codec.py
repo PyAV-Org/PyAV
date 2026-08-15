@@ -16,7 +16,6 @@ _cinit_sentinel = cython.declare(object, object())
 def wrap_codec(ptr: cython.pointer[cython.const[lib.AVCodec]]) -> Codec:
     codec: Codec = Codec(_cinit_sentinel)
     codec.ptr = ptr
-    codec.is_encoder = lib.av_codec_is_encoder(ptr)
     codec._init()
     return codec
 
@@ -135,8 +134,6 @@ class Codec:
             if not self.desc:
                 raise RuntimeError(f"No codec descriptor for {name!r}.")
 
-        self.is_encoder = lib.av_codec_is_encoder(self.ptr)
-
         # Sanity check.
         if self.is_encoder and lib.av_codec_is_decoder(self.ptr):
             raise RuntimeError("%s is both encoder and decoder.")
@@ -153,6 +150,10 @@ class Codec:
         from .context import CodecContext
 
         return CodecContext.create(self)
+
+    @property
+    def is_encoder(self):
+        return bool(lib.av_codec_is_encoder(self.ptr))
 
     @property
     def mode(self):
