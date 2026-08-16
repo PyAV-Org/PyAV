@@ -1,11 +1,7 @@
 from libc.stdint cimport int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 
 cdef extern from "libavutil/channel_layout.h" nogil:
-    ctypedef enum AVChannel:
-        AV_CHAN_NONE = -1
-        AV_CHAN_FRONT_LEFT
-        AV_CHAN_FRONT_RIGHT
-        AV_CHAN_FRONT_CENTER
+    ctypedef int AVChannel
     ctypedef struct AVChannelLayout:
         int nb_channels
 
@@ -38,6 +34,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_PROP_LOSSY
         AV_CODEC_PROP_LOSSLESS
         AV_CODEC_PROP_REORDER
+        AV_CODEC_PROP_FIELDS
+        AV_CODEC_PROP_ENHANCEMENT
         AV_CODEC_PROP_BITMAP_SUB
         AV_CODEC_PROP_TEXT_SUB
 
@@ -57,6 +55,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_CAP_HARDWARE
         AV_CODEC_CAP_HYBRID
         AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
+        AV_CODEC_CAP_ENCODER_FLUSH
+        AV_CODEC_CAP_ENCODER_RECON_FRAME
 
     cdef enum:
         AV_PROFILE_UNKNOWN = -99
@@ -97,6 +97,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG2_EXPORT_MVS
         AV_CODEC_FLAG2_SKIP_MANUAL
         AV_CODEC_FLAG2_RO_FLUSH_NOOP
+        AV_CODEC_FLAG2_ICC_PROFILES
 
     cdef enum:
         AV_PKT_FLAG_KEY
@@ -108,20 +109,13 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef enum:
         AV_FRAME_FLAG_CORRUPT
         AV_FRAME_FLAG_KEY
-        AV_FRAME_FLAG_DISCARD
         AV_FRAME_FLAG_INTERLACED
 
     cdef enum:
-        FF_COMPLIANCE_VERY_STRICT
-        FF_COMPLIANCE_STRICT
         FF_COMPLIANCE_NORMAL
-        FF_COMPLIANCE_UNOFFICIAL
-        FF_COMPLIANCE_EXPERIMENTAL
 
     cdef enum AVCodecID:
         AV_CODEC_ID_NONE
-        AV_CODEC_ID_MPEG2VIDEO
-        AV_CODEC_ID_MPEG1VIDEO
         AV_CODEC_ID_PCM_ALAW
         AV_CODEC_ID_PCM_BLURAY
         AV_CODEC_ID_PCM_DVD
@@ -202,7 +196,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         const char *name
         const char *long_name
         int props
-        const char *const *mime_types
         const AVProfile *profiles
 
     const AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
@@ -293,7 +286,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
     cdef AVCodecContext* avcodec_alloc_context3(const AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
-    cdef const AVClass* avcodec_get_class()
     cdef const AVCodec* avcodec_find_decoder(AVCodecID id)
     cdef const AVCodec* avcodec_find_encoder(AVCodecID id)
     cdef const AVCodec* avcodec_find_decoder_by_name(const char *name)
@@ -341,6 +333,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_FRAME_DATA_DYNAMIC_HDR_VIVID
         AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT
         AV_FRAME_DATA_VIDEO_HINT
+        AV_FRAME_DATA_LCEVC
+        AV_FRAME_DATA_VIEW_ID
+        AV_FRAME_DATA_3D_REFERENCE_DISPLAYS
+        AV_FRAME_DATA_EXIF
 
     cdef struct AVFrameSideData:
         AVFrameSideDataType type
@@ -453,14 +449,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef int avcodec_send_frame(AVCodecContext *avctx, const AVFrame *frame)
     cdef int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt)
 
-    cdef struct AVCodecParser:
-        int codec_ids[7]
-
     cdef struct AVCodecParserContext:
         int64_t pts
         int64_t dts
         int64_t pos
-        int64_t last_pos
         int64_t offset
         int duration
         int key_frame
@@ -501,7 +493,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 cdef extern from "libavcodec/bsf.h" nogil:
     cdef struct AVBitStreamFilter:
         const char *name
-        const AVCodecID *codec_ids
 
     cdef struct AVCodecParameters:
         pass

@@ -14,7 +14,6 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int AVIO_FLAG_WRITE
 
     cdef enum AVMediaType:
-        AVMEDIA_TYPE_UNKNOWN
         AVMEDIA_TYPE_VIDEO
         AVMEDIA_TYPE_AUDIO
         AVMEDIA_TYPE_DATA
@@ -31,7 +30,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         int64_t start_time
         int64_t duration
         int64_t nb_frames
-        int64_t cur_dts
         AVDictionary *metadata
         AVRational avg_frame_rate
         AVRational r_frame_rate
@@ -49,7 +47,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         unsigned char* buffer
         int buffer_size
         int write_flag
-        int direct
         int seekable
         int max_packet_size
         void *opaque
@@ -95,6 +92,7 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef enum:
         AVFMT_NOFILE
         AVFMT_NEEDNUMBER
+        AVFMT_EXPERIMENTAL
         AVFMT_SHOW_IDS
         AVFMT_GLOBALHEADER
         AVFMT_NOTIMESTAMPS
@@ -200,7 +198,6 @@ cdef extern from "libavformat/avformat.h" nogil:
         const char *filename
     )
     cdef void avformat_free_context(AVFormatContext *ctx)
-    cdef const AVClass* avformat_get_class()
     cdef void av_dump_format(AVFormatContext *ctx, int index, const char *url, int is_output)
     cdef int av_read_frame(AVFormatContext *ctx, AVPacket *packet)
     cdef int av_seek_frame(
@@ -222,8 +219,6 @@ cdef extern from "libavformat/avformat.h" nogil:
     )
     cdef const AVInputFormat* av_demuxer_iterate(void **opaque)
     cdef const AVOutputFormat* av_muxer_iterate(void **opaque)
-
-    cdef set pyav_get_available_formats()
 
     cdef struct AVIndexEntry:
         int64_t pos

@@ -38,8 +38,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
     cdef int avfilter_init_str(AVFilterContext *ctx, const char *args)
     cdef int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options)
-    cdef void avfilter_free(AVFilterContext*)
-    cdef const AVClass* avfilter_get_class()
 
     cdef struct AVFilterLink:
         AVFilterContext *src
@@ -62,8 +60,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
 
     cdef struct AVFilterInOut:
         char *name
-        AVFilterContext *filter_ctx
-        int pad_idx
         AVFilterInOut *next
 
     cdef AVFilterGraph* avfilter_graph_alloc()
@@ -72,14 +68,6 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         AVFilterGraph *graph,
         const AVFilter *filter,
         const char *name
-    )
-    cdef int avfilter_graph_create_filter(
-        AVFilterContext **filt_ctx,
-        const AVFilter *filt,
-        const char *name,
-        const char *args,
-        void *opaque,
-        AVFilterGraph *graph_ctx
     )
     cdef int avfilter_link(
         AVFilterContext *src,

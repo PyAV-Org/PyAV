@@ -19,12 +19,14 @@ class Interpolation(IntFlag):
     SINC: "Unwindowed Sinc" = SWS_SINC
     LANCZOS: "3-tap sinc/sinc" = SWS_LANCZOS
     SPLINE: "Unwindowed natural cubic spline" = SWS_SPLINE
+    STRICT: "Error out on underspecified conversions" = SWS_STRICT
     PRINT_INFO: "Emit verbose scaler info to the log" = SWS_PRINT_INFO
     FULL_CHR_H_INT: "Full chroma interpolation" = SWS_FULL_CHR_H_INT
     FULL_CHR_H_INP: "Full chroma input" = SWS_FULL_CHR_H_INP
     DIRECT_BGR: "Direct BGR" = SWS_DIRECT_BGR
     ACCURATE_RND: "Accurate rounding" = SWS_ACCURATE_RND
     BITEXACT: "Bit-exact output" = SWS_BITEXACT
+    UNSTABLE: "Prefer experimental code paths (testing only)" = SWS_UNSTABLE
     ERROR_DIFFUSION: "Error diffusion dither" = SWS_ERROR_DIFFUSION
 
 
@@ -78,6 +80,7 @@ class ColorTrc(IntEnum):
     SMPTE2084: "SMPTE 2084 (PQ, HDR10)" = lib.AVCOL_TRC_SMPTE2084
     SMPTE428: "SMPTE 428-1" = lib.AVCOL_TRC_SMPTE428
     ARIB_STD_B67: "ARIB STD-B67 (HLG)" = lib.AVCOL_TRC_ARIB_STD_B67
+    V_LOG: "Panasonic V-Log (not part of H.273)" = lib.AVCOL_TRC_V_LOG
 
 
 class ColorPrimaries(IntEnum):
@@ -98,6 +101,7 @@ class ColorPrimaries(IntEnum):
     SMPTE431: "SMPTE 431-2 (DCI-P3)" = lib.AVCOL_PRI_SMPTE431
     SMPTE432: "SMPTE 432-1 (Display P3)" = lib.AVCOL_PRI_SMPTE432
     EBU3213: "EBU 3213-E / JEDEC P22" = lib.AVCOL_PRI_EBU3213
+    V_GAMUT: "Panasonic V-Gamut (not part of H.273)" = lib.AVCOL_PRI_V_GAMUT
 
 
 @cython.cfunc

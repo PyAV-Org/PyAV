@@ -6,6 +6,7 @@ from typing import ClassVar, Literal, cast
 class Flags(Flag):
     no_file = cast(ClassVar[Flags], ...)
     need_number = cast(ClassVar[Flags], ...)
+    experimental = cast(ClassVar[Flags], ...)
     show_ids = cast(ClassVar[Flags], ...)
     global_header = cast(ClassVar[Flags], ...)
     no_timestamps = cast(ClassVar[Flags], ...)
@@ -17,7 +18,6 @@ class Flags(Flag):
     no_bin_search = cast(ClassVar[Flags], ...)
     no_gen_search = cast(ClassVar[Flags], ...)
     no_byte_seek = cast(ClassVar[Flags], ...)
-    allow_flush = cast(ClassVar[Flags], ...)
     ts_nonstrict = cast(ClassVar[Flags], ...)
     ts_negative = cast(ClassVar[Flags], ...)
     seek_to_pts = cast(ClassVar[Flags], ...)
@@ -38,5 +38,7 @@ class ContainerFormat:
     def flags(self) -> int: ...
     @property
     def no_file(self) -> bool: ...
+    @property
+    def fixed_framesize(self) -> bool: ...
 
 formats_available: set[str]
