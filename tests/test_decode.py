@@ -10,6 +10,7 @@ import pytest
 
 import av
 from av.sidedata.encparams import VideoEncParams
+from av.sidedata.sidedata import Type
 from av.subtitles.subtitle import SubtitleSet
 
 from .common import TestCase, fate_suite
@@ -298,6 +299,31 @@ class TestDecode(TestCase):
             output_count += 1
 
         assert output_count == input_count
+
+    def test_side_data_mapping_protocol(self) -> None:
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams.video[0]
+        stream.codec_context.options = {"flags2": "+export_mvs"}
+
+        for frame in container.decode(stream):
+            side_data = frame.side_data
+            if not len(side_data):
+                continue
+
+            # Iteration yields keys, so the Mapping mixins work off it.
+            keys = list(side_data)
+            assert all(isinstance(key, Type) for key in keys)
+            assert keys == list(side_data.keys())
+            assert len(keys) == len(side_data)
+            assert list(side_data.items()) == [(k, side_data[k]) for k in keys]
+            assert list(side_data.values()) == [side_data[k] for k in keys]
+            assert side_data == dict(side_data)
+            assert keys[0] in side_data
+
+            # Values stay reachable positionally.
+            assert side_data[0] is side_data[keys[0]]
+            assert list(side_data[:]) == list(side_data.values())
+            return
 
     def test_no_side_data(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))

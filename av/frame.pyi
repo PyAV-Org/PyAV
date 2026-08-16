@@ -1,11 +1,7 @@
 from fractions import Fraction
-from typing import TypedDict
 
 from av.rational import AVRational
-from av.sidedata.motionvectors import MotionVectors
-
-class SideData(TypedDict, total=False):
-    MOTION_VECTORS: MotionVectors
+from av.sidedata.sidedata import SideDataContainer
 
 class Frame:
     dts: int | None
@@ -15,7 +11,7 @@ class Frame:
     def time_base(self) -> AVRational: ...
     @time_base.setter
     def time_base(self, value: AVRational | Fraction | int) -> None: ...
-    side_data: SideData
+    side_data: SideDataContainer
     opaque: object
     @property
     def metadata(self) -> dict[str, str]: ...
