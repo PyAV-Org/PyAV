@@ -8,6 +8,11 @@ from cython.cimports.av.packet import Packet
 @cython.cclass
 class AudioStream(Stream):
     def __repr__(self):
+        if not self._is_open():
+            return (
+                f"<av.{self.__class__.__name__} (container closed) at 0x{id(self):x}>"
+            )
+
         if self.codec_context is None:
             return f"<av.AudioStream #{self.index} audio/<nocodec> at 0x{id(self):x}>"
         form = self.format.name if self.format else None

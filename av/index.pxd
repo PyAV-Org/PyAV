@@ -1,12 +1,14 @@
 cimport libav as lib
 
+from av.stream cimport Stream
+
 
 cdef class IndexEntry:
-    cdef const lib.AVIndexEntry *ptr
+    cdef lib.AVIndexEntry entry
     cdef _init(self, const lib.AVIndexEntry *ptr)
 
 cdef class IndexEntries:
-    cdef lib.AVStream *stream_ptr
-    cdef _init(self, lib.AVStream *ptr)
+    cdef Stream stream
+    cdef _init(self, Stream stream)
 
-cdef IndexEntries wrap_index_entries(lib.AVStream *ptr)
+cdef IndexEntries wrap_index_entries(Stream stream)
