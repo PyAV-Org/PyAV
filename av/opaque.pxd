@@ -1,6 +1,5 @@
-from libc.stdint cimport uint64_t
-
 cimport libav as lib
+from libc.stdint cimport uint64_t
 
 
 cdef class OpaqueContainer:

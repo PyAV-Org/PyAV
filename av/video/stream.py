@@ -12,6 +12,11 @@ from cython.cimports.libc.string import memcpy
 @cython.cclass
 class VideoStream(Stream):
     def __repr__(self):
+        if not self._is_open():
+            return (
+                f"<av.{self.__class__.__name__} (container closed) at 0x{id(self):x}>"
+            )
+
         if self.codec_context is None:
             return f"<av.VideoStream #{self.index} video/<nocodec> at 0x{id(self):x}>"
         return (
@@ -128,6 +133,7 @@ class VideoStream(Stream):
 
         :type: AVRational
         """
+        self._assert_open()
         return from_avrational(self.ptr.avg_frame_rate)
 
     @property
@@ -141,6 +147,7 @@ class VideoStream(Stream):
 
         :type: AVRational
         """
+        self._assert_open()
         return from_avrational(self.ptr.r_frame_rate)
 
     @property
@@ -152,6 +159,7 @@ class VideoStream(Stream):
 
         :type: AVRational
         """
+        self._assert_open()
         val: lib.AVRational = lib.av_guess_frame_rate(
             cython.NULL, self.ptr, cython.NULL
         )
@@ -166,6 +174,7 @@ class VideoStream(Stream):
 
         :type: AVRational
         """
+        self._assert_open()
         sar: lib.AVRational = lib.av_guess_sample_aspect_ratio(
             self.container.ptr, self.ptr, cython.NULL
         )

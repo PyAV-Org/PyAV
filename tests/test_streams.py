@@ -407,3 +407,33 @@ class TestStreams:
             stream = container.streams[0]
             assert stream.type == "unknown"
             assert type(stream) is av.stream.Stream
+
+    def test_stream_after_close(self) -> None:
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams.video[0]
+        assert stream.time_base and stream.index == 0
+
+        container.close()
+
+        for name in (
+            "id",
+            "index",
+            "time_base",
+            "start_time",
+            "duration",
+            "frames",
+            "disposition",
+            "discard",
+            "type",
+            "average_rate",
+            "base_rate",
+            "guessed_rate",
+        ):
+            with pytest.raises(AssertionError):
+                getattr(stream, name)
+
+        with pytest.raises(AssertionError):
+            stream.time_base = 1
+
+        # Still describable, so a traceback or debugger does not blow up.
+        assert "container closed" in repr(stream)

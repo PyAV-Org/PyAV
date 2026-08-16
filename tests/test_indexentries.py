@@ -77,3 +77,38 @@ class TestIndexEntries(TestCase):
                     for i, j in zip(individual_indices, slice_indices)
                 ]
             )
+
+    def test_index_entries_after_close(self) -> None:
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams.video[0]
+        entries = stream.index_entries
+        snapshot = entries[0]
+        pos, timestamp = snapshot.pos, snapshot.timestamp
+
+        container.close()
+
+        # The AVStream is gone, so the view must refuse rather than read it.
+        for call in (
+            lambda: len(entries),
+            lambda: entries[0],
+            lambda: entries.search_timestamp(0),
+        ):
+            with self.assertRaises(AssertionError):
+                call()
+
+        # An entry already handed out is a copy, so it stays readable.
+        assert (snapshot.pos, snapshot.timestamp) == (pos, timestamp)
+        assert "container closed" in repr(entries)
+        assert repr(snapshot)
+
+    def test_index_entries_outlive_container(self) -> None:
+        import gc
+
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        entries = container.streams.video[0].index_entries
+        length = len(entries)
+        del container
+        gc.collect()
+
+        # Holding the view keeps its stream, and so the container, alive.
+        assert len(entries) == length
