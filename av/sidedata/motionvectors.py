@@ -24,13 +24,15 @@ class MotionVectors(SideData):
         return self._len
 
     def __getitem__(self, index: cython.Py_ssize_t):
+        if index < 0:
+            index += self._len
+        if index < 0 or index >= self._len:
+            raise IndexError(index)
+
         try:
             return self._vectors[index]
         except KeyError:
             pass
-
-        if index >= self._len:
-            raise IndexError(index)
 
         vector = self._vectors[index] = MotionVector(
             _cinit_bypass_sentinel, self, index
