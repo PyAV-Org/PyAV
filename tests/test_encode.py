@@ -121,7 +121,7 @@ class TestBasicVideoEncoding(TestCase):
             stream = output.add_stream("mpeg4")
             assert stream in output.streams.video
             assert stream.average_rate == Fraction(24, 1)
-            assert stream.time_base is None
+            assert not stream.time_base
 
             # codec context properties
             assert stream.format.height == 480
@@ -196,7 +196,7 @@ class TestBasicAudioEncoding(TestCase):
         with av.open(self.sandboxed("output.mov"), "w") as output:
             stream = output.add_stream("mp2")
             assert stream in output.streams.audio
-            assert stream.time_base is None
+            assert not stream.time_base
 
             # codec context properties
             assert stream.format.name == "s16"
@@ -372,7 +372,7 @@ class TestEncodeStreamSemantics(TestCase):
             assert stream.id == 1
 
             # set time_base
-            assert stream.time_base is None
+            assert not stream.time_base
             stream.time_base = Fraction(1, 48000)
             assert stream.time_base == Fraction(1, 48000)
 

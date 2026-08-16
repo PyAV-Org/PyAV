@@ -11,9 +11,9 @@ from cython.cimports.av.container.output import OutputContainer
 from cython.cimports.av.container.pyio import pyio_close_custom_gil, pyio_close_gil
 from cython.cimports.av.error import err_check, stash_exception
 from cython.cimports.av.format import build_container_format
+from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.utils import (
     avdict_to_dict,
-    avrational_to_fraction,
     dict_to_avdict,
     to_avrational,
 )
@@ -433,7 +433,7 @@ class Container:
                     "id": ch.id,
                     "start": ch.start,
                     "end": ch.end,
-                    "time_base": avrational_to_fraction(cython.address(ch.time_base)),
+                    "time_base": from_avrational(ch.time_base),
                     "metadata": avdict_to_dict(
                         ch.metadata, self.metadata_encoding, self.metadata_errors
                     ),

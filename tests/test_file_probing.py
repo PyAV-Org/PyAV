@@ -304,12 +304,12 @@ class TestVideoProbeCorrupt(TestCase):
         assert stream.bit_rate is None
         assert stream.codec.long_name == "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"
         assert stream.codec.name == "h264"
-        assert stream.display_aspect_ratio is None
+        assert not stream.display_aspect_ratio
         assert stream.format is None
         assert not stream.has_b_frames
         assert stream.height == 0
         assert stream.max_bit_rate is None
-        assert stream.sample_aspect_ratio is None
+        assert not stream.sample_aspect_ratio
         assert stream.width == 0
 
         assert stream.coded_width == 0

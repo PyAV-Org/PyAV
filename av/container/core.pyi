@@ -7,12 +7,13 @@ from typing import Any, ClassVar, Literal, Self, TypedDict, cast, overload
 
 from av.codec.hwaccel import HWAccel
 from av.format import ContainerFormat
+from av.rational import AVRational
 
 from .input import InputContainer
 from .output import OutputContainer
 from .streams import StreamContainer
 
-Real = int | float | Fraction
+Real = int | float | Fraction | AVRational
 
 class Flags(Flag):
     gen_pts = cast(ClassVar[Flags], ...)
@@ -72,7 +73,7 @@ class Chapter(TypedDict):
     id: int
     start: int
     end: int
-    time_base: Fraction | None
+    time_base: AVRational
     metadata: dict[str, str]
 
 class Container:

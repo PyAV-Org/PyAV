@@ -1,8 +1,8 @@
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.packet import Packet
+from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.stream import Stream
-from cython.cimports.av.utils import avrational_to_fraction
 from cython.cimports.av.video.frame import VideoFrame
 from cython.cimports.libc.stdint import int32_t
 from cython.cimports.libc.string import memcpy
@@ -126,9 +126,9 @@ class VideoStream(Stream):
         This is calculated when the file is opened by looking at the first
         few frames and averaging their rate.
 
-        :type: fractions.Fraction | None
+        :type: AVRational
         """
-        return avrational_to_fraction(cython.address(self.ptr.avg_frame_rate))
+        return from_avrational(self.ptr.avg_frame_rate)
 
     @property
     def base_rate(self):
@@ -139,9 +139,9 @@ class VideoStream(Stream):
         frames can be represented accurately. See :ffmpeg:`AVStream.r_frame_rate`
         for more.
 
-        :type: fractions.Fraction | None
+        :type: AVRational
         """
-        return avrational_to_fraction(cython.address(self.ptr.r_frame_rate))
+        return from_avrational(self.ptr.r_frame_rate)
 
     @property
     def guessed_rate(self):
@@ -150,12 +150,12 @@ class VideoStream(Stream):
         This is a wrapper around :ffmpeg:`av_guess_frame_rate`, and uses multiple
         heuristics to decide what is "the" frame rate.
 
-        :type: fractions.Fraction | None
+        :type: AVRational
         """
         val: lib.AVRational = lib.av_guess_frame_rate(
             cython.NULL, self.ptr, cython.NULL
         )
-        return avrational_to_fraction(cython.address(val))
+        return from_avrational(val)
 
     @property
     def sample_aspect_ratio(self):
@@ -164,12 +164,12 @@ class VideoStream(Stream):
         This is a wrapper around :ffmpeg:`av_guess_sample_aspect_ratio`, and uses multiple
         heuristics to decide what is "the" sample aspect ratio.
 
-        :type: fractions.Fraction | None
+        :type: AVRational
         """
         sar: lib.AVRational = lib.av_guess_sample_aspect_ratio(
             self.container.ptr, self.ptr, cython.NULL
         )
-        return avrational_to_fraction(cython.address(sar))
+        return from_avrational(sar)
 
     @property
     def display_aspect_ratio(self):
@@ -177,7 +177,7 @@ class VideoStream(Stream):
 
         This is calculated from :meth:`.VideoStream.guessed_sample_aspect_ratio`.
 
-        :type: fractions.Fraction | None
+        :type: AVRational
         """
         dar = cython.declare(lib.AVRational)
         lib.av_reduce(
@@ -188,4 +188,4 @@ class VideoStream(Stream):
             1024 * 1024,
         )
 
-        return avrational_to_fraction(cython.address(dar))
+        return from_avrational(dar)

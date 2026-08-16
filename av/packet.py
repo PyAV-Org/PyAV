@@ -6,12 +6,11 @@ from cython.cimports import libav as lib
 from cython.cimports.av.buffer import Buffer, ByteSource, bytesource
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
-from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.av.rational import AVRational, from_avrational
+from cython.cimports.av.utils import to_avrational
 from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
 from cython.cimports.libc.stdint import uint8_t
 from cython.cimports.libc.string import memcpy
-
-from av.rational import AVRational
 
 # Check https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/packet.h#L41
 # for new additions in the future ffmpeg releases
@@ -338,9 +337,9 @@ class Packet(Buffer):
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
-        :type: fractions.Fraction
+        :type: AVRational
         """
-        return avrational_to_fraction(cython.address(self.ptr.time_base))
+        return from_avrational(self.ptr.time_base)
 
     @time_base.setter
     def time_base(self, value):

@@ -1,9 +1,9 @@
 import cython
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
+from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.utils import (
     avdict_to_dict,
-    avrational_to_fraction,
     to_avrational,
 )
 
@@ -141,10 +141,10 @@ class Frame:
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
-        :type: fractions.Fraction | None
+        :type: AVRational
         """
         if self._time_base.num:
-            return avrational_to_fraction(cython.address(self._time_base))
+            return from_avrational(self._time_base)
 
     @time_base.setter
     def time_base(self, value):

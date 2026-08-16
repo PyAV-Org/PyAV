@@ -5,7 +5,8 @@ from cython.cimports.av.codec.hwaccel import HWAccel
 from cython.cimports.av.error import err_check
 from cython.cimports.av.frame import Frame
 from cython.cimports.av.packet import Packet
-from cython.cimports.av.utils import avrational_to_fraction, to_avrational
+from cython.cimports.av.rational import from_avrational
+from cython.cimports.av.utils import to_avrational
 from cython.cimports.av.video.format import VideoFormat, get_pix_fmt, get_video_format
 from cython.cimports.av.video.frame import VideoFrame, alloc_video_frame
 from cython.cimports.av.video.reformatter import VideoReformatter
@@ -289,9 +290,9 @@ class VideoCodecContext(CodecContext):
         """
         The frame rate, in frames per second.
 
-        :type: fractions.Fraction
+        :type: AVRational
         """
-        return avrational_to_fraction(cython.address(self.ptr.framerate))
+        return from_avrational(self.ptr.framerate)
 
     @framerate.setter
     def framerate(self, value):
@@ -326,7 +327,7 @@ class VideoCodecContext(CodecContext):
 
     @property
     def sample_aspect_ratio(self):
-        return avrational_to_fraction(cython.address(self.ptr.sample_aspect_ratio))
+        return from_avrational(self.ptr.sample_aspect_ratio)
 
     @sample_aspect_ratio.setter
     def sample_aspect_ratio(self, value):
@@ -343,7 +344,7 @@ class VideoCodecContext(CodecContext):
             1024 * 1024,
         )
 
-        return avrational_to_fraction(cython.address(dar))
+        return from_avrational(dar)
 
     @property
     def has_b_frames(self):
