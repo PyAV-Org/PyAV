@@ -367,11 +367,65 @@ def get_codec_names():
     return names
 
 
+@cython.cfunc
+def get_media_type_name(media_type: lib.AVMediaType) -> str:
+    name = lib.av_get_media_type_string(media_type)
+    return "unknown" if name == cython.NULL else name
+
+
+@cython.cfunc
+def get_codec_summaries():
+    summaries: dict = {}
+    desc = cython.declare(
+        cython.pointer[cython.const[lib.AVCodecDescriptor]], cython.NULL
+    )
+    while True:
+        desc = lib.avcodec_descriptor_next(desc)
+        if not desc:
+            break
+        summaries[desc.name] = [
+            desc.long_name or "",
+            get_media_type_name(desc.type),
+            desc.props,
+            lib.avcodec_find_decoder(desc.id) != cython.NULL,
+            lib.avcodec_find_encoder(desc.id) != cython.NULL,
+        ]
+
+    canonical_names: set = set(summaries)
+
+    ptr = cython.declare(cython.pointer[cython.const[lib.AVCodec]])
+    opaque: cython.p_void = cython.NULL
+    while True:
+        ptr = lib.av_codec_iterate(cython.address(opaque))
+        if not ptr:
+            break
+        if ptr.name in canonical_names:
+            continue
+
+        desc = lib.avcodec_descriptor_get(ptr.id)
+        summary = summaries.setdefault(
+            ptr.name,
+            [
+                ptr.long_name or "",
+                get_media_type_name(ptr.type),
+                desc.props if desc else 0,
+                False,
+                False,
+            ],
+        )
+        summary[3 if lib.av_codec_is_decoder(ptr) else 4] = True
+
+    return summaries
+
+
 codecs_available = get_codec_names()
 
 
 def dump_codecs():
     """Print information about available codecs."""
+
+    def _type_char(media_type: str) -> str:
+        return "T" if media_type == "attachment" else media_type[0].upper()
 
     print(
         """Codecs:
@@ -380,34 +434,24 @@ def dump_codecs():
  ..V... = Video codec
  ..A... = Audio codec
  ..S... = Subtitle codec
+ ..D... = Data codec
+ ..T... = Attachment codec
  ...I.. = Intra frame-only codec
  ....L. = Lossy compression
  .....S = Lossless compression
  ------"""
     )
 
-    for name in sorted(codecs_available):
-        try:
-            e_codec = Codec(name, "w")
-        except ValueError:
-            e_codec = None
-
-        try:
-            d_codec = Codec(name, "r")
-        except ValueError:
-            d_codec = None
-
-        # TODO: Assert these always have the same properties.
-        codec = e_codec or d_codec
-
-        try:
-            print(
-                f" {'.D'[bool(d_codec)]}{'.E'[bool(e_codec)]}{codec.type[0].upper()}"
-                f"{'.I'[codec.intra_only]}{'.L'[codec.lossy]}{'.S'[codec.lossless]}"
-                f" {codec.name:<18} {codec.long_name}"
-            )
-        except Exception as e:
-            print(f"...... {codec.name:<18} ERROR: {e}")
+    for name, (long_name, media_type, props, can_decode, can_encode) in sorted(
+        get_codec_summaries().items()
+    ):
+        print(
+            f" {'.D'[can_decode]}{'.E'[can_encode]}{_type_char(media_type)}"
+            f"{'.I'[bool(props & lib.AV_CODEC_PROP_INTRA_ONLY)]}"
+            f"{'.L'[bool(props & lib.AV_CODEC_PROP_LOSSY)]}"
+            f"{'.S'[bool(props & lib.AV_CODEC_PROP_LOSSLESS)]}"
+            f" {name:<18} {long_name}"
+        )
 
 
 def dump_hwconfigs():
