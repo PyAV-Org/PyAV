@@ -5,6 +5,7 @@ from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
 from av.audio.layout import AudioLayout
 from av.audio.stream import AudioStream
+from av.rational import AVRational
 from av.video.format import VideoFormat
 from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
@@ -29,7 +30,7 @@ class Graph:
         height: int | None = None,
         format: VideoFormat | None = None,
         name: str | None = None,
-        time_base: Fraction | None = None,
+        time_base: AVRational | Fraction | None = None,
     ) -> FilterContext: ...
     def add_abuffer(
         self,
@@ -39,7 +40,7 @@ class Graph:
         layout: AudioLayout | str | None = None,
         channels: int | None = None,
         name: str | None = None,
-        time_base: Fraction | None = None,
+        time_base: AVRational | Fraction | None = None,
     ) -> FilterContext: ...
     def set_audio_frame_size(self, frame_size: int) -> None: ...
     def push(self, frame: None | AudioFrame | VideoFrame, at: int = -1) -> None: ...

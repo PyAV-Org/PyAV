@@ -5,7 +5,7 @@ from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.error import err_check
 from cython.cimports.av.filter.link import alloc_filter_pads
 from cython.cimports.av.frame import Frame
-from cython.cimports.av.utils import avrational_to_fraction
+from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.video.frame import alloc_video_frame
 
 _cinit_sentinel = cython.declare(object, object())
@@ -162,9 +162,7 @@ class FilterContext:
         err_check(res)
 
         frame._init_user_attributes()
-        frame.time_base = avrational_to_fraction(
-            cython.address(self.ptr.inputs[0].time_base)
-        )
+        frame.time_base = from_avrational(self.ptr.inputs[0].time_base)
         return frame
 
     def process_command(

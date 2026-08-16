@@ -6,6 +6,7 @@ from av.audio import _AudioCodecName
 from av.audio.stream import AudioStream
 from av.codec.hwaccel import HWAccel
 from av.packet import Packet
+from av.rational import AVRational
 from av.stream import AttachmentStream, DataStream, Stream
 from av.subtitles import _SubtitleCodecName
 from av.subtitles.stream import SubtitleStream
@@ -29,7 +30,7 @@ class OutputContainer(Container):
     def add_stream(
         self,
         codec_name: _VideoCodecName,
-        rate: Fraction | int | None = None,
+        rate: AVRational | Fraction | int | None = None,
         options: dict[str, str] | None = None,
         hwaccel: HWAccel | None = None,
         **kwargs,
@@ -38,7 +39,7 @@ class OutputContainer(Container):
     def add_stream(
         self,
         codec_name: _SubtitleCodecName,
-        rate: Fraction | int | None = None,
+        rate: AVRational | Fraction | int | None = None,
         options: dict[str, str] | None = None,
         **kwargs,
     ) -> SubtitleStream: ...
@@ -46,7 +47,7 @@ class OutputContainer(Container):
     def add_stream(
         self,
         codec_name: str,
-        rate: Fraction | int | None = None,
+        rate: AVRational | Fraction | int | None = None,
         options: dict[str, str] | None = None,
         hwaccel: HWAccel | None = None,
         **kwargs,
@@ -54,7 +55,7 @@ class OutputContainer(Container):
     def add_mux_stream(
         self,
         codec_name: str,
-        rate: Fraction | int | None = None,
+        rate: AVRational | Fraction | int | None = None,
         **kwargs,
     ) -> Stream: ...
     def add_stream_from_template(

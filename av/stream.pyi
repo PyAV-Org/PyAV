@@ -2,6 +2,8 @@ from enum import IntEnum, IntFlag
 from fractions import Fraction
 from typing import Literal, cast
 
+from av.rational import AVRational
+
 from .codec import Codec, CodecContext
 from .container import Container
 from .index import IndexEntries
@@ -48,10 +50,13 @@ class Stream:
     profile: str | None
     index: int
     options: dict[str, object]
-    time_base: Fraction | None
-    average_rate: Fraction | None
-    base_rate: Fraction | None
-    guessed_rate: Fraction | None
+    @property
+    def time_base(self) -> AVRational: ...
+    @time_base.setter
+    def time_base(self, value: AVRational | Fraction | int) -> None: ...
+    average_rate: AVRational
+    base_rate: AVRational
+    guessed_rate: AVRational
     start_time: int | None
     duration: int | None
     disposition: Disposition

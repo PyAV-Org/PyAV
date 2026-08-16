@@ -1,5 +1,4 @@
 import warnings
-from fractions import Fraction
 
 import cython
 from cython.cimports.av.audio.format import AudioFormat
@@ -8,6 +7,7 @@ from cython.cimports.av.audio.layout import AudioLayout
 from cython.cimports.av.error import err_check
 from cython.cimports.av.filter.context import FilterContext, wrap_filter_context
 from cython.cimports.av.filter.filter import Filter, wrap_filter
+from cython.cimports.av.rational import AVRational
 from cython.cimports.av.video.format import VideoFormat
 from cython.cimports.av.video.frame import VideoFrame
 
@@ -160,7 +160,7 @@ class Graph:
                 "This is deprecated and may be removed in future releases.",
                 DeprecationWarning,
             )
-            time_base = Fraction(1, 1000)
+            time_base = AVRational(1, 1000)
 
         return self.add(
             "buffer",
@@ -204,7 +204,7 @@ class Graph:
         if layout is None and channels is None:
             raise ValueError("missing layout or channels")
         if time_base is None:
-            time_base = Fraction(1, sample_rate)
+            time_base = AVRational(1, sample_rate)
 
         kwargs = {
             "sample_rate": f"{sample_rate}",

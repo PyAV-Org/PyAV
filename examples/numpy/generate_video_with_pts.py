@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import colorsys
-from fractions import Fraction
 from math import lcm
 
 import numpy as np
 
 import av
+from av import AVRational
 
 (width, height) = (640, 360)
 total_frames = 20
-fps = Fraction(30, 1)
+fps = AVRational(30, 1)
 
 # MP4 stores a nonzero starting offset in an edit list using the movie timescale,
 # which defaults to 1000. Choose a timescale that can represent frame-aligned
@@ -36,7 +36,7 @@ stream.pix_fmt = "yuv420p"
 # 1/2 means half a second (would be okay for the delays we use below)
 # 1/30 means ~33 milliseconds
 # you should use the least fraction that makes sense for you
-stream.codec_context.time_base = Fraction(1, fps)
+stream.codec_context.time_base = AVRational(fps.den, fps.num)
 
 # this says when to show the next frame
 # (increment by how long the current frame will be shown)

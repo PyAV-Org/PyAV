@@ -6,6 +6,7 @@ from typing import ClassVar, Literal, cast, overload
 from av.audio import _AudioCodecName
 from av.audio.codeccontext import AudioCodecContext
 from av.packet import Packet
+from av.rational import AVRational
 from av.subtitles import _SubtitleCodecName
 from av.subtitles.codeccontext import SubtitleCodecContext
 from av.video import _VideoCodecName
@@ -125,7 +126,10 @@ class CodecContext:
     @property
     def profiles(self) -> list[str]: ...
     extradata: bytes | None
-    time_base: Fraction
+    @property
+    def time_base(self) -> AVRational: ...
+    @time_base.setter
+    def time_base(self, value: AVRational | Fraction | int) -> None: ...
     codec_tag: str
     global_quality: int
     bit_rate: int | None

@@ -4,9 +4,9 @@ import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.error import err_check
 from cython.cimports.av.index import wrap_index_entries
+from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.utils import (
     avdict_to_dict,
-    avrational_to_fraction,
     dict_to_avdict,
     to_avrational,
 )
@@ -236,10 +236,10 @@ class Stream:
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
-        :type: fractions.Fraction | None
+        :type: AVRational
 
         """
-        return avrational_to_fraction(cython.address(self.ptr.time_base))
+        return from_avrational(self.ptr.time_base)
 
     @property
     def start_time(self):

@@ -1,6 +1,4 @@
 # type: ignore
-from fractions import Fraction
-
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.error import err_check
@@ -42,15 +40,6 @@ def dict_to_avdict(
                 dst, key.encode(encoding, errors), value.encode(encoding, errors), 0
             )
         )
-
-
-@cython.cfunc
-def avrational_to_fraction(
-    input: cython.pointer[cython.const[lib.AVRational]],
-) -> object:
-    if input.num and input.den:
-        return Fraction(input.num, input.den)
-    return None
 
 
 @cython.cfunc

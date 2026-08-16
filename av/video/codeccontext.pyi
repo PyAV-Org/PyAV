@@ -4,6 +4,7 @@ from typing import Literal
 
 from av.codec.context import CodecContext
 from av.packet import Packet
+from av.rational import AVRational
 
 from .format import VideoFormat
 from .frame import VideoFrame
@@ -18,11 +19,20 @@ class VideoCodecContext(CodecContext):
     def sw_format(self) -> VideoFormat | None: ...
     @sw_format.setter
     def sw_format(self, value: str) -> None: ...
-    framerate: Fraction
-    rate: Fraction
+    @property
+    def framerate(self) -> AVRational: ...
+    @framerate.setter
+    def framerate(self, value: AVRational | Fraction | int) -> None: ...
+    @property
+    def rate(self) -> AVRational: ...
+    @rate.setter
+    def rate(self, value: AVRational | Fraction | int) -> None: ...
     gop_size: int
-    sample_aspect_ratio: Fraction | None
-    display_aspect_ratio: Fraction | None
+    @property
+    def sample_aspect_ratio(self) -> AVRational: ...
+    @sample_aspect_ratio.setter
+    def sample_aspect_ratio(self, value: AVRational | Fraction | int) -> None: ...
+    display_aspect_ratio: AVRational
     has_b_frames: bool
     reorder_depth: int
     max_b_frames: int
