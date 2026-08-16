@@ -47,6 +47,7 @@ Features:
 Fixes:
 
 - ``av.dump_codecs()`` no longer drops the canonical names ``h264``, ``hevc``, ``av1``, ``dirac``, and ``ilbc``, each of which was overwritten by the row of whichever encoder it resolved to.
+- Attaching one object to the ``opaque`` of more than one frame or packet no longer loses it. The objects were keyed by ``id()``, so every holder shared an entry and whichever was freed first took it away from the rest.
 - ``Frame.side_data`` now satisfies the ``Mapping`` protocol it advertises: iteration yields :class:`~av.sidedata.sidedata.Type` keys, so ``items()``, ``keys()``, and ``values()`` work instead of raising ``KeyError``. Values remain reachable positionally by an integer or, for the first time, a slice. Its type stub was a ``TypedDict`` with a single literal key, and is now ``SideDataContainer``.
 - Fix crashes from indexes that were turned into C pointer arithmetic without being range checked. ``MotionVectors[i]`` only checked the upper bound, so a negative index read off the front of the buffer (``mvs[-1]`` now returns the last vector, as with any sequence); ``VideoFormatComponent`` and ``AudioPlane`` accepted any index at all; and ``BitmapSubtitlePlane`` and ``VideoBlockParams`` were missing their lower bounds.
 - Frames returned by flushing a codec context directly (``CodecContext.decode()`` with no packet) now carry the stream's ``time_base`` instead of ``None``.
