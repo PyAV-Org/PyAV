@@ -1,10 +1,6 @@
 from fractions import Fraction
-from typing import TypedDict
 
-from av.sidedata.motionvectors import MotionVectors
-
-class SideData(TypedDict, total=False):
-    MOTION_VECTORS: MotionVectors
+from av.sidedata.sidedata import SideDataContainer
 
 class Frame:
     dts: int | None
@@ -13,7 +9,7 @@ class Frame:
     def best_effort_timestamp(self) -> int | None: ...
     duration: int
     time_base: Fraction | None
-    side_data: SideData
+    side_data: SideDataContainer
     opaque: object
     @property
     def metadata(self) -> dict[str, str]: ...
