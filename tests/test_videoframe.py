@@ -1,3 +1,5 @@
+import gc
+import weakref
 from fractions import Fraction
 
 import numpy
@@ -134,6 +136,28 @@ def test_opaque() -> None:
 
     frame.opaque = None
     assert frame.opaque is None
+
+
+def test_opaque_shared_between_frames() -> None:
+    class Payload:
+        pass
+
+    payload = Payload()
+    ref = weakref.ref(payload)
+    frames = [VideoFrame(16, 16, "yuv420p") for _ in range(3)]
+    for frame in frames:
+        frame.opaque = payload
+
+    # Dropping one holder must not take the object away from the others.
+    while frames:
+        assert all(f.opaque is payload for f in frames)
+        frames.pop()
+        gc.collect()
+
+    # ...and the last one going away must still release it.
+    del frame, payload
+    gc.collect()
+    assert ref() is None
 
 
 def test_interpolation() -> None:
