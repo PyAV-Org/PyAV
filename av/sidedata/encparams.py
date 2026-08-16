@@ -134,6 +134,9 @@ class VideoEncParams(SideData):
 @cython.cclass
 class VideoBlockParams:
     def __init__(self, video_enc_params: VideoEncParams, idx: cython.int) -> None:
+        if idx < 0 or idx >= video_enc_params.nb_blocks:
+            raise ValueError("Expected idx in range [0, nb_blocks)")
+
         base: cython.pointer[uint8_t] = cython.cast(
             cython.pointer[uint8_t], video_enc_params.ptr.data
         )

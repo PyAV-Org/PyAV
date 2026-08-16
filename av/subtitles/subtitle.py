@@ -254,7 +254,7 @@ class BitmapSubtitle(Subtitle):
 @cython.cclass
 class BitmapSubtitlePlane:
     def __cinit__(self, subtitle: BitmapSubtitle, index: cython.int):
-        if index >= 4:
+        if index < 0 or index >= 4:
             raise ValueError("BitmapSubtitles have only 4 planes")
         if not subtitle.ptr.linesize[index]:
             raise ValueError("plane does not exist")

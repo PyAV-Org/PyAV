@@ -1,4 +1,7 @@
+import pytest
+
 from av import VideoFormat
+from av.video.format import VideoFormatComponent
 
 from .common import TestCase
 
@@ -92,3 +95,9 @@ class TestVideoFormats(TestCase):
         fmt = VideoFormat("pal8", 640, 480)
         assert len(fmt.components) == 1
         assert fmt.has_palette
+
+    def test_component_index_out_of_range(self) -> None:
+        fmt = VideoFormat("yuv420p", 640, 480)
+        for bad in (len(fmt.components), 100000000):
+            with pytest.raises(ValueError):
+                VideoFormatComponent(fmt, bad)

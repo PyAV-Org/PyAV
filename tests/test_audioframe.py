@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from av import AudioFrame
+from av.audio.plane import AudioPlane
 
 from .common import assertNdarraysEqual
 
@@ -201,3 +202,14 @@ def test_ndarray_u8() -> None:
         assert frame.layout.name == layout
         assert frame.samples == 160
         assertNdarraysEqual(frame.to_ndarray(), array)
+
+
+def test_plane_index_out_of_range() -> None:
+    # Plane._buffer_ptr() indexes extended_data with this, so an unchecked
+    # index reads outside the frame.
+    for format, nb_planes in (("fltp", 2), ("s16", 1)):
+        frame = AudioFrame(format=format, layout="stereo", samples=1024)
+        assert len(frame.planes) == nb_planes
+        for bad in (-1, nb_planes, 100000000):
+            with pytest.raises(ValueError):
+                AudioPlane(frame, bad)

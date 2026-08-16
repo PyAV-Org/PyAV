@@ -183,6 +183,24 @@ class TestDecode(TestCase):
                 assert vectors is not None and len(vectors) > 0
                 return
 
+    def test_motion_vector_index_bounds(self) -> None:
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        stream = container.streams.video[0]
+        stream.codec_context.options = {"flags2": "+export_mvs"}
+
+        for frame in container.decode(stream):
+            vectors = frame.side_data.get("MOTION_VECTORS")
+            if vectors is None or not len(vectors):
+                continue
+
+            # Negative indices count from the end rather than reading off the
+            # front of the buffer.
+            assert vectors[-1].source == vectors[len(vectors) - 1].source
+            for bad in (len(vectors), -len(vectors) - 1, -(10**9)):
+                with pytest.raises(IndexError):
+                    vectors[bad]
+            return
+
     def test_decoded_motion_vectors_no_flag(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
