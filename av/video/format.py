@@ -146,6 +146,11 @@ class VideoFormat:
 @cython.cclass
 class VideoFormatComponent:
     def __cinit__(self, format: VideoFormat, index: cython.uint):
+        if index >= format.ptr.nb_components:
+            raise ValueError(
+                f"component index {index} out of range for {format!r}, which has "
+                f"{format.ptr.nb_components}"
+            )
         self.format = format
         self.index = index
         self.ptr = cython.address(format.ptr.comp[index])
