@@ -1,5 +1,6 @@
 import cython
 import cython.cimports.libav as lib
+from cython.cimports.av.stream import Stream
 from cython.cimports.libc.stdint import int64_t
 
 _cinit_bypass_sentinel = cython.declare(object, object())
@@ -28,7 +29,7 @@ class IndexEntry:
 
     @cython.cfunc
     def _init(self, ptr: cython.pointer[cython.const[lib.AVIndexEntry]]) -> cython.void:
-        self.ptr = ptr
+        self.entry = ptr[0]  # Copied, not referenced
 
     def __repr__(self):
         return (
@@ -38,37 +39,37 @@ class IndexEntry:
 
     @property
     def pos(self):
-        return self.ptr.pos
+        return self.entry.pos
 
     @property
     def timestamp(self):
-        return self.ptr.timestamp
+        return self.entry.timestamp
 
     @property
     def flags(self):
-        return self.ptr.flags
+        return self.entry.flags
 
     @property
     def is_keyframe(self):
-        return bool(self.ptr.flags & lib.AVINDEX_KEYFRAME)
+        return bool(self.entry.flags & lib.AVINDEX_KEYFRAME)
 
     @property
     def is_discard(self):
-        return bool(self.ptr.flags & lib.AVINDEX_DISCARD_FRAME)
+        return bool(self.entry.flags & lib.AVINDEX_DISCARD_FRAME)
 
     @property
     def size(self):
-        return self.ptr.size
+        return self.entry.size
 
     @property
     def min_distance(self):
-        return self.ptr.min_distance
+        return self.entry.min_distance
 
 
 @cython.cfunc
-def wrap_index_entries(ptr: cython.pointer[lib.AVStream]) -> IndexEntries:
+def wrap_index_entries(stream: Stream) -> IndexEntries:
     obj: IndexEntries = IndexEntries(_cinit_bypass_sentinel)
-    obj._init(ptr)
+    obj._init(stream)
     return obj
 
 
@@ -90,21 +91,25 @@ class IndexEntries:
         raise RuntimeError("cannot manually instantiate IndexEntries")
 
     @cython.cfunc
-    def _init(self, ptr: cython.pointer[lib.AVStream]) -> cython.void:
-        self.stream_ptr = ptr
+    def _init(self, stream: Stream) -> cython.void:
+        self.stream = stream
 
     def __repr__(self):
+        if not self.stream._is_open():
+            return "<av.IndexEntries (container closed)>"
         return f"<av.IndexEntries[{len(self)}]>"
 
     def __len__(self) -> int:
+        self.stream._assert_open()
         with cython.nogil:
-            return lib.avformat_index_get_entries_count(self.stream_ptr)
+            return lib.avformat_index_get_entries_count(self.stream.ptr)
 
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
 
     def __getitem__(self, index):
+        self.stream._assert_open()
         if isinstance(index, int):
             n = len(self)
             if index < 0:
@@ -115,7 +120,7 @@ class IndexEntries:
             c_idx: cython.int = index
             entry: cython.pointer[cython.const[lib.AVIndexEntry]]
             with cython.nogil:
-                entry = lib.avformat_index_get_entry(self.stream_ptr, c_idx)
+                entry = lib.avformat_index_get_entry(self.stream.ptr, c_idx)
             if entry == cython.NULL:
                 raise IndexError("index entry not found")
 
@@ -135,6 +140,7 @@ class IndexEntries:
 
         Returns an index into this object, or ``-1`` if no match is found.
         """
+        self.stream._assert_open()
         c_timestamp: int64_t = timestamp
         flags: cython.int = 0
 
@@ -144,6 +150,6 @@ class IndexEntries:
             flags |= lib.AVSEEK_FLAG_ANY
 
         with cython.nogil:
-            idx = lib.av_index_search_timestamp(self.stream_ptr, c_timestamp, flags)
+            idx = lib.av_index_search_timestamp(self.stream.ptr, c_timestamp, flags)
 
         return idx

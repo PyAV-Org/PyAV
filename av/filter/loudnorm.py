@@ -23,10 +23,10 @@ def stats(loudnorm_args: str, stream: AudioStream) -> bytes:
         loudnorm_args = loudnorm_args + ":print_format=json"
 
     container: Container = stream.container
-    format_ptr: cython.pointer[AVFormatContext] = container.ptr
-    container.ptr = cython.NULL  # Prevent double-free
-
     stream_index: cython.int = stream.index
+
+    format_ptr: cython.pointer[AVFormatContext] = container.ptr
+    container.ptr = cython.NULL
     py_args: bytes = loudnorm_args.encode("utf-8")
     c_args: cython.p_const_char = py_args
     result: cython.p_char
