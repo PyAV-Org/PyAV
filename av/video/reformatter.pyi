@@ -15,12 +15,14 @@ class Interpolation(IntFlag):
     SINC = cast(int, ...)
     LANCZOS = cast(int, ...)
     SPLINE = cast(int, ...)
+    STRICT = cast(int, ...)
     PRINT_INFO = cast(int, ...)
     FULL_CHR_H_INT = cast(int, ...)
     FULL_CHR_H_INP = cast(int, ...)
     DIRECT_BGR = cast(int, ...)
     ACCURATE_RND = cast(int, ...)
     BITEXACT = cast(int, ...)
+    UNSTABLE = cast(int, ...)
     ERROR_DIFFUSION = cast(int, ...)
 
 class Colorspace(IntEnum):
@@ -65,6 +67,7 @@ class ColorTrc(IntEnum):
     SMPTE2084 = cast(int, ...)
     SMPTE428 = cast(int, ...)
     ARIB_STD_B67 = cast(int, ...)
+    V_LOG = cast(int, ...)
 
 class ColorPrimaries(IntEnum):
     BT709 = cast(int, ...)
@@ -79,6 +82,7 @@ class ColorPrimaries(IntEnum):
     SMPTE431 = cast(int, ...)
     SMPTE432 = cast(int, ...)
     EBU3213 = cast(int, ...)
+    V_GAMUT = cast(int, ...)
 
 class VideoReformatter:
     def reformat(

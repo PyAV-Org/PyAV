@@ -18,6 +18,8 @@ class Properties(Flag):
     LOSSY = cast(ClassVar[Properties], ...)
     LOSSLESS = cast(ClassVar[Properties], ...)
     REORDER = cast(ClassVar[Properties], ...)
+    FIELDS = cast(ClassVar[Properties], ...)
+    ENHANCEMENT = cast(ClassVar[Properties], ...)
     BITMAP_SUB = cast(ClassVar[Properties], ...)
     TEXT_SUB = cast(ClassVar[Properties], ...)
 
@@ -25,14 +27,10 @@ class Capabilities(IntEnum):
     none = cast(int, ...)
     draw_horiz_band = cast(int, ...)
     dr1 = cast(int, ...)
-    hwaccel = cast(int, ...)
     delay = cast(int, ...)
     small_last_frame = cast(int, ...)
-    hwaccel_vdpau = cast(int, ...)
-    subframes = cast(int, ...)
     experimental = cast(int, ...)
     channel_conf = cast(int, ...)
-    neg_linesizes = cast(int, ...)
     frame_threads = cast(int, ...)
     slice_threads = cast(int, ...)
     param_change = cast(int, ...)
@@ -53,6 +51,8 @@ class PixFmtLoss(IntFlag):
     ALPHA = cast(ClassVar[PixFmtLoss], ...)
     COLORQUANT = cast(ClassVar[PixFmtLoss], ...)
     CHROMA = cast(ClassVar[PixFmtLoss], ...)
+    EXCESS_RESOLUTION = cast(ClassVar[PixFmtLoss], ...)
+    EXCESS_DEPTH = cast(ClassVar[PixFmtLoss], ...)
 
 class UnknownCodecError(ValueError): ...
 

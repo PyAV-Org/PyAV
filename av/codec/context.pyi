@@ -54,6 +54,7 @@ class Flags2(IntEnum):
     export_mvs = cast(int, ...)
     skip_manual = cast(int, ...)
     ro_flush_noop = cast(int, ...)
+    icc_profiles = cast(int, ...)
 
 class OptionType(IntEnum):
     FLAGS = cast(int, ...)

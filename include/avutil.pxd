@@ -35,18 +35,11 @@ cdef extern from "libavutil/avutil.h" nogil:
         AV_PIX_FMT_YUV420P
 
     cdef enum AVColorSpace:
-        AVCOL_SPC_RGB
         AVCOL_SPC_BT709
-        AVCOL_SPC_UNSPECIFIED
-        AVCOL_SPC_RESERVED
         AVCOL_SPC_FCC
-        AVCOL_SPC_BT470BG
         AVCOL_SPC_SMPTE170M
         AVCOL_SPC_SMPTE240M
-        AVCOL_SPC_YCOCG
         AVCOL_SPC_BT2020_NCL
-        AVCOL_SPC_BT2020_CL
-        AVCOL_SPC_NB
 
     cdef enum AVColorRange:
         AVCOL_RANGE_UNSPECIFIED
@@ -64,11 +57,10 @@ cdef extern from "libavutil/avutil.h" nogil:
         AVCOL_PRI_FILM
         AVCOL_PRI_BT2020
         AVCOL_PRI_SMPTE428
-        AVCOL_PRI_SMPTEST428_1
         AVCOL_PRI_SMPTE431
         AVCOL_PRI_SMPTE432
         AVCOL_PRI_EBU3213
-        AVCOL_PRI_JEDEC_P22
+        AVCOL_PRI_V_GAMUT
 
     cdef enum AVColorTransferCharacteristic:
         AVCOL_TRC_BT709
@@ -86,10 +78,9 @@ cdef extern from "libavutil/avutil.h" nogil:
         AVCOL_TRC_BT2020_10
         AVCOL_TRC_BT2020_12
         AVCOL_TRC_SMPTE2084
-        AVCOL_TRC_SMPTEST2084
         AVCOL_TRC_SMPTE428
-        AVCOL_TRC_SMPTEST428_1
         AVCOL_TRC_ARIB_STD_B67
+        AVCOL_TRC_V_LOG
 
     cdef void* av_malloc(size_t size)
     cdef void* av_mallocz(size_t size)
@@ -108,7 +99,6 @@ cdef extern from "libavutil/avutil.h" nogil:
         int num
         int den
     cdef int64_t av_rescale_q(int64_t a, AVRational bq, AVRational cq)
-    cdef int64_t av_rescale(int64_t a, int64_t b, int64_t c)
     cdef const char* av_get_media_type_string(AVMediaType media_type)
 
 cdef extern from "libavutil/buffer.h" nogil:
@@ -188,7 +178,6 @@ cdef extern from "libavutil/frame.h" nogil:
     cdef int av_frame_get_buffer(AVFrame *frame, int align)
     cdef int av_frame_make_writable(AVFrame *frame)
     cdef int av_frame_copy_props(AVFrame *dst, const AVFrame *src)
-    cdef AVFrameSideData* av_frame_get_side_data(const AVFrame *frame, AVFrameSideDataType type)
 
 cdef extern from "libavutil/hwcontext.h" nogil:
     cdef struct AVHWDeviceContext:
@@ -210,6 +199,8 @@ cdef extern from "libavutil/hwcontext.h" nogil:
         AV_HWDEVICE_TYPE_MEDIACODEC
         AV_HWDEVICE_TYPE_VULKAN
         AV_HWDEVICE_TYPE_D3D12VA
+        AV_HWDEVICE_TYPE_AMF
+        AV_HWDEVICE_TYPE_OHCODEC
 
     ctypedef struct AVHWFramesContext:
         const AVClass *av_class
@@ -235,14 +226,6 @@ cdef extern from "libavutil/hwcontext.h" nogil:
     cdef int av_hwframe_ctx_init(AVBufferRef *ref)
 
 cdef extern from "libavutil/imgutils.h" nogil:
-    cdef int av_image_alloc(
-        uint8_t *pointers[4],
-        int linesizes[4],
-        int width,
-        int height,
-        AVPixelFormat pix_fmt,
-        int align
-    )
     cdef int av_image_fill_pointers(
         uint8_t *pointers[4],
         AVPixelFormat pix_fmt,
@@ -253,7 +236,6 @@ cdef extern from "libavutil/imgutils.h" nogil:
 
 cdef extern from "libavutil/log.h" nogil:
     cdef struct AVClass:
-        const char *class_name
         const char *(*item_name)(void*) nogil
         const AVOption *option
 
@@ -312,12 +294,6 @@ cdef extern from "libavutil/opt.h" nogil:
         AV_OPT_TYPE_UINT
         AV_OPT_TYPE_FLAG_ARRAY
 
-    cdef union AVOption_default_val:
-        int64_t i64
-        double dbl
-        const char *str
-        AVRational q
-
     cdef enum:
         AV_OPT_FLAG_ENCODING_PARAM
         AV_OPT_FLAG_DECODING_PARAM
@@ -337,7 +313,6 @@ cdef extern from "libavutil/opt.h" nogil:
         const char *help
         AVOptionType type
         int offset
-        AVOption_default_val default_val
         double min
         double max
         int flags
@@ -355,7 +330,6 @@ cdef extern from "libavutil/pixdesc.h" nogil:
         int plane
         int step
         int offset
-        int shift
         int depth
 
     cdef enum AVPixFmtFlags:
@@ -377,7 +351,6 @@ cdef extern from "libavutil/pixdesc.h" nogil:
 
     cdef const AVPixFmtDescriptor* av_pix_fmt_desc_get(AVPixelFormat pix_fmt)
     cdef const AVPixFmtDescriptor* av_pix_fmt_desc_next(const AVPixFmtDescriptor *prev)
-    cdef const char *av_get_pix_fmt_name(AVPixelFormat pix_fmt)
     cdef AVPixelFormat av_get_pix_fmt(const char *name)
     int av_get_bits_per_pixel(const AVPixFmtDescriptor *pixdesc)
     int av_get_padded_bits_per_pixel(const AVPixFmtDescriptor *pixdesc)

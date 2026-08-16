@@ -89,6 +89,7 @@ class Flags2(IntEnum):
     export_mvs = lib.AV_CODEC_FLAG2_EXPORT_MVS
     skip_manual = lib.AV_CODEC_FLAG2_SKIP_MANUAL
     ro_flush_noop = lib.AV_CODEC_FLAG2_RO_FLUSH_NOOP
+    icc_profiles = lib.AV_CODEC_FLAG2_ICC_PROFILES
 
 
 class OptionType(IntEnum):

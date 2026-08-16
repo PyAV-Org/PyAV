@@ -26,6 +26,8 @@ class Properties(Flag):
     LOSSY = lib.AV_CODEC_PROP_LOSSY
     LOSSLESS = lib.AV_CODEC_PROP_LOSSLESS
     REORDER = lib.AV_CODEC_PROP_REORDER
+    FIELDS = lib.AV_CODEC_PROP_FIELDS
+    ENHANCEMENT = lib.AV_CODEC_PROP_ENHANCEMENT
     BITMAP_SUB = lib.AV_CODEC_PROP_BITMAP_SUB
     TEXT_SUB = lib.AV_CODEC_PROP_TEXT_SUB
 
@@ -34,13 +36,10 @@ class Capabilities(IntEnum):
     none = 0
     draw_horiz_band = lib.AV_CODEC_CAP_DRAW_HORIZ_BAND
     dr1 = lib.AV_CODEC_CAP_DR1
-    hwaccel = 1 << 4
     delay = lib.AV_CODEC_CAP_DELAY
     small_last_frame = lib.AV_CODEC_CAP_SMALL_LAST_FRAME
-    hwaccel_vdpau = 1 << 7
     experimental = lib.AV_CODEC_CAP_EXPERIMENTAL
     channel_conf = lib.AV_CODEC_CAP_CHANNEL_CONF
-    neg_linesizes = 1 << 11
     frame_threads = lib.AV_CODEC_CAP_FRAME_THREADS
     slice_threads = lib.AV_CODEC_CAP_SLICE_THREADS
     param_change = lib.AV_CODEC_CAP_PARAM_CHANGE
@@ -49,9 +48,9 @@ class Capabilities(IntEnum):
     avoid_probing = lib.AV_CODEC_CAP_AVOID_PROBING
     hardware = lib.AV_CODEC_CAP_HARDWARE
     hybrid = lib.AV_CODEC_CAP_HYBRID
-    encoder_reordered_opaque = 1 << 20
-    encoder_flush = 1 << 21
-    encoder_recon_frame = 1 << 22
+    encoder_reordered_opaque = lib.AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
+    encoder_flush = lib.AV_CODEC_CAP_ENCODER_FLUSH
+    encoder_recon_frame = lib.AV_CODEC_CAP_ENCODER_RECON_FRAME
 
 
 class PixFmtLoss(IntFlag):
@@ -68,6 +67,8 @@ class PixFmtLoss(IntFlag):
     ALPHA = 0x0008  # loss of alpha bit
     COLORQUANT = 0x0010  # loss due to color quantization
     CHROMA = 0x0020  # loss of chroma (e.g. RGB to gray conversion)
+    EXCESS_RESOLUTION = 0x0040  # loss due to unneeded extra resolution
+    EXCESS_DEPTH = 0x0080  # loss due to unneeded extra color depth
 
 
 class UnknownCodecError(ValueError):
