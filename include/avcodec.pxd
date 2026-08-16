@@ -206,6 +206,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         const AVProfile *profiles
 
     const AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
+    const AVCodecDescriptor* avcodec_descriptor_next(const AVCodecDescriptor *prev)
 
     cdef enum:
         AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
