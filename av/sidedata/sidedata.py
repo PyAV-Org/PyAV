@@ -122,12 +122,20 @@ class _SideDataContainer:
             self._by_type[data.type] = data
 
     def __len__(self):
-        return len(self._by_index)
+        return len(self._by_type)
 
     def __iter__(self):
-        return iter(self._by_index)
+        """Iterate the :class:`Type` keys, as a mapping must.
+
+        The values are reachable positionally too, via an integer or a slice.
+        """
+        return iter(self._by_type)
 
     def __getitem__(self, key):
+        if isinstance(key, slice):
+            # Typed as list[SideData], so slice through an untyped alias.
+            entries: object = self._by_index
+            return entries[key]
         if isinstance(key, int):
             return self._by_index[key]
         if isinstance(key, str):
