@@ -21,7 +21,7 @@ def wrap_filter_context(
     graph: Graph, filter: Filter, ptr: cython.pointer[lib.AVFilterContext]
 ) -> FilterContext:
     self: FilterContext = FilterContext(_cinit_sentinel)
-    self._graph = graph
+    self.graph = graph
     self.filter = filter
     self.ptr = ptr
 
@@ -106,17 +106,13 @@ class FilterContext:
     ):
         err_check(lib.avfilter_link(self.ptr, output_idx, input_.ptr, input_idx))
 
-    @property
-    def graph(self):
-        return self._graph
-
     def push(self, frame: Frame | None):
         res: cython.int
 
         # av_buffersrc_write_frame() dereferences graph internals that only
         # exist after configuration; pushing first would segfault.
         if self._kind == _KIND_SOURCE or frame is None:
-            self._graph.configure()
+            self.graph.configure()
 
         if frame is None:
             with cython.nogil:
