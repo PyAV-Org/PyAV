@@ -89,9 +89,7 @@ def pyav_io_open_gil(
                     cython.cast(
                         cython.pointer[cython.pointer[lib.AVDictionary]], options
                     )
-                ),
-                encoding=container.metadata_encoding,
-                errors=container.metadata_errors,
+                )
             )
         else:
             options_dict = {}
@@ -235,8 +233,6 @@ class Container:
         options,
         container_options,
         hwaccel,
-        metadata_encoding,
-        metadata_errors,
         buffer_size,
         open_timeout,
         read_timeout,
@@ -257,8 +253,6 @@ class Container:
         self.options = dict(options or ())
         self.container_options = dict(container_options or ())
         self.hwaccel = hwaccel
-        self.metadata_encoding = metadata_encoding
-        self.metadata_errors = metadata_errors
         self.open_timeout = open_timeout
         self.read_timeout = read_timeout
         self.buffer_size = buffer_size
@@ -428,9 +422,7 @@ class Container:
                     "start": ch.start,
                     "end": ch.end,
                     "time_base": from_avrational(ch.time_base),
-                    "metadata": avdict_to_dict(
-                        ch.metadata, self.metadata_encoding, self.metadata_errors
-                    ),
+                    "metadata": avdict_to_dict(ch.metadata),
                 }
             )
         return result
@@ -473,12 +465,7 @@ class Container:
             to_avrational(entry["time_base"], cython.address(ch.time_base))
             ch.metadata = cython.NULL
             if "metadata" in entry:
-                dict_to_avdict(
-                    cython.address(ch.metadata),
-                    entry["metadata"],
-                    self.metadata_encoding,
-                    self.metadata_errors,
-                )
+                dict_to_avdict(cython.address(ch.metadata), entry["metadata"])
             ch_array[i] = ch
 
         self.ptr.nb_chapters = cython.cast(cython.uint, count)
@@ -491,8 +478,6 @@ def open(
     format=None,
     options=None,
     container_options=None,
-    metadata_encoding="utf-8",
-    metadata_errors="strict",
     buffer_size=32768,
     timeout=None,
     io_open=None,
@@ -507,10 +492,6 @@ def open(
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and all streams.
     :param dict container_options: Options to pass to the container.
-    :param str metadata_encoding: Encoding to use when reading or writing file metadata.
-        Defaults to ``"utf-8"``.
-    :param str metadata_errors: Specifies how to handle encoding errors; behaves like
-        ``str.encode`` parameter. Defaults to ``"strict"``.
     :param int buffer_size: Size of buffer for Python input/output operations in bytes.
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
     :param timeout: How many seconds to wait for data before giving up, as a float, or a
@@ -574,8 +555,6 @@ def open(
             options,
             container_options,
             hwaccel,
-            metadata_encoding,
-            metadata_errors,
             buffer_size,
             open_timeout,
             read_timeout,
@@ -589,8 +568,6 @@ def open(
         options,
         container_options,
         None,
-        metadata_encoding,
-        metadata_errors,
         buffer_size,
         open_timeout,
         read_timeout,

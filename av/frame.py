@@ -187,7 +187,7 @@ class Frame:
     @property
     def metadata(self):
         """Metadata attached to the frame by FFmpeg."""
-        return avdict_to_dict(self.ptr.metadata, "utf-8", "strict")
+        return avdict_to_dict(self.ptr.metadata)
 
     def make_writable(self):
         """

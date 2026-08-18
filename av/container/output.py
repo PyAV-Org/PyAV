@@ -523,12 +523,7 @@ class OutputContainer(Container):
             )
 
         # Copy the metadata dict.
-        dict_to_avdict(
-            cython.address(self.ptr.metadata),
-            self.metadata,
-            encoding=self.metadata_encoding,
-            errors=self.metadata_errors,
-        )
+        dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
 
         all_options: Dictionary = Dictionary(self.options, self.container_options)
         options: Dictionary = all_options.copy()

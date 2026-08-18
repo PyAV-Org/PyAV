@@ -89,9 +89,7 @@ class InputContainer(Container):
                 "Hardware accelerated decode requested but no stream is compatible"
             )
 
-        self._metadata = avdict_to_dict(
-            self.ptr.metadata, self.metadata_encoding, self.metadata_errors
-        )
+        self._metadata = avdict_to_dict(self.ptr.metadata)
 
     def __dealloc__(self):
         close_input(self)
