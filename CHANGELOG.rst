@@ -37,6 +37,7 @@ Major:
 - Remove the undocumented ``CodecContext.hwaccel`` attribute. It held the ``HWAccel`` settings object passed in, not the live device context; use ``CodecContext.is_hwaccel`` to check whether hardware acceleration is in use.
 - Rational attributes (``time_base``, ``average_rate``, ``base_rate``, ``guessed_rate``, ``framerate``, ``rate``, ``sample_aspect_ratio``, and ``display_aspect_ratio``) now return :class:`av.AVRational` rather than ``fractions.Fraction``, and are never ``None``: an unset value is the falsy ``AVRational(0, 1)``. Test them with ``if not stream.time_base:`` instead of ``is None``. Setters still accept a ``fractions.Fraction``.
 - Remove ``Capabilities.hwaccel``, ``Capabilities.hwaccel_vdpau``, and ``Capabilities.neg_linesizes``, none of which FFmpeg defines any more.
+- Remove the ``stream_options`` argument to :func:`av.open` and the matching attribute. They only ever reached ``avformat_find_stream_info()``, and only for formats that expose their streams before it runs, so they raised for MPEG and friends; output containers rejected them outright. Pass ``options`` for every stream, set ``stream.codec_context.options`` for one, and ``Container.add_stream(..., options={})`` when writing.
 
 Features:
 

@@ -87,7 +87,6 @@ class Container:
     format: ContainerFormat
     options: dict[str, str]
     container_options: dict[str, str]
-    stream_options: list[dict[str, str]]
     streams: StreamContainer
     metadata: dict[str, str]
     open_timeout: Real | None
@@ -114,7 +113,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    stream_options: list[str] | None = None,
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,
@@ -129,7 +127,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    stream_options: list[str] | None = None,
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,
@@ -144,7 +141,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    stream_options: list[str] | None = None,
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,
@@ -159,7 +155,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    stream_options: list[str] | None = None,
     metadata_encoding: str = "utf-8",
     metadata_errors: str = "strict",
     buffer_size: int = 32768,

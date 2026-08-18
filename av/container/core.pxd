@@ -16,34 +16,27 @@ ctypedef struct timeout_info:
 
 cdef class Container:
     cdef lib.AVFormatContext *ptr
-    cdef readonly object name
+    cdef readonly str name
     cdef readonly str metadata_encoding
     cdef readonly str metadata_errors
-
     cdef readonly PyIOFile file
     cdef int buffer_size
     cdef readonly object io_open
     cdef readonly object open_files
-
     cdef readonly ContainerFormat format
-
     cdef readonly dict options
     cdef readonly dict container_options
-    cdef readonly list stream_options
+    cdef dict _metadata
+    cdef readonly StreamContainer streams
+    cdef readonly object open_timeout
+    cdef readonly object read_timeout
 
     cdef HWAccel hwaccel
 
-    cdef readonly StreamContainer streams
-    cdef dict _metadata
-
-    # Private API.
-    cdef uint8_t _myflag  # enum: writeable, input_was_opened, started, done, extradata_planned
-    cdef void _assert_open(self)
-    cdef int err_check(self, int value) except -1
-
-    # Timeouts
-    cdef readonly object open_timeout
-    cdef readonly object read_timeout
     cdef timeout_info interrupt_callback_info
+    cdef uint8_t _myflag  # enum: writeable, input_was_opened, started, done, extradata_planned
+
+    cdef void _assert_open(self)
     cdef void set_timeout(self, object)
     cdef void start_timeout(self)
+    cdef int err_check(self, int value) except -1

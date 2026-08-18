@@ -30,20 +30,13 @@ class InputContainer(Container):
         codec: cython.pointer[cython.const[lib.AVCodec]]
         codec_context: cython.pointer[lib.AVCodecContext]
 
-        # If we have either the global `options`, or a `stream_options`, prepare
-        # a mashup of those options for each stream.
+        # Hand `options` to every stream that is already known. Only allocate
+        # c_options when they are: some formats (e.g. MPEG) do not expose their
+        # streams until avformat_find_stream_info has run.
         c_options: cython.pointer[cython.pointer[lib.AVDictionary]] = cython.NULL
         base_dict: Dictionary
-        stream_dict: Dictionary
         nb_streams_before: cython.uint = self.ptr.nb_streams
-        if self.stream_options and nb_streams_before == 0:
-            raise ValueError(
-                "stream_options were provided, but this format does not expose "
-                "its streams before avformat_find_stream_info (e.g. MPEG). "
-                "Per-stream options cannot be applied."
-            )
-        # Only allocate c_options when streams are already known.
-        if (self.options or self.stream_options) and nb_streams_before > 0:
+        if self.options and nb_streams_before > 0:
             base_dict = Dictionary(self.options)
             c_options = cython.cast(
                 cython.pointer[cython.pointer[lib.AVDictionary]],
@@ -51,12 +44,7 @@ class InputContainer(Container):
             )
             for i in range(nb_streams_before):
                 c_options[i] = cython.NULL
-                if i < len(self.stream_options) and self.stream_options:
-                    stream_dict = base_dict.copy()
-                    stream_dict.update(self.stream_options[i])
-                    lib.av_dict_copy(cython.address(c_options[i]), stream_dict.ptr, 0)
-                else:
-                    lib.av_dict_copy(cython.address(c_options[i]), base_dict.ptr, 0)
+                lib.av_dict_copy(cython.address(c_options[i]), base_dict.ptr, 0)
 
         self.set_timeout(self.open_timeout)
         self.start_timeout()

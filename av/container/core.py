@@ -234,7 +234,6 @@ class Container:
         format_name,
         options,
         container_options,
-        stream_options,
         hwaccel,
         metadata_encoding,
         metadata_errors,
@@ -257,16 +256,11 @@ class Container:
 
         self.options = dict(options or ())
         self.container_options = dict(container_options or ())
-        self.stream_options = [dict(x) for x in stream_options or ()]
-
         self.hwaccel = hwaccel
-
         self.metadata_encoding = metadata_encoding
         self.metadata_errors = metadata_errors
-
         self.open_timeout = open_timeout
         self.read_timeout = read_timeout
-
         self.buffer_size = buffer_size
         self.io_open = io_open
 
@@ -497,7 +491,6 @@ def open(
     format=None,
     options=None,
     container_options=None,
-    stream_options=None,
     metadata_encoding="utf-8",
     metadata_errors="strict",
     buffer_size=32768,
@@ -514,7 +507,6 @@ def open(
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and all streams.
     :param dict container_options: Options to pass to the container.
-    :param list stream_options: Options to pass to each stream.
     :param str metadata_encoding: Encoding to use when reading or writing file metadata.
         Defaults to ``"utf-8"``.
     :param str metadata_errors: Specifies how to handle encoding errors; behaves like
@@ -581,7 +573,6 @@ def open(
             format,
             options,
             container_options,
-            stream_options,
             hwaccel,
             metadata_encoding,
             metadata_errors,
@@ -591,17 +582,12 @@ def open(
             io_open,
         )
 
-    if stream_options:
-        raise ValueError(
-            "Provide stream options via Container.add_stream(..., options={})."
-        )
     return OutputContainer(
         _cinit_sentinel,
         file,
         format,
         options,
         container_options,
-        stream_options,
         None,
         metadata_encoding,
         metadata_errors,
