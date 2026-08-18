@@ -17,8 +17,6 @@ ctypedef struct timeout_info:
 cdef class Container:
     cdef lib.AVFormatContext *ptr
     cdef readonly str name
-    cdef readonly str metadata_encoding
-    cdef readonly str metadata_errors
     cdef readonly PyIOFile file
     cdef int buffer_size
     cdef readonly object io_open

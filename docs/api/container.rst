@@ -14,8 +14,6 @@ Generic
 
     .. attribute:: options
     .. attribute:: container_options
-    .. attribute:: metadata_encoding
-    .. attribute:: metadata_errors
     .. attribute:: open_timeout
     .. attribute:: read_timeout
 

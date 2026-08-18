@@ -662,3 +662,31 @@ def test_hardware_encode_honors_sw_format() -> None:
     for packet in stream.encode():
         container.mux(packet)
     container.close()
+
+
+def test_metadata_survives_non_utf8_bytes(tmp_path) -> None:
+    # FFmpeg hands tags back as bytes with no declared encoding, so PyAV reads
+    # them as UTF-8 with surrogateescape. That has to be byte exact both ways,
+    # or a tag written in some other encoding is destroyed by a round trip.
+    raw = "café".encode("latin-1")
+    tag = raw.decode("utf-8", "surrogateescape")
+    path = str(tmp_path / "metadata.mkv")
+
+    with av.open(path, "w") as output:
+        stream = output.add_stream("mpeg4", rate=24)
+        assert isinstance(stream, VideoStream)
+        stream.width = stream.height = 64
+        stream.pix_fmt = "yuv420p"
+        output.metadata["title"] = tag
+        stream.metadata["note"] = tag
+        output.mux(stream.encode(VideoFrame(64, 64, "yuv420p")))
+        output.mux(stream.encode(None))
+
+    with av.open(path) as input_:
+        # Matroska upper cases the keys it does not know.
+        title = input_.metadata["title"]
+        note = input_.streams[0].metadata["NOTE"]
+
+    assert title.encode("utf-8", "surrogateescape") == raw
+    assert note.encode("utf-8", "surrogateescape") == raw
+    assert title.encode("utf-8", "surrogateescape").decode("latin-1") == "café"

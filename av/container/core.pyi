@@ -78,8 +78,6 @@ class Chapter(TypedDict):
 
 class Container:
     name: str
-    metadata_encoding: str
-    metadata_errors: str
     file: Any
     buffer_size: int
     io_open: Any
@@ -113,8 +111,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    metadata_encoding: str = "utf-8",
-    metadata_errors: str = "strict",
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
@@ -127,8 +123,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    metadata_encoding: str = "utf-8",
-    metadata_errors: str = "strict",
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
@@ -141,8 +135,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    metadata_encoding: str = "utf-8",
-    metadata_errors: str = "strict",
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,
@@ -155,8 +147,6 @@ def open(
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
-    metadata_encoding: str = "utf-8",
-    metadata_errors: str = "strict",
     buffer_size: int = 32768,
     timeout: Real | None | tuple[Real | None, Real | None] = None,
     io_open: Callable[..., Any] | None = None,

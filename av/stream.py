@@ -120,11 +120,7 @@ class Stream:
 
         self.codec_context = codec_context
 
-        self.metadata = avdict_to_dict(
-            stream.metadata,
-            encoding=self.container.metadata_encoding,
-            errors=self.container.metadata_errors,
-        )
+        self.metadata = avdict_to_dict(stream.metadata)
 
     @cython.cfunc
     def _is_open(self) -> cython.bint:
@@ -176,12 +172,7 @@ class Stream:
 
     @cython.cfunc
     def _finalize_for_output(self) -> cython.void:
-        dict_to_avdict(
-            cython.address(self.ptr.metadata),
-            self.metadata,
-            encoding=self.container.metadata_encoding,
-            errors=self.container.metadata_errors,
-        )
+        dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
 
         if self.codec_context is None:
             return
