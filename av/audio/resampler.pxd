@@ -5,15 +5,13 @@ from av.filter.graph cimport Graph
 
 
 cdef class AudioResampler:
-    cdef readonly bint is_passthrough
     cdef AudioFrame template
-
-    # Destination descriptors
+    cdef Graph graph
     cdef readonly AudioFormat format
     cdef readonly AudioLayout layout
+    cdef readonly dict options
     cdef readonly int rate
     cdef readonly unsigned int frame_size
-    cdef readonly dict options
+    cdef readonly bint is_passthrough
 
-    cdef Graph graph
     cpdef list[AudioFrame] resample(self, AudioFrame)
