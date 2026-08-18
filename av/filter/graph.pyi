@@ -28,7 +28,7 @@ class Graph:
         template: VideoStream | None = None,
         width: int | None = None,
         height: int | None = None,
-        format: VideoFormat | None = None,
+        format: VideoFormat | str | None = None,
         name: str | None = None,
         time_base: AVRational | Fraction | None = None,
     ) -> FilterContext: ...

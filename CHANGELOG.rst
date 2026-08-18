@@ -47,6 +47,8 @@ Features:
 Fixes:
 
 - ``av.dump_codecs()`` no longer drops the canonical names ``h264``, ``hevc``, ``av1``, ``dirac``, and ``ilbc``, each of which was overwritten by the row of whichever encoder it resolved to.
+- ``FilterLink.input`` and ``FilterLink.output`` now follow the filters the graph auto-inserts while configuring. They cached the pad they first resolved, so reading one before ``Graph.configure()`` reported the filter the link no longer pointed at.
+- Fix a segfault when a ``FilterLink`` outlives its ``Graph``. It held the graph by weak reference and dereferenced ``AVFilterLink`` before consulting it, so ``link.input`` and ``link.output`` read freed memory. It now holds the graph, as a ``FilterContext`` already did.
 - Reading a :class:`.Stream` or its :attr:`~av.stream.Stream.index_entries` after the container is closed now raises instead of reading freed memory, since ``avformat_close_input()`` frees the underlying ``AVStream``. Holding an ``index_entries`` also keeps its container alive, and an :class:`.IndexEntry` is a copy, so it stays readable after the close and is unaffected by the demuxer reallocating the index.
 - Attaching one object to the ``opaque`` of more than one frame or packet no longer loses it. The objects were keyed by ``id()``, so every holder shared an entry and whichever was freed first took it away from the rest.
 - ``Frame.side_data`` now satisfies the ``Mapping`` protocol it advertises: iteration yields :class:`~av.sidedata.sidedata.Type` keys, so ``items()``, ``keys()``, and ``values()`` work instead of raising ``KeyError``. Values remain reachable positionally by an integer or, for the first time, a slice. Its type stub was a ``TypedDict`` with a single literal key, and is now ``SideDataContainer``.

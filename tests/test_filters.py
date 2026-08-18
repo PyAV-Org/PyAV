@@ -4,9 +4,10 @@ from fractions import Fraction
 import numpy as np
 
 import av
-from av import AudioFrame, VideoFrame
+from av import AudioFrame, AVRational, VideoFrame
 from av.audio.frame import format_dtypes
 from av.filter import Filter, Graph
+from av.filter.context import FilterContext
 
 from .common import TestCase, has_pillow
 
@@ -72,6 +73,54 @@ class TestFilters(TestCase):
 
         if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot2.png"))
+
+    def test_link_keeps_graph_alive(self) -> None:
+        import gc
+
+        graph = Graph()
+        src = graph.add("testsrc")
+        sink = graph.add("buffersink")
+        src.link_to(sink)
+        graph.configure()
+
+        link = src.outputs[0].link
+        assert link is not None
+        del graph, src, sink
+        gc.collect()
+
+        # The link points into the graph's memory, so holding it must hold the
+        # graph, exactly as holding a filter context does.
+        assert link.graph is not None
+        assert link.input.context.name == "testsrc"
+        assert link.output.context.name == "buffersink"
+
+    def test_link_pads_follow_auto_inserted_filters(self) -> None:
+        # Configuring a graph splices a converter in where formats disagree,
+        # which re-points the link. Reading a pad early must not pin the answer.
+        def build() -> tuple[Graph, FilterContext]:
+            graph = Graph()
+            src = graph.add_buffer(
+                width=64, height=64, format="yuv420p", time_base=AVRational(1, 24)
+            )
+            lutrgb = graph.add("lutrgb", "r=maxval-val:g=maxval-val:b=maxval-val")
+            sink = graph.add("buffersink")
+            src.link_to(lutrgb)
+            lutrgb.link_to(sink)
+            return graph, src
+
+        early_graph, early_src = build()
+        early_link = early_src.outputs[0].link
+        assert early_link is not None
+        early_link.output  # would have been cached
+        early_graph.configure()
+
+        late_graph, late_src = build()
+        late_graph.configure()
+        late_link = late_src.outputs[0].link
+        assert late_link is not None
+
+        assert early_link.output.context.name == late_link.output.context.name
+        assert early_link.input.context.name == late_link.input.context.name
 
     def test_auto_find_sink(self) -> None:
         graph = Graph()

@@ -1,9 +1,14 @@
 from av.filter import Graph
+from av.filter.link import FilterContextPad
 from av.frame import Frame
 
 class FilterContext:
     name: str | None
 
+    @property
+    def inputs(self) -> tuple[FilterContextPad, ...]: ...
+    @property
+    def outputs(self) -> tuple[FilterContextPad, ...]: ...
     def init(self, args: str | None = None, **kwargs: str | None) -> None: ...
     def link_to(
         self, input_: FilterContext, output_idx: int = 0, input_idx: int = 0
