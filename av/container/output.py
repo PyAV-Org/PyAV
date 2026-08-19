@@ -12,7 +12,7 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream, wrap_stream
 from cython.cimports.av.utils import dict_to_avdict, to_avrational
-from cython.cimports.libc.stdint import uint8_t
+from cython.cimports.libc.stdint import int64_t, uint8_t
 from cython.cimports.libc.string import memcpy, memset
 
 
@@ -146,12 +146,22 @@ class OutputContainer(Container):
         has_time_base: cython.bint = "time_base" in kwargs
         if has_time_base:
             to_avrational(kwargs.pop("time_base"), cython.address(c_time_base))
+
+        c_width: cython.int = 0
+        c_height: cython.int = 0
+        c_bit_rate: int64_t = 0
+        c_bit_rate_tolerance: cython.int = 0
         if codec.type == lib.AVMEDIA_TYPE_VIDEO:
             to_avrational(rate or 24, cython.address(c_framerate))
-        elif codec.type == lib.AVMEDIA_TYPE_AUDIO and not (
-            rate is None or type(rate) is int
-        ):
-            raise TypeError("audio stream `rate` must be: int | None")
+            c_width = kwargs.pop("width", 640)
+            c_height = kwargs.pop("height", 480)
+            c_bit_rate = kwargs.pop("bit_rate", 0)
+            c_bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 128000)
+        elif codec.type == lib.AVMEDIA_TYPE_AUDIO:
+            if not (rate is None or type(rate) is int):
+                raise TypeError("audio stream `rate` must be: int | None")
+            c_bit_rate = kwargs.pop("bit_rate", 0)
+            c_bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 32000)
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
         ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(codec)
@@ -168,10 +178,10 @@ class OutputContainer(Container):
         # Now let's set some more sane video defaults
         if codec.type == lib.AVMEDIA_TYPE_VIDEO:
             ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
-            ctx.width = kwargs.pop("width", 640)
-            ctx.height = kwargs.pop("height", 480)
-            ctx.bit_rate = kwargs.pop("bit_rate", 0)
-            ctx.bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 128000)
+            ctx.width = c_width
+            ctx.height = c_height
+            ctx.bit_rate = c_bit_rate
+            ctx.bit_rate_tolerance = c_bit_rate_tolerance
             ctx.framerate = c_framerate
 
             stream.avg_frame_rate = ctx.framerate
@@ -190,8 +200,8 @@ class OutputContainer(Container):
             )
             if out:
                 ctx.sample_fmt = cython.cast(cython.pointer[lib.AVSampleFormat], out)[0]
-            ctx.bit_rate = kwargs.pop("bit_rate", 0)
-            ctx.bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 32000)
+            ctx.bit_rate = c_bit_rate
+            ctx.bit_rate_tolerance = c_bit_rate_tolerance
             ctx.sample_rate = 48000 if rate is None else rate
             stream.time_base = ctx.time_base
             lib.av_channel_layout_default(cython.address(ctx.ch_layout), 2)
@@ -204,9 +214,13 @@ class OutputContainer(Container):
         #
         # Subsequent changes to the codec context will be applied just before
         # encoding starts in `start_encoding()`.
-        err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
+        try:
+            err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
+        except Exception:
+            lib.avcodec_free_context(cython.address(ctx))
+            raise
 
-        # Construct the user-land stream
+        # Construct the user-land stream, which takes ownership of ctx.
         py_codec_context: CodecContext = wrap_codec_context(ctx, codec, hwaccel)
         py_stream: Stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
@@ -268,10 +282,15 @@ class OutputContainer(Container):
             )
 
         c_rate: lib.AVRational
-        if rate is not None:
-            if codec_type == lib.AVMEDIA_TYPE_VIDEO:
+        c_width: cython.int = 0
+        c_height: cython.int = 0
+        if codec_type == lib.AVMEDIA_TYPE_VIDEO:
+            if rate is not None:
                 to_avrational(rate, cython.address(c_rate))
-            elif codec_type == lib.AVMEDIA_TYPE_AUDIO and type(rate) is not int:
+            c_width = kwargs.pop("width", 0)
+            c_height = kwargs.pop("height", 0)
+        elif codec_type == lib.AVMEDIA_TYPE_AUDIO:
+            if rate is not None and type(rate) is not int:
                 raise TypeError("audio stream `rate` must be: int | None")
 
         # Create stream with no codec context.
@@ -285,8 +304,8 @@ class OutputContainer(Container):
         stream.codecpar.codec_type = codec_type
 
         if codec_type == lib.AVMEDIA_TYPE_VIDEO:
-            stream.codecpar.width = kwargs.pop("width", 0)
-            stream.codecpar.height = kwargs.pop("height", 0)
+            stream.codecpar.width = c_width
+            stream.codecpar.height = c_height
             if rate is not None:
                 stream.avg_frame_rate = c_rate
         elif codec_type == lib.AVMEDIA_TYPE_AUDIO and rate is not None:
@@ -346,28 +365,34 @@ class OutputContainer(Container):
             lib.avcodec_free_context(cython.address(ctx))
             raise MemoryError("Could not allocate stream")
 
-        err_check(lib.avcodec_parameters_to_context(ctx, template.ptr.codecpar))
-        # Reset the codec tag assuming we are remuxing.
-        ctx.codec_tag = 0
+        try:
+            err_check(lib.avcodec_parameters_to_context(ctx, template.ptr.codecpar))
+            # Reset the codec tag assuming we are remuxing.
+            ctx.codec_tag = 0
 
-        # Copy the template's stream time_base
-        stream.time_base = template.ptr.time_base
-        ctx.time_base = template.ptr.time_base
+            # Copy the template's stream time_base
+            stream.time_base = template.ptr.time_base
+            ctx.time_base = template.ptr.time_base
 
-        # Some formats want stream headers to be separate
-        if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
-            ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
+            # Some formats want stream headers to be separate
+            if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
+                ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
 
-        # Copy flags If we're creating a new codec object. This fixes some muxing issues.
-        # Overwriting `ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER` is intentional.
-        if not opaque:
-            ctx.flags = template.codec_context.flags
+            # Copy flags If we're creating a new codec object. This fixes some
+            # muxing issues. Overwriting the flag set just above is intentional.
+            if not opaque:
+                ctx.flags = template.codec_context.flags
 
-        # Initialize stream codec parameters to populate the codec type. Subsequent changes to
-        # the codec context will be applied just before encoding starts in `start_encoding()`.
-        err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
+            # Initialize stream codec parameters to populate the codec type.
+            # Subsequent changes to the codec context will be applied just
+            # before encoding starts in `start_encoding()`.
+            err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
+        except Exception:
+            # Nothing owns ctx until wrap_codec_context() below.
+            lib.avcodec_free_context(cython.address(ctx))
+            raise
 
-        # Construct the user-land stream
+        # Construct the user-land stream, which takes ownership of ctx.
         py_codec_context: CodecContext = wrap_codec_context(ctx, codec, None)
         py_codec_context._ctxflags |= 1  # _template_initialized = True
         py_stream: Stream = wrap_stream(self, stream, py_codec_context)
@@ -509,7 +534,12 @@ class OutputContainer(Container):
                 ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
 
             # Initialize stream codec parameters
-            err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
+            try:
+                err_check(lib.avcodec_parameters_from_context(stream.codecpar, ctx))
+            except Exception:
+                # Nothing owns ctx until wrap_codec_context() below.
+                lib.avcodec_free_context(cython.address(ctx))
+                raise
         else:
             # No codec available - set basic parameters for data stream
             stream.codecpar.codec_type = lib.AVMEDIA_TYPE_DATA
