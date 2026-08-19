@@ -48,6 +48,7 @@ Features:
 
 Fixes:
 
+- A rejected ``add_stream()`` or ``add_mux_stream()`` no longer breaks the container.
 - ``InputContainer.size`` returns ``None`` when the size cannot be determined rather than the negative ``AVERROR`` it was passing through, which read as a plausible byte count. A non-seekable input, such as a pipe, reported ``-78``.
 - ``av.dump_codecs()`` no longer drops the canonical names ``h264``, ``hevc``, ``av1``, ``dirac``, and ``ilbc``, each of which was overwritten by the row of whichever encoder it resolved to.
 - ``FilterLink.input`` and ``FilterLink.output`` now follow the filters the graph auto-inserts while configuring. They cached the pad they first resolved, so reading one before ``Graph.configure()`` reported the filter the link no longer pointed at.
