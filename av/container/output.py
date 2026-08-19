@@ -38,6 +38,9 @@ def _set_codecpar_extradata(
 
 @cython.cfunc
 def close_output(self: OutputContainer) -> cython.void:
+    if self.ptr == cython.NULL:
+        return  # Already closed.
+
     if self.packet_ptr != cython.NULL and self._buffered_packets:
         buffered: list[Packet] = self._buffered_packets
         self._buffered_packets = []
@@ -46,21 +49,33 @@ def close_output(self: OutputContainer) -> cython.void:
             self._mux_one(packet)
 
     self.streams = StreamContainer()
-    if self._myflag & 12 == 4:  # enum.started and not enum.done
-        # If the underlying Python IO file was already closed (e.g. during GC
-        # finalization where cycle ordering is undefined), skip the trailer.
-        if self.file is not None and getattr(self.file.file, "closed", False):
-            self._myflag |= 8  # enum.done = True
-            return
-        # We must only ever call av_write_trailer *once*, otherwise we get a
-        # segmentation fault. Therefore no matter whether it succeeds or not
-        # we must absolutely set enum.done.
-        try:
-            self.err_check(lib.av_write_trailer(self.ptr))
-        finally:
-            if self.file is None and not (self.ptr.oformat.flags & lib.AVFMT_NOFILE):
-                lib.avio_closep(cython.address(self.ptr.pb))
-            self._myflag |= 8  # enum.done = True
+    try:
+        if self._myflag & 12 == 4:  # enum.started and not enum.done
+            # If the underlying Python IO file was already closed (e.g. during
+            # GC finalization where cycle ordering is undefined), skip the
+            # trailer.
+            if self.file is not None and getattr(self.file.file, "closed", False):
+                self._myflag |= 8  # enum.done = True
+                return
+            # We must only ever call av_write_trailer *once*, otherwise we get a
+            # segmentation fault. Therefore no matter whether it succeeds or not
+            # we must absolutely set enum.done.
+            try:
+                self.err_check(lib.av_write_trailer(self.ptr))
+            finally:
+                if self.file is None and not (
+                    self.ptr.oformat.flags & lib.AVFMT_NOFILE
+                ):
+                    lib.avio_closep(cython.address(self.ptr.pb))
+                self._myflag |= 8  # enum.done = True
+    finally:
+        # Drop the context so a closed output reports itself as closed:
+        # Container._assert_open() tests for a NULL ptr, which demuxing gets
+        # for free from avformat_close_input(). Muxing has no such call, and
+        # without this every accessor kept working on a finished file.
+        with cython.nogil:
+            lib.avformat_free_context(self.ptr)
+            self.ptr = cython.NULL
 
 
 @cython.final
@@ -111,6 +126,8 @@ class OutputContainer(Container):
 
         """
 
+        self._assert_open()
+
         codec_obj: Codec = Codec(codec_name, "w")
         codec: cython.pointer[cython.const[lib.AVCodec]] = codec_obj.ptr
 
@@ -122,7 +139,8 @@ class OutputContainer(Container):
                 f"{self.format.name!r} format does not support {codec_obj.name!r} codec"
             )
 
-        c_time_base, c_framerate: lib.AVRational
+        c_time_base: lib.AVRational
+        c_framerate: lib.AVRational
         has_time_base: cython.bint = "time_base" in kwargs
         if has_time_base:
             to_avrational(kwargs.pop("time_base"), cython.address(c_time_base))
@@ -213,6 +231,8 @@ class OutputContainer(Container):
         :rtype: The new :class:`~av.stream.Stream`.
 
         """
+        self._assert_open()
+
         # Find the codec to get its id and type (try encoder first, then decoder).
         codec_name_bytes: bytes = codec_name.encode()
         codec: cython.pointer[cython.const[lib.AVCodec]] = (
@@ -290,6 +310,7 @@ class OutputContainer(Container):
         :param \\**kwargs: Set attributes for the stream.
         :rtype: The new :class:`~av.stream.Stream`.
         """
+        self._assert_open()
         template.container._assert_open()
 
         if opaque is None:
@@ -390,6 +411,8 @@ class OutputContainer(Container):
         - Only supported by formats that support attachments (e.g. Matroska).
         - No per-packet muxing is required; attachments are written at header time.
         """
+        self._assert_open()
+
         # Create stream with no codec (attachments are codec-less).
         stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(
             self.ptr, cython.NULL
@@ -433,6 +456,8 @@ class OutputContainer(Container):
         :param dict options: Stream options.
         :rtype: The new :class:`~av.data.stream.DataStream`.
         """
+        self._assert_open()
+
         codec: cython.pointer[cython.const[lib.AVCodec]] = cython.NULL
         codec_descriptor: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
             cython.NULL
@@ -497,6 +522,7 @@ class OutputContainer(Container):
     @cython.ccall
     def start_encoding(self):
         """Write the file header! Called automatically."""
+        self._assert_open()
         if self._myflag & 4:  # started
             return
 
@@ -559,6 +585,8 @@ class OutputContainer(Container):
         """
         Returns a set of all codecs this format supports.
         """
+        self._assert_open()
+
         result: set[str] = set()
         codec: cython.pointer[cython.const[lib.AVCodec]] = cython.NULL
         opaque: cython.p_void = cython.NULL
@@ -612,6 +640,7 @@ class OutputContainer(Container):
                 self.mux_one(packet)
 
     def mux_one(self, packet: Packet):
+        self._assert_open()
         if not (self._myflag & 4) and self._buffer_for_extradata(packet):
             return
 
