@@ -91,6 +91,7 @@ class Container:
     read_timeout: Real | None
     flags: int
     video_codec_id: int
+    def dumps_format(self) -> str: ...
     def __enter__(self) -> Self: ...
     def __exit__(
         self,

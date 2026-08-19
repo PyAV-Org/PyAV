@@ -2,6 +2,8 @@ import gc
 import io
 from pathlib import Path
 
+import pytest
+
 import av
 
 from .common import fate_suite
@@ -53,3 +55,31 @@ def test_container_no_close() -> None:
     # Do not close so that container is freed through GC.
     _container_no_close()
     gc.collect()
+
+
+def test_output_container_is_closed_after_close(tmp_path) -> None:
+    path = str(tmp_path / "out.mp4")
+    container = av.open(path, "w")
+    stream = container.add_stream("mpeg4", rate=24)
+    stream.width = stream.height = 64
+    stream.pix_fmt = "yuv420p"
+    container.mux(stream.encode(av.VideoFrame(64, 64, "yuv420p")))
+    container.mux(stream.encode(None))
+    container.close()
+
+    # Muxing has no avformat_close_input() to null the context for it, so
+    # everything below used to keep working on a finished file.
+    for call in (
+        lambda: container.add_stream("mpeg4", rate=24),
+        lambda: container.add_mux_stream("h264"),
+        lambda: container.add_data_stream(),
+        lambda: container.add_attachment("a", "text/plain", b"b"),
+        lambda: container.supported_codecs,
+        lambda: container.mux(av.Packet(4)),
+        lambda: container.start_encoding(),
+        lambda: container.dumps_format(),
+    ):
+        with pytest.raises(AssertionError, match="Container is not open"):
+            call()
+
+    container.close()  # idempotent

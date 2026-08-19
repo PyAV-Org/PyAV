@@ -229,6 +229,11 @@ class TestStreams:
             packet.pts = i
             packet.stream = data_stream
             container1.mux(packet)
+
+        # Test string representation, while the container is still open.
+        repr = f"{data_stream}"
+        assert repr.startswith("<av.DataStream #0") and repr.endswith(">")
+
         container1.close()
 
         # Test reading back the data stream
@@ -247,10 +252,6 @@ class TestStreams:
         assert len(packets) == len(test_data)
         for read_packet, original_data in zip(packets, test_data):
             assert bytes(read_packet) == original_data
-
-        # Test string representation
-        repr = f"{data_stream}"
-        assert repr.startswith("<av.DataStream #0") and repr.endswith(">")
 
         container.close()
 
