@@ -662,3 +662,29 @@ def test_hardware_encode_honors_sw_format() -> None:
     for packet in stream.encode():
         container.mux(packet)
     container.close()
+
+
+@pytest.mark.parametrize("method", ["add_stream", "add_mux_stream"])
+def test_rejected_stream_leaves_container_usable(tmp_path, method: str) -> None:
+    # A stream cannot be removed from an AVFormatContext, so anything that can
+    # raise has to be checked before one is created. Otherwise the orphan
+    # desynchronises container.streams and the next valid call fails.
+    with av.open(str(tmp_path / "out.mkv"), "w") as output:
+        add = getattr(output, method)
+        with pytest.raises(TypeError):
+            add("aac", rate=44100.5)
+        assert len(output.streams) == 0
+
+        stream = add("aac", rate=44100)
+        assert stream.index == 0
+        assert len(output.streams) == 1
+
+
+def test_rejected_time_base_leaves_container_usable(tmp_path) -> None:
+    with av.open(str(tmp_path / "out.mkv"), "w") as output:
+        with pytest.raises(AttributeError):
+            output.add_stream("mpeg4", rate=24, time_base="not-a-rational")
+        assert len(output.streams) == 0
+
+        stream = output.add_stream("mpeg4", rate=24)
+        assert stream.index == 0
