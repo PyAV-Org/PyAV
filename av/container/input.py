@@ -29,6 +29,7 @@ class InputContainer(Container):
         stream: cython.pointer[lib.AVStream]
         codec: cython.pointer[cython.const[lib.AVCodec]]
         codec_context: cython.pointer[lib.AVCodecContext]
+        ret: cython.int
 
         # Hand `options` to every stream that is already known. Only allocate
         # c_options when they are: some formats (e.g. MPEG) do not expose their
@@ -42,6 +43,8 @@ class InputContainer(Container):
                 cython.pointer[cython.pointer[lib.AVDictionary]],
                 malloc(nb_streams_before * cython.sizeof(cython.p_void)),
             )
+            if c_options == cython.NULL:
+                raise MemoryError()
             for i in range(nb_streams_before):
                 c_options[i] = cython.NULL
                 lib.av_dict_copy(cython.address(c_options[i]), base_dict.ptr, 0)
@@ -51,12 +54,13 @@ class InputContainer(Container):
         with cython.nogil:
             ret = lib.avformat_find_stream_info(self.ptr, c_options)
         self.set_timeout(None)
-        self.err_check(ret)
 
         if c_options:
             for i in range(nb_streams_before):
                 lib.av_dict_free(cython.address(c_options[i]))
             free(c_options)
+
+        self.err_check(ret)
 
         at_least_one_accelerated_context = False
 
@@ -66,9 +70,12 @@ class InputContainer(Container):
             codec = lib.avcodec_find_decoder(stream.codecpar.codec_id)
             if codec:
                 codec_context = lib.avcodec_alloc_context3(codec)
-                err_check(
-                    lib.avcodec_parameters_to_context(codec_context, stream.codecpar)
-                )
+                if codec_context == cython.NULL:
+                    raise MemoryError()
+                ret = lib.avcodec_parameters_to_context(codec_context, stream.codecpar)
+                if ret < 0:
+                    lib.avcodec_free_context(cython.address(codec_context))
+                    err_check(ret)
                 codec_context.pkt_timebase = stream.time_base
                 py_codec_context = wrap_codec_context(
                     codec_context, codec, self.hwaccel
