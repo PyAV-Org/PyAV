@@ -122,22 +122,37 @@ class OutputContainer(Container):
                 f"{self.format.name!r} format does not support {codec_obj.name!r} codec"
             )
 
-        # Create new stream in the AVFormatContext, set AVCodecContext values.
-        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(self.ptr, codec)
-        ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(codec)
+        c_time_base, c_framerate: lib.AVRational
+        has_time_base: cython.bint = "time_base" in kwargs
+        if has_time_base:
+            to_avrational(kwargs.pop("time_base"), cython.address(c_time_base))
+        if codec.type == lib.AVMEDIA_TYPE_VIDEO:
+            to_avrational(rate or 24, cython.address(c_framerate))
+        elif codec.type == lib.AVMEDIA_TYPE_AUDIO and not (
+            rate is None or type(rate) is int
+        ):
+            raise TypeError("audio stream `rate` must be: int | None")
 
-        # Now lets set some more sane video defaults
+        # Create new stream in the AVFormatContext, set AVCodecContext values.
+        ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(codec)
+        if ctx == cython.NULL:
+            raise MemoryError("Could not allocate codec context")
+        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(self.ptr, codec)
+        if stream == cython.NULL:
+            lib.avcodec_free_context(cython.address(ctx))
+            raise MemoryError("Could not allocate stream")
+
+        if has_time_base:
+            ctx.time_base = c_time_base
+
+        # Now let's set some more sane video defaults
         if codec.type == lib.AVMEDIA_TYPE_VIDEO:
             ctx.pix_fmt = lib.AV_PIX_FMT_YUV420P
             ctx.width = kwargs.pop("width", 640)
             ctx.height = kwargs.pop("height", 480)
             ctx.bit_rate = kwargs.pop("bit_rate", 0)
             ctx.bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 128000)
-            try:
-                to_avrational(kwargs.pop("time_base"), cython.address(ctx.time_base))
-            except KeyError:
-                pass
-            to_avrational(rate or 24, cython.address(ctx.framerate))
+            ctx.framerate = c_framerate
 
             stream.avg_frame_rate = ctx.framerate
             stream.time_base = ctx.time_base
@@ -157,17 +172,7 @@ class OutputContainer(Container):
                 ctx.sample_fmt = cython.cast(cython.pointer[lib.AVSampleFormat], out)[0]
             ctx.bit_rate = kwargs.pop("bit_rate", 0)
             ctx.bit_rate_tolerance = kwargs.pop("bit_rate_tolerance", 32000)
-            try:
-                to_avrational(kwargs.pop("time_base"), cython.address(ctx.time_base))
-            except KeyError:
-                pass
-
-            if rate is None:
-                ctx.sample_rate = 48000
-            elif type(rate) is int:
-                ctx.sample_rate = rate
-            else:
-                raise TypeError("audio stream `rate` must be: int | None")
+            ctx.sample_rate = 48000 if rate is None else rate
             stream.time_base = ctx.time_base
             lib.av_channel_layout_default(cython.address(ctx.ch_layout), 2)
 
@@ -240,6 +245,13 @@ class OutputContainer(Container):
                 f"{self.format.name!r} format does not support {codec_name!r} codec"
             )
 
+        c_rate: lib.AVRational
+        if rate is not None:
+            if codec_type == lib.AVMEDIA_TYPE_VIDEO:
+                to_avrational(rate, cython.address(c_rate))
+            elif codec_type == lib.AVMEDIA_TYPE_AUDIO and type(rate) is not int:
+                raise TypeError("audio stream `rate` must be: int | None")
+
         # Create stream with no codec context.
         stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(
             self.ptr, cython.NULL
@@ -254,13 +266,9 @@ class OutputContainer(Container):
             stream.codecpar.width = kwargs.pop("width", 0)
             stream.codecpar.height = kwargs.pop("height", 0)
             if rate is not None:
-                to_avrational(rate, cython.address(stream.avg_frame_rate))
-        elif codec_type == lib.AVMEDIA_TYPE_AUDIO:
-            if rate is not None:
-                if type(rate) is int:
-                    stream.codecpar.sample_rate = rate
-                else:
-                    raise TypeError("audio stream `rate` must be: int | None")
+                stream.avg_frame_rate = c_rate
+        elif codec_type == lib.AVMEDIA_TYPE_AUDIO and rate is not None:
+            stream.codecpar.sample_rate = rate
 
         # Construct the user-land stream (no codec context).
         py_stream: Stream = wrap_stream(self, stream, None)
