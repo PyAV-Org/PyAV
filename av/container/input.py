@@ -161,11 +161,12 @@ class InputContainer(Container):
         self._assert_open()
 
         streams: list[Stream] = self.streams.get(*args, **kwargs)
-        if self.ptr.nb_streams == 0:
+        nb_streams: cython.uint = self.ptr.nb_streams
+        if nb_streams == 0:
             return
         include_stream: cython.pointer[uint8_t] = cython.cast(
             cython.pointer[uint8_t],
-            malloc(self.ptr.nb_streams * cython.sizeof(uint8_t)),
+            malloc(nb_streams * cython.sizeof(uint8_t)),
         )
         if include_stream == cython.NULL:
             raise MemoryError()
@@ -177,11 +178,11 @@ class InputContainer(Container):
 
         self.set_timeout(self.read_timeout)
         try:
-            for i in range(self.ptr.nb_streams):
+            for i in range(nb_streams):
                 include_stream[i] = 0
             for stream in streams:
                 i = stream.index
-                if i >= self.ptr.nb_streams:
+                if i >= nb_streams:
                     raise ValueError(f"stream index {i} out of range")
                 include_stream[i] = 1
 
@@ -203,11 +204,14 @@ class InputContainer(Container):
                 except EOFError:
                     break
 
-                if include_stream[read_packet.stream_index]:
-                    # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
-                    # may also appear in av_read_frame().
-                    # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
-                    # TODO: find better way to handle this
+                # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
+                # may also appear in av_read_frame(). They are past the end of
+                # include_stream, and nothing selected them anyway.
+                # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
+                if (
+                    read_packet.stream_index < nb_streams
+                    and include_stream[read_packet.stream_index]
+                ):
                     if read_packet.stream_index < len(self.streams):
                         # Move the encoded data out of the read buffer into a
                         # fresh Packet for the caller.
@@ -220,7 +224,7 @@ class InputContainer(Container):
                         yield packet
 
             # Flush!
-            for i in range(self.ptr.nb_streams):
+            for i in range(nb_streams):
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]
