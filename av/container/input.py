@@ -127,8 +127,17 @@ class InputContainer(Container):
 
     @property
     def size(self):
+        """Size of the input in bytes, or ``None`` if it cannot be determined.
+
+        A non-seekable input, such as a pipe or a file-like object without
+        ``seek``, has no size to report.
+
+        Wraps :ffmpeg:`avio_size`.
+        """
         self._assert_open()
-        return lib.avio_size(self.ptr.pb)
+        size: int64_t = lib.avio_size(self.ptr.pb)
+        if size >= 0:
+            return size
 
     def close(self):
         close_input(self)

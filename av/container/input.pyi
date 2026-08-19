@@ -17,7 +17,7 @@ class InputContainer(Container):
     start_time_realtime: int | None
     duration: int | None
     bit_rate: int
-    size: int
+    size: int | None
 
     @overload
     def demux(self, video_stream: VideoStream) -> Iterator[Packet[VideoStream]]: ...
