@@ -87,6 +87,8 @@ class OutputContainer(Container):
         self._buffered_packets = []
         with cython.nogil:
             self.packet_ptr = lib.av_packet_alloc()
+        if self.packet_ptr == cython.NULL:
+            raise MemoryError("Could not allocate packet")
 
     def __del__(self):
         close_output(self)
@@ -336,8 +338,13 @@ class OutputContainer(Container):
             )
 
         # Create new stream in the AVFormatContext, set AVCodecContext values.
-        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(self.ptr, codec)
         ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(codec)
+        if ctx == cython.NULL:
+            raise MemoryError("Could not allocate codec context")
+        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(self.ptr, codec)
+        if stream == cython.NULL:
+            lib.avcodec_free_context(cython.address(ctx))
+            raise MemoryError("Could not allocate stream")
 
         err_check(lib.avcodec_parameters_to_context(ctx, template.ptr.codecpar))
         # Reset the codec tag assuming we are remuxing.
@@ -482,18 +489,21 @@ class OutputContainer(Container):
                     f"{self.format.name!r} format does not support {codec_name!r} codec"
                 )
 
-        # Create new stream in the AVFormatContext
-        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(self.ptr, codec)
-        if stream == cython.NULL:
-            raise MemoryError("Could not allocate stream")
-
-        # Set up codec context and parameters
+        # The context first, so a failure here does not orphan a stream.
         ctx: cython.pointer[lib.AVCodecContext] = cython.NULL
         if codec != cython.NULL:
             ctx = lib.avcodec_alloc_context3(codec)
             if ctx == cython.NULL:
                 raise MemoryError("Could not allocate codec context")
 
+        # Create new stream in the AVFormatContext
+        stream: cython.pointer[lib.AVStream] = lib.avformat_new_stream(self.ptr, codec)
+        if stream == cython.NULL:
+            if ctx != cython.NULL:
+                lib.avcodec_free_context(cython.address(ctx))
+            raise MemoryError("Could not allocate stream")
+
+        if codec != cython.NULL:
             # Some formats want stream headers to be separate
             if self.ptr.oformat.flags & lib.AVFMT_GLOBALHEADER:
                 ctx.flags |= lib.AV_CODEC_FLAG_GLOBAL_HEADER
