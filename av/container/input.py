@@ -2,7 +2,6 @@ import cython
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
 from cython.cimports.av.container.streams import StreamContainer
 from cython.cimports.av.dictionary import Dictionary
-from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream, wrap_stream
 from cython.cimports.av.utils import avdict_to_dict
@@ -75,7 +74,7 @@ class InputContainer(Container):
                 ret = lib.avcodec_parameters_to_context(codec_context, stream.codecpar)
                 if ret < 0:
                     lib.avcodec_free_context(cython.address(codec_context))
-                    err_check(ret)
+                    self.err_check(ret)
                 codec_context.pkt_timebase = stream.time_base
                 py_codec_context = wrap_codec_context(
                     codec_context, codec, self.hwaccel
@@ -320,7 +319,7 @@ class InputContainer(Container):
         stream_index: cython.int = stream.index if stream else -1
         with cython.nogil:
             ret = lib.av_seek_frame(self.ptr, stream_index, c_offset, flags)
-        err_check(ret)
+        self.err_check(ret)
 
         self.flush_buffers()
 
