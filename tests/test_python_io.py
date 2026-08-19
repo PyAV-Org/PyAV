@@ -116,8 +116,7 @@ def read(
         assert container.format.name == "mpegts"
         assert container.format.long_name == "MPEG-TS (MPEG-2 Transport Stream)"
         assert len(container.streams) == 1
-        if seekable:
-            assert container.size == 800000
+        assert container.size == (800000 if seekable else None)
         assert container.metadata == {}
 
     # Check method calls.
