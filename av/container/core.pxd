@@ -18,9 +18,8 @@ cdef class Container:
     cdef lib.AVFormatContext *ptr
     cdef readonly str name
     cdef readonly PyIOFile file
-    cdef int buffer_size
     cdef readonly object io_open
-    cdef readonly object open_files
+    cdef readonly dict open_files
     cdef readonly ContainerFormat format
     cdef readonly dict options
     cdef readonly dict container_options
@@ -32,6 +31,7 @@ cdef class Container:
     cdef HWAccel hwaccel
 
     cdef timeout_info interrupt_callback_info
+    cdef int buffer_size
     cdef uint8_t _myflag  # enum: writeable, input_was_opened, started, done, extradata_planned
 
     cdef void _assert_open(self)
