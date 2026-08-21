@@ -325,6 +325,17 @@ class TestDecode(TestCase):
             assert list(side_data[:]) == list(side_data.values())
             return
 
+    def test_side_data_type_unknown(self) -> None:
+        """A type only a newer FFmpeg names must not take Type() down."""
+        unknown = Type(1 << 20)
+        assert unknown.name == "UNKNOWN_1048576"
+        assert unknown.value == 1 << 20
+        assert Type(1 << 20) is unknown
+        assert "UNKNOWN_1048576" not in Type.__members__
+
+        with pytest.raises(ValueError):
+            Type("not a side data type")  # type: ignore[arg-type]
+
     def test_no_side_data(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         frame = next(container.decode(video=0))
