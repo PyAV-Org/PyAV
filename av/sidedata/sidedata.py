@@ -47,6 +47,23 @@ class Type(Enum):
     AMBIENT_VIEWING_ENVIRONMENT = lib.AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT
     VIDEO_HINT = lib.AV_FRAME_DATA_VIDEO_HINT
 
+    @classmethod
+    def _missing_(cls, value):
+        """Name types added by an FFmpeg newer than the one PyAV was written against.
+
+        The members above only cover what the oldest supported FFmpeg defines,
+        so a frame decoded by a newer one can carry a type that is not here.
+        Give it an ``UNKNOWN_<value>`` member instead of raising ``ValueError``
+        and taking :attr:`av.Frame.side_data` down with it.
+        """
+        if not isinstance(value, int):
+            return None
+
+        member = object.__new__(cls)
+        member._name_ = f"UNKNOWN_{value}"
+        member._value_ = value
+        return cls._value2member_map_.setdefault(value, member)
+
 
 @cython.cfunc
 def wrap_side_data(frame: Frame, index: cython.int) -> SideData:

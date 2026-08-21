@@ -57,6 +57,9 @@ PktSideDataT = Literal[
     "lcevc",
     "3d_reference_displays",
     "rtcp_sr",
+    "exif",
+    "dynamic_hdr_smpte_2094_app5",
+    "hevc_conf",
 ]
 
 
