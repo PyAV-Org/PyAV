@@ -45,10 +45,13 @@ Features:
 
 - ``av.dump_codecs()`` now lists every codec FFmpeg knows of rather than only those with an encoder or a decoder, so data and attachment codecs appear, matching ``ffmpeg -codecs``. Its legend gains the ``..D...`` and ``..T...`` media types.
 - ``ContainerFormat.fixed_framesize`` reports whether a format wants fixed size audio frames.
+- :class:`.CodecContext` exposes more of ``AVCodecContext``: ``pkt_timebase``, ``frame_num``, ``active_thread_type``, ``bits_per_raw_sample``, ``compression_level``, ``rc_buffer_size``, ``min_bit_rate``, a setter for ``max_bit_rate``, the audio ``initial_padding``, ``trailing_padding``, and ``seek_preroll``, and ``stats_in``/``stats_out`` for two-pass encoding. ``VideoCodecContext`` gains ``chroma_sample_location``, ``refs``, and ``mb_decision``; ``AudioCodecContext`` gains ``block_align``.
+- ``CodecContext.coded_side_data`` and ``CodecContext.decoded_side_data`` expose the context's global side data as dicts of ``bytes``, keyed by packet side data name and :class:`~av.sidedata.sidedata.Type` respectively. Stream wide HDR metadata, such as mastering display and content light level, arrives in ``decoded_side_data`` once a frame has been decoded.
 - Enums gained the members FFmpeg has since added: ``Properties.FIELDS``, ``Properties.ENHANCEMENT``, ``PixFmtLoss.EXCESS_RESOLUTION``, ``PixFmtLoss.EXCESS_DEPTH``, ``Flags2.icc_profiles``, ``format.Flags.experimental``, ``Interpolation.STRICT``, ``Interpolation.UNSTABLE``, ``ColorTrc.V_LOG``, ``ColorPrimaries.V_GAMUT``, and the ``LCEVC``, ``VIEW_ID``, ``THREE_D_REFERENCE_DISPLAYS``, and ``EXIF`` members of ``sidedata.Type``.
 
 Fixes:
 
+- ``CodecContext.bit_rate_tolerance`` returns its value instead of always ``None``; the getter was missing its ``return``.
 - A rejected ``add_stream()`` or ``add_mux_stream()`` no longer breaks the container.
 - ``InputContainer.size`` returns ``None`` when the size cannot be determined rather than the negative ``AVERROR`` it was passing through, which read as a plausible byte count. A non-seekable input, such as a pipe, reported ``-78``.
 - ``av.dump_codecs()`` no longer drops the canonical names ``h264``, ``hevc``, ``av1``, ``dirac``, and ``ilbc``, each of which was overwritten by the row of whichever encoder it resolved to.
