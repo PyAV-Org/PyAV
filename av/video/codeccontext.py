@@ -496,3 +496,49 @@ class VideoCodecContext(CodecContext):
     @qmax.setter
     def qmax(self, value):
         self.ptr.qmax = value
+
+    @property
+    def chroma_sample_location(self):
+        """
+        Location of the chroma samples relative to the luma samples, as
+        FFmpeg's raw integer value.
+
+        Wraps :ffmpeg:`AVCodecContext.chroma_sample_location`.
+
+        :type: int
+        """
+        return self.ptr.chroma_sample_location
+
+    @chroma_sample_location.setter
+    def chroma_sample_location(self, value: cython.int):
+        self.ptr.chroma_sample_location = cython.cast(lib.AVChromaLocation, value)
+
+    @property
+    def refs(self):
+        """
+        The number of reference frames.
+
+        Wraps :ffmpeg:`AVCodecContext.refs`.
+
+        :type: int
+        """
+        return self.ptr.refs
+
+    @refs.setter
+    def refs(self, value: cython.int):
+        self.ptr.refs = value
+
+    @property
+    def mb_decision(self):
+        """
+        Macroblock decision mode: 0 (simple), 1 (bits) or 2 (rate distortion).
+
+        Wraps :ffmpeg:`AVCodecContext.mb_decision`.
+
+        :type: int
+        """
+        return self.ptr.mb_decision
+
+    @mb_decision.setter
+    def mb_decision(self, value: cython.int):
+        self.ptr.mb_decision = value

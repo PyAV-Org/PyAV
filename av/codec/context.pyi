@@ -5,8 +5,9 @@ from typing import ClassVar, Literal, cast, overload
 
 from av.audio import _AudioCodecName
 from av.audio.codeccontext import AudioCodecContext
-from av.packet import Packet
+from av.packet import Packet, PktSideDataT
 from av.rational import AVRational
+from av.sidedata.sidedata import Type as FrameSideDataType
 from av.subtitles import _SubtitleCodecName
 from av.subtitles.codeccontext import SubtitleCodecContext
 from av.video import _VideoCodecName
@@ -134,6 +135,11 @@ class CodecContext:
     global_quality: int
     bit_rate: int | None
     bit_rate_tolerance: int
+    rc_buffer_size: int
+    compression_level: int
+    bits_per_raw_sample: int
+    trailing_padding: int
+    stats_in: str | None
     thread_count: int
     thread_type: ThreadType
     skip_frame: Literal[
@@ -153,6 +159,30 @@ class CodecContext:
     def codec(self) -> Codec: ...
     @property
     def max_bit_rate(self) -> int | None: ...
+    @max_bit_rate.setter
+    def max_bit_rate(self, value: int) -> None: ...
+    @property
+    def min_bit_rate(self) -> int | None: ...
+    @min_bit_rate.setter
+    def min_bit_rate(self, value: int) -> None: ...
+    @property
+    def pkt_timebase(self) -> AVRational: ...
+    @pkt_timebase.setter
+    def pkt_timebase(self, value: AVRational | Fraction | int) -> None: ...
+    @property
+    def frame_num(self) -> int: ...
+    @property
+    def active_thread_type(self) -> ThreadType: ...
+    @property
+    def initial_padding(self) -> int: ...
+    @property
+    def seek_preroll(self) -> int: ...
+    @property
+    def stats_out(self) -> str | None: ...
+    @property
+    def coded_side_data(self) -> dict[PktSideDataT, bytes]: ...
+    @property
+    def decoded_side_data(self) -> dict[FrameSideDataType, bytes]: ...
     @property
     def delay(self) -> bool: ...
     @property

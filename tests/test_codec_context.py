@@ -617,3 +617,62 @@ class TestEncoding(TestCase):
             result_samples += frame.samples
             assert frame.sample_rate == sample_rate
             assert frame.layout.nb_channels == 2
+
+
+class TestNewlyExposedFields(TestCase):
+    def test_encoder_scalars_roundtrip(self) -> None:
+        ctx = av.CodecContext.create("libx264", "w")
+        assert isinstance(ctx, av.video.codeccontext.VideoCodecContext)
+
+        ctx.bit_rate_tolerance = 4000
+        ctx.max_bit_rate = 2_000_000
+        ctx.min_bit_rate = 500_000
+        ctx.rc_buffer_size = 1_000_000
+        ctx.compression_level = 5
+        ctx.bits_per_raw_sample = 8
+        ctx.trailing_padding = 0
+        ctx.chroma_sample_location = 1
+        ctx.refs = 3
+        ctx.mb_decision = 2
+        ctx.pkt_timebase = Fraction(1, 1000)
+
+        assert ctx.bit_rate_tolerance == 4000
+        assert ctx.max_bit_rate == 2_000_000
+        assert ctx.min_bit_rate == 500_000
+        assert ctx.rc_buffer_size == 1_000_000
+        assert ctx.compression_level == 5
+        assert ctx.bits_per_raw_sample == 8
+        assert ctx.trailing_padding == 0
+        assert ctx.chroma_sample_location == 1
+        assert ctx.refs == 3
+        assert ctx.mb_decision == 2
+        assert ctx.pkt_timebase == Fraction(1, 1000)
+        assert ctx.frame_num == 0
+
+    def test_stats_in_out(self) -> None:
+        ctx = av.CodecContext.create("libx264", "w")
+        assert ctx.stats_in is None
+        assert ctx.stats_out is None
+
+        ctx.stats_in = "frame in:0 out:0;"
+        assert ctx.stats_in == "frame in:0 out:0;"
+        ctx.stats_in = None
+        assert ctx.stats_in is None
+
+    def test_audio_padding(self) -> None:
+        with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
+            ctx = container.streams.audio[0].codec_context
+            assert ctx.initial_padding == 312
+            assert ctx.seek_preroll == 3840
+            assert ctx.block_align == 0
+
+    def test_coded_side_data(self) -> None:
+        with av.open(fate_suite("mov/displaymatrix.mov")) as container:
+            stream = container.streams.video[0]
+            ctx = stream.codec_context
+            assert ctx.bits_per_raw_sample == 8
+            assert len(ctx.coded_side_data["display_matrix"]) == 36
+
+            for _ in container.decode(stream):
+                break
+            assert ctx.frame_num == 1

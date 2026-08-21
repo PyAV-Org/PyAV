@@ -10,13 +10,23 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.rational import from_avrational
 from cython.cimports.av.utils import to_avrational
+from cython.cimports.cpython.bytes import (
+    PyBytes_FromString,
+    PyBytes_FromStringAndSize,
+)
 from cython.cimports.libc.errno import EAGAIN
 from cython.cimports.libc.stdint import uint8_t
 from cython.cimports.libc.string import memcpy, strcmp
 
 from av.error import InvalidDataError
+from av.packet import packet_sidedata_type_to_literal
 
 _cinit_sentinel = cython.declare(object, object())
+
+
+@cython.cfunc
+def _to_bytes(data: cython.pointer[uint8_t], size: cython.size_t) -> bytes:
+    return PyBytes_FromStringAndSize(cython.cast(cython.p_char, data), size)
 
 
 @cython.cfunc
@@ -908,14 +918,61 @@ class CodecContext:
 
     @property
     def max_bit_rate(self):
+        """Maximum bitrate, or ``None`` if unset.
+
+        Wraps :ffmpeg:`AVCodecContext.rc_max_rate`.
+        """
         if self.ptr.rc_max_rate > 0:
             return self.ptr.rc_max_rate
         else:
             return None
 
+    @max_bit_rate.setter
+    def max_bit_rate(self, value: cython.longlong):
+        self.ptr.rc_max_rate = value
+
+    @property
+    def min_bit_rate(self):
+        """Minimum bitrate, or ``None`` if unset.
+
+        Wraps :ffmpeg:`AVCodecContext.rc_min_rate`.
+        """
+        if self.ptr.rc_min_rate > 0:
+            return self.ptr.rc_min_rate
+        else:
+            return None
+
+    @min_bit_rate.setter
+    def min_bit_rate(self, value: cython.longlong):
+        self.ptr.rc_min_rate = value
+
+    @property
+    def rc_buffer_size(self):
+        """Decoder bitstream buffer size (VBV), in bits.
+
+        Wraps :ffmpeg:`AVCodecContext.rc_buffer_size`.
+        """
+        return self.ptr.rc_buffer_size
+
+    @rc_buffer_size.setter
+    def rc_buffer_size(self, value: cython.int):
+        self.ptr.rc_buffer_size = value
+
+    @property
+    def compression_level(self):
+        """Codec-defined compression level; ``-1`` means default.
+
+        Wraps :ffmpeg:`AVCodecContext.compression_level`.
+        """
+        return self.ptr.compression_level
+
+    @compression_level.setter
+    def compression_level(self, value: cython.int):
+        self.ptr.compression_level = value
+
     @property
     def bit_rate_tolerance(self):
-        self.ptr.bit_rate_tolerance
+        return self.ptr.bit_rate_tolerance
 
     @bit_rate_tolerance.setter
     def bit_rate_tolerance(self, value: cython.int):
@@ -955,6 +1012,15 @@ class CodecContext:
             self.ptr.thread_type = ThreadType[value].value
         else:
             self.ptr.thread_type = value.value
+
+    @property
+    def active_thread_type(self):
+        """The threading actually in use, which may differ from
+        :attr:`thread_type` once the codec is open.
+
+        Wraps :ffmpeg:`AVCodecContext.active_thread_type`.
+        """
+        return ThreadType(self.ptr.active_thread_type)
 
     @property
     def skip_frame(self):
@@ -1014,3 +1080,147 @@ class CodecContext:
 
         """
         return self.ptr.delay
+
+    @property
+    def pkt_timebase(self):
+        """Timebase of the packets fed to this context, as a
+        :class:`~fractions.Fraction`.
+
+        Decoders use it to set :attr:`.Frame.time_base`. Containers set it for
+        you; set it yourself when driving a bare CodecContext.
+
+        Wraps :ffmpeg:`AVCodecContext.pkt_timebase`.
+        """
+        return from_avrational(self.ptr.pkt_timebase)
+
+    @pkt_timebase.setter
+    def pkt_timebase(self, value):
+        to_avrational(value, cython.address(self.ptr.pkt_timebase))
+
+    @property
+    def frame_num(self):
+        """Number of frames passed to/from this context so far.
+
+        Wraps :ffmpeg:`AVCodecContext.frame_num`.
+        """
+        return self.ptr.frame_num
+
+    @property
+    def bits_per_raw_sample(self):
+        """Bit depth of the samples/components before encoding, e.g. ``10`` for
+        10-bit video. ``0`` when unknown.
+
+        This is the real bit depth; :attr:`.VideoCodecContext.bits_per_coded_sample`
+        is how many bits the bitstream spends on it.
+
+        Wraps :ffmpeg:`AVCodecContext.bits_per_raw_sample`.
+        """
+        return self.ptr.bits_per_raw_sample
+
+    @bits_per_raw_sample.setter
+    def bits_per_raw_sample(self, value: cython.int):
+        self.ptr.bits_per_raw_sample = value
+
+    @property
+    def initial_padding(self):
+        """Audio only. Samples the decoder should skip at the start of the
+        stream, i.e. the encoder delay. Needed for gapless playback.
+
+        Wraps :ffmpeg:`AVCodecContext.initial_padding`.
+        """
+        return self.ptr.initial_padding
+
+    @property
+    def trailing_padding(self):
+        """Audio only. Samples to discard at the end of the stream.
+
+        Wraps :ffmpeg:`AVCodecContext.trailing_padding`.
+        """
+        return self.ptr.trailing_padding
+
+    @trailing_padding.setter
+    def trailing_padding(self, value: cython.int):
+        self.ptr.trailing_padding = value
+
+    @property
+    def seek_preroll(self):
+        """Number of samples to decode before the target seek point for the
+        output to be correct, in ``1 / AV_TIME_BASE`` units.
+
+        Wraps :ffmpeg:`AVCodecContext.seek_preroll`.
+        """
+        return self.ptr.seek_preroll
+
+    @property
+    def stats_out(self):
+        """Pass-one statistics produced by the encoder, or ``None``.
+
+        Concatenate this after every :meth:`encode` call of the first pass and
+        feed the result back as :attr:`stats_in` on the second.
+
+        Wraps :ffmpeg:`AVCodecContext.stats_out`.
+        """
+        if self.ptr.stats_out == cython.NULL:
+            return None
+        return PyBytes_FromString(self.ptr.stats_out).decode("utf-8", "replace")
+
+    @property
+    def stats_in(self):
+        """Pass-one statistics to feed the second pass of a two-pass encode.
+
+        Must be set before :meth:`open`.
+
+        Wraps :ffmpeg:`AVCodecContext.stats_in`.
+        """
+        if self.ptr.stats_in == cython.NULL:
+            return None
+        return PyBytes_FromString(self.ptr.stats_in).decode("utf-8", "replace")
+
+    @stats_in.setter
+    def stats_in(self, value):
+        self._assert_not_open("stats_in")
+        if value is None:
+            self._stats_in = None
+            self.ptr.stats_in = cython.NULL
+            return
+
+        # libavcodec never frees stats_in, so we keep the bytes alive ourselves.
+        self._stats_in = value.encode("utf-8") if type(value) is str else bytes(value)
+        self.ptr.stats_in = self._stats_in
+
+    @property
+    def coded_side_data(self):
+        """Global side data attached to the coded bitstream, as a
+        ``dict`` of packet side data name to ``bytes``.
+
+        Wraps :ffmpeg:`AVCodecContext.coded_side_data`.
+        """
+        i: cython.int
+        return {
+            packet_sidedata_type_to_literal(
+                self.ptr.coded_side_data[i].type
+            ): _to_bytes(
+                self.ptr.coded_side_data[i].data, self.ptr.coded_side_data[i].size
+            )
+            for i in range(self.ptr.nb_coded_side_data)
+        }
+
+    @property
+    def decoded_side_data(self):
+        """Global side data produced by the decoder, as a ``dict`` of
+        :class:`av.sidedata.sidedata.Type` to ``bytes``.
+
+        This is where stream-wide HDR metadata (mastering display, content
+        light level) shows up after the first frame is decoded.
+
+        Wraps :ffmpeg:`AVCodecContext.decoded_side_data`.
+        """
+        from av.sidedata.sidedata import Type
+
+        i: cython.int
+        return {
+            Type(self.ptr.decoded_side_data[i].type): _to_bytes(
+                self.ptr.decoded_side_data[i].data, self.ptr.decoded_side_data[i].size
+            )
+            for i in range(self.ptr.nb_decoded_side_data)
+        }

@@ -109,3 +109,14 @@ class AudioCodecContext(CodecContext):
         self._assert_not_open("format")
         format: AudioFormat = AudioFormat(value)
         self.ptr.sample_fmt = format.sample_fmt
+
+    @property
+    def block_align(self):
+        """
+        Number of bytes per coded audio frame, for formats with a fixed one.
+
+        Wraps :ffmpeg:`AVCodecContext.block_align`.
+
+        :type: int
+        """
+        return self.ptr.block_align

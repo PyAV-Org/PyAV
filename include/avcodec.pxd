@@ -248,6 +248,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVColorTransferCharacteristic color_trc
         AVColorSpace colorspace
         AVColorRange color_range
+        AVChromaLocation chroma_sample_location
         AVFieldOrder field_order
 
         int has_b_frames
@@ -259,6 +260,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVSampleFormat sample_fmt
         AVChannelLayout ch_layout
         int frame_size
+        int block_align
+        int initial_padding
+        int trailing_padding
+        int seek_preroll
 
         int bit_rate_tolerance
         int global_quality
@@ -268,6 +273,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int rc_buffer_size
         int64_t rc_max_rate
         int64_t rc_min_rate
+        char *stats_in
+        char *stats_out
 
         const AVHWAccel *hwaccel
         AVBufferRef *hw_device_ctx
@@ -275,7 +282,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int thread_count
         int thread_type
+        int active_thread_type
         int bits_per_coded_sample
+        int bits_per_raw_sample
+        int refs
         int profile
         int level
         AVDiscard skip_frame
@@ -283,6 +293,11 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int subtitle_header_size
         uint8_t *subtitle_header
         int64_t frame_num
+
+        AVPacketSideData *coded_side_data
+        int nb_coded_side_data
+        AVFrameSideData **decoded_side_data
+        int nb_decoded_side_data
 
     cdef AVCodecContext* avcodec_alloc_context3(const AVCodec *codec)
     cdef void avcodec_free_context(AVCodecContext **ctx)
@@ -525,3 +540,4 @@ cdef extern from "libavcodec/packet.h" nogil:
         AVPacket *pkt, AVPacketSideDataType type, uint8_t *data, size_t size
     )
     const char *av_packet_side_data_name(AVPacketSideDataType type)
+    const char *av_frame_side_data_name(AVFrameSideDataType type)

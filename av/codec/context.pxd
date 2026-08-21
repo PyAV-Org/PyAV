@@ -16,6 +16,7 @@ cdef class CodecContext:
     cdef public dict options
     cdef HWAccel hwaccel_ctx
     cdef Frame _next_frame
+    cdef bytes _stats_in  # keeps the buffer ptr.stats_in points at alive
 
     cdef uint8_t _ctxflags  # ctxEnum: template_initialized
     # True when created via add_stream_from_template(); start_encoding() skips

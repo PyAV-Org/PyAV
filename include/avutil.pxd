@@ -62,6 +62,15 @@ cdef extern from "libavutil/avutil.h" nogil:
         AVCOL_PRI_EBU3213
         AVCOL_PRI_V_GAMUT
 
+    cdef enum AVChromaLocation:
+        AVCHROMA_LOC_UNSPECIFIED
+        AVCHROMA_LOC_LEFT
+        AVCHROMA_LOC_CENTER
+        AVCHROMA_LOC_TOPLEFT
+        AVCHROMA_LOC_TOP
+        AVCHROMA_LOC_BOTTOMLEFT
+        AVCHROMA_LOC_BOTTOM
+
     cdef enum AVColorTransferCharacteristic:
         AVCOL_TRC_BT709
         AVCOL_TRC_UNSPECIFIED
