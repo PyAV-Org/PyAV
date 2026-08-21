@@ -649,6 +649,11 @@ class TestNewlyExposedFields(TestCase):
         assert ctx.pkt_timebase == Fraction(1, 1000)
         assert ctx.frame_num == 0
 
+    def test_stats_in_rejects_junk(self) -> None:
+        ctx = av.CodecContext.create("libx264", "w")
+        with pytest.raises(TypeError):
+            ctx.stats_in = 5  # type: ignore[assignment]
+
     def test_stats_in_out(self) -> None:
         ctx = av.CodecContext.create("libx264", "w")
         assert ctx.stats_in is None

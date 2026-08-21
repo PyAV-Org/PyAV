@@ -1083,8 +1083,7 @@ class CodecContext:
 
     @property
     def pkt_timebase(self):
-        """Timebase of the packets fed to this context, as a
-        :class:`~fractions.Fraction`.
+        """Timebase of the packets fed to this context.
 
         Decoders use it to set :attr:`.Frame.time_base`. Containers set it for
         you; set it yourself when driving a bare CodecContext.
@@ -1123,8 +1122,12 @@ class CodecContext:
 
     @property
     def initial_padding(self):
-        """Audio only. Samples the decoder should skip at the start of the
-        stream, i.e. the encoder delay. Needed for gapless playback.
+        """Audio only. Priming samples the encoder inserted at the start of the
+        stream, which must be discarded to recover the original audio. Needed
+        for gapless playback.
+
+        Set by libavcodec when encoding, and taken from the stream parameters
+        when decoding.
 
         Wraps :ffmpeg:`AVCodecContext.initial_padding`.
         """
@@ -1132,7 +1135,11 @@ class CodecContext:
 
     @property
     def trailing_padding(self):
-        """Audio only. Samples to discard at the end of the stream.
+        """Audio only. Padding samples appended by the encoder, which must be
+        discarded from the end of the stream to recover the original audio.
+
+        libavcodec neither sets nor acts on this; it only travels between the
+        context and the container's stream parameters.
 
         Wraps :ffmpeg:`AVCodecContext.trailing_padding`.
         """
@@ -1144,8 +1151,8 @@ class CodecContext:
 
     @property
     def seek_preroll(self):
-        """Number of samples to decode before the target seek point for the
-        output to be correct, in ``1 / AV_TIME_BASE`` units.
+        """Audio only. Number of samples to skip after a discontinuity, such as
+        a seek, before the decoded output is correct.
 
         Wraps :ffmpeg:`AVCodecContext.seek_preroll`.
         """
@@ -1184,8 +1191,13 @@ class CodecContext:
             self.ptr.stats_in = cython.NULL
             return
 
+        if type(value) is str:
+            value = value.encode("utf-8")
+        elif not isinstance(value, (bytes, bytearray)):
+            raise TypeError("stats_in must be str, bytes, or None")
+
         # libavcodec never frees stats_in, so we keep the bytes alive ourselves.
-        self._stats_in = value.encode("utf-8") if type(value) is str else bytes(value)
+        self._stats_in = bytes(value)
         self.ptr.stats_in = self._stats_in
 
     @property
@@ -1196,14 +1208,16 @@ class CodecContext:
         Wraps :ffmpeg:`AVCodecContext.coded_side_data`.
         """
         i: cython.int
-        return {
-            packet_sidedata_type_to_literal(
-                self.ptr.coded_side_data[i].type
-            ): _to_bytes(
+        out = {}
+        for i in range(self.ptr.nb_coded_side_data):
+            try:
+                key = packet_sidedata_type_to_literal(self.ptr.coded_side_data[i].type)
+            except IndexError:
+                continue
+            out[key] = _to_bytes(
                 self.ptr.coded_side_data[i].data, self.ptr.coded_side_data[i].size
             )
-            for i in range(self.ptr.nb_coded_side_data)
-        }
+        return out
 
     @property
     def decoded_side_data(self):
@@ -1218,9 +1232,10 @@ class CodecContext:
         from av.sidedata.sidedata import Type
 
         i: cython.int
-        return {
-            Type(self.ptr.decoded_side_data[i].type): _to_bytes(
+        out = {}
+        for i in range(self.ptr.nb_decoded_side_data):
+            key = Type(self.ptr.decoded_side_data[i].type)
+            out[key] = _to_bytes(
                 self.ptr.decoded_side_data[i].data, self.ptr.decoded_side_data[i].size
             )
-            for i in range(self.ptr.nb_decoded_side_data)
-        }
+        return out

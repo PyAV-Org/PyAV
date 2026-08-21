@@ -540,4 +540,3 @@ cdef extern from "libavcodec/packet.h" nogil:
         AVPacket *pkt, AVPacketSideDataType type, uint8_t *data, size_t size
     )
     const char *av_packet_side_data_name(AVPacketSideDataType type)
-    const char *av_frame_side_data_name(AVFrameSideDataType type)
