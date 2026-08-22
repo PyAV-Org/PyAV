@@ -383,6 +383,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVColorPrimaries color_primaries
         AVColorTransferCharacteristic color_trc
         AVColorSpace colorspace
+        AVChromaLocation chroma_location
 
         AVDictionary *metadata
         int decode_error_flags

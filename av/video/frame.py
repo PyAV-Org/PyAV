@@ -705,10 +705,12 @@ class VideoFrame(Frame):
 
     @property
     def colorspace(self):
-        """Colorspace of frame.
+        """The YUV/RGB transformation matrix of the frame, as FFmpeg's raw
+        integer value. :class:`.Colorspace` names the values.
 
         Wraps :ffmpeg:`AVFrame.colorspace`.
 
+        :type: int
         """
         return self.ptr.colorspace
 
@@ -718,10 +720,12 @@ class VideoFrame(Frame):
 
     @property
     def color_range(self):
-        """Color range of frame.
+        """The signal range of the frame, as FFmpeg's raw integer value.
+        :class:`.ColorRange` names the values.
 
         Wraps :ffmpeg:`AVFrame.color_range`.
 
+        :type: int
         """
         return self.ptr.color_range
 
@@ -731,10 +735,13 @@ class VideoFrame(Frame):
 
     @property
     def color_trc(self):
-        """Transfer characteristic of frame.
+        """The linearization function (a.k.a. transfer characteristic) of the
+        frame, as FFmpeg's raw integer value. :class:`.ColorTrc` names the
+        values.
 
         Wraps :ffmpeg:`AVFrame.color_trc`.
 
+        :type: int
         """
         return self.ptr.color_trc
 
@@ -744,16 +751,35 @@ class VideoFrame(Frame):
 
     @property
     def color_primaries(self):
-        """Color primaries of frame.
+        """The RGB/XYZ matrix of the frame, as FFmpeg's raw integer value.
+        :class:`.ColorPrimaries` names the values.
 
         Wraps :ffmpeg:`AVFrame.color_primaries`.
 
+        :type: int
         """
         return self.ptr.color_primaries
 
     @color_primaries.setter
     def color_primaries(self, value):
         self.ptr.color_primaries = value
+
+    @property
+    def chroma_location(self):
+        """The position of the chroma samples relative to the luma samples, as
+        FFmpeg's raw integer value. :class:`.ChromaLocation` names the values.
+
+        Wraps :ffmpeg:`AVFrame.chroma_location`. FFmpeg spells the same field
+        ``chroma_sample_location`` on a codec context, and so does PyAV: see
+        :attr:`.VideoCodecContext.chroma_sample_location`.
+
+        :type: int
+        """
+        return self.ptr.chroma_location
+
+    @chroma_location.setter
+    def chroma_location(self, value):
+        self.ptr.chroma_location = value
 
     def reformat(self, *args, **kwargs):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None, threads=None)

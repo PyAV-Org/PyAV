@@ -384,9 +384,10 @@ class VideoCodecContext(CodecContext):
     @property
     def color_range(self):
         """
-        Describes the signal range of the colorspace.
+        Describes the signal range of the colorspace, as FFmpeg's raw integer
+        value. :class:`.ColorRange` names the values.
 
-        Wraps :ffmpeg:`AVFrame.color_range`.
+        Wraps :ffmpeg:`AVCodecContext.color_range`.
 
         :type: int
         """
@@ -399,9 +400,10 @@ class VideoCodecContext(CodecContext):
     @property
     def color_primaries(self):
         """
-        Describes the RGB/XYZ matrix of the colorspace.
+        Describes the RGB/XYZ matrix of the colorspace, as FFmpeg's raw integer
+        value. :class:`.ColorPrimaries` names the values.
 
-        Wraps :ffmpeg:`AVFrame.color_primaries`.
+        Wraps :ffmpeg:`AVCodecContext.color_primaries`.
 
         :type: int
         """
@@ -414,9 +416,11 @@ class VideoCodecContext(CodecContext):
     @property
     def color_trc(self):
         """
-        Describes the linearization function (a.k.a. transformation characteristics) of the colorspace.
+        Describes the linearization function (a.k.a. transformation
+        characteristics) of the colorspace, as FFmpeg's raw integer value.
+        :class:`.ColorTrc` names the values.
 
-        Wraps :ffmpeg:`AVFrame.color_trc`.
+        Wraps :ffmpeg:`AVCodecContext.color_trc`.
 
         :type: int
         """
@@ -429,9 +433,10 @@ class VideoCodecContext(CodecContext):
     @property
     def colorspace(self):
         """
-        Describes the YUV/RGB transformation matrix of the colorspace.
+        Describes the YUV/RGB transformation matrix of the colorspace, as
+        FFmpeg's raw integer value. :class:`.Colorspace` names the values.
 
-        Wraps :ffmpeg:`AVFrame.colorspace`.
+        Wraps :ffmpeg:`AVCodecContext.colorspace`.
 
         :type: int
         """
@@ -500,10 +505,12 @@ class VideoCodecContext(CodecContext):
     @property
     def chroma_sample_location(self):
         """
-        Location of the chroma samples relative to the luma samples, as
-        FFmpeg's raw integer value.
+        The position of the chroma samples relative to the luma samples, as
+        FFmpeg's raw integer value. :class:`.ChromaLocation` names the values.
 
-        Wraps :ffmpeg:`AVCodecContext.chroma_sample_location`.
+        Wraps :ffmpeg:`AVCodecContext.chroma_sample_location`. FFmpeg spells
+        the same field ``chroma_location`` on a frame, and so does PyAV: see
+        :attr:`.VideoFrame.chroma_location`.
 
         :type: int
         """

@@ -52,4 +52,5 @@ class VideoStream(Stream):
     color_primaries: int
     color_trc: int
     colorspace: int
+    chroma_sample_location: int
     type: Literal["video"]

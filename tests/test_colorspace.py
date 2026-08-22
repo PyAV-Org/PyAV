@@ -1,7 +1,10 @@
+import io
+
 import pytest
 
 import av
 from av.video.reformatter import (
+    ChromaLocation,
     ColorPrimaries,
     ColorRange,
     Colorspace,
@@ -65,6 +68,55 @@ def test_frame_color_primaries_property() -> None:
     frame.color_primaries = ColorPrimaries.BT709
     assert frame.color_primaries == ColorPrimaries.BT709
     assert frame.color_primaries == 1  # AVCOL_PRI_BT709
+
+
+def test_frame_chroma_location_property() -> None:
+    frame = av.VideoFrame(width=64, height=64, format="yuv420p")
+    assert frame.chroma_location == ChromaLocation.UNSPECIFIED
+
+    frame.chroma_location = ChromaLocation.LEFT
+    assert frame.chroma_location == ChromaLocation.LEFT
+    assert frame.chroma_location == 1  # AVCHROMA_LOC_LEFT
+
+    frame.chroma_location = ChromaLocation.TOPLEFT
+    assert frame.chroma_location == ChromaLocation.TOPLEFT
+
+
+def test_codec_context_chroma_sample_location_property() -> None:
+    ctx = av.codec.CodecContext.create("ffv1", "w")
+    assert isinstance(ctx, av.video.codeccontext.VideoCodecContext)
+    assert ctx.chroma_sample_location == ChromaLocation.UNSPECIFIED
+
+    ctx.chroma_sample_location = ChromaLocation.CENTER
+    assert ctx.chroma_sample_location == ChromaLocation.CENTER
+    assert ctx.chroma_sample_location == 2  # AVCHROMA_LOC_CENTER
+
+
+def test_chroma_location_round_trip() -> None:
+    # ffv1 in matroska signals the chroma location verbatim.
+    buf = io.BytesIO()
+    with av.open(buf, "w", format="matroska") as output:
+        out_stream = output.add_stream("ffv1", rate=30)
+        out_stream.width = 64
+        out_stream.height = 64
+        out_stream.pix_fmt = "yuv420p"
+        out_stream.codec_context.chroma_sample_location = ChromaLocation.TOPLEFT
+
+        for i in range(5):
+            frame = av.VideoFrame(width=64, height=64, format="yuv420p")
+            frame.pts = i
+            output.mux(out_stream.encode(frame))
+        output.mux(out_stream.encode())
+
+    buf.seek(0)
+    with av.open(buf, "r") as input_:
+        in_stream = input_.streams.video[0]
+        assert in_stream.chroma_sample_location == ChromaLocation.TOPLEFT
+
+        frames = list(input_.decode(in_stream))
+        assert frames
+        for decoded in frames:
+            assert decoded.chroma_location == ChromaLocation.TOPLEFT
 
 
 def test_reformat_dst_color_trc() -> None:

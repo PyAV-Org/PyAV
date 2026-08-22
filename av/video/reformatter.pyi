@@ -84,6 +84,15 @@ class ColorPrimaries(IntEnum):
     EBU3213 = cast(int, ...)
     V_GAMUT = cast(int, ...)
 
+class ChromaLocation(IntEnum):
+    UNSPECIFIED = cast(int, ...)
+    LEFT = cast(int, ...)
+    CENTER = cast(int, ...)
+    TOPLEFT = cast(int, ...)
+    TOP = cast(int, ...)
+    BOTTOMLEFT = cast(int, ...)
+    BOTTOM = cast(int, ...)
+
 class VideoReformatter:
     def reformat(
         self,
