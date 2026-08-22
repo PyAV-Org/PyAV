@@ -72,6 +72,28 @@ Types
     .. enumtable:: av.video.frame.PictureType
 
 
+Colors
+~~~~~~
+
+These describe how to interpret the frame's samples. They are FFmpeg's raw
+integer values, and each is named by an enum under :ref:`video_enums`. A
+decoder fills them in from the stream; an encoder passes them through to the
+container. Setting one relabels the frame, it does not convert the pixels --
+see :meth:`VideoFrame.reformat` for that.
+
+.. autoattribute:: VideoFrame.colorspace
+.. autoattribute:: VideoFrame.color_range
+.. autoattribute:: VideoFrame.color_trc
+.. autoattribute:: VideoFrame.color_primaries
+.. autoattribute:: VideoFrame.chroma_location
+
+The matching :class:`.VideoCodecContext` attributes carry the same values for a
+whole stream. FFmpeg spells the chroma one ``chroma_location`` on a frame and
+``chroma_sample_location`` on a codec context, and PyAV mirrors each C field
+name, so :attr:`.VideoCodecContext.chroma_sample_location` is the codec context
+spelling of :attr:`VideoFrame.chroma_location`.
+
+
 Conversions
 ~~~~~~~~~~~
 
@@ -105,6 +127,8 @@ Video Reformatters
 
         .. automethod:: reformat
 
+.. _video_enums:
+
 Enums
 ~~~~~
 
@@ -123,9 +147,21 @@ Enums
 
 .. autoclass:: av.video.reformatter.ColorRange
 
-    Wraps the ``AVCOL*`` flags.
+    Wraps the ``AVCOL_RANGE_*`` flags.
 
     .. enumtable:: av.video.reformatter.ColorRange
+
+.. autoclass:: av.video.reformatter.ColorTrc
+
+    Wraps the ``AVCOL_TRC_*`` flags.
+
+    .. enumtable:: av.video.reformatter.ColorTrc
+
+.. autoclass:: av.video.reformatter.ColorPrimaries
+
+    Wraps the ``AVCOL_PRI_*`` flags.
+
+    .. enumtable:: av.video.reformatter.ColorPrimaries
 
 .. autoclass:: av.video.reformatter.ChromaLocation
 
