@@ -271,6 +271,21 @@ def ffmpeg_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
             "AVCodecContext.color_trc": "#ab649e8c599f5a0e2a30448e67a36deb6",
             "AVCodecContext.colorspace": "#a8cd8caa7d40319324ce3d879a2edbd9f",
             "AVCodecContext.chroma_sample_location": "#ac60a0209642b5d74068cab0ac35a78b2",
+            "AVCodecContext.field_order": "#a5d222eeeb0b54ab462af363bcb9273bc",
+            "AVCodecContext.block_align": "#ae56433cc80666ff63af59db4de5b5e45",
+            "AVCodecContext.mb_decision": "#a66af0e26734255f1eacabd7d67558482",
+            "AVCodecContext.rc_max_rate": "#aa2b5582f1a360534310b686cc3f7c668",
+            "AVCodecContext.refs": "#aa0cb7241b4624dba761c8cf58fb2d5f0",
+            "AVCodecContext.time_base": "#ab7bfeb9fa5840aac090e2b0bd0ef7589",
+            "AVFrame.pict_type": "#af9920fc3fbfa347b8943ae461b50d18b",
+            "AVFrame.flags": "#a49020cc320b8fb1f5449167b6c97515b",
+            "AVFrame.pts": "#a0452833e3ab6ddd7acbf82817a7818a4",
+            "AVPacket.pts": "#a73bde0a37f3b1efc839f11295bfbf42a",
+            "AVStream.r_frame_rate": "#ad63fb11cc1415e278e09ddc676e8a1ad",
+            "AVStream.time_base": "#a9db755451f14e2bf590d4b85d82b32e6",
+            "AVFormatContext.flags": "#a32379cc371463b235d54235d4af06a15",
+            "AVFormatContext.start_time_realtime": "#aa5ddb5cee1df28f21739133f2e37f1c5",
+            "AVFilterGraph.nb_threads": "#ac28dcbf76e6fdd800295a2738d41660e",
         }.get(text, f"#{member}")
 
         url = base_url.format(struct_name) + fragment

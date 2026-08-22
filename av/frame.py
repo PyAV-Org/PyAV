@@ -165,7 +165,8 @@ class Frame:
     def key_frame(self):
         """Is this frame a key frame?
 
-        Wraps :ffmpeg:`AVFrame.key_frame`.
+        Reads the ``AV_FRAME_FLAG_KEY`` bit of :ffmpeg:`AVFrame.flags`. FFmpeg
+        removed the ``AVFrame.key_frame`` field this used to wrap.
 
         """
         return bool(self.ptr.flags & lib.AV_FRAME_FLAG_KEY)
