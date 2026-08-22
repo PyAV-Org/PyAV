@@ -755,6 +755,21 @@ class VideoFrame(Frame):
     def color_primaries(self, value):
         self.ptr.color_primaries = value
 
+    @property
+    def chroma_location(self):
+        """Location of the chroma samples relative to the luma samples.
+
+        Wraps :ffmpeg:`AVFrame.chroma_location`. The matching codec context
+        field is spelled :attr:`.VideoCodecContext.chroma_sample_location`,
+        as FFmpeg names it.
+
+        """
+        return self.ptr.chroma_location
+
+    @chroma_location.setter
+    def chroma_location(self, value):
+        self.ptr.chroma_location = value
+
     def reformat(self, *args, **kwargs):
         """reformat(width=None, height=None, format=None, src_colorspace=None, dst_colorspace=None, interpolation=None, threads=None)
 

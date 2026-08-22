@@ -127,3 +127,8 @@ Enums
 
     .. enumtable:: av.video.reformatter.ColorRange
 
+.. autoclass:: av.video.reformatter.ChromaLocation
+
+    Wraps the ``AVCHROMA_LOC_*`` flags.
+
+    .. enumtable:: av.video.reformatter.ChromaLocation

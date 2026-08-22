@@ -54,6 +54,7 @@ class VideoFrame(Frame):
     color_range: int
     color_trc: int
     color_primaries: int
+    chroma_location: int
 
     @property
     def sw_format(self) -> VideoFormat | None: ...

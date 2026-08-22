@@ -104,6 +104,21 @@ class ColorPrimaries(IntEnum):
     V_GAMUT: "Panasonic V-Gamut (not part of H.273)" = lib.AVCOL_PRI_V_GAMUT
 
 
+class ChromaLocation(IntEnum):
+    """Location of the chroma samples relative to the luma samples.
+
+    Maps to FFmpeg's ``AVChromaLocation``.
+    """
+
+    UNSPECIFIED: "Unspecified" = lib.AVCHROMA_LOC_UNSPECIFIED
+    LEFT: "MPEG-2/4 4:2:0, H.264 default for 4:2:0" = lib.AVCHROMA_LOC_LEFT
+    CENTER: "MPEG-1 4:2:0, JPEG 4:2:0, H.263 4:2:0" = lib.AVCHROMA_LOC_CENTER
+    TOPLEFT: "ITU-R 601, SMPTE 274M/296M, MPEG-2 4:2:2" = lib.AVCHROMA_LOC_TOPLEFT
+    TOP: "Top" = lib.AVCHROMA_LOC_TOP
+    BOTTOMLEFT: "Bottom left" = lib.AVCHROMA_LOC_BOTTOMLEFT
+    BOTTOM: "Bottom" = lib.AVCHROMA_LOC_BOTTOM
+
+
 @cython.cfunc
 @cython.inline
 def _resolve_enum_value(
