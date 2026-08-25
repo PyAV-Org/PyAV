@@ -30,7 +30,7 @@ fate-suite:
 
 lint:
 	$(PIP) install -U ruff isort pillow numpy mypy==2.1.0 pytest
-	ruff format --check av examples tests setup.py
+	ruff format --check av examples tests setup.py setup_cflags.py
 	isort --check-only --diff av examples tests
 	mypy av tests
 
