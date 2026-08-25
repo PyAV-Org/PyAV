@@ -331,25 +331,25 @@ def log_callback(
     if not inited:
         return
 
+    message: cython.char[1024]
+
     with cython.gil:
         if level > level_threshold and level != lib.AV_LOG_ERROR:
             return
 
-    # Format the message.
-    message: cython.char[1024]
-    vsnprintf(message, 1023, format, args)
+        # Format the message.
+        vsnprintf(message, 1023, format, args)
 
-    # Get the name.
-    name: cython.p_const_char = cython.NULL
-    cls: cython.pointer[lib.AVClass] = (
-        cython.cast(cython.pointer[cython.pointer[lib.AVClass]], ptr)[0]
-        if ptr
-        else cython.NULL
-    )
-    if cls and cls.item_name:
-        name = cls.item_name(ptr)
+        # Get the name.
+        name: cython.p_const_char = cython.NULL
+        cls: cython.pointer[lib.AVClass] = (
+            cython.cast(cython.pointer[cython.pointer[lib.AVClass]], ptr)[0]
+            if ptr
+            else cython.NULL
+        )
+        if cls and cls.item_name:
+            name = cls.item_name(ptr)
 
-    with cython.gil:
         try:
             log_callback_gil(level, name, message)
         except Exception:
