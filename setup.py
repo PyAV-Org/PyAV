@@ -140,19 +140,7 @@ else:
     }
 
 IMPORT_NAME = "av"
-
-loudnorm_extension = Extension(
-    f"{IMPORT_NAME}.filter.loudnorm",
-    sources=[
-        f"{IMPORT_NAME}/filter/loudnorm.py",
-        f"{IMPORT_NAME}/filter/loudnorm_impl.c",
-    ],
-    include_dirs=[f"{IMPORT_NAME}/filter"] + extension_extra["include_dirs"],
-    libraries=extension_extra["libraries"],
-    library_dirs=extension_extra["library_dirs"],
-    define_macros=define_macros,
-    py_limited_api=py_limited_api,
-)
+SHARED_MODULE_NAME = f"{IMPORT_NAME}._cyutil"
 
 compiler_directives = {
     "c_string_type": "str",
@@ -163,17 +151,37 @@ compiler_directives = {
     "freethreading_compatible": True,
 }
 
-# Add the cythonized loudnorm extension to ext_modules
-ext_modules = cythonize(
-    loudnorm_extension,
-    compiler_directives=compiler_directives,
-    build_dir="src",
-    include_path=["include"],
-)
+
+def make_extension(name, sources, extra_include_dirs=()):
+    return Extension(
+        name,
+        sources=sources,
+        include_dirs=[*extra_include_dirs, *extension_extra["include_dirs"]],
+        libraries=extension_extra["libraries"],
+        library_dirs=extension_extra["library_dirs"],
+        define_macros=define_macros,
+        py_limited_api=py_limited_api,
+    )
+
+
+LOUDNORM_SOURCE = os.path.join(IMPORT_NAME, "filter", "loudnorm.py")
+
+extensions = [
+    Extension(
+        SHARED_MODULE_NAME,
+        sources=[],
+        define_macros=define_macros,
+        py_limited_api=py_limited_api,
+    ),
+    make_extension(
+        f"{IMPORT_NAME}.filter.loudnorm",
+        [LOUDNORM_SOURCE, os.path.join(IMPORT_NAME, "filter", "loudnorm_impl.c")],
+        [os.path.join(IMPORT_NAME, "filter")],
+    ),
+]
 
 for dirname, dirnames, filenames in os.walk(IMPORT_NAME):
     for filename in filenames:
-        # We are looking for Cython sources.
         if filename.startswith("."):
             continue
         if filename in {"__init__.py", "__main__.py", "about.py", "datasets.py"}:
@@ -182,27 +190,26 @@ for dirname, dirnames, filenames in os.walk(IMPORT_NAME):
             continue
 
         pyx_path = os.path.join(dirname, filename)
+        if pyx_path == LOUDNORM_SOURCE:
+            continue
+
         base = os.path.splitext(pyx_path)[0]
 
         # Need to be a little careful because Windows will accept / or \
         # (where os.sep will be \ on Windows).
         mod_name = base.replace("/", ".").replace(os.sep, ".")
 
-        # Cythonize the module.
-        ext_modules += cythonize(
-            Extension(
-                mod_name,
-                include_dirs=extension_extra["include_dirs"],
-                libraries=extension_extra["libraries"],
-                library_dirs=extension_extra["library_dirs"],
-                sources=[pyx_path],
-                define_macros=define_macros,
-                py_limited_api=py_limited_api,
-            ),
-            compiler_directives=compiler_directives,
-            build_dir="src",
-            include_path=["include"],
-        )
+        extensions.append(make_extension(mod_name, [pyx_path]))
+
+# Cythonize in one pass so that the shared module can be generated alongside the
+# modules that import from it.
+ext_modules = cythonize(
+    extensions,
+    compiler_directives=compiler_directives,
+    build_dir="src",
+    include_path=["include"],
+    shared_utility_qualified_name=SHARED_MODULE_NAME,
+)
 
 
 package_folders = pathlib.Path(IMPORT_NAME).glob("**/")
