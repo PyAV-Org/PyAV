@@ -68,12 +68,14 @@ def get_config_from_directory(ffmpeg_dir):
     if not os.path.exists(library_dir):
         library_dir = FFMPEG_DIR
 
-    return {
+    config = {
         "include_dirs": [include_dir],
         "libraries": FFMPEG_LIBRARIES,
         "library_dirs": [library_dir],
-        "runtime_library_dirs": [library_dir],
     }
+    if platform.system() != "Windows":
+        config["runtime_library_dirs"] = [library_dir]
+    return config
 
 
 def get_config_from_pkg_config():
@@ -124,6 +126,14 @@ else:
 
 IMPORT_NAME = "av"
 
+# MSVC cannot embed rpath. An empty list is fine; a path raises
+# "don't know how to set runtime library search path for MSVC".
+runtime_library_dirs = (
+    []
+    if platform.system() == "Windows"
+    else extension_extra.get("runtime_library_dirs", [])
+)
+
 loudnorm_extension = Extension(
     f"{IMPORT_NAME}.filter.loudnorm",
     sources=[
@@ -133,7 +143,7 @@ loudnorm_extension = Extension(
     include_dirs=[f"{IMPORT_NAME}/filter"] + extension_extra["include_dirs"],
     libraries=extension_extra["libraries"],
     library_dirs=extension_extra["library_dirs"],
-    runtime_library_dirs=extension_extra.get("runtime_library_dirs", []),
+    runtime_library_dirs=runtime_library_dirs,
     define_macros=define_macros,
     py_limited_api=py_limited_api,
 )
@@ -179,7 +189,7 @@ for dirname, dirnames, filenames in os.walk(IMPORT_NAME):
                 include_dirs=extension_extra["include_dirs"],
                 libraries=extension_extra["libraries"],
                 library_dirs=extension_extra["library_dirs"],
-                runtime_library_dirs=extension_extra.get("runtime_library_dirs", []),
+                runtime_library_dirs=runtime_library_dirs,
                 sources=[pyx_path],
                 define_macros=define_macros,
                 py_limited_api=py_limited_api,
