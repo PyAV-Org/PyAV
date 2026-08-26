@@ -8,11 +8,12 @@ from cython.cimports import libav as lib
 _INT32_MAX: cython.longlong = 2147483647
 
 
+@cython.final
 @cython.cclass
 class AVRational:
     """
     An exact rational number stored as two int32s, mirroring FFmpeg's
-    ``AVRational``.
+    ``AVRational``. It is a final class and cannot be subclassed.
 
     Values are always reduced to lowest terms with a positive denominator.
     Arithmetic between two :class:`AVRational` uses FFmpeg's ``av_mul_q``
@@ -82,71 +83,71 @@ class AVRational:
         return (AVRational, (self.num, self.den))
 
     def __eq__(self, other):
-        if isinstance(other, AVRational):
+        if type(other) is AVRational:
             o: AVRational = other
             return self.num == o.num and self.den == o.den
         if self.den == 0:
             return False
-        return Fraction(self.num, self.den) == other
+        return Fraction(self.num, self.den).__eq__(other)
 
     def __lt__(self, other):
-        return Fraction(self.num, self.den) < other
+        return Fraction(self.num, self.den).__lt__(other)
 
     def __le__(self, other):
-        return Fraction(self.num, self.den) <= other
+        return Fraction(self.num, self.den).__le__(other)
 
     def __gt__(self, other):
-        return Fraction(self.num, self.den) > other
+        return Fraction(self.num, self.den).__gt__(other)
 
     def __ge__(self, other):
-        return Fraction(self.num, self.den) >= other
+        return Fraction(self.num, self.den).__ge__(other)
 
     def __neg__(self):
         return AVRational(-self.num, self.den)
 
     def __mul__(self, other):
-        if isinstance(other, AVRational):
+        if type(other) is AVRational:
             o: AVRational = other
             return from_avrational(lib.av_mul_q(self._q(), o._q()))
-        return Fraction(self.num, self.den) * other
+        return Fraction(self.num, self.den).__mul__(other)
 
     def __rmul__(self, other):
-        return other * Fraction(self.num, self.den)
+        return Fraction(self.num, self.den).__rmul__(other)
 
     def __truediv__(self, other):
-        if isinstance(other, AVRational):
+        if type(other) is AVRational:
             o: AVRational = other
             if o.num == 0:
                 raise ZeroDivisionError(f"{self} / {other}")
             return from_avrational(lib.av_div_q(self._q(), o._q()))
-        return Fraction(self.num, self.den) / other
+        return Fraction(self.num, self.den).__truediv__(other)
 
     def __rtruediv__(self, other):
-        return other / Fraction(self.num, self.den)
+        return Fraction(self.num, self.den).__rtruediv__(other)
 
     def __add__(self, other):
-        if isinstance(other, AVRational):
+        if type(other) is AVRational:
             o: AVRational = other
             return from_avrational(lib.av_add_q(self._q(), o._q()))
-        return Fraction(self.num, self.den) + other
+        return Fraction(self.num, self.den).__add__(other)
 
     def __radd__(self, other):
-        return other + Fraction(self.num, self.den)
+        return Fraction(self.num, self.den).__radd__(other)
 
     def __sub__(self, other):
-        if isinstance(other, AVRational):
+        if type(other) is AVRational:
             o: AVRational = other
             return from_avrational(lib.av_sub_q(self._q(), o._q()))
-        return Fraction(self.num, self.den) - other
+        return Fraction(self.num, self.den).__sub__(other)
 
     def __rsub__(self, other):
-        return other - Fraction(self.num, self.den)
+        return Fraction(self.num, self.den).__rsub__(other)
 
 
 @cython.cfunc
 def from_avrational(q: lib.AVRational) -> AVRational:
     obj: AVRational = AVRational.__new__(AVRational)
-    # FFmpeg does not guarantee reduced form; our invariant requires it.
+    # FFmpeg does not guarantee reduced form
     lib.av_reduce(
         cython.address(obj.num), cython.address(obj.den), q.num, q.den, _INT32_MAX
     )
