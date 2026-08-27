@@ -2,7 +2,7 @@ LDFLAGS ?= ""
 CFLAGS ?= "-O0 -Wno-unreachable-code"
 
 PYAV_PYTHON ?= python
-PYAV_PIP ?= pip
+PYAV_PIP ?= uv pip
 PYTHON := $(PYAV_PYTHON)
 PIP := $(PYAV_PIP)
 
@@ -29,11 +29,11 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
-	$(PIP) install -U ruff isort pillow numpy mypy==2.1.0 pytest
+	$(PIP) install --group lint
 	ruff format --check av examples tests setup.py
 	isort --check-only --diff av examples tests
 	mypy av tests
 
 test:
-	$(PIP) install --upgrade cython numpy pillow pytest
+	$(PIP) install --group test
 	$(PYTHON) -m pytest

@@ -43,7 +43,8 @@ if [[ "$PYAV_PYTHON" == *pypy* ]]; then
 fi
 
 export PYAV_PYTHON
-export PYAV_PIP="${PYAV_PIP-$PYAV_PYTHON -m pip}"
+export UV_PYTHON="$PYAV_PYTHON"
+export PYAV_PIP="${PYAV_PIP-uv pip}"
 
 if [[ "$GITHUB_ACTION" ]]; then
 
@@ -64,8 +65,7 @@ print("{}{}.{}".format(platform.python_implementation().lower(), *sys.version_in
 
     if [[ ! -e "$PYAV_VENV/bin/python" ]]; then
         mkdir -p "$PYAV_VENV"
-        virtualenv -p "$PYAV_PYTHON" "$PYAV_VENV"
-        "$PYAV_VENV/bin/pip" install --upgrade pip setuptools
+        uv venv -p "$PYAV_PYTHON" "$PYAV_VENV"
     fi
 
     if [[ -e "$PYAV_VENV/bin/activate" ]]; then
