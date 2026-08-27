@@ -24,6 +24,7 @@ All contributors (by number of commits):
 - Justin Wong <46082645+uvjustin@users.noreply.github.com>
 - Santtu Keskinen <santtu.keskinen@gmail.com>
 
+* Carlos Domin, Carlos Ruiz <carlos.r.domin@gmail.com>
 * Alba Mendez <me@alba.sh>
 * Curtis Doty <Curtis@GreenKey.net>; `@dotysan <https://github.com/dotysan>`_
 * Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
@@ -54,6 +55,7 @@ All contributors (by number of commits):
 - Benedikt Lorch, benedikt-grl <benedikt@getreallabs.com>
 - Santiago Castro <bryant1410@gmail.com>
 - Christian Clauss <cclauss@me.com>
+- Dominik Baran, Yozer <dominik.baran7@gmail.com>
 - Ihor Liubymov <ihor.liubymov@ring.com>
 - Johannes Erdfelt <johannes@erdfelt.com>
 - Karl Litterfeldt <kalle.litterfeldt@gmail.com>; `@litterfeldt <https://github.com/litterfeldt>`_
@@ -81,8 +83,6 @@ All contributors (by number of commits):
 - Ryan Huang <NPN@users.noreply.github.com>
 - Arthur Barros <arthbarros@gmail.com>
 - bdavid-evertz <bdavid@evertz.com>
-- Carlos Ruiz <carlos.r.domin@gmail.com>
-- Carlos Ruiz <carlos.ruiz.dominguez@west.cmu.edu>
 - Maxime Desroches <desroches.maxime@gmail.com>
 - egao1980 <egao1980@gmail.com>
 - Eric Kalosa-Kenyon <ekalosak@gmail.com>
@@ -97,6 +97,7 @@ All contributors (by number of commits):
 - Kian-Meng Ang <kianmeng@cpan.org>
 - Philipp Klaus <klaus@physik.uni-frankfurt.de>
 - Marcell Pardavi <marcell.pardavi@gmail.com>
+- mark-oshea <mark.oshea96@rocketmail.com>
 - Matteo Destro <matteo@cerrion.com>
 - Max Ehrlich <max.ehr@gmail.com>
 - Manuel Goacolou <mgoacolou@cls.fr>
@@ -116,6 +117,7 @@ All contributors (by number of commits):
 - Brendan Long <self@brendanlong.com>; `@brendanlong <https://github.com/brendanlong>`_
 - Семён Марьясин <simeon@maryasin.name>
 - Stephen.Y <stepheny@users.noreply.github.com>
+- Trevor Gamblin <tgamblin@ecocode.ca>
 - Tom Flanagan <theknio@gmail.com>
 - Tim O'Shea <tim.oshea753@gmail.com>
 - Tim Ahpee <timah@blackmagicdesign.com>

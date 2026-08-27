@@ -32,6 +32,8 @@ EMAIL_ALIASES: dict[str, str | None] = {
     "xxr3376@gmail.com": "xxr@megvii.com",
     "dallan@pha.jhu.edu": "daniel.b.allan@gmail.com",
     "61652821+laggykiller@users.noreply.github.com": "chaudominic2@gmail.com",
+    "carlos@aifi.com": "carlos.r.domin@gmail.com",
+    "carlos.ruiz.dominguez@west.cmu.edu": "carlos.r.domin@gmail.com",
 }
 
 CANONICAL_NAMES: dict[str, str] = {
