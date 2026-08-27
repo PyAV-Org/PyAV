@@ -1,6 +1,6 @@
 SPHINXOPTS    =
 BUILDDIR      = _build
-PYAV_PIP ?= pip
+PYAV_PIP ?= uv pip
 PIP := $(PYAV_PIP)
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 
