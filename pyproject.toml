@@ -56,3 +56,7 @@ skip = ["av/__init__.py"]
 
 [tool.uv]
 prerelease = "allow"
+
+[dependency-groups]
+test = ["cython>=3.3.0,<4", "numpy", "pillow", "pytest"]
+lint = ["ruff", "isort", "mypy==2.1.0", {include-group = "test"}]
