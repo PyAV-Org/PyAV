@@ -22,8 +22,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Python
-        uses: actions/setup-python@v6
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
+          activate-environment: true
           python-version: "3.14"
       - name: Linters
         run: make lint
@@ -50,10 +51,10 @@ jobs:
       name: Checkout
 
     - name: Python ${{ matrix.config.python }}
-      uses: actions/setup-python@v6
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
       with:
+        activate-environment: true
         python-version: ${{ matrix.config.python }}
-        allow-prereleases: true
 
     - name: OS Packages
       run: |
@@ -163,27 +164,22 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - name: Set up host Python 3.12
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Set up host Python 3.14t
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14t"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
       - name: Install build tooling
         run: |
-          for py in python3.12 python3.14t; do
-            $py -m pip install -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
-          done
+          uv venv --seed --python 3.12 .venv-3.12
+          uv venv --seed --python 3.14t .venv-3.14t
+          uv pip install --python .venv-3.12/bin/python -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
+          uv pip install --python .venv-3.14t/bin/python -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
           # patchelf 0.18 (ubuntu-24.04's system version) corrupts ELF files
           # with large p_align; pin <0.18 for auditwheel to use.
-          python3.12 -m pip install -U ziglang auditwheel 'patchelf<0.18'
+          uv pip install --python .venv-3.12/bin/python -U ziglang auditwheel 'patchelf<0.18'
       - name: Cross-compile armv7l wheels with zig
         env:
-          HOST_PY312: python3.12
-          HOST_PY314T: python3.14t
-          TOOLS_PY: python3.12
+          HOST_PY312: .venv-3.12/bin/python
+          HOST_PY314T: .venv-3.14t/bin/python
+          TOOLS_PY: .venv-3.12/bin/python
         run: bash scripts/build-armv7l-cross.sh
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
