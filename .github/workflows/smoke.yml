@@ -68,7 +68,7 @@ jobs:
         case ${{ matrix.config.os }} in
           ubuntu-24.04)
             sudo apt-get update
-            sudo apt-get install \
+            sudo apt-get install -y \
               autoconf \
               automake \
               build-essential \
@@ -79,7 +79,7 @@ jobs:
               pkg-config \
               zlib1g-dev
             if [[ "${{ matrix.config.extras }}" ]]; then
-              sudo apt-get install doxygen
+              sudo apt-get install -y doxygen
             fi
             ;;
           macos-14)
