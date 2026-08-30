@@ -1,4 +1,5 @@
 import pickle
+from decimal import Decimal
 from fractions import Fraction
 
 import pytest
@@ -69,7 +70,7 @@ def test_setters_accept_avrational() -> None:
     import av
 
     cc = av.codec.CodecContext.create("mpeg4", "w")
-    cc.time_base = AVRational(1001, 30000)  # type: ignore[assignment]
+    cc.time_base = AVRational(1001, 30000)
     assert cc.time_base == Fraction(1001, 30000)
 
 
@@ -86,3 +87,138 @@ def test_pickle_and_repr() -> None:
     assert pickle.loads(pickle.dumps(r)) == r
     assert repr(r) == "AVRational(30000, 1001)"
     assert str(r) == "30000/1001"
+
+
+def test_nonfinite_equality() -> None:
+    inf, nan = float("inf"), float("nan")
+
+    # Equality between two AVRationals is structural.
+    assert AVRational(1, 0) == AVRational(2, 0)
+    assert AVRational(0, 0) == AVRational(0, 0)
+    assert AVRational(1, 0) != AVRational(-1, 0)
+    assert AVRational(1, 0) != AVRational(0, 0)
+
+    # Against another numeric type it is by value, so the hashes must agree.
+    assert AVRational(1, 0) == inf and hash(AVRational(1, 0)) == hash(inf)
+    assert AVRational(-1, 0) == -inf and hash(AVRational(-1, 0)) == hash(-inf)
+    assert AVRational(1, 0) == Decimal("Infinity")
+    assert hash(AVRational(1, 0)) == hash(Decimal("Infinity"))
+    assert {AVRational(1, 0)} == {inf}
+
+    # 0/0 equals no value of another type, not even a NaN.
+    assert AVRational(0, 0) != nan
+    assert AVRational(0, 0) != Decimal("NaN")
+    assert AVRational(0, 0) != 0 and AVRational(0, 0) != Fraction(0, 1)
+
+    assert AVRational(1, 0) != "x" and AVRational(1, 0) is not None
+
+
+def test_nonfinite_ordering() -> None:
+    inf = float("inf")
+    neg, pos, undef, half = (
+        AVRational(-1, 0),
+        AVRational(1, 0),
+        AVRational(0, 0),
+        AVRational(1, 2),
+    )
+
+    assert neg < half < pos < undef
+    assert undef > pos > half > neg
+    assert not (pos < pos) and pos <= pos and pos >= pos
+    assert not (undef < undef) and undef <= undef and undef >= undef
+
+    # A finite AVRational against a non-finite one, either way round.
+    assert half < pos and pos > half
+    assert half > neg and neg < half
+    assert not (half >= pos) and not (pos <= half)
+
+    # Against plain numbers, including infinities of another type.
+    assert pos > 10**9 and pos > 1e308 and pos > Fraction(10**9)
+    assert neg < -(10**9) and neg < -1e308
+    assert pos <= inf and pos >= inf and not (pos < inf) and not (pos > inf)
+    assert neg <= -inf and neg >= -inf
+    assert half < inf and half > -inf
+    assert undef > inf and undef > 0 and not (undef < inf)
+
+
+def test_nonfinite_ordering_is_consistent() -> None:
+    values = [
+        AVRational(0, 0),
+        AVRational(1, 0),
+        AVRational(-1, 0),
+        AVRational(1, 2),
+        AVRational(0, 1),
+        Fraction(1, 2),
+        0,
+        7,
+        -2.5,
+        float("inf"),
+        float("-inf"),
+        Decimal("0.5"),
+        Decimal("Infinity"),
+    ]
+    for a in (v for v in values if isinstance(v, AVRational)):
+        for b in values:
+            eq, lt, le, gt, ge = a == b, a < b, a <= b, a > b, a >= b
+            assert le == (lt or eq), (a, b)
+            assert ge == (gt or eq), (a, b)
+            assert not (lt and gt), (a, b)
+            if isinstance(b, AVRational):
+                assert (lt, le, eq) == (b > a, b >= a, b == a), (a, b)
+                assert lt + eq + gt == 1, (a, b)
+            if eq:
+                assert hash(a) == hash(b), (a, b)
+
+
+def test_nan_is_unordered() -> None:
+    rationals = (AVRational(1, 2), AVRational(1, 0), AVRational(0, 0))
+    for value in (float("nan"), Decimal("NaN"), Decimal("sNaN")):
+        for r in rationals:
+            assert not (r < value) and not (r <= value)
+            assert not (r > value) and not (r >= value)
+
+    for value in (float("nan"), Decimal("NaN")):
+        for r in rationals:
+            assert r != value
+
+
+def test_nonfinite_sorting() -> None:
+    values = [
+        AVRational(1, 0),
+        AVRational(0, 0),
+        AVRational(1, 2),
+        AVRational(-1, 0),
+        AVRational(3, 1),
+        AVRational(-3, 1),
+    ]
+    expected = [
+        AVRational(-1, 0),
+        AVRational(-3, 1),
+        AVRational(1, 2),
+        AVRational(3, 1),
+        AVRational(1, 0),
+        AVRational(0, 0),
+    ]
+    assert sorted(values) == expected
+    backwards = values[::-1]
+    assert sorted(backwards) == expected
+    assert max(values) == AVRational(0, 0)
+    assert min(values) == AVRational(-1, 0)
+
+
+def test_unorderable_types() -> None:
+    for value in ("x", None, 1j, object()):
+        for r in (AVRational(1, 2), AVRational(1, 0), AVRational(0, 0)):
+            with pytest.raises(TypeError):
+                r < value  # noqa: B015
+            with pytest.raises(TypeError):
+                r >= value  # noqa: B015
+
+
+def test_fraction_on_the_left_is_asymmetric() -> None:
+    assert Fraction(1, 2) < AVRational(1, 0)
+    assert Fraction(1, 2) > AVRational(-1, 0)
+    assert Fraction(1, 2) >= AVRational(0, 0)
+    assert not (AVRational(0, 0) <= Fraction(1, 2))
+    assert not (Fraction(1, 2) < AVRational(0, 0))
+    assert AVRational(0, 0) > Fraction(1, 2)
