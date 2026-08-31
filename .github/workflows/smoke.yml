@@ -43,14 +43,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-24.04, python: "3.14", ffmpeg: "9.0.1", extras: true}
-          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.1.2"}
-          - {os: ubuntu-24.04, python: "3.13", ffmpeg: "9.0.1"}
-          - {os: ubuntu-24.04-riscv, python: "3.14", ffmpeg: "9.0.1", extras: true}
-          - {os: ubuntu-24.04-riscv, python: "3.12", ffmpeg: "8.1.2"}
-          - {os: ubuntu-24.04-riscv, python: "3.13", ffmpeg: "9.0.1"}
-          - {os: macos-14, python: "3.12", ffmpeg: "8.1.2"}
-          - {os: macos-14, python: "3.14", ffmpeg: "9.0.1"}
+          - {os: ubuntu-24.04, python: "3.14", ffmpeg: "9.0.1", ffmpeg_config: ffmpeg-latest.json, extras: true}
+          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.1.2", ffmpeg_config: ffmpeg-8.1.json}
+          - {os: ubuntu-24.04, python: "3.13", ffmpeg: "9.0.1", ffmpeg_config: ffmpeg-latest.json}
+          - {os: ubuntu-24.04-riscv, python: "3.14", ffmpeg: "9.0.1", ffmpeg_config: ffmpeg-latest.json, extras: true}
+          - {os: ubuntu-24.04-riscv, python: "3.12", ffmpeg: "8.1.2", ffmpeg_config: ffmpeg-8.1.json}
+          - {os: ubuntu-24.04-riscv, python: "3.13", ffmpeg: "9.0.1", ffmpeg_config: ffmpeg-latest.json}
+          - {os: macos-14, python: "3.12", ffmpeg: "8.1.2", ffmpeg_config: ffmpeg-8.1.json}
+          - {os: macos-14, python: "3.14", ffmpeg: "9.0.1", ffmpeg_config: ffmpeg-latest.json}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -61,6 +61,11 @@ jobs:
       # packages/versions RISE doesn't happen to carry.
       UV_INDEX: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && 'https://pypi.riseproject.dev/simple/' || '' }}
       UV_INDEX_STRATEGY: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && 'unsafe-best-match' || 'first-index' }}
+      # pyav-ffmpeg's vendor packages bake prefix=/tmp/vendor into their .pc
+      # files (not relocatable), so they must be extracted there verbatim.
+      PKG_CONFIG_PATH: /tmp/vendor/lib/pkgconfig
+      LD_LIBRARY_PATH: /tmp/vendor/lib
+      DYLD_LIBRARY_PATH: /tmp/vendor/lib
 
     steps:
     - uses: actions/checkout@v7
@@ -73,33 +78,18 @@ jobs:
         python-version: ${{ matrix.config.python }}
 
     - name: OS Packages
+      if: runner.os == 'Linux'
       run: |
-        case ${{ matrix.config.os }} in
-          ubuntu-24.04|ubuntu-24.04-riscv)
-            sudo apt-get update
-            sudo apt-get install -y \
-              autoconf \
-              automake \
-              build-essential \
-              cmake \
-              libtool \
-              libx264-dev \
-              nasm \
-              pkg-config \
-              zlib1g-dev
-            if [[ "${{ matrix.config.extras }}" ]]; then
-              sudo apt-get install -y doxygen
-            fi
-            ;;
-          macos-14)
-            brew install automake libtool opus x264
-            ;;
-        esac
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake pkg-config zlib1g-dev libxcb-shape0
+        if [[ "${{ matrix.config.extras }}" ]]; then
+          sudo apt-get install -y doxygen
+        fi
 
-    - name: Pip and FFmpeg
+    - name: FFmpeg
       run: |
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build-deps
+        python scripts/fetch-vendor.py --config-file scripts/${{ matrix.config.ffmpeg_config }} /tmp/vendor
 
     - name: Build
       run: |
