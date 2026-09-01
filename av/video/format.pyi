@@ -28,3 +28,5 @@ class VideoFormatComponent:
     height: int
 
     def __init__(self, format: VideoFormat, index: int) -> None: ...
+
+names: set[str]
