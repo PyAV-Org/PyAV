@@ -107,6 +107,72 @@ def hwdevices_available():
 
 @cython.final
 @cython.cclass
+class HWDevice:
+    """HWDevice(device_type, device=None, options=None, flags=None)
+
+    A hardware device context which can be shared by components such as filter
+    graphs. The underlying FFmpeg buffer is reference counted; consumers take
+    their own references and this object never exposes the raw pointer.
+
+    :param device_type: The kind of device, e.g. ``"cuda"``, ``"vaapi"`` or
+        ``"vulkan"``. See :func:`hwdevices_available` for the types supported by
+        the loaded FFmpeg.
+    :type device_type: str or HWDeviceType
+    :param str device: An optional device identifier. Uses the default device if
+        ``None``.
+    :param dict options: Options passed to ``av_hwdevice_ctx_create``.
+    :param int flags: Flags passed to ``av_hwdevice_ctx_create``.
+    """
+
+    def __cinit__(self):
+        self.ptr = cython.NULL
+
+    def __init__(self, device_type, device=None, options=None, flags=None):
+        if isinstance(device_type, HWDeviceType):
+            self._device_type = int(device_type)
+        elif isinstance(device_type, str):
+            self._device_type = int(lib.av_hwdevice_find_type_by_name(device_type))
+            if self._device_type == lib.AV_HWDEVICE_TYPE_NONE:
+                raise ValueError(f"Unknown hardware device type: {device_type}")
+        elif isinstance(device_type, int):
+            self._device_type = device_type
+        else:
+            raise TypeError("device_type must be a string, integer, or HWDeviceType")
+
+        if self._device_type == lib.AV_HWDEVICE_TYPE_NONE:
+            raise ValueError("Hardware device type cannot be 'none'")
+
+        self.options = {} if not options else dict(options)
+        self.flags = 0 if flags is None else flags
+
+        c_device: cython.p_char = cython.NULL
+        device_name = None if device is None else f"{device}"
+        if device_name:
+            device_bytes = device_name.encode()
+            c_device = device_bytes
+        c_options: Dictionary = Dictionary(self.options)
+
+        err_check(
+            lib.av_hwdevice_ctx_create(
+                cython.address(self.ptr),
+                cython.cast(lib.AVHWDeviceType, self._device_type),
+                c_device,
+                c_options.ptr,
+                self.flags,
+            )
+        )
+
+    @property
+    def device_type(self):
+        return HWDeviceType(self._device_type)
+
+    def __dealloc__(self):
+        if self.ptr:
+            lib.av_buffer_unref(cython.address(self.ptr))
+
+
+@cython.final
+@cython.cclass
 class HWAccel:
     """HWAccel(device_type, device=None, allow_software_fallback=True, options=None, flags=None, is_hw_owned=False)
 

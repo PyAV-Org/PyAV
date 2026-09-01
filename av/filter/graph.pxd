@@ -1,5 +1,6 @@
 cimport libav as lib
 
+from av.codec.hwaccel cimport HWDevice
 from av.filter.context cimport FilterContext
 
 
@@ -8,6 +9,7 @@ cdef class Graph:
     # ints paired up, so there are no padding holes between them.
     cdef object __weakref__
     cdef lib.AVFilterGraph *ptr
+    cdef HWDevice _hw_device
     cdef dict _name_counts
     cdef dict[size_t, FilterContext] _context_by_ptr
     cdef dict[str, list[FilterContext]] _context_by_type
