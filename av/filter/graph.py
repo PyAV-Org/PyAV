@@ -4,6 +4,7 @@ import cython
 from cython.cimports.av.audio.format import AudioFormat
 from cython.cimports.av.audio.frame import AudioFrame
 from cython.cimports.av.audio.layout import AudioLayout
+from cython.cimports.av.codec.hwaccel import HWDevice
 from cython.cimports.av.error import err_check
 from cython.cimports.av.filter.context import FilterContext, wrap_filter_context
 from cython.cimports.av.filter.filter import Filter, wrap_filter
@@ -15,8 +16,22 @@ from cython.cimports.av.video.frame import VideoFrame
 @cython.final
 @cython.cclass
 class Graph:
-    def __cinit__(self):
+    """Graph(hw_device=None)
+
+    A graph of audio and/or video filters.
+
+    :param HWDevice hw_device: An optional hardware device for filters such as
+        ``hwupload``. A reference is attached to every filter which declares
+        ``AVFILTER_FLAG_HWDEVICE`` before that filter is initialized.
+    """
+
+    def __cinit__(self, hw_device=None):
         self.ptr = lib.avfilter_graph_alloc()
+        if not self.ptr:
+            raise MemoryError("Could not allocate AVFilterGraph")
+        if hw_device is not None and not isinstance(hw_device, HWDevice):
+            raise TypeError("hw_device must be an HWDevice or None")
+        self._hw_device = hw_device
         self.configured = False
         self._name_counts = {}
         self._nb_filters_seen = 0
@@ -27,6 +42,11 @@ class Graph:
         if self.ptr:
             # This frees the graph, filter contexts, links, etc..
             lib.avfilter_graph_free(cython.address(self.ptr))
+
+    @property
+    def hw_device(self):
+        """The hardware device supplied when this graph was created."""
+        return self._hw_device
 
     @property
     def threads(self):
@@ -93,6 +113,14 @@ class Graph:
         )
         if not ptr:
             raise RuntimeError("Could not allocate AVFilterContext")
+
+        if (
+            self._hw_device is not None
+            and cy_filter.ptr.flags & lib.AVFILTER_FLAG_HWDEVICE
+        ):
+            ptr.hw_device_ctx = lib.av_buffer_ref(self._hw_device.ptr)
+            if not ptr.hw_device_ctx:
+                raise MemoryError("Could not reference graph hardware device")
 
         # Manually construct this context (so we can return it).
         ctx: FilterContext = wrap_filter_context(self, cy_filter, ptr)

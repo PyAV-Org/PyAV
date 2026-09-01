@@ -2,6 +2,7 @@ import errno
 from fractions import Fraction
 
 import numpy as np
+import pytest
 
 import av
 from av import AudioFrame, AVRational, VideoFrame
@@ -51,6 +52,14 @@ class TestFilters(TestCase):
         f = Filter("testsrc")
         assert f.name == "testsrc"
         assert f.description == "Generate test pattern."
+
+    def test_graph_rejects_invalid_hw_device(self) -> None:
+        with pytest.raises(TypeError, match="hw_device must be an HWDevice"):
+            Graph(hw_device=object())  # type: ignore[arg-type]
+
+    def test_hw_device_rejects_unknown_type(self) -> None:
+        with pytest.raises(ValueError, match="Unknown hardware device type"):
+            av.codec.hwaccel.HWDevice("definitely-not-a-hardware-device")
 
     def test_generator_graph(self):
         graph = Graph()

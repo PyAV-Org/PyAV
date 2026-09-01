@@ -36,6 +36,20 @@ class HWConfig:
     @property
     def is_supported(self) -> bool: ...
 
+class HWDevice:
+    options: dict[str, object]
+    flags: int
+
+    def __init__(
+        self,
+        device_type: str | int | HWDeviceType,
+        device: str | int | None = None,
+        options: dict[str, object] | None = None,
+        flags: int | None = None,
+    ) -> None: ...
+    @property
+    def device_type(self) -> HWDeviceType: ...
+
 class HWAccel:
     options: dict[str, object]
 

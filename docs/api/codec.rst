@@ -141,6 +141,8 @@ Hardware Acceleration
 .. currentmodule:: av.codec.hwaccel
 .. automodule:: av.codec.hwaccel
 
+.. autoclass:: HWDevice
+
 .. autoclass:: HWAccel
 
 .. autofunction:: hwdevices_available
@@ -167,4 +169,3 @@ frames passed to ``encode`` are uploaded to the device automatically::
 
 See ``examples/basics/hw_decode.py`` for a complete example, including
 recommended device types per platform.
-

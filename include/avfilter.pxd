@@ -36,6 +36,10 @@ cdef extern from "libavfilter/avfilter.h" nogil:
         AVFilterPad *output_pads
         AVFilterLink **outputs
 
+        AVBufferRef *hw_device_ctx
+
+    cdef int AVFILTER_FLAG_HWDEVICE
+
     cdef int avfilter_init_str(AVFilterContext *ctx, const char *args)
     cdef int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options)
 
