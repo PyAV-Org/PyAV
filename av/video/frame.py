@@ -344,6 +344,7 @@ supported_np_pix_fmts = {
     "rgbf32le",
     "yuv420p",
     "yuv420p10le",
+    "yuv422p",
     "yuv422p10le",
     "yuv444p",
     "yuv444p16be",
