@@ -755,9 +755,30 @@ def test_ndarray_yuv420p10le_zero_size() -> None:
 def test_ndarray_yuv422p() -> None:
     array = numpy.random.randint(0, 256, size=(960, 640), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="yuv422p")
+    assert "yuv422p" in supported_np_pix_fmts
     assert frame.width == 640 and frame.height == 480
     assert frame.format.name == "yuv422p"
     assertNdarraysEqual(frame.to_ndarray(), array)
+
+
+def test_supported_np_pix_fmts_matches_to_ndarray() -> None:
+    # supported_np_pix_fmts is public API describing what to_ndarray() accepts,
+    # so it is checked against to_ndarray() itself rather than against a list
+    # that would have to be kept in step with it by hand.
+    converts = set()
+    for name in av.video.format.names:
+        try:
+            VideoFrame(32, 16, name).to_ndarray()
+        except Exception:
+            continue
+        converts.add(name)
+
+    assert converts - supported_np_pix_fmts == set()
+
+    # Names that av.video.format.names does not carry are aliases, so the
+    # advertised set is checked directly rather than through the sweep.
+    for name in supported_np_pix_fmts:
+        VideoFrame(32, 16, name).to_ndarray()
 
 
 def test_ndarray_yuv420p_align() -> None:
