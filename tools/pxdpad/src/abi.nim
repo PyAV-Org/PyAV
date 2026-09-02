@@ -4,7 +4,7 @@ import std/[strutils, sets]
 import model
 
 const
-  targetNames* = ["lp64", "darwin-arm64", "llp64", "ilp32"]
+  targetNames* = ["lp64", "darwin-arm64", "llp64", "armv7", "ilp32"]
 
 proc getTarget*(name: string): Target =
   ## `lp64` is the x86-64 System V ABI, `llp64` is 64-bit Windows.
@@ -18,18 +18,17 @@ proc getTarget*(name: string): Target =
   of "llp64", "windows", "win64":
     Target(name: "llp64", ptrSize: 8, ptrAlign: 8, longSize: 4, longAlign: 4,
            ldSize: 8, ldAlign: 8, maxScalarAlign: 8, headSize: 16)
+  of "armv7", "armhf", "armv7l":  # 32-bit ARM, arm-linux-gnueabihf
+    # ILP32 like i386, but AAPCS aligns double and long long to 8, and
+    # long double is just double.
+    Target(name: "armv7", ptrSize: 4, ptrAlign: 4, longSize: 4, longAlign: 4,
+           ldSize: 8, ldAlign: 8, maxScalarAlign: 8, headSize: 8)
   of "ilp32", "x86":           # 32-bit x86 System V
     Target(name: "ilp32", ptrSize: 4, ptrAlign: 4, longSize: 4, longAlign: 4,
            ldSize: 12, ldAlign: 4, maxScalarAlign: 4, headSize: 8)
   else:
     raise newException(ValueError, "unknown target '" & name & "', expected one of " &
       targetNames.join(", "))
-
-proc defaultTarget*(): Target =
-  when defined(windows): getTarget("llp64")
-  elif defined(macosx) and defined(arm64): getTarget("darwin-arm64")
-  elif sizeof(pointer) == 4: getTarget("ilp32")
-  else: getTarget("lp64")
 
 const pyObjectTypes* = toHashSet([
   "object", "str", "bytes", "unicode", "bytearray", "dict", "list", "tuple",
