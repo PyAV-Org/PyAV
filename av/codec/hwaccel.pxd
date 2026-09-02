@@ -11,9 +11,9 @@ cdef class HWConfig:
 cdef HWConfig wrap_hwconfig(const lib.AVCodecHWConfig *ptr)
 
 cdef class HWDevice:
-    cdef int _device_type
     cdef lib.AVBufferRef *ptr
     cdef readonly dict options
+    cdef int _device_type
     cdef readonly int flags
 
 cdef class HWAccel:
