@@ -26,8 +26,15 @@ jobs:
         with:
           activate-environment: true
           python-version: "3.14"
+      - name: Nim
+        uses: jiro4989/setup-nim-action@v2
+        with:
+          nim-version: "stable"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Linters
         run: make lint
+      - name: pxdpad
+        run: make pxdpad
 
   nix:
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
