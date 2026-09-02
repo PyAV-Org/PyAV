@@ -1,0 +1,4 @@
+bin/
+nimcache/
+*.exe
+tests/test_pxdpad

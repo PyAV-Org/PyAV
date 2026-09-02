@@ -7,10 +7,9 @@ PYTHON := $(PYAV_PYTHON)
 PIP := $(PYAV_PIP)
 
 
-.PHONY: default build clean fate-suite lint test
+.PHONY: default build clean fate-suite lint test pxdpad pxdpad-build
 
 default: build
-
 
 build:
 	$(PIP) install -U --pre cython setuptools
@@ -33,6 +32,12 @@ lint:
 	ruff format --check av examples tests setup.py
 	isort --check-only --diff av examples tests
 	mypy av tests
+
+pxdpad-build:
+	nim c -d:danger --hints:off -o:tools/pxdpad/bin/pxdpad tools/pxdpad/src/main.nim
+
+pxdpad: pxdpad-build
+	tools/pxdpad/bin/pxdpad av include
 
 test:
 	$(PIP) install --group test
