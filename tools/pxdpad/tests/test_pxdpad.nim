@@ -298,6 +298,18 @@ cdef struct S:
     check analyze(src, "lp64")["S"].layout.size == 16
     check analyze(src, "llp64")["S"].layout.size == 8
 
+  test "armv7 is ILP32 but aligns double and long long to 8":
+    let src = """
+cdef struct S:
+    int a
+    double d
+"""
+    # i386 packs d at offset 4; AAPCS pads to 8.
+    check analyze(src, "ilp32")["S"].layout.size == 12
+    check analyze(src, "armv7")["S"].layout.size == 16
+    check analyze(src, "armv7")["S"].layout.fields[1].offset == 8
+    check analyze(src, "armv7")["S"].layout.holes.len == 1
+
   test "ilp32 shrinks pointers and the object header":
     let f = analyze("""
 cdef class C:
