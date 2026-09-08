@@ -39,6 +39,20 @@ else
     echo "         Building without NVIDIA NVENC/NVDEC support"
 fi
 
+# Some riscv64 toolchains include the Zbb extension by default. FFmpeg's runtime
+# CPU feature checks then get compiled away, causing SIGILL on hardware (like
+# the RISE RISC-V Runners) that doesn't actually implement Zbb
+# (https://trac.ffmpeg.org/ticket/11251). Being explicit about -march=riscv64gc
+# isn't enough to work around this, so also disable FFmpeg's riscv-specific
+# (scalar Zbb + vector) code paths. rv_zicbop's configure dependency is only on
+# "riscv", not "rv", so we have to disable all of the related vector options.
+# This is a temporary fix that should be removed once RISC-V Runners support
+# RVA23.
+CONFFLAGS_RISCV=""
+if [[ "$(uname -m)" == "riscv64" ]]; then
+    CONFFLAGS_RISCV="--extra-cflags=-march=rv64gc --disable-rv --disable-rvv --disable-rv_zicbop --disable-rv_zvbb"
+fi
+
 cd "$PYAV_LIBRARY_ROOT"
 
 # Download and expand the source.
@@ -72,6 +86,7 @@ echo ./configure
     --enable-filter=abuffer,abuffersink,aformat,aresample,atempo,buffer,buffersink,bwdif,color,ebur128,loudnorm,lutrgb,overlay,palettegen,scale,testsrc,vflip,volume \
     --disable-avx512 \
     $CONFFLAGS_NVIDIA \
+    $CONFFLAGS_RISCV \
     --prefix="$PYAV_LIBRARY_PREFIX" \
     || exit 2
 echo
