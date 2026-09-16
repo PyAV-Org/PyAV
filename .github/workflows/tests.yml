@@ -33,6 +33,8 @@ jobs:
             arch: arm64
           - os: macos-15-intel
             arch: x86_64
+          - os: ubuntu-24.04-riscv
+            arch: riscv64
           - os: ubuntu-24.04-arm
             arch: aarch64
           - os: ubuntu-24.04
@@ -61,7 +63,10 @@ jobs:
           CIBW_BEFORE_BUILD: python scripts/fetch-vendor.py --config-file scripts/ffmpeg-latest.json /tmp/vendor
           CIBW_BEFORE_BUILD_MACOS: python scripts/fetch-vendor.py --config-file scripts/ffmpeg-latest.json /tmp/vendor
           CIBW_BEFORE_BUILD_WINDOWS: python scripts\fetch-vendor.py --config-file scripts\ffmpeg-latest.json C:\cibw\vendor
-          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig
+          # riscv64 wheels (e.g. numpy, for CIBW_TEST_REQUIRES) are often missing on
+          # PyPI; RISE mirrors prebuilt wheels for it. unsafe-best-match is needed so
+          # uv still falls back to PyPI for packages/versions RISE doesn't carry.
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig${{ matrix.arch == 'riscv64' && ' UV_INDEX=https://pypi.riseproject.dev/simple/ UV_INDEX_STRATEGY=unsafe-best-match' || '' }}
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:\cibw\vendor\bin -w {dest_dir} {wheel}
