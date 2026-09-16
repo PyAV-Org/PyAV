@@ -59,6 +59,11 @@ jobs:
       # packages/versions RISE doesn't happen to carry.
       UV_INDEX: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && 'https://pypi.riseproject.dev/simple/' || '' }}
       UV_INDEX_STRATEGY: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && 'unsafe-best-match' || 'first-index' }}
+      # riscv64 uses a pyav-ffmpeg prebuilt to speed up smoke tests; its .pc
+      # files bake in prefix=/tmp/vendor, so it must be extracted there
+      # verbatim and pointed at explicitly.
+      PKG_CONFIG_PATH: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && '/tmp/vendor/lib/pkgconfig' || '' }}
+      LD_LIBRARY_PATH: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && '/tmp/vendor/lib' || '' }}
 
     steps:
     - uses: actions/checkout@v7
@@ -73,7 +78,7 @@ jobs:
     - name: OS Packages
       run: |
         case ${{ matrix.config.os }} in
-          ubuntu-24.04|ubuntu-24.04-riscv)
+          ubuntu-24.04)
             sudo apt-get update
             sudo apt-get install -y \
               autoconf \
@@ -89,6 +94,17 @@ jobs:
               sudo apt-get install -y doxygen
             fi
             ;;
+          ubuntu-24.04-riscv)
+          # Since we're using pyav-ffmpeg prebuilds, we don't need the full set
+          # of packages installed on other runners. libxcb-shape0 is needed
+          # for the prebuilt's X11 usage.
+            sudo apt-get update
+            sudo apt-get install -y \
+              build-essential \
+              pkg-config \
+              zlib1g-dev \
+              libxcb-shape0
+            ;;
           macos-14)
             brew install automake libtool opus x264
             ;;
@@ -97,7 +113,12 @@ jobs:
     - name: Pip and FFmpeg
       run: |
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        scripts/build-deps
+        # don't build from source for riscv64
+        if [ "${{ matrix.config.os }}" = "ubuntu-24.04-riscv" ]; then
+            python scripts/fetch-vendor.py --config-file scripts/ffmpeg-latest.json /tmp/vendor
+        else
+            scripts/build-deps
+        fi
 
     - name: Build
       run: |
