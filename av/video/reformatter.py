@@ -287,9 +287,12 @@ class VideoReformatter:
         dst_color_primaries: cython.int,
         threads: cython.int,
     ):
+        res: cython.int
         if frame.ptr.hw_frames_ctx:
             frame_sw = alloc_video_frame()
-            err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
+            with cython.nogil:
+                res = lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0)
+            err_check(res)
             frame_sw._copy_internal_attributes(frame, data_layout=False)
             frame_sw._init_user_attributes()
             frame = frame_sw
