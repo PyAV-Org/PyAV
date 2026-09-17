@@ -14,6 +14,7 @@ from cython.cimports.libc.stdint import int64_t
 
 
 @cython.cfunc
+@cython.nogil
 @cython.exceptval(check=False)
 def _get_hw_format(
     ctx: cython.pointer[lib.AVCodecContext],
@@ -114,8 +115,15 @@ class VideoCodecContext(CodecContext):
             )
 
         hwframe: VideoFrame = alloc_video_frame()
-        err_check(lib.av_hwframe_get_buffer(self.ptr.hw_frames_ctx, hwframe.ptr, 0))
-        err_check(lib.av_hwframe_transfer_data(hwframe.ptr, vframe.ptr, 0))
+
+        res: cython.int
+        transfer_res: cython.int = 0
+        with cython.nogil:
+            res = lib.av_hwframe_get_buffer(self.ptr.hw_frames_ctx, hwframe.ptr, 0)
+            if res == 0:
+                transfer_res = lib.av_hwframe_transfer_data(hwframe.ptr, vframe.ptr, 0)
+        err_check(res)
+        err_check(transfer_res)
         hwframe._copy_internal_attributes(vframe, data_layout=False)
         hwframe._init_user_attributes()
 
@@ -180,7 +188,10 @@ class VideoCodecContext(CodecContext):
             return frame
 
         frame_sw: Frame = self._alloc_next_frame()
-        err_check(lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0))
+        res: cython.int
+        with cython.nogil:
+            res = lib.av_hwframe_transfer_data(frame_sw.ptr, frame.ptr, 0)
+        err_check(res)
         frame_sw._copy_internal_attributes(frame, data_layout=False)
         return frame_sw
 
