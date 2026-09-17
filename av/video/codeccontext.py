@@ -14,6 +14,7 @@ from cython.cimports.libc.stdint import int64_t
 
 
 @cython.cfunc
+@cython.nogil
 @cython.exceptval(check=False)
 def _get_hw_format(
     ctx: cython.pointer[lib.AVCodecContext],
