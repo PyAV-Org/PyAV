@@ -60,13 +60,17 @@ def close_output(self: OutputContainer) -> cython.void:
             # We must only ever call av_write_trailer *once*, otherwise we get a
             # segmentation fault. Therefore no matter whether it succeeds or not
             # we must absolutely set enum.done.
+            ret: cython.int
             try:
-                self.err_check(lib.av_write_trailer(self.ptr))
+                with cython.nogil:
+                    ret = lib.av_write_trailer(self.ptr)
+                self.err_check(ret)
             finally:
                 if self.file is None and not (
                     self.ptr.oformat.flags & lib.AVFMT_NOFILE
                 ):
-                    lib.avio_closep(cython.address(self.ptr.pb))
+                    with cython.nogil:
+                        lib.avio_closep(cython.address(self.ptr.pb))
                 self._myflag |= 8  # enum.done = True
     finally:
         # Drop the context so a closed output reports itself as closed:
@@ -591,17 +595,41 @@ class OutputContainer(Container):
         # Open the output file, if needed.
         name_obj: bytes = os.fsencode(self.name if self.file is None else "")
         name: cython.p_char = name_obj
-        if self.ptr.pb == cython.NULL and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            err_check(
-                lib.avio_open(cython.address(self.ptr.pb), name, lib.AVIO_FLAG_WRITE)
-            )
+        ret: cython.int
+        all_options: Dictionary
+        options: Dictionary
+        options_ptr: cython.pointer[cython.pointer[lib.AVDictionary]]
 
-        # Copy the metadata dict.
-        dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
+        self.set_timeout(self.open_timeout)
+        self.start_timeout()
+        try:
+            if (
+                self.ptr.pb == cython.NULL
+                and not self.ptr.oformat.flags & lib.AVFMT_NOFILE
+            ):
+                # avio_open() would pass the protocol a NULL interrupt
+                # callback, so a stalled connect could never be timed out.
+                with cython.nogil:
+                    ret = lib.avio_open2(
+                        cython.address(self.ptr.pb),
+                        name,
+                        lib.AVIO_FLAG_WRITE,
+                        cython.address(self.ptr.interrupt_callback),
+                        cython.NULL,
+                    )
+                err_check(ret)
 
-        all_options: Dictionary = Dictionary(self.options, self.container_options)
-        options: Dictionary = all_options.copy()
-        self.err_check(lib.avformat_write_header(self.ptr, cython.address(options.ptr)))
+            # Copy the metadata dict.
+            dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
+
+            all_options = Dictionary(self.options, self.container_options)
+            options = all_options.copy()
+            options_ptr = cython.address(options.ptr)
+            with cython.nogil:
+                ret = lib.avformat_write_header(self.ptr, options_ptr)
+            self.err_check(ret)
+        finally:
+            self.set_timeout(None)
 
         # Track option usage...
         for k in all_options:
