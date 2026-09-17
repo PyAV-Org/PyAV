@@ -292,15 +292,19 @@ class Container:
             # We need the context before we open the input AND setup Python IO.
             self.ptr = lib.avformat_alloc_context()
 
-            # Setup interrupt callback
-            if self.open_timeout is not None or self.read_timeout is not None:
-                self.ptr.interrupt_callback.callback = interrupt_cb
-                self.ptr.interrupt_callback.opaque = cython.address(
-                    self.interrupt_callback_info
-                )
-
             if acodec is not None:
                 self.ptr.audio_codec_id = getattr(AudioCodec, acodec)
+
+        # Setup interrupt callback. Muxing needs it as much as demuxing does,
+        # since writing the header to a network URL can block indefinitely.
+        if self.open_timeout is not None or self.read_timeout is not None:
+            # Start disarmed, so nothing between here and the first
+            # start_timeout() can be interrupted by a zeroed deadline.
+            self.set_timeout(None)
+            self.ptr.interrupt_callback.callback = interrupt_cb
+            self.ptr.interrupt_callback.opaque = cython.address(
+                self.interrupt_callback_info
+            )
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = cython.cast(cython.p_void, self)

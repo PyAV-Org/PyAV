@@ -179,6 +179,10 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef int av_interleaved_write_frame(AVFormatContext *ctx, AVPacket *pkt)
     cdef int av_write_frame(AVFormatContext *ctx, AVPacket *pkt)
     cdef int avio_open(AVIOContext **s, const char *url, int flags)
+    cdef int avio_open2(
+        AVIOContext **s, const char *url, int flags,
+        const AVIOInterruptCB *int_cb, AVDictionary **options
+    )
     cdef int64_t avio_size(AVIOContext *s)
     cdef const AVOutputFormat* av_guess_format(
         const char *short_name, const char *filename, const char *mime_type

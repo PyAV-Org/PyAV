@@ -1,0 +1,108 @@
+import socket
+import threading
+import time
+
+import pytest
+
+import av
+
+from .common import TestCase
+
+# The main thread sleeps in 1 ms slices while another thread is stuck in the
+# RTMP handshake. It wakes roughly a thousand times if the GIL is free and a
+# handful of times if it is not, so this threshold sits well clear of both.
+WINDOW = 1.0
+MIN_TICKS = 100
+
+
+class SilentServer:
+    """Accepts connections and then says nothing, so the handshake never ends."""
+
+    def __init__(self) -> None:
+        self.sock = socket.socket()
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(("127.0.0.1", 0))
+        self.sock.listen(4)
+        self.port: int = self.sock.getsockname()[1]
+        self.accepted: list[socket.socket] = []
+        self.thread = threading.Thread(target=self._accept, daemon=True)
+        self.thread.start()
+
+    def _accept(self) -> None:
+        while True:
+            try:
+                conn, _ = self.sock.accept()
+            except OSError:
+                return
+            self.accepted.append(conn)
+
+    def close(self) -> None:
+        self.sock.close()
+        for conn in self.accepted:
+            conn.close()
+
+
+def has_rtmp() -> bool:
+    """Whether FFmpeg was built with the RTMP protocol.
+
+    Port 1 on loopback refuses at once, so the probe either fails looking the
+    protocol up, before any connect, or fails connecting.
+    """
+    try:
+        av.open("rtmp://127.0.0.1:1/x", "w", format="flv").start_encoding()
+    except av.error.ProtocolNotFoundError:
+        return False
+    except Exception:
+        pass
+    return True
+
+
+@pytest.mark.skipif(not has_rtmp(), reason="FFmpeg was built without RTMP")
+class TestOutputBlocking(TestCase):
+    def setUp(self) -> None:
+        self.server = SilentServer()
+
+    def tearDown(self) -> None:
+        self.server.close()
+
+    def _push(self, timeout: float) -> tuple[threading.Thread, list[BaseException]]:
+        raised: list[BaseException] = []
+
+        def run() -> None:
+            try:
+                container = av.open(
+                    f"rtmp://127.0.0.1:{self.server.port}/live/x",
+                    "w",
+                    format="flv",
+                    timeout=timeout,
+                )
+                stream = container.add_stream("h264", rate=30)
+                stream.width = 320
+                stream.height = 240
+                stream.pix_fmt = "yuv420p"
+                container.start_encoding()
+            except BaseException as e:
+                raised.append(e)
+
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
+        return thread, raised
+
+    def test_start_encoding_releases_the_gil(self) -> None:
+        thread, _ = self._push(WINDOW * 8)
+
+        ticks = 0
+        deadline = time.monotonic() + WINDOW
+        while time.monotonic() < deadline:
+            ticks += 1
+            time.sleep(0.001)
+
+        assert thread.is_alive(), "the handshake completed, so nothing was blocking"
+        assert ticks > MIN_TICKS, f"main thread only ran {ticks} times"
+        thread.join(WINDOW * 16)
+
+    def test_start_encoding_honours_the_timeout(self) -> None:
+        thread, raised = self._push(WINDOW)
+        thread.join(WINDOW * 16)
+        assert not thread.is_alive(), "timeout did not interrupt the handshake"
+        assert raised, "the handshake returned instead of timing out"
