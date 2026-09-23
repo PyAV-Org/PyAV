@@ -49,7 +49,8 @@ def has_rtmp() -> bool:
     protocol up, before any connect, or fails connecting.
     """
     try:
-        av.open("rtmp://127.0.0.1:1/x", "w", format="flv").start_encoding()
+        with av.open("rtmp://127.0.0.1:1/x", "w", format="flv") as container:
+            container.start_encoding()
     except av.error.ProtocolNotFoundError:
         return False
     except Exception:
@@ -65,7 +66,9 @@ class TestOutputBlocking(TestCase):
     def tearDown(self) -> None:
         self.server.close()
 
-    def _push(self, timeout: float) -> tuple[threading.Thread, list[BaseException]]:
+    def _push(
+        self, timeout: float, containers: list | None = None
+    ) -> tuple[threading.Thread, list[BaseException]]:
         raised: list[BaseException] = []
 
         def run() -> None:
@@ -76,6 +79,8 @@ class TestOutputBlocking(TestCase):
                     format="flv",
                     timeout=timeout,
                 )
+                if containers is not None:
+                    containers.append(container)
                 stream = container.add_stream("h264", rate=30)
                 stream.width = 320
                 stream.height = 240
@@ -106,3 +111,18 @@ class TestOutputBlocking(TestCase):
         thread.join(WINDOW * 16)
         assert not thread.is_alive(), "timeout did not interrupt the handshake"
         assert raised, "the handshake returned instead of timing out"
+
+    def test_close_refuses_to_free_a_container_in_use(self) -> None:
+        containers: list[av.container.OutputContainer] = []
+        thread, _ = self._push(WINDOW * 4, containers)
+
+        # The server only accepts once the writing thread is inside the
+        # connect, which is where the context stops being ours to free.
+        deadline = time.monotonic() + WINDOW
+        while not self.server.accepted and time.monotonic() < deadline:
+            time.sleep(0.001)
+        assert self.server.accepted, "the writing thread never connected"
+
+        with pytest.raises(RuntimeError, match="another thread"):
+            containers[0].close()
+        thread.join(WINDOW * 16)

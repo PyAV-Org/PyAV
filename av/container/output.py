@@ -49,6 +49,7 @@ def close_output(self: OutputContainer) -> cython.void:
             self._mux_one(packet)
 
     self.streams = StreamContainer()
+    self._myflag |= 32  # enum.blocking = True
     try:
         if self._myflag & 12 == 4:  # enum.started and not enum.done
             # If the underlying Python IO file was already closed (e.g. during
@@ -80,6 +81,7 @@ def close_output(self: OutputContainer) -> cython.void:
         with cython.nogil:
             lib.avformat_free_context(self.ptr)
             self.ptr = cython.NULL
+        self._myflag = self._myflag & ~32  # enum.blocking = False
 
 
 @cython.final
@@ -602,6 +604,7 @@ class OutputContainer(Container):
 
         self.set_timeout(self.open_timeout)
         self.start_timeout()
+        self._myflag |= 32  # enum.blocking = True
         try:
             if (
                 self.ptr.pb == cython.NULL
@@ -629,6 +632,7 @@ class OutputContainer(Container):
                 ret = lib.avformat_write_header(self.ptr, options_ptr)
             self.err_check(ret)
         finally:
+            self._myflag = self._myflag & ~32  # enum.blocking = False
             self.set_timeout(None)
 
         # Track option usage...
@@ -696,6 +700,13 @@ class OutputContainer(Container):
         return lib.avcodec_get_name(self.format.optr.subtitle_codec)
 
     def close(self):
+        if self._myflag & 32:  # enum.blocking
+            # Another thread is inside libav without the GIL, so freeing the
+            # context here would be a use-after-free. Pass ``timeout`` to
+            # :func:`av.open` to give up on an open that never connects.
+            raise RuntimeError(
+                "Cannot close an OutputContainer while another thread is writing to it"
+            )
         close_output(self)
 
     def mux(self, packets):
