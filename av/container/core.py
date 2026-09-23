@@ -292,15 +292,19 @@ class Container:
             # We need the context before we open the input AND setup Python IO.
             self.ptr = lib.avformat_alloc_context()
 
-            # Setup interrupt callback
-            if self.open_timeout is not None or self.read_timeout is not None:
-                self.ptr.interrupt_callback.callback = interrupt_cb
-                self.ptr.interrupt_callback.opaque = cython.address(
-                    self.interrupt_callback_info
-                )
-
             if acodec is not None:
                 self.ptr.audio_codec_id = getattr(AudioCodec, acodec)
+
+        # Setup interrupt callback. Muxing needs it as much as demuxing does,
+        # since writing the header to a network URL can block indefinitely.
+        if self.open_timeout is not None or self.read_timeout is not None:
+            # Start disarmed, so nothing between here and the first
+            # start_timeout() can be interrupted by a zeroed deadline.
+            self.set_timeout(None)
+            self.ptr.interrupt_callback.callback = interrupt_cb
+            self.ptr.interrupt_callback.opaque = cython.address(
+                self.interrupt_callback_info
+            )
 
         self.ptr.flags |= lib.AVFMT_FLAG_GENPTS
         self.ptr.opaque = cython.cast(cython.p_void, self)
@@ -495,7 +499,11 @@ def open(
     :param int buffer_size: Size of buffer for Python input/output operations in bytes.
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
     :param timeout: How many seconds to wait for data before giving up, as a float, or a
-        ``(open timeout, read timeout)`` tuple.
+        ``(open timeout, read timeout)`` tuple. The open timeout covers both connecting
+        and reading or writing the header. Writing honours it only while opening, so it
+        is the supported way to give up on an output that never connects. Muxing and
+        closing still block indefinitely, and calling :meth:`.OutputContainer.close`
+        from another thread to break out of them raises instead.
     :param callable io_open: Custom I/O callable for opening files/streams.
         This option is intended for formats that need to open additional
         file-like objects to ``file`` using custom I/O.

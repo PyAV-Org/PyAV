@@ -49,6 +49,7 @@ def close_output(self: OutputContainer) -> cython.void:
             self._mux_one(packet)
 
     self.streams = StreamContainer()
+    self._blocking_depth += 1
     try:
         if self._myflag & 12 == 4:  # enum.started and not enum.done
             # If the underlying Python IO file was already closed (e.g. during
@@ -60,13 +61,17 @@ def close_output(self: OutputContainer) -> cython.void:
             # We must only ever call av_write_trailer *once*, otherwise we get a
             # segmentation fault. Therefore no matter whether it succeeds or not
             # we must absolutely set enum.done.
+            ret: cython.int
             try:
-                self.err_check(lib.av_write_trailer(self.ptr))
+                with cython.nogil:
+                    ret = lib.av_write_trailer(self.ptr)
+                self.err_check(ret)
             finally:
                 if self.file is None and not (
                     self.ptr.oformat.flags & lib.AVFMT_NOFILE
                 ):
-                    lib.avio_closep(cython.address(self.ptr.pb))
+                    with cython.nogil:
+                        lib.avio_closep(cython.address(self.ptr.pb))
                 self._myflag |= 8  # enum.done = True
     finally:
         # Drop the context so a closed output reports itself as closed:
@@ -76,6 +81,7 @@ def close_output(self: OutputContainer) -> cython.void:
         with cython.nogil:
             lib.avformat_free_context(self.ptr)
             self.ptr = cython.NULL
+        self._blocking_depth -= 1
 
 
 @cython.final
@@ -591,17 +597,54 @@ class OutputContainer(Container):
         # Open the output file, if needed.
         name_obj: bytes = os.fsencode(self.name if self.file is None else "")
         name: cython.p_char = name_obj
-        if self.ptr.pb == cython.NULL and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
-            err_check(
-                lib.avio_open(cython.address(self.ptr.pb), name, lib.AVIO_FLAG_WRITE)
-            )
+        ret: cython.int
+        opened_pb: cython.bint = False
+        all_options: Dictionary
+        options: Dictionary
+        options_ptr: cython.pointer[cython.pointer[lib.AVDictionary]]
 
-        # Copy the metadata dict.
-        dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
+        self.set_timeout(self.open_timeout)
+        self.start_timeout()
+        self._blocking_depth += 1
+        try:
+            if (
+                self.ptr.pb == cython.NULL
+                and not self.ptr.oformat.flags & lib.AVFMT_NOFILE
+            ):
+                # avio_open() would pass the protocol a NULL interrupt
+                # callback, so a stalled connect could never be timed out.
+                with cython.nogil:
+                    ret = lib.avio_open2(
+                        cython.address(self.ptr.pb),
+                        name,
+                        lib.AVIO_FLAG_WRITE,
+                        cython.address(self.ptr.interrupt_callback),
+                        cython.NULL,
+                    )
+                err_check(ret)
+                opened_pb = True
 
-        all_options: Dictionary = Dictionary(self.options, self.container_options)
-        options: Dictionary = all_options.copy()
-        self.err_check(lib.avformat_write_header(self.ptr, cython.address(options.ptr)))
+            # Copy the metadata dict.
+            dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
+
+            all_options = Dictionary(self.options, self.container_options)
+            options = all_options.copy()
+            options_ptr = cython.address(options.ptr)
+            with cython.nogil:
+                ret = lib.avformat_write_header(self.ptr, options_ptr)
+            try:
+                self.err_check(ret)
+            except Exception:
+                # started is never set, so close_output() will not close pb.
+                # Nothing else will either, and a stalled header write is an
+                # expected path now that it can time out.
+                if opened_pb:
+                    with cython.nogil:
+                        lib.avio_closep(cython.address(self.ptr.pb))
+                raise
+        finally:
+            self._blocking_depth -= 1
+            self.set_timeout(None)
 
         # Track option usage...
         for k in all_options:
@@ -668,6 +711,13 @@ class OutputContainer(Container):
         return lib.avcodec_get_name(self.format.optr.subtitle_codec)
 
     def close(self):
+        if self._blocking_depth:
+            # Another thread is inside libav without the GIL, so freeing the
+            # context here would be a use-after-free. Pass ``timeout`` to
+            # :func:`av.open` to give up on an open that never connects.
+            raise RuntimeError(
+                "Cannot close an OutputContainer while another thread is writing to it"
+            )
         close_output(self)
 
     def mux(self, packets):
@@ -704,8 +754,13 @@ class OutputContainer(Container):
         # takes ownership of the reference.
         self.err_check(lib.av_packet_ref(self.packet_ptr, packet.ptr))
 
-        with cython.nogil:
-            ret: cython.int = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
+        ret: cython.int
+        self._blocking_depth += 1
+        try:
+            with cython.nogil:
+                ret = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
+        finally:
+            self._blocking_depth -= 1
         self.err_check(ret)
 
     @cython.cfunc

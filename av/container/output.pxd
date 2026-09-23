@@ -7,6 +7,9 @@ from av.stream cimport Stream
 
 cdef class OutputContainer(Container):
     cdef lib.AVPacket *packet_ptr
+    # How many nogil libav calls are in flight, so close() can refuse
+    # to free the context while another thread is still inside one.
+    cdef int _blocking_depth
     cdef dict _extradata_bsfs
     cdef list[Packet] _buffered_packets
     cdef _buffer_for_extradata(self, Packet packet)
