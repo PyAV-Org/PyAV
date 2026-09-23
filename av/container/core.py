@@ -500,10 +500,10 @@ def open(
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
     :param timeout: How many seconds to wait for data before giving up, as a float, or a
         ``(open timeout, read timeout)`` tuple. The open timeout covers both connecting
-        and reading or writing the header. Writing honours it only while opening, so it
-        is the supported way to give up on an output that never connects. Muxing and
-        closing still block indefinitely, and calling :meth:`.OutputContainer.close`
-        from another thread to break out of them raises instead.
+        and reading or writing the header. The read timeout covers each subsequent
+        demux, mux, or close, so a stalled peer gives up rather than blocking forever.
+        Each demux and mux gets the full timeout; a close shares one across writing
+        the trailer and flushing, so it cannot outlast the timeout either.
     :param callable io_open: Custom I/O callable for opening files/streams.
         This option is intended for formats that need to open additional
         file-like objects to ``file`` using custom I/O.

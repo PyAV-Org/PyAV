@@ -62,7 +62,9 @@ def close_output(self: OutputContainer) -> cython.void:
             # segmentation fault. Therefore no matter whether it succeeds or not
             # we must absolutely set enum.done.
             ret: cython.int
+            self.set_timeout(self.read_timeout)
             try:
+                self.start_timeout()
                 with cython.nogil:
                     ret = lib.av_write_trailer(self.ptr)
                 self.err_check(ret)
@@ -70,8 +72,13 @@ def close_output(self: OutputContainer) -> cython.void:
                 if self.file is None and not (
                     self.ptr.oformat.flags & lib.AVFMT_NOFILE
                 ):
+                    # No fresh deadline: the trailer and this flush share one,
+                    # so closing cannot outlast the timeout. The point here is
+                    # to stop the flush hanging, not to report on it, so its
+                    # return goes unchecked as it always has.
                     with cython.nogil:
                         lib.avio_closep(cython.address(self.ptr.pb))
+                self.set_timeout(None)
                 self._myflag |= 8  # enum.done = True
     finally:
         # Drop the context so a closed output reports itself as closed:
@@ -755,12 +762,15 @@ class OutputContainer(Container):
         self.err_check(lib.av_packet_ref(self.packet_ptr, packet.ptr))
 
         ret: cython.int
+        self.set_timeout(self.read_timeout)
+        self.start_timeout()
         self._blocking_depth += 1
         try:
             with cython.nogil:
                 ret = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
         finally:
             self._blocking_depth -= 1
+            self.set_timeout(None)
         self.err_check(ret)
 
     @cython.cfunc

@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 
+import numpy as np
 import pytest
 
 import av
@@ -15,12 +16,22 @@ WINDOW = 1.0
 MIN_TICKS = 100
 
 
+# A writer that never blocks has nothing to time out, so give up once the
+# socket has swallowed more than any plausible buffer.
+MAX_FRAMES = 500
+
+
 class SilentServer:
-    """Accepts connections and then says nothing, so the handshake never ends."""
+    """Accepts connections and then neither reads nor writes.
+
+    An RTMP handshake never completes against it, and a socket written to it
+    fills up and stays full.
+    """
 
     def __init__(self) -> None:
         self.sock = socket.socket()
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
         self.sock.bind(("127.0.0.1", 0))
         self.sock.listen(4)
         self.port: int = self.sock.getsockname()[1]
@@ -152,3 +163,58 @@ class TestFailedHeaderWrite(TestCase):
                 pass  # Drain whatever the muxer wrote before it gave up.
         except TimeoutError:
             raise AssertionError("the connection was left open") from None
+
+
+class TestOutputWriteTimeout(TestCase):
+    """Muxing and closing over a peer that has stopped reading."""
+
+    def setUp(self) -> None:
+        self.server = SilentServer()
+
+    def tearDown(self) -> None:
+        self.server.close()
+
+    def _open(self) -> av.container.OutputContainer:
+        container = av.open(
+            f"tcp://127.0.0.1:{self.server.port}",
+            "w",
+            format="mpegts",
+            timeout=WINDOW,
+        )
+        stream = container.add_stream("mpeg4", rate=30)
+        stream.width = 640
+        stream.height = 480
+        stream.pix_fmt = "yuv420p"
+        return container
+
+    def _fill(self, container: av.container.OutputContainer) -> None:
+        """Mux noise, which compresses badly, until the socket blocks."""
+        stream = container.streams.video[0]
+        rgb = np.random.randint(0, 256, (480, 640, 3), dtype=np.uint8)
+        frame = av.VideoFrame.from_ndarray(rgb, format="rgb24")
+        for i in range(MAX_FRAMES):
+            frame.pts = i
+            for packet in stream.encode(frame):
+                container.mux(packet)
+        raise AssertionError("the socket swallowed everything without blocking")
+
+    def test_mux_honours_the_timeout(self) -> None:
+        container = self._open()
+        start = time.monotonic()
+        with pytest.raises(av.error.ExitError):
+            self._fill(container)
+        assert time.monotonic() - start >= WINDOW, "the write gave up early"
+
+    def test_close_frees_the_container_after_a_stalled_write(self) -> None:
+        container = self._open()
+        with pytest.raises(av.error.ExitError):
+            self._fill(container)
+
+        # A timed-out write leaves its error on the AVIO context, so the
+        # trailer fails straight away rather than blocking. That makes this a
+        # test of the teardown, not of the close timeout: close() must report
+        # the failure and still free the context.
+        with pytest.raises(av.error.ExitError):
+            container.close()
+        with pytest.raises(AssertionError, match="not open"):
+            container.add_stream("mpeg4", rate=30)
