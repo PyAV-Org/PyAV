@@ -49,7 +49,7 @@ def has_rtmp() -> bool:
     protocol up, before any connect, or fails connecting.
     """
     try:
-        with av.open("rtmp://127.0.0.1:1/x", "w", format="flv") as container:
+        with av.open("rtmp://127.0.0.1:1/x", "w", format="flv", timeout=1) as container:
             container.start_encoding()
     except av.error.ProtocolNotFoundError:
         return False
@@ -94,7 +94,7 @@ class TestOutputBlocking(TestCase):
         return thread, raised
 
     def test_start_encoding_releases_the_gil(self) -> None:
-        thread, _ = self._push(WINDOW * 8)
+        thread, _ = self._push(WINDOW * 3)
 
         ticks = 0
         deadline = time.monotonic() + WINDOW
@@ -104,17 +104,17 @@ class TestOutputBlocking(TestCase):
 
         assert thread.is_alive(), "the handshake completed, so nothing was blocking"
         assert ticks > MIN_TICKS, f"main thread only ran {ticks} times"
-        thread.join(WINDOW * 16)
+        thread.join(WINDOW * 8)
 
     def test_start_encoding_honours_the_timeout(self) -> None:
         thread, raised = self._push(WINDOW)
-        thread.join(WINDOW * 16)
+        thread.join(WINDOW * 8)
         assert not thread.is_alive(), "timeout did not interrupt the handshake"
         assert raised, "the handshake returned instead of timing out"
 
     def test_close_refuses_to_free_a_container_in_use(self) -> None:
         containers: list[av.container.OutputContainer] = []
-        thread, _ = self._push(WINDOW * 4, containers)
+        thread, _ = self._push(WINDOW * 2, containers)
 
         # The server only accepts once the writing thread is inside the
         # connect, which is where the context stops being ours to free.
@@ -125,7 +125,7 @@ class TestOutputBlocking(TestCase):
 
         with pytest.raises(RuntimeError, match="another thread"):
             containers[0].close()
-        thread.join(WINDOW * 16)
+        thread.join(WINDOW * 8)
 
 
 class TestFailedHeaderWrite(TestCase):
