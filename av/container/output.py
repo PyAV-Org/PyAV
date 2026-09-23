@@ -81,7 +81,7 @@ def close_output(self: OutputContainer) -> cython.void:
         with cython.nogil:
             lib.avformat_free_context(self.ptr)
             self.ptr = cython.NULL
-        self._myflag = self._myflag & ~32  # enum.blocking = False
+        self._myflag &= ~32  # enum.blocking = False
 
 
 @cython.final
@@ -632,7 +632,7 @@ class OutputContainer(Container):
                 ret = lib.avformat_write_header(self.ptr, options_ptr)
             self.err_check(ret)
         finally:
-            self._myflag = self._myflag & ~32  # enum.blocking = False
+            self._myflag &= ~32  # enum.blocking = False
             self.set_timeout(None)
 
         # Track option usage...
