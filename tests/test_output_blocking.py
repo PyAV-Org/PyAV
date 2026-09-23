@@ -126,3 +126,29 @@ class TestOutputBlocking(TestCase):
         with pytest.raises(RuntimeError, match="another thread"):
             containers[0].close()
         thread.join(WINDOW * 16)
+
+
+class TestFailedHeaderWrite(TestCase):
+    def test_a_failed_header_write_closes_the_connection(self) -> None:
+        """mp4 cannot carry PCM, so the muxer rejects it after the connect."""
+        server = SilentServer()
+        self.addCleanup(server.close)
+
+        container = av.open(f"tcp://127.0.0.1:{server.port}", "w", format="mp4")
+        container.add_stream("pcm_s16le")
+        with pytest.raises(av.error.ArgumentError):
+            container.start_encoding()
+
+        deadline = time.monotonic() + WINDOW
+        while not server.accepted and time.monotonic() < deadline:
+            time.sleep(0.001)
+        assert server.accepted, "the writer never connected"
+
+        # started was never set, so nothing downstream would close pb.
+        conn = server.accepted[0]
+        conn.settimeout(WINDOW)
+        try:
+            while conn.recv(4096):
+                pass  # Drain whatever the muxer wrote before it gave up.
+        except TimeoutError:
+            raise AssertionError("the connection was left open") from None

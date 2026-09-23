@@ -598,6 +598,7 @@ class OutputContainer(Container):
         name_obj: bytes = os.fsencode(self.name if self.file is None else "")
         name: cython.p_char = name_obj
         ret: cython.int
+        opened_pb: cython.bint = False
         all_options: Dictionary
         options: Dictionary
         options_ptr: cython.pointer[cython.pointer[lib.AVDictionary]]
@@ -621,6 +622,7 @@ class OutputContainer(Container):
                         cython.NULL,
                     )
                 err_check(ret)
+                opened_pb = True
 
             # Copy the metadata dict.
             dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
@@ -630,7 +632,16 @@ class OutputContainer(Container):
             options_ptr = cython.address(options.ptr)
             with cython.nogil:
                 ret = lib.avformat_write_header(self.ptr, options_ptr)
-            self.err_check(ret)
+            try:
+                self.err_check(ret)
+            except Exception:
+                # started is never set, so close_output() will not close pb.
+                # Nothing else will either, and a stalled header write is an
+                # expected path now that it can time out.
+                if opened_pb:
+                    with cython.nogil:
+                        lib.avio_closep(cython.address(self.ptr.pb))
+                raise
         finally:
             self._blocking_depth -= 1
             self.set_timeout(None)
