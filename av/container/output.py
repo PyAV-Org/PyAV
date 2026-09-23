@@ -49,7 +49,7 @@ def close_output(self: OutputContainer) -> cython.void:
             self._mux_one(packet)
 
     self.streams = StreamContainer()
-    self._myflag |= 32  # enum.blocking = True
+    self._blocking_depth += 1
     try:
         if self._myflag & 12 == 4:  # enum.started and not enum.done
             # If the underlying Python IO file was already closed (e.g. during
@@ -81,7 +81,7 @@ def close_output(self: OutputContainer) -> cython.void:
         with cython.nogil:
             lib.avformat_free_context(self.ptr)
             self.ptr = cython.NULL
-        self._myflag &= ~32  # enum.blocking = False
+        self._blocking_depth -= 1
 
 
 @cython.final
@@ -604,7 +604,7 @@ class OutputContainer(Container):
 
         self.set_timeout(self.open_timeout)
         self.start_timeout()
-        self._myflag |= 32  # enum.blocking = True
+        self._blocking_depth += 1
         try:
             if (
                 self.ptr.pb == cython.NULL
@@ -632,7 +632,7 @@ class OutputContainer(Container):
                 ret = lib.avformat_write_header(self.ptr, options_ptr)
             self.err_check(ret)
         finally:
-            self._myflag &= ~32  # enum.blocking = False
+            self._blocking_depth -= 1
             self.set_timeout(None)
 
         # Track option usage...
@@ -700,7 +700,7 @@ class OutputContainer(Container):
         return lib.avcodec_get_name(self.format.optr.subtitle_codec)
 
     def close(self):
-        if self._myflag & 32:  # enum.blocking
+        if self._blocking_depth:
             # Another thread is inside libav without the GIL, so freeing the
             # context here would be a use-after-free. Pass ``timeout`` to
             # :func:`av.open` to give up on an open that never connects.
@@ -743,8 +743,13 @@ class OutputContainer(Container):
         # takes ownership of the reference.
         self.err_check(lib.av_packet_ref(self.packet_ptr, packet.ptr))
 
-        with cython.nogil:
-            ret: cython.int = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
+        ret: cython.int
+        self._blocking_depth += 1
+        try:
+            with cython.nogil:
+                ret = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
+        finally:
+            self._blocking_depth -= 1
         self.err_check(ret)
 
     @cython.cfunc

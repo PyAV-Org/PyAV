@@ -32,7 +32,7 @@ cdef class Container:
 
     cdef timeout_info interrupt_callback_info
     cdef int buffer_size
-    cdef uint8_t _myflag  # enum: writeable, input_was_opened, started, done, extradata_planned, blocking
+    cdef uint8_t _myflag  # enum: writeable, input_was_opened, started, done, extradata_planned
 
     cdef void _assert_open(self)
     cdef void set_timeout(self, object)
