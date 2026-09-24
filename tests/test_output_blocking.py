@@ -57,6 +57,7 @@ class SilentServer:
     def close(self) -> None:
         self.stopped.set()
         self.thread.join(WINDOW)
+        assert not self.thread.is_alive(), "the accept thread outlived the server"
         self.sock.close()
         for conn in self.accepted:
             conn.close()
