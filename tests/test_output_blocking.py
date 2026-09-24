@@ -34,20 +34,29 @@ class SilentServer:
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
         self.sock.bind(("127.0.0.1", 0))
         self.sock.listen(4)
+        # Poll rather than block, so close() can stop the thread itself.
+        # Closing the socket under a blocked accept() is not guaranteed to
+        # wake it, and a thread still sitting in accept() outlives the test.
+        self.sock.settimeout(0.1)
         self.port: int = self.sock.getsockname()[1]
         self.accepted: list[socket.socket] = []
+        self.stopped = threading.Event()
         self.thread = threading.Thread(target=self._accept, daemon=True)
         self.thread.start()
 
     def _accept(self) -> None:
-        while True:
+        while not self.stopped.is_set():
             try:
                 conn, _ = self.sock.accept()
+            except TimeoutError:
+                continue
             except OSError:
                 return
             self.accepted.append(conn)
 
     def close(self) -> None:
+        self.stopped.set()
+        self.thread.join(WINDOW)
         self.sock.close()
         for conn in self.accepted:
             conn.close()
@@ -181,11 +190,21 @@ class TestOutputWriteTimeout(TestCase):
             format="mpegts",
             timeout=WINDOW,
         )
+        # Closing from __del__ instead would write the trailer at collection
+        # time, where the failure surfaces as an unraisable exception.
+        self.addCleanup(self._close_quietly, container)
         stream = container.add_stream("mpeg4", rate=30)
         stream.width = 640
         stream.height = 480
         stream.pix_fmt = "yuv420p"
         return container
+
+    @staticmethod
+    def _close_quietly(container: av.container.OutputContainer) -> None:
+        try:
+            container.close()
+        except av.error.ExitError:
+            pass  # A stalled write is the point of these tests.
 
     def _fill(self, container: av.container.OutputContainer) -> None:
         """Mux noise, which compresses badly, until the socket blocks."""
@@ -218,3 +237,40 @@ class TestOutputWriteTimeout(TestCase):
             container.close()
         with pytest.raises(AssertionError, match="not open"):
             container.add_stream("mpeg4", rate=30)
+
+
+class TestSeekableOutputIgnoresTheTimeout(TestCase):
+    """A local file is written on its own schedule, not a peer's."""
+
+    def test_faststart_close_is_not_cut_short(self) -> None:
+        """``movflags=faststart`` rewrites the file when the trailer is written.
+
+        How long that takes grows with the file, so a timeout meant for a
+        stalled peer would abandon it part-written. The file has to survive
+        both the write and a read back.
+        """
+        path = self.sandboxed("faststart.mp4")
+        with av.open(
+            path,
+            "w",
+            # Small enough that any interruptible write trips it, so the test
+            # turns on whether a file is subject to the timeout at all rather
+            # than on how fast the disk is.
+            timeout=(None, 1e-9),
+            container_options={"movflags": "faststart"},
+        ) as container:
+            stream = container.add_stream("mpeg4", rate=30)
+            stream.width = 640
+            stream.height = 480
+            stream.pix_fmt = "yuv420p"
+            rgb = np.random.randint(0, 256, (480, 640, 3), dtype=np.uint8)
+            frame = av.VideoFrame.from_ndarray(rgb, format="rgb24")
+            for i in range(120):
+                frame.pts = i
+                for packet in stream.encode(frame):
+                    container.mux(packet)
+            for packet in stream.encode():
+                container.mux(packet)
+
+        with av.open(path) as container:
+            assert sum(1 for _ in container.decode(video=0)) == 120

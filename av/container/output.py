@@ -37,6 +37,23 @@ def _set_codecpar_extradata(
 
 
 @cython.cfunc
+def arm_write_timeout(self: OutputContainer) -> cython.void:
+    """Start the write deadline, unless the output is a seekable file.
+
+    FFmpeg checks the interrupt callback before every write, local files
+    included, and a file's write time scales with its size: with
+    ``movflags=faststart`` the trailer rewrites the whole thing. A deadline
+    sized for a stalled peer would abandon a large file part-written rather
+    than protect it, so only unseekable outputs, which are the ones that can
+    stall indefinitely, get one.
+    """
+    if self.ptr.pb == cython.NULL or self.ptr.pb.seekable & lib.AVIO_SEEKABLE_NORMAL:
+        return
+    self.set_timeout(self.read_timeout)
+    self.start_timeout()
+
+
+@cython.cfunc
 def close_output(self: OutputContainer) -> cython.void:
     if self.ptr == cython.NULL:
         return  # Already closed.
@@ -62,9 +79,8 @@ def close_output(self: OutputContainer) -> cython.void:
             # segmentation fault. Therefore no matter whether it succeeds or not
             # we must absolutely set enum.done.
             ret: cython.int
-            self.set_timeout(self.read_timeout)
             try:
-                self.start_timeout()
+                arm_write_timeout(self)
                 with cython.nogil:
                     ret = lib.av_write_trailer(self.ptr)
                 self.err_check(ret)
@@ -762,8 +778,7 @@ class OutputContainer(Container):
         self.err_check(lib.av_packet_ref(self.packet_ptr, packet.ptr))
 
         ret: cython.int
-        self.set_timeout(self.read_timeout)
-        self.start_timeout()
+        arm_write_timeout(self)
         self._blocking_depth += 1
         try:
             with cython.nogil:
