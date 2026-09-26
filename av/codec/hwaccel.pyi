@@ -18,6 +18,8 @@ class HWDeviceType(IntEnum):
     mediacodec = cast(int, ...)
     vulkan = cast(int, ...)
     d3d12va = cast(int, ...)
+    amf = cast(int, ...)
+    ohcodec = cast(int, ...)
 
 class HWConfigMethod(IntEnum):
     none = cast(int, ...)
@@ -52,6 +54,8 @@ class HWDevice:
 
 class HWAccel:
     options: dict[str, object]
+    flags: int
+    allow_software_fallback: bool
 
     @property
     def is_hw_owned(self) -> bool: ...
