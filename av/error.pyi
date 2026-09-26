@@ -13,7 +13,6 @@ class FFmpegError(Exception):
     def filename(self) -> str | None: ...
     @property
     def log(self) -> tuple[int, str, str] | None: ...
-
     def __init__(
         self,
         code: int,
