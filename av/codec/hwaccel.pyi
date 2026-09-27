@@ -56,6 +56,7 @@ class HWAccel:
     options: dict[str, object]
     flags: int
     allow_software_fallback: bool
+    config: HWConfig | None
 
     @property
     def is_hw_owned(self) -> bool: ...
@@ -63,9 +64,9 @@ class HWAccel:
     def device_id(self) -> int: ...
     def __init__(
         self,
-        device_type: str | HWDeviceType,
+        device_type: str | int | HWDeviceType,
         device: str | int | None = None,
-        allow_software_fallback: bool = False,
+        allow_software_fallback: bool = True,
         options: dict[str, object] | None = None,
         flags: int | None = None,
         is_hw_owned: bool = False,

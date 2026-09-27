@@ -8,6 +8,7 @@ from av.rational import AVRational
 
 from .format import VideoFormat
 from .frame import VideoFrame
+from .reformatter import VideoReformatter
 
 class VideoCodecContext(CodecContext):
     format: VideoFormat | None
@@ -15,6 +16,7 @@ class VideoCodecContext(CodecContext):
     height: int
     bits_per_coded_sample: int
     pix_fmt: str | None
+    reformatter: VideoReformatter | None
     @property
     def sw_format(self) -> VideoFormat | None: ...
     @sw_format.setter

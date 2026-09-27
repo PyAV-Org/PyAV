@@ -1,9 +1,11 @@
 from av.filter import Graph
+from av.filter.filter import Filter
 from av.filter.link import FilterContextPad
 from av.frame import Frame
 
 class FilterContext:
     name: str | None
+    filter: Filter
 
     @property
     def inputs(self) -> tuple[FilterContextPad, ...]: ...
