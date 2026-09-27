@@ -37,6 +37,23 @@ def _set_codecpar_extradata(
 
 
 @cython.cfunc
+def arm_write_timeout(self: OutputContainer) -> cython.void:
+    """Start the write deadline, unless the output is a seekable file.
+
+    FFmpeg checks the interrupt callback before every write, local files
+    included, and a file's write time scales with its size: with
+    ``movflags=faststart`` the trailer rewrites the whole thing. A deadline
+    sized for a stalled peer would abandon a large file part-written rather
+    than protect it, so only unseekable outputs, which are the ones that can
+    stall indefinitely, get one.
+    """
+    if self.ptr.pb == cython.NULL or self.ptr.pb.seekable & lib.AVIO_SEEKABLE_NORMAL:
+        return
+    self.set_timeout(self.read_timeout)
+    self.start_timeout()
+
+
+@cython.cfunc
 def close_output(self: OutputContainer) -> cython.void:
     if self.ptr == cython.NULL:
         return  # Already closed.
@@ -63,6 +80,7 @@ def close_output(self: OutputContainer) -> cython.void:
             # we must absolutely set enum.done.
             ret: cython.int
             try:
+                arm_write_timeout(self)
                 with cython.nogil:
                     ret = lib.av_write_trailer(self.ptr)
                 self.err_check(ret)
@@ -70,8 +88,13 @@ def close_output(self: OutputContainer) -> cython.void:
                 if self.file is None and not (
                     self.ptr.oformat.flags & lib.AVFMT_NOFILE
                 ):
+                    # No fresh deadline: the trailer and this flush share one,
+                    # so closing cannot outlast the timeout. The point here is
+                    # to stop the flush hanging, not to report on it, so its
+                    # return goes unchecked as it always has.
                     with cython.nogil:
                         lib.avio_closep(cython.address(self.ptr.pb))
+                self.set_timeout(None)
                 self._myflag |= 8  # enum.done = True
     finally:
         # Drop the context so a closed output reports itself as closed:
@@ -755,12 +778,14 @@ class OutputContainer(Container):
         self.err_check(lib.av_packet_ref(self.packet_ptr, packet.ptr))
 
         ret: cython.int
+        arm_write_timeout(self)
         self._blocking_depth += 1
         try:
             with cython.nogil:
                 ret = lib.av_interleaved_write_frame(self.ptr, self.packet_ptr)
         finally:
             self._blocking_depth -= 1
+            self.set_timeout(None)
         self.err_check(ret)
 
     @cython.cfunc
