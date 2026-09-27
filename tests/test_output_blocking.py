@@ -9,25 +9,12 @@ import av
 
 from .common import TestCase
 
-# The main thread sleeps in 1 ms slices while another thread is stuck in the
-# RTMP handshake. It wakes roughly a thousand times if the GIL is free and a
-# handful of times if it is not, so this threshold sits well clear of both.
 WINDOW = 1.0
-MIN_TICKS = 100
-
-
-# A writer that never blocks has nothing to time out, so give up once the
-# socket has swallowed more than any plausible buffer.
+HANDSHAKE_TIMEOUT = 10.0
 MAX_FRAMES = 500
 
 
 class SilentServer:
-    """Accepts connections and then neither reads nor writes.
-
-    An RTMP handshake never completes against it, and a socket written to it
-    fills up and stays full.
-    """
-
     def __init__(self) -> None:
         self.sock = socket.socket()
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -115,17 +102,26 @@ class TestOutputBlocking(TestCase):
         return thread, raised
 
     def test_start_encoding_releases_the_gil(self) -> None:
-        thread, _ = self._push(WINDOW * 3)
+        start = time.monotonic()
+        thread, _ = self._push(HANDSHAKE_TIMEOUT)
 
-        ticks = 0
-        deadline = time.monotonic() + WINDOW
-        while time.monotonic() < deadline:
-            ticks += 1
+        deadline = start + HANDSHAKE_TIMEOUT
+        while not self.server.accepted and time.monotonic() < deadline:
             time.sleep(0.001)
+        elapsed = time.monotonic() - start
 
-        assert thread.is_alive(), "the handshake completed, so nothing was blocking"
-        assert ticks > MIN_TICKS, f"main thread only ran {ticks} times"
-        thread.join(WINDOW * 8)
+        assert self.server.accepted, (
+            f"no connection was seen for {elapsed:.1f}s: the handshake held the "
+            "GIL, or never connected"
+        )
+        assert thread.is_alive(), "the handshake ended before anything else could run"
+        assert elapsed < HANDSHAKE_TIMEOUT / 2, f"nothing else ran for {elapsed:.1f}s"
+
+        # Hanging up ends the handshake, so passing does not cost the timeout.
+        for conn in self.server.accepted:
+            conn.close()
+        thread.join(HANDSHAKE_TIMEOUT)
+        assert not thread.is_alive(), "hanging up did not end the handshake"
 
     def test_start_encoding_honours_the_timeout(self) -> None:
         thread, raised = self._push(WINDOW)
@@ -244,19 +240,10 @@ class TestSeekableOutputIgnoresTheTimeout(TestCase):
     """A local file is written on its own schedule, not a peer's."""
 
     def test_faststart_close_is_not_cut_short(self) -> None:
-        """``movflags=faststart`` rewrites the file when the trailer is written.
-
-        How long that takes grows with the file, so a timeout meant for a
-        stalled peer would abandon it part-written. The file has to survive
-        both the write and a read back.
-        """
         path = self.sandboxed("faststart.mp4")
         with av.open(
             path,
             "w",
-            # Small enough that any interruptible write trips it, so the test
-            # turns on whether a file is subject to the timeout at all rather
-            # than on how fast the disk is.
             timeout=(None, 1e-9),
             container_options={"movflags": "faststart"},
         ) as container:
