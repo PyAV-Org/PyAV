@@ -376,6 +376,25 @@ class TestDecode(TestCase):
 
         assert frame_count == video_stream.frames
 
+    def test_hardware_create_keeps_flags(self) -> None:
+        hwdevices_available = av.codec.hwaccel.hwdevices_available()
+        if "HWACCEL_DEVICE_TYPE" not in os.environ:
+            pytest.skip(
+                "Set the HWACCEL_DEVICE_TYPE to run this test. "
+                f"Options are {' '.join(hwdevices_available)}"
+            )
+
+        HWACCEL_DEVICE_TYPE = os.environ["HWACCEL_DEVICE_TYPE"]
+        assert HWACCEL_DEVICE_TYPE in hwdevices_available, (
+            f"{HWACCEL_DEVICE_TYPE} not available"
+        )
+
+        # AV_CUDA_USE_PRIMARY_CONTEXT. It is the only flag FFmpeg defines for
+        # device creation, and every other device type ignores it.
+        hwaccel = av.codec.hwaccel.HWAccel(device_type=HWACCEL_DEVICE_TYPE, flags=1)
+        created = hwaccel.create(av.Codec("h264", "r"))
+        assert created.flags == 1
+
 
 @pytest.mark.parametrize("is_hw_owned", [False, True])
 def test_hardware_decode_download_preserves_frame_props(is_hw_owned: bool) -> None:
