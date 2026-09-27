@@ -1,5 +1,4 @@
 from collections.abc import Iterator, Sequence
-from fractions import Fraction
 from typing import Literal
 
 from av.codec.context import ThreadType
@@ -35,14 +34,6 @@ class VideoStream(Stream):
     height: int
     bits_per_coded_sample: int
     pix_fmt: str | None
-    @property
-    def framerate(self) -> AVRational: ...
-    @framerate.setter
-    def framerate(self, value: AVRational | Fraction | int) -> None: ...
-    @property
-    def rate(self) -> AVRational: ...
-    @rate.setter
-    def rate(self, value: AVRational | Fraction | int) -> None: ...
     gop_size: int
     has_b_frames: bool
     max_b_frames: int
