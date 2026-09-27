@@ -9,15 +9,16 @@ def err_check(res: int, filename: str | None = None) -> int: ...
 class FFmpegError(Exception):
     errno: int | None
     strerror: str | None
-    filename: str
-    log: tuple[int, tuple[int, str, str] | None]
-
+    @property
+    def filename(self) -> str | None: ...
+    @property
+    def log(self) -> tuple[int, str, str] | None: ...
     def __init__(
         self,
         code: int,
         message: str,
         filename: str | None = None,
-        log: tuple[int, tuple[int, str, str] | None] | None = None,
+        log: tuple[int, str, str] | None = None,
     ) -> None: ...
 
 class LookupError(FFmpegError): ...

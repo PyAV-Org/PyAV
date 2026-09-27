@@ -11,6 +11,7 @@ class AudioResampler:
     layout: AudioLayout
     options: dict[str, str]
     graph: Graph | None
+    is_passthrough: bool
 
     def __init__(
         self,

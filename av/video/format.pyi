@@ -19,6 +19,7 @@ class VideoFormat:
     def chroma_height(self, luma_height: int = 0) -> int: ...
 
 class VideoFormatComponent:
+    index: int
     plane: int
     bits: int
     is_alpha: bool
