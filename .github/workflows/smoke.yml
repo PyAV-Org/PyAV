@@ -2,14 +2,14 @@ name: smoke
 on:
   workflow_dispatch:
   push:
-    branches: main
+    branches: master
     paths-ignore:
       - '**.md'
       - '**.rst'
       - '**.txt'
       - '.github/workflows/tests.yml'
   pull_request:
-    branches: main
+    branches: master
     paths-ignore:
       - '**.md'
       - '**.rst'
