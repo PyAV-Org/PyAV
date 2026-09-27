@@ -38,6 +38,7 @@ class HWConfig:
 
 class HWAccel:
     options: dict[str, object]
+    flags: int
 
     @property
     def is_hw_owned(self) -> bool: ...
