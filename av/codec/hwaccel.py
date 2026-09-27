@@ -275,6 +275,7 @@ class HWAccel:
             device=self._device,
             allow_software_fallback=self.allow_software_fallback,
             options=self.options,
+            flags=self.flags,
             is_hw_owned=self.is_hw_owned,
         )
         ret._initialize_hw_context(codec, for_encoding=for_encoding)
