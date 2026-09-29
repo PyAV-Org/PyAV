@@ -52,6 +52,7 @@ All contributors (by number of commits):
 - DE-AI <81620697+DE-AI@users.noreply.github.com>
 - rutsh <Eugene.Krokhalev@gmail.com>
 - Felix Vollmer <FelixVollmer@gmail.com>
+- adrianrfreedman <adrianrfreedman@gmail.com>
 - Benedikt Lorch, benedikt-grl <benedikt@getreallabs.com>
 - Santiago Castro <bryant1410@gmail.com>
 - Christian Clauss <cclauss@me.com>
@@ -71,13 +72,17 @@ All contributors (by number of commits):
 - Andrew Wason <rectalogic@rectalogic.com>
 - Radek Senfeld <rush@logic.cz>; `@radek-senfeld <https://github.com/radek-senfeld>`_
 - robinechuca <serveurpython.oz@gmail.com>
+- Trevor Gamblin <tgamblin@baylibre.com>
+- hallo1 <2302004040@qq.com>
 - Nick <24689722+ntjohnson1@users.noreply.github.com>
 - Benjamin Chrétien <2742231+bchretien@users.noreply.github.com>
 - 吴小白 <296015668@qq.com>
+- Dylan Pulver <35541198+dylanpulver@users.noreply.github.com>
 - davidplowman <38045873+davidplowman@users.noreply.github.com>
 - Hanz <40712686+HanzCEO@users.noreply.github.com>
 - Clay Castronovo <42858023+clayy24@users.noreply.github.com>
 - Kesh Ikuma <79113787+tikuma-lsuhsc@users.noreply.github.com>
+- Robolightning <89173189+Robolightning@users.noreply.github.com>
 - Artturin <Artturin@artturin.com>
 - Ian Lee <IanLee1521@gmail.com>
 - Ryan Huang <NPN@users.noreply.github.com>
