@@ -44,7 +44,8 @@ class Stream:
     codec: Codec
     codec_context: CodecContext
     metadata: dict[str, str]
-    index_entries: IndexEntries
+    @property
+    def index_entries(self) -> IndexEntries: ...
     id: int
     profiles: list[str]
     profile: str | None
