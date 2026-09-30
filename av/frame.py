@@ -181,9 +181,7 @@ class Frame:
 
     @property
     def side_data(self):
-        if self._side_data is None:
-            self._side_data = SideDataContainer(self)
-        return self._side_data
+        return SideDataContainer(self)
 
     @property
     def metadata(self):

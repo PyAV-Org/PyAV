@@ -11,7 +11,6 @@ _cinit_bypass_sentinel = cython.declare(object, object())
 class MotionVectors(SideData):
     def __init__(self, sentinel, frame: Frame, index: cython.int):
         SideData.__init__(self, sentinel, frame, index)
-        self._vectors = {}
         self._len = self.ptr.size // cython.sizeof(lib.AVMotionVector)
 
     def __repr__(self):
@@ -29,15 +28,7 @@ class MotionVectors(SideData):
         if index < 0 or index >= self._len:
             raise IndexError(index)
 
-        try:
-            return self._vectors[index]
-        except KeyError:
-            pass
-
-        vector = self._vectors[index] = MotionVector(
-            _cinit_bypass_sentinel, self, index
-        )
-        return vector
+        return MotionVector(_cinit_bypass_sentinel, self, index)
 
     def __iter__(self):
         """Iterate over all motion vectors."""

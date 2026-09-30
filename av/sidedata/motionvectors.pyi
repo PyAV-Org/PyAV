@@ -1,14 +1,13 @@
-from typing import Any, overload
+from collections.abc import Iterator
+from typing import Any
 
 import numpy as np
 
 from .sidedata import SideData
 
 class MotionVectors(SideData):
-    @overload
     def __getitem__(self, index: int) -> MotionVector: ...
-    @overload
-    def __getitem__(self, index: slice) -> list[MotionVector]: ...
+    def __iter__(self) -> Iterator[MotionVector]: ...
     def __len__(self) -> int: ...
     def to_ndarray(self) -> np.ndarray[Any, Any]: ...
 

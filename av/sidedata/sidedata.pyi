@@ -3,7 +3,6 @@ from enum import Enum
 from typing import ClassVar, cast, overload
 
 from av.buffer import Buffer
-from av.frame import Frame
 
 class Type(Enum):
     PANSCAN = cast(ClassVar[Type], ...)
@@ -43,7 +42,6 @@ class SideData(Buffer):
     type: Type
 
 class SideDataContainer(Mapping):
-    frame: Frame
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[Type]: ...
     @overload
