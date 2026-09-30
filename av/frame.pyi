@@ -9,7 +9,8 @@ class Frame:
     def best_effort_timestamp(self) -> int | None: ...
     duration: int
     time_base: Fraction | None
-    side_data: SideDataContainer
+    @property
+    def side_data(self) -> SideDataContainer: ...
     opaque: object
     @property
     def metadata(self) -> dict[str, str]: ...

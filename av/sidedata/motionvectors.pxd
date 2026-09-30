@@ -5,7 +5,6 @@ from av.sidedata.sidedata cimport SideData
 
 
 cdef class MotionVectors(SideData):
-    cdef dict _vectors
     cdef Py_ssize_t _len
 
 
