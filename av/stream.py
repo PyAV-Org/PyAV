@@ -116,7 +116,6 @@ class Stream:
     ):
         self.container = container
         self.ptr = stream
-        self.index_entries = wrap_index_entries(self)
 
         self.codec_context = codec_context
         if self.codec_context:
@@ -198,6 +197,10 @@ class Stream:
                 self.ptr.codecpar, self.codec_context.ptr
             )
         )
+
+    @property
+    def index_entries(self):
+        return wrap_index_entries(self)
 
     @property
     def id(self):
