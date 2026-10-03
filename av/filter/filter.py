@@ -39,15 +39,11 @@ class Filter:
 
     @property
     def inputs(self):
-        if self._inputs is None:
-            self._inputs = alloc_filter_pads(self, self.ptr.inputs, True)
-        return self._inputs
+        return alloc_filter_pads(self, self.ptr.inputs, True)
 
     @property
     def outputs(self):
-        if self._outputs is None:
-            self._outputs = alloc_filter_pads(self, self.ptr.outputs, False)
-        return self._outputs
+        return alloc_filter_pads(self, self.ptr.outputs, False)
 
 
 @cython.cfunc

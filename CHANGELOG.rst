@@ -37,6 +37,7 @@ Fixes:
 - Reading :attr:`.Frame.side_data` no longer holds the frame in a reference cycle, which kept its picture buffer alive until gc ran. By :gh-user:`WyattBlue`.
 - :class:`.MotionVectors` no longer memoizes the vectors it hands out, a cache that never evicted and put every one of them in a reference cycle with the side data, retaining 1640 objects for a single 640x360 frame. By :gh-user:`WyattBlue`.
 - :attr:`.Stream.index_entries` is now a view built on access rather than an object allocated for every stream whether or not anything reads it, which also takes the stream out of a reference cycle with it. Fixes (:issue:`2425`) by :gh-user:`WyattBlue`.
+- :class:`.Filter` and :class:`.FilterContext` pads are now built on access rather than cached, which takes a filter out of a reference cycle with its pads and makes a pad compare equal by what it denotes. By :gh-user:`WyattBlue`.
 
 
 v19.0.0
