@@ -64,19 +64,11 @@ class FilterContext:
 
     @property
     def inputs(self):
-        if self._inputs is None:
-            self._inputs = alloc_filter_pads(
-                self.filter, self.ptr.input_pads, True, self
-            )
-        return self._inputs
+        return alloc_filter_pads(self.filter, self.ptr.input_pads, True, self)
 
     @property
     def outputs(self):
-        if self._outputs is None:
-            self._outputs = alloc_filter_pads(
-                self.filter, self.ptr.output_pads, False, self
-            )
-        return self._outputs
+        return alloc_filter_pads(self.filter, self.ptr.output_pads, False, self)
 
     def init(self, args=None, **kwargs):
         if self.inited:
@@ -126,13 +118,14 @@ class FilterContext:
             return
 
         # Delegate to the input.
-        if len(self.inputs) != 1:
+        inputs = self.inputs
+        if len(inputs) != 1:
             raise ValueError(
-                f"cannot delegate push without single input; found {len(self.inputs)}"
+                f"cannot delegate push without single input; found {len(inputs)}"
             )
-        if not self.inputs[0].link:
+        if not inputs[0].link:
             raise ValueError("cannot delegate push without linked input")
-        self.inputs[0].linked.context.push(frame)
+        inputs[0].linked.context.push(frame)
 
     def pull(self):
         frame: Frame
@@ -143,13 +136,14 @@ class FilterContext:
             frame = alloc_audio_frame()
         else:
             # Delegate to the output.
-            if len(self.outputs) != 1:
+            outputs = self.outputs
+            if len(outputs) != 1:
                 raise ValueError(
-                    f"cannot delegate pull without single output; found {len(self.outputs)}"
+                    f"cannot delegate pull without single output; found {len(outputs)}"
                 )
-            if not self.outputs[0].link:
+            if not outputs[0].link:
                 raise ValueError("cannot delegate pull without linked output")
-            return self.outputs[0].linked.context.pull()
+            return outputs[0].linked.context.pull()
 
         self.graph.configure()
 

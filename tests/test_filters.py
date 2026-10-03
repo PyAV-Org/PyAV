@@ -74,8 +74,8 @@ class TestFilters(TestCase):
         lutrgb.link_to(sink)
 
         # pads and links
-        assert src.outputs[0].link.output is lutrgb.inputs[0]
-        assert lutrgb.inputs[0].link.input is src.outputs[0]
+        assert src.outputs[0].link.output == lutrgb.inputs[0]
+        assert lutrgb.inputs[0].link.input == src.outputs[0]
 
         frame = sink.pull()
         assert isinstance(frame, VideoFrame)
