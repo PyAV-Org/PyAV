@@ -32,10 +32,10 @@ conda install av -c conda-forge
 See the [Conda install][conda-install] docs to get started with Miniconda.
 
 
-Alternative installation methods
+Alternative Installation Methods
 --------------------------------
 
-Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. This release supports FFmpeg 8.x. To build the source distribution against an existing FFmpeg installation on Linux or macOS, run:
+Due to the complexity of the dependencies, PyAV is not always the easiest Python package to install from source. This release supports FFmpeg 9.x. To build the source distribution against an existing FFmpeg installation on Linux or macOS, run:
 
 > [!WARNING]
 > FFmpeg's development files and `pkg-config` must be available on your system.
