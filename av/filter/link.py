@@ -1,6 +1,7 @@
 import cython
 import cython.cimports.libav as lib
 from cython.cimports.av.filter.graph import Graph
+from cython.cimports.libc.stdint import uintptr_t
 
 _cinit_sentinel = cython.declare(object, object())
 
@@ -63,6 +64,34 @@ class FilterPad:
 
         return (
             f"<av.FilterPad {_filter}.{_io}[{self.index}]: {self.name} ({self.type})>"
+        )
+
+    def __eq__(self, other):
+        """Two pads are equal when they denote the same pad.
+
+        Pads are built on access rather than cached, so ``is`` compares the
+        wrappers while this compares what they point at.
+        """
+        if not isinstance(other, FilterPad):
+            return NotImplemented
+
+        o: FilterPad = other
+        if self.base_ptr != o.base_ptr or self.index != o.index:
+            return False
+        if self.is_input != o.is_input:
+            return False
+        if (self.context is None) != (o.context is None):
+            return False
+        return self.context is None or self.context.ptr == o.context.ptr
+
+    def __hash__(self):
+        return hash(
+            (
+                cython.cast(uintptr_t, self.base_ptr),
+                self.index,
+                self.is_input,
+                0 if self.context is None else cython.cast(uintptr_t, self.context.ptr),
+            )
         )
 
     @property
