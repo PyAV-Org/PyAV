@@ -45,7 +45,7 @@ def register_doctests(mod):
     for test in suite._tests:
 
         def func(self):
-            return test.runTest()
+            return test.debug()
 
         name = str("test_" + re.sub("[^a-zA-Z0-9]+", "_", test.id()).strip("_"))
         func.__name__ = name

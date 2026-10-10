@@ -65,7 +65,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:\cibw\vendor\bin -w {dest_dir} {wheel}
-          CIBW_BUILD: "cp312* cp314t*"
+          CIBW_BUILD: "cp312* cp314t* cp315t*"
           CIBW_BUILD_FRONTEND: uv
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
           CIBW_TEST_REQUIRES: pytest numpy
@@ -92,8 +92,10 @@ jobs:
         run: |
           uv venv --seed --python 3.12 .venv-3.12
           uv venv --seed --python 3.14t .venv-3.14t
+          uv venv --seed --python 3.15t .venv-3.15t
           uv pip install --python .venv-3.12/bin/python -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
           uv pip install --python .venv-3.14t/bin/python -U "cython>=3.1.0,<4" "setuptools>=77.0" wheel
+          uv pip install --python .venv-3.15t/bin/python -U "cython>=3.3.0,<4" "setuptools>=78.0" wheel
           # patchelf 0.18 (ubuntu-24.04's system version) corrupts ELF files
           # with large p_align; pin <0.18 for auditwheel to use.
           uv pip install --python .venv-3.12/bin/python -U ziglang auditwheel 'patchelf<0.18'
@@ -101,6 +103,7 @@ jobs:
         env:
           HOST_PY312: .venv-3.12/bin/python
           HOST_PY314T: .venv-3.14t/bin/python
+          HOST_PY315T: .venv-3.15t/bin/python
           TOOLS_PY: .venv-3.12/bin/python
         run: bash scripts/build-armv7l-cross.sh
       - name: Upload wheels
