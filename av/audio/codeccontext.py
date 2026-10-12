@@ -27,6 +27,7 @@ class AudioCodecContext(CodecContext):
                 layout=self.layout,
                 rate=self.ptr.sample_rate,
                 frame_size=None if allow_var_frame_size else self.ptr.frame_size,
+                threads=self.ptr.thread_count,
             )
         frames = self.resampler.resample(frame)
         if input_frame is None:

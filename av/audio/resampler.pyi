@@ -7,6 +7,7 @@ from .layout import AudioLayout
 class AudioResampler:
     rate: int
     frame_size: int
+    threads: int
     format: AudioFormat
     layout: AudioLayout
     options: dict[str, str]
@@ -20,5 +21,6 @@ class AudioResampler:
         rate: int | None = None,
         frame_size: int | None = None,
         options: dict[str, str] | None = None,
+        threads: int | None = None,
     ) -> None: ...
     def resample(self, frame: AudioFrame | None) -> list[AudioFrame]: ...

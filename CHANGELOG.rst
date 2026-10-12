@@ -29,10 +29,12 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
 
-v19.0.2 (Unreleased)
+v19.1.0 (Unreleased)
 --------------------
 
 Fixes:
+
+- Audio encoding now correctly passes the codec's ``thread_count`` to its internal :class:`.AudioResampler`, which takes a new ``threads`` argument, as video encoding does for its reformatter. Audio codecs without threading (e.g. MP3) resolve ``thread_count`` to ``1``, but the resampler ignored it and started an idle thread per CPU. By :gh-user:`tonyay163`.
 
 
 v19.0.1
