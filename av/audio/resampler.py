@@ -9,7 +9,7 @@ from av.error import FFmpegError
 @cython.final
 @cython.cclass
 class AudioResampler:
-    """AudioResampler(format=None, layout=None, rate=None, frame_size=None, options=None)
+    """AudioResampler(format=None, layout=None, rate=None, frame_size=None, options=None, threads=None)
 
     :param AudioFormat format: The target format, or string that parses to one
         (e.g. ``"s16"``).
@@ -21,10 +21,19 @@ class AudioResampler:
         ``aresample`` filter (e.g. ``{"resampler": "soxr", "precision": "28"}``).
         See the `FFmpeg resampler documentation
         <https://ffmpeg.org/ffmpeg-resampler.html>`_ for the full list.
+    :param int threads: How many threads the filter graph may use, or ``0`` for
+        automatic selection based on the number of available CPUs. Defaults to
+        ``0`` (auto).
     """
 
     def __cinit__(
-        self, format=None, layout=None, rate=None, frame_size=None, options=None
+        self,
+        format=None,
+        layout=None,
+        rate=None,
+        frame_size=None,
+        options=None,
+        threads=None,
     ):
         if format is not None:
             self.format = (
@@ -37,6 +46,7 @@ class AudioResampler:
         self.rate = int(rate) if rate else 0
         self.frame_size = int(frame_size) if frame_size else 0
         self.options = {str(k): str(v) for k, v in options.items()} if options else {}
+        self.threads = int(threads) if threads else 0
         self.graph = None
 
     @cython.ccall
@@ -81,6 +91,7 @@ class AudioResampler:
             # handle resampling with aformat filter
             # (similar to configure_output_audio_filter from ffmpeg)
             self.graph = Graph()
+            self.graph.threads = self.threads
             extra_args = {}
             if frame.time_base is not None:
                 extra_args["time_base"] = f"{frame.time_base}"

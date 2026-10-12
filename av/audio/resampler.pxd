@@ -12,6 +12,7 @@ cdef class AudioResampler:
     cdef readonly dict options
     cdef readonly int rate
     cdef readonly unsigned int frame_size
+    cdef readonly int threads
     cdef readonly bint is_passthrough
 
     cpdef list[AudioFrame] resample(self, AudioFrame)
