@@ -630,6 +630,9 @@ class OutputContainer(Container):
         self.start_timeout()
         self._blocking_depth += 1
         try:
+            all_options = Dictionary(self.options, self.container_options)
+            options = all_options.copy()
+            options_ptr = cython.address(options.ptr)
             if (
                 self.ptr.pb == cython.NULL
                 and not self.ptr.oformat.flags & lib.AVFMT_NOFILE
@@ -642,7 +645,7 @@ class OutputContainer(Container):
                         name,
                         lib.AVIO_FLAG_WRITE,
                         cython.address(self.ptr.interrupt_callback),
-                        cython.NULL,
+                        options_ptr,
                     )
                 err_check(ret)
                 opened_pb = True
@@ -650,9 +653,6 @@ class OutputContainer(Container):
             # Copy the metadata dict.
             dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
 
-            all_options = Dictionary(self.options, self.container_options)
-            options = all_options.copy()
-            options_ptr = cython.address(options.ptr)
             with cython.nogil:
                 ret = lib.avformat_write_header(self.ptr, options_ptr)
             try:
