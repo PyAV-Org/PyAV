@@ -47,8 +47,8 @@ jobs:
           - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.1.2"}
           - {os: ubuntu-24.04, python: "3.13", ffmpeg: "9.0.2"}
           - {os: ubuntu-24.04-riscv, python: "3.14", ffmpeg: "9.0.2"}
-          - {os: macos-14, python: "3.12", ffmpeg: "8.1.2"}
-          - {os: macos-14, python: "3.14", ffmpeg: "9.0.2"}
+          - {os: macos-15, python: "3.12", ffmpeg: "8.1.2"}
+          - {os: macos-15, python: "3.14", ffmpeg: "9.0.2"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
@@ -105,7 +105,7 @@ jobs:
               zlib1g-dev \
               libxcb-shape0
             ;;
-          macos-14)
+          macos-15)
             brew install automake libtool opus x264
             ;;
         esac
