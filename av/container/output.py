@@ -566,9 +566,17 @@ class OutputContainer(Container):
         # Open the output file, if needed.
         name_obj: bytes = os.fsencode(self.name if self.file is None else "")
         name: cython.p_char = name_obj
+        all_options: Dictionary = Dictionary(self.options, self.container_options)
+        options: Dictionary = all_options.copy()
         if self.ptr.pb == cython.NULL and not self.ptr.oformat.flags & lib.AVFMT_NOFILE:
             err_check(
-                lib.avio_open(cython.address(self.ptr.pb), name, lib.AVIO_FLAG_WRITE)
+                lib.avio_open2(
+                    cython.address(self.ptr.pb),
+                    name,
+                    lib.AVIO_FLAG_WRITE,
+                    cython.NULL,
+                    cython.address(options.ptr),
+                )
             )
 
         # Copy the metadata dict.
@@ -579,8 +587,6 @@ class OutputContainer(Container):
             errors=self.metadata_errors,
         )
 
-        all_options: Dictionary = Dictionary(self.options, self.container_options)
-        options: Dictionary = all_options.copy()
         self.err_check(lib.avformat_write_header(self.ptr, cython.address(options.ptr)))
 
         # Track option usage...
