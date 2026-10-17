@@ -29,6 +29,12 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
 
+v19.0.2 (Unreleased)
+--------------------
+
+Fixes:
+
+
 v19.0.1
 -------
 
