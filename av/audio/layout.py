@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import cython
 from cython.cimports import libav as lib
+from cython.cimports.av.error import err_check
 from cython.cimports.cpython.bytes import PyBytes_FromStringAndSize
 
 
@@ -21,7 +22,11 @@ _cinit_bypass_sentinel = cython.declare(object, object())
 def get_audio_layout(c_layout: lib.AVChannelLayout) -> AudioLayout:
     """Get an AudioLayout from Cython land."""
     layout: AudioLayout = AudioLayout(_cinit_bypass_sentinel)
-    layout.layout = c_layout
+    err_check(
+        lib.av_channel_layout_copy(
+            cython.address(layout.layout), cython.address(c_layout)
+        )
+    )
     return layout
 
 
@@ -36,17 +41,20 @@ class AudioLayout:
             return
 
         if type(layout) is str:
-            ret = lib.av_channel_layout_from_string(cython.address(c_layout), layout)
+            ret = lib.av_channel_layout_from_string(cython.address(self.layout), layout)
             if ret != 0:
                 raise ValueError(f"Invalid layout: {layout}")
         elif isinstance(layout, AudioLayout):
-            c_layout = cython.cast(AudioLayout, layout).layout
+            err_check(
+                lib.av_channel_layout_copy(
+                    cython.address(self.layout),
+                    cython.address(cython.cast(AudioLayout, layout).layout),
+                )
+            )
         else:
             raise TypeError(
                 f"layout must be of type: string | av.AudioLayout, got {type(layout)}"
             )
-
-        self.layout = c_layout
 
     def __repr__(self):
         return f"<av.{self.__class__.__name__} {self.name!r}>"
