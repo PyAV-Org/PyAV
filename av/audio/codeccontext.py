@@ -3,6 +3,7 @@ from cython.cimports import libav as lib
 from cython.cimports.av.audio.format import AudioFormat, get_audio_format
 from cython.cimports.av.audio.frame import AudioFrame, alloc_audio_frame
 from cython.cimports.av.audio.layout import AudioLayout, get_audio_layout
+from cython.cimports.av.error import err_check
 from cython.cimports.av.frame import Frame
 from cython.cimports.av.packet import Packet
 
@@ -94,7 +95,11 @@ class AudioCodecContext(CodecContext):
     def layout(self, value):
         self._assert_not_open("layout")
         layout: AudioLayout = AudioLayout(value)
-        self.ptr.ch_layout = layout.layout
+        err_check(
+            lib.av_channel_layout_copy(
+                cython.address(self.ptr.ch_layout), cython.address(layout.layout)
+            )
+        )
 
     @property
     def format(self):

@@ -36,6 +36,7 @@ Fixes:
 
 - Audio encoding now correctly passes the codec's ``thread_count`` to its internal :class:`.AudioResampler`, which takes a new ``threads`` argument, as video encoding does for its reformatter. Audio codecs without threading (e.g. MP3) resolve ``thread_count`` to ``1``, but the resampler ignored it and started an idle thread per CPU. By :gh-user:`tonyay163`.
 - Output containers now pass their options to ``avio_open2()`` before ``avformat_write_header()``, as the ``ffmpeg`` program does, so protocol options are used by the protocol. By :gh-user:`ANDYwyLEE`.
+- Fix memory corruption bug when decoding audio with custom channel layouts: :class:`.AudioLayout`, :class:`.AudioFrame`, and :class:`.AudioCodecContext` shallow-copied channel layouts, so custom-order layouts (e.g. ``"FR+FL"``) were double freed. Fixes (:issue:`2444`) by :gh-user:`WyattBlue`.
 
 
 v19.0.1

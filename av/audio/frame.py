@@ -50,7 +50,11 @@ class AudioFrame(Frame):
     ) -> cython.void:
         self.ptr.nb_samples = nb_samples
         self.ptr.format = format
-        self.ptr.ch_layout = layout
+        err_check(
+            lib.av_channel_layout_copy(
+                cython.address(self.ptr.ch_layout), cython.address(layout)
+            )
+        )
 
         # Sometimes this is called twice. Oh well.
         self._init_user_attributes()

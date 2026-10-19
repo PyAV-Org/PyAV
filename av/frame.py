@@ -41,7 +41,12 @@ class Frame:
             self.ptr.format = source.ptr.format
             self.ptr.width = source.ptr.width
             self.ptr.height = source.ptr.height
-            self.ptr.ch_layout = source.ptr.ch_layout
+            err_check(
+                lib.av_channel_layout_copy(
+                    cython.address(self.ptr.ch_layout),
+                    cython.address(source.ptr.ch_layout),
+                )
+            )
 
     @cython.cfunc
     def _init_user_attributes(self) -> cython.void:
