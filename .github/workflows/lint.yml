@@ -1,0 +1,39 @@
+name: lint
+on:
+  workflow_dispatch:
+  push:
+    branches: master
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
+      - '.github/workflows/smoke.yml'
+      - '.github/workflows/tests.yml'
+  pull_request:
+    branches: master
+    paths-ignore:
+      - '**.md'
+      - '**.rst'
+      - '**.txt'
+      - '.github/workflows/smoke.yml'
+      - '.github/workflows/tests.yml'
+jobs:
+  style:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Python
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          activate-environment: true
+          python-version: "3.14"
+      - name: Nim
+        uses: jiro4989/setup-nim-action@v2
+        with:
+          nim-version: "stable"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Linters
+        run: make lint
+      - name: pxdpad
+        run: make pxdpad
