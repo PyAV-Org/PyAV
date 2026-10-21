@@ -1,11 +1,12 @@
 from collections.abc import Iterator
-from typing import Literal, overload
+from typing import Literal, final, overload
 
 from av.audio.stream import AudioStream
 from av.stream import AttachmentStream, DataStream, Stream
 from av.subtitles.stream import SubtitleStream
 from av.video.stream import VideoStream
 
+@final
 class StreamContainer:
     video: tuple[VideoStream, ...]
     audio: tuple[AudioStream, ...]
@@ -17,11 +18,9 @@ class StreamContainer:
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[Stream]: ...
     @overload
-    def __getitem__(self, index: int) -> Stream: ...
+    def __getitem__(self, index: int, /) -> Stream: ...
     @overload
-    def __getitem__(self, index: slice) -> list[Stream]: ...
-    @overload
-    def __getitem__(self, index: int | slice) -> Stream | list[Stream]: ...
+    def __getitem__(self, index: slice, /) -> list[Stream]: ...
     def get(
         self,
         *args: int | Stream | dict[str, int | tuple[int, ...]],
