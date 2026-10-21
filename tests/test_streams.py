@@ -124,6 +124,8 @@ class TestStreams:
 
         assert [video] == container.streams.get(video=0)
         assert [video] == container.streams.get(video=(0,))
+        assert [video, audio] == container.streams[:]
+        assert [audio] == container.streams[1:]
 
         assert video == container.streams.best("video")
         assert audio == container.streams.best("audio")

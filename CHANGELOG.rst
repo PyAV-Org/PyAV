@@ -32,7 +32,8 @@ v19.0.3 (Unreleased)
 --------------------
 
 Fixes:
--
+
+- Support slicing ``Container.streams``, which raised ``TypeError`` despite being typed.
 
 v19.0.2
 -------
