@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Literal
+from typing import Literal, final
 
 from av.codec.context import CodecContext
 from av.packet import Packet
@@ -16,6 +16,7 @@ class _Layout:
     def __get__(self, i: object | None, owner: type | None = None) -> AudioLayout: ...
     def __set__(self, instance: object, value: AudioLayout | str) -> None: ...
 
+@final
 class AudioCodecContext(CodecContext):
     frame_size: int
     sample_rate: int
@@ -27,6 +28,6 @@ class AudioCodecContext(CodecContext):
     def channels(self) -> int: ...
     @property
     def block_align(self) -> int: ...
-    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...
-    def encode_lazy(self, frame: AudioFrame | None = None) -> Iterator[Packet]: ...
+    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...  # type: ignore[override]
+    def encode_lazy(self, frame: AudioFrame | None = None) -> Iterator[Packet]: ...  # type: ignore[override]
     def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...

@@ -1,9 +1,10 @@
-from typing import Literal
+from typing import Literal, final
 
 from av.codec.context import CodecContext
 from av.packet import Packet
 from av.subtitles.subtitle import SubtitleSet
 
+@final
 class SubtitleCodecContext(CodecContext):
     type: Literal["subtitle"]
     subtitle_header: bytes | None
