@@ -1,8 +1,14 @@
-# When Python 3.12 becomes our lowest supported version, we could make this
-# class inherit `collections.abc.Buffer`.
+from collections.abc import Buffer as _Buffer
+from typing import final
 
-class Buffer:
+from typing_extensions import disjoint_base
+
+@final
+class ByteSource: ...
+
+@disjoint_base
+class Buffer(_Buffer):
     buffer_size: int
     buffer_ptr: int
     def update(self, input: bytes) -> None: ...
-    def __buffer__(self, flags: int) -> memoryview: ...
+    def __buffer__(self, flags: int, /) -> memoryview: ...
