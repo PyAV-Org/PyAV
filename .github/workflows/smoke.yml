@@ -7,6 +7,8 @@ on:
       - '**.md'
       - '**.rst'
       - '**.txt'
+      - '**.pyi'
+      - '.github/workflows/lint.yml'
       - '.github/workflows/tests.yml'
   pull_request:
     branches: master
@@ -14,28 +16,10 @@ on:
       - '**.md'
       - '**.rst'
       - '**.txt'
+      - '**.pyi'
+      - '.github/workflows/lint.yml'
       - '.github/workflows/tests.yml'
 jobs:
-  style:
-    runs-on: ubuntu-slim
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Python
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-        with:
-          activate-environment: true
-          python-version: "3.14"
-      - name: Nim
-        uses: jiro4989/setup-nim-action@v2
-        with:
-          nim-version: "stable"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Linters
-        run: make lint
-      - name: pxdpad
-        run: make pxdpad
-
   nix:
     name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
     runs-on: ${{ matrix.config.os }}
