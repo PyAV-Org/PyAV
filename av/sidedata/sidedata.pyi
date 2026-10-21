@@ -2,7 +2,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
 from typing import ClassVar, cast, overload
 
+from typing_extensions import disjoint_base
+
 from av.buffer import Buffer
+from av.frame import Frame
 
 class Type(Enum):
     PANSCAN = cast(ClassVar[Type], ...)
@@ -38,17 +41,15 @@ class Type(Enum):
     THREE_D_REFERENCE_DISPLAYS = cast(ClassVar[Type], ...)
     EXIF = cast(ClassVar[Type], ...)
 
+@disjoint_base
 class SideData(Buffer):
     type: Type
+    def __init__(self, sentinel: object, frame: Frame, index: int, /) -> None: ...
 
 class SideDataContainer(Mapping):
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[Type]: ...
     @overload
-    def __getitem__(self, key: str | int | Type) -> SideData: ...
+    def __getitem__(self, key: str | int | Type, /) -> SideData: ...
     @overload
-    def __getitem__(self, key: slice) -> Sequence[SideData]: ...
-    @overload
-    def __getitem__(
-        self, key: str | int | Type | slice
-    ) -> SideData | Sequence[SideData]: ...
+    def __getitem__(self, key: slice, /) -> Sequence[SideData]: ...
