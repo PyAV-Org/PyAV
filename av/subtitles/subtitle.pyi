@@ -1,6 +1,12 @@
 from collections.abc import Iterator
-from typing import Literal
+from typing import Literal, final
 
+from typing_extensions import disjoint_base
+
+@final
+class SubtitleProxy: ...
+
+@final
 class SubtitleSet:
     format: int
     start_display_time: int
@@ -18,11 +24,13 @@ class SubtitleSet:
     ) -> SubtitleSet: ...
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[Subtitle]: ...
-    def __getitem__(self, i: int) -> Subtitle: ...
+    def __getitem__(self, i: int, /) -> Subtitle: ...
 
+@disjoint_base
 class Subtitle:
     type: bytes
 
+@final
 class BitmapSubtitle(Subtitle):
     type: Literal[b"bitmap"]
     x: int
@@ -32,11 +40,13 @@ class BitmapSubtitle(Subtitle):
     nb_colors: int
     planes: tuple[BitmapSubtitlePlane, ...]
 
+@final
 class BitmapSubtitlePlane:
     subtitle: BitmapSubtitle
     index: int
     buffer_size: int
 
+@final
 class AssSubtitle(Subtitle):
     type: Literal[b"ass", b"text"]
     @property
