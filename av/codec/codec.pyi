@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from enum import Flag, IntEnum, IntFlag
-from typing import ClassVar, Literal, cast, overload
+from typing import Literal, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
@@ -13,46 +13,47 @@ from .context import CodecContext
 from .hwaccel import HWConfig
 
 class Properties(Flag):
-    NONE = cast(ClassVar[Properties], ...)
-    INTRA_ONLY = cast(ClassVar[Properties], ...)
-    LOSSY = cast(ClassVar[Properties], ...)
-    LOSSLESS = cast(ClassVar[Properties], ...)
-    REORDER = cast(ClassVar[Properties], ...)
-    FIELDS = cast(ClassVar[Properties], ...)
-    ENHANCEMENT = cast(ClassVar[Properties], ...)
-    BITMAP_SUB = cast(ClassVar[Properties], ...)
-    TEXT_SUB = cast(ClassVar[Properties], ...)
+    _value_: int
+    NONE = 0
+    INTRA_ONLY = ...
+    LOSSY = ...
+    LOSSLESS = ...
+    REORDER = ...
+    FIELDS = ...
+    ENHANCEMENT = ...
+    BITMAP_SUB = ...
+    TEXT_SUB = ...
 
 class Capabilities(IntEnum):
-    none = cast(int, ...)
-    draw_horiz_band = cast(int, ...)
-    dr1 = cast(int, ...)
-    delay = cast(int, ...)
-    small_last_frame = cast(int, ...)
-    experimental = cast(int, ...)
-    channel_conf = cast(int, ...)
-    frame_threads = cast(int, ...)
-    slice_threads = cast(int, ...)
-    param_change = cast(int, ...)
-    auto_threads = cast(int, ...)
-    variable_frame_size = cast(int, ...)
-    avoid_probing = cast(int, ...)
-    hardware = cast(int, ...)
-    hybrid = cast(int, ...)
-    encoder_reordered_opaque = cast(int, ...)
-    encoder_flush = cast(int, ...)
-    encoder_recon_frame = cast(int, ...)
+    none = 0
+    draw_horiz_band = ...
+    dr1 = ...
+    delay = ...
+    small_last_frame = ...
+    experimental = ...
+    channel_conf = ...
+    frame_threads = ...
+    slice_threads = ...
+    param_change = ...
+    auto_threads = ...
+    variable_frame_size = ...
+    avoid_probing = ...
+    hardware = ...
+    hybrid = ...
+    encoder_reordered_opaque = ...
+    encoder_flush = ...
+    encoder_recon_frame = ...
 
 class PixFmtLoss(IntFlag):
-    NONE = cast(ClassVar[PixFmtLoss], ...)
-    RESOLUTION = cast(ClassVar[PixFmtLoss], ...)
-    DEPTH = cast(ClassVar[PixFmtLoss], ...)
-    COLORSPACE = cast(ClassVar[PixFmtLoss], ...)
-    ALPHA = cast(ClassVar[PixFmtLoss], ...)
-    COLORQUANT = cast(ClassVar[PixFmtLoss], ...)
-    CHROMA = cast(ClassVar[PixFmtLoss], ...)
-    EXCESS_RESOLUTION = cast(ClassVar[PixFmtLoss], ...)
-    EXCESS_DEPTH = cast(ClassVar[PixFmtLoss], ...)
+    NONE = 0
+    RESOLUTION = 0x0001
+    DEPTH = 0x0002
+    COLORSPACE = 0x0004
+    ALPHA = 0x0008
+    COLORQUANT = 0x0010
+    CHROMA = 0x0020
+    EXCESS_RESOLUTION = 0x0040
+    EXCESS_DEPTH = 0x0080
 
 class UnknownCodecError(ValueError): ...
 
@@ -149,4 +150,3 @@ def find_best_pix_fmt_of_list(
     members.
     For exact behavior see: libavutil/pixdesc.c/get_pix_fmt_score() in ffmpeg source code.
     """
-    ...

@@ -1,13 +1,13 @@
 from enum import IntEnum
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 
 class VideoEncParamsType(IntEnum):
-    NONE = cast(int, ...)
-    VP9 = cast(int, ...)
-    H264 = cast(int, ...)
-    MPEG2 = cast(int, ...)
+    NONE = ...
+    VP9 = ...
+    H264 = ...
+    MPEG2 = ...
 
 class VideoEncParams:
     nb_blocks: int

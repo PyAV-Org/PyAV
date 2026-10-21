@@ -1,5 +1,5 @@
 from collections.abc import Iterator, Sequence
-from typing import Literal
+from typing import Any, Literal
 
 from av.codec.context import ThreadType
 from av.packet import Packet
@@ -29,7 +29,7 @@ class VideoStream(Stream):
     # from codec context
     format: VideoFormat
     thread_count: int
-    thread_type: ThreadType
+    thread_type: ThreadType | Any
     width: int
     height: int
     bits_per_coded_sample: int
