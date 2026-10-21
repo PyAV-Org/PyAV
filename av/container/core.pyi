@@ -3,7 +3,18 @@ from enum import Flag, IntEnum
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Any, ClassVar, Literal, Self, TypedDict, cast, overload
+from typing import (
+    Any,
+    ClassVar,
+    Literal,
+    Self,
+    TypedDict,
+    cast,
+    overload,
+    type_check_only,
+)
+
+from typing_extensions import disjoint_base
 
 from av.codec.hwaccel import HWAccel
 from av.format import ContainerFormat
@@ -13,7 +24,7 @@ from .input import InputContainer
 from .output import OutputContainer
 from .streams import StreamContainer
 
-Real = int | float | Fraction | AVRational
+type _Real = int | float | Fraction | AVRational
 
 class Flags(Flag):
     gen_pts = cast(ClassVar[Flags], ...)
@@ -69,6 +80,7 @@ class AudioCodec(IntEnum):
     pcm_u8 = cast(int, ...)
     pcm_vidc = cast(int, ...)
 
+@type_check_only
 class Chapter(TypedDict):
     id: int
     start: int
@@ -76,6 +88,7 @@ class Chapter(TypedDict):
     time_base: AVRational
     metadata: dict[str, str]
 
+@disjoint_base
 class Container:
     name: str
     file: Any
@@ -87,8 +100,8 @@ class Container:
     container_options: dict[str, str]
     streams: StreamContainer
     metadata: dict[str, str]
-    open_timeout: Real | None
-    read_timeout: Real | None
+    open_timeout: _Real | None
+    read_timeout: _Real | None
     flags: int
     video_codec_id: int
     def dumps_format(self) -> str: ...
@@ -113,7 +126,7 @@ def open(
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
-    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
     io_open: Callable[..., Any] | None = None,
     hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
@@ -125,7 +138,7 @@ def open(
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
-    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
     io_open: Callable[..., Any] | None = None,
     hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
@@ -137,7 +150,7 @@ def open(
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
-    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
     io_open: Callable[..., Any] | None = None,
     hwaccel: HWAccel | None = None,
 ) -> OutputContainer: ...
@@ -149,7 +162,7 @@ def open(
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
-    timeout: Real | None | tuple[Real | None, Real | None] = None,
+    timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
     io_open: Callable[..., Any] | None = None,
     hwaccel: HWAccel | None = None,
 ) -> InputContainer | OutputContainer: ...

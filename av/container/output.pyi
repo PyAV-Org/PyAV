@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from fractions import Fraction
-from typing import TypeVar, overload
+from typing import final, overload
 
 from av.audio import _AudioCodecName
 from av.audio.stream import AudioStream
@@ -15,8 +15,7 @@ from av.video.stream import VideoStream
 
 from .core import Container
 
-_StreamT = TypeVar("_StreamT", bound=Stream)
-
+@final
 class OutputContainer(Container):
     @overload
     def add_stream(
@@ -58,9 +57,9 @@ class OutputContainer(Container):
         rate: AVRational | Fraction | int | None = None,
         **kwargs,
     ) -> Stream: ...
-    def add_stream_from_template(
-        self, template: _StreamT, opaque: bool | None = None, **kwargs
-    ) -> _StreamT: ...
+    def add_stream_from_template[StreamT: Stream](
+        self, template: StreamT, opaque: bool | None = None, **kwargs
+    ) -> StreamT: ...
     def add_attachment(
         self, name: str, mimetype: str, data: bytes
     ) -> AttachmentStream: ...

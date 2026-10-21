@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Any, overload
+from typing import Any, final, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
@@ -12,6 +12,7 @@ from av.video.stream import VideoStream
 
 from .core import Container
 
+@final
 class InputContainer(Container):
     start_time: int
     start_time_realtime: int | None
