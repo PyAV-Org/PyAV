@@ -46,6 +46,19 @@ class AudioStream(Stream):
 
         return packets
 
+    def encode_lazy(self, frame: AudioFrame | None = None):
+        """
+        Encode an :class:`.AudioFrame` and yield each :class:`.Packet` as it is produced.
+
+        .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode_lazy`.
+        """
+        self._assert_has_codec_context(lib.AVERROR_ENCODER_NOT_FOUND)
+        packet: Packet
+        for packet in self.codec_context.encode_lazy(frame):
+            packet._stream = self
+            packet.ptr.stream_index = self.ptr.index
+            yield packet
+
     @cython.ccall
     def decode(self, packet: Packet | None = None):
         """

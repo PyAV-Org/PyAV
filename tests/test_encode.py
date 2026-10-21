@@ -330,6 +330,38 @@ class TestEncodeStreamSemantics(TestCase):
             assert apacket.stream is astream
             assert apacket.stream_index == 1
 
+    def test_stream_index_lazy(self) -> None:
+        with av.open(self.sandboxed("output_lazy.mov"), "w") as output:
+            astream = output.add_stream("mp2", 48000)
+            astream.layout = "stereo"
+            astream.format = "s16"
+
+            vstream = output.add_stream("mpeg4", 24)
+            vstream.pix_fmt = "yuv420p"
+            vstream.width = 320
+            vstream.height = 240
+
+            assert astream.index == 0
+            assert vstream.index == 1
+
+            vpackets = list(vstream.encode_lazy(VideoFrame(320, 240, "yuv420p")))
+            vpackets += list(vstream.encode_lazy(None))
+            assert vpackets
+            for vpacket in vpackets:
+                assert vpacket.stream is vstream
+                assert vpacket.stream_index == 1
+
+            apackets = []
+            for i in range(10):
+                aframe = AudioFrame("s16", "stereo", samples=astream.frame_size or 1000)
+                aframe.sample_rate = 48000
+                apackets += list(astream.encode_lazy(aframe))
+            apackets += list(astream.encode_lazy(None))
+            assert apackets
+            for apacket in apackets:
+                assert apacket.stream is astream
+                assert apacket.stream_index == 0
+
     def test_stream_audio_resample(self) -> None:
         with av.open(self.sandboxed("output.mov"), "w") as output:
             vstream = output.add_stream("mpeg4", 24)
