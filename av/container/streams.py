@@ -75,6 +75,8 @@ class StreamContainer:
     def __getitem__(self, index):
         if isinstance(index, int):
             return self.get(index)[0]
+        elif isinstance(index, slice):
+            return cython.cast(list, self._streams)[index]
         else:
             return self.get(index)
 
