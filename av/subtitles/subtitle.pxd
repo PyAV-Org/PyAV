@@ -13,12 +13,6 @@ cdef class Subtitle:
     cdef lib.AVSubtitleRect *ptr
     cdef readonly bytes type
 
-cdef class TextSubtitle(Subtitle):
-    pass
-
-cdef class ASSSubtitle(Subtitle):
-    pass
-
 cdef class BitmapSubtitle(Subtitle):
     cdef readonly planes
 
