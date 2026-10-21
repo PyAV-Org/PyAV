@@ -3,8 +3,11 @@ from enum import Flag, IntEnum, IntFlag
 from fractions import Fraction
 from typing import ClassVar, Literal, cast, overload
 
+from typing_extensions import disjoint_base
+
 from av.audio import _AudioCodecName
 from av.audio.codeccontext import AudioCodecContext
+from av.frame import Frame
 from av.packet import Packet, PktSideDataT
 from av.rational import AVRational
 from av.sidedata.sidedata import Type as FrameSideDataType
@@ -116,6 +119,7 @@ class CodecOptionSet:
     generic: tuple[CodecOption, ...]
     private: tuple[CodecOption, ...]
 
+@disjoint_base
 class CodecContext:
     name: str
     type: Literal["video", "audio", "data", "subtitle", "attachment"]
@@ -222,3 +226,6 @@ class CodecContext:
         self, raw_input: bytes | bytearray | memoryview | None = None
     ) -> list[Packet]: ...
     def flush_buffers(self) -> None: ...
+    def encode(self, frame: Frame | None = None): ...
+    def encode_lazy(self, frame: Frame | None = None): ...
+    def decode(self, packet: Packet | None = None): ...
