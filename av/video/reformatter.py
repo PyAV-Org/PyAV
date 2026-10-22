@@ -358,8 +358,11 @@ class VideoReformatter:
         self.ptr.threads = threads
         self.ptr.flags = cython.cast(cython.uint, interpolation)
 
-        # Allocate frame buffers and perform the conversion
-        new_frame._init(dst_format, width, height)
+        # Allocate frame buffers and perform the conversion. Let FFmpeg pick the
+        # alignment: swscale's SIMD output can write past the row width, and with
+        # only 16-byte alignment that spills into the next row, which races with
+        # another slice thread (#2431).
+        new_frame._init(dst_format, width, height, 0)
         with cython.nogil:
             ret = sws_scale_frame(self.ptr, new_frame.ptr, frame.ptr)
 

@@ -580,7 +580,11 @@ class VideoFrame(Frame):
 
     @cython.cfunc
     def _init(
-        self, format: lib.AVPixelFormat, width: cython.uint, height: cython.uint
+        self,
+        format: lib.AVPixelFormat,
+        width: cython.uint,
+        height: cython.uint,
+        align: cython.int = 16,
     ) -> cython.void:
         res: cython.int = 0
 
@@ -590,9 +594,10 @@ class VideoFrame(Frame):
             self.ptr.format = format
 
             # We enforce aligned buffers, otherwise `sws_scale_frame` can perform
-            # poorly or even cause out-of-bounds reads and writes.
+            # poorly or even cause out-of-bounds reads and writes. An align of 0
+            # uses FFmpeg's default, which is at least as large as its SIMD width.
             if width and height:
-                res = lib.av_frame_get_buffer(self.ptr, 16)
+                res = lib.av_frame_get_buffer(self.ptr, align)
 
         if res:
             err_check(res)
