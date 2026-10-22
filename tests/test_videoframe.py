@@ -1453,6 +1453,30 @@ def test_reformat_pixel_format_align() -> None:
         assert numpy.abs(result.astype(int) - expected_rgb.astype(int)).max() <= 1
 
 
+@pytest.mark.parametrize("format", ["yuv422p10le", "yuv444p10le", "gray16le"])
+def test_reformat_threaded_high_bit_depth(format: str) -> None:
+    # On x86, swscale's SIMD output can write past the row width. With too little
+    # row padding that spills into the first pixels of the next row, which is
+    # raced by another slice thread (#2431).
+    width, height = 2388, 1486
+    t = numpy.linspace(0, 1, height)[:, None]
+    col = numpy.stack([255 * t, 255 * (1 - t), numpy.full_like(t, 128)], axis=-1)
+    rgb = numpy.repeat(col, width, axis=1).astype(numpy.uint8)
+
+    def planes(frame: VideoFrame) -> list[numpy.ndarray]:
+        return [
+            numpy.frombuffer(p, dtype=numpy.uint16).reshape(p.height, -1)[:, : p.width]
+            for p in frame.planes
+        ]
+
+    frame = VideoFrame.from_ndarray(rgb, format="rgb24")
+    expected = planes(frame.reformat(format=format, threads=1))
+    for threads in (4, 16):
+        result = planes(frame.reformat(format=format, threads=threads))
+        for result_plane, expected_plane in zip(result, expected):
+            assertNdarraysEqual(result_plane, expected_plane)
+
+
 def test_save_options(tmp_path) -> None:
     y, x = numpy.mgrid[0:240, 0:320]
     array = numpy.dstack([x % 256, y % 256, (x + y) % 256]).astype(numpy.uint8)

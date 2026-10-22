@@ -22,7 +22,7 @@ cdef class VideoFrame(Frame):
     cdef CudaContext _cuda_ctx
     cdef readonly VideoFormat format
     cdef readonly int _device_id
-    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height)
+    cdef _init(self, lib.AVPixelFormat format, unsigned int width, unsigned int height, int align=*)
     cdef _init_user_attributes(self)
 
 cdef VideoFrame alloc_video_frame()
