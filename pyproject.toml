@@ -59,4 +59,4 @@ prerelease = "allow"
 
 [dependency-groups]
 test = ["cython>=3.3.0,<4", "numpy", "pillow", "pytest"]
-lint = ["ruff", "isort", "mypy==2.1.0", {include-group = "test"}]
+lint = ["ruff", "isort", "mypy==2.4.0", {include-group = "test"}]
