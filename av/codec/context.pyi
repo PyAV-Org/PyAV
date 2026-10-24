@@ -2,7 +2,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from enum import Flag, IntEnum, IntFlag
 from fractions import Fraction
-from typing import ClassVar, Literal, cast, overload
+from typing import Literal, overload
 
 from typing_extensions import disjoint_base
 
@@ -22,10 +22,11 @@ from .codec import Codec
 from .hwaccel import HWAccel
 
 class ThreadType(Flag):
-    NONE = cast(ClassVar[ThreadType], ...)
-    FRAME = cast(ClassVar[ThreadType], ...)
-    SLICE = cast(ClassVar[ThreadType], ...)
-    AUTO = cast(ClassVar[ThreadType], ...)
+    _value_: int
+    NONE = ...
+    FRAME = ...
+    SLICE = ...
+    AUTO = ...
 
 class Flags(IntEnum):
     unaligned = ...
