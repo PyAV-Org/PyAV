@@ -28,7 +28,7 @@ fate-suite:
 	rsync -vrltLW rsync://fate-suite.ffmpeg.org/fate-suite/ tests/assets/fate-suite/
 
 lint:
-	$(PIP) install --group lint
+	$(PIP) install --only-binary pillow --group lint
 	ruff format --check av examples tests setup.py
 	isort --check-only --diff av examples tests
 	mypy av tests
@@ -40,5 +40,5 @@ pxdpad: pxdpad-build
 	tools/pxdpad/bin/pxdpad av include
 
 test:
-	$(PIP) install --group test
+	$(PIP) install --only-binary pillow --group test
 	$(PYTHON) -m pytest
