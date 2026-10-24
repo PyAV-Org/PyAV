@@ -114,7 +114,11 @@ def test_find_best_pix_fmt_of_list_empty() -> None:
         ),
     ],
 )
-def test_find_best_pix_fmt_of_list_best(pix_fmts, src_pix_fmt, expected_best) -> None:
+def test_find_best_pix_fmt_of_list_best(
+    pix_fmts: list[str | VideoFormat],
+    src_pix_fmt: str | VideoFormat,
+    expected_best: str,
+) -> None:
     best, loss = find_best_pix_fmt_of_list(pix_fmts, src_pix_fmt)
     assert best is not None
     assert best.name == expected_best
@@ -128,7 +132,9 @@ def test_find_best_pix_fmt_of_list_best(pix_fmts, src_pix_fmt, expected_best) ->
         (["rgb24"], "__unknown_pix_fmt"),
     ],
 )
-def test_find_best_pix_fmt_of_list_unknown_pix_fmt(pix_fmts, src_pix_fmt) -> None:
+def test_find_best_pix_fmt_of_list_unknown_pix_fmt(
+    pix_fmts: list[str], src_pix_fmt: str
+) -> None:
     with pytest.raises(ValueError, match="not a pixel format"):
         find_best_pix_fmt_of_list(pix_fmts, src_pix_fmt)
 
@@ -141,7 +147,9 @@ def test_find_best_pix_fmt_of_list_unknown_pix_fmt(pix_fmts, src_pix_fmt) -> Non
         (["rgb24", "rgba", "bgra", "rgb24", "gray"], "yuv420p"),
     ],
 )
-def test_find_best_pix_fmt_of_list_picks_from_list(pix_fmts, src_pix_fmt) -> None:
+def test_find_best_pix_fmt_of_list_picks_from_list(
+    pix_fmts: list[str], src_pix_fmt: str
+) -> None:
     best, loss = find_best_pix_fmt_of_list(pix_fmts, src_pix_fmt)
     assert best is not None
     assert best.name in set(pix_fmts)

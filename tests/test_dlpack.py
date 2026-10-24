@@ -1,7 +1,9 @@
 import gc
 from fractions import Fraction
+from typing import Any
 
 import numpy
+import numpy.typing
 import pytest
 
 import av
@@ -19,7 +21,12 @@ def _make_u16(shape: tuple[int, ...]) -> numpy.ndarray:
     return numpy.arange(int(numpy.prod(shape)), dtype=numpy.uint16).reshape(shape)
 
 
-def _plane_to_2d(plane, height: int, width: int, dtype) -> numpy.ndarray:
+def _plane_to_2d(
+    plane: av.video.plane.VideoPlane,
+    height: int,
+    width: int,
+    dtype: numpy.typing.DTypeLike,
+) -> numpy.ndarray:
     itemsize = numpy.dtype(dtype).itemsize
     assert plane.line_size % itemsize == 0
     pitch_elems = plane.line_size // itemsize
@@ -27,7 +34,7 @@ def _plane_to_2d(plane, height: int, width: int, dtype) -> numpy.ndarray:
     return arr[:, :width]
 
 
-def _get_cuda_backend():
+def _get_cuda_backend() -> tuple[str, Any] | None:
     try:
         import cupy  # type: ignore
 
@@ -313,7 +320,9 @@ def test_video_frame_from_dlpack_rejects_packed_format() -> None:
         ("yuv420p10le", numpy.uint16, [(48, 64), (24, 32), (24, 32)]),
     ],
 )
-def test_video_frame_from_dlpack_planar_cpu(fmt, dtype, planes_hw) -> None:
+def test_video_frame_from_dlpack_planar_cpu(
+    fmt: str, dtype: type[numpy.generic], planes_hw: list[tuple[int, int]]
+) -> None:
     # Issue #2217: planar formats whose planes each hold one component round
     # trip through DLPack without a NumPy intermediate.
     width, height = 64, 48
@@ -703,7 +712,7 @@ def test_encode_cuda_frame_with_nvenc_if_available(use_current_ctx: bool) -> Non
 
 def test_encode_cuda_frame_with_nvenc_external_stream_if_available() -> None:
     try:
-        import torch  # type: ignore
+        import torch
     except Exception:
         pytest.skip("PyTorch is not available.")
     if not torch.cuda.is_available():

@@ -6,7 +6,7 @@ from .common import TestCase, fate_suite
 
 
 class TestAudioProbe(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.file = av.open(fate_suite("aac/latm_stereo_to_51.ts"))
 
     def test_container_probing(self) -> None:

@@ -1,6 +1,7 @@
 import gc
 import weakref
 from fractions import Fraction
+from pathlib import Path
 
 import numpy
 import pytest
@@ -13,7 +14,9 @@ from av.video.reformatter import Colorspace, Interpolation
 from .common import assertNdarraysEqual, fate_png, fate_suite
 
 
-def assertPixelValue16(plane, expected, byteorder: str) -> None:
+def assertPixelValue16(
+    plane: av.video.plane.VideoPlane, expected: int, byteorder: str
+) -> None:
     view = memoryview(plane)
     if byteorder == "big":
         assert view[0] == (expected >> 8 & 0xFF)
@@ -118,9 +121,9 @@ def test_memoryview_read() -> None:
     assert mem.shape == (640 * 480 * 3,)
     assert not mem.readonly
     assert mem[1] == 49
-    assert mem[:7] == b"01234xx"
+    assert bytes(mem[:7]) == b"01234xx"
     mem[1] = 46
-    assert mem[:7] == b"0.234xx"
+    assert bytes(mem[:7]) == b"0.234xx"
 
 
 def test_opaque() -> None:
@@ -1029,14 +1032,14 @@ def test_ndarray_bgr8() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
-def test_ndarray_pal8():
+def test_ndarray_pal8() -> None:
     array = numpy.random.randint(0, 256, size=(480, 640), dtype=numpy.uint8)
     palette = numpy.random.randint(0, 256, size=(256, 4), dtype=numpy.uint8)
     frame = VideoFrame.from_ndarray((array, palette), format="pal8")
     assert frame.width == 640 and frame.height == 480
     assert frame.format.name == "pal8"
     assert frame.format.name in supported_np_pix_fmts
-    returned = frame.to_ndarray()
+    returned: object = frame.to_ndarray()
     assert type(returned) is tuple and len(returned) == 2
     assertNdarraysEqual(returned[0], array)
     assertNdarraysEqual(returned[1], palette)
@@ -1477,7 +1480,7 @@ def test_reformat_threaded_high_bit_depth(format: str) -> None:
             assertNdarraysEqual(result_plane, expected_plane)
 
 
-def test_save_options(tmp_path) -> None:
+def test_save_options(tmp_path: Path) -> None:
     y, x = numpy.mgrid[0:240, 0:320]
     array = numpy.dstack([x % 256, y % 256, (x + y) % 256]).astype(numpy.uint8)
     frame = VideoFrame.from_ndarray(array, format="rgb24")

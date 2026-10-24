@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 import av
@@ -9,7 +11,7 @@ from av.bitstream import BitStreamFilterContext, bitstream_filters_available
 from .common import fate_suite
 
 
-def is_annexb(packet: Packet | bytes | None) -> bool:
+def is_annexb(packet: Packet[Any] | bytes | None) -> bool:
     if packet is None:
         return False
 
@@ -24,7 +26,7 @@ def test_filters_available() -> None:
 def test_filter_chomp() -> None:
     ctx = BitStreamFilterContext("chomp")
 
-    src_packets: tuple[Packet, None] = (Packet(b"\x0012345\0\0\0"), None)
+    src_packets: tuple[Packet[Any], None] = (Packet(b"\x0012345\0\0\0"), None)
     assert bytes(src_packets[0]) == b"\x0012345\0\0\0"
 
     result_packets = []
@@ -47,7 +49,7 @@ def test_filter_setts() -> None:
     p2.pts = 50
     src_packets = [p1, p2, None]
 
-    result_packets: list[Packet] = []
+    result_packets: list[Packet[Any]] = []
     for p in src_packets:
         result_packets.extend(ctx.filter(p))
 
@@ -68,8 +70,8 @@ def test_filter_h264_mp4toannexb() -> None:
 
         assert len(res_packets) == stream.frames
 
-        for p in res_packets:
-            assert is_annexb(p)
+        for res_packet in res_packets:
+            assert is_annexb(res_packet)
 
 
 def test_filter_in_stream_codec_and_name() -> None:

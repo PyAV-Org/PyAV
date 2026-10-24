@@ -1,4 +1,4 @@
-from typing import final
+from typing import Any, final
 
 from av.codec.codec import Codec
 from av.packet import Packet
@@ -17,6 +17,6 @@ class SubtitleStream(Stream):
     codec_tag: str
     options: dict[str, str]
     def decode(
-        self, packet: Packet | None = None
+        self, packet: Packet[Any] | None = None
     ) -> list[AssSubtitle] | list[BitmapSubtitle]: ...
-    def decode2(self, packet: Packet) -> SubtitleSet | None: ...
+    def decode2(self, packet: Packet[Any]) -> SubtitleSet | None: ...

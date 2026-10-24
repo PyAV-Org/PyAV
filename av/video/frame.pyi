@@ -1,6 +1,6 @@
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, final
+from typing import Any, Literal, final, overload
 
 import numpy as np
 from PIL.Image import Image
@@ -101,6 +101,16 @@ class VideoFrame(Frame):
     def from_numpy_buffer(
         array: _SupportedNDarray, format: str = "rgb24", width: int = 0
     ) -> VideoFrame: ...
+    @overload
+    @staticmethod
+    def from_ndarray(
+        array: tuple[
+            np.ndarray[Any, np.dtype[np.uint8]], np.ndarray[Any, np.dtype[np.uint8]]
+        ],
+        format: Literal["pal8"],
+        channel_last: bool = False,
+    ) -> VideoFrame: ...
+    @overload
     @staticmethod
     def from_ndarray(
         array: _SupportedNDarray, format: str = "rgb24", channel_last: bool = False

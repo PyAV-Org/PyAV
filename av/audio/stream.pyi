@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Literal, final
+from typing import Any, Literal, final
 
 from av.codec.codec import Codec
 from av.packet import Packet
@@ -21,9 +21,11 @@ class _Layout:
 @final
 class AudioStream(Stream):
     codec_context: AudioCodecContext
-    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...
-    def encode_lazy(self, frame: AudioFrame | None = None) -> Iterator[Packet]: ...
-    def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
+    def encode(self, frame: AudioFrame | None = None) -> list[Packet[AudioStream]]: ...
+    def encode_lazy(
+        self, frame: AudioFrame | None = None
+    ) -> Iterator[Packet[AudioStream]]: ...
+    def decode(self, packet: Packet[Any] | None = None) -> list[AudioFrame]: ...
 
     # From codec context
     name: str

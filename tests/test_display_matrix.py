@@ -111,7 +111,7 @@ def _read_matrix(frame: av.VideoFrame) -> list[int] | None:
     sd = frame.side_data.get("DISPLAYMATRIX")
     if sd is None:
         return None
-    return list(struct.unpack("=9i", bytes(cast(SideData, sd))))
+    return list(struct.unpack("=9i", bytes(sd)))
 
 
 @pytest.mark.parametrize("codec_name", CODECS)

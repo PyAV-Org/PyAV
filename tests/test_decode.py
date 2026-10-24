@@ -335,7 +335,7 @@ class TestDecode(TestCase):
         assert "UNKNOWN_1048576" not in Type.__members__
 
         with pytest.raises(ValueError):
-            Type("not a side data type")  # type: ignore[arg-type]
+            Type("not a side data type")
 
     def test_no_side_data(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))

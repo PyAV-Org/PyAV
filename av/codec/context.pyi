@@ -2,7 +2,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from enum import Flag, IntEnum, IntFlag
 from fractions import Fraction
-from typing import Literal, overload
+from typing import Any, Literal, overload
 
 from typing_extensions import disjoint_base
 
@@ -12,6 +12,7 @@ from av.frame import Frame
 from av.packet import Packet, PktSideDataT
 from av.rational import AVRational
 from av.sidedata.sidedata import Type as FrameSideDataType
+from av.stream import Stream
 from av.subtitles import _SubtitleCodecName
 from av.subtitles.codeccontext import SubtitleCodecContext
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
@@ -228,10 +229,10 @@ class CodecContext:
     ) -> CodecContext: ...
     def parse(
         self, raw_input: bytes | bytearray | memoryview | None = None
-    ) -> list[Packet]: ...
+    ) -> list[Packet[Stream]]: ...
     def flush_buffers(self) -> None: ...
-    def encode(self, frame: Frame | None = None) -> list[Packet]: ...
-    def encode_lazy(self, frame: Frame | None = None) -> Iterator[Packet]: ...
+    def encode(self, frame: Frame | None = None) -> list[Packet[Stream]]: ...
+    def encode_lazy(self, frame: Frame | None = None) -> Iterator[Packet[Stream]]: ...
     def decode(
-        self, packet: Packet | None = None
+        self, packet: Packet[Any] | None = None
     ) -> Sequence[Frame | AssSubtitle | BitmapSubtitle]: ...

@@ -7,7 +7,7 @@ from .common import TestCase
 
 
 class TestVideoFormats(TestCase):
-    def test_invalid_pixel_format(self):
+    def test_invalid_pixel_format(self) -> None:
         with self.assertRaises(ValueError) as cm:
             VideoFormat("__unknown_pix_fmt", 640, 480)
         assert str(cm.exception) == "not a pixel format: '__unknown_pix_fmt'"
