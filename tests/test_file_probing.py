@@ -183,7 +183,7 @@ class TestSubtitleProbe(TestCase):
         assert len(self.file.streams) == 1
 
     def test_stream_probing(self) -> None:
-        stream = self.file.streams[0]
+        stream = self.file.streams.subtitles[0]
 
         assert str(stream).startswith("<av.SubtitleStream #0 subtitle/mov_text at ")
 

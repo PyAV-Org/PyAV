@@ -79,7 +79,7 @@ class Codec:
     audio_rates: list[int] | None
     video_formats: list[VideoFormat] | None
     audio_formats: list[AudioFormat] | None
-    hardware_configs: list[HWConfig]
+    hardware_configs: tuple[HWConfig, ...]
 
     @property
     def properties(self) -> int: ...

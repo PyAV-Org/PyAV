@@ -56,6 +56,7 @@ def test_add_mux_stream_video() -> None:
             out_stream = output.add_mux_stream(
                 in_stream.codec_context.name, width=width, height=height
             )
+            assert isinstance(out_stream, av.VideoStream)
             assert out_stream.codec_context is None
             assert out_stream.type == "video"
 

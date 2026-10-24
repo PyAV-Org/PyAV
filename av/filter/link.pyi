@@ -4,7 +4,7 @@ from av.filter.graph import Graph
 
 class FilterPad:
     filter: Filter
-    context: FilterContext
+    context: FilterContext | None
     is_input: bool
     index: int
     def __eq__(self, other: object) -> bool: ...
@@ -17,6 +17,7 @@ class FilterPad:
     def type(self) -> str: ...
 
 class FilterContextPad(FilterPad):
+    context: FilterContext
     @property
     def link(self) -> FilterLink | None: ...
     @property

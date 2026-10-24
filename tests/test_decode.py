@@ -75,6 +75,7 @@ class TestDecode(TestCase):
     def test_mux_stream_without_codec_context(self) -> None:
         with av.open(io.BytesIO(), "w", format="mp4") as output:
             stream = output.add_mux_stream("h264", width=16, height=16)
+            assert isinstance(stream, av.VideoStream)
             assert stream.codec_context is None
             with pytest.raises(av.EncoderNotFoundError):
                 stream.encode(None)

@@ -4,7 +4,7 @@ from typing import Literal, cast
 
 from av.rational import AVRational
 
-from .codec import Codec, CodecContext
+from .codec import CodecContext
 from .container import Container
 from .index import IndexEntries
 
@@ -41,8 +41,7 @@ class Discard(IntEnum):
 class Stream:
     name: str | None
     container: Container
-    codec: Codec
-    codec_context: CodecContext
+    codec_context: CodecContext | None
     metadata: dict[str, str]
     @property
     def index_entries(self) -> IndexEntries: ...
@@ -50,14 +49,10 @@ class Stream:
     profiles: list[str]
     profile: str | None
     index: int
-    options: dict[str, object]
     @property
     def time_base(self) -> AVRational: ...
     @time_base.setter
     def time_base(self, value: AVRational | Fraction | int) -> None: ...
-    average_rate: AVRational
-    base_rate: AVRational
-    guessed_rate: AVRational
     start_time: int | None
     duration: int | None
     disposition: Disposition
@@ -66,14 +61,13 @@ class Stream:
     language: str | None
     type: Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]
 
-    # From context
-    codec_tag: str
-
 class DataStream(Stream):
+    codec_context: None
     type: Literal["data"]
     name: str | None
 
 class AttachmentStream(Stream):
+    codec_context: None
     type: Literal["attachment"]
     @property
     def mimetype(self) -> str | None: ...

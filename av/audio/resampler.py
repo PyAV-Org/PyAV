@@ -93,7 +93,7 @@ class AudioResampler:
             self.graph = Graph()
             self.graph.threads = self.threads
             extra_args = {}
-            if frame.time_base is not None:
+            if frame.time_base:
                 extra_args["time_base"] = f"{frame.time_base}"
 
             abuffer = self.graph.add(

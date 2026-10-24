@@ -392,13 +392,13 @@ class CodecContext:
     def is_encoder(self):
         if self.ptr is cython.NULL:
             return False
-        return lib.av_codec_is_encoder(self.ptr.codec)
+        return bool(lib.av_codec_is_encoder(self.ptr.codec))
 
     @property
     def is_decoder(self):
         if self.ptr is cython.NULL:
             return False
-        return lib.av_codec_is_decoder(self.ptr.codec)
+        return bool(lib.av_codec_is_decoder(self.ptr.codec))
 
     @property
     def codec(self):

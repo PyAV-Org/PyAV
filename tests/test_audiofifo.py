@@ -113,5 +113,5 @@ class TestAudioFifo(TestCase):
         oframe = fifo.read(512)
 
         assert oframe is not None
-        assert oframe.pts is None and oframe.time_base is None
+        assert oframe.pts is None and not oframe.time_base
         assert oframe.sample_rate == iframe.sample_rate

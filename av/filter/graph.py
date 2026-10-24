@@ -182,7 +182,7 @@ class Graph:
             raise ValueError("missing height")
         if format is None:
             raise ValueError("missing format")
-        if time_base is None:
+        if not time_base:
             warnings.warn(
                 "missing time_base. Guessing 1/1000 time base. "
                 "This is deprecated and may be removed in future releases.",
@@ -231,7 +231,7 @@ class Graph:
             raise ValueError("missing format")
         if layout is None and channels is None:
             raise ValueError("missing layout or channels")
-        if time_base is None:
+        if not time_base:
             time_base = AVRational(1, sample_rate)
 
         kwargs = {

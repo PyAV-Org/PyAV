@@ -34,6 +34,10 @@ v19.0.3 (Unreleased)
 Fixes:
 
 - Support slicing ``Container.streams``, which raised ``TypeError`` despite being typed.
+- ``HWConfig.methods`` no longer raises ``ValueError`` for configs that support several methods; ``HWConfigMethod`` is now an ``IntFlag``.
+- ``CodecContext.is_encoder``, ``CodecContext.is_decoder``, ``Container.input_was_opened``, and ``VideoFormatComponent.is_chroma`` now return ``bool`` instead of ``int``.
+- ``Frame.time_base`` returns ``AVRational(0, 1)`` instead of ``None`` when unset, like other ``AVRational`` properties.
+- Fix type stubs that did not match runtime: ``average_rate``, ``base_rate``, and ``guessed_rate`` are only on ``VideoStream``; ``codec``, ``codec_tag``, and ``options`` are only on audio, video, and subtitle streams; ``Stream.codec_context`` may be ``None``; ``AudioStream.bit_rate``, ``InputContainer.start_time``, ``VideoFrame.time``, and ``FilterPad.context`` may be ``None``; ``Codec.hardware_configs`` is a tuple; ``CodecContext.delay`` is an ``int``; ``AudioStream.max_bit_rate`` is added; and the inaccessible ``Plane.frame``, ``Plane.index``, and ``Container.buffer_size`` are removed.
 
 v19.0.2
 -------
