@@ -1,11 +1,16 @@
 from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
-from typing import overload
+from typing import Literal, TypeVar, overload
 
 from typing_extensions import disjoint_base
 
 from av.buffer import Buffer
 from av.frame import Frame
+
+from .encparams import VideoEncParams
+from .motionvectors import MotionVectors
+
+_T = TypeVar("_T")
 
 class Type(Enum):
     _value_: int
@@ -42,15 +47,28 @@ class Type(Enum):
     THREE_D_REFERENCE_DISPLAYS = ...
     EXIF = ...
 
+_MotionVectorsKey = Literal["MOTION_VECTORS", Type.MOTION_VECTORS]
+_VideoEncParamsKey = Literal["VIDEO_ENC_PARAMS", Type.VIDEO_ENC_PARAMS]
+
 @disjoint_base
 class SideData(Buffer):
     type: Type
     def __init__(self, sentinel: object, frame: Frame, index: int, /) -> None: ...
 
-class SideDataContainer(Mapping):
+class SideDataContainer(Mapping[Type, SideData]):
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[Type]: ...
     @overload
     def __getitem__(self, key: str | int | Type, /) -> SideData: ...
     @overload
     def __getitem__(self, key: slice, /) -> Sequence[SideData]: ...
+    @overload
+    def get(self, key: _MotionVectorsKey, /) -> MotionVectors | None: ...
+    @overload
+    def get(self, key: _VideoEncParamsKey, /) -> VideoEncParams | None: ...
+    @overload
+    def get(self, key: str | int | Type, /) -> SideData | None: ...
+    @overload
+    def get(
+        self, key: str | int | Type, default: SideData | _T, /
+    ) -> SideData | _T: ...
