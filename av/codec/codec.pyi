@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from enum import Flag, IntEnum, IntFlag
-from typing import ClassVar, Literal, cast, overload
+from typing import ClassVar, Literal, cast, final, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
@@ -56,6 +56,7 @@ class PixFmtLoss(IntFlag):
 
 class UnknownCodecError(ValueError): ...
 
+@final
 class Codec:
     @property
     def is_encoder(self) -> bool: ...

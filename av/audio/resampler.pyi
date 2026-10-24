@@ -1,9 +1,12 @@
+from typing import final
+
 from av.filter.graph import Graph
 
 from .format import AudioFormat
 from .frame import AudioFrame
 from .layout import AudioLayout
 
+@final
 class AudioResampler:
     rate: int
     frame_size: int

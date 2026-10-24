@@ -1,5 +1,8 @@
+from typing import final
+
 from .link import FilterPad
 
+@final
 class Filter:
     name: str
     description: str

@@ -1,7 +1,7 @@
 __all__ = ("Flags", "ContainerFormat", "formats_available")
 
 from enum import Flag
-from typing import ClassVar, Literal, cast
+from typing import ClassVar, Literal, cast, final
 
 class Flags(Flag):
     no_file = cast(ClassVar[Flags], ...)
@@ -22,6 +22,7 @@ class Flags(Flag):
     ts_negative = cast(ClassVar[Flags], ...)
     seek_to_pts = cast(ClassVar[Flags], ...)
 
+@final
 class ContainerFormat:
     def __init__(self, name: str, mode: Literal["r", "w"] | None = None) -> None: ...
     @property

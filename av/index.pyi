@@ -1,6 +1,7 @@
 from collections.abc import Iterator
-from typing import overload
+from typing import final, overload
 
+@final
 class IndexEntry:
     pos: int
     timestamp: int
@@ -10,13 +11,14 @@ class IndexEntry:
     size: int
     min_distance: int
 
+@final
 class IndexEntries:
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[IndexEntry]: ...
     @overload
-    def __getitem__(self, index: int) -> IndexEntry: ...
+    def __getitem__(self, index: int, /) -> IndexEntry: ...
     @overload
-    def __getitem__(self, index: slice) -> list[IndexEntry]: ...
+    def __getitem__(self, index: slice, /) -> list[IndexEntry]: ...
     def search_timestamp(
         self, timestamp, *, backward: bool = True, any_frame: bool = False
     ) -> int: ...

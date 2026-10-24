@@ -1,3 +1,6 @@
+from typing import final
+
+@final
 class VideoFormat:
     name: str
     bits_per_pixel: int
@@ -18,6 +21,7 @@ class VideoFormat:
     def chroma_width(self, luma_width: int = 0) -> int: ...
     def chroma_height(self, luma_height: int = 0) -> int: ...
 
+@final
 class VideoFormatComponent:
     index: int
     plane: int

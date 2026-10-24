@@ -1,3 +1,6 @@
+from typing import final
+
+@final
 class AudioFormat:
     name: str
     bytes: int

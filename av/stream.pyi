@@ -1,6 +1,6 @@
 from enum import IntEnum, IntFlag
 from fractions import Fraction
-from typing import Literal, cast
+from typing import Literal, cast, final
 
 from av.rational import AVRational
 
@@ -61,11 +61,13 @@ class Stream:
     language: str | None
     type: Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]
 
+@final
 class DataStream(Stream):
     codec_context: None
     type: Literal["data"]
     name: str | None
 
+@final
 class AttachmentStream(Stream):
     codec_context: None
     type: Literal["attachment"]

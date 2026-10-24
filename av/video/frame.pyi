@@ -1,6 +1,6 @@
 from enum import IntEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, final
 
 import numpy as np
 
@@ -29,6 +29,7 @@ class PictureType(IntEnum):
     SP = 6
     BI = 7
 
+@final
 class CudaContext:
     @property
     def device_id(self) -> int: ...
@@ -46,6 +47,7 @@ class CudaContext:
         cuda_stream: int | None = None,
     ) -> None: ...
 
+@final
 class VideoFrame(Frame):
     format: VideoFormat
     planes: tuple[VideoPlane, ...]

@@ -1,5 +1,5 @@
 from enum import IntEnum, IntFlag
-from typing import cast
+from typing import cast, final
 
 from .frame import VideoFrame
 
@@ -93,6 +93,7 @@ class ChromaLocation(IntEnum):
     BOTTOMLEFT = cast(int, ...)
     BOTTOM = cast(int, ...)
 
+@final
 class VideoReformatter:
     def reformat(
         self,

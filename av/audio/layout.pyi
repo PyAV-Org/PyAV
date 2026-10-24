@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from typing import final
 
+@final
 class AudioLayout:
     name: str
     nb_channels: int

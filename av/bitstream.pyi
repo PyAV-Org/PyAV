@@ -1,7 +1,10 @@
+from typing import final
+
 from .codec import Codec
 from .packet import Packet
 from .stream import Stream
 
+@final
 class BitStreamFilterContext:
     def __init__(
         self,

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, final
 
 import numpy as np
 
@@ -25,6 +25,7 @@ class _Layout:
     def __get__(self, i: object | None, owner: type | None = None) -> AudioLayout: ...
     def __set__(self, instance: object, value: AudioLayout | str) -> None: ...
 
+@final
 class AudioFrame(Frame):
     planes: tuple[AudioPlane, ...]
     samples: int

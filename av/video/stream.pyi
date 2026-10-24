@@ -1,5 +1,5 @@
 from collections.abc import Iterator, Sequence
-from typing import Literal
+from typing import Literal, final
 
 from av.codec.codec import Codec
 from av.codec.context import ThreadType
@@ -11,6 +11,7 @@ from .codeccontext import VideoCodecContext
 from .format import VideoFormat
 from .frame import VideoFrame
 
+@final
 class VideoStream(Stream):
     bit_rate: int | None
     max_bit_rate: int | None

@@ -1,5 +1,5 @@
 from enum import IntEnum, IntFlag
-from typing import cast
+from typing import cast, final
 
 from av.codec.codec import Codec
 from av.video.format import VideoFormat
@@ -28,6 +28,7 @@ class HWConfigMethod(IntFlag):
     internal = cast(int, ...)
     ad_hoc = cast(int, ...)
 
+@final
 class HWConfig:
     @property
     def device_type(self) -> HWDeviceType: ...
@@ -38,6 +39,7 @@ class HWConfig:
     @property
     def is_supported(self) -> bool: ...
 
+@final
 class HWDevice:
     options: dict[str, object]
     flags: int
@@ -52,6 +54,7 @@ class HWDevice:
     @property
     def device_type(self) -> HWDeviceType: ...
 
+@final
 class HWAccel:
     options: dict[str, object]
     flags: int
