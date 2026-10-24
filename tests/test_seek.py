@@ -69,7 +69,7 @@ class TestSeek(TestCase):
         for packet in container.demux():
             middle_packet_count += 1
 
-        # you can't really seek to to end but you can to the last keyframe
+        # you can't really seek to the end but you can to the last keyframe
         container.seek(container.duration)
 
         seek_packet_count = 0
