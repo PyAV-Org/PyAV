@@ -1,3 +1,5 @@
+from typing import final
+
 from av.filter.context import FilterContext
 from av.filter.filter import Filter
 from av.filter.graph import Graph
@@ -7,7 +9,7 @@ class FilterPad:
     context: FilterContext | None
     is_input: bool
     index: int
-    def __eq__(self, other: object) -> bool: ...
+    def __eq__(self, other: object, /) -> bool: ...
     def __hash__(self) -> int: ...
     @property
     def is_output(self) -> bool: ...
@@ -16,6 +18,7 @@ class FilterPad:
     @property
     def type(self) -> str: ...
 
+@final
 class FilterContextPad(FilterPad):
     context: FilterContext
     @property
@@ -23,6 +26,7 @@ class FilterContextPad(FilterPad):
     @property
     def linked(self) -> FilterContextPad | None: ...
 
+@final
 class FilterLink:
     @property
     def graph(self) -> Graph: ...

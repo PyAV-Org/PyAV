@@ -1,7 +1,10 @@
+from typing import final
+
 from .format import AudioFormat
 from .frame import AudioFrame
 from .layout import AudioLayout
 
+@final
 class AudioFifo:
     def write(self, frame: AudioFrame) -> None: ...
     def read(self, samples: int = 0, partial: bool = False) -> AudioFrame | None: ...

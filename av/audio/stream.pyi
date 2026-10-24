@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Literal
+from typing import Literal, final
 
 from av.codec.codec import Codec
 from av.packet import Packet
@@ -18,6 +18,7 @@ class _Layout:
     def __get__(self, i: object | None, owner: type | None = None) -> AudioLayout: ...
     def __set__(self, instance: object, value: AudioLayout | str) -> None: ...
 
+@final
 class AudioStream(Stream):
     codec_context: AudioCodecContext
     def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...

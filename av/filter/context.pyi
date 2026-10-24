@@ -1,8 +1,11 @@
+from typing import final
+
 from av.filter import Graph
 from av.filter.filter import Filter
 from av.filter.link import FilterContextPad
 from av.frame import Frame
 
+@final
 class FilterContext:
     name: str | None
     filter: Filter

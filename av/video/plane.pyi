@@ -1,9 +1,11 @@
 from types import CapsuleType
+from typing import final
 
 from av.plane import Plane
 
 from .frame import VideoFrame
 
+@final
 class VideoPlane(Plane):
     line_size: int
     width: int

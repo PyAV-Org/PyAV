@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any
+from typing import Any, final
 
 PANIC: int
 FATAL: int
@@ -21,6 +21,7 @@ def set_skip_repeated(v: bool) -> None: ...
 def get_last_error() -> tuple[int, tuple[int, str, str] | None]: ...
 def log(level: int, name: str, message: str) -> None: ...
 
+@final
 class Capture:
     logs: list[tuple[int, str, str]]
 

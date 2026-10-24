@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 from fractions import Fraction
-from typing import Generic, Literal, TypeVar, overload
+from typing import Generic, Literal, TypeVar, final, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
@@ -61,6 +61,7 @@ PktSideDataT = Literal[
     "hevc_conf",
 ]
 
+@final
 class PacketSideData(Buffer):
     @staticmethod
     def from_packet(packet: Packet[Stream], dtype: PktSideDataT) -> PacketSideData: ...
@@ -79,6 +80,7 @@ def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> int: ...
 # TypeVar for stream types - bound to Stream so it can be any stream type
 StreamT = TypeVar("StreamT", bound=Stream)
 
+@final
 class Packet(Buffer, Generic[StreamT]):
     stream: StreamT
     stream_index: int
