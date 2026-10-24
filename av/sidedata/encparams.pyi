@@ -1,15 +1,15 @@
 from enum import IntEnum
-from typing import Any, cast, final
+from typing import Any, final
 
 import numpy as np
 
 from .sidedata import SideData
 
 class VideoEncParamsType(IntEnum):
-    NONE = cast(int, ...)
-    VP9 = cast(int, ...)
-    H264 = cast(int, ...)
-    MPEG2 = cast(int, ...)
+    NONE = ...
+    VP9 = ...
+    H264 = ...
+    MPEG2 = ...
 
 @final
 class VideoEncParams(SideData):
