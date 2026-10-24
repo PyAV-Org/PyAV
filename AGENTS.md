@@ -14,7 +14,7 @@ make test # All tests
 python -m pytest tests/some_file.py # Individual file
 python -m pytest -k "substring"
 
-# 4. Lint before commiting
+# 4. Lint before committing
 
 make lint
 
