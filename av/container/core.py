@@ -404,7 +404,7 @@ class Container:
 
     @property
     def input_was_opened(self):
-        return self._myflag & 2
+        return bool(self._myflag & 2)
 
     @property
     def metadata(self) -> dict:

@@ -1,6 +1,7 @@
 from collections.abc import Iterator, Sequence
 from typing import Literal
 
+from av.codec.codec import Codec
 from av.codec.context import ThreadType
 from av.packet import Packet
 from av.rational import AVRational
@@ -26,7 +27,14 @@ class VideoStream(Stream):
         self, degrees: float, hflip: bool = ..., vflip: bool = ...
     ) -> None: ...
 
+    average_rate: AVRational
+    base_rate: AVRational
+    guessed_rate: AVRational
+
     # from codec context
+    codec: Codec
+    codec_tag: str
+    options: dict[str, str]
     format: VideoFormat
     thread_count: int
     @property

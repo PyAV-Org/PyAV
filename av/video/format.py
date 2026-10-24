@@ -184,7 +184,7 @@ class VideoFormatComponent:
     @property
     def is_chroma(self):
         """Is this component a chroma channel?"""
-        return (self.index == 1 or self.index == 2) and (
+        return (self.index == 1 or self.index == 2) and bool(
             self.format.ptr.log2_chroma_w or self.format.ptr.log2_chroma_h
         )
 

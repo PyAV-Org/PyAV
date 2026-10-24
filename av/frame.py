@@ -1,7 +1,7 @@
 import cython
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
-from cython.cimports.av.rational import from_avrational
+from cython.cimports.av.rational import AVRational, from_avrational
 from cython.cimports.av.utils import (
     avdict_to_dict,
     to_avrational,
@@ -146,10 +146,13 @@ class Frame:
         """
         The unit of time (in fractional seconds) in which timestamps are expressed.
 
+        ``AVRational(0, 1)`` if unset.
+
         :type: AVRational
         """
-        if self._time_base.num:
-            return from_avrational(self._time_base)
+        if not self._time_base.num:
+            return AVRational(0, 1)
+        return from_avrational(self._time_base)
 
     @time_base.setter
     def time_base(self, value):

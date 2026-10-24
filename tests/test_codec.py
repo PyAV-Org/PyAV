@@ -3,6 +3,7 @@ import pytest
 from av import AudioFormat, Codec, VideoFormat, codecs_available
 from av.codec import PixFmtLoss, find_best_pix_fmt_of_list
 from av.codec.codec import UnknownCodecError
+from av.codec.hwaccel import HWConfigMethod
 
 
 def test_codec_bogus() -> None:
@@ -165,3 +166,16 @@ def test_find_best_pix_fmt_of_list_loss_flags() -> None:
     _, loss = find_best_pix_fmt_of_list(["gray"], "rgb24")
     assert isinstance(loss, PixFmtLoss)
     assert loss & PixFmtLoss.CHROMA
+
+
+def test_codec_hardware_config_methods() -> None:
+    # methods is a bitmask; a config supporting several of them must not raise.
+    for name in codecs_available:
+        for mode in ("r", "w"):
+            try:
+                codec = Codec(name, mode)
+            except UnknownCodecError:
+                continue
+            assert isinstance(codec.hardware_configs, tuple)
+            for config in codec.hardware_configs:
+                assert isinstance(config.methods, HWConfigMethod)

@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from typing import cast
 
 from av.codec.codec import Codec
@@ -21,7 +21,7 @@ class HWDeviceType(IntEnum):
     amf = cast(int, ...)
     ohcodec = cast(int, ...)
 
-class HWConfigMethod(IntEnum):
+class HWConfigMethod(IntFlag):
     none = cast(int, ...)
     hw_device_ctx = cast(int, ...)
     hw_frame_ctx = cast(int, ...)

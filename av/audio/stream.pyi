@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from typing import Literal
 
+from av.codec.codec import Codec
 from av.packet import Packet
 from av.stream import Stream
 
@@ -24,9 +25,13 @@ class AudioStream(Stream):
     def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
 
     # From codec context
+    codec: Codec
+    codec_tag: str
+    options: dict[str, str]
     frame_size: int
     sample_rate: int
-    bit_rate: int
+    bit_rate: int | None
+    max_bit_rate: int | None
     rate: int
     channels: int
     type: Literal["audio"]

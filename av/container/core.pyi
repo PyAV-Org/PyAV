@@ -92,7 +92,6 @@ class Chapter(TypedDict):
 class Container:
     name: str
     file: Any
-    buffer_size: int
     io_open: Any
     open_files: Any
     format: ContainerFormat

@@ -1,5 +1,5 @@
 import weakref
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 
 import cython
 import cython.cimports.libav as lib
@@ -27,7 +27,7 @@ class HWDeviceType(IntEnum):
     ohcodec = lib.AV_HWDEVICE_TYPE_OHCODEC
 
 
-class HWConfigMethod(IntEnum):
+class HWConfigMethod(IntFlag):
     none = 0
     hw_device_ctx = (
         lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
