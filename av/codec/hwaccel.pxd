@@ -1,7 +1,5 @@
 cimport libav as lib
 
-from av.codec.codec cimport Codec
-
 
 cdef class HWConfig:
     cdef object __weakref__
@@ -18,7 +16,6 @@ cdef class HWDevice:
 
 cdef class HWAccel:
     cdef str _device
-    cdef readonly Codec codec
     cdef readonly HWConfig config
     cdef lib.AVBufferRef *ptr
     cdef public dict options
