@@ -29,7 +29,10 @@ class VideoStream(Stream):
     # from codec context
     format: VideoFormat
     thread_count: int
-    thread_type: ThreadType
+    @property
+    def thread_type(self) -> ThreadType: ...
+    @thread_type.setter
+    def thread_type(self, value: int | str | ThreadType) -> None: ...
     width: int
     height: int
     bits_per_coded_sample: int

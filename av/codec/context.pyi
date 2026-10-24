@@ -24,8 +24,6 @@ class ThreadType(Flag):
     FRAME = cast(ClassVar[ThreadType], ...)
     SLICE = cast(ClassVar[ThreadType], ...)
     AUTO = cast(ClassVar[ThreadType], ...)
-    def __get__(self, i: object | None, owner: type | None = None) -> ThreadType: ...
-    def __set__(self, instance: object, value: int | str | ThreadType) -> None: ...
 
 class Flags(IntEnum):
     unaligned = cast(int, ...)
@@ -145,7 +143,6 @@ class CodecContext:
     trailing_padding: int
     stats_in: str | None
     thread_count: int
-    thread_type: ThreadType
     skip_frame: Literal[
         "NONE", "DEFAULT", "NONREF", "BIDIR", "NONINTRA", "NONKEY", "ALL"
     ]
@@ -175,6 +172,10 @@ class CodecContext:
     def pkt_timebase(self, value: AVRational | Fraction | int) -> None: ...
     @property
     def frame_num(self) -> int: ...
+    @property
+    def thread_type(self) -> ThreadType: ...
+    @thread_type.setter
+    def thread_type(self, value: int | str | ThreadType) -> None: ...
     @property
     def active_thread_type(self) -> ThreadType: ...
     @property
