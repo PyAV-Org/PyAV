@@ -1661,7 +1661,7 @@ class VideoFrame(Frame):
                         "device_id does not match the DLPack tensor device_id"
                     )
             else:
-                if device_id not in (None, 0):
+                if device_id is not None and device_id != 0:
                     raise ValueError("device_id must be 0 for CPU tensors")
                 device_id = 0
             if dev_type0 == kCPU and (dev0 != 0 or dev1 != 0):
@@ -1886,7 +1886,7 @@ class VideoFrame(Frame):
             )
         expected_bits: cython.int = itemsize * 8
 
-        if device_id not in (None, 0):
+        if device_id is not None and device_id != 0:
             raise ValueError("device_id must be 0 for CPU tensors")
 
         log2_w: cython.int = desc.log2_chroma_w
