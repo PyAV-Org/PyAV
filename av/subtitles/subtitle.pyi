@@ -12,7 +12,7 @@ class SubtitleSet:
     start_display_time: int
     end_display_time: int
     pts: int
-    rects: tuple[Subtitle, ...]
+    rects: tuple[AssSubtitle | BitmapSubtitle, ...]
 
     @staticmethod
     def create(
@@ -23,8 +23,8 @@ class SubtitleSet:
         subtitle_format: int = 1,
     ) -> SubtitleSet: ...
     def __len__(self) -> int: ...
-    def __iter__(self) -> Iterator[Subtitle]: ...
-    def __getitem__(self, i: int, /) -> Subtitle: ...
+    def __iter__(self) -> Iterator[AssSubtitle | BitmapSubtitle]: ...
+    def __getitem__(self, i: int, /) -> AssSubtitle | BitmapSubtitle: ...
 
 @disjoint_base
 class Subtitle:
@@ -39,12 +39,16 @@ class BitmapSubtitle(Subtitle):
     height: int
     nb_colors: int
     planes: tuple[BitmapSubtitlePlane, ...]
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[BitmapSubtitlePlane]: ...
+    def __getitem__(self, i: int, /) -> BitmapSubtitlePlane: ...
 
 @final
 class BitmapSubtitlePlane:
     subtitle: BitmapSubtitle
     index: int
     buffer_size: int
+    def __buffer__(self, flags: int, /) -> memoryview: ...
 
 @final
 class AssSubtitle(Subtitle):

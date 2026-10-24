@@ -33,10 +33,11 @@ class VideoStream(Stream):
     guessed_rate: AVRational
 
     # from codec context
+    name: str
     codec: Codec
     codec_tag: str
     options: dict[str, str]
-    format: VideoFormat
+    format: VideoFormat | None
     thread_count: int
     @property
     def thread_type(self) -> ThreadType: ...

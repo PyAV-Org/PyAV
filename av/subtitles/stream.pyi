@@ -12,6 +12,7 @@ class SubtitleStream(Stream):
     codec_context: SubtitleCodecContext
 
     # From codec context
+    name: str
     codec: Codec
     codec_tag: str
     options: dict[str, str]

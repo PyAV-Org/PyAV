@@ -1,4 +1,5 @@
 import av
+from av.subtitles.subtitle import AssSubtitle
 
 av.logging.set_level(av.logging.VERBOSE)
 
@@ -22,4 +23,5 @@ print("Remuxing done")
 with av.open("remuxed.vtt") as f:
     for subset in f.decode(subtitles=0):
         for sub in subset:
-            print(sub.ass)
+            if isinstance(sub, AssSubtitle):
+                print(sub.ass)
