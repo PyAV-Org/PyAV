@@ -1,8 +1,9 @@
 from collections.abc import Iterator
-from typing import Literal, final
+from typing import Any, Literal, final
 
 from av.codec.context import CodecContext
 from av.packet import Packet
+from av.stream import Stream
 
 from .format import AudioFormat
 from .frame import AudioFrame
@@ -28,6 +29,8 @@ class AudioCodecContext(CodecContext):
     def channels(self) -> int: ...
     @property
     def block_align(self) -> int: ...
-    def encode(self, frame: AudioFrame | None = None) -> list[Packet]: ...  # type: ignore[override]
-    def encode_lazy(self, frame: AudioFrame | None = None) -> Iterator[Packet]: ...  # type: ignore[override]
-    def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
+    def encode(self, frame: AudioFrame | None = None) -> list[Packet[Stream]]: ...  # type: ignore[override]
+    def encode_lazy(  # type: ignore[override]
+        self, frame: AudioFrame | None = None
+    ) -> Iterator[Packet[Stream]]: ...
+    def decode(self, packet: Packet[Any] | None = None) -> list[AudioFrame]: ...

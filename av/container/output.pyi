@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from fractions import Fraction
-from typing import final, overload
+from typing import Any, final, overload
 
 from av.audio import _AudioCodecName
 from av.audio.stream import AudioStream
@@ -23,7 +23,7 @@ class OutputContainer(Container):
         codec_name: _AudioCodecName,
         rate: int | None = None,
         options: dict[str, str] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> AudioStream: ...
     @overload
     def add_stream(
@@ -32,7 +32,7 @@ class OutputContainer(Container):
         rate: AVRational | Fraction | int | None = None,
         options: dict[str, str] | None = None,
         hwaccel: HWAccel | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> VideoStream: ...
     @overload
     def add_stream(
@@ -40,7 +40,7 @@ class OutputContainer(Container):
         codec_name: _SubtitleCodecName,
         rate: AVRational | Fraction | int | None = None,
         options: dict[str, str] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> SubtitleStream: ...
     @overload
     def add_stream(
@@ -49,16 +49,16 @@ class OutputContainer(Container):
         rate: AVRational | Fraction | int | None = None,
         options: dict[str, str] | None = None,
         hwaccel: HWAccel | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> VideoStream | AudioStream | SubtitleStream: ...
     def add_mux_stream(
         self,
         codec_name: str,
         rate: AVRational | Fraction | int | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Stream: ...
     def add_stream_from_template[StreamT: Stream](
-        self, template: StreamT, opaque: bool | None = None, **kwargs
+        self, template: StreamT, opaque: bool | None = None, **kwargs: Any
     ) -> StreamT: ...
     def add_attachment(
         self, name: str, mimetype: str, data: bytes
@@ -67,8 +67,8 @@ class OutputContainer(Container):
         self, codec_name: str | None = None, options: dict[str, str] | None = None
     ) -> DataStream: ...
     def start_encoding(self) -> None: ...
-    def mux(self, packets: Packet | Sequence[Packet]) -> None: ...
-    def mux_one(self, packet: Packet) -> None: ...
+    def mux(self, packets: Packet[Any] | Sequence[Packet[Any]]) -> None: ...
+    def mux_one(self, packet: Packet[Any]) -> None: ...
     @property
     def default_video_codec(self) -> str: ...
     @property

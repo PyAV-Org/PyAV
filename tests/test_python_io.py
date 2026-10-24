@@ -5,7 +5,7 @@ import io
 import types
 from io import BytesIO
 from re import escape
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -15,7 +15,7 @@ from .common import TestCase, fate_png, fate_suite, has_pillow
 from .test_encode import assert_rgb_rotate, write_rgb_rotate
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Buffer, Callable
 
 
 class MethodLogger:
@@ -24,7 +24,9 @@ class MethodLogger:
         self._log: list[tuple[str, object]] = []
 
     def __getattr__(self, name: str) -> object:
-        def _method(name: str, meth: Callable, *args, **kwargs) -> object:
+        def _method(
+            name: str, meth: Callable[..., object], *args: Any, **kwargs: Any
+        ) -> object:
             self._log.append((name, args))
             return meth(*args, **kwargs)
 
@@ -54,7 +56,7 @@ class BrokenBuffer(BytesIO):
 
     broken = False
 
-    def write(self, data):
+    def write(self, data: Buffer) -> int:
         if self.broken:
             raise OSError("It's broken")
         else:
@@ -66,10 +68,10 @@ class ReadOnlyBuffer:
     Minimal buffer which *only* implements the read() method.
     """
 
-    def __init__(self, data) -> None:
+    def __init__(self, data: bytes) -> None:
         self.data = data
 
-    def read(self, n):
+    def read(self, n: int) -> bytes:
         data = self.data[0:n]
         self.data = self.data[n:]
         return data
@@ -145,15 +147,15 @@ class CustomIOLogger:
     """Log calls to open a file as well as method calls on the files"""
 
     def __init__(self) -> None:
-        self._log: list[tuple[object, dict]] = []
+        self._log: list[tuple[object, dict[str, Any]]] = []
         self._method_log: list[MethodLogger] = []
 
-    def __call__(self, *args, **kwargs) -> MethodLogger:
+    def __call__(self, *args: Any, **kwargs: Any) -> MethodLogger:
         self._log.append((args, kwargs))
         self._method_log.append(self.io_open(*args, **kwargs))
         return self._method_log[-1]
 
-    def io_open(self, url: str, flags, options: object) -> MethodLogger:
+    def io_open(self, url: str, flags: int, options: object) -> MethodLogger:
         # Remove the protocol prefix to reveal the local filename
         if CUSTOM_IO_PROTOCOL in url:
             url = url.split(CUSTOM_IO_PROTOCOL, 1)[1]

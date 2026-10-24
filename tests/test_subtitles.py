@@ -62,7 +62,7 @@ class TestSubtitle:
 
         bms = sub.planes
         assert len(bms) == 1
-        assert len(memoryview(bms[0])) == 4800  # type: ignore
+        assert len(memoryview(bms[0])) == 4800
 
     def test_subtitle_flush(self) -> None:
         path = fate_suite("sub/MovText_capability_tester.mp4")
@@ -172,9 +172,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 end=int(2 / time_base),
                 pts=0,
             )
-            packet = sub_ctx.encode_subtitle(subtitle)
-            packet.stream = sub_stream
-            container.mux(packet)
+            sub_packet = sub_ctx.encode_subtitle(subtitle)
+            sub_packet.stream = sub_stream
+            container.mux(sub_packet)
 
             for packet in video_stream.encode():
                 container.mux(packet)

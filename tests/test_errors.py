@@ -35,7 +35,7 @@ def test_bases() -> None:
     assert issubclass(av.FileNotFoundError, av.FFmpegError)
 
 
-def test_filenotfound():
+def test_filenotfound() -> None:
     """Catch using builtin class on Python 3.3"""
     try:
         av.open("does not exist")

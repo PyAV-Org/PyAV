@@ -67,7 +67,7 @@ def test_frame_color_primaries_property() -> None:
 
     frame.color_primaries = ColorPrimaries.BT709
     assert frame.color_primaries == ColorPrimaries.BT709
-    assert frame.color_primaries == 1  # AVCOL_PRI_BT709
+    assert int(frame.color_primaries) == 1  # AVCOL_PRI_BT709
 
 
 def test_frame_chroma_location_property() -> None:
@@ -76,7 +76,7 @@ def test_frame_chroma_location_property() -> None:
 
     frame.chroma_location = ChromaLocation.LEFT
     assert frame.chroma_location == ChromaLocation.LEFT
-    assert frame.chroma_location == 1  # AVCHROMA_LOC_LEFT
+    assert int(frame.chroma_location) == 1  # AVCHROMA_LOC_LEFT
 
     frame.chroma_location = ChromaLocation.TOPLEFT
     assert frame.chroma_location == ChromaLocation.TOPLEFT
@@ -89,7 +89,7 @@ def test_codec_context_chroma_sample_location_property() -> None:
 
     ctx.chroma_sample_location = ChromaLocation.CENTER
     assert ctx.chroma_sample_location == ChromaLocation.CENTER
-    assert ctx.chroma_sample_location == 2  # AVCHROMA_LOC_CENTER
+    assert int(ctx.chroma_sample_location) == 2  # AVCHROMA_LOC_CENTER
 
 
 def test_chroma_location_round_trip() -> None:

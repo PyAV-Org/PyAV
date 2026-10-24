@@ -61,7 +61,7 @@ class TestFilters(TestCase):
         with pytest.raises(ValueError, match="Unknown hardware device type"):
             av.codec.hwaccel.HWDevice("definitely-not-a-hardware-device")
 
-    def test_generator_graph(self):
+    def test_generator_graph(self) -> None:
         graph = Graph()
         src = graph.add("testsrc")
         lutrgb = graph.add(
@@ -74,8 +74,11 @@ class TestFilters(TestCase):
         lutrgb.link_to(sink)
 
         # pads and links
-        assert src.outputs[0].link.output == lutrgb.inputs[0]
-        assert lutrgb.inputs[0].link.input == src.outputs[0]
+        src_link = src.outputs[0].link
+        lutrgb_link = lutrgb.inputs[0].link
+        assert src_link is not None and lutrgb_link is not None
+        assert src_link.output == lutrgb.inputs[0]
+        assert lutrgb_link.input == src.outputs[0]
 
         frame = sink.pull()
         assert isinstance(frame, VideoFrame)
@@ -154,7 +157,7 @@ class TestFilters(TestCase):
         if has_pillow:
             frame.to_image().save(self.sandboxed("mandelbrot4.png"))
 
-    def test_audio_buffer_sink(self):
+    def test_audio_buffer_sink(self) -> None:
         graph = Graph()
         audio_buffer = graph.add_abuffer(
             format="fltp",
@@ -198,7 +201,7 @@ class TestFilters(TestCase):
         assert out_frame.layout.name == "stereo"
         assert out_frame.sample_rate == 44100
 
-    def test_audio_buffer_frame_size(self):
+    def test_audio_buffer_frame_size(self) -> None:
         graph = Graph()
         graph.link_nodes(
             graph.add_abuffer(
@@ -220,10 +223,11 @@ class TestFilters(TestCase):
             )
         )
         out_frame = graph.pull()
+        assert isinstance(out_frame, av.AudioFrame)
         assert out_frame.sample_rate == 48000
         assert out_frame.samples == 256
 
-    def test_audio_buffer_volume_filter(self):
+    def test_audio_buffer_volume_filter(self) -> None:
         graph = Graph()
         graph.link_nodes(
             graph.add_abuffer(
@@ -242,6 +246,7 @@ class TestFilters(TestCase):
         graph.push(input_frame)
 
         out_frame = graph.pull()
+        assert isinstance(out_frame, av.AudioFrame)
         assert out_frame.format.name == "fltp"
         assert out_frame.layout.name == "stereo"
         assert out_frame.sample_rate == 48000
@@ -285,7 +290,7 @@ class TestFilters(TestCase):
         metadata.clear()
         assert "lavfi.r128.I" in output.metadata
 
-    def _test_video_buffer(self, graph):
+    def _test_video_buffer(self, graph: Graph) -> None:
         input_container = av.open(format="lavfi", file="color=c=pink:duration=1:r=30")
         input_video_stream = input_container.streams.video[0]
 
@@ -301,6 +306,7 @@ class TestFilters(TestCase):
             graph.vpush(frame)
             filtered_frames = pull_until_blocked(graph)
 
+            assert frame.pts is not None
             if frame.pts == 0:
                 # no output for the first input frame
                 assert len(filtered_frames) == 0
@@ -314,10 +320,10 @@ class TestFilters(TestCase):
                 assert filtered_frames[1].pts == (frame.pts - 1) * 2 + 1
                 assert filtered_frames[1].time_base == Fraction(1, 60)
 
-    def test_video_buffer(self):
+    def test_video_buffer(self) -> None:
         self._test_video_buffer(av.filter.Graph())
 
-    def test_video_buffer_threading(self):
+    def test_video_buffer_threading(self) -> None:
         graph = av.filter.Graph()
         graph.threads = 4
         self._test_video_buffer(graph)

@@ -20,5 +20,5 @@ class IndexEntries:
     @overload
     def __getitem__(self, index: slice, /) -> list[IndexEntry]: ...
     def search_timestamp(
-        self, timestamp, *, backward: bool = True, any_frame: bool = False
+        self, timestamp: int, *, backward: bool = True, any_frame: bool = False
     ) -> int: ...

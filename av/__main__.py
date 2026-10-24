@@ -17,7 +17,7 @@ def main() -> None:
 
         print(f"PyAV v{av.__version__}")
 
-        by_config: dict = {}
+        by_config: dict[tuple[str, str], list[tuple[str, av._core._Meta]]] = {}
         for libname, config in sorted(av._core.library_meta.items()):
             version = config["version"]
             if version[0] >= 0:
@@ -25,8 +25,8 @@ def main() -> None:
                     (config["configuration"], config["license"]), []
                 ).append((libname, config))
 
-        for (config, license), libs in sorted(by_config.items()):
-            print("library configuration:", config)
+        for (configuration, license), libs in sorted(by_config.items()):
+            print("library configuration:", configuration)
             print("library license:", license)
             for libname, config in libs:
                 version = config["version"]

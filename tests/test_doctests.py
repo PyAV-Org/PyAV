@@ -1,50 +1,50 @@
 import doctest
 import pkgutil
 import re
+import types
+from typing import Any
 from unittest import TestCase
 
 import av
 import av.datasets
 
-
-def fix_doctests(suite):
-    for case in suite._tests:
-        # Add some more flags.
-        case._dt_optionflags = (
-            (case._dt_optionflags or 0)
-            | doctest.IGNORE_EXCEPTION_DETAIL
-            | doctest.ELLIPSIS
-            | doctest.NORMALIZE_WHITESPACE
-        )
-
-        case._dt_test.globs["av"] = av
-        case._dt_test.globs["video_path"] = av.datasets.curated(
-            "pexels/time-lapse-video-of-night-sky-857195.mp4"
-        )
-
-        for example in case._dt_test.examples:
-            # Remove b prefix from strings.
-            if example.want.startswith("b'"):
-                example.want = example.want[1:]
+VIDEO_PATH = av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4")
 
 
-def register_doctests(mod):
+class DocTestFinder(doctest.DocTestFinder):
+    def find(self, *args: Any, **kwargs: Any) -> list[doctest.DocTest]:
+        tests = super().find(*args, **kwargs)
+        for test in tests:
+            for example in test.examples:
+                # Remove b prefix from strings.
+                if example.want.startswith("b'"):
+                    example.want = example.want[1:]
+        return tests
+
+
+def register_doctests(mod: str | types.ModuleType) -> None:
     if isinstance(mod, str):
         mod = __import__(mod, fromlist=[""])
 
     try:
-        suite = doctest.DocTestSuite(mod)
+        suite = doctest.DocTestSuite(
+            mod,
+            extraglobs={"av": av, "video_path": VIDEO_PATH},
+            test_finder=DocTestFinder(),
+            optionflags=doctest.IGNORE_EXCEPTION_DETAIL
+            | doctest.ELLIPSIS
+            | doctest.NORMALIZE_WHITESPACE,
+        )
     except ValueError:
         return
-
-    fix_doctests(suite)
 
     cls_name = "Test" + "".join(x.title() for x in mod.__name__.split("."))
     cls = type(cls_name, (TestCase,), {})
 
-    for test in suite._tests:
+    for test in suite:
+        assert isinstance(test, doctest.DocTestCase)
 
-        def func(self):
+        def func(self: TestCase) -> None:
             return test.runTest()
 
         name = str("test_" + re.sub("[^a-zA-Z0-9]+", "_", test.id()).strip("_"))

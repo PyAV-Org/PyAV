@@ -33,6 +33,7 @@ __all__ = (
     "time_base",
     "ffmpeg_version_info",
     "library_versions",
+    "AVRational",
     "AudioCodecContext",
     "AudioFifo",
     "AudioFormat",

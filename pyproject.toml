@@ -54,6 +54,9 @@ profile = "black"
 known_first_party = ["av"]
 skip = ["av/__init__.py"]
 
+[tool.mypy]
+strict = true
+
 [tool.uv]
 prerelease = "allow"
 

@@ -1,6 +1,7 @@
 import io
 import os
 import struct
+from collections.abc import Iterator
 
 import pytest
 
@@ -69,7 +70,7 @@ def _make_unknown_stream_ts() -> bytes:
 
 class TestStreams:
     @pytest.fixture(autouse=True)
-    def cleanup(self):
+    def cleanup(self) -> Iterator[None]:
         yield
         for file in (
             "data.ts",

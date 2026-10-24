@@ -75,7 +75,9 @@ class TestOutputBlocking(TestCase):
         self.server.close()
 
     def _push(
-        self, timeout: float, containers: list | None = None
+        self,
+        timeout: float,
+        containers: list[av.container.OutputContainer] | None = None,
     ) -> tuple[threading.Thread, list[BaseException]]:
         raised: list[BaseException] = []
 

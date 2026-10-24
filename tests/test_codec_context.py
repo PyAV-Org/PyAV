@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 from fractions import Fraction
-from typing import TypedDict, overload
+from typing import Any, TypedDict, overload
 
 import pytest
 
@@ -101,12 +101,12 @@ class TestCodecContext(TestCase):
         changed_generic = {option.name: option for option in changed_supported.generic}
         assert changed_generic["b"].default == bit_rate.default
 
-    def test_global_quality(self):
+    def test_global_quality(self) -> None:
         ctx = Codec("mpeg4", "w").create()
         ctx.global_quality = 5
         assert ctx.global_quality == 5
 
-    def test_level(self):
+    def test_level(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
             assert container.streams.video[0].codec_context.level == 41
 
@@ -114,15 +114,15 @@ class TestCodecContext(TestCase):
         ctx.level = 5
         assert ctx.level == 5
 
-    def test_field_order(self):
+    def test_field_order(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
             assert container.streams.video[0].codec_context.field_order == 2
 
-        ctx = Codec("mpeg4", "w").create()
+        ctx = Codec("mpeg4", "w").create("video")
         ctx.field_order = 1
         assert ctx.field_order == 1
 
-    def test_skip_frame_default(self):
+    def test_skip_frame_default(self) -> None:
         ctx = Codec("png", "w").create()
         assert ctx.skip_frame == "DEFAULT"
 
@@ -132,7 +132,7 @@ class TestCodecContext(TestCase):
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
             assert container.streams.video[0].codec_context.delay == 0
 
-    def test_codec_tag(self):
+    def test_codec_tag(self) -> None:
         ctx = Codec("mpeg4", "w").create()
         assert ctx.codec_tag == "\x00\x00\x00\x00"
         ctx.codec_tag = "xvid"
@@ -148,12 +148,12 @@ class TestCodecContext(TestCase):
         with pytest.raises(
             ValueError, match="Codec tag should be a 4 character string"
         ):
-            ctx.codec_tag = 123
+            ctx.codec_tag = 123  # type: ignore[assignment]
 
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
-            assert container.streams[0].codec_tag == "avc1"
+            assert container.streams.video[0].codec_tag == "avc1"
 
-    def test_decoder_extradata(self):
+    def test_decoder_extradata(self) -> None:
         ctx = av.codec.Codec("h264", "r").create()
         assert ctx.extradata is None
         assert ctx.extradata_size == 0
@@ -209,7 +209,7 @@ class TestCodecContext(TestCase):
         assert str(cm.exception) == "not a pixel format: '__unknown_pix_fmt'"
         assert ctx.pix_fmt == "yuv420p"
 
-    def test_bits_per_coded_sample(self):
+    def test_bits_per_coded_sample(self) -> None:
         with av.open(fate_suite("qtrle/aletrek-rle.mov")) as container:
             stream = container.streams.video[0]
             stream.bits_per_coded_sample = 32
@@ -316,7 +316,7 @@ class TestCodecContext(TestCase):
 
     def _assert_parse(self, codec_name: str, path: str) -> None:
         fh = av.open(path)
-        packets = []
+        packets: list[av.Packet[Any]] = []
         for packet in fh.demux(video=0):
             packets.append(packet)
 

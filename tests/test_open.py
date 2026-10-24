@@ -57,7 +57,7 @@ def test_container_no_close() -> None:
     gc.collect()
 
 
-def test_output_container_is_closed_after_close(tmp_path) -> None:
+def test_output_container_is_closed_after_close(tmp_path: Path) -> None:
     path = str(tmp_path / "out.mp4")
     container = av.open(path, "w")
     stream = container.add_stream("mpeg4", rate=24)

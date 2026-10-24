@@ -14,7 +14,9 @@ from .common import fate_suite, sandboxed
 
 
 class TestDataStreams:
-    def generate_container_with_data_packets(self):
+    def generate_container_with_data_packets(
+        self,
+    ) -> tuple[av.container.InputContainer, dict[fractions.Fraction, bytes]]:
         file = io.BytesIO()
         packet_datas_expected = dict[fractions.Fraction, bytes]()
 
@@ -43,10 +45,9 @@ class TestDataStreams:
 
         container.close()
 
-        container = av.open(file, format="mp4", mode="r")
-        return container, packet_datas_expected
+        return av.open(file, format="mp4", mode="r"), packet_datas_expected
 
-    def test_data_packet_bytes(self):
+    def test_data_packet_bytes(self) -> None:
         container, packet_datas_expected = self.generate_container_with_data_packets()
 
         packet_datas = dict[fractions.Fraction, bytes]()

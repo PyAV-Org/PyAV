@@ -4,6 +4,7 @@ import io
 import math
 import os
 from fractions import Fraction
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -70,7 +71,7 @@ def write_rgb_rotate(output: av.container.OutputContainer) -> None:
 
 
 def assert_rgb_rotate(
-    self, input_: av.container.InputContainer, is_dash: bool = False
+    self: object, input_: av.container.InputContainer, is_dash: bool = False
 ) -> None:
     # Now inspect it a little.
     assert len(input_.streams) == 1
@@ -698,7 +699,7 @@ def test_hardware_encode_honors_sw_format() -> None:
     container.close()
 
 
-def test_metadata_survives_non_utf8_bytes(tmp_path) -> None:
+def test_metadata_survives_non_utf8_bytes(tmp_path: Path) -> None:
     # FFmpeg hands tags back as bytes with no declared encoding, so PyAV reads
     # them as UTF-8 with surrogateescape. That has to be byte exact both ways,
     # or a tag written in some other encoding is destroyed by a round trip.
@@ -727,7 +728,7 @@ def test_metadata_survives_non_utf8_bytes(tmp_path) -> None:
 
 
 @pytest.mark.parametrize("method", ["add_stream", "add_mux_stream"])
-def test_rejected_stream_leaves_container_usable(tmp_path, method: str) -> None:
+def test_rejected_stream_leaves_container_usable(tmp_path: Path, method: str) -> None:
     # A stream cannot be removed from an AVFormatContext, so anything that can
     # raise has to be checked before one is created. Otherwise the orphan
     # desynchronises container.streams and the next valid call fails.
@@ -742,7 +743,7 @@ def test_rejected_stream_leaves_container_usable(tmp_path, method: str) -> None:
         assert len(output.streams) == 1
 
 
-def test_rejected_time_base_leaves_container_usable(tmp_path) -> None:
+def test_rejected_time_base_leaves_container_usable(tmp_path: Path) -> None:
     with av.open(str(tmp_path / "out.mkv"), "w") as output:
         with pytest.raises(AttributeError):
             output.add_stream("mpeg4", rate=24, time_base="not-a-rational")
