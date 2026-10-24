@@ -293,6 +293,7 @@ class TestPythonIO(TestCase):
 
             # codec context properties
             assert stream.codec.name == "png"
+            assert stream.format is not None
             assert stream.format.name == "rgb24"
             assert stream.format.width == width
             assert stream.format.height == height

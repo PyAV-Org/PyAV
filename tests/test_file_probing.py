@@ -249,6 +249,7 @@ class TestVideoProbe(TestCase):
         assert stream.codec.long_name == "MPEG-2 video"
         assert stream.codec.name == "mpeg2video"
         assert stream.display_aspect_ratio == Fraction(4, 3)
+        assert stream.format is not None
         assert stream.format.name == "yuv420p"
         assert not stream.has_b_frames
         assert stream.height == 576

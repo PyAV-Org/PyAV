@@ -26,6 +26,7 @@ class AudioStream(Stream):
     def decode(self, packet: Packet | None = None) -> list[AudioFrame]: ...
 
     # From codec context
+    name: str
     codec: Codec
     codec_tag: str
     options: dict[str, str]

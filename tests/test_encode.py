@@ -110,6 +110,7 @@ def assert_rgb_rotate(
     # codec context properties
     assert stream.codec.name == "mpeg4"
     assert stream.codec.long_name == "MPEG-4 part 2"
+    assert stream.format is not None
     assert stream.format.name == "yuv420p"
     assert stream.format.width == WIDTH
     assert stream.format.height == HEIGHT
@@ -124,6 +125,7 @@ class TestBasicVideoEncoding(TestCase):
             assert not stream.time_base
 
             # codec context properties
+            assert stream.format is not None
             assert stream.format.height == 480
             assert stream.format.name == "yuv420p"
             assert stream.format.width == 640
