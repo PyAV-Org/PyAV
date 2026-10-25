@@ -7,6 +7,7 @@ import numpy
 import pytest
 
 import av
+import av.filter
 from av import VideoFrame
 from av.video.frame import supported_np_pix_fmts
 from av.video.reformatter import Colorspace, Interpolation

@@ -7,6 +7,7 @@ import pytest
 
 import av
 import av.datasets
+import av.filter.loudnorm
 
 from .common import fate_suite
 
