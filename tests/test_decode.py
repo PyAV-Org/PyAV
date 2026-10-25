@@ -1,4 +1,5 @@
 import functools
+import gc
 import io
 import os
 import pathlib
@@ -9,8 +10,10 @@ import numpy as np
 import pytest
 
 import av
-from av.sidedata.encparams import VideoEncParams
-from av.sidedata.sidedata import Type
+from av.codec.hwaccel import HWConfig
+from av.sidedata.encparams import VideoBlockParams, VideoEncParams
+from av.sidedata.motionvectors import MotionVector, MotionVectors
+from av.sidedata.sidedata import SideData, Type
 from av.subtitles.subtitle import SubtitleSet
 
 from .common import TestCase, fate_suite
@@ -51,6 +54,16 @@ def make_h264_test_video(path: str) -> None:
             output_container.mux(packet)
 
     output_container.close()
+
+
+@pytest.mark.parametrize(
+    "cls",
+    [HWConfig, SideData, MotionVectors, MotionVector, VideoEncParams, VideoBlockParams],
+)
+def test_wrapper_cannot_be_created_empty(cls: type[object]) -> None:
+    # Skipping the constructor used to leave a NULL pointer that getters read.
+    with pytest.raises(TypeError):
+        cls.__new__(cls)
 
 
 class TestDecode(TestCase):
@@ -228,6 +241,9 @@ class TestDecode(TestCase):
 
             first_block = video_enc_params.block_params(0)
             assert video_enc_params.qp + first_block.delta_qp == 29
+
+            # The block points into the side data, so it must keep it alive.
+            assert video_enc_params in gc.get_referents(first_block)
             return
 
     def test_decoded_video_enc_params_no_flag(self) -> None:

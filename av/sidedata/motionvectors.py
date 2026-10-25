@@ -9,8 +9,8 @@ _cinit_bypass_sentinel = cython.declare(object, object())
 @cython.final
 @cython.cclass
 class MotionVectors(SideData):
-    def __init__(self, sentinel, frame: Frame, index: cython.int):
-        SideData.__init__(self, sentinel, frame, index)
+    def __cinit__(self, sentinel, frame: Frame, index: cython.int):
+        # SideData.__cinit__ has already run with the same arguments.
         self._len = self.ptr.size // cython.sizeof(lib.AVMotionVector)
 
     def __repr__(self):
@@ -73,7 +73,7 @@ class MotionVector:
     Motion vectors describe the motion of a block of pixels between frames.
     """
 
-    def __init__(self, sentinel, parent: MotionVectors, index: cython.int):
+    def __cinit__(self, sentinel, parent: MotionVectors, index: cython.int):
         if sentinel is not _cinit_bypass_sentinel:
             raise RuntimeError("cannot manually instantiate MotionVector")
         self.parent = parent

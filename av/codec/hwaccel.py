@@ -56,7 +56,7 @@ def wrap_hwconfig(ptr: cython.pointer[cython.const[lib.AVCodecHWConfig]]) -> HWC
 @cython.final
 @cython.cclass
 class HWConfig:
-    def __init__(self, sentinel):
+    def __cinit__(self, sentinel):
         if sentinel is not _cinit_sentinel:
             raise RuntimeError("Cannot instantiate CodecContext")
 

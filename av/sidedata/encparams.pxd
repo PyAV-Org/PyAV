@@ -8,4 +8,5 @@ cdef class VideoEncParams(SideData):
 
 
 cdef class VideoBlockParams:
+    cdef VideoEncParams parent
     cdef lib.AVVideoBlockParams *ptr

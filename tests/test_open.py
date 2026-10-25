@@ -57,6 +57,16 @@ def test_container_no_close() -> None:
     gc.collect()
 
 
+def test_decode_after_close() -> None:
+    with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+        frames = container.decode(video=0)
+        next(frames)
+
+    # Resuming the generator used to read from the freed format context.
+    with pytest.raises(AssertionError, match="not open"):
+        next(frames)
+
+
 def test_output_container_is_closed_after_close(tmp_path: Path) -> None:
     path = str(tmp_path / "out.mp4")
     container = av.open(path, "w")
