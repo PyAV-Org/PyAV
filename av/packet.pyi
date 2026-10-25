@@ -82,7 +82,10 @@ StreamT = TypeVar("StreamT", bound=Stream)
 
 @final
 class Packet(Buffer, Generic[StreamT]):
-    stream: StreamT
+    @property
+    def stream(self) -> StreamT | None: ...
+    @stream.setter
+    def stream(self, value: StreamT) -> None: ...
     stream_index: int
     @property
     def time_base(self) -> AVRational: ...
