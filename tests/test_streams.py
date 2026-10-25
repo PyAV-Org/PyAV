@@ -169,7 +169,11 @@ class TestStreams:
             if discard is not None:
                 c.streams.audio[0].discard = discard
             count = sum(
-                1 for p in c.demux() if p.dts is not None and p.stream.type == "audio"
+                1
+                for p in c.demux()
+                if p.dts is not None
+                and p.stream is not None
+                and p.stream.type == "audio"
             )
             c.close()
             return count
@@ -389,7 +393,7 @@ class TestStreams:
             for packet in ic.demux(ic.streams.video):
                 if packet.size == 0:
                     continue
-                updated_stream = stream_map.get(packet.stream.index)
+                updated_stream = stream_map.get(packet.stream_index)
                 if isinstance(updated_stream, av.video.stream.VideoStream):
                     packet.stream = updated_stream
                 else:
