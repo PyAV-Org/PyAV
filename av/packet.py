@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from types import GenericAlias
 from typing import Literal, get_args
 
 import cython
@@ -221,6 +222,12 @@ class Packet(Buffer):
     This may, or may not include a complete object within a stream.
     :meth:`decode` must be called to extract encoded data.
     """
+
+    @classmethod
+    @cython.binding(True)
+    def __class_getitem__(cls, item):
+        # Packet is generic over its stream type in the stubs.
+        return GenericAlias(cls, item)
 
     def __cinit__(self, input=None):
         with cython.nogil:
