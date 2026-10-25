@@ -108,6 +108,15 @@ class TestDecode(TestCase):
 
         assert frame_count == video_stream.frames
 
+    def test_best_effort_timestamp(self) -> None:
+        assert av.VideoFrame(16, 16, "yuv420p").best_effort_timestamp is None
+
+        with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+            for frame in container.decode(video=0):
+                # MP4 stores valid PTS, so the decoder's estimate is the PTS.
+                assert frame.pts is not None
+                assert frame.best_effort_timestamp == frame.pts
+
     def test_flushed_frames_keep_time_base(self) -> None:
         # `decode()` with no packet has no packet to take the time base from;
         # it must fall back to the one the container set on the context.

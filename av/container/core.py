@@ -496,6 +496,9 @@ def open(
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and all streams.
     :param dict container_options: Options to pass to the container.
+        Input containers set the ``genpts`` flag, which fills in missing packet PTS.
+        Pass ``{"fflags": "-genpts"}`` to turn it off. See also
+        :attr:`.Frame.best_effort_timestamp`.
     :param int buffer_size: Size of buffer for Python input/output operations in bytes.
         Honored only when ``file`` is a file-like object. Defaults to 32768 (32k).
     :param timeout: How many seconds to wait for data before giving up, as a float, or a

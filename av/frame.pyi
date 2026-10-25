@@ -9,6 +9,8 @@ from av.sidedata.sidedata import SideDataContainer
 class Frame:
     dts: int | None
     pts: int | None
+    @property
+    def best_effort_timestamp(self) -> int | None: ...
     duration: int
     @property
     def time_base(self) -> AVRational: ...

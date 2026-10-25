@@ -115,6 +115,23 @@ class Frame:
             self.ptr.pts = value
 
     @property
+    def best_effort_timestamp(self):
+        """
+        The presentation timestamp estimated by the decoder, in :attr:`time_base` units.
+
+        This is the timestamp FFmpeg's own tools use. It is :attr:`pts`, unless the
+        PTS values have been missing or out of order more often than the DTS
+        values, in which case it is :attr:`dts`. Prefer it over :attr:`pts` for
+        inputs that store only DTS, such as AVI, whose generated PTS can go
+        backwards when the video has B-frames.
+
+        :type: int | None
+        """
+        if self.ptr.best_effort_timestamp == lib.AV_NOPTS_VALUE:
+            return None
+        return self.ptr.best_effort_timestamp
+
+    @property
     def duration(self):
         """
         The duration of the frame in :attr:`time_base` units
