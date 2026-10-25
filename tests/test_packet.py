@@ -77,6 +77,9 @@ class TestProperties:
         del packet
         data.extend(b"d")
 
+    def test_str_input_is_utf8(self) -> None:
+        assert bytes(av.Packet("né")) == "né".encode()
+
     def test_rescale_ts(self) -> None:
         packet = av.Packet()
         packet.time_base = fractions.Fraction(1, 1000)
