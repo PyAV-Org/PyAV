@@ -47,6 +47,7 @@ class TestAudioProbe(TestCase):
         assert stream.channels == 2
         assert stream.codec.name == "aac_latm"
         assert stream.codec.long_name == "AAC LATM (Advanced Audio Coding LATM syntax)"
+        assert stream.format is not None
         assert stream.format.bits == 32
         assert stream.format.name == "fltp"
         assert stream.layout.name == "stereo"

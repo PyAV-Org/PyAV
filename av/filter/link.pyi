@@ -1,9 +1,12 @@
 from typing import final
 
+from typing_extensions import disjoint_base
+
 from av.filter.context import FilterContext
 from av.filter.filter import Filter
 from av.filter.graph import Graph
 
+@disjoint_base
 class FilterPad:
     filter: Filter
     context: FilterContext | None

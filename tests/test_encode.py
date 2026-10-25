@@ -202,6 +202,7 @@ class TestBasicAudioEncoding(TestCase):
             assert not stream.time_base
 
             # codec context properties
+            assert stream.format is not None
             assert stream.format.name == "s16"
             assert stream.sample_rate == 48000
 
@@ -243,6 +244,7 @@ class TestBasicAudioEncoding(TestCase):
             stream = container.streams[0]
 
             # codec context properties
+            assert stream.format is not None
             assert stream.format.name == "s16p"
             assert stream.sample_rate == sample_rate
 

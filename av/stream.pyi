@@ -2,6 +2,8 @@ from enum import IntEnum, IntFlag
 from fractions import Fraction
 from typing import Literal, final
 
+from typing_extensions import disjoint_base
+
 from av.rational import AVRational
 
 from .codec import CodecContext
@@ -38,6 +40,7 @@ class Discard(IntEnum):
     nonkey = ...
     all = ...
 
+@disjoint_base
 class Stream:
     name: str | None
     container: Container

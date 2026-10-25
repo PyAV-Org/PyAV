@@ -1,5 +1,5 @@
-from collections.abc import Callable
-from typing import Any, final
+from types import TracebackType
+from typing import final
 
 PANIC: int
 FATAL: int
@@ -29,7 +29,7 @@ class Capture:
     def __enter__(self) -> list[tuple[int, str, str]]: ...
     def __exit__(
         self,
-        type_: type | None,
-        value: Exception | None,
-        traceback: Callable[..., Any] | None,
+        type_: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None: ...

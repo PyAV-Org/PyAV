@@ -9,22 +9,20 @@ from .format import AudioFormat
 from .frame import AudioFrame
 from .layout import AudioLayout
 
-class _Format:
-    def __get__(self, i: object | None, owner: type | None = None) -> AudioFormat: ...
-    def __set__(self, instance: object, value: AudioFormat | str) -> None: ...
-
-class _Layout:
-    def __get__(self, i: object | None, owner: type | None = None) -> AudioLayout: ...
-    def __set__(self, instance: object, value: AudioLayout | str) -> None: ...
-
 @final
 class AudioCodecContext(CodecContext):
     frame_size: int
     sample_rate: int
     rate: int
     type: Literal["audio"]
-    format: _Format
-    layout: _Layout
+    @property
+    def format(self) -> AudioFormat | None: ...
+    @format.setter
+    def format(self, value: AudioFormat | str) -> None: ...
+    @property
+    def layout(self) -> AudioLayout: ...
+    @layout.setter
+    def layout(self, value: AudioLayout | str) -> None: ...
     @property
     def channels(self) -> int: ...
     @property

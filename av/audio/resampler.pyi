@@ -1,7 +1,5 @@
 from typing import final
 
-from av.filter.graph import Graph
-
 from .format import AudioFormat
 from .frame import AudioFrame
 from .layout import AudioLayout
@@ -14,7 +12,6 @@ class AudioResampler:
     format: AudioFormat
     layout: AudioLayout
     options: dict[str, str]
-    graph: Graph | None
     is_passthrough: bool
 
     def __init__(

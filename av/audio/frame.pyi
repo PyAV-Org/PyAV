@@ -17,23 +17,16 @@ _SupportedNDarray = (
     | np.ndarray[Any, np.dtype[np.uint8]]  # u1
 )
 
-class _Format:
-    def __get__(self, i: object | None, owner: type | None = None) -> AudioFormat: ...
-    def __set__(self, instance: object, value: AudioFormat | str) -> None: ...
-
-class _Layout:
-    def __get__(self, i: object | None, owner: type | None = None) -> AudioLayout: ...
-    def __set__(self, instance: object, value: AudioLayout | str) -> None: ...
-
 @final
 class AudioFrame(Frame):
     planes: tuple[AudioPlane, ...]
     samples: int
     sample_rate: int
     rate: int
-    format: _Format
-    layout: _Layout
-
+    @property
+    def format(self) -> AudioFormat: ...
+    @property
+    def layout(self) -> AudioLayout: ...
     def __init__(
         self,
         format: AudioFormat | str = "s16",

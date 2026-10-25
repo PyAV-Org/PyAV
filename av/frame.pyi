@@ -1,8 +1,11 @@
 from fractions import Fraction
 
+from typing_extensions import disjoint_base
+
 from av.rational import AVRational
 from av.sidedata.sidedata import SideDataContainer
 
+@disjoint_base
 class Frame:
     dts: int | None
     pts: int | None
