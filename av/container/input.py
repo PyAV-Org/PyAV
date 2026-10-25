@@ -199,6 +199,10 @@ class InputContainer(Container):
                 raise MemoryError("Could not allocate packet")
 
             while True:
+                # The container may have been closed while this generator was
+                # suspended at a yield.
+                self._assert_open()
+
                 # Reset the read buffer
                 with cython.nogil:
                     lib.av_packet_unref(read_packet)
@@ -231,6 +235,7 @@ class InputContainer(Container):
 
             # Flush!
             for i in range(nb_streams):
+                self._assert_open()
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]

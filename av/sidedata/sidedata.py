@@ -96,7 +96,7 @@ def get_display_rotation(frame: Frame) -> cython.int:
 
 @cython.cclass
 class SideData(Buffer):
-    def __init__(self, sentinel, frame: Frame, index: cython.int):
+    def __cinit__(self, sentinel, frame: Frame, index: cython.int):
         if sentinel is not _cinit_bypass_sentinel:
             raise RuntimeError("cannot manually instantiate SideData")
         self.frame = frame

@@ -24,3 +24,12 @@ def test_dictionary_non_ascii() -> None:
     assert d["café"] == "naïve 日本語 🎵"
     assert "café" in d
     assert list(d) == ["café"]
+
+
+def test_dictionary_mutate_while_iterating() -> None:
+    d = Dictionary({"a": "1", "b": "2"})
+    # Iteration used to hold an entry pointer that inserts could invalidate.
+    for key in d:
+        for i in range(100):
+            d[f"{key}{i}"] = "x"
+    assert len(d) == 202

@@ -182,6 +182,15 @@ class TestPythonIO(TestCase):
             buf = BytesIO(fh.read())
         read(buf, seekable=True)
 
+    def test_read_returning_too_much(self) -> None:
+        class Greedy:
+            def read(self, n: int) -> bytes:
+                return bytes(n + 1)
+
+        # This used to overflow FFmpeg's I/O buffer.
+        with pytest.raises(ValueError, match="expected at most"):
+            av.open(Greedy(), format="mpegts")
+
     def test_reading_from_buffer_no_seek(self) -> None:
         with open(fate_suite("mpeg2/mpeg2_field_encoding.ts"), "rb") as fh:
             buf = ReadOnlyBuffer(fh.read())

@@ -1,3 +1,4 @@
+from collections.abc import Buffer as _BufferLike
 from collections.abc import Iterator
 from fractions import Fraction
 from typing import Generic, Literal, TypeVar, final, overload
@@ -103,7 +104,9 @@ class Packet(Buffer, Generic[StreamT]):
     is_trusted: bool
     is_disposable: bool
 
-    def __init__(self: Packet[Stream], input: int | bytes | None = None) -> None: ...
+    def __init__(
+        self: Packet[Stream], input: int | str | _BufferLike | None = None
+    ) -> None: ...
     def rescale_ts(self, time_base: AVRational) -> None: ...
 
     # Overloads that return the same type as the stream's decode method

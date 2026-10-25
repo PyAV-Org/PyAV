@@ -65,6 +65,18 @@ class TestDataStreams:
 
 
 class TestProperties:
+    def test_bytearray_input_is_locked(self) -> None:
+        # The packet references the bytearray's memory, so resizing it while
+        # the packet is alive would leave the packet pointing at freed memory.
+        data = bytearray(b"abc")
+        packet = av.Packet(data)
+        with pytest.raises(BufferError):
+            data.extend(b"d")
+        assert bytes(packet) == b"abc"
+
+        del packet
+        data.extend(b"d")
+
     def test_rescale_ts(self) -> None:
         packet = av.Packet()
         packet.time_base = fractions.Fraction(1, 1000)

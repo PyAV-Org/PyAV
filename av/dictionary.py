@@ -33,12 +33,16 @@ class Dictionary:
         return err_check(lib.av_dict_count(self.ptr))
 
     def __iter__(self):
+        # Collect the keys up front: setting or deleting an item while a lazy
+        # iterator holds an entry pointer would leave it dangling.
+        keys: list = []
         element: cython.pointer[lib.AVDictionaryEntry] = cython.NULL
         while True:
             element = lib.av_dict_get(self.ptr, "", element, lib.AV_DICT_IGNORE_SUFFIX)
             if element == cython.NULL:
                 break
-            yield element.key
+            keys.append(element.key)
+        return iter(keys)
 
     def __repr__(self):
         return f"av.Dictionary({dict(self)!r})"
