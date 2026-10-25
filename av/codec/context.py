@@ -442,7 +442,10 @@ class CodecContext:
     def __dealloc__(self):
         if self.ptr:
             lib.av_freep(cython.address(self.ptr.extradata))
-            lib.avcodec_free_context(cython.address(self.ptr))
+            # Release the GIL: freeing a frame-threaded decoder waits for its worker
+            # threads, which may be blocked in log_callback waiting for the GIL.
+            with cython.nogil:
+                lib.avcodec_free_context(cython.address(self.ptr))
         if self.parser:
             lib.av_parser_close(self.parser)
 
