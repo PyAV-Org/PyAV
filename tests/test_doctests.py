@@ -2,24 +2,12 @@ import doctest
 import pkgutil
 import re
 import types
-from typing import Any
 from unittest import TestCase
 
 import av
 import av.datasets
 
 VIDEO_PATH = av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4")
-
-
-class DocTestFinder(doctest.DocTestFinder):
-    def find(self, *args: Any, **kwargs: Any) -> list[doctest.DocTest]:
-        tests = super().find(*args, **kwargs)
-        for test in tests:
-            for example in test.examples:
-                # Remove b prefix from strings.
-                if example.want.startswith("b'"):
-                    example.want = example.want[1:]
-        return tests
 
 
 def register_doctests(mod: str | types.ModuleType) -> None:
@@ -30,7 +18,6 @@ def register_doctests(mod: str | types.ModuleType) -> None:
         suite = doctest.DocTestSuite(
             mod,
             extraglobs={"av": av, "video_path": VIDEO_PATH},
-            test_finder=DocTestFinder(),
             optionflags=doctest.IGNORE_EXCEPTION_DETAIL
             | doctest.ELLIPSIS
             | doctest.NORMALIZE_WHITESPACE,
@@ -44,7 +31,7 @@ def register_doctests(mod: str | types.ModuleType) -> None:
     for test in suite:
         assert isinstance(test, doctest.DocTestCase)
 
-        def func(self: TestCase) -> None:
+        def func(self: TestCase, test: doctest.DocTestCase = test) -> None:
             return test.runTest()
 
         name = str("test_" + re.sub("[^a-zA-Z0-9]+", "_", test.id()).strip("_"))
