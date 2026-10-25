@@ -15,11 +15,10 @@ class ByteSource:
     def __cinit__(self, owner):
         self.owner = owner
 
-        try:
+        # Only immutable objects may be referenced without a buffer export; a
+        # bytearray could be resized, freeing the memory self.ptr points to.
+        if isinstance(owner, (bytes, str)):
             self.ptr = owner
-        except TypeError:
-            pass
-        else:
             self.length = len(owner)
             return
 

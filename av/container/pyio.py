@@ -103,6 +103,10 @@ def pyio_read_gil(opaque: cython.p_void, buf: Buf, buf_size: cython.int) -> cyth
     try:
         self = cython.cast(PyIOFile, opaque)
         res = self.fread(buf_size)
+        if len(res) > buf_size:
+            raise ValueError(
+                f"read({buf_size}) returned {len(res)} bytes; expected at most {buf_size}"
+            )
         memcpy(
             buf, cython.cast(cython.p_void, cython.cast(cython.p_char, res)), len(res)
         )

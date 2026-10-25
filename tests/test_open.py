@@ -2,6 +2,8 @@ import gc
 import io
 from pathlib import Path
 
+import pytest
+
 import av
 
 from .common import fate_suite
@@ -53,3 +55,13 @@ def test_container_no_close() -> None:
     # Do not close so that container is freed through GC.
     _container_no_close()
     gc.collect()
+
+
+def test_decode_after_close() -> None:
+    with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+        frames = container.decode(video=0)
+        next(frames)
+
+    # Resuming the generator used to read from the freed format context.
+    with pytest.raises(AssertionError, match="not open"):
+        next(frames)
