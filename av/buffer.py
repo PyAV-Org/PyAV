@@ -6,6 +6,7 @@ from cython.cimports.cpython.buffer import (
     PyObject_CheckBuffer,
     PyObject_GetBuffer,
 )
+from cython.cimports.cpython.unicode import PyUnicode_AsUTF8AndSize
 from cython.cimports.libc.string import memcpy
 
 
@@ -14,10 +15,20 @@ from cython.cimports.libc.string import memcpy
 class ByteSource:
     def __cinit__(self, owner):
         self.owner = owner
+        size: cython.Py_ssize_t
 
         # Only immutable objects may be referenced without a buffer export; a
         # bytearray could be resized, freeing the memory self.ptr points to.
-        if isinstance(owner, (bytes, str)):
+        if isinstance(owner, str):
+            # The str owns this UTF-8 buffer. len() would count characters, not
+            # encoded bytes.
+            self.ptr = cython.cast(
+                cython.p_uchar, PyUnicode_AsUTF8AndSize(owner, cython.address(size))
+            )
+            self.length = size
+            return
+
+        if isinstance(owner, bytes):
             self.ptr = owner
             self.length = len(owner)
             return
