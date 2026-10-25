@@ -373,6 +373,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
 
         int64_t pts
         int64_t pkt_dts
+        int64_t best_effort_timestamp
         void *opaque
         int sample_rate
         AVBufferRef *buf[8]
