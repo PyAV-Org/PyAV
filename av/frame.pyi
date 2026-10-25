@@ -9,6 +9,8 @@ class SideData(TypedDict, total=False):
 class Frame:
     dts: int | None
     pts: int | None
+    @property
+    def best_effort_timestamp(self) -> int | None: ...
     duration: int
     time_base: Fraction | None
     side_data: SideData

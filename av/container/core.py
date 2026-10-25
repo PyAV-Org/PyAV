@@ -514,6 +514,9 @@ def open(
     :param str format: Specific format to use. Defaults to autodect.
     :param dict options: Options to pass to the container and all streams.
     :param dict container_options: Options to pass to the container.
+        Input containers set the ``genpts`` flag, which fills in missing packet PTS.
+        Pass ``{"fflags": "-genpts"}`` to turn it off. See also
+        :attr:`.Frame.best_effort_timestamp`.
     :param list stream_options: Options to pass to each stream.
     :param str metadata_encoding: Encoding to use when reading or writing file metadata.
         Defaults to ``"utf-8"``.
