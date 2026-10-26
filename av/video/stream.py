@@ -1,3 +1,5 @@
+import warnings
+
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.packet import Packet
@@ -6,6 +8,15 @@ from cython.cimports.av.stream import Stream
 from cython.cimports.av.video.frame import VideoFrame
 from cython.cimports.libc.stdint import int32_t
 from cython.cimports.libc.string import memcpy
+
+
+def _warn_format_passthrough():
+    warnings.warn(
+        "VideoStream.format is deprecated; use VideoStream.cctx.format instead",
+        DeprecationWarning,
+        # Cython functions have no frames, so 1 is the caller.
+        stacklevel=1,
+    )
 
 
 @cython.final
@@ -17,12 +28,13 @@ class VideoStream(Stream):
                 f"<av.{self.__class__.__name__} (container closed) at 0x{id(self):x}>"
             )
 
-        if self.codec_context is None:
+        if self.cctx is None:
             return f"<av.VideoStream #{self.index} video/<nocodec> at 0x{id(self):x}>"
+        fmt = self.cctx.format
         return (
             f"<av.VideoStream #{self.index} {self.name}, "
-            f"{self.format.name if self.format else None} {self.codec_context.width}x"
-            f"{self.codec_context.height} at 0x{id(self):x}>"
+            f"{fmt.name if fmt else None} {self.cctx.width}x"
+            f"{self.cctx.height} at 0x{id(self):x}>"
         )
 
     def __getattr__(self, name):
@@ -30,11 +42,34 @@ class VideoStream(Stream):
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{name}'"
             )
-        if self.codec_context is None:
+        if self.cctx is None:
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{name}'"
             )
-        return getattr(self.codec_context, name)
+        return getattr(self.cctx, name)
+
+    @property
+    def format(self):
+        """
+        The video format of the codec context.
+
+        .. deprecated:: 19.1
+            Use ``stream.cctx.format`` instead.
+
+        :type: VideoFormat | None
+        """
+        _warn_format_passthrough()
+        if self.cctx is None:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute 'format'"
+            )
+        return self.cctx.format
+
+    @format.setter
+    def format(self, value):
+        _warn_format_passthrough()
+        if self.cctx is not None:
+            self.cctx.format = value
 
     @cython.ccall
     def encode(self, frame: VideoFrame | None = None):
@@ -46,7 +81,7 @@ class VideoStream(Stream):
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode`.
         """
         self._assert_has_codec_context(lib.AVERROR_ENCODER_NOT_FOUND)
-        packets = self.codec_context.encode(frame)
+        packets = self.cctx.encode(frame)
         packet: Packet
         for packet in packets:
             packet._stream = self
@@ -61,7 +96,7 @@ class VideoStream(Stream):
         """
         self._assert_has_codec_context(lib.AVERROR_ENCODER_NOT_FOUND)
         packet: Packet
-        for packet in self.codec_context.encode_lazy(frame):
+        for packet in self.cctx.encode_lazy(frame):
             packet._stream = self
             packet.ptr.stream_index = self.ptr.index
             yield packet
@@ -76,16 +111,16 @@ class VideoStream(Stream):
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
         self._assert_has_codec_context()
-        return self.codec_context.decode(packet)
+        return self.cctx.decode(packet)
 
     @cython.cfunc
     def _finalize_for_output(self) -> cython.void:
         Stream._finalize_for_output(self)
-        if self.codec_context is not None:
-            self.ptr.avg_frame_rate = self.codec_context.ptr.framerate
+        if self.cctx is not None:
+            self.ptr.avg_frame_rate = self.cctx.ptr.framerate
         # avcodec_parameters_from_context() overwrites codecpar.coded_side_data,
         # so inject the display matrix after it, before avformat_write_header().
-        if self.codec_context is not None and self._has_display_matrix:
+        if self.cctx is not None and self._has_display_matrix:
             self._apply_display_matrix()
 
     @cython.cfunc
@@ -205,8 +240,8 @@ class VideoStream(Stream):
         lib.av_reduce(
             cython.address(dar.num),
             cython.address(dar.den),
-            self.format.width * self.sample_aspect_ratio.num,
-            self.format.height * self.sample_aspect_ratio.den,
+            self.cctx.format.width * self.sample_aspect_ratio.num,
+            self.cctx.format.height * self.sample_aspect_ratio.den,
             1024 * 1024,
         )
 

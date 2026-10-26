@@ -13,6 +13,13 @@ from cython.cimports.av.video.format import VideoFormat
 from cython.cimports.av.video.frame import VideoFrame
 
 
+@cython.cfunc
+def _template_ctx(template):
+    # A stream's format and layout passthroughs are deprecated, so read them
+    # from its codec context. Frames and codec contexts are used directly.
+    return getattr(template, "cctx", template)
+
+
 @cython.final
 @cython.cclass
 class Graph:
@@ -174,7 +181,7 @@ class Graph:
             if height is None:
                 height = template.height
             if format is None:
-                format = template.format
+                format = _template_ctx(template).format
             if time_base is None:
                 time_base = template.time_base
 
@@ -219,9 +226,9 @@ class Graph:
             if sample_rate is None:
                 sample_rate = template.sample_rate
             if format is None:
-                format = template.format
+                format = _template_ctx(template).format
             if layout is None:
-                layout = template.layout.name
+                layout = _template_ctx(template).layout.name
             if channels is None:
                 channels = template.channels
             if time_base is None:

@@ -2,6 +2,7 @@ import io
 import os
 import struct
 from collections.abc import Iterator
+from fractions import Fraction
 
 import pytest
 
@@ -299,7 +300,7 @@ class TestStreams:
 
         with av.open("data_copy.ts") as remuxed:
             output_stream = remuxed.streams.data[0]
-            assert output_stream.codec_context is None
+            assert output_stream.cctx is None
 
             remuxed_payloads: list[bytes] = []
             for data_packet in remuxed.demux(output_stream):
@@ -330,7 +331,7 @@ class TestStreams:
 
             assert data_stream.type == "data"
             assert klv_stream.type == "data"
-            # Note: codec_context may be None for descriptor-only data codecs
+            # Note: cctx may be None for descriptor-only data codecs
 
             test_data = [b"test1", b"test2", b"test3"]
             for i, data in enumerate(test_data):
@@ -446,3 +447,64 @@ class TestStreams:
 
         # Still describable, so a traceback or debugger does not blow up.
         assert "container closed" in repr(stream)
+
+
+def test_audio_format_layout_passthrough_deprecated() -> None:
+    with av.open(io.BytesIO(), "w", format="mp4") as output:
+        stream = output.add_stream("aac", rate=48000)
+        assert isinstance(stream, av.AudioStream)
+
+        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+            stream.format = "fltp"
+        with pytest.warns(DeprecationWarning, match="cctx\.layout"):
+            stream.layout = "mono"
+        fmt = stream.cctx.format
+        assert fmt is not None and fmt.name == "fltp"
+        assert stream.cctx.layout.name == "mono"
+
+        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+            fmt = stream.format
+        assert fmt is not None and fmt.name == "fltp"
+        with pytest.warns(DeprecationWarning, match="cctx\.layout"):
+            assert stream.layout.name == "mono"
+
+
+def test_video_format_passthrough_deprecated() -> None:
+    with av.open(io.BytesIO(), "w", format="mp4") as output:
+        stream = output.add_stream("mpeg4", rate=24)
+        assert isinstance(stream, av.VideoStream)
+
+        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+            stream.format = av.VideoFormat("yuv420p", 32, 32)
+        assert stream.cctx.width == 32
+
+        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+            assert stream.format is not None
+
+
+@pytest.mark.filterwarnings("error::DeprecationWarning")
+def test_add_stream_format_layout_kwargs_not_deprecated() -> None:
+    with av.open(io.BytesIO(), "w", format="mp4") as output:
+        astream = output.add_stream("aac", rate=48000, format="fltp", layout="mono")
+        assert astream.cctx.layout.name == "mono"
+
+        vstream = output.add_stream(
+            "mpeg4", rate=24, format=av.VideoFormat("yuv420p", 32, 32)
+        )
+        assert vstream.cctx.width == 32
+
+        graph = av.filter.Graph()
+        graph.add_buffer(template=vstream, time_base=Fraction(1, 24))
+        graph.add_abuffer(template=astream, time_base=Fraction(1, 48000))
+
+
+def test_codec_context_is_cctx_alias() -> None:
+    with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
+        stream = container.streams.video[0]
+        assert stream.cctx is not None
+        assert stream.codec_context is stream.cctx
+
+    with av.open(io.BytesIO(), "w", format="mp4") as output:
+        mux = output.add_mux_stream("h264", width=16, height=16)
+        assert mux.cctx is None
+        assert mux.codec_context is None

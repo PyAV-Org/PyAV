@@ -34,6 +34,8 @@ v19.1.0 (Unreleased)
 Features:
 
 - Add ``VideoFrame.solid()`` to create a frame filled with one color, in any non-paletted pixel format.
+- Add ``Stream.cctx`` as the name for a stream's codec context; ``Stream.codec_context`` remains as an alias.
+- Deprecate ``AudioStream.format``, ``AudioStream.layout``, and ``VideoStream.format``, which pass through to the codec context; use ``stream.cctx.format`` and ``stream.cctx.layout`` instead. Passing ``format`` or ``layout`` to ``add_stream()`` is not deprecated.
 
 Fixes:
 

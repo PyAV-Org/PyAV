@@ -9,6 +9,7 @@ from .codeccontext import SubtitleCodecContext
 
 @final
 class SubtitleStream(Stream):
+    cctx: SubtitleCodecContext
     codec_context: SubtitleCodecContext
 
     # From codec context

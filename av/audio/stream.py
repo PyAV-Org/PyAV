@@ -1,7 +1,18 @@
+import warnings
+
 import cython
 from cython.cimports import libav as lib
 from cython.cimports.av.audio.frame import AudioFrame
 from cython.cimports.av.packet import Packet
+
+
+def _warn_passthrough(name):
+    warnings.warn(
+        f"AudioStream.{name} is deprecated; use AudioStream.cctx.{name} instead",
+        DeprecationWarning,
+        # Cython functions have no frames, so 1 is the caller.
+        stacklevel=1,
+    )
 
 
 @cython.final
@@ -13,20 +24,67 @@ class AudioStream(Stream):
                 f"<av.{self.__class__.__name__} (container closed) at 0x{id(self):x}>"
             )
 
-        if self.codec_context is None:
+        if self.cctx is None:
             return f"<av.AudioStream #{self.index} audio/<nocodec> at 0x{id(self):x}>"
-        form = self.format.name if self.format else None
+        cc = self.cctx
+        form = cc.format.name if cc.format else None
         return (
             f"<av.AudioStream #{self.index} {self.name} at {self.rate}Hz,"
-            f" {self.layout.name}, {form} at 0x{id(self):x}>"
+            f" {cc.layout.name}, {form} at 0x{id(self):x}>"
         )
 
     def __getattr__(self, name):
-        if self.codec_context is None:
+        if self.cctx is None:
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{name}'"
             )
-        return getattr(self.codec_context, name)
+        return getattr(self.cctx, name)
+
+    @property
+    def format(self):
+        """
+        The audio sample format of the codec context.
+
+        .. deprecated:: 19.1
+            Use ``stream.cctx.format`` instead.
+
+        :type: AudioFormat | None
+        """
+        _warn_passthrough("format")
+        if self.cctx is None:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute 'format'"
+            )
+        return self.cctx.format
+
+    @format.setter
+    def format(self, value):
+        _warn_passthrough("format")
+        if self.cctx is not None:
+            self.cctx.format = value
+
+    @property
+    def layout(self):
+        """
+        The audio channel layout of the codec context.
+
+        .. deprecated:: 19.1
+            Use ``stream.cctx.layout`` instead.
+
+        :type: AudioLayout
+        """
+        _warn_passthrough("layout")
+        if self.cctx is None:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute 'layout'"
+            )
+        return self.cctx.layout
+
+    @layout.setter
+    def layout(self, value):
+        _warn_passthrough("layout")
+        if self.cctx is not None:
+            self.cctx.layout = value
 
     @cython.ccall
     def encode(self, frame: AudioFrame | None = None):
@@ -38,7 +96,7 @@ class AudioStream(Stream):
         .. seealso:: This is mostly a passthrough to :meth:`.CodecContext.encode`.
         """
         self._assert_has_codec_context(lib.AVERROR_ENCODER_NOT_FOUND)
-        packets = self.codec_context.encode(frame)
+        packets = self.cctx.encode(frame)
         packet: Packet
         for packet in packets:
             packet._stream = self
@@ -54,7 +112,7 @@ class AudioStream(Stream):
         """
         self._assert_has_codec_context(lib.AVERROR_ENCODER_NOT_FOUND)
         packet: Packet
-        for packet in self.codec_context.encode_lazy(frame):
+        for packet in self.cctx.encode_lazy(frame):
             packet._stream = self
             packet.ptr.stream_index = self.ptr.index
             yield packet
@@ -69,4 +127,4 @@ class AudioStream(Stream):
         .. seealso:: This is a passthrough to :meth:`.CodecContext.decode`.
         """
         self._assert_has_codec_context()
-        return self.codec_context.decode(packet)
+        return self.cctx.decode(packet)

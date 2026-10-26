@@ -63,9 +63,9 @@ class BitStreamFilterContext:
             err_check(res)
             # codecpar carries everything the muxer needs; a mux-only stream
             # (add_mux_stream) has no context to keep in sync.
-            if out_stream.codec_context is not None:
+            if out_stream.cctx is not None:
                 lib.avcodec_parameters_to_context(
-                    out_stream.codec_context.ptr, out_stream.ptr.codecpar
+                    out_stream.cctx.ptr, out_stream.ptr.codecpar
                 )
 
     def __dealloc__(self):

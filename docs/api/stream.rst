@@ -64,6 +64,8 @@ Basics
 
 .. autoattribute:: Stream.type
 
+.. autoattribute:: Stream.cctx
+
 .. autoattribute:: Stream.codec_context
 
 .. autoattribute:: Stream.id

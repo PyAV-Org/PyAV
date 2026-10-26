@@ -336,6 +336,6 @@ class InputContainer(Container):
         codec_context: CodecContext
 
         for stream in self.streams:
-            codec_context = stream.codec_context
+            codec_context = stream.cctx
             if codec_context:
                 codec_context.flush_buffers()

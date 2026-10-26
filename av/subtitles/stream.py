@@ -7,7 +7,7 @@ from cython.cimports.av.stream import Stream
 @cython.cclass
 class SubtitleStream(Stream):
     def __getattr__(self, name):
-        return getattr(self.codec_context, name)
+        return getattr(self.cctx, name)
 
     @cython.ccall
     def decode(self, packet: Packet | None = None):
@@ -22,4 +22,4 @@ class SubtitleStream(Stream):
         if not packet:
             packet = Packet()
 
-        return self.codec_context.decode(packet)
+        return self.cctx.decode(packet)

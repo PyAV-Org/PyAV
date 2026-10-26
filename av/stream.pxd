@@ -10,7 +10,7 @@ cdef class Stream:
     cdef lib.AVStream *ptr
     cdef readonly Container container
     cdef readonly dict metadata
-    cdef readonly CodecContext codec_context
+    cdef readonly CodecContext cctx
     cdef void _init(self, Container, lib.AVStream*, CodecContext)
     cdef bint _is_open(self)
     cdef void _assert_open(self)

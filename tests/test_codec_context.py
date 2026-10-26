@@ -108,7 +108,7 @@ class TestCodecContext(TestCase):
 
     def test_level(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
-            assert container.streams.video[0].codec_context.level == 41
+            assert container.streams.video[0].cctx.level == 41
 
         ctx = Codec("mpeg4", "w").create()
         ctx.level = 5
@@ -116,7 +116,7 @@ class TestCodecContext(TestCase):
 
     def test_field_order(self) -> None:
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
-            assert container.streams.video[0].codec_context.field_order == 2
+            assert container.streams.video[0].cctx.field_order == 2
 
         ctx = Codec("mpeg4", "w").create("video")
         ctx.field_order = 1
@@ -128,9 +128,9 @@ class TestCodecContext(TestCase):
 
     def test_codec_delay(self) -> None:
         with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
-            assert container.streams.audio[0].codec_context.delay == 312
+            assert container.streams.audio[0].cctx.delay == 312
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
-            assert container.streams.video[0].codec_context.delay == 0
+            assert container.streams.video[0].cctx.delay == 0
 
     def test_codec_tag(self) -> None:
         ctx = Codec("mpeg4", "w").create()
@@ -232,7 +232,7 @@ class TestCodecContext(TestCase):
             stream = output.add_stream("qtrle")
 
             with pytest.raises(ValueError):
-                stream.codec_context.bits_per_coded_sample = 32
+                stream.cctx.bits_per_coded_sample = 32
 
     def test_decode_keeps_frames_before_error(self) -> None:
         # Regression test for #2044: a single packet may contain a valid frame
@@ -249,8 +249,8 @@ class TestCodecContext(TestCase):
         with av.open(buf, "w", format="flac") as output:
             stream = output.add_stream("flac", rate=44100)
             assert isinstance(stream, AudioStream)
-            stream.format = "s16"
-            stream.layout = "mono"
+            stream.cctx.format = "s16"
+            stream.cctx.layout = "mono"
             n = 0
             for _ in range(8):
                 samples = 4096
@@ -271,7 +271,7 @@ class TestCodecContext(TestCase):
         buf.seek(0)
         with av.open(buf, "r") as container:
             audio = container.streams.audio[0]
-            extradata = audio.codec_context.extradata
+            extradata = audio.cctx.extradata
             packets = [bytes(p) for p in container.demux(audio) if p.size]
 
         assert len(packets) >= 3
@@ -666,7 +666,7 @@ class TestNewlyExposedFields(TestCase):
 
     def test_audio_padding(self) -> None:
         with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
-            ctx = container.streams.audio[0].codec_context
+            ctx = container.streams.audio[0].cctx
             assert ctx.initial_padding == 312
             assert ctx.seek_preroll == 3840
             assert ctx.block_align == 0
@@ -674,7 +674,7 @@ class TestNewlyExposedFields(TestCase):
     def test_coded_side_data(self) -> None:
         with av.open(fate_suite("mov/displaymatrix.mov")) as container:
             stream = container.streams.video[0]
-            ctx = stream.codec_context
+            ctx = stream.cctx
             assert ctx.bits_per_raw_sample == 8
             assert len(ctx.coded_side_data["display_matrix"]) == 36
 
