@@ -114,6 +114,43 @@ def test_rgb24_planes() -> None:
     assert frame.planes[0].buffer_size == 640 * 480 * 3
 
 
+@pytest.mark.parametrize(
+    "format", ["rgb24", "bgr0", "gbrp", "yuv420p", "nv12", "yuyv422", "yuv420p10le"]
+)
+def test_solid(format: str) -> None:
+    # Odd sizes check the last row and column of subsampled planes get filled.
+    frame = VideoFrame.solid(33, 17, "#ff8000", format)
+    assert (frame.width, frame.height, frame.format.name) == (33, 17, format)
+
+    rgb = frame.to_ndarray(format="rgb24").astype(int)
+    assert numpy.abs(rgb - (255, 128, 0)).max() <= 2
+
+
+def test_solid_matches_reformat() -> None:
+    rgb = VideoFrame.solid(16, 16, (30, 140, 220), "rgb24")
+    expected = rgb.reformat(format="yuv420p")
+    frame = VideoFrame.solid(16, 16, (30, 140, 220), "yuv420p")
+    assertNdarraysEqual(frame.to_ndarray(), expected.to_ndarray())
+
+
+def test_solid_alpha() -> None:
+    frame = VideoFrame.solid(8, 8, "white@0.5", "rgba")
+    assert bytes(frame.planes[0])[:4] == b"\xff\xff\xff\x7f"
+    frame = VideoFrame.solid(8, 8, (0, 0, 255, 64), "rgba")
+    assert bytes(frame.planes[0])[:4] == b"\x00\x00\xff\x40"
+
+
+def test_solid_invalid() -> None:
+    with pytest.raises(ValueError, match="Invalid color"):
+        VideoFrame.solid(8, 8, "notacolor")
+    with pytest.raises(ValueError):
+        VideoFrame.solid(8, 8, (255, 0))  # type: ignore[arg-type]
+    with pytest.raises(ValueError):
+        VideoFrame.solid(8, 8, (256, 0, 0))
+    with pytest.raises(ValueError, match="pal8"):
+        VideoFrame.solid(8, 8, "red", "pal8")
+
+
 def test_memoryview_read() -> None:
     frame = VideoFrame(640, 480, "rgb24")
     frame.planes[0].update(b"01234" + (b"x" * (640 * 480 * 3 - 5)))

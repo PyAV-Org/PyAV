@@ -31,6 +31,10 @@ We are operating with `semantic versioning <https://semver.org>`_.
 v19.0.3 (Unreleased)
 --------------------
 
+Features:
+
+- Add ``VideoFrame.solid()`` to create a frame filled with one color, in any non-paletted pixel format.
+
 Fixes:
 
 - Support slicing ``Container.streams``, which raised ``TypeError`` despite being typed.
