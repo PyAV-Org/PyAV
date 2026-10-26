@@ -126,6 +126,8 @@ class Graph:
         ctx: FilterContext = wrap_filter_context(self, cy_filter, ptr)
         ctx.init(args, **kwargs)
         self._register_context(ctx)
+        # The new filter must be configured before it can push or pull.
+        self.configured = False
 
         # There might have been automatic contexts added (e.g. resamplers,
         # fifos, and scalers). It is more likely to see them after the graph

@@ -43,6 +43,8 @@ Fixes:
 - ``Frame.time_base`` returns ``AVRational(0, 1)`` instead of ``None`` when unset, like other ``AVRational`` properties.
 - Fix type stubs that did not match runtime: ``average_rate``, ``base_rate``, and ``guessed_rate`` are only on ``VideoStream``; ``codec``, ``codec_tag``, and ``options`` are only on audio, video, and subtitle streams; ``Stream.codec_context`` may be ``None``; ``AudioStream.bit_rate``, ``InputContainer.start_time``, ``VideoFrame.time``, and ``FilterPad.context`` may be ``None``; ``Codec.hardware_configs`` is a tuple; ``CodecContext.delay`` is an ``int``; ``AudioStream.max_bit_rate`` is added; and the inaccessible ``Plane.frame``, ``Plane.index``, and ``Container.buffer_size`` are removed.
 - Fix more type stubs that did not match runtime: ``SubtitleSet`` items are ``AssSubtitle | BitmapSubtitle``; ``BitmapSubtitle`` supports ``len()``, iteration, and indexing; ``BitmapSubtitlePlane`` supports the buffer protocol; ``VideoFormat`` supports ``int()``; ``CodecContext.encode``, ``encode_lazy``, and ``decode`` have return types; ``SubtitleCodecContext.decode`` requires a packet; ``VideoStream.format`` may be ``None``; stream ``name`` is a ``str`` on audio, video, and subtitle streams; and ``VideoFrame.to_image``, ``set_image``, and ``from_image`` use ``PIL.Image.Image``.
+- ``FilterContext.link_to`` raises ``ValueError`` when linking filters from different graphs instead of aborting the process.
+- Filters added or linked after ``Graph.configure()`` are now configured on the next push or pull instead of segfaulting.
 
 v19.0.2
 -------

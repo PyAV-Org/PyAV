@@ -407,3 +407,64 @@ class TestFilters(TestCase):
 
         with self.assertRaises(RuntimeError):
             graph.threads = 2
+
+    def test_link_across_graphs(self) -> None:
+        a = Graph().add("null")
+        b = Graph().add("null")
+
+        with pytest.raises(ValueError, match="different graphs"):
+            a.link_to(b)
+
+    def test_add_after_configure(self) -> None:
+        graph = Graph()
+        graph.configure()
+        assert graph.configured
+
+        src = graph.add_buffer(
+            width=64, height=64, format="rgb24", time_base=Fraction(1, 24)
+        )
+        sink = graph.add("buffersink")
+        assert not graph.configured
+        src.link_to(sink)
+
+        frame = VideoFrame(64, 64, "rgb24")
+        frame.pts = 0
+        src.push(frame)
+        assert graph.configured
+        out = sink.pull()
+        assert (out.width, out.height, out.pts) == (64, 64, 0)
+
+    def test_pull_unlinked_sink_after_configure(self) -> None:
+        graph = Graph()
+        graph.configure()
+        sink = graph.add("buffersink")
+
+        with pytest.raises(av.FFmpegError):
+            sink.pull()
+
+    def test_extend_running_graph(self) -> None:
+        graph = Graph()
+        src = graph.add_buffer(
+            width=32, height=32, format="rgb24", time_base=Fraction(1, 24)
+        )
+        sink = graph.add("buffersink")
+        src.link_to(sink)
+        frame = VideoFrame(32, 32, "rgb24")
+        frame.pts = 0
+        src.push(frame)
+        assert sink.pull().pts == 0
+
+        src2 = graph.add_buffer(
+            width=16, height=16, format="gray", time_base=Fraction(1, 24)
+        )
+        sink2 = graph.add("buffersink")
+        src2.link_to(sink2)
+        frame2 = VideoFrame(16, 16, "gray")
+        frame2.pts = 0
+        src2.push(frame2)
+        out = sink2.pull()
+        assert isinstance(out, VideoFrame) and out.format.name == "gray"
+
+        frame.pts = 1
+        src.push(frame)
+        assert sink.pull().pts == 1
