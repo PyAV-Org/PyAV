@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any, final
+from typing import Any, Self, final
 
 from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
@@ -19,7 +19,7 @@ class Graph:
     configured: bool
     threads: int
 
-    def __init__(self, hw_device: HWDevice | None = None) -> None: ...
+    def __new__(cls, hw_device: HWDevice | None = None) -> Self: ...
     @property
     def hw_device(self) -> HWDevice | None: ...
     def configure(self, auto_buffer: bool = True, force: bool = False) -> None: ...

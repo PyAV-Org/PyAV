@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from enum import Flag, IntEnum, IntFlag
-from typing import Literal, final, overload
+from typing import Literal, Self, final, overload
 
 from av.audio.codeccontext import AudioCodecContext
 from av.audio.format import AudioFormat
@@ -103,7 +103,7 @@ class Codec:
     def experimental(self) -> bool: ...
     @property
     def delay(self) -> bool: ...
-    def __init__(self, name: str, mode: Literal["r", "w"] = "r") -> None: ...
+    def __new__(cls, name: str, mode: Literal["r", "w"] = "r") -> Self: ...
     @overload
     def create(self, kind: Literal["video"]) -> VideoCodecContext: ...
     @overload

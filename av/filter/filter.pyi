@@ -1,4 +1,4 @@
-from typing import final
+from typing import Self, final
 
 from .link import FilterPad
 
@@ -12,6 +12,6 @@ class Filter:
     def inputs(self) -> tuple[FilterPad, ...]: ...
     @property
     def outputs(self) -> tuple[FilterPad, ...]: ...
-    def __init__(self, name: str) -> None: ...
+    def __new__(cls, name: str) -> Self: ...
 
 filters_available: set[str]

@@ -1,4 +1,4 @@
-from typing import Any, final
+from typing import Any, Self, final
 
 import numpy as np
 
@@ -27,13 +27,13 @@ class AudioFrame(Frame):
     def format(self) -> AudioFormat: ...
     @property
     def layout(self) -> AudioLayout: ...
-    def __init__(
-        self,
+    def __new__(
+        cls,
         format: AudioFormat | str = "s16",
         layout: AudioLayout | str = "stereo",
         samples: int = 0,
         align: int = 1,
-    ) -> None: ...
+    ) -> Self: ...
     @staticmethod
     def from_ndarray(
         array: _SupportedNDarray,

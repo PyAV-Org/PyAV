@@ -1,5 +1,5 @@
 from types import CapsuleType
-from typing import final
+from typing import Self, final
 
 from av.plane import Plane
 
@@ -12,6 +12,6 @@ class VideoPlane(Plane):
     height: int
     buffer_size: int
 
-    def __init__(self, frame: VideoFrame, index: int) -> None: ...
+    def __new__(cls, frame: VideoFrame, index: int) -> Self: ...
     def __dlpack_device__(self) -> tuple[int, int]: ...
     def __dlpack__(self, *, stream: int | None = None) -> CapsuleType: ...
