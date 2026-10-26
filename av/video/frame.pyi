@@ -117,7 +117,7 @@ class VideoFrame(Frame):
     ) -> VideoFrame: ...
     @staticmethod
     def from_bytes(
-        data: bytes,
+        img_bytes: bytes,
         width: int,
         height: int,
         format: str = "rgba",
