@@ -2,6 +2,7 @@ import doctest
 import pkgutil
 import re
 import types
+import unittest
 from unittest import TestCase
 
 import av
@@ -32,7 +33,14 @@ def register_doctests(mod: str | types.ModuleType) -> None:
         assert isinstance(test, doctest.DocTestCase)
 
         def func(self: TestCase, test: doctest.DocTestCase = test) -> None:
-            return test.runTest()
+            # Go through run(); since Python 3.15, runTest() reports to the
+            # result that only run() sets.
+            result = unittest.TestResult()
+            test.run(result)
+            if problems := result.errors + result.failures:
+                self.fail("\n".join(tb for _, tb in problems))
+            if any(t is test for t, _ in result.skipped):
+                self.skipTest("all examples were skipped")
 
         name = str("test_" + re.sub("[^a-zA-Z0-9]+", "_", test.id()).strip("_"))
         func.__name__ = name
