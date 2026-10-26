@@ -18,7 +18,8 @@ from cython.cimports.cpython.pycapsule import (
 )
 from cython.cimports.cpython.ref import Py_DECREF, Py_INCREF
 from cython.cimports.hwcontext_cuda import AVCUDADeviceContext, CUstream
-from cython.cimports.libc.stdint import int64_t, uint8_t, uintptr_t
+from cython.cimports.libc.stddef import ptrdiff_t
+from cython.cimports.libc.stdint import int64_t, uint8_t, uint32_t, uintptr_t
 
 # Holds the VideoReformatter shared by all frames converted on this thread.
 _thread_local = threading.local()
@@ -560,6 +561,24 @@ def useful_array(
         )
 
     return np.ndarray(shape, dtype=dtype_obj, buffer=plane, strides=strides)
+
+
+@cython.cfunc
+def _fill_color(frame: VideoFrame, color: cython.pointer[uint32_t]) -> cython.void:
+    linesize = cython.declare(ptrdiff_t[4])
+    for i in range(4):
+        linesize[i] = frame.ptr.linesize[i]
+    err_check(
+        lib.av_image_fill_color(
+            frame.ptr.data,
+            linesize,
+            cython.cast(lib.AVPixelFormat, frame.ptr.format),
+            color,
+            frame.ptr.width,
+            frame.ptr.height,
+            0,
+        )
+    )
 
 
 @cython.cfunc
@@ -1597,6 +1616,74 @@ class VideoFrame(Frame):
             )
         else:
             raise NotImplementedError(f"Format '{format}' is not supported.")
+        return frame
+
+    @staticmethod
+    def solid(width: int, height: int, color="black", format="yuv420p"):
+        """Create a frame filled with a single color.
+
+        :param color: A color FFmpeg can parse, like ``"red"``, ``"#ff8000"``, or
+            ``"white@0.5"``; or an ``(r, g, b)`` or ``(r, g, b, a)`` tuple of ints
+            from 0 to 255.
+        :param format: The pixel format. The color is converted to it the same
+            way :meth:`reformat` converts an RGB frame.
+
+        >>> frame = VideoFrame.solid(64, 64, "red", "rgb24")
+        >>> bytes(frame.planes[0])[:3]
+        b'\\xff\\x00\\x00'
+
+        """
+        rgba = cython.declare(uint8_t[4])
+        if isinstance(color, str):
+            if lib.av_parse_color(rgba, color.encode(), -1, cython.NULL) < 0:
+                raise ValueError(f"Invalid color {color!r}")
+        else:
+            values = tuple(color)
+            if len(values) == 3:
+                values += (255,)
+            if len(values) != 4 or not all(0 <= v <= 255 for v in values):
+                raise ValueError(
+                    f"Expected an (r, g, b) or (r, g, b, a) tuple of 0-255, got {color!r}"
+                )
+            for i in range(4):
+                rgba[i] = values[i]
+
+        frame: VideoFrame = VideoFrame(width, height, format)
+        desc: cython.pointer[cython.const[lib.AVPixFmtDescriptor]] = (
+            lib.av_pix_fmt_desc_get(cython.cast(lib.AVPixelFormat, frame.ptr.format))
+        )
+        if desc.flags & (lib.AV_PIX_FMT_FLAG_PAL | lib.AV_PIX_FMT_FLAG_BAYER):
+            raise ValueError(f"Cannot fill format '{format}' with a solid color")
+
+        # Let swscale convert a small RGBA block, so the result matches what
+        # reformat() would produce, then copy its components across the frame
+        # without converting every pixel. 16x16 covers any chroma subsampling.
+        color32 = cython.declare(uint32_t[4])
+        for i in range(4):
+            color32[i] = rgba[i]
+        block: VideoFrame = VideoFrame(16, 16, "rgba")
+        _fill_color(block, color32)
+        block = block.reformat(format=format)
+
+        for i in range(desc.nb_components):
+            lib.av_read_image_line2(
+                cython.address(color32[i]),
+                cython.cast(
+                    cython.pointer[cython.pointer[cython.const[uint8_t]]],
+                    block.ptr.data,
+                ),
+                block.ptr.linesize,
+                desc,
+                0,
+                0,
+                i,
+                1,
+                0,
+                4,
+            )
+        _fill_color(frame, color32)
+        frame.ptr.colorspace = block.ptr.colorspace
+        frame.ptr.color_range = block.ptr.color_range
         return frame
 
     @staticmethod

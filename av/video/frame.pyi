@@ -125,6 +125,13 @@ class VideoFrame(Frame):
         flip_vertical: bool = False,
     ) -> VideoFrame: ...
     @staticmethod
+    def solid(
+        width: int,
+        height: int,
+        color: str | tuple[int, int, int] | tuple[int, int, int, int] = "black",
+        format: str = "yuv420p",
+    ) -> VideoFrame: ...
+    @staticmethod
     def from_dlpack(
         planes: object | tuple[object, ...],
         format: str = "nv12",

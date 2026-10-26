@@ -1,3 +1,4 @@
+from libc.stddef cimport ptrdiff_t
 from libc.stdint cimport int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 
 
@@ -242,6 +243,15 @@ cdef extern from "libavutil/imgutils.h" nogil:
         uint8_t *ptr,
         const int linesizes[4]
     )
+    cdef int av_image_fill_color(
+        uint8_t * const dst_data[4],
+        const ptrdiff_t dst_linesize[4],
+        AVPixelFormat pix_fmt,
+        const uint32_t color[4],
+        int width,
+        int height,
+        int flags
+    )
 
 cdef extern from "libavutil/log.h" nogil:
     cdef struct AVClass:
@@ -333,6 +343,11 @@ cdef extern from "libavutil/opt.h" nogil:
         void *obj, const char *name, int search_flags, uint8_t **out_val
     )
 
+cdef extern from "libavutil/parseutils.h" nogil:
+    cdef int av_parse_color(
+        uint8_t *rgba_color, const char *color_string, int slen, void *log_ctx
+    )
+
 cdef extern from "libavutil/pixdesc.h" nogil:
     # See: http://ffmpeg.org/doxygen/trunk/structAVComponentDescriptor.html
     cdef struct AVComponentDescriptor:
@@ -363,6 +378,18 @@ cdef extern from "libavutil/pixdesc.h" nogil:
     cdef AVPixelFormat av_get_pix_fmt(const char *name)
     int av_get_bits_per_pixel(const AVPixFmtDescriptor *pixdesc)
     int av_get_padded_bits_per_pixel(const AVPixFmtDescriptor *pixdesc)
+    void av_read_image_line2(
+        void *dst,
+        const uint8_t *data[4],
+        const int linesize[4],
+        const AVPixFmtDescriptor *desc,
+        int x,
+        int y,
+        int c,
+        int w,
+        int read_pal_component,
+        int dst_element_size
+    )
 
 cdef extern from "libavutil/rational.h" nogil:
     cdef int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
