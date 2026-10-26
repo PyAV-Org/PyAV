@@ -47,10 +47,10 @@ class TestAudioProbe(TestCase):
         assert stream.channels == 2
         assert stream.codec.name == "aac_latm"
         assert stream.codec.long_name == "AAC LATM (Advanced Audio Coding LATM syntax)"
-        assert stream.format is not None
-        assert stream.format.bits == 32
-        assert stream.format.name == "fltp"
-        assert stream.layout.name == "stereo"
+        assert stream.cctx.format is not None
+        assert stream.cctx.format.bits == 32
+        assert stream.cctx.format.name == "fltp"
+        assert stream.cctx.layout.name == "stereo"
         assert stream.max_bit_rate is None
         assert stream.sample_rate == 48000
 
@@ -100,8 +100,8 @@ class TestAudioProbeCorrupt(TestCase):
         assert stream.codec.name == "flac"
         assert stream.codec.long_name == "FLAC (Free Lossless Audio Codec)"
         assert stream.channels == 0
-        assert stream.format is None
-        assert stream.layout.name == "0 channels"
+        assert stream.cctx.format is None
+        assert stream.cctx.layout.name == "0 channels"
         assert stream.max_bit_rate is None
         assert stream.sample_rate == 0
 
@@ -250,8 +250,8 @@ class TestVideoProbe(TestCase):
         assert stream.codec.long_name == "MPEG-2 video"
         assert stream.codec.name == "mpeg2video"
         assert stream.display_aspect_ratio == Fraction(4, 3)
-        assert stream.format is not None
-        assert stream.format.name == "yuv420p"
+        assert stream.cctx.format is not None
+        assert stream.cctx.format.name == "yuv420p"
         assert not stream.has_b_frames
         assert stream.height == 576
         assert stream.max_bit_rate is None
@@ -307,7 +307,7 @@ class TestVideoProbeCorrupt(TestCase):
         assert stream.codec.long_name == "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"
         assert stream.codec.name == "h264"
         assert not stream.display_aspect_ratio
-        assert stream.format is None
+        assert stream.cctx.format is None
         assert not stream.has_b_frames
         assert stream.height == 0
         assert stream.max_bit_rate is None

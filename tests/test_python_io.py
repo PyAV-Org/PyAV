@@ -304,10 +304,10 @@ class TestPythonIO(TestCase):
 
             # codec context properties
             assert stream.codec.name == "png"
-            assert stream.format is not None
-            assert stream.format.name == "rgb24"
-            assert stream.format.width == width
-            assert stream.format.height == height
+            assert stream.cctx.format is not None
+            assert stream.cctx.format.name == "rgb24"
+            assert stream.cctx.format.width == width
+            assert stream.cctx.format.height == height
 
     def test_writing_to_file(self) -> None:
         path = self.sandboxed("writing.mp4")

@@ -94,13 +94,13 @@ def test_filter_output_parameters() -> None:
     with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
         stream = container.streams.video[0]
 
-        assert not is_annexb(stream.codec_context.extradata)
+        assert not is_annexb(stream.cctx.extradata)
         ctx = BitStreamFilterContext("h264_mp4toannexb", stream)
-        assert not is_annexb(stream.codec_context.extradata)
+        assert not is_annexb(stream.cctx.extradata)
         del ctx
 
         _ = BitStreamFilterContext("h264_mp4toannexb", stream, out_stream=stream)
-        assert is_annexb(stream.codec_context.extradata)
+        assert is_annexb(stream.cctx.extradata)
 
 
 def test_filter_flush() -> None:

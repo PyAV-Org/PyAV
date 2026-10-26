@@ -20,14 +20,14 @@ def test_penguin_joke() -> None:
     )
     stream = container.streams.video[0]
 
-    assert stream.codec_context.color_range == 2
-    assert stream.codec_context.color_range == ColorRange.JPEG
+    assert stream.cctx.color_range == 2
+    assert stream.cctx.color_range == ColorRange.JPEG
 
-    assert stream.codec_context.color_primaries == 2
-    assert stream.codec_context.color_trc == 2
+    assert stream.cctx.color_primaries == 2
+    assert stream.cctx.color_trc == 2
 
-    assert stream.codec_context.colorspace == 5
-    assert stream.codec_context.colorspace == Colorspace.ITU601
+    assert stream.cctx.colorspace == 5
+    assert stream.cctx.colorspace == Colorspace.ITU601
 
     for frame in container.decode(stream):
         assert frame.color_range == ColorRange.JPEG  # a.k.a "pc"
@@ -43,11 +43,11 @@ def test_sky_timelapse() -> None:
 
     assert stream.disposition == av.stream.Disposition.default
 
-    assert stream.codec_context.color_range == 1
-    assert stream.codec_context.color_range == ColorRange.MPEG
-    assert stream.codec_context.color_primaries == 1
-    assert stream.codec_context.color_trc == 1
-    assert stream.codec_context.colorspace == 1
+    assert stream.cctx.color_range == 1
+    assert stream.cctx.color_range == ColorRange.MPEG
+    assert stream.cctx.color_primaries == 1
+    assert stream.cctx.color_trc == 1
+    assert stream.cctx.colorspace == 1
 
 
 def test_frame_color_trc_property() -> None:
@@ -100,7 +100,7 @@ def test_chroma_location_round_trip() -> None:
         out_stream.width = 64
         out_stream.height = 64
         out_stream.pix_fmt = "yuv420p"
-        out_stream.codec_context.chroma_sample_location = ChromaLocation.TOPLEFT
+        out_stream.cctx.chroma_sample_location = ChromaLocation.TOPLEFT
 
         for i in range(5):
             frame = av.VideoFrame(width=64, height=64, format="yuv420p")

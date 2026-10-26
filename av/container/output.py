@@ -37,6 +37,17 @@ def _set_codecpar_extradata(
 
 
 @cython.cfunc
+def _set_stream_attrs(stream: Stream, ctx: CodecContext, kwargs: dict) -> cython.void:
+    # format and layout go straight to the codec context, since the stream
+    # passthroughs for them are deprecated.
+    for k, v in kwargs.items():
+        if k == "format" or k == "layout":
+            setattr(ctx, k, v)
+        else:
+            setattr(stream, k, v)
+
+
+@cython.cfunc
 def arm_write_timeout(self: OutputContainer) -> cython.void:
     """Start the write deadline, unless the output is a seekable file.
 
@@ -257,8 +268,7 @@ class OutputContainer(Container):
         if options:
             py_stream.options.update(options)
 
-        for k, v in kwargs.items():
-            setattr(py_stream, k, v)
+        _set_stream_attrs(py_stream, py_codec_context, kwargs)
 
         return py_stream
 
@@ -366,14 +376,14 @@ class OutputContainer(Container):
         if opaque is None:
             opaque = template.type != "video"
 
-        if template.codec_context is None:
+        if template.cctx is None:
             return self._add_stream_without_codec_from_template(template, **kwargs)
 
         codec_obj: Codec
         if opaque:  # Copy ctx from template.
-            codec_obj = template.codec_context.codec
+            codec_obj = template.cctx.codec
         else:  # Construct new codec object.
-            codec_obj = Codec(template.codec_context.codec.name, "w")
+            codec_obj = Codec(template.cctx.codec.name, "w")
 
         codec: cython.pointer[cython.const[lib.AVCodec]] = codec_obj.ptr
 
@@ -410,7 +420,7 @@ class OutputContainer(Container):
             # Copy flags If we're creating a new codec object. This fixes some
             # muxing issues. Overwriting the flag set just above is intentional.
             if not opaque:
-                ctx.flags = template.codec_context.flags
+                ctx.flags = template.cctx.flags
 
             # Initialize stream codec parameters to populate the codec type.
             # Subsequent changes to the codec context will be applied just
@@ -427,8 +437,7 @@ class OutputContainer(Container):
         py_stream: Stream = wrap_stream(self, stream, py_codec_context)
         self.streams.add_stream(py_stream)
 
-        for k, v in kwargs.items():
-            setattr(py_stream, k, v)
+        _set_stream_attrs(py_stream, py_codec_context, kwargs)
 
         return py_stream
 
@@ -602,7 +611,7 @@ class OutputContainer(Container):
 
         # Finalize and open all streams.
         for stream in self.streams:
-            ctx = stream.codec_context
+            ctx = stream.cctx
             if ctx is not None and not ctx.is_open:
                 for k, v in self.options.items():
                     ctx.options.setdefault(k, v)
@@ -798,7 +807,7 @@ class OutputContainer(Container):
                 stream: Stream
                 for stream in self.streams:
                     if (
-                        stream.codec_context is not None
+                        stream.cctx is not None
                         or stream.ptr.codecpar.extradata != cython.NULL
                     ):
                         continue

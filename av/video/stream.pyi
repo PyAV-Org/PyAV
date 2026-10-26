@@ -1,6 +1,8 @@
 from collections.abc import Iterator, Sequence
 from typing import Any, Literal, final
 
+from typing_extensions import deprecated
+
 from av.codec.codec import Codec
 from av.codec.context import ThreadType
 from av.packet import Packet
@@ -18,6 +20,7 @@ class VideoStream(Stream):
     bit_rate_tolerance: int
     sample_aspect_ratio: AVRational
     display_aspect_ratio: AVRational
+    cctx: VideoCodecContext
     codec_context: VideoCodecContext
 
     def encode(self, frame: VideoFrame | None = None) -> list[Packet[VideoStream]]: ...
@@ -39,7 +42,12 @@ class VideoStream(Stream):
     codec: Codec
     codec_tag: str
     options: dict[str, str]
-    format: VideoFormat | None
+    @property
+    @deprecated("Use VideoStream.cctx.format instead")
+    def format(self) -> VideoFormat | None: ...
+    @format.setter
+    @deprecated("Use VideoStream.cctx.format instead")
+    def format(self, value: VideoFormat) -> None: ...
     thread_count: int
     @property
     def thread_type(self) -> ThreadType: ...

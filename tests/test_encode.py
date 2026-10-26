@@ -111,10 +111,10 @@ def assert_rgb_rotate(
     # codec context properties
     assert stream.codec.name == "mpeg4"
     assert stream.codec.long_name == "MPEG-4 part 2"
-    assert stream.format is not None
-    assert stream.format.name == "yuv420p"
-    assert stream.format.width == WIDTH
-    assert stream.format.height == HEIGHT
+    assert stream.cctx.format is not None
+    assert stream.cctx.format.name == "yuv420p"
+    assert stream.cctx.format.width == WIDTH
+    assert stream.cctx.format.height == HEIGHT
 
 
 class TestBasicVideoEncoding(TestCase):
@@ -126,10 +126,10 @@ class TestBasicVideoEncoding(TestCase):
             assert not stream.time_base
 
             # codec context properties
-            assert stream.format is not None
-            assert stream.format.height == 480
-            assert stream.format.name == "yuv420p"
-            assert stream.format.width == 640
+            assert stream.cctx.format is not None
+            assert stream.cctx.format.height == 480
+            assert stream.cctx.format.name == "yuv420p"
+            assert stream.cctx.format.width == 640
             assert stream.height == 480
             assert stream.pix_fmt == "yuv420p"
             assert stream.width == 640
@@ -170,7 +170,7 @@ class TestBasicVideoEncoding(TestCase):
 
         with av.open(path, "w") as output:
             stream = output.add_stream("mpeg4")
-            stream.codec_context.framerate = Fraction(30, 1)
+            stream.cctx.framerate = Fraction(30, 1)
             stream.width = 16
             stream.height = 16
 
@@ -202,8 +202,8 @@ class TestBasicAudioEncoding(TestCase):
             assert not stream.time_base
 
             # codec context properties
-            assert stream.format is not None
-            assert stream.format.name == "s16"
+            assert stream.cctx.format is not None
+            assert stream.cctx.format.name == "s16"
             assert stream.sample_rate == 48000
 
     def test_transcode(self) -> None:
@@ -220,9 +220,9 @@ class TestBasicAudioEncoding(TestCase):
             stream = output.add_stream("mp2", sample_rate)
             assert stream in output.streams.audio
 
-            ctx = stream.codec_context
+            ctx = stream.cctx
             ctx.sample_rate = sample_rate
-            stream.format = sample_fmt
+            stream.cctx.format = sample_fmt
             ctx.layout = channel_layout
 
             with av.open(
@@ -244,8 +244,8 @@ class TestBasicAudioEncoding(TestCase):
             stream = container.streams[0]
 
             # codec context properties
-            assert stream.format is not None
-            assert stream.format.name == "s16p"
+            assert stream.cctx.format is not None
+            assert stream.cctx.format.name == "s16p"
             assert stream.sample_rate == sample_rate
 
 
@@ -279,7 +279,7 @@ class TestEncodeStreamSemantics(TestCase):
             first = output.add_stream("ffv1", rate=30)
             second = output.add_stream("ffv1", rate=30)
 
-            first.format = av.VideoFormat("bgr0", width=16, height=16)
+            first.cctx.format = av.VideoFormat("bgr0", width=16, height=16)
             frame = VideoFrame(16, 16, "bgr0")
             frame.pts = 0
             frame.time_base = Fraction(1, 30)
@@ -287,9 +287,9 @@ class TestEncodeStreamSemantics(TestCase):
 
             # Muxing the first packet writes the header and opens every stream.
             # Changing the second encoder now used to corrupt FFV1 state and crash.
-            assert second.codec_context.is_open
+            assert second.cctx.is_open
             with pytest.raises(RuntimeError, match="Cannot change format"):
-                second.format = av.VideoFormat("bgr0", width=16, height=16)
+                second.cctx.format = av.VideoFormat("bgr0", width=16, height=16)
             with pytest.raises(RuntimeError, match="Cannot change width"):
                 second.width = 16
             with pytest.raises(RuntimeError, match="Cannot change height"):
@@ -307,8 +307,8 @@ class TestEncodeStreamSemantics(TestCase):
 
             astream = output.add_stream("mp2", 48000)
             assert astream in output.streams.audio
-            astream.layout = "stereo"
-            astream.format = "s16"
+            astream.cctx.layout = "stereo"
+            astream.cctx.format = "s16"
 
             assert vstream.index == 0
             assert astream.index == 1
@@ -338,8 +338,8 @@ class TestEncodeStreamSemantics(TestCase):
     def test_stream_index_lazy(self) -> None:
         with av.open(self.sandboxed("output_lazy.mov"), "w") as output:
             astream = output.add_stream("mp2", 48000)
-            astream.layout = "stereo"
-            astream.format = "s16"
+            astream.cctx.layout = "stereo"
+            astream.cctx.format = "s16"
 
             vstream = output.add_stream("mpeg4", 24)
             vstream.pix_fmt = "yuv420p"
@@ -432,8 +432,8 @@ def encode_file_with_max_b_frames(max_b_frames: int) -> io.BytesIO:
     stream.width = 640
     stream.height = 480
     stream.pix_fmt = "yuv420p"
-    stream.codec_context.gop_size = 15
-    stream.codec_context.max_b_frames = max_b_frames
+    stream.cctx.gop_size = 15
+    stream.cctx.max_b_frames = max_b_frames
 
     for i in range(50):
         array = np.empty((stream.height, stream.width, 3), dtype=np.uint8)
@@ -516,8 +516,8 @@ def encode_frames_with_qminmax(
     stream = container.add_stream("h264", rate=30)
     stream.height, stream.width, _ = shape
     stream.pix_fmt = "yuv420p"
-    stream.codec_context.gop_size = 15
-    stream.codec_context.qmin, stream.codec_context.qmax = qminmax
+    stream.cctx.gop_size = 15
+    stream.cctx.qmin, stream.cctx.qmax = qminmax
 
     bytes_encoded = 0
     for frame in frames:
@@ -643,7 +643,7 @@ def test_hardware_encode() -> None:
             muxed += 1
 
     # The hardware frames context must have been set up during open().
-    assert stream.codec_context.is_hwaccel
+    assert stream.cctx.is_hwaccel
 
     for packet in stream.encode():
         container.mux(packet)
@@ -684,18 +684,18 @@ def test_hardware_encode_honors_sw_format() -> None:
     stream.width = 320
     stream.height = 240
     stream.pix_fmt = hw_format
-    stream.codec_context.sw_format = "yuv420p"
+    stream.cctx.sw_format = "yuv420p"
 
-    assert stream.codec_context.sw_format is not None
-    assert stream.codec_context.sw_format.name == "yuv420p"
+    assert stream.cctx.sw_format is not None
+    assert stream.cctx.sw_format.name == "yuv420p"
 
     frame = VideoFrame(320, 240, "rgb24")
     for packet in stream.encode(frame):
         container.mux(packet)
 
-    assert stream.codec_context.pix_fmt == hw_format
-    assert stream.codec_context.sw_format is not None
-    assert stream.codec_context.sw_format.name == "yuv420p"
+    assert stream.cctx.pix_fmt == hw_format
+    assert stream.cctx.sw_format is not None
+    assert stream.cctx.sw_format.name == "yuv420p"
     for packet in stream.encode():
         container.mux(packet)
     container.close()

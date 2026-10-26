@@ -1,6 +1,8 @@
 from collections.abc import Iterator
 from typing import Any, Literal, final
 
+from typing_extensions import deprecated
+
 from av.codec.codec import Codec
 from av.packet import Packet
 from av.stream import Stream
@@ -12,6 +14,7 @@ from .layout import AudioLayout
 
 @final
 class AudioStream(Stream):
+    cctx: AudioCodecContext
     codec_context: AudioCodecContext
     def encode(self, frame: AudioFrame | None = None) -> list[Packet[AudioStream]]: ...
     def encode_lazy(
@@ -32,10 +35,14 @@ class AudioStream(Stream):
     channels: int
     type: Literal["audio"]
     @property
+    @deprecated("Use AudioStream.cctx.format instead")
     def format(self) -> AudioFormat | None: ...
     @format.setter
+    @deprecated("Use AudioStream.cctx.format instead")
     def format(self, value: AudioFormat | str) -> None: ...
     @property
+    @deprecated("Use AudioStream.cctx.layout instead")
     def layout(self) -> AudioLayout: ...
     @layout.setter
+    @deprecated("Use AudioStream.cctx.layout instead")
     def layout(self, value: AudioLayout | str) -> None: ...

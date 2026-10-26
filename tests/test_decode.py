@@ -81,7 +81,7 @@ class TestDecode(TestCase):
         data = buffer.getvalue().replace(b"avc1", b"zzzz")
         with av.open(io.BytesIO(data)) as container:
             stream = container.streams.video[0]
-            assert stream.codec_context is None
+            assert stream.cctx is None
             with pytest.raises(av.DecoderNotFoundError):
                 list(container.decode(stream))
 
@@ -89,7 +89,7 @@ class TestDecode(TestCase):
         with av.open(io.BytesIO(), "w", format="mp4") as output:
             stream = output.add_mux_stream("h264", width=16, height=16)
             assert isinstance(stream, av.VideoStream)
-            assert stream.codec_context is None
+            assert stream.cctx is None
             with pytest.raises(av.EncoderNotFoundError):
                 stream.encode(None)
 
@@ -122,7 +122,7 @@ class TestDecode(TestCase):
         # it must fall back to the one the container set on the context.
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
-        ctx = stream.codec_context
+        ctx = stream.cctx
         assert ctx is not None
 
         for packet in container.demux(stream):
@@ -195,8 +195,8 @@ class TestDecode(TestCase):
     def test_decoded_motion_vectors(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
-        codec_context = stream.codec_context
-        codec_context.options = {"flags2": "+export_mvs"}
+        cctx = stream.cctx
+        cctx.options = {"flags2": "+export_mvs"}
 
         for frame in container.decode(stream):
             vectors = frame.side_data.get("MOTION_VECTORS")
@@ -210,7 +210,7 @@ class TestDecode(TestCase):
     def test_motion_vector_index_bounds(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
-        stream.codec_context.options = {"flags2": "+export_mvs"}
+        stream.cctx.options = {"flags2": "+export_mvs"}
 
         for frame in container.decode(stream):
             vectors = frame.side_data.get("MOTION_VECTORS")
@@ -238,7 +238,7 @@ class TestDecode(TestCase):
     def test_decoded_video_enc_params(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
-        stream.codec_context.options = {"export_side_data": "venc_params"}
+        stream.cctx.options = {"export_side_data": "venc_params"}
 
         for frame in container.decode(stream):
             video_enc_params = cast(
@@ -329,7 +329,7 @@ class TestDecode(TestCase):
     def test_side_data_mapping_protocol(self) -> None:
         container = av.open(fate_suite("h264/interlaced_crop.mp4"))
         stream = container.streams.video[0]
-        stream.codec_context.options = {"flags2": "+export_mvs"}
+        stream.cctx.options = {"flags2": "+export_mvs"}
 
         for frame in container.decode(stream):
             side_data = frame.side_data
@@ -394,7 +394,7 @@ class TestDecode(TestCase):
 
         container = av.open(test_video_path, hwaccel=hwaccel)
         video_stream = container.streams.video[0]
-        assert video_stream.codec_context.is_hwaccel
+        assert video_stream.cctx.is_hwaccel
 
         frame_count = 0
         for frame in container.decode(video_stream):

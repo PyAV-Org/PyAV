@@ -96,7 +96,7 @@ class Stream:
         >>> stream
         <av.VideoStream #0 h264, yuv420p 1280x720 at 0x...>
 
-    This encapsulates a :class:`.CodecContext`, located at :attr:`Stream.codec_context`.
+    This encapsulates a :class:`.CodecContext`, located at :attr:`Stream.cctx`.
     Attribute access is passed through to that context when attributes are missing
     on the stream itself. E.g. ``stream.options`` will be the options on the
     context.
@@ -117,7 +117,7 @@ class Stream:
         self.container = container
         self.ptr = stream
 
-        self.codec_context = codec_context
+        self.cctx = codec_context
 
         self.metadata = avdict_to_dict(stream.metadata)
 
@@ -134,7 +134,7 @@ class Stream:
     def _assert_has_codec_context(
         self, err: cython.int = lib.AVERROR_DECODER_NOT_FOUND
     ) -> cython.void:
-        if self.codec_context is None:
+        if self.cctx is None:
             err_check(err)
 
     def __repr__(self):
@@ -164,27 +164,28 @@ class Stream:
         if name == "time_base":
             to_avrational(value, cython.address(self.ptr.time_base))
             return
+        if name == "format" or name == "layout":
+            prop = getattr(type(self), name, None)
+            if prop is not None:
+                prop.__set__(self, value)
+                return
 
         # Convenience setter for codec context properties.
-        if self.codec_context is not None:
-            setattr(self.codec_context, name, value)
+        if self.cctx is not None:
+            setattr(self.cctx, name, value)
 
     @cython.cfunc
     def _finalize_for_output(self) -> cython.void:
         dict_to_avdict(cython.address(self.ptr.metadata), self.metadata)
 
-        if self.codec_context is None:
+        if self.cctx is None:
             return
 
         if not self.ptr.time_base.num:
-            self.ptr.time_base = self.codec_context.ptr.time_base
+            self.ptr.time_base = self.cctx.ptr.time_base
 
         # It prefers if we pass it parameters via this other object. Let's just copy what we want.
-        err_check(
-            lib.avcodec_parameters_from_context(
-                self.ptr.codecpar, self.codec_context.ptr
-            )
-        )
+        err_check(lib.avcodec_parameters_from_context(self.ptr.codecpar, self.cctx.ptr))
 
     @property
     def index_entries(self):
@@ -209,14 +210,23 @@ class Stream:
             self.ptr.id = value
 
     @property
+    def codec_context(self):
+        """
+        Alias of :attr:`cctx`.
+
+        :type: CodecContext | None
+        """
+        return self.cctx
+
+    @property
     def profiles(self):
         """
         List the available profiles for this stream.
 
         :type: list[str]
         """
-        if self.codec_context:
-            return self.codec_context.profiles
+        if self.cctx:
+            return self.cctx.profiles
         else:
             return []
 
@@ -227,8 +237,8 @@ class Stream:
 
         :type: str
         """
-        if self.codec_context:
-            return self.codec_context.profile
+        if self.cctx:
+            return self.cctx.profile
         else:
             return None
 

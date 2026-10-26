@@ -49,15 +49,15 @@ def test_add_mux_stream_video() -> None:
     buf = io.BytesIO()
     with av.open(input_path) as input_:
         in_stream = input_.streams.video[0]
-        width = in_stream.codec_context.width
-        height = in_stream.codec_context.height
+        width = in_stream.cctx.width
+        height = in_stream.cctx.height
 
         with av.open(buf, "w", format="mp4") as output:
             out_stream = output.add_mux_stream(
-                in_stream.codec_context.name, width=width, height=height
+                in_stream.cctx.name, width=width, height=height
             )
             assert isinstance(out_stream, av.VideoStream)
-            assert out_stream.codec_context is None
+            assert out_stream.cctx is None
             assert out_stream.type == "video"
 
             out_stream.time_base = in_stream.time_base
@@ -71,8 +71,8 @@ def test_add_mux_stream_video() -> None:
     buf.seek(0)
     with av.open(buf) as result:
         assert len(result.streams.video) == 1
-        assert result.streams.video[0].codec_context.width == width
-        assert result.streams.video[0].codec_context.height == height
+        assert result.streams.video[0].cctx.width == width
+        assert result.streams.video[0].cctx.height == height
 
 
 def test_add_mux_stream_no_codec_context() -> None:
@@ -82,8 +82,8 @@ def test_add_mux_stream_no_codec_context() -> None:
         video_stream = output.add_mux_stream("h264", width=1920, height=1080)
         audio_stream = output.add_mux_stream("aac", rate=44100)
 
-        assert video_stream.codec_context is None
-        assert audio_stream.codec_context is None
+        assert video_stream.cctx is None
+        assert audio_stream.cctx is None
         # repr should not crash
         assert "video/<nocodec>" in repr(video_stream)
         assert "audio/<nocodec>" in repr(audio_stream)

@@ -44,6 +44,7 @@ class Discard(IntEnum):
 class Stream:
     name: str | None
     container: Container
+    cctx: CodecContext | None
     codec_context: CodecContext | None
     metadata: dict[str, str]
     @property
@@ -66,12 +67,14 @@ class Stream:
 
 @final
 class DataStream(Stream):
+    cctx: None
     codec_context: None
     type: Literal["data"]
     name: str | None
 
 @final
 class AttachmentStream(Stream):
+    cctx: None
     codec_context: None
     type: Literal["attachment"]
     @property
