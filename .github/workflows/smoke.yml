@@ -28,26 +28,26 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-24.04, python: "3.14", ffmpeg: "9.0.2", extras: true}
-          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.1.2"}
+          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.1.3"}
           - {os: ubuntu-24.04, python: "3.13", ffmpeg: "9.0.2"}
-          - {os: ubuntu-24.04-riscv, python: "3.14", ffmpeg: "9.0.2"}
-          - {os: macos-15, python: "3.12", ffmpeg: "8.1.2"}
+          # riscv64 wheels (e.g. Pillow) are often missing on PyPI; RISE mirrors
+          # prebuilt wheels for it so uv doesn't have to build them from source.
+          # It also uses a pyav-ffmpeg prebuilt to speed up smoke tests.
+          - {os: ubuntu-24.04-riscv, python: "3.14", ffmpeg: "9.0.2", prebuilt: true, uv-index: "https://pypi.riseproject.dev/simple/"}
+          - {os: macos-15, python: "3.12", ffmpeg: "8.1.3"}
           - {os: macos-15, python: "3.14", ffmpeg: "9.0.2"}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
       PYAV_LIBRARY: ffmpeg-${{ matrix.config.ffmpeg }}
-      # riscv64 wheels (e.g. Pillow) are often missing on PyPI; RISE mirrors
-      # prebuilt wheels for it so uv doesn't have to build them from source.
       # unsafe-best-match is needed so uv still falls back to PyPI for
-      # packages/versions RISE doesn't happen to carry.
-      UV_INDEX: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && 'https://pypi.riseproject.dev/simple/' || '' }}
-      UV_INDEX_STRATEGY: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && 'unsafe-best-match' || 'first-index' }}
-      # riscv64 uses a pyav-ffmpeg prebuilt to speed up smoke tests; its .pc
-      # files bake in prefix=/tmp/vendor, so it must be extracted there
-      # verbatim and pointed at explicitly.
-      PKG_CONFIG_PATH: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && '/tmp/vendor/lib/pkgconfig' || '' }}
-      LD_LIBRARY_PATH: ${{ matrix.config.os == 'ubuntu-24.04-riscv' && '/tmp/vendor/lib' || '' }}
+      # packages/versions an extra index doesn't happen to carry.
+      UV_INDEX: ${{ matrix.config.uv-index || '' }}
+      UV_INDEX_STRATEGY: ${{ matrix.config.uv-index && 'unsafe-best-match' || 'first-index' }}
+      # pyav-ffmpeg prebuilt .pc files bake in prefix=/tmp/vendor, so it must
+      # be extracted there verbatim and pointed at explicitly.
+      PKG_CONFIG_PATH: ${{ matrix.config.prebuilt && '/tmp/vendor/lib/pkgconfig' || '' }}
+      LD_LIBRARY_PATH: ${{ matrix.config.prebuilt && '/tmp/vendor/lib' || '' }}
 
     steps:
     - uses: actions/checkout@v7
@@ -61,35 +61,22 @@ jobs:
 
     - name: OS Packages
       run: |
-        case ${{ matrix.config.os }} in
-          ubuntu-24.04)
-            sudo apt-get update
-            sudo apt-get install -y \
-              autoconf \
-              automake \
-              build-essential \
-              cmake \
-              libtool \
-              libx264-dev \
-              nasm \
-              pkg-config \
-              zlib1g-dev
-            if [[ "${{ matrix.config.extras }}" ]]; then
-              sudo apt-get install -y doxygen
+        case ${{ runner.os }} in
+          Linux)
+            packages="build-essential pkg-config zlib1g-dev"
+            if [[ "${{ matrix.config.prebuilt }}" ]]; then
+              # libxcb-shape0 is needed for the prebuilt's X11 usage.
+              packages="$packages libxcb-shape0"
+            else
+              packages="$packages autoconf automake cmake libtool libx264-dev nasm"
             fi
-            ;;
-          ubuntu-24.04-riscv)
-          # Since we're using pyav-ffmpeg prebuilds, we don't need the full set
-          # of packages installed on other runners. libxcb-shape0 is needed
-          # for the prebuilt's X11 usage.
+            if [[ "${{ matrix.config.extras }}" ]]; then
+              packages="$packages doxygen"
+            fi
             sudo apt-get update
-            sudo apt-get install -y \
-              build-essential \
-              pkg-config \
-              zlib1g-dev \
-              libxcb-shape0
+            sudo apt-get install -y $packages
             ;;
-          macos-15)
+          macOS)
             brew install automake libtool opus x264
             ;;
         esac
@@ -97,8 +84,7 @@ jobs:
     - name: Pip and FFmpeg
       run: |
         . scripts/activate.sh ffmpeg-${{ matrix.config.ffmpeg }}
-        # don't build from source for riscv64
-        if [ "${{ matrix.config.os }}" = "ubuntu-24.04-riscv" ]; then
+        if [[ "${{ matrix.config.prebuilt }}" ]]; then
             python scripts/fetch-vendor.py --config-file scripts/ffmpeg-latest.json /tmp/vendor
         else
             scripts/build-deps
