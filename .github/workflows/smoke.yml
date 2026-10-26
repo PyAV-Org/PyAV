@@ -20,22 +20,58 @@ on:
       - '.github/workflows/lint.yml'
       - '.github/workflows/tests.yml'
 jobs:
+  matrix:
+    name: Pick Python versions
+    runs-on: ubuntu-24.04
+    outputs:
+      config: ${{ steps.pick.outputs.config }}
+    steps:
+    - name: Pick
+      id: pick
+      shell: python
+      run: |
+        import json, os, random
+
+        configs = [
+            {"os": "ubuntu-24.04", "ffmpeg": "9.0.2", "extras": True},
+            {"os": "ubuntu-24.04", "ffmpeg": "8.1.3"},
+            {"os": "ubuntu-24.04", "ffmpeg": "9.0.2"},
+            # riscv64 wheels (e.g. Pillow) are often missing on PyPI; RISE
+            # mirrors prebuilt wheels for it so uv doesn't have to build them
+            # from source. It also uses a pyav-ffmpeg prebuilt to speed up
+            # smoke tests. Neither index has cp315 riscv64 wheels yet.
+            {
+                "os": "ubuntu-24.04-riscv",
+                "ffmpeg": "9.0.2",
+                "prebuilt": True,
+                "uv-index": "https://pypi.riseproject.dev/simple/",
+                "pythons": ["3.12", "3.13", "3.14"],
+            },
+            {"os": "macos-15", "ffmpeg": "8.1.3"},
+            {"os": "macos-15", "ffmpeg": "9.0.2"},
+        ]
+        pythons = ["3.12", "3.13", "3.14", "3.15"]
+        # Don't give two jobs with the same OS and FFmpeg the same Python.
+        taken = set()
+        for config in configs:
+            key = (config["os"], config["ffmpeg"])
+            choices = [
+                py for py in config.pop("pythons", pythons) if (key, py) not in taken
+            ]
+            config["python"] = random.choice(choices)
+            taken.add((key, config["python"]))
+
+        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"config={json.dumps(configs)}\n")
+
   nix:
-    name: "py-${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{matrix.config.os}}"
+    name: "py${{ matrix.config.python }} lib-${{ matrix.config.ffmpeg }} ${{ matrix.config.os }}"
+    needs: matrix
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - {os: ubuntu-24.04, python: "3.14", ffmpeg: "9.0.2", extras: true}
-          - {os: ubuntu-24.04, python: "3.12", ffmpeg: "8.1.3"}
-          - {os: ubuntu-24.04, python: "3.13", ffmpeg: "9.0.2"}
-          # riscv64 wheels (e.g. Pillow) are often missing on PyPI; RISE mirrors
-          # prebuilt wheels for it so uv doesn't have to build them from source.
-          # It also uses a pyav-ffmpeg prebuilt to speed up smoke tests.
-          - {os: ubuntu-24.04-riscv, python: "3.14", ffmpeg: "9.0.2", prebuilt: true, uv-index: "https://pypi.riseproject.dev/simple/"}
-          - {os: macos-15, python: "3.12", ffmpeg: "8.1.3"}
-          - {os: macos-15, python: "3.14", ffmpeg: "9.0.2"}
+        config: ${{ fromJSON(needs.matrix.outputs.config) }}
 
     env:
       PYAV_PYTHON: python${{ matrix.config.python }}
