@@ -96,7 +96,11 @@ class FilterContext:
         output_idx: cython.int = 0,
         input_idx: cython.int = 0,
     ):
+        # avfilter_link() aborts the process on a cross-graph link.
+        if input_.graph is not self.graph:
+            raise ValueError("cannot link filters from different graphs")
         err_check(lib.avfilter_link(self.ptr, output_idx, input_.ptr, input_idx))
+        self.graph.configured = False
 
     def push(self, frame: Frame | None):
         res: cython.int
