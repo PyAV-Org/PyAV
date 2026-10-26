@@ -8,6 +8,7 @@ on:
       - '**.rst'
       - '**.txt'
       - '**.pyi'
+      - 'av/about.py'
       - '.github/workflows/lint.yml'
       - '.github/workflows/tests.yml'
   pull_request:
@@ -17,6 +18,7 @@ on:
       - '**.rst'
       - '**.txt'
       - '**.pyi'
+      - 'av/about.py'
       - '.github/workflows/lint.yml'
       - '.github/workflows/tests.yml'
 jobs:
