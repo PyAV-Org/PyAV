@@ -1,51 +1,46 @@
 import doctest
 import pkgutil
 import re
+import types
+import unittest
 from unittest import TestCase
 
 import av
 import av.datasets
 
-
-def fix_doctests(suite):
-    for case in suite._tests:
-        # Add some more flags.
-        case._dt_optionflags = (
-            (case._dt_optionflags or 0)
-            | doctest.IGNORE_EXCEPTION_DETAIL
-            | doctest.ELLIPSIS
-            | doctest.NORMALIZE_WHITESPACE
-        )
-
-        case._dt_test.globs["av"] = av
-        case._dt_test.globs["video_path"] = av.datasets.curated(
-            "pexels/time-lapse-video-of-night-sky-857195.mp4"
-        )
-
-        for example in case._dt_test.examples:
-            # Remove b prefix from strings.
-            if example.want.startswith("b'"):
-                example.want = example.want[1:]
+VIDEO_PATH = av.datasets.curated("pexels/time-lapse-video-of-night-sky-857195.mp4")
 
 
-def register_doctests(mod):
+def register_doctests(mod: str | types.ModuleType) -> None:
     if isinstance(mod, str):
         mod = __import__(mod, fromlist=[""])
 
     try:
-        suite = doctest.DocTestSuite(mod)
+        suite = doctest.DocTestSuite(
+            mod,
+            extraglobs={"av": av, "video_path": VIDEO_PATH},
+            optionflags=doctest.IGNORE_EXCEPTION_DETAIL
+            | doctest.ELLIPSIS
+            | doctest.NORMALIZE_WHITESPACE,
+        )
     except ValueError:
         return
-
-    fix_doctests(suite)
 
     cls_name = "Test" + "".join(x.title() for x in mod.__name__.split("."))
     cls = type(cls_name, (TestCase,), {})
 
-    for test in suite._tests:
+    for test in suite:
+        assert isinstance(test, doctest.DocTestCase)
 
-        def func(self):
-            return test.runTest()
+        def func(self: TestCase, test: doctest.DocTestCase = test) -> None:
+            # Go through run(); since Python 3.15, runTest() reports to the
+            # result that only run() sets.
+            result = unittest.TestResult()
+            test.run(result)
+            if problems := result.errors + result.failures:
+                self.fail("\n".join(tb for _, tb in problems))
+            if any(t is test for t, _ in result.skipped):
+                self.skipTest("all examples were skipped")
 
         name = str("test_" + re.sub("[^a-zA-Z0-9]+", "_", test.id()).strip("_"))
         func.__name__ = name
