@@ -1,6 +1,6 @@
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Literal, final, overload
+from typing import Any, Literal, Self, final, overload
 
 import numpy as np
 from PIL.Image import Image
@@ -40,13 +40,13 @@ class CudaContext:
     def current_ctx(self) -> bool: ...
     @property
     def cuda_stream(self) -> int: ...
-    def __init__(
-        self,
+    def __new__(
+        cls,
         device_id: int = 0,
         primary_ctx: bool = True,
         current_ctx: bool = False,
         cuda_stream: int | None = None,
-    ) -> None: ...
+    ) -> Self: ...
 
 @final
 class VideoFrame(Frame):
@@ -71,9 +71,9 @@ class VideoFrame(Frame):
     def interlaced_frame(self) -> bool: ...
     @property
     def rotation(self) -> int: ...
-    def __init__(
-        self, width: int = 0, height: int = 0, format: str = "yuv420p"
-    ) -> None: ...
+    def __new__(
+        cls, width: int = 0, height: int = 0, format: str = "yuv420p"
+    ) -> Self: ...
     def reformat(
         self,
         width: int | None = None,

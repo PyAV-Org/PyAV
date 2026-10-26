@@ -1,7 +1,7 @@
 __all__ = ("Flags", "ContainerFormat", "formats_available")
 
 from enum import Flag
-from typing import Literal, final
+from typing import Literal, Self, final
 
 class Flags(Flag):
     _value_: int
@@ -25,7 +25,7 @@ class Flags(Flag):
 
 @final
 class ContainerFormat:
-    def __init__(self, name: str, mode: Literal["r", "w"] | None = None) -> None: ...
+    def __new__(cls, name: str, mode: Literal["r", "w"] | None = None) -> Self: ...
     @property
     def name(self) -> str: ...
     @property

@@ -1,4 +1,4 @@
-from typing import final
+from typing import Self, final
 
 @final
 class AudioFormat:
@@ -11,4 +11,4 @@ class AudioFormat:
     packed: AudioFormat
     container_name: str
 
-    def __init__(self, name: str | AudioFormat) -> None: ...
+    def __new__(cls, name: str | AudioFormat) -> Self: ...

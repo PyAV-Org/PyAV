@@ -1,3 +1,5 @@
+from typing import Self
+
 from typing_extensions import disjoint_base
 
 from .buffer import Buffer
@@ -5,4 +7,4 @@ from .frame import Frame
 
 @disjoint_base
 class Plane(Buffer):
-    def __init__(self, frame: Frame, index: int) -> None: ...
+    def __new__(cls, frame: Frame, index: int) -> Self: ...

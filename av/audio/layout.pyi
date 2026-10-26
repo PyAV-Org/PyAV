@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import final
+from typing import Self, final
 
 @final
 class AudioLayout:
     name: str
     nb_channels: int
     channels: tuple[AudioChannel, ...]
-    def __init__(self, layout: str | AudioLayout): ...
+    def __new__(cls, layout: str | AudioLayout) -> Self: ...
 
 @dataclass
 class AudioChannel:
