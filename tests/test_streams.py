@@ -454,18 +454,18 @@ def test_audio_format_layout_passthrough_deprecated() -> None:
         stream = output.add_stream("aac", rate=48000)
         assert isinstance(stream, av.AudioStream)
 
-        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+        with pytest.warns(DeprecationWarning, match=r"cctx\.format"):
             stream.format = "fltp"
-        with pytest.warns(DeprecationWarning, match="cctx\.layout"):
+        with pytest.warns(DeprecationWarning, match=r"cctx\.layout"):
             stream.layout = "mono"
         fmt = stream.cctx.format
         assert fmt is not None and fmt.name == "fltp"
         assert stream.cctx.layout.name == "mono"
 
-        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+        with pytest.warns(DeprecationWarning, match=r"cctx\.format"):
             fmt = stream.format
         assert fmt is not None and fmt.name == "fltp"
-        with pytest.warns(DeprecationWarning, match="cctx\.layout"):
+        with pytest.warns(DeprecationWarning, match=r"cctx\.layout"):
             assert stream.layout.name == "mono"
 
 
@@ -474,11 +474,11 @@ def test_video_format_passthrough_deprecated() -> None:
         stream = output.add_stream("mpeg4", rate=24)
         assert isinstance(stream, av.VideoStream)
 
-        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+        with pytest.warns(DeprecationWarning, match=r"cctx\.format"):
             stream.format = av.VideoFormat("yuv420p", 32, 32)
         assert stream.cctx.width == 32
 
-        with pytest.warns(DeprecationWarning, match="cctx\.format"):
+        with pytest.warns(DeprecationWarning, match=r"cctx\.format"):
             assert stream.format is not None
 
 
