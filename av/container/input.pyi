@@ -4,15 +4,35 @@ from typing import Literal, final, overload
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
 from av.packet import Packet
-from av.stream import AttachmentStream, DataStream, Stream
+from av.stream import AttachmentStream, DataStream, Discard, Stream
 from av.subtitles.stream import SubtitleStream
 from av.subtitles.subtitle import SubtitleSet
 from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
 
 from .core import Container
-from .program import Program
 from .streams import _Indices, _StreamSelector
+
+@final
+class Program:
+    @property
+    def index(self) -> int: ...
+    @property
+    def id(self) -> int: ...
+    @property
+    def program_num(self) -> int: ...
+    @property
+    def pmt_pid(self) -> int: ...
+    @property
+    def pcr_pid(self) -> int: ...
+    @property
+    def metadata(self) -> dict[str, str]: ...
+    @property
+    def streams(self) -> tuple[Stream, ...]: ...
+    @property
+    def discard(self) -> Discard: ...
+    @discard.setter
+    def discard(self, value: Discard | int) -> None: ...
 
 @final
 class InputContainer(Container):

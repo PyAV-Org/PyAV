@@ -3,7 +3,7 @@ from collections import Counter
 import pytest
 
 import av
-from av.container.program import Program
+from av.container.input import Program
 from av.stream import Discard
 
 from .common import fate_suite
