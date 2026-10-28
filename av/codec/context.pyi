@@ -13,7 +13,7 @@ from av.packet import Packet, PktSideDataT
 from av.rational import AVRational
 from av.sidedata.sidedata import Type as FrameSideDataType
 from av.stream import Stream
-from av.subtitles import _SubtitleCodecName
+from av.subtitles import _SubtitleCodecName, _SubtitleDecoderName
 from av.subtitles.codeccontext import SubtitleCodecContext
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle
 from av.video import _VideoCodecName
@@ -218,6 +218,13 @@ class CodecContext:
     def create(
         codec: _SubtitleCodecName,
         mode: Literal["r", "w"] | None = None,
+        hwaccel: HWAccel | None = None,
+    ) -> SubtitleCodecContext: ...
+    @overload
+    @staticmethod
+    def create(
+        codec: _SubtitleDecoderName,
+        mode: Literal["r"] | None = None,
         hwaccel: HWAccel | None = None,
     ) -> SubtitleCodecContext: ...
     @overload

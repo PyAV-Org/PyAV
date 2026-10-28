@@ -4,7 +4,6 @@ from typing import cast
 
 import av
 from av.codec.context import CodecContext
-from av.subtitles.codeccontext import SubtitleCodecContext
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, Subtitle, SubtitleSet
 
 from .common import TestCase, fate_suite
@@ -86,7 +85,7 @@ class TestSubtitle:
 
             return bytes([0xFC, odd(b1), odd(b2)])
 
-        ctx = cast(SubtitleCodecContext, CodecContext.create("eia_608", "r"))
+        ctx = CodecContext.create("eia_608", "r")
         ctx.pkt_timebase = Fraction(1, 1000)
 
         # A pop-on caption: resume caption loading, "HI", end of caption.
