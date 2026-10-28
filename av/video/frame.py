@@ -456,6 +456,20 @@ def alloc_video_frame() -> VideoFrame:
     return VideoFrame(_cinit_bypass_sentinel)
 
 
+def _check_crop(value, other, size, names):
+    # Mirror av_frame_apply_cropping(): the two crops on an axis must leave at
+    # least one pixel. Some hardware filters read these fields unchecked.
+    value = int(value)
+    if value < 0:
+        raise ValueError(f"{names[0]} must not be negative")
+    if value and value + other >= size:
+        raise ValueError(
+            f"{names[0]} + {names[1]} must be less than the frame "
+            f"{names[2]} ({size}), got {value} + {other}"
+        )
+    return value
+
+
 class PictureType(IntEnum):
     NONE = lib.AV_PICTURE_TYPE_NONE  # Undefined
     I = lib.AV_PICTURE_TYPE_I  # Intra
@@ -722,6 +736,10 @@ class VideoFrame(Frame):
         option is ``"0"``, in which case the crop is reported here and can be
         applied with :meth:`apply_cropping`.
 
+        Setting a value raises :class:`ValueError` if it would leave no rows,
+        i.e. if ``crop_top + crop_bottom`` would reach :attr:`height`. The same
+        goes for ``crop_left + crop_right`` and :attr:`width`.
+
         Wraps :ffmpeg:`AVFrame.crop_top`.
 
         :type: int
@@ -730,7 +748,12 @@ class VideoFrame(Frame):
 
     @crop_top.setter
     def crop_top(self, value):
-        self.ptr.crop_top = value
+        self.ptr.crop_top = _check_crop(
+            value,
+            self.ptr.crop_bottom,
+            self.ptr.height,
+            ("crop_top", "crop_bottom", "height"),
+        )
 
     @property
     def crop_bottom(self):
@@ -744,7 +767,12 @@ class VideoFrame(Frame):
 
     @crop_bottom.setter
     def crop_bottom(self, value):
-        self.ptr.crop_bottom = value
+        self.ptr.crop_bottom = _check_crop(
+            value,
+            self.ptr.crop_top,
+            self.ptr.height,
+            ("crop_bottom", "crop_top", "height"),
+        )
 
     @property
     def crop_left(self):
@@ -758,7 +786,12 @@ class VideoFrame(Frame):
 
     @crop_left.setter
     def crop_left(self, value):
-        self.ptr.crop_left = value
+        self.ptr.crop_left = _check_crop(
+            value,
+            self.ptr.crop_right,
+            self.ptr.width,
+            ("crop_left", "crop_right", "width"),
+        )
 
     @property
     def crop_right(self):
@@ -772,7 +805,12 @@ class VideoFrame(Frame):
 
     @crop_right.setter
     def crop_right(self, value):
-        self.ptr.crop_right = value
+        self.ptr.crop_right = _check_crop(
+            value,
+            self.ptr.crop_left,
+            self.ptr.width,
+            ("crop_right", "crop_left", "width"),
+        )
 
     def apply_cropping(self, unaligned=False):
         """Crop the frame in place according to its ``crop_*`` attributes.

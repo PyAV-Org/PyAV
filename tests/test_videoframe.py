@@ -1582,11 +1582,29 @@ def test_apply_cropping_plane_stays_in_buffer() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array[:, 10:])
 
 
-def test_apply_cropping_invalid() -> None:
+def test_crop_setters_reject_invalid() -> None:
     frame = VideoFrame(64, 48, "yuv420p")
-    frame.crop_left = 100
-    with pytest.raises(av.error.OverflowError):
-        frame.apply_cropping()
+    with pytest.raises(ValueError):
+        frame.crop_left = 64
+    with pytest.raises(ValueError):
+        frame.crop_top = -1
+
+    frame.crop_left = 40
+    with pytest.raises(ValueError, match="crop_right"):
+        frame.crop_right = 24
+    frame.crop_right = 23
+
+    frame.crop_bottom = 47
+    with pytest.raises(ValueError, match="crop_top"):
+        frame.crop_top = 1
+    assert (frame.crop_left, frame.crop_right) == (40, 23)
+    assert (frame.crop_top, frame.crop_bottom) == (0, 47)
+
+    # Zero is always allowed, even on a frame with no pixels.
+    empty = VideoFrame()
+    empty.crop_left = 0
+    with pytest.raises(ValueError):
+        empty.crop_left = 1
 
 
 def _encode_m2v() -> bytearray:
