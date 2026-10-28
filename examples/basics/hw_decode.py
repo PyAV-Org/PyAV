@@ -40,7 +40,7 @@ print("Decoding in software (auto threading)...")
 
 container = av.open(test_file_path)
 
-container.streams.video[0].thread_type = "AUTO"
+container.streams.video[0].cctx.thread_type = "AUTO"
 
 start_time = time.time()
 frame_count = 0

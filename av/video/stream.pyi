@@ -50,8 +50,10 @@ class VideoStream(Stream):
     def format(self, value: VideoFormat) -> None: ...
     thread_count: int
     @property
+    @deprecated("Use VideoStream.cctx.thread_type instead")
     def thread_type(self) -> ThreadType: ...
     @thread_type.setter
+    @deprecated("Use VideoStream.cctx.thread_type instead")
     def thread_type(self, value: int | str | ThreadType) -> None: ...
     width: int
     height: int
