@@ -1698,3 +1698,23 @@ def test_apply_cropping_bitstream(format: str) -> None:
     assert (frame.crop_right, frame.crop_bottom) == (0, 0)
     assert plane.buffer_size == line_size * 43
     assert frame.to_ndarray(format="rgb24").shape == (43, 61, 3)
+
+
+def test_reformat_crop() -> None:
+    frame = VideoFrame(64, 48, "yuv420p")
+    frame.crop_left = 40
+    frame.crop_top = 30
+    frame.crop_bottom = 2
+
+    # Same size: the crop still describes the same pixels.
+    rgb = frame.reformat(format="rgb24")
+    assert (rgb.crop_left, rgb.crop_top, rgb.crop_bottom) == (40, 30, 2)
+    rgb.apply_cropping(unaligned=True)
+    assert (rgb.width, rgb.height) == (24, 16)
+
+    # Resized: the source crop no longer fits, so it is dropped.
+    small = frame.reformat(width=32, height=24, format="rgb24")
+    assert small.crop_left == small.crop_top == small.crop_bottom == 0
+    assert small.crop_right == 0
+    small.apply_cropping()
+    assert (small.width, small.height) == (32, 24)

@@ -303,6 +303,15 @@ class VideoReformatter:
         new_frame.ptr.width = width
         new_frame.ptr.height = height
 
+        # The copied crop is in source pixels. It still holds after a pixel
+        # format change, but not after a resize, where it could even exceed the
+        # new dimensions.
+        if width != frame.ptr.width or height != frame.ptr.height:
+            new_frame.ptr.crop_top = 0
+            new_frame.ptr.crop_bottom = 0
+            new_frame.ptr.crop_left = 0
+            new_frame.ptr.crop_right = 0
+
         # A transfer-characteristic / primaries conversion is opt-in. Unlike the
         # pre-17.0 sws_scale, sws_scale_frame inspects color_trc/color_primaries
         # and rejects RESERVED (and other unsupported) values with EOPNOTSUPP,
