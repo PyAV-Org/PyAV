@@ -1,7 +1,7 @@
 from typing import Literal
 
-from .frame import AudioFrame
-from .stream import AudioStream
+from .frame import AudioFrame as AudioFrame
+from .stream import AudioStream as AudioStream
 
 # FFmpeg 8.1 encoders and the codec descriptor aliases that resolve to them.
 _AudioCodecName = Literal[
@@ -118,5 +118,3 @@ _AudioCodecName = Literal[
     "wmav1",
     "wmav2",
 ]
-
-__all__ = ("AudioFrame", "AudioStream")

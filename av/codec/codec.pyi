@@ -123,12 +123,9 @@ codecs_available: set[str]
 
 def dump_codecs() -> None: ...
 def dump_hwconfigs() -> None: ...
-
-PixFmtLike = str | VideoFormat
-
 def find_best_pix_fmt_of_list(
-    pix_fmts: Sequence[PixFmtLike],
-    src_pix_fmt: PixFmtLike,
+    pix_fmts: Sequence[str | VideoFormat],
+    src_pix_fmt: str | VideoFormat,
     has_alpha: bool = False,
 ) -> tuple[VideoFormat | None, PixFmtLoss]:
     """
