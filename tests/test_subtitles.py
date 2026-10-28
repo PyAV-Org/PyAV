@@ -1,8 +1,10 @@
 import io
+from fractions import Fraction
 from typing import cast
 
 import av
 from av.codec.context import CodecContext
+from av.subtitles.codeccontext import SubtitleCodecContext
 from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, Subtitle, SubtitleSet
 
 from .common import TestCase, fate_suite
@@ -75,6 +77,31 @@ class TestSubtitle:
                 subs.extend(stream.decode())
 
         assert len(subs) == 3
+
+    def test_codec_context_flush_returns_delayed_subtitles(self) -> None:
+        def cc_pair(b1: int, b2: int) -> bytes:
+            # EIA-608 bytes carry odd parity in the high bit.
+            def odd(b: int) -> int:
+                return b if b.bit_count() % 2 else b | 0x80
+
+            return bytes([0xFC, odd(b1), odd(b2)])
+
+        ctx = cast(SubtitleCodecContext, CodecContext.create("eia_608", "r"))
+        ctx.pkt_timebase = Fraction(1, 1000)
+
+        # A pop-on caption: resume caption loading, "HI", end of caption.
+        subs: list[AssSubtitle | BitmapSubtitle] = []
+        for i, pair in enumerate([(0x14, 0x20), (ord("H"), ord("I")), (0x14, 0x2F)]):
+            packet = av.Packet(cc_pair(*pair))
+            packet.pts = i * 33
+            subs.extend(ctx.decode(packet))
+        assert subs == []
+
+        # cc_dec holds the displayed caption until flushed.
+        flushed = ctx.decode(None)
+        assert len(flushed) == 1
+        assert isinstance(flushed[0], AssSubtitle)
+        assert flushed[0].dialogue.endswith(b"HI")
 
     def test_subtitle_header_read(self) -> None:
         """Test reading subtitle_header from a decoded subtitle stream."""
