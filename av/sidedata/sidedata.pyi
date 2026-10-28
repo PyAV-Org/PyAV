@@ -1,6 +1,6 @@
 from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
-from typing import Literal, TypeVar, overload
+from typing import Literal, Self, TypeVar, overload
 
 from typing_extensions import disjoint_base
 
@@ -53,7 +53,7 @@ _VideoEncParamsKey = Literal["VIDEO_ENC_PARAMS", Type.VIDEO_ENC_PARAMS]
 @disjoint_base
 class SideData(Buffer):
     type: Type
-    def __init__(self, sentinel: object, frame: Frame, index: int, /) -> None: ...
+    def __new__(cls, sentinel: object, frame: Frame, index: int, /) -> Self: ...
 
 class SideDataContainer(Mapping[Type, SideData]):
     def __len__(self) -> int: ...
