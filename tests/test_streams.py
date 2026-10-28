@@ -114,14 +114,14 @@ class TestStreams:
         )
         video = container.streams.video[0]
 
-        video.thread_type = av.codec.context.ThreadType.AUTO
-        assert video.thread_type == av.codec.context.ThreadType.AUTO
+        video.cctx.thread_type = av.codec.context.ThreadType.AUTO
+        assert video.cctx.thread_type == av.codec.context.ThreadType.AUTO
 
-        video.thread_type = 0x03
-        assert video.thread_type == av.codec.context.ThreadType.AUTO
+        video.cctx.thread_type = 0x03
+        assert video.cctx.thread_type == av.codec.context.ThreadType.AUTO
 
-        video.thread_type = "AUTO"
-        assert video.thread_type == av.codec.context.ThreadType.AUTO
+        video.cctx.thread_type = "AUTO"
+        assert video.cctx.thread_type == av.codec.context.ThreadType.AUTO
 
         audio = container.streams.audio[0]
 
@@ -482,6 +482,19 @@ def test_video_format_passthrough_deprecated() -> None:
             assert stream.format is not None
 
 
+def test_video_thread_type_passthrough_deprecated() -> None:
+    with av.open(io.BytesIO(), "w", format="mp4") as output:
+        stream = output.add_stream("mpeg4", rate=24)
+        assert isinstance(stream, av.VideoStream)
+
+        with pytest.warns(DeprecationWarning, match=r"cctx\.thread_type"):
+            stream.thread_type = "AUTO"
+        assert stream.cctx.thread_type == av.codec.context.ThreadType.AUTO
+
+        with pytest.warns(DeprecationWarning, match=r"cctx\.thread_type"):
+            assert stream.thread_type == av.codec.context.ThreadType.AUTO
+
+
 @pytest.mark.filterwarnings("error::DeprecationWarning")
 def test_add_stream_format_layout_kwargs_not_deprecated() -> None:
     with av.open(io.BytesIO(), "w", format="mp4") as output:
@@ -489,9 +502,13 @@ def test_add_stream_format_layout_kwargs_not_deprecated() -> None:
         assert astream.cctx.layout.name == "mono"
 
         vstream = output.add_stream(
-            "mpeg4", rate=24, format=av.VideoFormat("yuv420p", 32, 32)
+            "mpeg4",
+            rate=24,
+            format=av.VideoFormat("yuv420p", 32, 32),
+            thread_type="AUTO",
         )
         assert vstream.cctx.width == 32
+        assert vstream.cctx.thread_type == av.codec.context.ThreadType.AUTO
 
         graph = av.filter.Graph()
         graph.add_buffer(template=vstream, time_base=Fraction(1, 24))

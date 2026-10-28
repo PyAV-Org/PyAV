@@ -38,10 +38,10 @@ def _set_codecpar_extradata(
 
 @cython.cfunc
 def _set_stream_attrs(stream: Stream, ctx: CodecContext, kwargs: dict) -> cython.void:
-    # format and layout go straight to the codec context, since the stream
-    # passthroughs for them are deprecated.
+    # format, layout, and thread_type go straight to the codec context, since
+    # the stream passthroughs for them are deprecated.
     for k, v in kwargs.items():
-        if k == "format" or k == "layout":
+        if k in ("format", "layout", "thread_type"):
             setattr(ctx, k, v)
         else:
             setattr(stream, k, v)

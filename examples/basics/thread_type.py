@@ -26,7 +26,7 @@ container = av.open(
 )
 
 # !!! This is the only difference.
-container.streams.video[0].thread_type = "AUTO"
+container.streams.video[0].cctx.thread_type = "AUTO"
 
 start_time = time.time()
 for packet in container.demux():

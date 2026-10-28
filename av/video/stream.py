@@ -10,9 +10,9 @@ from cython.cimports.libc.stdint import int32_t
 from cython.cimports.libc.string import memcpy
 
 
-def _warn_format_passthrough():
+def _warn_passthrough(name):
     warnings.warn(
-        "VideoStream.format is deprecated; use VideoStream.cctx.format instead",
+        f"VideoStream.{name} is deprecated; use VideoStream.cctx.{name} instead",
         DeprecationWarning,
         # Cython functions have no frames, so 1 is the caller.
         stacklevel=1,
@@ -58,7 +58,7 @@ class VideoStream(Stream):
 
         :type: VideoFormat | None
         """
-        _warn_format_passthrough()
+        _warn_passthrough("format")
         if self.cctx is None:
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute 'format'"
@@ -67,9 +67,32 @@ class VideoStream(Stream):
 
     @format.setter
     def format(self, value):
-        _warn_format_passthrough()
+        _warn_passthrough("format")
         if self.cctx is not None:
             self.cctx.format = value
+
+    @property
+    def thread_type(self):
+        """
+        The threading type of the codec context.
+
+        .. deprecated:: 19.1
+            Use ``stream.cctx.thread_type`` instead.
+
+        :type: ThreadType
+        """
+        _warn_passthrough("thread_type")
+        if self.cctx is None:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute 'thread_type'"
+            )
+        return self.cctx.thread_type
+
+    @thread_type.setter
+    def thread_type(self, value):
+        _warn_passthrough("thread_type")
+        if self.cctx is not None:
+            self.cctx.thread_type = value
 
     @cython.ccall
     def encode(self, frame: VideoFrame | None = None):
