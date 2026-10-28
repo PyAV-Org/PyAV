@@ -184,7 +184,9 @@ class Codec:
         The name of the external library or hardware API this codec wraps, or
         ``None`` for codecs native to FFmpeg.
 
-        E.g: ``'videotoolbox'`` for ``h264_videotoolbox``.
+        E.g: ``'at'`` for ``aac_at``, which wraps AudioToolbox. Not every
+        wrapper sets this; FFmpeg 9.0 added it to more of them, such as
+        ``h264_videotoolbox`` and ``libx264``.
 
         Wraps :ffmpeg:`AVCodec.wrapper_name`.
 

@@ -34,7 +34,7 @@ v19.1.0 (Unreleased)
 Features:
 
 - Add ``VideoFrame.solid()`` to create a frame filled with one color, in any non-paletted pixel format.
-- Add ``InputContainer.probe_score``, ``VideoStream.codec_rate``, ``VideoStream.video_delay``, ``Codec.wrapper_name``, and ``Codec.max_lowres``.
+- Add ``InputContainer.probe_score``, ``InputContainer.duration_estimation_method``, ``VideoStream.codec_rate``, ``VideoStream.video_delay``, ``Codec.wrapper_name``, and ``Codec.max_lowres``.
 - Add ``VideoFrame.crop_top``, ``crop_bottom``, ``crop_left``, ``crop_right``, and ``VideoFrame.apply_cropping()``.
 - Add ``Stream.cctx`` as the name for a stream's codec context; ``Stream.codec_context`` remains as an alias.
 - Deprecate ``AudioStream.format``, ``AudioStream.layout``, ``VideoStream.format``, ``VideoStream.thread_count``, and ``VideoStream.thread_type``, which pass through to the codec context; use ``stream.cctx.format``, ``stream.cctx.layout``, ``stream.cctx.thread_count``, and ``stream.cctx.thread_type`` instead. Passing these to ``add_stream()`` is not deprecated.

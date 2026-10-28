@@ -159,6 +159,29 @@ class InputContainer(Container):
         self._assert_open()
         return self.ptr.probe_score
 
+    @property
+    def duration_estimation_method(self):
+        """How FFmpeg worked out :attr:`duration`, or ``None`` if it is unknown.
+
+        - ``"pts"``: from the timestamps of the packets, which is accurate.
+        - ``"stream"``: from a stream with a known duration.
+        - ``"bitrate"``: from the file size and bitrate, which can be far off,
+          especially for variable bitrate files.
+
+        Wraps :ffmpeg:`AVFormatContext.duration_estimation_method`.
+
+        :type: Literal["pts", "stream", "bitrate"] | None
+        """
+        self._assert_open()
+        if self.ptr.duration == lib.AV_NOPTS_VALUE:
+            return None
+        method = self.ptr.duration_estimation_method
+        if method == lib.AVFMT_DURATION_FROM_PTS:
+            return "pts"
+        if method == lib.AVFMT_DURATION_FROM_STREAM:
+            return "stream"
+        return "bitrate"
+
     def close(self):
         close_input(self)
 

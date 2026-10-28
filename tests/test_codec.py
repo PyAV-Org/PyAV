@@ -92,9 +92,9 @@ def test_codec_opus_encoder() -> None:
 
 
 def test_codec_wrapper_name() -> None:
-    if "h264_videotoolbox" not in codecs_available:
-        pytest.skip("h264_videotoolbox not available")
-    assert Codec("h264_videotoolbox", "w").wrapper_name == "videotoolbox"
+    if "aac_at" not in codecs_available:
+        pytest.skip("aac_at not available")
+    assert Codec("aac_at").wrapper_name == "at"
 
 
 def test_codecs_available() -> None:
