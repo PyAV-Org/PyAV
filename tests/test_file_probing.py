@@ -222,6 +222,7 @@ class TestVideoProbe(TestCase):
         assert self.file.metadata == {}
         assert self.file.size == 800000
         assert self.file.start_time == 22953408322
+        assert self.file.probe_score == 100
         assert len(self.file.streams) == 1
 
     def test_stream_probing(self) -> None:
@@ -234,6 +235,8 @@ class TestVideoProbe(TestCase):
 
         # actual stream properties
         assert stream.average_rate == Fraction(25, 1)
+        assert stream.codec_rate == Fraction(25, 1)
+        assert stream.video_delay == 0
         assert stream.duration == 145800
         assert stream.frames == 0
         assert stream.id == 4131

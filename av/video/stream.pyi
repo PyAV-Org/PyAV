@@ -36,6 +36,8 @@ class VideoStream(Stream):
     average_rate: AVRational
     base_rate: AVRational
     guessed_rate: AVRational
+    codec_rate: AVRational
+    video_delay: int
 
     # from codec context
     name: str

@@ -260,6 +260,32 @@ class VideoStream(Stream):
         return from_avrational(val)
 
     @property
+    def codec_rate(self):
+        """The frame rate stored in the codec bitstream, such as H.264 VUI
+        timing info.
+
+        Is falsy if the bitstream does not say.
+
+        Wraps :ffmpeg:`AVCodecParameters.framerate`.
+
+        :type: AVRational
+        """
+        self._assert_open()
+        return from_avrational(self.ptr.codecpar.framerate)
+
+    @property
+    def video_delay(self):
+        """The number of frames the decoder holds back before output, due to
+        frame reordering.
+
+        Wraps :ffmpeg:`AVCodecParameters.video_delay`.
+
+        :type: int
+        """
+        self._assert_open()
+        return self.ptr.codecpar.video_delay
+
+    @property
     def sample_aspect_ratio(self):
         """The guessed sample aspect ratio (SAR) of this stream.
 

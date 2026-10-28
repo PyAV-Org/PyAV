@@ -145,6 +145,20 @@ class InputContainer(Container):
         if size >= 0:
             return size
 
+    @property
+    def probe_score(self):
+        """How confident FFmpeg was when it detected the input format, from 0 to 100.
+
+        Low scores mean the format was a guess. It is 0 when ``format=`` was
+        given, since no probing happens.
+
+        Wraps :ffmpeg:`AVFormatContext.probe_score`.
+
+        :type: int
+        """
+        self._assert_open()
+        return self.ptr.probe_score
+
     def close(self):
         close_input(self)
 

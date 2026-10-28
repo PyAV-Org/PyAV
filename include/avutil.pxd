@@ -188,6 +188,11 @@ cdef extern from "libavutil/frame.h" nogil:
     cdef int av_frame_get_buffer(AVFrame *frame, int align)
     cdef int av_frame_make_writable(AVFrame *frame)
     cdef int av_frame_copy_props(AVFrame *dst, const AVFrame *src)
+    cdef int av_frame_apply_cropping(AVFrame *frame, int flags)
+    cdef AVBufferRef *av_frame_get_plane_buffer(const AVFrame *frame, int plane)
+
+    cdef enum:
+        AV_FRAME_CROP_UNALIGNED
 
 cdef extern from "libavutil/hwcontext.h" nogil:
     cdef struct AVHWDeviceContext:

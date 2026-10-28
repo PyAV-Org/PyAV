@@ -1534,3 +1534,54 @@ def test_save_options(tmp_path: Path) -> None:
     # Non-str values are coerced.
     frame.save(tmp_path / "q.jpg", qscale=2)
     assert (tmp_path / "q.jpg").stat().st_size > 0
+
+
+def test_crop_fields_from_decoder() -> None:
+    path = fate_suite("h264/interlaced_crop.mp4")
+    with av.open(path) as container:
+        ref = next(container.decode(video=0))
+    assert ref.crop_top == ref.crop_bottom == ref.crop_left == ref.crop_right == 0
+
+    with av.open(path) as container:
+        stream = container.streams.video[0]
+        stream.cctx.options = {"apply_cropping": "0"}
+        frame = next(container.decode(stream))
+
+    assert frame.height == ref.height + 24
+    assert frame.crop_bottom == 24
+
+    frame.apply_cropping()
+    assert (frame.width, frame.height) == (ref.width, ref.height)
+    assert frame.crop_bottom == 0
+    assert frame.format.height == ref.height
+    assertNdarraysEqual(frame.to_ndarray(format="gray"), ref.to_ndarray(format="gray"))
+
+
+def test_apply_cropping_unaligned() -> None:
+    array = numpy.arange(48 * 64 * 3, dtype=numpy.uint8).reshape(48, 64, 3)
+    frame = VideoFrame.from_ndarray(array, format="rgb24")
+    frame.crop_top = 4
+    frame.crop_left = 10
+    frame.crop_right = 6
+    frame.apply_cropping(unaligned=True)
+
+    assert (frame.width, frame.height) == (48, 44)
+    assertNdarraysEqual(frame.to_ndarray(), array[4:, 10:58])
+
+
+def test_apply_cropping_plane_stays_in_buffer() -> None:
+    array = numpy.arange(48 * 64 * 3, dtype=numpy.uint8).reshape(48, 64, 3)
+    frame = VideoFrame.from_numpy_buffer(array, format="rgb24")
+    frame.crop_left = 10
+    frame.apply_cropping(unaligned=True)
+
+    # The last row ends 30 bytes before linesize * height would reach.
+    assert frame.planes[0].buffer_size == array.nbytes - 30
+    assertNdarraysEqual(frame.to_ndarray(), array[:, 10:])
+
+
+def test_apply_cropping_invalid() -> None:
+    frame = VideoFrame(64, 48, "yuv420p")
+    frame.crop_left = 100
+    with pytest.raises(av.error.OverflowError):
+        frame.apply_cropping()
