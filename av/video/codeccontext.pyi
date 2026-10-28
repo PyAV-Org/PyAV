@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 from fractions import Fraction
-from typing import Any, Literal, final
+from typing import Any, Literal, final, override
 
 from av.codec.context import CodecContext
 from av.packet import Packet
@@ -54,8 +54,11 @@ class VideoCodecContext(CodecContext):
     qmax: int
     type: Literal["video"]
 
+    @override
     def encode(self, frame: VideoFrame | None = None) -> list[Packet[Stream]]: ...  # type: ignore[override]
+    @override
     def encode_lazy(  # type: ignore[override]
         self, frame: VideoFrame | None = None
     ) -> Iterator[Packet[Stream]]: ...
+    @override
     def decode(self, packet: Packet[Any] | None = None) -> list[VideoFrame]: ...
