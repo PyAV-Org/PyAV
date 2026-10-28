@@ -21,6 +21,23 @@ from cython.cimports.libc.stdlib import free, malloc
 @cython.cclass
 class VideoPlane(Plane):
     def __cinit__(self, frame: VideoFrame, index: cython.int):
+        self._seen_data = cython.NULL
+        self._refresh()
+
+    @cython.cfunc
+    def _refresh(self) -> cython.void:
+        frame: VideoFrame = self.frame
+        index: cython.int = self.index
+        linesize: cython.int = frame.ptr.linesize[index]
+        data: cython.p_void = frame.ptr.data[index]
+        if (
+            self._seen_data == data
+            and self._seen_width == frame.ptr.width
+            and self._seen_height == frame.ptr.height
+            and self._seen_linesize == linesize
+        ):
+            return
+
         # The palette plane has no associated component or linesize; set fields manually
         fmt = frame.format
         if frame.ptr.hw_frames_ctx:
@@ -32,44 +49,70 @@ class VideoPlane(Plane):
             )
 
         if index == 1 and fmt.name == "pal8":
-            self.width = 256
-            self.height = 1
-            self.buffer_size = 256 * 4
-            return
-
-        for i in range(fmt.ptr.nb_components):
-            if fmt.ptr.comp[i].plane == index:
-                component = VideoFormatComponent(fmt, i)
-                self.width = component.width
-                self.height = component.height
-                break
+            self._width = 256
+            self._height = 1
+            self._size = 256 * 4
         else:
-            raise RuntimeError(f"could not find plane {index} of {fmt!r}")
+            for i in range(fmt.ptr.nb_components):
+                if fmt.ptr.comp[i].plane == index:
+                    component = VideoFormatComponent(fmt, i)
+                    self._width = component.width
+                    self._height = component.height
+                    break
+            else:
+                raise RuntimeError(f"could not find plane {index} of {fmt!r}")
 
-        # Sometimes, linesize is negative (and that is meaningful). We are only
-        # insisting that the buffer size be based on the extent of linesize, and
-        # ignore it's direction.
-        self.buffer_size = abs(self.frame.ptr.linesize[self.index]) * self.height
+            # Sometimes, linesize is negative (and that is meaningful). We are only
+            # insisting that the buffer size be based on the extent of linesize, and
+            # ignore it's direction.
+            self._size = abs(linesize) * self._height
 
-        # Cropping moves the data pointer into the buffer, so the last row can end
-        # past the allocation. Clamp to what the plane's buffer actually holds.
-        if frame.ptr.hw_frames_ctx or self.frame.ptr.linesize[self.index] < 0:
-            return
-        buf: cython.pointer[lib.AVBufferRef] = lib.av_frame_get_plane_buffer(
-            frame.ptr, index
-        )
-        if buf == cython.NULL:
-            return
-        start: cython.p_uchar = frame.ptr.data[index]
-        end: cython.p_uchar = buf.data + buf.size
-        if buf.data <= start < end and cython.cast(cython.size_t, end - start) < (
-            self.buffer_size
-        ):
-            self.buffer_size = end - start
+            # Cropping moves the data pointer into the buffer, so the last row can
+            # end past the allocation. Clamp to what the plane's buffer holds.
+            if not frame.ptr.hw_frames_ctx and linesize >= 0:
+                buf: cython.pointer[lib.AVBufferRef] = lib.av_frame_get_plane_buffer(
+                    frame.ptr, index
+                )
+                if buf != cython.NULL:
+                    start: cython.p_uchar = frame.ptr.data[index]
+                    end: cython.p_uchar = buf.data + buf.size
+                    if (
+                        buf.data <= start < end
+                        and cython.cast(cython.size_t, end - start) < self._size
+                    ):
+                        self._size = end - start
+
+        self._seen_data = data
+        self._seen_width = frame.ptr.width
+        self._seen_height = frame.ptr.height
+        self._seen_linesize = linesize
 
     @cython.cfunc
     def _buffer_size(self) -> cython.size_t:
-        return self.buffer_size
+        self._refresh()
+        return self._size
+
+    @property
+    def buffer_size(self):
+        return self._buffer_size()
+
+    @property
+    def width(self):
+        """Width of this plane, in pixels.
+
+        :type: int
+        """
+        self._refresh()
+        return self._width
+
+    @property
+    def height(self):
+        """Height of this plane, in pixels.
+
+        :type: int
+        """
+        self._refresh()
+        return self._height
 
     @property
     def line_size(self):
@@ -95,13 +138,14 @@ class VideoPlane(Plane):
         if flags & PyBUF_WRITABLE and not self._buffer_writable():
             raise ValueError("buffer is not writable")
 
+        size: cython.size_t = self._buffer_size()
         ptr: cython.p_void = self._buffer_ptr()
         line_size: cython.int = self.frame.ptr.linesize[self.index]
         if line_size < 0:
-            height: cython.int = self.height
+            height: cython.int = self._height
             ptr = cython.cast(cython.p_char, ptr) + (height - 1) * line_size
 
-        PyBuffer_FillInfo(view, self, ptr, self._buffer_size(), 0, flags)
+        PyBuffer_FillInfo(view, self, ptr, size, 0, flags)
 
     def __dlpack_device__(self):
         if self.frame.ptr.hw_frames_ctx:
@@ -148,6 +192,7 @@ class VideoPlane(Plane):
             device_type = kCPU
             device_id = 0
 
+        self._refresh()
         line_size = self.line_size
         if line_size < 0:
             raise NotImplementedError(
@@ -260,14 +305,14 @@ class VideoPlane(Plane):
 
             if ncomp == 1:
                 ndim = 2
-                s0 = self.height
-                s1 = self.width
+                s0 = self._height
+                s1 = self._width
                 st0 = line_size // itemsize
                 st1 = 1
             else:
                 ndim = 3
-                s0 = self.height
-                s1 = self.width
+                s0 = self._height
+                s1 = self._width
                 s2 = ncomp
                 st0 = line_size // itemsize
                 st1 = ncomp

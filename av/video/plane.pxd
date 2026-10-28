@@ -5,8 +5,13 @@ from av.video.format cimport VideoFormatComponent
 
 
 cdef class VideoPlane(Plane):
-    cdef readonly size_t buffer_size
-    cdef readonly unsigned int width, height
+    # Geometry derived from the frame, recomputed by _refresh() whenever the
+    # frame's dimensions or data pointer change (e.g. after apply_cropping()).
+    cdef size_t _size
+    cdef unsigned int _width, _height
+    cdef int _seen_width, _seen_height, _seen_linesize
+    cdef void *_seen_data
+    cdef void _refresh(self)
 
 
 cdef enum DeviceType:

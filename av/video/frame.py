@@ -780,6 +780,10 @@ class VideoFrame(Frame):
         No pixels are copied; the planes are narrowed to the cropped region and
         the ``crop_*`` attributes are reset to 0.
 
+        For hardware frames and 1-bit formats (``monob``, ``monow``), FFmpeg only
+        applies :attr:`crop_right` and :attr:`crop_bottom`; :attr:`crop_left` and
+        :attr:`crop_top` are left unapplied and keep their values.
+
         By default the left edge may be moved slightly to keep plane data
         aligned, leaving a few extra pixels. Pass ``unaligned=True`` to crop
         exactly.
