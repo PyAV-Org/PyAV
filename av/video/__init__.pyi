@@ -3,7 +3,7 @@ from typing import Literal
 from .frame import VideoFrame as VideoFrame
 from .stream import VideoStream as VideoStream
 
-# FFmpeg 8.1 encoders and the codec descriptor aliases that resolve to them.
+# FFmpeg 9.0 encoders and the codec descriptor aliases that resolve to them.
 _VideoCodecName = Literal[
     "a64_multi",
     "a64_multi5",
@@ -60,7 +60,6 @@ _VideoCodecName = Literal[
     "h264_mf",
     "h264_nvenc",
     "h264_oh",
-    "h264_omx",
     "h264_qsv",
     "h264_rkmpp",
     "h264_v4l2m2m",
@@ -123,7 +122,6 @@ _VideoCodecName = Literal[
     "mpeg2video",
     "mpeg4",
     "mpeg4_mediacodec",
-    "mpeg4_omx",
     "mpeg4_v4l2m2m",
     "msmpeg4",
     "msmpeg4v2",
@@ -133,6 +131,7 @@ _VideoCodecName = Literal[
     "pam",
     "pbm",
     "pcx",
+    "pdv",
     "pfm",
     "pgm",
     "pgmyuv",
@@ -165,9 +164,6 @@ _VideoCodecName = Literal[
     "tiff",
     "utvideo",
     "v210",
-    "v308",
-    "v408",
-    "v410",
     "vbn",
     "vc2",
     "vnull",

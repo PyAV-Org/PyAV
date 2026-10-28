@@ -3,7 +3,7 @@ from typing import Literal
 from .frame import AudioFrame as AudioFrame
 from .stream import AudioStream as AudioStream
 
-# FFmpeg 8.1 encoders and the codec descriptor aliases that resolve to them.
+# FFmpeg 9.0 encoders and the codec descriptor aliases that resolve to them.
 _AudioCodecName = Literal[
     "aac",
     "aac_at",
@@ -108,8 +108,6 @@ _AudioCodecName = Literal[
     "roq_dpcm",
     "s302m",
     "sbc",
-    "sonic",
-    "sonicls",
     "speex",
     "truehd",
     "tta",
