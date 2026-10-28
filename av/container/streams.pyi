@@ -6,6 +6,11 @@ from av.stream import AttachmentStream, DataStream, Stream
 from av.subtitles.stream import SubtitleStream
 from av.video.stream import VideoStream
 
+type _Indices = int | tuple[int, ...] | list[int]
+type _StreamSelector = (
+    int | Stream | tuple[int | Stream, ...] | list[int | Stream] | dict[str, _Indices]
+)
+
 @final
 class StreamContainer:
     video: tuple[VideoStream, ...]
@@ -21,11 +26,7 @@ class StreamContainer:
     def __getitem__(self, index: int, /) -> Stream: ...
     @overload
     def __getitem__(self, index: slice, /) -> list[Stream]: ...
-    def get(
-        self,
-        *args: int | Stream | dict[str, int | tuple[int, ...]],
-        **kwargs: int | tuple[int, ...],
-    ) -> list[Stream]: ...
+    def get(self, *args: _StreamSelector, **kwargs: _Indices) -> list[Stream]: ...
     def best(
         self,
         type: Literal["video", "audio", "subtitle", "data", "attachment"],

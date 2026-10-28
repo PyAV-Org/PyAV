@@ -1,6 +1,7 @@
-from typing import Any, Self, final
+from typing import Self, final
 
 import numpy as np
+import numpy.typing as npt
 
 from av.frame import Frame
 
@@ -10,11 +11,11 @@ from .plane import AudioPlane
 
 format_dtypes: dict[str, str]
 _SupportedNDarray = (
-    np.ndarray[Any, np.dtype[np.float64]]  # f8
-    | np.ndarray[Any, np.dtype[np.float32]]  # f4
-    | np.ndarray[Any, np.dtype[np.int32]]  # i4
-    | np.ndarray[Any, np.dtype[np.int16]]  # i2
-    | np.ndarray[Any, np.dtype[np.uint8]]  # u1
+    npt.NDArray[np.float64]
+    | npt.NDArray[np.float32]
+    | npt.NDArray[np.int32]
+    | npt.NDArray[np.int16]
+    | npt.NDArray[np.uint8]
 )
 
 @final

@@ -114,7 +114,7 @@ def read(
 ) -> None:
     wrapped = MethodLogger(fh)
 
-    with av.open(wrapped, "r") as container:
+    with av.open(wrapped, "r") as container:  # type: ignore[call-overload]
         assert container.format.name == "mpegts"
         assert container.format.long_name == "MPEG-TS (MPEG-2 Transport Stream)"
         assert len(container.streams) == 1
@@ -130,7 +130,7 @@ def read(
 def write(fh: io.BufferedWriter | BytesIO) -> None:
     wrapped = MethodLogger(fh)
 
-    with av.open(wrapped, "w", "mp4") as container:
+    with av.open(wrapped, "w", "mp4") as container:  # type: ignore[call-overload]
         write_rgb_rotate(container)
 
     # Check method calls.

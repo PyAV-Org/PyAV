@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any, Self, final
+from typing import Self, final
 
 from av.audio.format import AudioFormat
 from av.audio.frame import AudioFrame
@@ -25,7 +25,7 @@ class Graph:
     def configure(self, auto_buffer: bool = True, force: bool = False) -> None: ...
     def link_nodes(self, *nodes: FilterContext) -> Graph: ...
     def add(
-        self, filter: str | Filter, args: Any = None, **kwargs: str
+        self, filter: str | Filter, args: str | None = None, **kwargs: str
     ) -> FilterContext: ...
     def add_buffer(
         self,

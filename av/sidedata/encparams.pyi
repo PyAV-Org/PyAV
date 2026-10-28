@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Any, Self, final
+from typing import Self, final
 
 import numpy as np
 
@@ -20,7 +20,7 @@ class VideoEncParams(SideData):
     qp: int
     delta_qp: int
     def block_params(self, idx: int) -> VideoBlockParams: ...
-    def qp_map(self) -> np.ndarray[Any, Any]: ...
+    def qp_map(self) -> np.ndarray[tuple[int, int], np.dtype[np.int32]]: ...
 
 @final
 class VideoBlockParams:

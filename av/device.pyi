@@ -5,11 +5,7 @@ class DeviceInfo:
     media_types: list[str]
 
     def __init__(
-        self,
-        name: str,
-        description: str,
-        is_default: bool,
-        media_types: list[str],
+        self, name: str, description: str, is_default: bool, media_types: list[str]
     ) -> None: ...
     def __repr__(self) -> str: ...
 
