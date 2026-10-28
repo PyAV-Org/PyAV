@@ -1,4 +1,7 @@
+import io
 from fractions import Fraction
+
+import numpy as np
 
 import av
 
@@ -12,6 +15,7 @@ class TestAudioProbe(TestCase):
     def test_container_probing(self) -> None:
         assert self.file.bit_rate == 269558
         assert self.file.duration == 6165333
+        assert self.file.duration_estimation_method == "pts"
         assert str(self.file.format) == "<av.ContainerFormat 'mpegts'>"
         assert self.file.format.name == "mpegts"
         assert self.file.format.long_name == "MPEG-TS (MPEG-2 Transport Stream)"
@@ -170,6 +174,7 @@ class TestSubtitleProbe(TestCase):
     def test_container_probing(self) -> None:
         assert self.file.bit_rate == 810
         assert self.file.duration == 8140000
+        assert self.file.duration_estimation_method == "stream"
         assert str(self.file.format) == "<av.ContainerFormat 'mov,mp4,m4a,3gp,3g2,mj2'>"
         assert self.file.format.name == "mov,mp4,m4a,3gp,3g2,mj2"
         assert self.file.format.long_name == "QuickTime / MOV"
@@ -222,7 +227,8 @@ class TestVideoProbe(TestCase):
         assert self.file.metadata == {}
         assert self.file.size == 800000
         assert self.file.start_time == 22953408322
-        assert self.file.probe_score == 100
+        # The mpegts prober scores this file 100 on FFmpeg 9.0 but 50 on 8.1.
+        assert self.file.probe_score >= 50
         assert len(self.file.streams) == 1
 
     def test_stream_probing(self) -> None:
@@ -319,3 +325,40 @@ class TestVideoProbeCorrupt(TestCase):
 
         assert stream.coded_width == 0
         assert stream.coded_height == 0
+
+
+def _adts_bytes() -> bytes:
+    buf = io.BytesIO()
+    with av.open(buf, "w", format="adts") as out:
+        stream = out.add_stream("aac", rate=48000)
+        for i in range(50):
+            frame = av.AudioFrame.from_ndarray(
+                np.zeros((2, 1024), dtype=np.float32), format="fltp", layout="stereo"
+            )
+            frame.sample_rate = 48000
+            frame.pts = i * 1024
+            out.mux(stream.encode(frame))
+        out.mux(stream.encode(None))
+    return buf.getvalue()
+
+
+class _Pipe:
+    def __init__(self, data: bytes) -> None:
+        self._buf = io.BytesIO(data)
+
+    def read(self, n: int) -> bytes:
+        return self._buf.read(n)
+
+
+def test_duration_estimation_method_bitrate() -> None:
+    # Raw ADTS has no duration, so it is guessed from the file size.
+    with av.open(io.BytesIO(_adts_bytes()), "r") as container:
+        assert container.duration is not None
+        assert container.duration_estimation_method == "bitrate"
+
+
+def test_duration_estimation_method_unknown() -> None:
+    # A pipe has no size to estimate from.
+    with av.open(_Pipe(_adts_bytes()), "r") as container:
+        assert container.duration is None
+        assert container.duration_estimation_method is None

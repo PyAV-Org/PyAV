@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import final, overload
+from typing import Literal, final, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
@@ -21,6 +21,7 @@ class InputContainer(Container):
     bit_rate: int
     size: int | None
     probe_score: int
+    duration_estimation_method: Literal["pts", "stream", "bitrate"] | None
 
     @overload
     def demux(self, video_stream: VideoStream) -> Iterator[Packet[VideoStream]]: ...

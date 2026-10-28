@@ -125,6 +125,11 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVFMT_FLAG_FAST_SEEK
         AVFMT_FLAG_AUTO_BSF
 
+    cdef enum AVDurationEstimationMethod:
+        AVFMT_DURATION_FROM_PTS
+        AVFMT_DURATION_FROM_STREAM
+        AVFMT_DURATION_FROM_BITRATE
+
     cdef int av_find_best_stream(
         AVFormatContext *ic,
         AVMediaType type,
@@ -157,6 +162,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVCodecID video_codec_id
         void *opaque
         int probe_score
+        AVDurationEstimationMethod duration_estimation_method
         int (*io_open)(
             AVFormatContext *s,
             AVIOContext **pb,
