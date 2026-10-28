@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Any, final
+from typing import Any, Self, final
 
 import numpy as np
 
@@ -9,7 +9,7 @@ from .sidedata import SideData
 
 @final
 class MotionVectors(SideData):
-    def __init__(self, sentinel: object, frame: Frame, index: int, /) -> None: ...
+    def __new__(cls, sentinel: object, frame: Frame, index: int, /) -> Self: ...
     def __getitem__(self, index: int, /) -> MotionVector: ...
     def __iter__(self) -> Iterator[MotionVector]: ...
     def __len__(self) -> int: ...
@@ -27,6 +27,6 @@ class MotionVector:
     motion_x: int
     motion_y: int
     motion_scale: int
-    def __init__(
-        self, sentinel: object, parent: MotionVectors, index: int, /
-    ) -> None: ...
+    def __new__(
+        cls, sentinel: object, parent: MotionVectors, index: int, /
+    ) -> Self: ...

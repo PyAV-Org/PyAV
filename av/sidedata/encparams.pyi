@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Any, final
+from typing import Any, Self, final
 
 import numpy as np
 
@@ -29,4 +29,4 @@ class VideoBlockParams:
     w: int
     h: int
     delta_qp: int
-    def __init__(self, video_enc_params: VideoEncParams, idx: int, /) -> None: ...
+    def __new__(cls, video_enc_params: VideoEncParams, idx: int, /) -> Self: ...
