@@ -1645,3 +1645,38 @@ def test_decode_error_flags() -> None:
     frames = _decode_m2v(data)
     assert any(DecodeError.concealment_active in f.decode_error_flags for f in frames)
     assert any(frame.is_corrupt for frame in frames)
+
+
+def test_apply_cropping_updates_existing_planes() -> None:
+    array = numpy.arange(48 * 64, dtype=numpy.uint8).reshape(48, 64)
+    frame = VideoFrame.from_numpy_buffer(array, format="gray")
+    plane = frame.planes[0]
+    frame.crop_top = 40
+    frame.crop_left = 8
+    frame.apply_cropping(unaligned=True)
+
+    # A plane made before cropping must not pair the shifted data pointer with
+    # its old size, or reading it runs past the end of the array.
+    assert (plane.width, plane.height) == (56, 8)
+    assert plane.buffer_size == 64 * 7 + 56
+    assert bytes(plane) == array.tobytes()[40 * 64 + 8 :]
+
+
+@pytest.mark.parametrize("format", ["monob", "monow"])
+def test_apply_cropping_bitstream(format: str) -> None:
+    frame = VideoFrame(64, 48, format)
+    plane = frame.planes[0]
+    line_size = plane.line_size
+    frame.crop_left = 8
+    frame.crop_top = 4
+    frame.crop_right = 3
+    frame.crop_bottom = 5
+    frame.apply_cropping()
+
+    # FFmpeg cannot move a data pointer by a fraction of a byte, so only the
+    # right and bottom crops apply.
+    assert (frame.width, frame.height) == (61, 43)
+    assert (frame.crop_left, frame.crop_top) == (8, 4)
+    assert (frame.crop_right, frame.crop_bottom) == (0, 0)
+    assert plane.buffer_size == line_size * 43
+    assert frame.to_ndarray(format="rgb24").shape == (43, 61, 3)
