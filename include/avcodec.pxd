@@ -488,7 +488,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int duration
         int key_frame
 
-    cdef AVCodecParserContext *av_parser_init(int codec_id)
+    cdef AVCodecParserContext *av_parser_init(AVCodecID codec_id)
     cdef int av_parser_parse2(
         AVCodecParserContext *s,
         AVCodecContext *avctx,
