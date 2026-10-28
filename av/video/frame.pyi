@@ -12,7 +12,7 @@ from .format import VideoFormat
 from .plane import VideoPlane
 from .reformatter import ColorPrimaries, ColorTrc
 
-_SupportedNDarray = (
+type _SupportedNDarray = (
     npt.NDArray[np.uint8]
     | npt.NDArray[np.uint16]
     | npt.NDArray[np.float16]
@@ -77,8 +77,6 @@ class VideoFrame(Frame):
 
     @property
     def sw_format(self) -> VideoFormat | None: ...
-    @property
-    def time(self) -> float | None: ...
     @property
     def width(self) -> int: ...
     @property

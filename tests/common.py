@@ -21,11 +21,9 @@ except ImportError:
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing import Any, TypeVar
+    from typing import Any
 
     from PIL.Image import Image
-
-    T = TypeVar("T")
 
 
 __all__ = ("fate_suite",)
@@ -84,7 +82,7 @@ def sandboxed(
 
 
 # Decorator for running a test in the sandbox directory
-def run_in_sandbox(func: Callable[..., T]) -> Callable[..., T]:
+def run_in_sandbox[T](func: Callable[..., T]) -> Callable[..., T]:
     @functools.wraps(func)
     def _inner(self: Any, *args: Any, **kwargs: Any) -> T:
         current_dir = os.getcwd()

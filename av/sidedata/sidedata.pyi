@@ -1,6 +1,6 @@
 from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
-from typing import Literal, Self, TypeVar, overload
+from typing import Literal, Self, overload
 
 from typing_extensions import disjoint_base
 
@@ -9,8 +9,6 @@ from av.frame import Frame
 
 from .encparams import VideoEncParams
 from .motionvectors import MotionVectors
-
-_T = TypeVar("_T")
 
 class Type(Enum):
     _value_: int
@@ -47,8 +45,8 @@ class Type(Enum):
     THREE_D_REFERENCE_DISPLAYS = ...
     EXIF = ...
 
-_MotionVectorsKey = Literal["MOTION_VECTORS", Type.MOTION_VECTORS]
-_VideoEncParamsKey = Literal["VIDEO_ENC_PARAMS", Type.VIDEO_ENC_PARAMS]
+type _MotionVectorsKey = Literal["MOTION_VECTORS", Type.MOTION_VECTORS]
+type _VideoEncParamsKey = Literal["VIDEO_ENC_PARAMS", Type.VIDEO_ENC_PARAMS]
 
 @disjoint_base
 class SideData(Buffer):
@@ -69,6 +67,6 @@ class SideDataContainer(Mapping[Type, SideData]):
     @overload
     def get(self, key: str | int | Type, /) -> SideData | None: ...
     @overload
-    def get(
-        self, key: str | int | Type, default: SideData | _T, /
-    ) -> SideData | _T: ...
+    def get[T](
+        self, key: str | int | Type, default: SideData | T, /
+    ) -> SideData | T: ...

@@ -10,7 +10,7 @@ from .layout import AudioLayout
 from .plane import AudioPlane
 
 format_dtypes: dict[str, str]
-_SupportedNDarray = (
+type _SupportedNDarray = (
     npt.NDArray[np.float64]
     | npt.NDArray[np.float32]
     | npt.NDArray[np.int32]

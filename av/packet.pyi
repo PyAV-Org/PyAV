@@ -1,7 +1,7 @@
 from collections.abc import Buffer as _BufferLike
 from collections.abc import Iterator
 from fractions import Fraction
-from typing import Generic, Literal, TypeVar, final, overload
+from typing import Literal, final, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
@@ -80,15 +80,12 @@ class PacketSideData(Buffer):
 def packet_sidedata_type_to_literal(dtype: int) -> PktSideDataT: ...
 def packet_sidedata_type_from_literal(dtype: PktSideDataT) -> int: ...
 
-# TypeVar for stream types - bound to Stream so it can be any stream type
-_StreamT = TypeVar("_StreamT", bound=Stream)
-
 @final
-class Packet(Buffer, Generic[_StreamT]):
+class Packet[StreamT: Stream](Buffer):
     @property
-    def stream(self) -> _StreamT | None: ...
+    def stream(self) -> StreamT | None: ...
     @stream.setter
-    def stream(self, value: _StreamT) -> None: ...
+    def stream(self, value: StreamT) -> None: ...
     stream_index: int
     @property
     def time_base(self) -> AVRational: ...

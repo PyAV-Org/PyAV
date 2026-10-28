@@ -4,7 +4,7 @@ from .frame import AudioFrame as AudioFrame
 from .stream import AudioStream as AudioStream
 
 # FFmpeg 9.0 encoders and the codec descriptor aliases that resolve to them.
-_AudioCodecName = Literal[
+type _AudioCodecName = Literal[
     "aac",
     "aac_at",
     "aac_mf",

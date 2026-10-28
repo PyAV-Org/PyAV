@@ -4,7 +4,7 @@ from .frame import VideoFrame as VideoFrame
 from .stream import VideoStream as VideoStream
 
 # FFmpeg 9.0 encoders and the codec descriptor aliases that resolve to them.
-_VideoCodecName = Literal[
+type _VideoCodecName = Literal[
     "a64_multi",
     "a64_multi5",
     "a64multi",
