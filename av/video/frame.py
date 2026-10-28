@@ -715,6 +715,82 @@ class VideoFrame(Frame):
         return bool(self.ptr.flags & lib.AV_FRAME_FLAG_INTERLACED)
 
     @property
+    def crop_top(self):
+        """Pixels to crop from the top of the frame.
+
+        Decoders apply cropping themselves unless the ``apply_cropping`` codec
+        option is ``"0"``, in which case the crop is reported here and can be
+        applied with :meth:`apply_cropping`.
+
+        Wraps :ffmpeg:`AVFrame.crop_top`.
+
+        :type: int
+        """
+        return self.ptr.crop_top
+
+    @crop_top.setter
+    def crop_top(self, value):
+        self.ptr.crop_top = value
+
+    @property
+    def crop_bottom(self):
+        """Pixels to crop from the bottom of the frame. See :attr:`crop_top`.
+
+        Wraps :ffmpeg:`AVFrame.crop_bottom`.
+
+        :type: int
+        """
+        return self.ptr.crop_bottom
+
+    @crop_bottom.setter
+    def crop_bottom(self, value):
+        self.ptr.crop_bottom = value
+
+    @property
+    def crop_left(self):
+        """Pixels to crop from the left of the frame. See :attr:`crop_top`.
+
+        Wraps :ffmpeg:`AVFrame.crop_left`.
+
+        :type: int
+        """
+        return self.ptr.crop_left
+
+    @crop_left.setter
+    def crop_left(self, value):
+        self.ptr.crop_left = value
+
+    @property
+    def crop_right(self):
+        """Pixels to crop from the right of the frame. See :attr:`crop_top`.
+
+        Wraps :ffmpeg:`AVFrame.crop_right`.
+
+        :type: int
+        """
+        return self.ptr.crop_right
+
+    @crop_right.setter
+    def crop_right(self, value):
+        self.ptr.crop_right = value
+
+    def apply_cropping(self, unaligned=False):
+        """Crop the frame in place according to its ``crop_*`` attributes.
+
+        No pixels are copied; the planes are narrowed to the cropped region and
+        the ``crop_*`` attributes are reset to 0.
+
+        By default the left edge may be moved slightly to keep plane data
+        aligned, leaving a few extra pixels. Pass ``unaligned=True`` to crop
+        exactly.
+
+        Wraps :ffmpeg:`av_frame_apply_cropping`.
+        """
+        flags: cython.int = lib.AV_FRAME_CROP_UNALIGNED if unaligned else 0
+        err_check(lib.av_frame_apply_cropping(self.ptr, flags))
+        self._init_user_attributes()
+
+    @property
     def pict_type(self):
         """Returns an integer that corresponds to the PictureType enum.
 

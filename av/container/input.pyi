@@ -20,6 +20,7 @@ class InputContainer(Container):
     duration: int | None
     bit_rate: int
     size: int | None
+    probe_score: int
 
     @overload
     def demux(self, video_stream: VideoStream) -> Iterator[Packet[VideoStream]]: ...

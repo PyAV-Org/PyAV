@@ -51,6 +51,22 @@ class VideoPlane(Plane):
         # ignore it's direction.
         self.buffer_size = abs(self.frame.ptr.linesize[self.index]) * self.height
 
+        # Cropping moves the data pointer into the buffer, so the last row can end
+        # past the allocation. Clamp to what the plane's buffer actually holds.
+        if frame.ptr.hw_frames_ctx or self.frame.ptr.linesize[self.index] < 0:
+            return
+        buf: cython.pointer[lib.AVBufferRef] = lib.av_frame_get_plane_buffer(
+            frame.ptr, index
+        )
+        if buf == cython.NULL:
+            return
+        start: cython.p_uchar = frame.ptr.data[index]
+        end: cython.p_uchar = buf.data + buf.size
+        if buf.data <= start < end and cython.cast(cython.size_t, end - start) < (
+            self.buffer_size
+        ):
+            self.buffer_size = end - start
+
     @cython.cfunc
     def _buffer_size(self) -> cython.size_t:
         return self.buffer_size

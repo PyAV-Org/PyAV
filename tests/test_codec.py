@@ -23,6 +23,8 @@ def test_codec_mpeg4_decoder() -> None:
     assert c.is_decoder
     assert not c.is_encoder
     assert c.delay
+    assert c.wrapper_name is None
+    assert c.max_lowres == 3
 
     assert c.audio_formats is None and c.audio_rates is None
 
@@ -87,6 +89,12 @@ def test_codec_opus_encoder() -> None:
     assert 48000 in c.audio_rates
 
     assert c.video_formats is None and c.frame_rates is None
+
+
+def test_codec_wrapper_name() -> None:
+    if "h264_videotoolbox" not in codecs_available:
+        pytest.skip("h264_videotoolbox not available")
+    assert Codec("h264_videotoolbox", "w").wrapper_name == "videotoolbox"
 
 
 def test_codecs_available() -> None:

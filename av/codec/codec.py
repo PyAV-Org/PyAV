@@ -179,6 +179,33 @@ class Codec:
         return self.ptr.long_name or ""
 
     @property
+    def wrapper_name(self):
+        """
+        The name of the external library or hardware API this codec wraps, or
+        ``None`` for codecs native to FFmpeg.
+
+        E.g: ``'videotoolbox'`` for ``h264_videotoolbox``.
+
+        Wraps :ffmpeg:`AVCodec.wrapper_name`.
+
+        :rtype: str | None
+        """
+        if self.ptr.wrapper_name != cython.NULL:
+            return self.ptr.wrapper_name
+
+    @property
+    def max_lowres(self):
+        """
+        The highest ``lowres`` option value this decoder supports, or ``0`` if it
+        cannot decode at reduced resolution.
+
+        Wraps :ffmpeg:`AVCodec.max_lowres`.
+
+        :rtype: int
+        """
+        return self.ptr.max_lowres
+
+    @property
     def type(self):
         """
         The media type of this codec.

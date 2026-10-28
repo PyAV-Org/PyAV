@@ -167,7 +167,9 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVMediaType type
         AVCodecID id
         int capabilities
+        uint8_t max_lowres
         const AVClass *priv_class
+        const char *wrapper_name
 
     cdef int av_codec_is_encoder(const AVCodec*)
     cdef int av_codec_is_decoder(const AVCodec*)
@@ -394,6 +396,10 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AVBufferRef *opaque_ref
         AVChannelLayout ch_layout
         int64_t duration
+        size_t crop_top
+        size_t crop_bottom
+        size_t crop_left
+        size_t crop_right
 
     cdef struct AVPacket:
         AVBufferRef *buf
@@ -493,6 +499,8 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int extradata_size
         int width
         int height
+        AVRational framerate
+        int video_delay
         int sample_rate
         AVPacketSideData *coded_side_data
         int nb_coded_side_data

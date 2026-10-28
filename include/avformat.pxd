@@ -156,6 +156,7 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVCodecID audio_codec_id
         AVCodecID video_codec_id
         void *opaque
+        int probe_score
         int (*io_open)(
             AVFormatContext *s,
             AVIOContext **pb,
