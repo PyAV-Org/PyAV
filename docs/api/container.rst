@@ -41,12 +41,8 @@ Input Containers
 Programs
 --------
 
-.. currentmodule:: av.container.program
-
-.. autoclass:: Program
+.. autoclass:: av.container.input.Program
     :members:
-
-.. currentmodule:: av.container
 
 
 Output Containers
