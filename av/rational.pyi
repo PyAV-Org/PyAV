@@ -3,7 +3,7 @@ from fractions import Fraction
 from numbers import Rational
 from typing import final, overload
 
-_Comparable = AVRational | Rational | Decimal | float
+type _Comparable = AVRational | Rational | Decimal | float
 
 @final
 class AVRational:
