@@ -99,10 +99,22 @@ class SubtitleCodecContext(CodecContext):
         if not self.ptr.codec:
             raise ValueError("cannot decode unknown codec")
 
-        if packet is None:
-            raise RuntimeError("packet cannot be None")
-
         self.open(strict=False)
+
+        if packet is not None:
+            subtitle: SubtitleSet | None = self._decode_one(packet)
+            return list(subtitle) if subtitle is not None else []
+
+        # Flush: send empty packets until the decoder stops returning subtitles,
+        # as avcodec_decode_subtitle2() documents.
+        flush_packet: Packet = Packet()
+        subtitles: list = []
+        while (subtitle := self._decode_one(flush_packet)) is not None:
+            subtitles.extend(subtitle)
+        return subtitles
+
+    @cython.cfunc
+    def _decode_one(self, packet: Packet):
         proxy: SubtitleProxy = SubtitleProxy()
         got_frame: cython.int = 0
 
@@ -116,8 +128,8 @@ class SubtitleCodecContext(CodecContext):
         )
 
         if got_frame:
-            return list(SubtitleSet(proxy))
-        return []
+            return SubtitleSet(proxy)
+        return None
 
     @cython.ccall
     def decode2(self, packet: Packet):

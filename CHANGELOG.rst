@@ -46,6 +46,7 @@ Fixes:
 - Type stubs now pass ``mypy --strict`` and have been corrected throughout to match runtime behavior, including attributes on the wrong class, values that may be ``None``, missing return types, and mismatched parameter names.
 - ``FilterContext.link_to`` raises ``ValueError`` when linking filters from different graphs instead of aborting the process.
 - Filters added or linked after ``Graph.configure()`` are now configured on the next push or pull instead of segfaulting.
+- ``SubtitleCodecContext.decode(None)`` flushes the decoder instead of raising ``RuntimeError``, so delayed decoders such as EIA-608 closed captions return their final subtitle.
 
 v19.0.2
 -------

@@ -5,4 +5,5 @@ from av.packet cimport Packet
 cdef class SubtitleCodecContext(CodecContext):
     cdef bint subtitle_header_set
     cdef _decode(self, Packet packet)
+    cdef _decode_one(self, Packet packet)
     cpdef decode2(self, Packet packet)
