@@ -3,14 +3,7 @@ from enum import Flag, IntEnum
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import (
-    Any,
-    Literal,
-    Self,
-    TypedDict,
-    overload,
-    type_check_only,
-)
+from typing import Any, Literal, Protocol, Self, TypedDict, overload, type_check_only
 
 from typing_extensions import disjoint_base
 
@@ -23,6 +16,15 @@ from .output import OutputContainer
 from .streams import StreamContainer
 
 type _Real = int | float | Fraction | AVRational
+type _IOOpen = Callable[[str, int, dict[str, str]], object]
+
+@type_check_only
+class _ReadableFile(Protocol):
+    def read(self, size: int, /) -> bytes: ...
+
+@type_check_only
+class _WritableFile(Protocol):
+    def write(self, data: bytes, /) -> object: ...
 
 class Flags(Flag):
     _value_: int
@@ -91,7 +93,7 @@ class Chapter(TypedDict):
 class Container:
     name: str
     file: Any
-    io_open: Any
+    io_open: _IOOpen | None
     open_files: Any
     format: ContainerFormat
     options: dict[str, str]
@@ -118,14 +120,14 @@ class Container:
 
 @overload
 def open(
-    file: Any,
+    file: str | Path | _ReadableFile,
     mode: Literal["r"],
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
     timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
-    io_open: Callable[..., Any] | None = None,
+    io_open: _IOOpen | None = None,
     hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
 @overload
@@ -137,30 +139,30 @@ def open(
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
     timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
-    io_open: Callable[..., Any] | None = None,
+    io_open: _IOOpen | None = None,
     hwaccel: HWAccel | None = None,
 ) -> InputContainer: ...
 @overload
 def open(
-    file: Any,
+    file: str | Path | _WritableFile,
     mode: Literal["w"],
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
     timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
-    io_open: Callable[..., Any] | None = None,
+    io_open: _IOOpen | None = None,
     hwaccel: HWAccel | None = None,
 ) -> OutputContainer: ...
 @overload
 def open(
-    file: Any,
+    file: str | Path | _ReadableFile | _WritableFile,
     mode: Literal["r", "w"] | None = None,
     format: str | None = None,
     options: dict[str, str] | None = None,
     container_options: dict[str, str] | None = None,
     buffer_size: int = 32768,
     timeout: _Real | None | tuple[_Real | None, _Real | None] = None,
-    io_open: Callable[..., Any] | None = None,
+    io_open: _IOOpen | None = None,
     hwaccel: HWAccel | None = None,
 ) -> InputContainer | OutputContainer: ...

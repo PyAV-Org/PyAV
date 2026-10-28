@@ -1,7 +1,8 @@
 from collections.abc import Iterator
-from typing import Any, Self, final
+from typing import Self, final
 
 import numpy as np
+import numpy.typing as npt
 
 from av.frame import Frame
 
@@ -13,7 +14,7 @@ class MotionVectors(SideData):
     def __getitem__(self, index: int, /) -> MotionVector: ...
     def __iter__(self) -> Iterator[MotionVector]: ...
     def __len__(self) -> int: ...
-    def to_ndarray(self) -> np.ndarray[Any, Any]: ...
+    def to_ndarray(self) -> npt.NDArray[np.void]: ...
 
 @final
 class MotionVector:

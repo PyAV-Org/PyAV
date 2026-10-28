@@ -142,7 +142,7 @@ def test_nonfinite_ordering() -> None:
 
 
 def test_nonfinite_ordering_is_consistent() -> None:
-    values = [
+    values: list[AVRational | Fraction | float | Decimal] = [
         AVRational(0, 0),
         AVRational(1, 0),
         AVRational(-1, 0),
@@ -210,9 +210,9 @@ def test_unorderable_types() -> None:
     for value in ("x", None, 1j, object()):
         for r in (AVRational(1, 2), AVRational(1, 0), AVRational(0, 0)):
             with pytest.raises(TypeError):
-                r < value  # noqa: B015
+                r < value  # type: ignore[operator]  # noqa: B015
             with pytest.raises(TypeError):
-                r >= value  # noqa: B015
+                r >= value  # type: ignore[operator]  # noqa: B015
 
 
 def test_fraction_on_the_left_is_asymmetric() -> None:

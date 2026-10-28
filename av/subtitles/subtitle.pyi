@@ -16,11 +16,7 @@ class SubtitleSet:
 
     @staticmethod
     def create(
-        text: bytes,
-        start: int,
-        end: int,
-        pts: int = 0,
-        subtitle_format: int = 1,
+        text: bytes, start: int, end: int, pts: int = 0, subtitle_format: int = 1
     ) -> SubtitleSet: ...
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[AssSubtitle | BitmapSubtitle]: ...

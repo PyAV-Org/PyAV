@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Any, final, overload
+from typing import final, overload
 
 from av.audio.frame import AudioFrame
 from av.audio.stream import AudioStream
@@ -11,6 +11,7 @@ from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
 
 from .core import Container
+from .streams import _Indices, _StreamSelector
 
 @final
 class InputContainer(Container):
@@ -27,7 +28,7 @@ class InputContainer(Container):
         self, video_streams: tuple[VideoStream, ...]
     ) -> Iterator[Packet[VideoStream]]: ...
     @overload
-    def demux(self, *, video: Any) -> Iterator[Packet[VideoStream]]: ...
+    def demux(self, *, video: _Indices) -> Iterator[Packet[VideoStream]]: ...
     @overload
     def demux(self, audio_stream: AudioStream) -> Iterator[Packet[AudioStream]]: ...
     @overload
@@ -35,7 +36,7 @@ class InputContainer(Container):
         self, audio_streams: tuple[AudioStream, ...]
     ) -> Iterator[Packet[AudioStream]]: ...
     @overload
-    def demux(self, *, audio: Any) -> Iterator[Packet[AudioStream]]: ...
+    def demux(self, *, audio: _Indices) -> Iterator[Packet[AudioStream]]: ...
     @overload
     def demux(
         self, subtitle_stream: SubtitleStream
@@ -51,7 +52,7 @@ class InputContainer(Container):
         self, data_streams: tuple[DataStream, ...]
     ) -> Iterator[Packet[DataStream]]: ...
     @overload
-    def demux(self, *, data: Any) -> Iterator[Packet[DataStream]]: ...
+    def demux(self, *, data: _Indices) -> Iterator[Packet[DataStream]]: ...
     @overload
     def demux(
         self, attachment_stream: AttachmentStream
@@ -61,7 +62,9 @@ class InputContainer(Container):
         self, attachment_streams: tuple[AttachmentStream, ...]
     ) -> Iterator[Packet[AttachmentStream]]: ...
     @overload
-    def demux(self, *args: Any, **kwargs: Any) -> Iterator[Packet[Stream]]: ...
+    def demux(
+        self, *args: _StreamSelector, **kwargs: _Indices
+    ) -> Iterator[Packet[Stream]]: ...
     @overload
     def decode(self, video: int) -> Iterator[VideoFrame]: ...
     @overload
@@ -76,7 +79,7 @@ class InputContainer(Container):
     def decode(self, *args: SubtitleStream) -> Iterator[SubtitleSet]: ...
     @overload
     def decode(
-        self, *args: Any, **kwargs: Any
+        self, *args: _StreamSelector, **kwargs: _Indices
     ) -> Iterator[VideoFrame | AudioFrame | SubtitleSet]: ...
     def seek(
         self,

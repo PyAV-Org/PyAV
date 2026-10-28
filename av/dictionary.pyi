@@ -16,8 +16,5 @@ class Dictionary:
     def copy(self) -> Dictionary: ...
     def pop(self, key: str) -> str: ...
     def update(
-        self,
-        other: Mapping[str, str] | Iterable[tuple[str, str]] = (),
-        /,
-        **kwds: str,
+        self, other: Mapping[str, str] | Iterable[tuple[str, str]] = (), /, **kwds: str
     ) -> None: ...

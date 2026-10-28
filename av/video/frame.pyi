@@ -1,8 +1,9 @@
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Literal, Self, final, overload
+from typing import Literal, Self, TypedDict, Unpack, final, overload
 
 import numpy as np
+import numpy.typing as npt
 from PIL.Image import Image
 
 from av.frame import Frame
@@ -12,13 +13,28 @@ from .plane import VideoPlane
 from .reformatter import ColorPrimaries, ColorTrc
 
 _SupportedNDarray = (
-    np.ndarray[Any, np.dtype[np.uint8]]
-    | np.ndarray[Any, np.dtype[np.uint16]]
-    | np.ndarray[Any, np.dtype[np.float16]]
-    | np.ndarray[Any, np.dtype[np.float32]]
+    npt.NDArray[np.uint8]
+    | npt.NDArray[np.uint16]
+    | npt.NDArray[np.float16]
+    | npt.NDArray[np.float32]
 )
 
 supported_np_pix_fmts: set[str]
+
+class _ReformatKwargs(TypedDict, total=False):
+    width: int | None
+    height: int | None
+    src_colorspace: str | int | None
+    dst_colorspace: str | int | None
+    interpolation: int | str | None
+    src_color_range: int | str | None
+    dst_color_range: int | str | None
+    dst_color_trc: int | ColorTrc | None
+    dst_color_primaries: int | ColorPrimaries | None
+    threads: int | None
+
+class _ToNdarrayKwargs(_ReformatKwargs, total=False):
+    format: str | None
 
 class PictureType(IntEnum):
     NONE = 0
@@ -88,12 +104,12 @@ class VideoFrame(Frame):
         dst_color_primaries: int | ColorPrimaries | None = None,
         threads: int | None = None,
     ) -> VideoFrame: ...
-    def to_rgb(self, **kwargs: Any) -> VideoFrame: ...
-    def save(self, filepath: str | Path, **options: Any) -> None: ...
+    def to_rgb(self, **kwargs: Unpack[_ReformatKwargs]) -> VideoFrame: ...
+    def save(self, filepath: str | Path, **options: object) -> None: ...
     def set_image(self, img: Image) -> None: ...
-    def to_image(self, **kwargs: Any) -> Image: ...
+    def to_image(self, **kwargs: Unpack[_ReformatKwargs]) -> Image: ...
     def to_ndarray(
-        self, channel_last: bool = False, **kwargs: Any
+        self, channel_last: bool = False, **kwargs: Unpack[_ToNdarrayKwargs]
     ) -> _SupportedNDarray: ...
     @staticmethod
     def from_image(img: Image) -> VideoFrame: ...
@@ -104,9 +120,7 @@ class VideoFrame(Frame):
     @overload
     @staticmethod
     def from_ndarray(
-        array: tuple[
-            np.ndarray[Any, np.dtype[np.uint8]], np.ndarray[Any, np.dtype[np.uint8]]
-        ],
+        array: tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]],
         format: Literal["pal8"],
         channel_last: bool = False,
     ) -> VideoFrame: ...
