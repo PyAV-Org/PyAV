@@ -1,6 +1,6 @@
 from typing import Literal
 
-# FFmpeg 8.1 encoders and the codec descriptor aliases that resolve to them.
+# FFmpeg 9.0 encoders and the codec descriptor aliases that resolve to them.
 _SubtitleCodecName = Literal[
     "ass",
     "dvb_subtitle",
