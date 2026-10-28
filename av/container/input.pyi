@@ -11,6 +11,7 @@ from av.video.frame import VideoFrame
 from av.video.stream import VideoStream
 
 from .core import Container
+from .program import Program
 from .streams import _Indices, _StreamSelector
 
 @final
@@ -21,6 +22,8 @@ class InputContainer(Container):
     bit_rate: int
     size: int | None
     probe_score: int
+    @property
+    def programs(self) -> tuple[Program, ...]: ...
     duration_estimation_method: Literal["pts", "stream", "bitrate"] | None
 
     @overload

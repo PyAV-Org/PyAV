@@ -1,5 +1,6 @@
 import cython
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
+from cython.cimports.av.container.program import wrap_program
 from cython.cimports.av.container.streams import StreamContainer
 from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.packet import Packet
@@ -144,6 +145,17 @@ class InputContainer(Container):
         size: int64_t = lib.avio_size(self.ptr.pb)
         if size >= 0:
             return size
+
+    @property
+    def programs(self):
+        """The programs in this container, such as the channels of an MPEG-TS
+        broadcast. Empty for formats without programs.
+
+        :type: tuple[Program, ...]
+        """
+        self._assert_open()
+        i: cython.uint
+        return tuple(wrap_program(self, i) for i in range(self.ptr.nb_programs))
 
     @property
     def probe_score(self):

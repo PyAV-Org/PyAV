@@ -35,6 +35,16 @@ cdef extern from "libavformat/avformat.h" nogil:
         AVRational r_frame_rate
         AVRational sample_aspect_ratio
 
+    cdef struct AVProgram:
+        int id
+        AVDiscard discard
+        unsigned int *stream_index
+        unsigned int nb_stream_indexes
+        AVDictionary *metadata
+        int program_num
+        int pmt_pid
+        int pcr_pid
+
     cdef struct AVChapter:
         int64_t id
         int64_t start
@@ -146,6 +156,8 @@ cdef extern from "libavformat/avformat.h" nogil:
         const AVClass *av_class
         unsigned int nb_streams
         AVStream **streams
+        unsigned int nb_programs
+        AVProgram **programs
         unsigned int nb_chapters
         AVChapter **chapters
         const AVInputFormat *iformat
