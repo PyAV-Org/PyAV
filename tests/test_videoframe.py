@@ -1,4 +1,5 @@
 import gc
+import io
 import weakref
 from fractions import Fraction
 from pathlib import Path
@@ -9,6 +10,7 @@ import pytest
 import av
 import av.filter
 from av import VideoFrame
+from av.frame import DecodeError
 from av.video.frame import supported_np_pix_fmts
 from av.video.reformatter import Colorspace, Interpolation
 
@@ -1585,3 +1587,61 @@ def test_apply_cropping_invalid() -> None:
     frame.crop_left = 100
     with pytest.raises(av.error.OverflowError):
         frame.apply_cropping()
+
+
+def _encode_m2v() -> bytearray:
+    buf = io.BytesIO()
+    with av.open(buf, "w", format="mpeg2video") as out:
+        stream = out.add_stream("mpeg2video", rate=25)
+        stream.width = 64
+        stream.height = 48
+        stream.pix_fmt = "yuv420p"
+        for i in range(6):
+            frame = VideoFrame.solid(64, 48, (i * 40, 0, 0))
+            frame.pts = i
+            out.mux(stream.encode(frame))
+        out.mux(stream.encode(None))
+    return bytearray(buf.getvalue())
+
+
+def _decode_m2v(data: bytearray) -> list[VideoFrame]:
+    with av.open(io.BytesIO(bytes(data)), "r", format="mpeg2video") as container:
+        return list(container.decode(video=0))
+
+
+def test_repeat_pict() -> None:
+    data = _encode_m2v()
+    assert all(frame.repeat_pict == 0 for frame in _decode_m2v(data))
+
+    # Set repeat_first_field and clear top_field_first in every picture coding
+    # extension. On a progressive sequence, that doubles each frame.
+    i = data.find(b"\x00\x00\x01\xb5")
+    while i != -1:
+        if data[i + 4] >> 4 == 8:
+            data[i + 7] = (data[i + 7] | 0x02) & ~0x80
+        i = data.find(b"\x00\x00\x01\xb5", i + 4)
+
+    frames = _decode_m2v(data)
+    assert frames
+    assert all(frame.repeat_pict == 2 for frame in frames)
+
+
+def test_decode_error_flags() -> None:
+    data = _encode_m2v()
+    for frame in _decode_m2v(data):
+        assert frame.decode_error_flags == DecodeError(0)
+        assert not frame.is_corrupt
+
+    # Garble the start of every slice after the first frame's.
+    slices = [
+        i
+        for i in range(len(data) - 3)
+        if data[i : i + 3] == b"\x00\x00\x01" and 0x01 <= data[i + 3] <= 0xAF
+    ]
+    for i in slices[2:]:
+        for j in range(i + 5, min(i + 12, len(data))):
+            data[j] ^= 0xFF
+
+    frames = _decode_m2v(data)
+    assert any(DecodeError.concealment_active in f.decode_error_flags for f in frames)
+    assert any(frame.is_corrupt for frame in frames)

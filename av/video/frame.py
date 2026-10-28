@@ -805,6 +805,26 @@ class VideoFrame(Frame):
         self.ptr.pict_type = value
 
     @property
+    def repeat_pict(self):
+        """How many extra fields to show this frame for, as used by soft
+        telecine.
+
+        The frame lasts ``repeat_pict + 2`` field durations, so ``1`` on an
+        interlaced frame means it is shown as 3 fields. Decoders set this from
+        MPEG-2 ``repeat_first_field`` or H.264 ``pic_struct``. Few encoders
+        read it; Intel QSV is one.
+
+        Wraps :ffmpeg:`AVFrame.repeat_pict`.
+
+        :type: int
+        """
+        return self.ptr.repeat_pict
+
+    @repeat_pict.setter
+    def repeat_pict(self, value):
+        self.ptr.repeat_pict = value
+
+    @property
     def colorspace(self):
         """The YUV/RGB transformation matrix of the frame, as FFmpeg's raw
         integer value. :class:`.Colorspace` names the values.

@@ -1,3 +1,5 @@
+from enum import IntFlag
+
 import cython
 from cython.cimports.av.error import err_check
 from cython.cimports.av.opaque import opaque_container
@@ -8,6 +10,13 @@ from cython.cimports.av.utils import (
 )
 
 from av.sidedata.sidedata import SideDataContainer
+
+
+class DecodeError(IntFlag):
+    invalid_bitstream = lib.FF_DECODE_ERROR_INVALID_BITSTREAM
+    missing_reference = lib.FF_DECODE_ERROR_MISSING_REFERENCE
+    concealment_active = lib.FF_DECODE_ERROR_CONCEALMENT_ACTIVE
+    decode_slices = lib.FF_DECODE_ERROR_DECODE_SLICES
 
 
 @cython.cclass
@@ -185,6 +194,19 @@ class Frame:
         return self.ptr.decode_error_flags != 0 or bool(
             self.ptr.flags & lib.AV_FRAME_FLAG_CORRUPT
         )
+
+    @property
+    def decode_error_flags(self):
+        """What went wrong while decoding this frame, if anything.
+
+        The decoder still produced the frame, but it may contain artifacts.
+        Empty for frames that decoded cleanly.
+
+        Wraps :ffmpeg:`AVFrame.decode_error_flags`.
+
+        :type: DecodeError
+        """
+        return DecodeError(self.ptr.decode_error_flags)
 
     @property
     def key_frame(self):

@@ -115,6 +115,12 @@ cdef extern from "libavcodec/avcodec.h" nogil:
     cdef enum:
         FF_COMPLIANCE_NORMAL
 
+    cdef enum:
+        FF_DECODE_ERROR_INVALID_BITSTREAM
+        FF_DECODE_ERROR_MISSING_REFERENCE
+        FF_DECODE_ERROR_CONCEALMENT_ACTIVE
+        FF_DECODE_ERROR_DECODE_SLICES
+
     cdef enum AVCodecID:
         AV_CODEC_ID_NONE
         AV_CODEC_ID_PCM_ALAW
@@ -372,6 +378,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int nb_samples
         int format  # -1 if unknown, AVPixelFormat or AVSampleFormat
         AVPictureType pict_type
+        int repeat_pict
 
         int64_t pts
         int64_t pkt_dts

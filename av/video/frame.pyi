@@ -69,6 +69,7 @@ class VideoFrame(Frame):
     format: VideoFormat
     planes: tuple[VideoPlane, ...]
     pict_type: int
+    repeat_pict: int
     colorspace: int
     color_range: int
     color_trc: int
