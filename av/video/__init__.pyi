@@ -1,7 +1,7 @@
 from typing import Literal
 
-from .frame import VideoFrame
-from .stream import VideoStream
+from .frame import VideoFrame as VideoFrame
+from .stream import VideoStream as VideoStream
 
 # FFmpeg 8.1 encoders and the codec descriptor aliases that resolve to them.
 _VideoCodecName = Literal[
@@ -193,5 +193,3 @@ _VideoCodecName = Literal[
     "zlib",
     "zmbv",
 ]
-
-__all__ = ("VideoFrame", "VideoStream")
