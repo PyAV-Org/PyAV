@@ -164,7 +164,7 @@ class Stream:
         if name == "time_base":
             to_avrational(value, cython.address(self.ptr.time_base))
             return
-        if name in ("format", "layout", "thread_type"):
+        if name in ("format", "layout", "thread_count", "thread_type"):
             prop = getattr(type(self), name, None)
             if prop is not None:
                 prop.__set__(self, value)

@@ -495,6 +495,19 @@ def test_video_thread_type_passthrough_deprecated() -> None:
             assert stream.thread_type == av.codec.context.ThreadType.AUTO
 
 
+def test_video_thread_count_passthrough_deprecated() -> None:
+    with av.open(io.BytesIO(), "w", format="mp4") as output:
+        stream = output.add_stream("mpeg4", rate=24)
+        assert isinstance(stream, av.VideoStream)
+
+        with pytest.warns(DeprecationWarning, match=r"cctx\.thread_count"):
+            stream.thread_count = 2
+        assert stream.cctx.thread_count == 2
+
+        with pytest.warns(DeprecationWarning, match=r"cctx\.thread_count"):
+            assert stream.thread_count == 2
+
+
 @pytest.mark.filterwarnings("error::DeprecationWarning")
 def test_add_stream_format_layout_kwargs_not_deprecated() -> None:
     with av.open(io.BytesIO(), "w", format="mp4") as output:
@@ -506,8 +519,10 @@ def test_add_stream_format_layout_kwargs_not_deprecated() -> None:
             rate=24,
             format=av.VideoFormat("yuv420p", 32, 32),
             thread_type="AUTO",
+            thread_count=2,
         )
         assert vstream.cctx.width == 32
+        assert vstream.cctx.thread_count == 2
         assert vstream.cctx.thread_type == av.codec.context.ThreadType.AUTO
 
         graph = av.filter.Graph()

@@ -72,6 +72,29 @@ class VideoStream(Stream):
             self.cctx.format = value
 
     @property
+    def thread_count(self):
+        """
+        The number of threads the codec context uses.
+
+        .. deprecated:: 19.1
+            Use ``stream.cctx.thread_count`` instead.
+
+        :type: int
+        """
+        _warn_passthrough("thread_count")
+        if self.cctx is None:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute 'thread_count'"
+            )
+        return self.cctx.thread_count
+
+    @thread_count.setter
+    def thread_count(self, value):
+        _warn_passthrough("thread_count")
+        if self.cctx is not None:
+            self.cctx.thread_count = value
+
+    @property
     def thread_type(self):
         """
         The threading type of the codec context.
