@@ -56,6 +56,17 @@ def test_manual_fltp_7_1_constructor() -> None:
     assertNdarraysEqual(frame.to_ndarray(), array)
 
 
+def test_manual_fltp_22_2_constructor() -> None:
+    # More than 8 planes: extended_data is a separate heap array of exactly
+    # nb_channels pointers, so reading past it would be out of bounds.
+    frame = AudioFrame(format="fltp", layout="22.2", samples=160)
+    assert len(frame.planes) == 24
+
+    array = np.arange(24 * 160, dtype="f4").reshape(24, 160)
+    frame = AudioFrame.from_ndarray(array, format="fltp", layout="22.2")
+    assertNdarraysEqual(frame.to_ndarray(), array)
+
+
 def test_manual_s16_mono_constructor() -> None:
     frame = AudioFrame(format="s16", layout="mono", samples=160)
     assert frame.format.name == "s16"

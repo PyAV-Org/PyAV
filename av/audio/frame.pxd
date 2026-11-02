@@ -27,5 +27,6 @@ cdef class AudioFrame(Frame):
 
     cdef void _init(self, lib.AVSampleFormat format, lib.AVChannelLayout layout, unsigned int nb_samples, unsigned int align)
     cdef void _init_user_attributes(self)
+    cdef int _nb_planes(self)
 
 cdef AudioFrame alloc_audio_frame()

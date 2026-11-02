@@ -141,6 +141,10 @@ class AudioFrame(Frame):
             plane.update(array[i, :])
         return frame
 
+    @cython.cfunc
+    def _nb_planes(self) -> cython.int:
+        return self.layout.nb_channels if self.format.is_planar else 1
+
     @property
     def planes(self):
         """
@@ -148,7 +152,7 @@ class AudioFrame(Frame):
 
         :type: tuple
         """
-        nb_planes: cython.int = self.layout.nb_channels if self.format.is_planar else 1
+        nb_planes: cython.int = self._nb_planes()
         plane_count: cython.int = 0
         while plane_count < nb_planes and self.ptr.extended_data[plane_count]:
             plane_count += 1
