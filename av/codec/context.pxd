@@ -12,6 +12,8 @@ cdef class CodecContext:
     # Fields are laid out in declaration order: pointers first, then the small
     # scalars, so there are no padding holes between them.
     cdef lib.AVCodecContext *ptr
+    # avcodec_open2() may clear AVCodecContext.codec when opening fails.
+    cdef const lib.AVCodec *_codec
     cdef lib.AVCodecParserContext *parser
     cdef public dict options
     cdef HWAccel hwaccel_ctx

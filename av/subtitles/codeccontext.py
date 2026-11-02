@@ -61,7 +61,7 @@ class SubtitleCodecContext(CodecContext):
         Returns:
             A Packet containing the encoded subtitle data
         """
-        if not self.ptr.codec:
+        if not self._codec:
             raise ValueError("Cannot encode with unknown codec")
 
         self.open(strict=False)
@@ -96,7 +96,7 @@ class SubtitleCodecContext(CodecContext):
     def _decode(self, packet: Packet | None):
         """Decode a subtitle packet, returning a list of :class:`.Subtitle` objects
         if a subtitle was decoded, or an empty list otherwise."""
-        if not self.ptr.codec:
+        if not self._codec:
             raise ValueError("cannot decode unknown codec")
 
         self.open(strict=False)
@@ -136,7 +136,7 @@ class SubtitleCodecContext(CodecContext):
         """
         Returns SubtitleSet if you really need it.
         """
-        if not self.ptr.codec:
+        if not self._codec:
             raise ValueError("cannot decode unknown codec")
 
         self.open(strict=False)

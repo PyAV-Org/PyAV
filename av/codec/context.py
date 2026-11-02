@@ -264,7 +264,7 @@ class CodecContext:
         descriptors only; set options through :attr:`options`.
         """
         ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(
-            self.ptr.codec
+            self._codec
         )
         child: cython.p_void
         private: list[CodecOption] = []
@@ -290,6 +290,9 @@ class CodecContext:
         self.ptr = ptr
         if self.ptr.codec and codec and self.ptr.codec != codec:
             raise RuntimeError("Wrapping CodecContext with mismatched codec.")
+        # Keep the selected implementation independently of FFmpeg's mutable
+        # context: a failed avcodec_open2() clears ptr.codec during cleanup.
+        self._codec = codec if codec != cython.NULL else self.ptr.codec
 
         # Set reasonable threading defaults.
         self.ptr.thread_count = 0  # use as many threads as there are CPUs.
@@ -390,19 +393,19 @@ class CodecContext:
 
     @property
     def is_encoder(self):
-        if self.ptr is cython.NULL:
+        if self.ptr is cython.NULL or self._codec is cython.NULL:
             return False
-        return bool(lib.av_codec_is_encoder(self.ptr.codec))
+        return bool(lib.av_codec_is_encoder(self._codec))
 
     @property
     def is_decoder(self):
-        if self.ptr is cython.NULL:
+        if self.ptr is cython.NULL or self._codec is cython.NULL:
             return False
-        return bool(lib.av_codec_is_decoder(self.ptr.codec))
+        return bool(lib.av_codec_is_decoder(self._codec))
 
     @property
     def codec(self):
-        return wrap_codec(self.ptr.codec)
+        return wrap_codec(self._codec)
 
     @property
     def is_open(self):
@@ -412,6 +415,8 @@ class CodecContext:
 
     @cython.ccall
     def open(self, strict: cython.bint = True):
+        if self._codec is cython.NULL:
+            raise ValueError("Cannot open an unknown codec.")
         if lib.avcodec_is_open(self.ptr):
             if strict:
                 raise ValueError("CodecContext is already open.")
@@ -434,8 +439,8 @@ class CodecContext:
         self._setup_encode_hwframes()
 
         err_check(
-            lib.avcodec_open2(self.ptr, self.ptr.codec, cython.address(options.ptr)),
-            f'avcodec_open2("{self.ptr.codec.name}", {self.options})',
+            lib.avcodec_open2(self.ptr, self._codec, cython.address(options.ptr)),
+            f'avcodec_open2("{self._codec.name}", {self.options})',
         )
         self.options = dict(options)
 
@@ -476,9 +481,11 @@ class CodecContext:
         """
 
         if not self.parser:
-            self.parser = lib.av_parser_init(self.ptr.codec.id)
+            if self._codec is cython.NULL:
+                raise ValueError("Cannot parse with an unknown codec.")
+            self.parser = lib.av_parser_init(self._codec.id)
             if not self.parser:
-                raise ValueError(f"No parser for {self.ptr.codec.name}")
+                raise ValueError(f"No parser for {self._codec.name}")
 
         source: ByteSource = bytesource(raw_input, allow_none=True)
 
@@ -746,7 +753,7 @@ class CodecContext:
 
     @cython.cfunc
     def _decode(self, packet: Packet | None):
-        if not self.ptr.codec:
+        if not self._codec:
             raise ValueError("cannot decode unknown codec")
 
         self.open(strict=False)
@@ -798,7 +805,7 @@ class CodecContext:
 
     @property
     def name(self):
-        return self.ptr.codec.name or ""
+        return (self._codec.name or "") if self._codec != cython.NULL else ""
 
     @property
     def type(self):
@@ -815,7 +822,7 @@ class CodecContext:
         desc: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
             lib.avcodec_descriptor_get(self.ptr.codec_id)
         )
-        if not self.ptr.codec or desc == cython.NULL or not desc.profiles:
+        if not self._codec or desc == cython.NULL or not desc.profiles:
             return ret
 
         i: cython.int = 0
@@ -830,7 +837,7 @@ class CodecContext:
         desc: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
             lib.avcodec_descriptor_get(self.ptr.codec_id)
         )
-        if not self.ptr.codec or desc == cython.NULL or not desc.profiles:
+        if not self._codec or desc == cython.NULL or not desc.profiles:
             return
 
         i: cython.int = 0
@@ -844,7 +851,7 @@ class CodecContext:
         desc: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
             lib.avcodec_descriptor_get(self.ptr.codec_id)
         )
-        if not self.ptr.codec or desc == cython.NULL or not desc.profiles:
+        if not self._codec or desc == cython.NULL or not desc.profiles:
             return
 
         i: cython.int = 0

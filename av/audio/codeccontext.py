@@ -17,7 +17,7 @@ class AudioCodecContext(CodecContext):
     ) -> list[Frame | None]:
         frame: AudioFrame | None = input_frame
         allow_var_frame_size: cython.bint = (
-            self.ptr.codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
+            self._codec.capabilities & lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE
         )
 
         # Note that the resampler will simply return an input frame if there is

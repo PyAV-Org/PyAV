@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
 from collections.abc import Iterator
 from fractions import Fraction
+from pathlib import Path
 from typing import Any, TypedDict, overload
 
 import pytest
@@ -71,6 +74,19 @@ def iter_raw_frames(
 
 
 class TestCodecContext(TestCase):
+    def test_failed_open_preserves_selected_codec(self) -> None:
+        child = Path(__file__).with_name("codec_context_retry.py")
+        package_root = Path(av.__file__).resolve().parent.parent
+        result = subprocess.run(
+            [sys.executable, "-I", "-B", str(child), str(package_root)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        assert result.returncode == 0, (result.returncode, result.stdout, result.stderr)
+        assert "real-codec-retry-and-recovery-pass" in result.stdout
+
     def test_supported_options(self) -> None:
         ctx = Codec("flac", "w").create()
         supported = ctx.supported_options
