@@ -148,8 +148,11 @@ class AudioFrame(Frame):
 
         :type: tuple
         """
+        nb_planes: cython.int = (
+            self.layout.nb_channels if self.format.is_planar else 1
+        )
         plane_count: cython.int = 0
-        while self.ptr.extended_data[plane_count]:
+        while plane_count < nb_planes and self.ptr.extended_data[plane_count]:
             plane_count += 1
 
         return tuple([AudioPlane(self, i) for i in range(plane_count)])
