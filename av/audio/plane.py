@@ -6,9 +6,7 @@ from cython.cimports.av.audio.frame import AudioFrame
 @cython.cclass
 class AudioPlane(Plane):
     def __cinit__(self, frame: AudioFrame, index: cython.int):
-        nb_planes: cython.int = (
-            frame.layout.nb_channels if frame.format.is_planar else 1
-        )
+        nb_planes: cython.int = frame._nb_planes()
         if index < 0 or index >= nb_planes:
             raise ValueError(f"plane index {index} out of range for {nb_planes} planes")
 
