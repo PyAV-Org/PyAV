@@ -45,6 +45,17 @@ def test_manual_fltp_stereo_constructor() -> None:
     assert frame.samples == 160
 
 
+def test_manual_fltp_7_1_constructor() -> None:
+    # With 8 planes, extended_data points at the frame's data[8] array, which
+    # is not NULL-terminated: the next field is linesize[0].
+    frame = AudioFrame(format="fltp", layout="7.1", samples=160)
+    assert len(frame.planes) == 8
+
+    array = np.arange(8 * 160, dtype="f4").reshape(8, 160)
+    frame = AudioFrame.from_ndarray(array, format="fltp", layout="7.1")
+    assertNdarraysEqual(frame.to_ndarray(), array)
+
+
 def test_manual_s16_mono_constructor() -> None:
     frame = AudioFrame(format="s16", layout="mono", samples=160)
     assert frame.format.name == "s16"
