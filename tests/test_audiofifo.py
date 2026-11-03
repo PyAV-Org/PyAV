@@ -1,5 +1,7 @@
 from fractions import Fraction
 
+import pytest
+
 import av
 
 from .common import TestCase, fate_suite
@@ -115,3 +117,14 @@ class TestAudioFifo(TestCase):
         assert oframe is not None
         assert oframe.pts is None and oframe.time_base is None
         assert oframe.sample_rate == iframe.sample_rate
+
+    def test_layout_mismatch(self) -> None:
+        fifo = av.AudioFifo()
+        fifo.write(av.AudioFrame(format="s16", layout="mono", samples=1024))
+
+        # The FIFO was allocated for one channel, so a stereo frame would be
+        # read as mono and its samples scrambled.
+        with pytest.raises(ValueError):
+            fifo.write(av.AudioFrame(format="s16", layout="stereo", samples=1024))
+
+        assert fifo.samples == 1024

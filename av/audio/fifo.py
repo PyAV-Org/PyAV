@@ -76,6 +76,10 @@ class AudioFifo:
         elif (
             frame.ptr.format != self.template.ptr.format
             or frame.ptr.sample_rate != self.template.ptr.sample_rate
+            or lib.av_channel_layout_compare(
+                cython.address(frame.ptr.ch_layout),
+                cython.address(self.template.ptr.ch_layout),
+            )
             or (
                 frame._time_base.num
                 and self.template._time_base.num
