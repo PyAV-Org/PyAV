@@ -394,6 +394,16 @@ class CodecContext:
 
     @cython.ccall
     def open(self, strict: cython.bint = True):
+        """open(strict=True)
+
+        Open the codec, readying the context to encode or decode.
+
+        The selected codec is preserved if opening fails, so the context stays
+        inspectable and can be retried after fixing the offending parameters.
+        FFmpeg's failed-open cleanup still resets other fields, though (notably
+        ``layout`` drops to 0 channels), so a retry must re-apply the parameters
+        that were set before the failed attempt.
+        """
         if self.is_open:
             if strict:
                 raise ValueError("CodecContext is already open.")
@@ -415,10 +425,15 @@ class CodecContext:
 
         self._setup_encode_hwframes()
 
-        err_check(
-            lib.avcodec_open2(self.ptr, self.codec.ptr, cython.address(options.ptr)),
-            f'avcodec_open2("{self.codec.name}", {self.options})',
+        # AVCodec structs are static globals, so holding the pointer across the
+        # call is safe.
+        codec: cython.pointer[cython.const[lib.AVCodec]] = self.codec.ptr
+        ret: cython.int = lib.avcodec_open2(
+            self.ptr, codec, cython.address(options.ptr)
         )
+        if ret < 0:
+            self.ptr.codec = codec
+        err_check(ret, f'avcodec_open2("{self.codec.name}", {self.options})')
         self.is_open = True
         self.options = dict(options)
 
