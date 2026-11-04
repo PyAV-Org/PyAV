@@ -351,6 +351,30 @@ class TestCodecContext(TestCase):
         # so at least some packets should carry it through.
         assert any(p.pos is not None for p in packets)
 
+    def test_failed_open_preserves_codec(self) -> None:
+        # A failed avcodec_open2() runs FFmpeg's cleanup, which clears
+        # avctx->codec. open() must restore it so the context stays usable.
+        ctx = av.AudioCodecContext.create("aac", "w")
+        ctx.format = av.AudioFormat("s16")  # AAC wants fltp, so open() fails.
+        ctx.layout = "stereo"
+        ctx.sample_rate = 44100
+
+        with pytest.raises(av.error.FFmpegError):
+            ctx.open()
+
+        # The selected codec is still known after the failure.
+        assert ctx.codec is not None
+        assert ctx.codec.name == "aac"
+        assert ctx.is_encoder and not ctx.is_decoder
+        assert not ctx.is_open
+
+        # Fixing the offending parameters and retrying works on the same context.
+        ctx.format = av.AudioFormat("fltp")
+        ctx.layout = "stereo"
+        ctx.sample_rate = 44100
+        ctx.open()
+        assert ctx.is_open
+
 
 class TestEncoding(TestCase):
     def test_encoding_png(self) -> None:
