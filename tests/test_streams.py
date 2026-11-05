@@ -227,6 +227,12 @@ class TestStreams:
         container.close()
         input_.close()
 
+    def test_name_uses_codec_context(self) -> None:
+        # The encoder name differs from the codec descriptor name ("ac3").
+        with av.open(io.BytesIO(), "w", format="ac3") as container:
+            stream = container.add_stream("ac3_fixed")
+            assert stream.name == "ac3_fixed"
+
     def test_data_stream(self) -> None:
         # First test writing and reading a simple data stream
         container1 = av.open("data.ts", "w")

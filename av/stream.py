@@ -143,10 +143,9 @@ class Stream:
                 f"<av.{self.__class__.__name__} (container closed) at 0x{id(self):x}>"
             )
 
-        name = getattr(self, "name", None)
         return (
             f"<av.{self.__class__.__name__} #{self.index} {self.type or '<notype>'}/"
-            f"{name or '<nocodec>'} at 0x{id(self):x}>"
+            f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
         )
 
     def __setattr__(self, name, value):
@@ -328,6 +327,24 @@ class Stream:
         return Discard(self.ptr.discard)
 
     @property
+    def name(self):
+        """
+        The name of the stream's codec context, or the codec descriptor's name
+        when the stream has no codec context.
+
+        :type: str | None
+        """
+        if self.cctx is not None:
+            return self.cctx.name
+        self._assert_open()
+        desc: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
+            lib.avcodec_descriptor_get(self.ptr.codecpar.codec_id)
+        )
+        if desc == cython.NULL:
+            return None
+        return desc.name
+
+    @property
     def type(self):
         """
         The type of the stream.
@@ -352,16 +369,6 @@ class DataStream(Stream):
             f"<av.{self.__class__.__name__} #{self.index} data/"
             f"{self.name or '<nocodec>'} at 0x{id(self):x}>"
         )
-
-    @property
-    def name(self):
-        self._assert_open()
-        desc: cython.pointer[cython.const[lib.AVCodecDescriptor]] = (
-            lib.avcodec_descriptor_get(self.ptr.codecpar.codec_id)
-        )
-        if desc == cython.NULL:
-            return None
-        return desc.name
 
 
 @cython.final
