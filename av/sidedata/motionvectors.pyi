@@ -18,16 +18,26 @@ class MotionVectors(SideData):
 
 @final
 class MotionVector:
-    source: int
-    w: int
-    h: int
-    src_x: int
-    src_y: int
-    dst_x: int
-    dst_y: int
-    motion_x: int
-    motion_y: int
-    motion_scale: int
+    @property
+    def source(self) -> int: ...
+    @property
+    def w(self) -> int: ...
+    @property
+    def h(self) -> int: ...
+    @property
+    def src_x(self) -> int: ...
+    @property
+    def src_y(self) -> int: ...
+    @property
+    def dst_x(self) -> int: ...
+    @property
+    def dst_y(self) -> int: ...
+    @property
+    def motion_x(self) -> int: ...
+    @property
+    def motion_y(self) -> int: ...
+    @property
+    def motion_scale(self) -> int: ...
     def __new__(
         cls, sentinel: object, parent: MotionVectors, index: int, /
     ) -> Self: ...

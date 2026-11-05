@@ -36,16 +36,24 @@ class Program:
 
 @final
 class InputContainer(Container):
-    start_time: int | None
-    start_time_realtime: int | None
-    duration: int | None
-    bit_rate: int
-    size: int | None
-    probe_score: int
+    @property
+    def start_time(self) -> int | None: ...
+    @property
+    def start_time_realtime(self) -> int | None: ...
+    @property
+    def duration(self) -> int | None: ...
+    @property
+    def bit_rate(self) -> int: ...
+    @property
+    def size(self) -> int | None: ...
+    @property
+    def probe_score(self) -> int: ...
     @property
     def programs(self) -> tuple[Program, ...]: ...
-    duration_estimation_method: Literal["pts", "stream", "bitrate"] | None
-
+    @property
+    def duration_estimation_method(
+        self,
+    ) -> Literal["pts", "stream", "bitrate"] | None: ...
     @overload
     def demux(self, video_stream: VideoStream) -> Iterator[Packet[VideoStream]]: ...
     @overload

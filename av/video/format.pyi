@@ -2,15 +2,24 @@ from typing import Self, final
 
 @final
 class VideoFormat:
-    name: str
-    bits_per_pixel: int
-    padded_bits_per_pixel: int
-    is_big_endian: bool
-    has_palette: bool
-    is_bit_stream: bool
-    is_planar: bool
-    width: int
-    height: int
+    @property
+    def name(self) -> str: ...
+    @property
+    def bits_per_pixel(self) -> int: ...
+    @property
+    def padded_bits_per_pixel(self) -> int: ...
+    @property
+    def is_big_endian(self) -> bool: ...
+    @property
+    def has_palette(self) -> bool: ...
+    @property
+    def is_bit_stream(self) -> bool: ...
+    @property
+    def is_planar(self) -> bool: ...
+    @property
+    def width(self) -> int: ...
+    @property
+    def height(self) -> int: ...
     @property
     def components(self) -> tuple[VideoFormatComponent, ...]: ...
     @property
@@ -26,15 +35,22 @@ class VideoFormat:
 
 @final
 class VideoFormatComponent:
-    index: int
-    plane: int
-    bits: int
-    is_alpha: bool
-    is_luma: bool
-    is_chroma: bool
-    width: int
-    height: int
-
+    @property
+    def index(self) -> int: ...
+    @property
+    def plane(self) -> int: ...
+    @property
+    def bits(self) -> int: ...
+    @property
+    def is_alpha(self) -> bool: ...
+    @property
+    def is_luma(self) -> bool: ...
+    @property
+    def is_chroma(self) -> bool: ...
+    @property
+    def width(self) -> int: ...
+    @property
+    def height(self) -> int: ...
     def __new__(cls, format: VideoFormat, index: int) -> Self: ...
 
 names: set[str]

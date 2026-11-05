@@ -11,10 +11,12 @@ from .layout import AudioLayout
 
 @final
 class AudioCodecContext(CodecContext):
-    frame_size: int
+    @property
+    def frame_size(self) -> int: ...
     sample_rate: int
     rate: int
-    type: Literal["audio"]
+    @property
+    def type(self) -> Literal["audio"]: ...
     @property
     def format(self) -> AudioFormat | None: ...
     @format.setter

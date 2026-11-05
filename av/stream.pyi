@@ -42,41 +42,62 @@ class Discard(IntEnum):
 
 @disjoint_base
 class Stream:
-    name: str | None
-    container: Container
-    cctx: CodecContext | None
-    codec_context: CodecContext | None
-    metadata: dict[str, str]
+    @property
+    def name(self) -> str | None: ...
+    @property
+    def container(self) -> Container: ...
+    @property
+    def cctx(self) -> CodecContext | None: ...
+    @property
+    def codec_context(self) -> CodecContext | None: ...
+    @property
+    def metadata(self) -> dict[str, str]: ...
     @property
     def index_entries(self) -> IndexEntries: ...
     id: int
-    profiles: list[str]
+    @property
+    def profiles(self) -> list[str]: ...
     profile: str | None
-    index: int
+    @property
+    def index(self) -> int: ...
     @property
     def time_base(self) -> AVRational: ...
     @time_base.setter
     def time_base(self, value: AVRational | Fraction | int) -> None: ...
-    start_time: int | None
-    duration: int | None
+    @property
+    def start_time(self) -> int | None: ...
+    @property
+    def duration(self) -> int | None: ...
     disposition: Disposition
     discard: Discard
-    frames: int
-    language: str | None
-    type: Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]
+    @property
+    def frames(self) -> int: ...
+    @property
+    def language(self) -> str | None: ...
+    @property
+    def type(
+        self,
+    ) -> Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]: ...
 
 @final
 class DataStream(Stream):
-    cctx: None
-    codec_context: None
-    type: Literal["data"]
-    name: str | None
+    @property
+    def cctx(self) -> None: ...
+    @property
+    def codec_context(self) -> None: ...
+    @property
+    def type(self) -> Literal["data"]: ...
+    @property
+    def name(self) -> str | None: ...
 
 @final
 class AttachmentStream(Stream):
-    cctx: None
-    codec_context: None
-    type: Literal["attachment"]
+    @property
+    def cctx(self) -> None: ...
+    @property
+    def codec_context(self) -> None: ...
+    @property
+    def type(self) -> Literal["attachment"]: ...
     @property
     def mimetype(self) -> str | None: ...
     @property

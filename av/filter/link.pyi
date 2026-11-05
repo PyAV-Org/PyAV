@@ -8,10 +8,14 @@ from av.filter.graph import Graph
 
 @disjoint_base
 class FilterPad:
-    filter: Filter
-    context: FilterContext | None
-    is_input: bool
-    index: int
+    @property
+    def filter(self) -> Filter: ...
+    @property
+    def context(self) -> FilterContext | None: ...
+    @property
+    def is_input(self) -> bool: ...
+    @property
+    def index(self) -> int: ...
     def __eq__(self, other: object, /) -> bool: ...
     def __hash__(self) -> int: ...
     @property
@@ -23,7 +27,8 @@ class FilterPad:
 
 @final
 class FilterContextPad(FilterPad):
-    context: FilterContext
+    @property
+    def context(self) -> FilterContext: ...
     @property
     def link(self) -> FilterLink | None: ...
     @property

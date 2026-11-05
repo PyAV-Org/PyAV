@@ -7,9 +7,10 @@ from av.frame import Frame
 
 @final
 class FilterContext:
-    name: str | None
-    filter: Filter
-
+    @property
+    def name(self) -> str | None: ...
+    @property
+    def filter(self) -> Filter: ...
     @property
     def inputs(self) -> tuple[FilterContextPad, ...]: ...
     @property

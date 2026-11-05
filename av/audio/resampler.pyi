@@ -6,14 +6,20 @@ from .layout import AudioLayout
 
 @final
 class AudioResampler:
-    rate: int
-    frame_size: int
-    threads: int
-    format: AudioFormat
-    layout: AudioLayout
-    options: dict[str, str]
-    is_passthrough: bool
-
+    @property
+    def rate(self) -> int: ...
+    @property
+    def frame_size(self) -> int: ...
+    @property
+    def threads(self) -> int: ...
+    @property
+    def format(self) -> AudioFormat: ...
+    @property
+    def layout(self) -> AudioLayout: ...
+    @property
+    def options(self) -> dict[str, str]: ...
+    @property
+    def is_passthrough(self) -> bool: ...
     def __new__(
         cls,
         format: str | AudioFormat | None = None,

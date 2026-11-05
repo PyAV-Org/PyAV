@@ -3,13 +3,20 @@ from typing import final, overload
 
 @final
 class IndexEntry:
-    pos: int
-    timestamp: int
-    flags: int
-    is_keyframe: bool
-    is_discard: bool
-    size: int
-    min_distance: int
+    @property
+    def pos(self) -> int: ...
+    @property
+    def timestamp(self) -> int: ...
+    @property
+    def flags(self) -> int: ...
+    @property
+    def is_keyframe(self) -> bool: ...
+    @property
+    def is_discard(self) -> bool: ...
+    @property
+    def size(self) -> int: ...
+    @property
+    def min_distance(self) -> int: ...
 
 @final
 class IndexEntries:

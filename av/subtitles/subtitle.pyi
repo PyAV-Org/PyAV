@@ -12,8 +12,8 @@ class SubtitleSet:
     start_display_time: int
     end_display_time: int
     pts: int
-    rects: tuple[AssSubtitle | BitmapSubtitle, ...]
-
+    @property
+    def rects(self) -> tuple[AssSubtitle | BitmapSubtitle, ...]: ...
     @staticmethod
     def create(
         text: bytes, start: int, end: int, pts: int = 0, subtitle_format: int = 1
@@ -24,31 +24,43 @@ class SubtitleSet:
 
 @disjoint_base
 class Subtitle:
-    type: bytes
+    @property
+    def type(self) -> bytes: ...
 
 @final
 class BitmapSubtitle(Subtitle):
-    type: Literal[b"bitmap"]
-    x: int
-    y: int
-    width: int
-    height: int
-    nb_colors: int
-    planes: tuple[BitmapSubtitlePlane, ...]
+    @property
+    def type(self) -> Literal[b"bitmap"]: ...
+    @property
+    def x(self) -> int: ...
+    @property
+    def y(self) -> int: ...
+    @property
+    def width(self) -> int: ...
+    @property
+    def height(self) -> int: ...
+    @property
+    def nb_colors(self) -> int: ...
+    @property
+    def planes(self) -> tuple[BitmapSubtitlePlane, ...]: ...
     def __len__(self) -> int: ...
     def __iter__(self) -> Iterator[BitmapSubtitlePlane]: ...
     def __getitem__(self, i: int, /) -> BitmapSubtitlePlane: ...
 
 @final
 class BitmapSubtitlePlane:
-    subtitle: BitmapSubtitle
-    index: int
-    buffer_size: int
+    @property
+    def subtitle(self) -> BitmapSubtitle: ...
+    @property
+    def index(self) -> int: ...
+    @property
+    def buffer_size(self) -> int: ...
     def __buffer__(self, flags: int, /) -> memoryview: ...
 
 @final
 class AssSubtitle(Subtitle):
-    type: Literal[b"ass", b"text"]
+    @property
+    def type(self) -> Literal[b"ass", b"text"]: ...
     @property
     def ass(self) -> bytes: ...
     @property

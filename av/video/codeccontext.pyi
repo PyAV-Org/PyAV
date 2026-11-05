@@ -24,7 +24,8 @@ class VideoCodecContext(CodecContext):
     def pix_fmt(self) -> str | None: ...
     @pix_fmt.setter
     def pix_fmt(self, value: str) -> None: ...
-    reformatter: VideoReformatter | None
+    @property
+    def reformatter(self) -> VideoReformatter | None: ...
     @property
     def sw_format(self) -> VideoFormat | None: ...
     @sw_format.setter
@@ -42,12 +43,16 @@ class VideoCodecContext(CodecContext):
     def sample_aspect_ratio(self) -> AVRational: ...
     @sample_aspect_ratio.setter
     def sample_aspect_ratio(self, value: AVRational | Fraction | int) -> None: ...
-    display_aspect_ratio: AVRational
-    has_b_frames: bool
+    @property
+    def display_aspect_ratio(self) -> AVRational: ...
+    @property
+    def has_b_frames(self) -> bool: ...
     reorder_depth: int
     max_b_frames: int
-    coded_width: int
-    coded_height: int
+    @property
+    def coded_width(self) -> int: ...
+    @property
+    def coded_height(self) -> int: ...
     color_range: int
     color_primaries: int
     color_trc: int
@@ -58,8 +63,8 @@ class VideoCodecContext(CodecContext):
     mb_decision: int
     qmin: int
     qmax: int
-    type: Literal["video"]
-
+    @property
+    def type(self) -> Literal["video"]: ...
     @override
     def encode(self, frame: VideoFrame | None = None) -> list[Packet[Stream]]: ...  # type: ignore[override]
     @override

@@ -20,8 +20,10 @@ type _SupportedNDarray = (
 
 @final
 class AudioFrame(Frame):
-    planes: tuple[AudioPlane, ...]
-    samples: int
+    @property
+    def planes(self) -> tuple[AudioPlane, ...]: ...
+    @property
+    def samples(self) -> int: ...
     sample_rate: int
     rate: int
     @property

@@ -123,8 +123,12 @@ class CodecOptionSet:
 
 @disjoint_base
 class CodecContext:
-    name: str
-    type: Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]
+    @property
+    def name(self) -> str: ...
+    @property
+    def type(
+        self,
+    ) -> Literal["video", "audio", "data", "subtitle", "attachment", "unknown"]: ...
     options: dict[str, str]
     @property
     def supported_options(self) -> CodecOptionSet: ...

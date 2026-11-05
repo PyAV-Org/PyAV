@@ -14,8 +14,10 @@ from .layout import AudioLayout
 
 @final
 class AudioStream(Stream):
-    cctx: AudioCodecContext
-    codec_context: AudioCodecContext
+    @property
+    def cctx(self) -> AudioCodecContext: ...
+    @property
+    def codec_context(self) -> AudioCodecContext: ...
     def encode(self, frame: AudioFrame | None = None) -> list[Packet[AudioStream]]: ...
     def encode_lazy(
         self, frame: AudioFrame | None = None
@@ -23,17 +25,22 @@ class AudioStream(Stream):
     def decode(self, packet: Packet[Any] | None = None) -> list[AudioFrame]: ...
 
     # From codec context
-    name: str
-    codec: Codec
+    @property
+    def name(self) -> str: ...
+    @property
+    def codec(self) -> Codec: ...
     codec_tag: str
     options: dict[str, str]
-    frame_size: int
+    @property
+    def frame_size(self) -> int: ...
     sample_rate: int
     bit_rate: int | None
     max_bit_rate: int | None
     rate: int
-    channels: int
-    type: Literal["audio"]
+    @property
+    def channels(self) -> int: ...
+    @property
+    def type(self) -> Literal["audio"]: ...
     @property
     @deprecated("Use AudioStream.cctx.format instead")
     def format(self) -> AudioFormat | None: ...
