@@ -19,10 +19,12 @@ class VideoStream(Stream):
     max_bit_rate: int | None
     bit_rate_tolerance: int
     sample_aspect_ratio: AVRational
-    display_aspect_ratio: AVRational
-    cctx: VideoCodecContext
-    codec_context: VideoCodecContext
-
+    @property
+    def display_aspect_ratio(self) -> AVRational: ...
+    @property
+    def cctx(self) -> VideoCodecContext: ...
+    @property
+    def codec_context(self) -> VideoCodecContext: ...
     def encode(self, frame: VideoFrame | None = None) -> list[Packet[VideoStream]]: ...
     def encode_lazy(
         self, frame: VideoFrame | None = None
@@ -32,16 +34,22 @@ class VideoStream(Stream):
     def set_display_rotation(
         self, degrees: float, hflip: bool = ..., vflip: bool = ...
     ) -> None: ...
-
-    average_rate: AVRational
-    base_rate: AVRational
-    guessed_rate: AVRational
-    codec_rate: AVRational
-    video_delay: int
+    @property
+    def average_rate(self) -> AVRational: ...
+    @property
+    def base_rate(self) -> AVRational: ...
+    @property
+    def guessed_rate(self) -> AVRational: ...
+    @property
+    def codec_rate(self) -> AVRational: ...
+    @property
+    def video_delay(self) -> int: ...
 
     # from codec context
-    name: str
-    codec: Codec
+    @property
+    def name(self) -> str: ...
+    @property
+    def codec(self) -> Codec: ...
     codec_tag: str
     options: dict[str, str]
     @property
@@ -67,13 +75,17 @@ class VideoStream(Stream):
     bits_per_coded_sample: int
     pix_fmt: str | None
     gop_size: int
-    has_b_frames: bool
+    @property
+    def has_b_frames(self) -> bool: ...
     max_b_frames: int
-    coded_width: int
-    coded_height: int
+    @property
+    def coded_width(self) -> int: ...
+    @property
+    def coded_height(self) -> int: ...
     color_range: int
     color_primaries: int
     color_trc: int
     colorspace: int
     chroma_sample_location: int
-    type: Literal["video"]
+    @property
+    def type(self) -> Literal["video"]: ...

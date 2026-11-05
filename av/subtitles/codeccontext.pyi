@@ -7,7 +7,8 @@ from av.subtitles.subtitle import AssSubtitle, BitmapSubtitle, SubtitleSet
 
 @final
 class SubtitleCodecContext(CodecContext):
-    type: Literal["subtitle"]
+    @property
+    def type(self) -> Literal["subtitle"]: ...
     subtitle_header: bytes | None
     @override
     def decode(

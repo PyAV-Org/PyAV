@@ -41,9 +41,10 @@ class HWConfig:
 
 @final
 class HWDevice:
-    options: dict[str, object]
-    flags: int
-
+    @property
+    def options(self) -> dict[str, object]: ...
+    @property
+    def flags(self) -> int: ...
     def __init__(
         self,
         device_type: str | int | HWDeviceType,
@@ -59,8 +60,8 @@ class HWAccel:
     options: dict[str, object]
     flags: int
     allow_software_fallback: bool
-    config: HWConfig | None
-
+    @property
+    def config(self) -> HWConfig | None: ...
     @property
     def is_hw_owned(self) -> bool: ...
     @property

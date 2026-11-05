@@ -9,12 +9,16 @@ from .codeccontext import SubtitleCodecContext
 
 @final
 class SubtitleStream(Stream):
-    cctx: SubtitleCodecContext
-    codec_context: SubtitleCodecContext
+    @property
+    def cctx(self) -> SubtitleCodecContext: ...
+    @property
+    def codec_context(self) -> SubtitleCodecContext: ...
 
     # From codec context
-    name: str
-    codec: Codec
+    @property
+    def name(self) -> str: ...
+    @property
+    def codec(self) -> Codec: ...
     codec_tag: str
     options: dict[str, str]
     def decode(

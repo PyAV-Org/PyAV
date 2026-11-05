@@ -4,10 +4,12 @@ from .link import FilterPad
 
 @final
 class Filter:
-    name: str
-    description: str
-    flags: int
-
+    @property
+    def name(self) -> str: ...
+    @property
+    def description(self) -> str: ...
+    @property
+    def flags(self) -> int: ...
     @property
     def inputs(self) -> tuple[FilterPad, ...]: ...
     @property

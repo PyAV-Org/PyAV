@@ -50,7 +50,8 @@ type _VideoEncParamsKey = Literal["VIDEO_ENC_PARAMS", Type.VIDEO_ENC_PARAMS]
 
 @disjoint_base
 class SideData(Buffer):
-    type: Type
+    @property
+    def type(self) -> Type: ...
     def __new__(cls, sentinel: object, frame: Frame, index: int, /) -> Self: ...
 
 class SideDataContainer(Mapping[Type, SideData]):

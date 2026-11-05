@@ -2,13 +2,20 @@ from typing import Self, final
 
 @final
 class AudioFormat:
-    name: str
-    bytes: int
-    bits: int
-    is_planar: bool
-    is_packed: bool
-    planar: AudioFormat
-    packed: AudioFormat
-    container_name: str
-
+    @property
+    def name(self) -> str: ...
+    @property
+    def bytes(self) -> int: ...
+    @property
+    def bits(self) -> int: ...
+    @property
+    def is_planar(self) -> bool: ...
+    @property
+    def is_packed(self) -> bool: ...
+    @property
+    def planar(self) -> AudioFormat: ...
+    @property
+    def packed(self) -> AudioFormat: ...
+    @property
+    def container_name(self) -> str: ...
     def __new__(cls, name: str | AudioFormat) -> Self: ...

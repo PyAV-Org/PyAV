@@ -3,9 +3,12 @@ from typing import Self, final
 
 @final
 class AudioLayout:
-    name: str
-    nb_channels: int
-    channels: tuple[AudioChannel, ...]
+    @property
+    def name(self) -> str: ...
+    @property
+    def nb_channels(self) -> int: ...
+    @property
+    def channels(self) -> tuple[AudioChannel, ...]: ...
     def __new__(cls, layout: str | AudioLayout) -> Self: ...
 
 @dataclass

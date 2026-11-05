@@ -66,8 +66,10 @@ class CudaContext:
 
 @final
 class VideoFrame(Frame):
-    format: VideoFormat
-    planes: tuple[VideoPlane, ...]
+    @property
+    def format(self) -> VideoFormat: ...
+    @property
+    def planes(self) -> tuple[VideoPlane, ...]: ...
     pict_type: int
     repeat_pict: int
     colorspace: int

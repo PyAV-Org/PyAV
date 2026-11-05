@@ -16,7 +16,8 @@ from .filter import Filter
 
 @final
 class Graph:
-    configured: bool
+    @property
+    def configured(self) -> bool: ...
     threads: int
 
     def __new__(cls, hw_device: HWDevice | None = None) -> Self: ...

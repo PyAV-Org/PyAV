@@ -99,17 +99,28 @@ class Chapter(TypedDict):
 
 @disjoint_base
 class Container:
-    name: str
-    file: Any
-    io_open: _IOOpen | None
-    open_files: Any
-    format: ContainerFormat
-    options: dict[str, str]
-    container_options: dict[str, str]
-    streams: StreamContainer
-    metadata: dict[str, str]
-    open_timeout: _Real | None
-    read_timeout: _Real | None
+    @property
+    def name(self) -> str: ...
+    @property
+    def file(self) -> Any: ...
+    @property
+    def io_open(self) -> _IOOpen | None: ...
+    @property
+    def open_files(self) -> Any: ...
+    @property
+    def format(self) -> ContainerFormat: ...
+    @property
+    def options(self) -> dict[str, str]: ...
+    @property
+    def container_options(self) -> dict[str, str]: ...
+    @property
+    def streams(self) -> StreamContainer: ...
+    @property
+    def metadata(self) -> dict[str, str]: ...
+    @property
+    def open_timeout(self) -> _Real | None: ...
+    @property
+    def read_timeout(self) -> _Real | None: ...
     flags: int
     video_codec_id: int
     def dumps_format(self) -> str: ...
