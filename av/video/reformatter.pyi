@@ -1,6 +1,7 @@
 from enum import IntEnum, IntFlag
 from typing import final
 
+from .format import VideoFormat
 from .frame import VideoFrame
 
 class Interpolation(IntFlag):
@@ -100,9 +101,9 @@ class VideoReformatter:
         frame: VideoFrame,
         width: int | None = None,
         height: int | None = None,
-        format: str | None = None,
-        src_colorspace: int | None = None,
-        dst_colorspace: int | None = None,
+        format: str | VideoFormat | None = None,
+        src_colorspace: str | int | None = None,
+        dst_colorspace: str | int | None = None,
         interpolation: Interpolation | int | str | None = None,
         src_color_range: int | str | None = None,
         dst_color_range: int | str | None = None,

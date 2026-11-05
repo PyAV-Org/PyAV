@@ -16,8 +16,8 @@ class AudioResampler:
 
     def __new__(
         cls,
-        format: str | int | AudioFormat | None = None,
-        layout: str | int | AudioLayout | None = None,
+        format: str | AudioFormat | None = None,
+        layout: str | AudioLayout | None = None,
         rate: int | None = None,
         frame_size: int | None = None,
         options: dict[str, str] | None = None,

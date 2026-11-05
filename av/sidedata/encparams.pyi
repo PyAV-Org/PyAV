@@ -18,7 +18,7 @@ class VideoEncParams(SideData):
     block_size: int
     codec_type: VideoEncParamsType
     qp: int
-    delta_qp: int
+    delta_qp: list[list[int]]
     def block_params(self, idx: int) -> VideoBlockParams: ...
     def qp_map(self) -> np.ndarray[tuple[int, int], np.dtype[np.int32]]: ...
 

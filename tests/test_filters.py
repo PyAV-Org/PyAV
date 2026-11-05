@@ -31,7 +31,7 @@ def generate_audio_frame(
         data = np.zeros(frame_size, dtype=format_dtypes[input_format])
         for j in range(frame_size):
             data[j] = np.sin(2 * np.pi * (frame_num + j) * (i + 1) / float(frame_size))
-        frame.planes[i].update(data)  # type: ignore
+        frame.planes[i].update(data)
 
     return frame
 
