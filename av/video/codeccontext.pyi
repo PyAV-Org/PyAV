@@ -13,11 +13,17 @@ from .reformatter import VideoReformatter
 
 @final
 class VideoCodecContext(CodecContext):
-    format: VideoFormat | None
+    @property
+    def format(self) -> VideoFormat | None: ...
+    @format.setter
+    def format(self, value: VideoFormat) -> None: ...
     width: int
     height: int
     bits_per_coded_sample: int
-    pix_fmt: str | None
+    @property
+    def pix_fmt(self) -> str | None: ...
+    @pix_fmt.setter
+    def pix_fmt(self, value: str) -> None: ...
     reformatter: VideoReformatter | None
     @property
     def sw_format(self) -> VideoFormat | None: ...

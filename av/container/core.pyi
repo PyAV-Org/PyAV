@@ -3,7 +3,16 @@ from enum import Flag, IntEnum
 from fractions import Fraction
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Literal, Protocol, Self, TypedDict, overload, type_check_only
+from typing import (
+    Any,
+    Literal,
+    NotRequired,
+    Protocol,
+    Self,
+    TypedDict,
+    overload,
+    type_check_only,
+)
 
 from typing_extensions import disjoint_base
 
@@ -41,7 +50,6 @@ class Flags(Flag):
     bitexact = ...
     sort_dts = ...
     fast_seek = ...
-    shortest = ...
     auto_bsf = ...
 
 class AudioCodec(IntEnum):
@@ -86,8 +94,8 @@ class Chapter(TypedDict):
     id: int
     start: int
     end: int
-    time_base: AVRational
-    metadata: dict[str, str]
+    time_base: AVRational | Fraction
+    metadata: NotRequired[dict[str, str]]
 
 @disjoint_base
 class Container:

@@ -34,7 +34,7 @@ class _ReformatKwargs(TypedDict, total=False):
     threads: int | None
 
 class _ToNdarrayKwargs(_ReformatKwargs, total=False):
-    format: str | None
+    format: str | VideoFormat | None
 
 class PictureType(IntEnum):
     NONE = 0
@@ -98,7 +98,7 @@ class VideoFrame(Frame):
         self,
         width: int | None = None,
         height: int | None = None,
-        format: str | None = None,
+        format: str | VideoFormat | None = None,
         src_colorspace: str | int | None = None,
         dst_colorspace: str | int | None = None,
         interpolation: int | str | None = None,
@@ -112,6 +112,15 @@ class VideoFrame(Frame):
     def save(self, filepath: str | Path, **options: object) -> None: ...
     def set_image(self, img: Image) -> None: ...
     def to_image(self, **kwargs: Unpack[_ReformatKwargs]) -> Image: ...
+    @overload
+    def to_ndarray(  # type: ignore[overload-overlap]
+        self,
+        channel_last: bool = False,
+        *,
+        format: Literal["pal8"],
+        **kwargs: Unpack[_ReformatKwargs],
+    ) -> tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]: ...
+    @overload
     def to_ndarray(
         self, channel_last: bool = False, **kwargs: Unpack[_ToNdarrayKwargs]
     ) -> _SupportedNDarray: ...
