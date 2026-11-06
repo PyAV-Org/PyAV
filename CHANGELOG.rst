@@ -44,6 +44,7 @@ Features:
 Fixes:
 
 - Support slicing ``Container.streams``, which raised ``TypeError`` despite being typed.
+- ``AssSubtitle.dialogue`` now strips override tags such as ``{\b1}``, turns ``\n`` and ``\h`` into spaces, and keeps a ``{`` with no closing ``}`` instead of dropping the rest of the line.
 - ``HWConfig.methods`` no longer raises ``ValueError`` for configs that support several methods; ``HWConfigMethod`` is now an ``IntFlag``.
 - ``CodecContext.is_encoder``, ``CodecContext.is_decoder``, ``Container.input_was_opened``, and ``VideoFormatComponent.is_chroma`` now return ``bool`` instead of ``int``.
 - ``Frame.time_base`` returns ``AVRational(0, 1)`` instead of ``None`` when unset, like other ``AVRational`` properties.
