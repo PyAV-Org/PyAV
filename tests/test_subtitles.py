@@ -154,6 +154,28 @@ class TestSubtitleEncoding(TestCase):
 
         assert sub.dialogue == "♪ Hey, hey, hey ♪".encode()
 
+    def test_subtitle_dialogue(self) -> None:
+        from av.subtitles.subtitle import SubtitleSet
+
+        def dialogue(text: bytes) -> bytes:
+            subtitle = SubtitleSet.create(text=text, start=0, end=2000)
+            return cast(AssSubtitle, subtitle[0]).dialogue
+
+        prefix = b"0,0,Default,,0,0,0,,"
+        # Override tags and comments are stripped.
+        assert dialogue(prefix + b"{\\b1}bold{\\b0}") == b"bold"
+        assert dialogue(prefix + b"{\\an8}top") == b"top"
+        assert dialogue(prefix + b"{\\fnArial}hi") == b"hi"
+        assert dialogue(prefix + b"a{comment}b") == b"ab"
+        # Text escapes: \N -> newline, \n and \h -> space.
+        assert dialogue(prefix + b"a\\Nb") == b"a\nb"
+        assert dialogue(prefix + b"a\\nb") == b"a b"
+        assert dialogue(prefix + b"a\\hb") == b"a b"
+        # A stray '{' with no closing '}' is literal text.
+        assert dialogue(prefix + b"cost is {5") == b"cost is {5"
+        # Commas in the Text field are kept.
+        assert dialogue(prefix + b"x, y, z") == b"x, y, z"
+
     def test_subtitle_encode_mp4(self) -> None:
         """Test encoding subtitles to MP4 container."""
         from av.subtitles.subtitle import SubtitleSet

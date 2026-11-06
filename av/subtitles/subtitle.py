@@ -291,15 +291,21 @@ class AssSubtitle(Subtitle):
     @property
     def dialogue(self):
         """
-        Extract the dialogue from the ass format. Strip comments.
+        Extract the plain text from the ASS dialogue line.
+
+        Override tags and comments (``{...}`` blocks) are removed, ``\\N``
+        becomes a newline, and ``\\n`` and ``\\h`` become a space. A ``{``
+        with no closing ``}`` is kept as literal text.
         """
+        ass_text: bytes = self.ass
+        text_len: cython.Py_ssize_t = len(ass_text)
+        # A '{' only opens a block if a '}' appears somewhere after it.
+        last_close: cython.Py_ssize_t = ass_text.rfind(b"}")
         comma_count: cython.short = 0
         i: cython.Py_ssize_t = 0
-        state: cython.bint = False
-        ass_text: bytes = self.ass
+        in_block: cython.bint = False
         char, next_char = cython.declare(cython.uchar)
         result: bytearray = bytearray()
-        text_len: cython.Py_ssize_t = len(ass_text)
 
         while comma_count < 8 and i < text_len:
             if ass_text[i] == b","[0]:
@@ -310,18 +316,21 @@ class AssSubtitle(Subtitle):
             char = ass_text[i]
             next_char = 0 if i + 1 >= text_len else ass_text[i + 1]
 
-            if char == b"\\"[0] and next_char == b"N"[0]:
-                result.append(b"\n"[0])
-                i += 2
-                continue
-
-            if not state:
-                if char == b"{"[0] and next_char != b"\\"[0]:
-                    state = True
+            if not in_block:
+                if char == b"\\"[0] and next_char == b"N"[0]:
+                    result.append(b"\n"[0])
+                    i += 2
+                    continue
+                if char == b"\\"[0] and (next_char == b"n"[0] or next_char == b"h"[0]):
+                    result.append(b" "[0])
+                    i += 2
+                    continue
+                if char == b"{"[0] and i < last_close:
+                    in_block = True
                 else:
                     result.append(char)
             elif char == b"}"[0]:
-                state = False
+                in_block = False
             i += 1
 
         return bytes(result)
