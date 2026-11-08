@@ -25,6 +25,8 @@ jobs:
 
   package-wheel:
     runs-on: ${{ matrix.os }}
+    # riscv64 is best-effort: a failure there must not hold back the release.
+    continue-on-error: ${{ matrix.arch == 'riscv64' }}
     strategy:
       fail-fast: false
       matrix:
@@ -33,6 +35,11 @@ jobs:
             arch: arm64
           - os: macos-15-intel
             arch: x86_64
+          # riscv64 wheels are attached to the GitHub release only, not
+          # uploaded to PyPI (see #2443).
+          - os: ubuntu-24.04-riscv
+            arch: riscv64
+            github-only: true
           - os: ubuntu-24.04-arm
             arch: aarch64
           - os: ubuntu-24.04
@@ -63,14 +70,19 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: python scripts\fetch-vendor.py --config-file scripts\ffmpeg-latest.json C:\cibw\vendor
           # Linux is the only platform that embeds debug info in the extensions;
           # macOS and Windows keep it out of the shipped binaries.
-          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-Wl,--strip-debug
+          # riscv64 wheels (e.g. numpy, for CIBW_TEST_REQUIRES) are often missing on
+          # PyPI; RISE mirrors prebuilt wheels for it. unsafe-best-match is needed so
+          # uv still falls back to PyPI for packages/versions RISE doesn't carry.
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/tmp/vendor/lib:$LD_LIBRARY_PATH PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-Wl,--strip-debug${{ matrix.arch == 'riscv64' && ' UV_INDEX=https://pypi.riseproject.dev/simple/ UV_INDEX_STRATEGY=unsafe-best-match' || '' }}
           CIBW_ENVIRONMENT_MACOS: PKG_CONFIG_PATH=/tmp/vendor/lib/pkgconfig LDFLAGS=-headerpad_max_install_names
           CIBW_ENVIRONMENT_WINDOWS: INCLUDE=C:\\cibw\\vendor\\include LIB=C:\\cibw\\vendor\\lib PYAV_SKIP_TESTS=unicode_filename
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:\cibw\vendor\bin -w {dest_dir} {wheel}
           CIBW_BUILD: "cp312* cp314t*"
           CIBW_BUILD_FRONTEND: uv
           CIBW_TEST_COMMAND: mv {project}/av {project}/av.disabled && python -m pytest {package}/tests && mv {project}/av.disabled {project}/av
-          CIBW_TEST_REQUIRES: pytest numpy
+          # cibuildwheel passes this straight to `pip install`. Never build numpy
+          # or Pillow from source for the tests, as `make test` does.
+          CIBW_TEST_REQUIRES: pytest numpy pillow --only-binary numpy,pillow
         run: |
           uv pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
@@ -78,7 +90,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v6
         with:
-          name: dist-${{ matrix.os }}-${{ matrix.arch }}
+          name: ${{ matrix.github-only && 'github-only' || 'dist' }}-${{ matrix.os }}-${{ matrix.arch }}
           path: dist/
 
   # armv7l (32-bit ARM) is cross-compiled with zig on a native x86_64 runner
@@ -118,12 +130,13 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v7
         with:
+          pattern: dist-*
           merge-multiple: true
           path: dist/
 
       - name: Publish to GitHub
         if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: dist/*
         env:
@@ -135,3 +148,23 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
+
+  # Wheels for platforms we don't publish to PyPI go on the GitHub release only.
+  publish-github-only:
+    runs-on: ubuntu-latest
+    needs: package-wheel
+    if: github.event_name == 'release'
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: github-only-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Publish to GitHub
+        if: hashFiles('dist/*') != ''
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
