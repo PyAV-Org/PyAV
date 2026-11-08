@@ -148,6 +148,7 @@ class CodecContext:
     rc_buffer_size: int
     compression_level: int
     bits_per_raw_sample: int
+    initial_padding: int
     trailing_padding: int
     stats_in: str | None
     thread_count: int
@@ -186,8 +187,6 @@ class CodecContext:
     def thread_type(self, value: int | str | ThreadType) -> None: ...
     @property
     def active_thread_type(self) -> ThreadType: ...
-    @property
-    def initial_padding(self) -> int: ...
     @property
     def seek_preroll(self) -> int: ...
     @property

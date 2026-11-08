@@ -231,3 +231,53 @@ def test_remux_keeps_keyframe_with_none_dts() -> None:
     with av.open(output, "r") as container:
         first_out = next(p for p in container.demux(video=0) if p.size)
         assert first_out.is_keyframe
+
+
+def test_remux_clear_initial_padding() -> None:
+    """A segment cut from the middle of an AAC stream has no priming samples.
+
+    Matroska stores the template's initial_padding as CodecDelay, so unless it
+    is cleared the decoder drops the segment's first 1024 real samples.
+    """
+    source = io.BytesIO()
+    with av.open(source, "w", format="mp4") as out:
+        stream = out.add_stream("aac", rate=48000, layout="mono")
+        for i in range(20):
+            frame = av.AudioFrame.from_ndarray(
+                np.zeros((1, 1024), dtype="f4"), format="fltp", layout="mono"
+            )
+            frame.sample_rate = 48000
+            frame.pts = i * 1024
+            for packet in stream.encode(frame):
+                out.mux(packet)
+        for packet in stream.encode():
+            out.mux(packet)
+
+    source.seek(0)
+    segment = io.BytesIO()
+    with (
+        av.open(source, "r") as input_,
+        av.open(segment, "w", format="matroska") as out,
+    ):
+        in_audio = input_.streams.audio[0]
+        assert in_audio.cctx.initial_padding == 1024
+
+        out_audio = out.add_stream_from_template(in_audio)
+        assert out_audio.cctx.initial_padding == 1024
+        out_audio.cctx.initial_padding = 0
+
+        packets = [p for p in input_.demux(in_audio) if p.dts is not None][10:]
+        start = packets[0].pts
+        assert start is not None
+        for packet in packets:
+            assert packet.pts is not None and packet.dts is not None
+            packet.pts -= start
+            packet.dts -= start
+            packet.stream = out_audio
+            out.mux(packet)
+
+    segment.seek(0)
+    with av.open(segment, "r") as container:
+        audio = container.streams.audio[0]
+        assert audio.cctx.initial_padding == 0
+        assert sum(f.samples for f in container.decode(audio)) == len(packets) * 1024
