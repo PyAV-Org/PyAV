@@ -1145,11 +1145,17 @@ class CodecContext:
         for gapless playback.
 
         Set by libavcodec when encoding, and taken from the stream parameters
-        when decoding.
+        when decoding. When remuxing, set it on the output stream's context to
+        change what the container records, e.g. ``0`` for a segment that does
+        not start with the priming samples.
 
         Wraps :ffmpeg:`AVCodecContext.initial_padding`.
         """
         return self.ptr.initial_padding
+
+    @initial_padding.setter
+    def initial_padding(self, value: cython.int):
+        self.ptr.initial_padding = value
 
     @property
     def trailing_padding(self):
