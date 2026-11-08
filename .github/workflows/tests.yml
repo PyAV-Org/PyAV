@@ -83,6 +83,7 @@ jobs:
           # cibuildwheel passes this straight to `pip install`. Never build numpy
           # or Pillow from source for the tests, as `make test` does.
           CIBW_TEST_REQUIRES: pytest numpy pillow --only-binary numpy,pillow
+          CIBW_TEST_SKIP: "*-musllinux_riscv64"
         run: |
           uv pip install cibuildwheel delvewheel
           cibuildwheel --output-dir dist
