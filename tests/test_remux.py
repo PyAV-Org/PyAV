@@ -237,10 +237,12 @@ def test_remux_clear_initial_padding() -> None:
     """A segment cut from the middle of an AAC stream has no priming samples.
 
     Matroska stores the template's initial_padding as CodecDelay, so unless it
-    is cleared the decoder drops the segment's first 1024 real samples.
+    is cleared the decoder drops the segment's first 1024 real samples. The
+    source is Matroska too: the MP4 demuxer only reports AAC priming as
+    initial_padding from libavformat 63 (FFmpeg 9) on.
     """
     source = io.BytesIO()
-    with av.open(source, "w", format="mp4") as out:
+    with av.open(source, "w", format="matroska") as out:
         stream = out.add_stream("aac", rate=48000, layout="mono")
         for i in range(20):
             frame = av.AudioFrame.from_ndarray(
