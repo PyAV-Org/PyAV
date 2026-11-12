@@ -171,6 +171,9 @@ class TestSubtitleEncoding(TestCase):
         assert dialogue(prefix + b"a\\Nb") == b"a\nb"
         assert dialogue(prefix + b"a\\nb") == b"a b"
         assert dialogue(prefix + b"a\\hb") == b"a b"
+        # Escaped braces are literal and don't open a block.
+        assert dialogue(prefix + b"a\\{b\\}c") == b"a{b}c"
+        assert dialogue(prefix + b"\\{x{\\i1}y") == b"{xy"
         # A stray '{' with no closing '}' is literal text.
         assert dialogue(prefix + b"cost is {5") == b"cost is {5"
         # Commas in the Text field are kept.
