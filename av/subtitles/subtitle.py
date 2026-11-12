@@ -294,8 +294,9 @@ class AssSubtitle(Subtitle):
         Extract the plain text from the ASS dialogue line.
 
         Override tags and comments (``{...}`` blocks) are removed, ``\\N``
-        becomes a newline, and ``\\n`` and ``\\h`` become a space. A ``{``
-        with no closing ``}`` is kept as literal text.
+        becomes a newline, ``\\n`` and ``\\h`` become a space, and ``\\{``
+        and ``\\}`` become literal braces. A ``{`` with no closing ``}`` is
+        kept as literal text.
         """
         ass_text: bytes = self.ass
         text_len: cython.Py_ssize_t = len(ass_text)
@@ -323,6 +324,10 @@ class AssSubtitle(Subtitle):
                     continue
                 if char == b"\\"[0] and (next_char == b"n"[0] or next_char == b"h"[0]):
                     result.append(b" "[0])
+                    i += 2
+                    continue
+                if char == b"\\"[0] and (next_char == b"{"[0] or next_char == b"}"[0]):
+                    result.append(next_char)
                     i += 2
                     continue
                 if char == b"{"[0] and i < last_close:
