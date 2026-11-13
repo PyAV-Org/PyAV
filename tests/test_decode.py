@@ -1,7 +1,6 @@
 import functools
 import gc
 import io
-import os
 import pathlib
 from fractions import Fraction
 from typing import cast
@@ -16,7 +15,7 @@ from av.sidedata.motionvectors import MotionVector, MotionVectors
 from av.sidedata.sidedata import SideData, Type
 from av.subtitles.subtitle import SubtitleSet
 
-from .common import TestCase, fate_suite
+from .common import TestCase, fate_suite, hwaccel_device_type
 
 
 @functools.cache
@@ -373,23 +372,13 @@ class TestDecode(TestCase):
         assert frame.rotation == -90
 
     def test_hardware_decode(self) -> None:
-        hwdevices_available = av.codec.hwaccel.hwdevices_available()
-        if "HWACCEL_DEVICE_TYPE" not in os.environ:
-            pytest.skip(
-                "Set the HWACCEL_DEVICE_TYPE to run this test. "
-                f"Options are {' '.join(hwdevices_available)}"
-            )
-
-        HWACCEL_DEVICE_TYPE = os.environ["HWACCEL_DEVICE_TYPE"]
-        assert HWACCEL_DEVICE_TYPE in hwdevices_available, (
-            f"{HWACCEL_DEVICE_TYPE} not available"
-        )
+        device_type = hwaccel_device_type()
 
         test_video_path = "tests/assets/black.mp4"
         make_h264_test_video(test_video_path)
 
         hwaccel = av.codec.hwaccel.HWAccel(
-            device_type=HWACCEL_DEVICE_TYPE, allow_software_fallback=False
+            device_type=device_type, allow_software_fallback=False
         )
 
         container = av.open(test_video_path, hwaccel=hwaccel)
@@ -403,45 +392,25 @@ class TestDecode(TestCase):
         assert frame_count == video_stream.frames
 
     def test_hardware_create_keeps_flags(self) -> None:
-        hwdevices_available = av.codec.hwaccel.hwdevices_available()
-        if "HWACCEL_DEVICE_TYPE" not in os.environ:
-            pytest.skip(
-                "Set the HWACCEL_DEVICE_TYPE to run this test. "
-                f"Options are {' '.join(hwdevices_available)}"
-            )
-
-        HWACCEL_DEVICE_TYPE = os.environ["HWACCEL_DEVICE_TYPE"]
-        assert HWACCEL_DEVICE_TYPE in hwdevices_available, (
-            f"{HWACCEL_DEVICE_TYPE} not available"
-        )
+        device_type = hwaccel_device_type()
 
         # AV_CUDA_USE_PRIMARY_CONTEXT. It is the only flag FFmpeg defines for
         # device creation, and every other device type ignores it.
-        hwaccel = av.codec.hwaccel.HWAccel(device_type=HWACCEL_DEVICE_TYPE, flags=1)
+        hwaccel = av.codec.hwaccel.HWAccel(device_type=device_type, flags=1)
         created = hwaccel.create(av.Codec("h264", "r"))
         assert created.flags == 1
 
 
 @pytest.mark.parametrize("is_hw_owned", [False, True])
 def test_hardware_decode_download_preserves_frame_props(is_hw_owned: bool) -> None:
-    hwdevices_available = av.codec.hwaccel.hwdevices_available()
-    if "HWACCEL_DEVICE_TYPE" not in os.environ:
-        pytest.skip(
-            "Set the HWACCEL_DEVICE_TYPE to run this test. "
-            f"Options are {' '.join(hwdevices_available)}"
-        )
-
-    hwaccel_device_type = os.environ["HWACCEL_DEVICE_TYPE"]
-    assert hwaccel_device_type in hwdevices_available, (
-        f"{hwaccel_device_type} not available"
-    )
+    device_type = hwaccel_device_type()
 
     test_video_path = fate_suite("hevc/hdr10_plus_h265_sample.hevc")
     cpu_frame = decode_first_video_frame(test_video_path)
     hw_frame = decode_first_video_frame(
         test_video_path,
         av.codec.hwaccel.HWAccel(
-            device_type=hwaccel_device_type,
+            device_type=device_type,
             is_hw_owned=is_hw_owned,
             allow_software_fallback=False,
         ),
@@ -457,23 +426,13 @@ def test_hardware_decode_download_preserves_frame_props(is_hw_owned: bool) -> No
 
 
 def test_hardware_frame_reformat_matches_downloaded_frame() -> None:
-    hwdevices_available = av.codec.hwaccel.hwdevices_available()
-    if "HWACCEL_DEVICE_TYPE" not in os.environ:
-        pytest.skip(
-            "Set the HWACCEL_DEVICE_TYPE to run this test. "
-            f"Options are {' '.join(hwdevices_available)}"
-        )
+    device_type = hwaccel_device_type()
 
-    hwaccel_device_type = os.environ["HWACCEL_DEVICE_TYPE"]
-    assert hwaccel_device_type in hwdevices_available, (
-        f"{hwaccel_device_type} not available"
-    )
-
-    test_video_path = fate_suite("h264/interlaced_crop.mp4")
+    test_video_path = fate_suite("h264/extradata-reload-multi-stsd.mov")
     downloaded_frame = decode_first_video_frame(
         test_video_path,
         av.codec.hwaccel.HWAccel(
-            device_type=hwaccel_device_type,
+            device_type=device_type,
             is_hw_owned=False,
             allow_software_fallback=False,
         ),
@@ -481,7 +440,7 @@ def test_hardware_frame_reformat_matches_downloaded_frame() -> None:
     hw_frame = decode_first_video_frame(
         test_video_path,
         av.codec.hwaccel.HWAccel(
-            device_type=hwaccel_device_type,
+            device_type=device_type,
             is_hw_owned=True,
             allow_software_fallback=False,
         ),

@@ -4,12 +4,15 @@ import datetime
 import errno
 import functools
 import os
+import sys
 import typing
 from typing import TYPE_CHECKING
 from unittest import TestCase as _Base
 
 import numpy as np
+import pytest
 
+import av.codec.hwaccel
 from av.datasets import fate as fate_suite
 
 try:
@@ -31,6 +34,40 @@ __all__ = ("fate_suite",)
 
 is_windows = os.name == "nt"
 skip_tests = frozenset(os.environ.get("PYAV_SKIP_TESTS", "").split(","))
+
+
+@functools.cache
+def _hwaccel_device_type() -> str | None:
+    available = av.codec.hwaccel.hwdevices_available()
+    device_type = os.environ.get("HWACCEL_DEVICE_TYPE")
+    if device_type is None:
+        if (
+            sys.platform == "darwin"
+            and "CI" not in os.environ
+            and "videotoolbox" in available
+        ):
+            return "videotoolbox"
+        return None
+    if not device_type:
+        return None
+
+    assert device_type in available, f"{device_type} not available"
+    return device_type
+
+
+def hwaccel_device_type() -> str:
+    """Return the hwaccel device type to test, or skip the test.
+
+    Uses HWACCEL_DEVICE_TYPE if set (an empty value disables the tests). Otherwise
+    defaults to videotoolbox on macOS, except in CI where there is no usable GPU.
+    """
+    device_type = _hwaccel_device_type()
+    if device_type is None:
+        pytest.skip(
+            "Set the HWACCEL_DEVICE_TYPE to run this test. Options are "
+            + " ".join(av.codec.hwaccel.hwdevices_available())
+        )
+    return device_type
 
 
 def safe_makedirs(path: str) -> None:

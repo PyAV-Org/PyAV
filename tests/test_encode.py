@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 import math
-import os
 from fractions import Fraction
 from pathlib import Path
 
@@ -15,7 +14,7 @@ from av import AudioFrame, VideoFrame
 from av.audio.stream import AudioStream
 from av.video.stream import VideoStream
 
-from .common import TestCase, fate_suite, has_pillow
+from .common import TestCase, fate_suite, has_pillow, hwaccel_device_type
 
 WIDTH = 320
 HEIGHT = 240
@@ -606,15 +605,7 @@ def get_hwaccel_format(encoder: str, device_type: str) -> str:
 
 
 def test_hardware_encode() -> None:
-    hwdevices_available = av.codec.hwaccel.hwdevices_available()
-    if "HWACCEL_DEVICE_TYPE" not in os.environ:
-        pytest.skip(
-            "Set the HWACCEL_DEVICE_TYPE to run this test. "
-            f"Options are {' '.join(hwdevices_available)}"
-        )
-
-    device_type = os.environ["HWACCEL_DEVICE_TYPE"]
-    assert device_type in hwdevices_available, f"{device_type} not available"
+    device_type = hwaccel_device_type()
 
     encoder = _HWACCEL_ENCODERS.get(device_type)
     if encoder is None:
@@ -660,15 +651,7 @@ def test_hardware_encode() -> None:
 
 
 def test_hardware_encode_honors_sw_format() -> None:
-    hwdevices_available = av.codec.hwaccel.hwdevices_available()
-    if "HWACCEL_DEVICE_TYPE" not in os.environ:
-        pytest.skip(
-            "Set the HWACCEL_DEVICE_TYPE to run this test. "
-            f"Options are {' '.join(hwdevices_available)}"
-        )
-
-    device_type = os.environ["HWACCEL_DEVICE_TYPE"]
-    assert device_type in hwdevices_available, f"{device_type} not available"
+    device_type = hwaccel_device_type()
 
     encoder = _HWACCEL_ENCODERS.get(device_type)
     if encoder is None:
