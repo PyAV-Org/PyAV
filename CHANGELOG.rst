@@ -28,6 +28,56 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
+v18.1.1 (Unreleased)
+--------------------
+
+Fixes:
+
+- Expose ``Frame.best_effort_timestamp``, FFmpeg's estimate of a frame's presentation time, which falls back to the DTS when the PTS is unreliable (:issue:`2477`).
+- Fix several crashes from reading freed or out-of-range memory:
+
+  - Reading a :class:`.Stream` or its :attr:`~av.stream.Stream.index_entries` after the container is closed now raises instead of reading freed memory. An :class:`.IndexEntry` is a copy, so it stays readable after the close.
+  - Resuming ``demux()`` or ``decode()`` after the container is closed now raises instead of reading the freed format context.
+  - ``add_stream_from_template()`` checks that the template's container is still open.
+  - Indexes are range checked before being turned into pointer arithmetic: ``MotionVectors[i]`` accepts negative indexes, and ``VideoFormatComponent``, ``AudioPlane``, ``BitmapSubtitlePlane``, and ``VideoBlockParams`` reject out-of-range ones. ``VideoBlockParams`` also keeps its ``VideoEncParams`` alive.
+  - A Python file whose ``read(n)`` returns more than ``n`` bytes raises ``ValueError`` instead of overflowing FFmpeg's I/O buffer.
+  - ``Packet(bytearray)`` copies the data, so resizing the bytearray afterwards no longer leaves the packet reading freed memory.
+  - Inserting into a ``Dictionary`` while iterating it no longer reads an invalidated entry.
+  - ``HWConfig`` and the side data wrappers can no longer be left holding a NULL pointer when created through ``__new__``.
+
+- Fix crashes in filter graphs:
+
+  - A ``FilterContext`` or ``FilterLink`` that outlives its ``Graph`` keeps the graph alive instead of using freed memory.
+  - ``push()`` to a buffer source configures the graph first, as ``pull()`` does.
+  - Filters added or linked after ``Graph.configure()`` are configured on the next push or pull instead of segfaulting.
+  - ``FilterContext.link_to`` raises ``ValueError`` when linking filters from different graphs instead of aborting the process.
+
+- ``FilterLink.input`` and ``FilterLink.output`` now follow the filters the graph auto-inserts while configuring, instead of the pad they first resolved.
+- ``repr()`` of a filter pad no longer raises ``AttributeError``.
+- Fix memory corruption when decoding audio with custom channel layouts (e.g. ``"FR+FL"``), which were shallow-copied and double freed (:issue:`2444`).
+- Fix a deadlock when freeing a frame-threaded decoder while a worker thread logs an error. The codec context is now freed with the GIL released (:issue:`2440`).
+- Release the GIL around hardware frame transfers.
+- Fix corrupted rows in threaded high bit depth ``VideoFrame.reformat()`` on x86 (:issue:`2431`).
+- ``VideoFrame.reformat()`` (and so ``to_ndarray(format=...)``, ``to_rgb()``, and ``to_image()``) shares one ``SwsContext`` per thread instead of allocating one per frame, which used megabytes per frame with FFmpeg 8 (:issue:`2320`).
+- Fix reference cycles that kept frames, streams, and filters alive until gc ran: reading ``Frame.side_data``, ``MotionVectors`` memoizing its vectors, ``Stream.index_entries`` (:issue:`2425`), and filter pads.
+- ``Frame.side_data`` now satisfies the ``Mapping`` protocol it advertises: iteration yields :class:`~av.sidedata.sidedata.Type` keys, so ``items()``, ``keys()``, and ``values()`` work instead of raising ``KeyError``.
+- ``Frame.side_data`` and ``PacketSideData.data_type`` no longer raise on side data types FFmpeg has added since PyAV last listed them, such as the ``AV_PKT_DATA_HEVC_CONF`` an HEVC stream in MP4 or Matroska carries.
+- Attaching one object to the ``opaque`` of more than one frame or packet no longer loses it when the first holder is freed.
+- Frames returned by flushing a codec context directly (``CodecContext.decode()`` with no packet) now carry the stream's ``time_base`` instead of ``None``.
+- A failed ``CodecContext.open()`` no longer clears the selected codec, so ``is_encoder`` and ``is_decoder`` keep working and the context can be reopened after fixing the offending parameters.
+- A rejected ``add_stream()`` or ``add_mux_stream()`` no longer breaks the container, and a failed stream or output allocation no longer leaks.
+- Output containers pass their options to ``avio_open2()``, so protocol options are used by the protocol. By :gh-user:`ANDYwyLEE`.
+- ``InputContainer.size`` returns ``None`` when the size cannot be determined instead of a negative error code.
+- Audio encoding passes the codec's ``thread_count`` to its internal :class:`.AudioResampler`, which no longer starts an idle thread per CPU for codecs without threading. By :gh-user:`tonyay163`.
+- ``AudioFrame.planes`` no longer counts one plane too many for 8-channel planar audio, and no longer reads past ``extended_data`` for more channels. By :gh-user:`ChandraChaan` in (:pr:`2502`).
+- ``AudioFifo.write()`` raises ``ValueError`` for a frame whose channel layout differs from the first frame's, instead of scrambling or over-reading the samples. By :gh-user:`ChandraChaan` in (:pr:`2505`).
+- ``SubtitleCodecContext.decode(None)`` flushes the decoder instead of raising ``RuntimeError``, so delayed decoders such as EIA-608 closed captions return their final subtitle.
+- ``AssSubtitle.dialogue`` strips override tags such as ``{\b1}``, turns ``\n`` and ``\h`` into spaces, treats ``\{`` and ``\}`` as literal braces, and keeps a ``{`` with no closing ``}`` instead of dropping the rest of the line.
+- :meth:`.HWAccel.create` passes ``flags`` on to the context it creates instead of dropping them.
+- ``Packet(str)`` and setting ``CodecContext.extradata`` to a ``str`` no longer drop the last bytes of non-ASCII text.
+- ``AVRational`` values with a zero denominator compare and hash consistently with ``float`` and ``Decimal`` infinities, and its operators return ``NotImplemented`` for unsupported operands.
+- ``av.video.frame.supported_np_pix_fmts`` now lists ``yuv422p``.
+
 v18.1.0
 -------
 
