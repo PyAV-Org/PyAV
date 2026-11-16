@@ -42,6 +42,7 @@ class BitStreamFilterContext:
                     self.ptr.par_in, cython.cast(Stream, in_stream).ptr.codecpar
                 )
             err_check(res)
+            self.ptr.time_base_in = cython.cast(Stream, in_stream).ptr.time_base
         elif in_stream is not None:
             # A Codec or codec name only pins the input codec, which is enough for
             # codec-specific filters (e.g. h264_mp4toannexb) to initialize.

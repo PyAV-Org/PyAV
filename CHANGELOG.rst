@@ -77,6 +77,7 @@ Fixes:
 - ``Packet(str)`` and setting ``CodecContext.extradata`` to a ``str`` no longer drop the last bytes of non-ASCII text.
 - ``AVRational`` values with a zero denominator compare and hash consistently with ``float`` and ``Decimal`` infinities, and its operators return ``NotImplemented`` for unsupported operands.
 - ``av.video.frame.supported_np_pix_fmts`` now lists ``yuv422p``.
+- :class:`.BitStreamFilterContext` now passes ``in_stream``'s time base to the filter, so filters that read it, such as ``setts`` with ``TB`` and ``pcm_rechunk``, no longer return ``None`` timestamps. By :gh-user:`NotAFlightRisk`.
 
 v18.1.0
 -------
