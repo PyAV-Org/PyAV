@@ -534,6 +534,7 @@ cdef extern from "libavcodec/bsf.h" nogil:
         const AVBitStreamFilter *filter
         AVCodecParameters *par_in
         AVCodecParameters *par_out
+        AVRational time_base_in
 
     cdef int av_bsf_list_parse_str(const char *str, AVBSFContext **bsf)
     cdef int av_bsf_init(AVBSFContext *ctx)
