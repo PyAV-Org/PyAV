@@ -74,6 +74,22 @@ def test_filter_h264_mp4toannexb() -> None:
             assert is_annexb(res_packet)
 
 
+def test_filter_setts_uses_stream_time_base() -> None:
+    with av.open(fate_suite("h264/interlaced_crop.mp4"), "r") as container:
+        stream = container.streams.video[0]
+        ctx = BitStreamFilterContext("setts=pts=PTS+10/TB", stream)
+
+        offset = int(10 / stream.time_base)
+        expected = []
+        res_packets = []
+        for p in container.demux(stream):
+            if p.pts is not None:
+                expected.append(p.pts + offset)
+            res_packets.extend(ctx.filter(p))
+
+        assert [p.pts for p in res_packets] == expected
+
+
 def test_filter_in_stream_codec_and_name() -> None:
     # A Codec or codec-name str can stand in for a Stream to pin the input codec,
     # which is all a codec-specific filter needs to initialize.
