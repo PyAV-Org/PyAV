@@ -113,15 +113,16 @@ class CudaContext:
         if self.current_ctx:
             options_dict["current_ctx"] = "1"
         options: Dictionary = Dictionary(options_dict)
-        err_check(
-            lib.av_hwdevice_ctx_create(
+        ret: cython.int
+        with cython.nogil:
+            ret = lib.av_hwdevice_ctx_create(
                 cython.address(owner_ref),
                 lib.AV_HWDEVICE_TYPE_CUDA,
                 c_device,
                 options.ptr,
                 0,
             )
-        )
+        err_check(ret)
         if not self.cuda_stream:
             self._device_ref = owner_ref
             return owner_ref
@@ -169,6 +170,7 @@ class CudaContext:
         cached = self._frames_cache.get(key)
         cached_ref: cython.pointer[lib.AVBufferRef]
         out_ref: cython.pointer[lib.AVBufferRef]
+        ret: cython.int
 
         if cached is not None:
             cached_ref = cython.cast(
@@ -196,7 +198,9 @@ class CudaContext:
             frames_ctx.sw_format = sw_fmt
             frames_ctx.width = int(width)
             frames_ctx.height = int(height)
-            err_check(lib.av_hwframe_ctx_init(frames_ref))
+            with cython.nogil:
+                ret = lib.av_hwframe_ctx_init(frames_ref)
+            err_check(ret)
         except Exception:
             lib.av_buffer_unref(cython.address(frames_ref))
             raise

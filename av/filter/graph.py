@@ -91,7 +91,11 @@ class Graph:
         if self.configured and not force:
             return
 
-        err_check(lib.avfilter_graph_config(self.ptr, cython.NULL))
+        graph: cython.pointer[lib.AVFilterGraph] = self.ptr
+        ret: cython.int
+        with cython.nogil:
+            ret = lib.avfilter_graph_config(graph, cython.NULL)
+        err_check(ret)
         self.configured = True
 
         # We get auto-inserted stuff here.

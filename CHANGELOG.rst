@@ -58,6 +58,7 @@ Fixes:
 - ``AudioFifo.write()`` now raises ``ValueError`` for a frame whose channel layout differs from the first frame's, instead of reading the wrong number of channels and scrambling or over-reading the samples. By :gh-user:`ChandraChaan` in (:pr:`2505`).
 - A failed ``CodecContext.open()`` no longer clears the selected codec, so ``codec``, ``name``, ``is_encoder``, and ``is_decoder`` keep working and the context can be reused after fixing the offending parameters.
 - :class:`.BitStreamFilterContext` now passes ``in_stream``'s time base to the filter, so filters that read it, such as ``setts`` with ``TB`` and ``pcm_rechunk``, no longer return ``None`` timestamps. By :gh-user:`NotAFlightRisk`.
+- Release the GIL while initializing filters, configuring filter graphs, listing devices, and creating the CUDA device and frame pool used by ``VideoFrame.from_dlpack()``, so slow setup such as loading a ``whisper`` model or probing capture devices no longer stops other Python threads.
 - :meth:`.CodecContext.open` releases the GIL while the codec opens, as do creating a hardware device and its encoder frame pool, so other Python threads keep running while a hardware encoder takes seconds to start (:issue:`2517`).
 
 v19.0.2
