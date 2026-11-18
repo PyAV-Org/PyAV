@@ -190,15 +190,17 @@ class HWAccel:
             c_device = device_bytes
         c_options: Dictionary = Dictionary(self.options)
 
-        err_check(
-            lib.av_hwdevice_ctx_create(
+        c_device_type: lib.AVHWDeviceType = config.ptr.device_type
+        ret: cython.int
+        with cython.nogil:
+            ret = lib.av_hwdevice_ctx_create(
                 cython.address(self.ptr),
-                config.ptr.device_type,
+                c_device_type,
                 c_device,
                 c_options.ptr,
                 self.flags,
             )
-        )
+        err_check(ret)
 
     def create(self, codec: Codec, for_encoding: bool = False) -> HWAccel:
         """Create a new hardware accelerator context with the given codec"""
