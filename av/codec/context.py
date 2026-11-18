@@ -446,9 +446,14 @@ class CodecContext:
         # AVCodec structs are static globals, so holding the pointer across the
         # call is safe.
         codec: cython.pointer[cython.const[lib.AVCodec]] = self.ptr.codec
-        ret: cython.int = lib.avcodec_open2(
-            self.ptr, codec, cython.address(options.ptr)
+        ctx: cython.pointer[lib.AVCodecContext] = self.ptr
+        options_ptr: cython.pointer[cython.pointer[lib.AVDictionary]] = cython.address(
+            options.ptr
         )
+        ret: cython.int
+        # Hardware encoders can take seconds to open, so let other threads run.
+        with cython.nogil:
+            ret = lib.avcodec_open2(ctx, codec, options_ptr)
         if ret < 0:
             self.ptr.codec = codec
         err_check(ret, f'avcodec_open2("{codec.name}", {self.options})')
@@ -618,6 +623,7 @@ class CodecContext:
         if frames_ref == cython.NULL:
             raise MemoryError("av_hwframe_ctx_alloc() failed")
 
+        ret: cython.int
         try:
             frames_ctx: cython.pointer[lib.AVHWFramesContext] = cython.cast(
                 cython.pointer[lib.AVHWFramesContext], frames_ref.data
@@ -627,7 +633,9 @@ class CodecContext:
             frames_ctx.width = self.ptr.width
             frames_ctx.height = self.ptr.height
             frames_ctx.initial_pool_size = 32
-            err_check(lib.av_hwframe_ctx_init(frames_ref))
+            with cython.nogil:
+                ret = lib.av_hwframe_ctx_init(frames_ref)
+            err_check(ret)
         except Exception:
             lib.av_buffer_unref(cython.address(frames_ref))
             raise
