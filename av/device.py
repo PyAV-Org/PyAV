@@ -94,9 +94,12 @@ def _enumerate_via_log_fallback(format_name: str) -> list[DeviceInfo]:
     devices: list[DeviceInfo] = []
     try:
         with avlogging.Capture() as logs:
-            lib.avformat_open_input(cython.address(ctx), b"", fmt, cython.address(opts))
-            if ctx:
-                lib.avformat_close_input(cython.address(ctx))
+            with cython.nogil:
+                lib.avformat_open_input(
+                    cython.address(ctx), b"", fmt, cython.address(opts)
+                )
+                if ctx:
+                    lib.avformat_close_input(cython.address(ctx))
 
         current_media_type = "video"
         for _level, _name, message in logs:
@@ -144,12 +147,13 @@ def enumerate_input_devices(format_name: str) -> list[DeviceInfo]:
         raise ValueError(f"no such input format: {format_name!r}")
 
     device_list: cython.pointer[lib.AVDeviceInfoList] = cython.NULL
+    ret: cython.int
     try:
-        err_check(
-            lib.avdevice_list_input_sources(
+        with cython.nogil:
+            ret = lib.avdevice_list_input_sources(
                 fmt, cython.NULL, cython.NULL, cython.address(device_list)
             )
-        )
+        err_check(ret)
         return _build_device_list(device_list)
     except NotImplementedError:
         # Format doesn't implement get_device_list (e.g. avfoundation).
@@ -175,11 +179,12 @@ def enumerate_output_devices(format_name: str) -> list[DeviceInfo]:
         raise ValueError(f"no such output format: {format_name!r}")
 
     device_list: cython.pointer[lib.AVDeviceInfoList] = cython.NULL
-    err_check(
-        lib.avdevice_list_output_sinks(
+    ret: cython.int
+    with cython.nogil:
+        ret = lib.avdevice_list_output_sinks(
             fmt, cython.NULL, cython.NULL, cython.address(device_list)
         )
-    )
+    err_check(ret)
 
     try:
         return _build_device_list(device_list)

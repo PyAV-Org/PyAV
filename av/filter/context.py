@@ -78,13 +78,21 @@ class FilterContext:
 
         dict_: Dictionary = None
         c_args: cython.p_char = cython.NULL
+        ctx: cython.pointer[lib.AVFilterContext] = self.ptr
+        ret: cython.int
         if args or not kwargs:
             if args:
                 c_args = args
-            err_check(lib.avfilter_init_str(self.ptr, c_args))
+            with cython.nogil:
+                ret = lib.avfilter_init_str(ctx, c_args)
         else:
             dict_ = Dictionary(kwargs)
-            err_check(lib.avfilter_init_dict(self.ptr, cython.address(dict_.ptr)))
+            dict_ptr: cython.pointer[cython.pointer[lib.AVDictionary]] = cython.address(
+                dict_.ptr
+            )
+            with cython.nogil:
+                ret = lib.avfilter_init_dict(ctx, dict_ptr)
+        err_check(ret)
 
         self.inited = True
         if dict_:
