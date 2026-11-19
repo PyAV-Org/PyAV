@@ -67,6 +67,7 @@ Fixes:
 - Writing to a Python file object whose ``write()`` accepts only part of each buffer, such as a socket or pipe, no longer silently drops the rest.
 - Closing an input container opened with ``io_open`` now closes the file ``io_open`` returned for the main input, instead of leaving it open.
 - ``Container.set_chapters()`` no longer leaks memory or drops the existing chapters when given an invalid entry.
+- ``AVRational(x)`` now converts a float, ``Decimal`` or ``Fraction`` exactly instead of truncating it to an integer, and ``AVRational(num, den)`` raises ``TypeError`` unless both are integers.
 
 v19.0.2
 -------

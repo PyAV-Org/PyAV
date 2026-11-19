@@ -51,6 +51,20 @@ def test_fraction_interop() -> None:
     assert float(r) == 0.5
 
 
+def test_non_integer_arguments() -> None:
+    assert AVRational(0.5) == AVRational(1, 2)
+    assert AVRational(Decimal("0.5")) == AVRational(1, 2)
+    assert AVRational(Fraction(-3, 6)) == AVRational(-1, 2)
+    with pytest.raises(OverflowError):
+        AVRational(0.1)
+    with pytest.raises(TypeError):
+        AVRational("1")  # type: ignore[call-overload]
+    with pytest.raises(TypeError):
+        AVRational(0.5, 2)  # type: ignore[call-overload]
+    with pytest.raises(TypeError):
+        AVRational(1, 0.5)  # type: ignore[call-overload]
+
+
 def test_avrational_arithmetic() -> None:
     a = AVRational(1, 25)
     b = AVRational(1, 2)
