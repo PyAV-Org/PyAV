@@ -82,6 +82,7 @@ Fixes:
 - Release the GIL while initializing filters, configuring filter graphs, listing devices, and creating the CUDA device and frame pool used by ``VideoFrame.from_dlpack()``, so slow setup such as loading a ``whisper`` model or probing capture devices no longer stops other Python threads.
 - ``FilterContext.push(None)`` on a filter that isn't a buffer source now flushes through its input instead of segfaulting.
 - ``VideoFrame.from_numpy_buffer()`` raises ``ValueError`` when ``width`` is wider than the array's rows, instead of reading past the end of the buffer.
+- ``VideoFrame.from_numpy_buffer()`` with a ``gbrp`` or ``gbrap`` format no longer garbles input whose rows are padded, or reads past the end of its copy.
 
 v18.1.0
 -------
