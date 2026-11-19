@@ -232,6 +232,8 @@ class Packet(Buffer):
     def __cinit__(self, input=None):
         with cython.nogil:
             self.ptr = lib.av_packet_alloc()
+        if self.ptr == cython.NULL:
+            raise MemoryError("Could not allocate AVPacket")
 
     def __dealloc__(self):
         with cython.nogil:
