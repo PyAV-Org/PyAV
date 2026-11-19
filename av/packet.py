@@ -250,13 +250,14 @@ class Packet(Buffer):
             size = source.length
             if size:
                 # Create a buffer that references the source data directly.
+                self._readonly = not source.has_view or source.view.readonly
                 Py_INCREF(source)
                 buf = lib.av_buffer_create(
                     source.ptr,
                     size,
                     _python_free,
                     cython.cast(cython.p_void, source),
-                    0,
+                    lib.AV_BUFFER_FLAG_READONLY if self._readonly else 0,
                 )
                 if buf == cython.NULL:
                     Py_DECREF(source)
@@ -279,6 +280,10 @@ class Packet(Buffer):
     @cython.cfunc
     def _buffer_ptr(self) -> cython.p_void:
         return self.ptr.data
+
+    @cython.cfunc
+    def _buffer_writable(self) -> cython.bint:
+        return not self._readonly
 
     @cython.cfunc
     def _rebase_time(self, dst: lib.AVRational):

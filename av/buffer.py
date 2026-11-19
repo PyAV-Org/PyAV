@@ -80,7 +80,14 @@ class Buffer:
         if flags & PyBUF_WRITABLE and not self._buffer_writable():
             raise ValueError("buffer is not writable")
 
-        PyBuffer_FillInfo(view, self, self._buffer_ptr(), self._buffer_size(), 0, flags)
+        PyBuffer_FillInfo(
+            view,
+            self,
+            self._buffer_ptr(),
+            self._buffer_size(),
+            not self._buffer_writable(),
+            flags,
+        )
 
     @property
     def buffer_size(self):
