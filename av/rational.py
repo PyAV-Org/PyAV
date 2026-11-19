@@ -2,7 +2,7 @@
 import sys
 from decimal import Decimal
 from fractions import Fraction
-from numbers import Rational, Real
+from numbers import Integral, Rational, Real
 
 import cython
 from cython.cimports import libav as lib
@@ -47,16 +47,37 @@ class AVRational:
     """
 
     def __init__(self, num=0, den=1):
-        if den == 1 and isinstance(num, Rational):
-            num, den = num.numerator, num.denominator
-        n64: cython.longlong = num
-        d64: cython.longlong = den
+        top, bottom = num, den
+        if type(num) is not int or type(den) is not int:
+            if not isinstance(den, Integral):
+                raise TypeError(
+                    f"AVRational(num, den) takes integers, not {type(den).__name__}"
+                )
+            if not isinstance(num, Integral):
+                if den != 1:
+                    raise TypeError(
+                        f"AVRational(num, den) takes integers, not {type(num).__name__}"
+                    )
+                if not isinstance(num, (Real, Decimal)):
+                    raise TypeError(
+                        f"AVRational() argument must be a number, not {type(num).__name__}"
+                    )
+                # A single number (float, Decimal, Fraction, ...) is converted exactly.
+                frac = Fraction(num)
+                top, bottom = frac.numerator, frac.denominator
+        n64: cython.longlong
+        d64: cython.longlong
         n: cython.int
         d: cython.int
-        if not lib.av_reduce(
-            cython.address(n), cython.address(d), n64, d64, _INT32_MAX
-        ):
-            raise OverflowError(f"{num}/{den} cannot be reduced to fit in int32")
+        try:
+            n64, d64 = top, bottom
+            if not lib.av_reduce(
+                cython.address(n), cython.address(d), n64, d64, _INT32_MAX
+            ):
+                raise OverflowError
+        except OverflowError:
+            value = f"{num}/{den}" if top is num else f"{num!r}"
+            raise OverflowError(f"{value} cannot be reduced to fit in int32") from None
         self.num = n
         self.den = d
 

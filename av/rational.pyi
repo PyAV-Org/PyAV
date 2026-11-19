@@ -1,11 +1,15 @@
+from decimal import Decimal
 from fractions import Fraction
 from numbers import Rational
-from typing import Any
+from typing import Any, overload
 
 class AVRational:
     num: int
     den: int
-    def __init__(self, num: int | Rational = 0, den: int = 1) -> None: ...
+    @overload
+    def __init__(self, num: int | Rational | float | Decimal = 0) -> None: ...
+    @overload
+    def __init__(self, num: int, den: int) -> None: ...
     @property
     def numerator(self) -> int: ...
     @property
