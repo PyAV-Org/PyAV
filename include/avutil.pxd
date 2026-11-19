@@ -112,6 +112,8 @@ cdef extern from "libavutil/avutil.h" nogil:
     cdef const char* av_get_media_type_string(AVMediaType media_type)
 
 cdef extern from "libavutil/buffer.h" nogil:
+    cdef enum:
+        AV_BUFFER_FLAG_READONLY
     AVBufferRef *av_buffer_create(uint8_t *data, size_t size, void (*free)(void *opaque, uint8_t *data), void *opaque, int flags)
     AVBufferRef* av_buffer_ref(const AVBufferRef *buf)
     void av_buffer_unref(AVBufferRef **buf)

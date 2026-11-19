@@ -1466,12 +1466,13 @@ class VideoFrame(Frame):
         py_buf = cython.cast(object, buffer)
         Py_INCREF(py_buf)
 
+        self._readonly = not buffer.flags.writeable
         self.ptr.buf[0] = lib.av_buffer_create(
             c_ptr,
             required,
             _numpy_avbuffer_free,
             cython.cast(cython.p_void, py_buf),
-            0,
+            lib.AV_BUFFER_FLAG_READONLY if self._readonly else 0,
         )
         if self.ptr.buf[0] == cython.NULL:
             Py_DECREF(py_buf)

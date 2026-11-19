@@ -18,6 +18,9 @@ cdef class PacketSideData(Buffer):
 cdef class Packet(Buffer):
     cdef lib.AVPacket* ptr
     cdef Stream _stream
+    # The data is borrowed from a read-only Python object.
+    cdef bint _readonly
     cdef void _rebase_time(self, lib.AVRational)
     cdef size_t _buffer_size(self)
     cdef void* _buffer_ptr(self)
+    cdef bint _buffer_writable(self)

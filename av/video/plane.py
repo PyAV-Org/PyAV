@@ -125,7 +125,7 @@ class VideoPlane(Plane):
 
     @cython.cfunc
     def _buffer_writable(self) -> cython.bint:
-        if self.frame.ptr.hw_frames_ctx:
+        if self.frame.ptr.hw_frames_ctx or self.frame._readonly:
             return False
         return True
 
@@ -145,7 +145,7 @@ class VideoPlane(Plane):
             height: cython.int = self._height
             ptr = cython.cast(cython.p_char, ptr) + (height - 1) * line_size
 
-        PyBuffer_FillInfo(view, self, ptr, size, 0, flags)
+        PyBuffer_FillInfo(view, self, ptr, size, not self._buffer_writable(), flags)
 
     def __dlpack_device__(self):
         if self.frame.ptr.hw_frames_ctx:
