@@ -241,6 +241,9 @@ cdef extern from "libavutil/hwcontext.h" nogil:
     cdef int av_hwframe_ctx_init(AVBufferRef *ref)
 
 cdef extern from "libavutil/imgutils.h" nogil:
+    cdef int av_image_fill_linesizes(
+        int linesizes[4], AVPixelFormat pix_fmt, int width
+    )
     cdef int av_image_fill_pointers(
         uint8_t *pointers[4],
         AVPixelFormat pix_fmt,

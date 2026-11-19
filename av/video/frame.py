@@ -1429,6 +1429,18 @@ class VideoFrame(Frame):
         c_data: cython.Py_ssize_t = buffer.ctypes.data
         c_ptr: cython.pointer[uint8_t] = cython.cast(cython.pointer[uint8_t], c_data)
         c_format: lib.AVPixelFormat = get_pix_fmt(format)
+
+        # Each row of `width` pixels must fit in the array's rows, or FFmpeg
+        # reads past the end of the buffer.
+        min_linesizes: cython.int[4]
+        err_check(lib.av_image_fill_linesizes(min_linesizes, c_format, width))
+        for i, linesize in enumerate(linesizes):
+            if min_linesizes[i] > linesize:
+                raise ValueError(
+                    f"width {width} needs {min_linesizes[i]} bytes per row in plane"
+                    f" {i}, but the array's rows are {linesize} bytes"
+                )
+
         lib.av_frame_unref(self.ptr)
 
         # Hold on to a reference for the numpy buffer so that it doesn't get accidentally garbage collected
