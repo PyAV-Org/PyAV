@@ -152,17 +152,26 @@ def pyav_io_close_gil(
 @cython.cfunc
 @cython.nogil
 @cython.exceptval(check=False)
-def _free_chapters(ctx: cython.pointer[lib.AVFormatContext]) -> cython.void:
+def _free_chapter_array(
+    chapters: cython.pointer[AVChapterPtrPtr], count: cython.Py_ssize_t
+) -> cython.void:
     i: cython.Py_ssize_t
-    if ctx.chapters != cython.NULL:
-        for i in range(ctx.nb_chapters):
-            if ctx.chapters[i] != cython.NULL:
-                if ctx.chapters[i].metadata != cython.NULL:
-                    lib.av_dict_free(cython.address(ctx.chapters[i].metadata))
+    if chapters[0] != cython.NULL:
+        for i in range(count):
+            if chapters[0][i] != cython.NULL:
+                if chapters[0][i].metadata != cython.NULL:
+                    lib.av_dict_free(cython.address(chapters[0][i].metadata))
                 lib.av_freep(
-                    cython.cast(cython.pp_void, cython.address(ctx.chapters[i]))
+                    cython.cast(cython.pp_void, cython.address(chapters[0][i]))
                 )
-        lib.av_freep(cython.cast(cython.pp_void, cython.address(ctx.chapters)))
+        lib.av_freep(cython.cast(cython.pp_void, chapters))
+
+
+@cython.cfunc
+@cython.nogil
+@cython.exceptval(check=False)
+def _free_chapters(ctx: cython.pointer[lib.AVFormatContext]) -> cython.void:
+    _free_chapter_array(cython.address(ctx.chapters), ctx.nb_chapters)
     ctx.nb_chapters = 0
 
 
@@ -440,38 +449,39 @@ class Container:
         ch: cython.pointer[lib.AVChapter]
         entry: dict
 
+        ch_array = cython.NULL
+        if count:
+            ch_array = cython.cast(
+                AVChapterPtrPtr,
+                lib.av_mallocz(count * cython.sizeof(cython.pointer[lib.AVChapter])),
+            )
+            if ch_array == cython.NULL:
+                raise MemoryError("av_malloc failed for chapters")
+
+        # Build the new chapters before freeing the old ones, so a bad entry
+        # leaves the container's chapters as they were.
+        try:
+            for i in range(count):
+                entry = chapters[i]
+                ch = cython.cast(
+                    cython.pointer[lib.AVChapter],
+                    lib.av_mallocz(cython.sizeof(lib.AVChapter)),
+                )
+                if ch == cython.NULL:
+                    raise MemoryError("av_malloc failed for chapter")
+                ch_array[i] = ch
+                ch.id = entry["id"]
+                ch.start = cython.cast(int64_t, entry["start"])
+                ch.end = cython.cast(int64_t, entry["end"])
+                to_avrational(entry["time_base"], cython.address(ch.time_base))
+                if "metadata" in entry:
+                    dict_to_avdict(cython.address(ch.metadata), entry["metadata"])
+        except BaseException:
+            _free_chapter_array(cython.address(ch_array), count)
+            raise
+
         with cython.nogil:
             _free_chapters(self.ptr)
-
-        if count == 0:
-            self.ptr.nb_chapters = 0
-            self.ptr.chapters = cython.NULL
-            return
-
-        ch_array = cython.cast(
-            AVChapterPtrPtr,
-            lib.av_malloc(count * cython.sizeof(cython.pointer[lib.AVChapter])),
-        )
-        if ch_array == cython.NULL:
-            raise MemoryError("av_malloc failed for chapters")
-
-        for i in range(count):
-            entry = chapters[i]
-            ch = cython.cast(
-                cython.pointer[lib.AVChapter],
-                lib.av_malloc(cython.sizeof(lib.AVChapter)),
-            )
-            if ch == cython.NULL:
-                raise MemoryError("av_malloc failed for chapter")
-            ch.id = entry["id"]
-            ch.start = cython.cast(int64_t, entry["start"])
-            ch.end = cython.cast(int64_t, entry["end"])
-            to_avrational(entry["time_base"], cython.address(ch.time_base))
-            ch.metadata = cython.NULL
-            if "metadata" in entry:
-                dict_to_avdict(cython.address(ch.metadata), entry["metadata"])
-            ch_array[i] = ch
-
         self.ptr.nb_chapters = cython.cast(cython.uint, count)
         self.ptr.chapters = ch_array
 
