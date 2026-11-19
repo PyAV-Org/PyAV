@@ -270,10 +270,9 @@ class Packet(Buffer):
                 self.ptr.size = cython.cast(cython.int, size)
 
     def __repr__(self):
-        stream = self._stream.index if self._stream else 0
         return (
-            f"av.{self.__class__.__name__} of #{stream}, dts={self.dts},"
-            f" pts={self.pts}; {self.ptr.size} bytes at 0x{id(self):x}>"
+            f"<av.{self.__class__.__name__} of #{self.ptr.stream_index},"
+            f" dts={self.dts}, pts={self.pts}; {self.ptr.size} bytes at 0x{id(self):x}>"
         )
 
     # Buffer protocol.
