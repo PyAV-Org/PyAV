@@ -85,6 +85,7 @@ Fixes:
 - ``VideoFrame.from_numpy_buffer()`` with a ``gbrp`` or ``gbrap`` format no longer garbles input whose rows are padded, or reads past the end of its copy.
 - Memory borrowed from read-only Python objects is no longer exported as writable: a :class:`.Packet` made from ``bytes`` or ``str``, a frame from ``VideoFrame.from_numpy_buffer()`` on a read-only array, and side data now give read-only ``memoryview`` objects and refuse ``update()``.
 - Writing to a Python file object whose ``write()`` accepts only part of each buffer, such as a socket or pipe, no longer silently drops the rest.
+- Closing an input container opened with ``io_open`` now closes the file ``io_open`` returned for the main input, instead of leaving it open.
 
 v18.1.0
 -------
