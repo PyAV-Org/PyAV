@@ -86,6 +86,7 @@ Fixes:
 - Memory borrowed from read-only Python objects is no longer exported as writable: a :class:`.Packet` made from ``bytes`` or ``str``, a frame from ``VideoFrame.from_numpy_buffer()`` on a read-only array, and side data now give read-only ``memoryview`` objects and refuse ``update()``.
 - Writing to a Python file object whose ``write()`` accepts only part of each buffer, such as a socket or pipe, no longer silently drops the rest.
 - Closing an input container opened with ``io_open`` now closes the file ``io_open`` returned for the main input, instead of leaving it open.
+- ``Container.set_chapters()`` no longer leaks memory or drops the existing chapters when given an invalid entry.
 
 v18.1.0
 -------
