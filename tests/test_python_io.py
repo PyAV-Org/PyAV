@@ -109,6 +109,15 @@ class WriteOnlyPipe(BytesIO):
         return False
 
 
+class ShortWritePipe(WriteOnlyPipe):
+    """
+    Writable pipe that, like a socket, may take only part of each write.
+    """
+
+    def write(self, data: Buffer) -> int:
+        return super().write(bytes(data)[:7])
+
+
 def read(
     fh: io.BufferedReader | BytesIO | ReadOnlyBuffer, seekable: bool = True
 ) -> None:
@@ -328,6 +337,26 @@ class TestPythonIO(TestCase):
             ),
         ) as cm:
             write(buf)
+
+    def test_writing_to_pipe_short_writes(self) -> None:
+        def mux(buf: BytesIO) -> bytes:
+            with av.open(
+                buf, "w", format="matroska", options={"fflags": "+bitexact"}
+            ) as output:
+                stream = output.add_stream("mpeg4", rate=24)
+                stream.width = stream.height = 64
+                stream.pix_fmt = "yuv420p"
+                for i in range(5):
+                    frame = av.VideoFrame(64, 64, "yuv420p")
+                    for plane in frame.planes:  # Allocated uninitialized
+                        plane.update(bytes(plane.buffer_size))
+                    frame.pts = i
+                    output.mux(stream.encode(frame))
+                output.mux(stream.encode(None))
+            return buf.getvalue()
+
+        # Every byte the file didn't take must be offered again.
+        assert mux(ShortWritePipe()) == mux(WriteOnlyPipe())
 
     def test_writing_to_pipe_writeonly(self) -> None:
         av.logging.set_level(av.logging.VERBOSE)

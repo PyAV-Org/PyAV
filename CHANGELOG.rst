@@ -64,6 +64,7 @@ Fixes:
 - ``VideoFrame.from_numpy_buffer()`` raises ``ValueError`` when ``width`` is wider than the array's rows, instead of reading past the end of the buffer.
 - ``VideoFrame.from_numpy_buffer()`` with a ``gbrp`` or ``gbrap`` format no longer garbles input whose rows are padded, or reads past the end of its copy.
 - Memory borrowed from read-only Python objects is no longer exported as writable: a :class:`.Packet` made from ``bytes`` or ``str``, a frame from ``VideoFrame.from_numpy_buffer()`` on a read-only array, and side data now give read-only ``memoryview`` objects and refuse ``update()``.
+- Writing to a Python file object whose ``write()`` accepts only part of each buffer, such as a socket or pipe, no longer silently drops the rest.
 
 v19.0.2
 -------

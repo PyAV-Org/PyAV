@@ -133,12 +133,23 @@ def pyio_write_gil(
 ) -> cython.int:
     self: PyIOFile
     bytes_to_write: bytes
-    bytes_written: cython.int
+    bytes_written: cython.int = 0
     try:
         self = cython.cast(PyIOFile, opaque)
         bytes_to_write = buf[:buf_size]
-        ret_value = self.fwrite(bytes_to_write)
-        bytes_written = ret_value if isinstance(ret_value, int) else buf_size
+        # FFmpeg does not retry a short write, so a raw file that takes part of
+        # the buffer (a socket, pipe, ...) must be called until it takes it all.
+        while bytes_written < buf_size:
+            ret_value = self.fwrite(
+                bytes_to_write if not bytes_written else bytes_to_write[bytes_written:]
+            )
+            if not isinstance(ret_value, int):
+                # File-likes that don't report a count are assumed to write it all.
+                bytes_written = buf_size
+                break
+            if ret_value <= 0:
+                raise OSError("write() accepted no bytes")
+            bytes_written += min(ret_value, buf_size - bytes_written)
         self.pos += bytes_written
         return bytes_written
     except Exception:
