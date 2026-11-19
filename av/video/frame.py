@@ -1404,6 +1404,9 @@ class VideoFrame(Frame):
             array = np.ascontiguousarray(np.moveaxis(array[..., [1, 2, 0, 3]], -1, 0))
         elif format.startswith("gbrp"):  # rgb -> gbr
             array = np.ascontiguousarray(np.moveaxis(array[..., [1, 2, 0]], -1, 0))
+        if format.startswith("gbr"):
+            # The planar copy drops any row padding the input had.
+            linesizes = (array.strides[1],) * array.shape[0]
 
         frame = VideoFrame(_cinit_bypass_sentinel)
         frame._image_fill_pointers_numpy(array, width, height, linesizes, format)

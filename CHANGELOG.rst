@@ -62,6 +62,7 @@ Fixes:
 - :meth:`.CodecContext.open` releases the GIL while the codec opens, as do creating a hardware device and its encoder frame pool, so other Python threads keep running while a hardware encoder takes seconds to start (:issue:`2517`).
 - ``FilterContext.push(None)`` on a filter that isn't a buffer source now flushes through its input instead of segfaulting.
 - ``VideoFrame.from_numpy_buffer()`` raises ``ValueError`` when ``width`` is wider than the array's rows, instead of reading past the end of the buffer.
+- ``VideoFrame.from_numpy_buffer()`` with a ``gbrp`` or ``gbrap`` format no longer garbles input whose rows are padded, or reads past the end of its copy.
 
 v19.0.2
 -------
