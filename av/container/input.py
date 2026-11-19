@@ -1,5 +1,6 @@
 import cython
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
+from cython.cimports.av.container.pyio import PyIOFile, pyio_close_custom_gil
 from cython.cimports.av.container.streams import StreamContainer
 from cython.cimports.av.dictionary import Dictionary
 from cython.cimports.av.packet import Packet
@@ -14,13 +15,29 @@ _cinit_bypass_sentinel = cython.declare(object, object())
 
 
 @cython.cfunc
-def close_input(self: InputContainer) -> cython.void:
+def close_input(self: InputContainer) -> cython.int:
     self.streams = StreamContainer()
+    # ptr can be NULL here: loudnorm.stats() takes the context over.
+    if not self._myflag & 2 or self.ptr == cython.NULL:
+        self._myflag &= ~2  # enum.input_was_opened = False
+        return 0
+
+    # With io_open, AVFMT_FLAG_CUSTOM_IO stops avformat_close_input() from
+    # avio_close()ing the main input, which would crash on our AVIOContext, so
+    # close it the way io_close2 would. The PyIOFile keeps pb alive until then.
+    pb: cython.pointer[lib.AVIOContext] = self.ptr.pb
+    main_file: PyIOFile = None
+    if pb != cython.NULL and self.open_files:
+        main_file = self.open_files.pop(cython.cast(int64_t, pb.opaque), None)
+
     with cython.nogil:
-        if self._myflag & 2:
-            # This causes `self.ptr` to be set to NULL.
-            lib.avformat_close_input(cython.address(self.ptr))
-            self._myflag &= ~2  # enum.input_was_opened = False
+        # This causes `self.ptr` to be set to NULL.
+        lib.avformat_close_input(cython.address(self.ptr))
+    self._myflag &= ~2  # enum.input_was_opened = False
+
+    if main_file is not None:
+        return pyio_close_custom_gil(pb)
+    return 0
 
 
 @cython.final
@@ -102,7 +119,11 @@ class InputContainer(Container):
         self._metadata = avdict_to_dict(self.ptr.metadata)
 
     def __dealloc__(self):
-        close_input(self)
+        if close_input(self) < 0:
+            try:
+                self.err_check(-1)
+            except Exception:
+                pass  # Nowhere to raise to; don't leave the exception stashed.
 
     @property
     def start_time(self):
@@ -198,7 +219,9 @@ class InputContainer(Container):
         return "bitrate"
 
     def close(self):
-        close_input(self)
+        res: cython.int = close_input(self)
+        if res < 0:
+            self.err_check(res)
 
     def demux(self, *args, **kwargs):
         """demux(streams=None, video=None, audio=None, subtitles=None, data=None)

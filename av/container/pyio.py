@@ -216,4 +216,4 @@ def pyio_close_custom_gil(pb: cython.pointer[lib.AVIOContext]) -> cython.int:
 
         return 0
     except Exception:
-        stash_exception()
+        return stash_exception()
