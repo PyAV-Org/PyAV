@@ -328,60 +328,56 @@ class VideoReformatter:
         )
         frame_src_color_trc: lib.AVColorTransferCharacteristic = frame.ptr.color_trc
         frame_src_color_primaries: lib.AVColorPrimaries = frame.ptr.color_primaries
-
-        if convert_trc:
-            new_frame.ptr.color_trc = cython.cast(
-                lib.AVColorTransferCharacteristic, dst_color_trc
-            )
-        else:
-            frame.ptr.color_trc = lib.AVCOL_TRC_UNSPECIFIED
-            new_frame.ptr.color_trc = lib.AVCOL_TRC_UNSPECIFIED
-
-        if convert_primaries:
-            new_frame.ptr.color_primaries = cython.cast(
-                lib.AVColorPrimaries, dst_color_primaries
-            )
-        else:
-            frame.ptr.color_primaries = lib.AVCOL_PRI_UNSPECIFIED
-            new_frame.ptr.color_primaries = lib.AVCOL_PRI_UNSPECIFIED
-
-        # Translate source and destination colorspace/range from SWS_CS_* to AVCOL_*
-        # so sws_is_noop and sws_scale_frame understand them
         frame_src_colorspace: lib.AVColorSpace = frame.ptr.colorspace
         frame_src_color_range: lib.AVColorRange = frame.ptr.color_range
-        _set_frame_colorspace(frame.ptr, src_colorspace, src_color_range)
-        _set_frame_colorspace(new_frame.ptr, dst_colorspace, dst_color_range)
 
-        # Shortcut if sws_scale_frame would be a no-op
-        is_noop: cython.bint = sws_is_noop(new_frame.ptr, frame.ptr) != 0
-        if is_noop:
-            # Restore source frame metadata to avoid side effects
+        # The source frame's tags are changed for swscale below, so restore them
+        # however this ends, including when allocation or scaling raises.
+        try:
+            if convert_trc:
+                new_frame.ptr.color_trc = cython.cast(
+                    lib.AVColorTransferCharacteristic, dst_color_trc
+                )
+            else:
+                frame.ptr.color_trc = lib.AVCOL_TRC_UNSPECIFIED
+                new_frame.ptr.color_trc = lib.AVCOL_TRC_UNSPECIFIED
+
+            if convert_primaries:
+                new_frame.ptr.color_primaries = cython.cast(
+                    lib.AVColorPrimaries, dst_color_primaries
+                )
+            else:
+                frame.ptr.color_primaries = lib.AVCOL_PRI_UNSPECIFIED
+                new_frame.ptr.color_primaries = lib.AVCOL_PRI_UNSPECIFIED
+
+            # Translate source and destination colorspace/range from SWS_CS_* to
+            # AVCOL_* so sws_is_noop and sws_scale_frame understand them
+            _set_frame_colorspace(frame.ptr, src_colorspace, src_color_range)
+            _set_frame_colorspace(new_frame.ptr, dst_colorspace, dst_color_range)
+
+            # Shortcut if sws_scale_frame would be a no-op
+            if sws_is_noop(new_frame.ptr, frame.ptr) != 0:
+                return frame
+
+            if self.ptr == cython.NULL:
+                self.ptr = sws_alloc_context()
+                if self.ptr == cython.NULL:
+                    raise MemoryError("Could not allocate SwsContext")
+            self.ptr.threads = threads
+            self.ptr.flags = cython.cast(cython.uint, interpolation)
+
+            # Allocate frame buffers and perform the conversion. Let FFmpeg pick
+            # the alignment: swscale's SIMD output can write past the row width,
+            # and with only 16-byte alignment that spills into the next row, which
+            # races with another slice thread (#2431).
+            new_frame._init(dst_format, width, height, 0)
+            with cython.nogil:
+                ret = sws_scale_frame(self.ptr, new_frame.ptr, frame.ptr)
+        finally:
             frame.ptr.colorspace = frame_src_colorspace
             frame.ptr.color_range = frame_src_color_range
             frame.ptr.color_trc = frame_src_color_trc
             frame.ptr.color_primaries = frame_src_color_primaries
-            return frame
-
-        if self.ptr == cython.NULL:
-            self.ptr = sws_alloc_context()
-            if self.ptr == cython.NULL:
-                raise MemoryError("Could not allocate SwsContext")
-        self.ptr.threads = threads
-        self.ptr.flags = cython.cast(cython.uint, interpolation)
-
-        # Allocate frame buffers and perform the conversion. Let FFmpeg pick the
-        # alignment: swscale's SIMD output can write past the row width, and with
-        # only 16-byte alignment that spills into the next row, which races with
-        # another slice thread (#2431).
-        new_frame._init(dst_format, width, height, 0)
-        with cython.nogil:
-            ret = sws_scale_frame(self.ptr, new_frame.ptr, frame.ptr)
-
-        # Restore source frame metadata to avoid side effects
-        frame.ptr.colorspace = frame_src_colorspace
-        frame.ptr.color_range = frame_src_color_range
-        frame.ptr.color_trc = frame_src_color_trc
-        frame.ptr.color_primaries = frame_src_color_primaries
 
         # Preserve the source's transfer/primaries on the output when no explicit
         # conversion was requested (the scale ran with neutralized tags).

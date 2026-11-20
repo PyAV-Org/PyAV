@@ -157,6 +157,22 @@ def test_reformat_preserves_color_primaries() -> None:
     assert rgb.color_primaries == ColorPrimaries.BT709
 
 
+def test_failed_reformat_keeps_source_metadata() -> None:
+    frame = av.VideoFrame(width=64, height=64, format="yuv420p")
+    frame.colorspace = Colorspace.ITU709
+    frame.color_trc = ColorTrc.BT709
+    frame.color_primaries = ColorPrimaries.BT709
+
+    # Allocating a frame with negative dimensions fails after the source frame's
+    # tags were changed for swscale; they must still be put back.
+    with pytest.raises(av.ArgumentError):
+        frame.reformat(format="rgb24", width=-2, height=-2)
+
+    assert frame.colorspace == Colorspace.ITU709
+    assert frame.color_trc == ColorTrc.BT709
+    assert frame.color_primaries == ColorPrimaries.BT709
+
+
 @pytest.mark.parametrize("colorspace", [1, 4, 5, 6, 7, 9])
 def test_reformat_preserves_colorspace(colorspace: int) -> None:
     # Without dst_colorspace, the frame's AVColorSpace must be kept as is.
