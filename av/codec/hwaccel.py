@@ -145,6 +145,8 @@ class HWAccel:
             self._device_type = device_type
         elif isinstance(device_type, str):
             self._device_type = int(lib.av_hwdevice_find_type_by_name(device_type))
+            if self._device_type == lib.AV_HWDEVICE_TYPE_NONE:
+                raise ValueError(f"Unknown hardware device type: {device_type}")
         elif isinstance(device_type, int):
             self._device_type = device_type
         else:

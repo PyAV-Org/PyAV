@@ -53,6 +53,10 @@ class TestFilters(TestCase):
         assert f.name == "testsrc"
         assert f.description == "Generate test pattern."
 
+    def test_hwaccel_rejects_unknown_type(self) -> None:
+        with pytest.raises(ValueError, match="Unknown hardware device type"):
+            av.codec.hwaccel.HWAccel("definitely-not-a-hardware-device")
+
     def test_generator_graph(self):
         graph = Graph()
         src = graph.add("testsrc")
