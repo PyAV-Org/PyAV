@@ -6,7 +6,7 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.subtitles.subtitle import SubtitleProxy, SubtitleSet
 from cython.cimports.cpython.bytes import PyBytes_FromStringAndSize
-from cython.cimports.libc.string import memcpy
+from cython.cimports.libc.string import memcpy, memset
 
 
 @cython.final
@@ -34,16 +34,21 @@ class SubtitleCodecContext(CodecContext):
             self.ptr.subtitle_header_size = 0
         else:
             source = bytesource(data)
-            self.ptr.subtitle_header = cython.cast(
+            # Realloc into a temporary so a failure keeps the old buffer and size.
+            buf: cython.p_uchar = cython.cast(
                 cython.p_uchar,
                 lib.av_realloc(
                     self.ptr.subtitle_header,
                     source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE,
                 ),
             )
-            if not self.ptr.subtitle_header:
+            if buf == cython.NULL:
                 raise MemoryError("Cannot allocate subtitle_header")
-            memcpy(self.ptr.subtitle_header, source.ptr, source.length)
+            memcpy(buf, source.ptr, source.length)
+            # FFmpeg requires zeroed padding: bitstream readers read into it, and it
+            # NUL-terminates text such as an ASS header.
+            memset(buf + source.length, 0, lib.AV_INPUT_BUFFER_PADDING_SIZE)
+            self.ptr.subtitle_header = buf
             self.ptr.subtitle_header_size = cython.cast(cython.int, source.length)
         self.subtitle_header_set = True
 

@@ -16,7 +16,7 @@ from cython.cimports.cpython.bytes import (
 )
 from cython.cimports.libc.errno import EAGAIN
 from cython.cimports.libc.stdint import uint8_t
-from cython.cimports.libc.string import memcpy, strcmp
+from cython.cimports.libc.string import memcpy, memset, strcmp
 
 from av.error import InvalidDataError
 from av.packet import packet_sidedata_type_to_literal
@@ -373,15 +373,20 @@ class CodecContext:
             self.ptr.extradata_size = 0
         else:
             source = bytesource(data)
-            self.ptr.extradata = cython.cast(
+            # Realloc into a temporary so a failure keeps the old buffer and size.
+            buf: cython.pointer[uint8_t] = cython.cast(
                 cython.pointer[uint8_t],
                 lib.av_realloc(
                     self.ptr.extradata, source.length + lib.AV_INPUT_BUFFER_PADDING_SIZE
                 ),
             )
-            if not self.ptr.extradata:
+            if buf == cython.NULL:
                 raise MemoryError("Cannot allocate extradata")
-            memcpy(self.ptr.extradata, source.ptr, source.length)
+            memcpy(buf, source.ptr, source.length)
+            # FFmpeg requires zeroed padding: bitstream readers read into it, and it
+            # NUL-terminates text such as an ASS header.
+            memset(buf + source.length, 0, lib.AV_INPUT_BUFFER_PADDING_SIZE)
+            self.ptr.extradata = buf
             self.ptr.extradata_size = cython.cast(cython.int, source.length)
 
     @property
