@@ -348,6 +348,12 @@ class TestDecode(TestCase):
             # Values stay reachable positionally.
             assert side_data[0] is side_data[keys[0]]
             assert list(side_data[:]) == list(side_data.values())
+
+            # An out-of-range position is a missing key to get() and `in`.
+            assert side_data.get(99) is None
+            assert 99 not in side_data  # type: ignore[comparison-overlap]
+            with pytest.raises(IndexError):
+                side_data[99]
             return
 
     def test_side_data_type_unknown(self) -> None:

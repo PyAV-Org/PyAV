@@ -90,6 +90,7 @@ Fixes:
 - ``AVRational(x)`` now converts a float, ``Decimal`` or ``Fraction`` exactly instead of truncating it to an integer, and ``AVRational(num, den)`` raises ``TypeError`` unless both are integers.
 - ``VideoFrame.reformat()`` no longer changes a ``bt470bg`` frame's colorspace to ``smpte170m`` when ``dst_colorspace`` isn't given.
 - ``HWAccel`` now raises ``ValueError`` for an unknown device type name instead of falling back to the codec's first hardware config.
+- ``frame.side_data.get()`` and ``in`` no longer raise ``IndexError`` for an out-of-range integer key.
 
 v18.1.0
 -------
