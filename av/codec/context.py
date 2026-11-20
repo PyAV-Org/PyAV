@@ -887,18 +887,21 @@ class CodecContext:
 
     @property
     def codec_tag(self):
+        # Latin-1 maps each byte to one character, so tags that aren't ASCII
+        # (a WAV format code such as 0x00FF for AAC) read and set back as is.
         return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
-            encoding="ascii"
+            encoding="latin-1"
         )
 
     @codec_tag.setter
     def codec_tag(self, value):
-        if isinstance(value, str) and len(value) == 4:
-            self.ptr.codec_tag = int.from_bytes(
-                value.encode(encoding="ascii"), byteorder="little", signed=False
-            )
-        else:
+        if not isinstance(value, str) or len(value) != 4:
             raise ValueError("Codec tag should be a 4 character string.")
+        try:
+            tag = value.encode(encoding="latin-1")
+        except UnicodeEncodeError:
+            raise ValueError("Codec tag characters must be in U+0000..U+00FF.")
+        self.ptr.codec_tag = int.from_bytes(tag, byteorder="little", signed=False)
 
     @property
     @cython.cdivision(True)
