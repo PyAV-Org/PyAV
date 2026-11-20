@@ -159,6 +159,21 @@ class _SideDataContainer:
             return self._by_type[Type[key]]
         return self._by_type[key]
 
+    # Mapping's get() and __contains__ only catch KeyError, but an integer key
+    # is a position and raises IndexError.
+    def __contains__(self, key):
+        try:
+            self[key]
+        except (KeyError, IndexError):
+            return False
+        return True
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except (KeyError, IndexError):
+            return default
+
 
 class SideDataContainer(_SideDataContainer, Mapping):
     pass
