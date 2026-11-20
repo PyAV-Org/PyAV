@@ -93,6 +93,7 @@ Fixes:
 - ``frame.side_data.get()`` and ``in`` no longer raise ``IndexError`` for an out-of-range integer key.
 - ``CodecContext.codec_tag`` no longer raises ``UnicodeDecodeError`` for a tag that isn't ASCII, such as AAC in WAV; it now reads and sets each byte as one Latin-1 character.
 - A failed ``VideoFrame.reformat()`` no longer leaves the source frame's ``color_trc`` and ``color_primaries`` changed to unspecified.
+- Setting ``CodecContext.extradata`` or ``SubtitleCodecContext.subtitle_header`` now zeroes the padding FFmpeg reads past the data, so an ASS header no longer reads past the end of its buffer.
 
 v18.1.0
 -------
