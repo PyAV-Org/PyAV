@@ -904,20 +904,32 @@ class CodecContext:
 
     @property
     def codec_tag(self):
-        # Latin-1 maps each byte to one character, so tags that aren't ASCII
-        # (a WAV format code such as 0x00FF for AAC) read and set back as is.
+        """The four-byte codec tag (FourCC), e.g. ``"avc1"``.
+
+        Each byte is one Latin-1 character, so a tag that isn't ASCII (such as
+        WAV's ``0x00FF`` for AAC, ``"\\xff\\x00\\x00\\x00"``) can be read and set
+        back as is. It can also be set from 4 ``bytes``.
+
+        .. version-changed:: 19.1
+            Accepts ``bytes``.
+
+        Wraps :ffmpeg:`AVCodecContext.codec_tag`.
+        """
         return self.ptr.codec_tag.to_bytes(4, byteorder="little", signed=False).decode(
             encoding="latin-1"
         )
 
     @codec_tag.setter
     def codec_tag(self, value):
-        if not isinstance(value, str) or len(value) != 4:
-            raise ValueError("Codec tag should be a 4 character string.")
-        try:
-            tag = value.encode(encoding="latin-1")
-        except UnicodeEncodeError:
-            raise ValueError("Codec tag characters must be in U+0000..U+00FF.")
+        if isinstance(value, (bytes, bytearray)) and len(value) == 4:
+            tag = bytes(value)
+        elif isinstance(value, str) and len(value) == 4:
+            try:
+                tag = value.encode(encoding="latin-1")
+            except UnicodeEncodeError:
+                raise ValueError("Codec tag characters must be in U+0000..U+00FF.")
+        else:
+            raise ValueError("Codec tag should be a 4 character string or 4 bytes.")
         self.ptr.codec_tag = int.from_bytes(tag, byteorder="little", signed=False)
 
     @property

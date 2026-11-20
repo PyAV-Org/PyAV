@@ -42,6 +42,7 @@ Features:
 - Build riscv64 Linux wheels again. They are attached to the GitHub release, not uploaded to PyPI (:issue:`2443`).
 - ``CodecContext.initial_padding`` is now writable, so a remuxed segment can clear the priming copied by ``add_stream_from_template()`` (:issue:`2509`).
 - Deprecate ``AudioStream.format``, ``AudioStream.layout``, ``VideoStream.format``, ``VideoStream.thread_count``, and ``VideoStream.thread_type``, which pass through to the codec context; use ``stream.cctx.format``, ``stream.cctx.layout``, ``stream.cctx.thread_count``, and ``stream.cctx.thread_type`` instead. Passing these to ``add_stream()`` is not deprecated.
+- ``CodecContext.codec_tag`` can now be set from 4 ``bytes``.
 
 Fixes:
 

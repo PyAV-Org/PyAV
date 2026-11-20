@@ -144,6 +144,13 @@ class TestCodecContext(TestCase):
         with pytest.raises(ValueError, match="U\\+0000..U\\+00FF"):
             ctx.codec_tag = "\u0100abc"
 
+        ctx.codec_tag = b"hev1"
+        assert ctx.codec_tag == "hev1"
+        ctx.codec_tag = bytearray(b"\xff\x00\x00\x00")
+        assert ctx.codec_tag == "\xff\x00\x00\x00"
+        with pytest.raises(ValueError, match="or 4 bytes"):
+            ctx.codec_tag = b"abc"
+
         # wrong length
         with pytest.raises(
             ValueError, match="Codec tag should be a 4 character string"
