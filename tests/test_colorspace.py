@@ -157,6 +157,17 @@ def test_reformat_preserves_color_primaries() -> None:
     assert rgb.color_primaries == ColorPrimaries.BT709
 
 
+@pytest.mark.parametrize("colorspace", [1, 4, 5, 6, 7, 9])
+def test_reformat_preserves_colorspace(colorspace: int) -> None:
+    # Without dst_colorspace, the frame's AVColorSpace must be kept as is.
+    # bt470bg (5) shares its value with SWS_CS_ITU601, which maps to smpte170m.
+    frame = av.VideoFrame(width=64, height=64, format="yuv420p")
+    frame.colorspace = colorspace
+    assert frame.reformat(format="rgb24").colorspace == colorspace
+    assert frame.reformat(width=32, height=32).colorspace == colorspace
+    assert frame.colorspace == colorspace
+
+
 @pytest.mark.parametrize(
     ("colorspace", "expected"),
     [

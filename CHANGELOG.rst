@@ -68,6 +68,7 @@ Fixes:
 - Closing an input container opened with ``io_open`` now closes the file ``io_open`` returned for the main input, instead of leaving it open.
 - ``Container.set_chapters()`` no longer leaks memory or drops the existing chapters when given an invalid entry.
 - ``AVRational(x)`` now converts a float, ``Decimal`` or ``Fraction`` exactly instead of truncating it to an integer, and ``AVRational(num, den)`` raises ``TypeError`` unless both are integers.
+- ``VideoFrame.reformat()`` no longer changes a ``bt470bg`` frame's colorspace to ``smpte170m`` when ``dst_colorspace`` isn't given.
 
 v19.0.2
 -------
