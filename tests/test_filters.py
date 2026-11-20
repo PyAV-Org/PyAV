@@ -61,6 +61,10 @@ class TestFilters(TestCase):
         with pytest.raises(ValueError, match="Unknown hardware device type"):
             av.codec.hwaccel.HWDevice("definitely-not-a-hardware-device")
 
+    def test_hwaccel_rejects_unknown_type(self) -> None:
+        with pytest.raises(ValueError, match="Unknown hardware device type"):
+            av.codec.hwaccel.HWAccel("definitely-not-a-hardware-device")
+
     def test_generator_graph(self) -> None:
         graph = Graph()
         src = graph.add("testsrc")
