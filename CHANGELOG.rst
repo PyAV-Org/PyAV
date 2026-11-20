@@ -92,6 +92,7 @@ Fixes:
 - ``HWAccel`` now raises ``ValueError`` for an unknown device type name instead of falling back to the codec's first hardware config.
 - ``frame.side_data.get()`` and ``in`` no longer raise ``IndexError`` for an out-of-range integer key.
 - ``CodecContext.codec_tag`` no longer raises ``UnicodeDecodeError`` for a tag that isn't ASCII, such as AAC in WAV; it now reads and sets each byte as one Latin-1 character.
+- A failed ``VideoFrame.reformat()`` no longer leaves the source frame's ``color_trc`` and ``color_primaries`` changed to unspecified.
 
 v18.1.0
 -------
