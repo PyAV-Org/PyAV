@@ -138,6 +138,12 @@ class TestCodecContext(TestCase):
         ctx.codec_tag = "xvid"
         assert ctx.codec_tag == "xvid"
 
+        # Tags need not be ASCII, e.g. WAV's 0x00FF for AAC.
+        ctx.codec_tag = "\xff\x00\x00\x00"
+        assert ctx.codec_tag == "\xff\x00\x00\x00"
+        with pytest.raises(ValueError, match="U\\+0000..U\\+00FF"):
+            ctx.codec_tag = "\u0100abc"
+
         # wrong length
         with pytest.raises(
             ValueError, match="Codec tag should be a 4 character string"
