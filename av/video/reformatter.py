@@ -133,7 +133,10 @@ def _set_frame_colorspace(
     colorspace: cython.int,
     color_range: cython.int,
 ):
-    """Set AVFrame colorspace/range from SWS_CS_* and AVColorRange values."""
+    """Set AVFrame colorspace/range from SWS_CS_* and AVColorRange values.
+
+    A colorspace of -1 leaves the frame's colorspace unchanged.
+    """
     if color_range != lib.AVCOL_RANGE_UNSPECIFIED:
         frame.color_range = cython.cast(lib.AVColorRange, color_range)
     # Mapping from SWS_CS_* (swscale colorspace) to AVColorSpace (frame metadata).
@@ -213,12 +216,11 @@ class VideoReformatter:
 
         """
         c_dst_format = _resolve_format(format, frame.format.pix_fmt)
-        c_src_colorspace = _resolve_enum_value(
-            src_colorspace, Colorspace, frame.ptr.colorspace
-        )
-        c_dst_colorspace = _resolve_enum_value(
-            dst_colorspace, Colorspace, frame.ptr.colorspace
-        )
+        # -1 keeps the frame's colorspace as is. The frame holds an AVColorSpace,
+        # which must not be read as a SWS_CS_* value (AVCOL_SPC_BT470BG is 5, the
+        # same as SWS_CS_ITU601, so it would come back as SMPTE170M).
+        c_src_colorspace = _resolve_enum_value(src_colorspace, Colorspace, -1)
+        c_dst_colorspace = _resolve_enum_value(dst_colorspace, Colorspace, -1)
         c_interpolation = _resolve_enum_value(
             interpolation, Interpolation, SWS_BILINEAR
         )
