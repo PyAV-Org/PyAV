@@ -95,6 +95,7 @@ Fixes:
 - A failed ``VideoFrame.reformat()`` no longer leaves the source frame's ``color_trc`` and ``color_primaries`` changed to unspecified.
 - Setting ``CodecContext.extradata`` or ``SubtitleCodecContext.subtitle_header`` now zeroes the padding FFmpeg reads past the data, so an ASS header no longer reads past the end of its buffer.
 - ``VideoFrame.from_numpy_buffer()`` with ``yuv420p``, ``yuvj420p``, or ``nv12`` now gets the right height when it isn't a multiple of 4.
+- ``container.streams.best()`` raises an error on a closed container instead of segfaulting.
 
 v18.1.0
 -------

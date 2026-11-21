@@ -136,6 +136,13 @@ class TestStreams:
         data = container.streams.data[0]
         assert data == container.streams.best("data")
 
+    def test_best_after_close(self) -> None:
+        container = av.open(fate_suite("h264/interlaced_crop.mp4"))
+        streams = container.streams
+        container.close()
+        with pytest.raises(AssertionError):
+            streams.best("video")
+
     def test_discard(self) -> None:
         from av.stream import Discard
 
