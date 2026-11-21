@@ -28,6 +28,9 @@ We are operating with `semantic versioning <https://semver.org>`_.
     - Bug fixes (PATCH) go here. 
     - $CHANGE by :gh-user:`mikeboers` in (:pr:`1`).
 
+v18.1.2 (Unreleased)
+--------------------
+
 v18.1.1
 -------
 
