@@ -1,5 +1,6 @@
 import cython
 from cython.cimports.av.codec.context import CodecContext, wrap_codec_context
+from cython.cimports.av.codec.hwaccel import HWAccel
 from cython.cimports.av.container.pyio import PyIOFile, pyio_close_custom_gil
 from cython.cimports.av.container.streams import StreamContainer
 from cython.cimports.av.dictionary import Dictionary
@@ -12,6 +13,57 @@ from cython.cimports.libc.stdlib import free, malloc
 from av.stream import Discard
 
 _cinit_bypass_sentinel = cython.declare(object, object())
+
+
+@cython.cfunc
+def _supports_device_type(
+    codec: cython.pointer[cython.const[lib.AVCodec]], device_type: cython.int
+) -> cython.bint:
+    config: cython.pointer[cython.const[lib.AVCodecHWConfig]]
+    i: cython.int = 0
+    while True:
+        config = lib.avcodec_get_hw_config(codec, i)
+        if config == cython.NULL:
+            return False
+        if (
+            config.methods & lib.AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
+            and config.device_type == device_type
+        ):
+            return True
+        i += 1
+
+
+@cython.cfunc
+def _find_decoder(
+    codec_id: lib.AVCodecID, hwaccel: HWAccel | None
+) -> cython.pointer[cython.const[lib.AVCodec]]:
+    # avcodec_find_decoder() returns the first decoder registered for the codec,
+    # which is not always one that can use the requested device: for AV1 it is
+    # libdav1d when FFmpeg is built with it, while the hwaccels belong to the
+    # native decoder. Prefer the default, and only look further when it cannot
+    # use the device.
+    codec: cython.pointer[cython.const[lib.AVCodec]] = lib.avcodec_find_decoder(
+        codec_id
+    )
+    if (
+        hwaccel is None
+        or codec == cython.NULL
+        or _supports_device_type(codec, hwaccel._device_type)
+    ):
+        return codec
+
+    other: cython.pointer[cython.const[lib.AVCodec]]
+    opaque: cython.p_void = cython.NULL
+    while True:
+        other = lib.av_codec_iterate(cython.address(opaque))
+        if other == cython.NULL:
+            return codec
+        if (
+            other.id == codec_id
+            and lib.av_codec_is_decoder(other)
+            and _supports_device_type(other, hwaccel._device_type)
+        ):
+            return other
 
 
 @cython.cfunc
@@ -87,7 +139,7 @@ class InputContainer(Container):
         self.streams = StreamContainer()
         for i in range(self.ptr.nb_streams):
             stream = self.ptr.streams[i]
-            codec = lib.avcodec_find_decoder(stream.codecpar.codec_id)
+            codec = _find_decoder(stream.codecpar.codec_id, self.hwaccel)
             if codec:
                 codec_context = lib.avcodec_alloc_context3(codec)
                 if codec_context == cython.NULL:

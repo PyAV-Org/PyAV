@@ -55,6 +55,30 @@ def make_h264_test_video(path: str) -> None:
     output_container.close()
 
 
+def make_av1_test_video(path: str) -> None:
+    """Generates a black AV1 test video, or skips the test without an AV1 encoder."""
+    for encoder in ("libsvtav1", "libaom-av1", "librav1e"):
+        if encoder in av.codecs_available:
+            break
+    else:
+        pytest.skip("No AV1 encoder is available to generate the test video.")
+
+    pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with av.open(path, "w") as output_container:
+        stream = output_container.add_stream(encoder, rate=24)
+        assert isinstance(stream, av.VideoStream)
+        stream.width = 1280
+        stream.height = 720
+        stream.pix_fmt = "yuv420p"
+
+        for _ in range(24):
+            frame = av.VideoFrame.from_ndarray(
+                np.zeros((720, 1280, 3), dtype=np.uint8), format="rgb24"
+            )
+            output_container.mux(stream.encode(frame))
+        output_container.mux(stream.encode())
+
+
 @pytest.mark.parametrize(
     "cls",
     [HWConfig, SideData, MotionVectors, MotionVector, VideoEncParams, VideoBlockParams],
@@ -396,6 +420,33 @@ class TestDecode(TestCase):
             frame_count += 1
 
         assert frame_count == video_stream.frames
+
+    def test_hardware_decode_picks_a_decoder_for_the_device(self) -> None:
+        device_type = hwaccel_device_type()
+
+        # The default AV1 decoder is libdav1d when FFmpeg is built with it, and
+        # it has no hardware configs. The native decoder owns the hwaccels.
+        native = av.Codec("av1", "r")
+        if not any(
+            config.device_type.name == device_type for config in native.hardware_configs
+        ):
+            pytest.skip(f"FFmpeg has no AV1 hwaccel for {device_type}.")
+
+        test_video_path = "tests/assets/black_av1.mp4"
+        make_av1_test_video(test_video_path)
+
+        hwaccel = av.codec.hwaccel.HWAccel(
+            device_type=device_type, allow_software_fallback=False
+        )
+
+        with av.open(test_video_path, hwaccel=hwaccel) as container:
+            video_stream = container.streams.video[0]
+            assert video_stream.codec_context.is_hwaccel
+            assert video_stream.codec_context.codec.hardware_configs
+
+            frame_count = sum(1 for _ in container.decode(video_stream))
+
+        assert frame_count == 24
 
     def test_hardware_create_keeps_flags(self) -> None:
         device_type = hwaccel_device_type()

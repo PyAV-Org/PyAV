@@ -47,6 +47,7 @@ Features:
 Fixes:
 
 - Support slicing ``Container.streams``, which raised ``TypeError`` despite being typed.
+- Hardware decoding now works for AV1 when FFmpeg also provides libdav1d: ``av.open(..., hwaccel=...)`` picks a decoder that supports the requested device, and no longer sets the hardware pixel format before the decoder is opened.
 - ``AssSubtitle.dialogue`` now strips override tags such as ``{\b1}``, turns ``\n`` and ``\h`` into spaces, and keeps a ``{`` with no closing ``}`` instead of dropping the rest of the line.
 - ``HWConfig.methods`` no longer raises ``ValueError`` for configs that support several methods; ``HWConfigMethod`` is now an ``IntFlag``.
 - ``CodecContext.is_encoder``, ``CodecContext.is_decoder``, ``Container.input_was_opened``, and ``VideoFormatComponent.is_chroma`` now return ``bool`` instead of ``int``.
