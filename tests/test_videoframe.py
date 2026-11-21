@@ -1349,6 +1349,14 @@ def test_shares_memory_yuvj420p() -> None:
     )
 
 
+@pytest.mark.parametrize("format", ["yuv420p", "yuvj420p", "nv12"])
+def test_from_numpy_buffer_yuv420_height_not_multiple_of_4(format: str) -> None:
+    array = numpy.random.randint(0, 256, size=(6 * 3 // 2, 8), dtype=numpy.uint8)
+    frame = VideoFrame.from_numpy_buffer(array, format)
+    assert frame.height == 6
+    assertNdarraysEqual(frame.to_ndarray(), array)
+
+
 def test_shares_memory_nv12() -> None:
     array = numpy.random.randint(0, 256, size=(512 * 6 // 4, 256), dtype=numpy.uint8)
     frame = VideoFrame.from_numpy_buffer(array, "nv12")
