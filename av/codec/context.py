@@ -235,6 +235,8 @@ class CodecContext:
         c_ctx: cython.pointer[lib.AVCodecContext] = lib.avcodec_alloc_context3(
             cy_codec.ptr
         )
+        if c_ctx == cython.NULL:
+            raise MemoryError("Could not allocate codec context")
         return wrap_codec_context(c_ctx, cy_codec.ptr, hwaccel)
 
     def __cinit__(self, sentinel=None, *args, **kwargs):
