@@ -12,6 +12,7 @@ from cython.cimports.av.error import err_check
 from cython.cimports.av.packet import Packet
 from cython.cimports.av.stream import Stream, wrap_stream
 from cython.cimports.av.utils import dict_to_avdict, to_avrational
+from cython.cimports.libc.limits import INT_MAX
 from cython.cimports.libc.stdint import int64_t, uint8_t
 from cython.cimports.libc.string import memcpy, memset
 
@@ -493,18 +494,15 @@ class OutputContainer(Container):
         stream.codecpar.codec_type = lib.AVMEDIA_TYPE_ATTACHMENT
         stream.codecpar.codec_id = lib.AV_CODEC_ID_NONE
 
-        # Allocate and copy payload into codecpar.extradata.
-        payload_size: cython.size_t = len(data)
-        if payload_size:
-            buf = cython.cast(cython.p_uchar, lib.av_malloc(payload_size + 1))
-            if buf == cython.NULL:
-                raise MemoryError("Could not allocate attachment data")
-            # Copy bytes.
-            for i in range(payload_size):
-                buf[i] = data[i]
-            buf[payload_size] = 0
-            stream.codecpar.extradata = cython.cast(cython.p_uchar, buf)
-            stream.codecpar.extradata_size = cython.cast(cython.int, payload_size)
+        # The payload is stored as codecpar.extradata, with FFmpeg's zeroed padding.
+        if len(data) > INT_MAX - lib.AV_INPUT_BUFFER_PADDING_SIZE:
+            raise OverflowError("Attachment data is too large")
+        if data:
+            _set_codecpar_extradata(
+                stream,
+                cython.cast(cython.pointer[uint8_t], cython.cast(cython.p_char, data)),
+                cython.cast(cython.int, len(data)),
+            )
 
         # Wrap as user-land stream.
         meta_ptr = cython.address(stream.metadata)

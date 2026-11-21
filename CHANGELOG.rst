@@ -77,6 +77,7 @@ Fixes:
 - Setting ``CodecContext.extradata`` or ``SubtitleCodecContext.subtitle_header`` now zeroes the padding FFmpeg reads past the data, so an ASS header no longer reads past the end of its buffer.
 - ``VideoFrame.from_numpy_buffer()`` with ``yuv420p``, ``yuvj420p``, or ``nv12`` now gets the right height when it isn't a multiple of 4.
 - ``container.streams.best()`` raises an error on a closed container instead of segfaulting.
+- ``OutputContainer.add_attachment()`` now pads its data with the zeroed bytes FFmpeg requires after it.
 
 v19.0.2
 -------
