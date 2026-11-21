@@ -169,6 +169,7 @@ class StreamContainer:
             return None
 
         first_stream: Stream = cython.cast(Stream, self._streams[0])
+        first_stream.container._assert_open()
         container: cython.pointer[lib.AVFormatContext] = first_stream.container.ptr
         stream_index: cython.int = _get_best_stream_index(
             container, _get_media_type_enum(type), related
