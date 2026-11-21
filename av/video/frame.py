@@ -1197,7 +1197,7 @@ class VideoFrame(Frame):
             check_ndarray(array, "uint8", 2)
             check_ndarray_shape(array, array.shape[0] % 3 == 0)
             check_ndarray_shape(array, array.shape[1] % 2 == 0)
-            height = height // 6 * 4
+            height = height * 2 // 3
             if array.strides[1] != 1:
                 raise ValueError("provided array does not have C_CONTIGUOUS rows")
             if format in {"yuv420p", "yuvj420p"}:
