@@ -41,12 +41,15 @@ def _find_decoder(
     # which is not always one that can use the requested device: for AV1 it is
     # libdav1d when FFmpeg is built with it, while the hwaccels belong to the
     # native decoder. Prefer the default, and only look further when it cannot
-    # use the device.
+    # use the device and software decoding is not allowed: a decoder like the
+    # native AV1 one cannot decode at all on a device without support for the
+    # codec, so with fallback allowed the default decoder is the safe choice.
     codec: cython.pointer[cython.const[lib.AVCodec]] = lib.avcodec_find_decoder(
         codec_id
     )
     if (
         hwaccel is None
+        or hwaccel.allow_software_fallback
         or codec == cython.NULL
         or _supports_device_type(codec, hwaccel._device_type)
     ):

@@ -444,7 +444,10 @@ class TestDecode(TestCase):
             assert video_stream.codec_context.is_hwaccel
             assert video_stream.codec_context.codec.hardware_configs
 
-            frame_count = sum(1 for _ in container.decode(video_stream))
+            try:
+                frame_count = sum(1 for _ in container.decode(video_stream))
+            except NotImplementedError:
+                pytest.skip(f"The {device_type} device cannot decode AV1.")
 
         assert frame_count == 24
 
