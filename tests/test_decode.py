@@ -436,20 +436,29 @@ class TestDecode(TestCase):
         make_av1_test_video(test_video_path)
 
         hwaccel = av.codec.hwaccel.HWAccel(
-            device_type=device_type, allow_software_fallback=False
+            device_type=device_type, allow_software_fallback=False, is_hw_owned=True
         )
 
         with av.open(test_video_path, hwaccel=hwaccel) as container:
             video_stream = container.streams.video[0]
             assert video_stream.codec_context.is_hwaccel
-            assert video_stream.codec_context.codec.hardware_configs
+            hardware_format = next(
+                config.format
+                for config in video_stream.codec_context.codec.hardware_configs
+                if config.device_type.name == device_type
+            )
+            assert hardware_format is not None
 
+            frames = container.decode(video_stream)
             try:
-                frame_count = sum(1 for _ in container.decode(video_stream))
+                first_frame = next(frames)
             except NotImplementedError:
                 pytest.skip(f"The {device_type} device cannot decode AV1.")
 
-        assert frame_count == 24
+            formats = [first_frame.format.name]
+            formats.extend(frame.format.name for frame in frames)
+
+        assert formats == [hardware_format.name] * 24
 
     def test_hardware_create_keeps_flags(self) -> None:
         device_type = hwaccel_device_type()
