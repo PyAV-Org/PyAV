@@ -25,6 +25,7 @@ All contributors (by number of commits):
 - Santtu Keskinen <santtu.keskinen@gmail.com>
 
 * Carlos Domin, Carlos Ruiz <carlos.r.domin@gmail.com>
+* jorenham <jhammudoglu@gmail.com>
 * Alba Mendez <me@alba.sh>
 * Curtis Doty <Curtis@GreenKey.net>; `@dotysan <https://github.com/dotysan>`_
 * Xinran Xu <xxr@megvii.com>; `@xxr3376 <https://github.com/xxr3376>`_
@@ -47,6 +48,7 @@ All contributors (by number of commits):
 
 - zzjjbb <31069326+zzjjbb@users.noreply.github.com>
 - Joe Schiff <41972063+JoeSchiff@users.noreply.github.com>
+- Chandra ObulaReddy <53801679+ChandraChaan@users.noreply.github.com>
 - Nils DEYBACH <68770774+ndeybach@users.noreply.github.com>
 - Dexer <73297572+DexerBR@users.noreply.github.com>
 - DE-AI <81620697+DE-AI@users.noreply.github.com>
@@ -86,6 +88,7 @@ All contributors (by number of commits):
 - Artturin <Artturin@artturin.com>
 - Ian Lee <IanLee1521@gmail.com>
 - Ryan Huang <NPN@users.noreply.github.com>
+- andywylee <andywylee@gmail.com>
 - Arthur Barros <arthbarros@gmail.com>
 - bdavid-evertz <bdavid@evertz.com>
 - Maxime Desroches <desroches.maxime@gmail.com>
@@ -96,6 +99,8 @@ All contributors (by number of commits):
 - henri-gasc <henri.gasc@eurecom.fr>
 - Jonathan Martin <homerunisgood@hotmail.com>
 - HotariTobu <hotari24tools@gmail.com>
+- Iain <iain1970@protonmail.com>
+- Jacob Sanchez <jacob.sanchez@amododesign.com>
 - Joshua <jbree@users.noreply.github.com>
 - Johan Jeppsson Karlin <johjep@gmail.com>
 - Kazuki Oikawa <k@oikw.org>
@@ -127,6 +132,7 @@ All contributors (by number of commits):
 - Tim O'Shea <tim.oshea753@gmail.com>
 - Tim Ahpee <timah@blackmagicdesign.com>
 - Jonas Tingeborn <tinjon@gmail.com>
+- Tony Au-Yeung <tony@elevenlabs.io>
 - Pino Toscano <toscano.pino@tiscali.it>
 - Ulrik Mikaelsson <ulrikm@spotify.com>
 - Vasiliy Kotov <vasiliy.kotov@itechart-group.com>
