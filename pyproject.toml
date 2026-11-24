@@ -7,6 +7,7 @@ description = "Pythonic bindings for FFmpeg's libraries."
 readme = "README.md"
 license = "BSD-3-Clause"
 authors = [
+    {name = "PyAV Authors", email = "noreply@pyav.org"},
     {name = "WyattBlue", email = "wyattblue@auto-editor.com"},
     {name = "Jeremy Lainé", email = "jeremy.laine@m4x.org"},
 ]
