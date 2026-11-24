@@ -66,7 +66,9 @@ class VideoCodecContext(CodecContext):
         try:
             self.hwaccel_ctx = hwaccel.create(self.codec)
             self.ptr.hw_device_ctx = lib.av_buffer_ref(self.hwaccel_ctx.ptr)
-            self.ptr.pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
+            # Leave pix_fmt alone: the decoder negotiates the hardware format through
+            # get_format. FFmpeg's AV1 decoder skips that negotiation, and with it the
+            # hwaccel setup, when pix_fmt already holds a hardware format.
             self.ptr.get_format = _get_hw_format
             self._private_data.hardware_pix_fmt = self.hwaccel_ctx.config.ptr.pix_fmt
             self._private_data.allow_software_fallback = (
