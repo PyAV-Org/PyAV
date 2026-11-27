@@ -265,6 +265,14 @@ proc parseFile*(path, src: string, pr: var ParseResult) =
     let opensBlock = text.endsWith(":")
     let inExtern = stack.anyIt(it.kind == ckExtern)
 
+    # `from libc.stdbool cimport bool as c_bool`
+    if w.len >= 4 and w[0] == "from" and w[2] == "cimport":
+      for item in text[text.find("cimport") + 7 .. ^1].strip(chars = {' ', '(', ')'}).split(','):
+        let parts = item.splitWhitespace()
+        if parts.len == 3 and parts[1] == "as" and parts[0] != parts[2]:
+          pr.aliases[parts[2]] = parts[0]
+      continue
+
     # `cdef extern from "libavutil/x.h" nogil:`
     if w.len >= 3 and w[0] == "cdef" and w[1] == "extern":
       stack.add Ctx(kind: ckExtern, indent: ll.indent, agg: -1)

@@ -344,6 +344,8 @@ cdef class HWConfig:
 """)
     check f["HWAccel"].layout.size == 80
     check f["HWAccel"].wasted == 0
+    check f["HWAccel"].narrowedSize == 72  # the two bints as 1 byte each
+    check f["HWAccel"].bintWaste == 8
     check f["HWConfig"].layout.size == 40    # head + vtab + __weakref__ + ptr
     check f["HWConfig"].layout.vtab
 
@@ -361,6 +363,78 @@ cdef class C:
     check f.wasted == 8
     check f.order[0].name == "p"
     check f.order[^1].name == "tag"
+
+suite "bint":
+  test "a bint costs 3 bytes over a 1-byte flag":
+    let f = analyze("""
+cdef struct S:
+    void *p
+    bint a
+    bint b
+""")["S"]
+    check f.layout.size == 16
+    check f.wasted == 0
+    check f.narrowedSize == 16      # 8 + 2, rounded up to 8: no gain here
+    check f.bintWaste == 0
+
+  test "bint waste is reported once it crosses an alignment boundary":
+    let f = analyze("""
+cdef struct S:
+    void *p
+    int n
+    bint a
+    bint b
+""")["S"]
+    check f.layout.size == 24
+    check f.narrowedSize == 16      # 8 + 4 + 1 + 1, rounded up to 8
+    check f.bintWaste == 8
+
+  test "bint through a ctypedef and in arrays":
+    let f = analyze("""
+ctypedef bint flag_t
+cdef struct S:
+    void *p
+    flag_t f[4]
+""")["S"]
+    check f.layout.size == 24
+    check f.narrowedSize == 16
+    check f.bintWaste == 8
+
+  test "bint waste counts toward the report":
+    let r = analyzeMulti("""
+cdef class C:
+    cdef void *p
+    cdef int n
+    cdef bint a
+    cdef bint b
+""", @["lp64", "ilp32"])["C"]
+    check r.bints == @["a", "b"]
+    check not r.changed
+    check r.results[0].bintWaste == 8   # 40 -> 32
+    check r.results[1].bintWaste == 4   # 24 -> 20
+    check r.worstWaste == 8
+    check r.worstTarget == "lp64"
+
+  test "a cimported C bool is one byte":
+    let f = analyze("""
+from libc.stdbool cimport bool as c_bool
+cdef class C:
+    cdef void *p
+    cdef int n
+    cdef c_bool a
+    cdef c_bool b
+""")["C"]
+    check f.layout.size == 32
+    check f.narrowedSize == 0
+    check f.bintWaste == 0
+
+  test "a pointer to bint is not narrowed":
+    let f = analyze("""
+cdef struct S:
+    bint *p
+""")["S"]
+    check f.narrowedSize == 0
+    check f.bintWaste == 0
 
 suite "across ABIs":
   test "a layout clean on lp64 can have a hole on llp64":

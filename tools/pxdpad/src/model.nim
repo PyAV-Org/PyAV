@@ -57,12 +57,14 @@ type
     layout*: Layout
     optimalSize*: int
     order*: seq[FieldDecl]  ## fields in the suggested order
+    narrowedSize*: int      ## best size with `bint` fields as 1 byte, 0 if none
 
   TargetResult* = object
     target*: string
     layout*: Layout
     optimalSize*: int       ## best this ABI could do on its own
     suggested*: int         ## what the shared suggested order costs here
+    narrowed*: int          ## best size with `bint` fields as 1 byte, 0 if none
     unresolved*: seq[string]
 
   Report* = object
@@ -71,6 +73,7 @@ type
     agg*: Aggregate
     results*: seq[TargetResult]
     order*: seq[FieldDecl]
+    bints*: seq[string]     ## `bint` fields that could be a single byte
     changed*: bool          ## the suggestion differs from the declared order
     sized*: int             ## how many targets could be measured
 
@@ -83,14 +86,27 @@ func wasted*(t: TargetResult): int =
   ## What the suggested order would actually save on this ABI.
   if t.layout.complete: t.layout.size - t.suggested else: 0
 
+func bintWaste*(f: Finding): int =
+  ## What narrowing `bint` fields to one byte saves beyond reordering.
+  if f.narrowedSize > 0: max(0, f.optimalSize - f.narrowedSize) else: 0
+
+func bintWaste*(t: TargetResult): int =
+  ## What narrowing `bint` fields to one byte saves beyond the suggested order.
+  if t.layout.complete and t.narrowed > 0: max(0, t.suggested - t.narrowed)
+  else: 0
+
+func totalWaste*(t: TargetResult): int = t.wasted + t.bintWaste
+
+func best*(t: TargetResult): int = t.layout.size - t.totalWaste
+
 func worstWaste*(r: Report): int =
-  for t in r.results: result = max(result, t.wasted)
+  for t in r.results: result = max(result, t.totalWaste)
 
 func worstTarget*(r: Report): string =
   var worst = -1
   for t in r.results:
-    if t.wasted > worst:
-      worst = t.wasted
+    if t.totalWaste > worst:
+      worst = t.totalWaste
       result = t.target
 
 func isArray*(f: FieldDecl): bool =

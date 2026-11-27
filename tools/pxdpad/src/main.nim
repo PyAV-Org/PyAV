@@ -20,6 +20,9 @@ is 4 bytes on 64-bit Windows, and pointers are 4 bytes on 32-bit. A .pxd has one
 field order for all of them, so the suggested order is the one that measures
 smallest across every ABI checked, not the best for any single one.
 
+A `bint` is lowered to a 4-byte int, though a flag needs only one byte, so the
+bytes a `bint` field costs over a 1-byte type count as waste too.
+
 Options:
   -t, --target:NAMES     restrict to these ABIs, comma-separated. One of
                          $2
@@ -95,7 +98,8 @@ proc sig(t: TargetResult): string =
   ## Two ABIs are worth one row when they measure the type identically. lp64 and
   ## darwin-arm64 differ only in `long double`, so they usually collapse.
   if not t.layout.complete: return "n/a"
-  result = $t.layout.size & "/" & $t.suggested & "/" & $t.layout.align
+  result = $t.layout.size & "/" & $t.suggested & "/" & $t.narrowed & "/" &
+    $t.layout.align
   for h in t.layout.holes:
     result.add "|" & $h.offset & ":" & $h.size
 
@@ -124,14 +128,14 @@ proc describe(rep: Report, opts: Options, color: bool): string =
     let t = rep.results[0]
     result.add " — " & $t.layout.size & " bytes"
     if waste > 0:
-      result.add ", " & red & $waste & " wasted" & off & " (" & $t.suggested &
+      result.add ", " & red & $waste & " wasted" & off & " (" & $t.best &
         " optimal)"
     result.add "\n"
   else:
     let groups = grouped(rep)
     var worstGroup = 0
     for i, g in groups:
-      if g.res.wasted > groups[worstGroup].res.wasted: worstGroup = i
+      if g.res.totalWaste > groups[worstGroup].res.totalWaste: worstGroup = i
     if waste > 0:
       result.add " — " & red & $waste & " bytes wasted" & off & " on " &
         groups[worstGroup].label & "\n"
@@ -141,9 +145,9 @@ proc describe(rep: Report, opts: Options, color: bool): string =
     for g in groups:
       if not g.res.layout.complete:
         cells.add g.label & " " & dim & "n/a" & off
-      elif g.res.wasted > 0:
+      elif g.res.totalWaste > 0:
         cells.add g.label & " " & $g.res.layout.size & red & "→" &
-          $g.res.suggested & off
+          $g.res.best & off
       else:
         cells.add g.label & " " & $g.res.layout.size
     result.add "    " & cells.join("   ") & "\n"
@@ -151,7 +155,7 @@ proc describe(rep: Report, opts: Options, color: bool): string =
   # Holes differ per ABI; show them for the one with the most to gain.
   var worst = 0
   for i, t in rep.results:
-    if t.wasted > rep.results[worst].wasted: worst = i
+    if t.totalWaste > rep.results[worst].totalWaste: worst = i
   let lay = rep.results[worst].layout
   if lay.holes.len > 0:
     if not single:
@@ -161,6 +165,18 @@ proc describe(rep: Report, opts: Options, color: bool): string =
         if sig(g.res) == sig(rep.results[worst]): label = g.label
       result.add "  padding on " & label & ":\n"
     result.add holeLines(lay)
+
+  var bintWaste = 0
+  for t in rep.results: bintWaste = max(bintWaste, t.bintWaste)
+  if bintWaste > 0:
+    result.add "  " & rep.bints.mapIt("`" & it & "`").join(", ") &
+      (if rep.bints.len == 1: " is a 4-byte bint" else: " are 4-byte bints") &
+      "; at 1 byte: "
+    if single:
+      result.add $rep.results[0].narrowed & " bytes\n"
+    else:
+      result.add grouped(rep).filterIt(it.res.layout.complete)
+        .mapIt(it.label & " " & $it.res.narrowed).join("; ") & "\n"
 
   if rep.changed and not opts.noSuggest:
     result.add "  suggested order"
