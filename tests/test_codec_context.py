@@ -128,7 +128,11 @@ class TestCodecContext(TestCase):
 
     def test_codec_delay(self) -> None:
         with av.open(fate_suite("mkv/codec_delay_opus.mkv")) as container:
-            assert container.streams.audio[0].cctx.delay == 312
+            cctx = container.streams.audio[0].cctx
+            assert cctx.initial_padding == 312
+            # Since FFmpeg 9.1 the decoder sets delay itself when opened.
+            cctx.open()
+            assert cctx.delay == 312
         with av.open(fate_suite("h264/interlaced_crop.mp4")) as container:
             assert container.streams.video[0].cctx.delay == 0
 
