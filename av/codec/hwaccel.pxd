@@ -1,4 +1,5 @@
 cimport libav as lib
+from libc.stdbool cimport bool as c_bool
 
 
 cdef class HWConfig:
@@ -22,5 +23,5 @@ cdef class HWAccel:
     cdef int _device_type
     cdef readonly int device_id
     cdef public int flags
-    cdef readonly bint is_hw_owned
-    cdef public bint allow_software_fallback
+    cdef readonly c_bool is_hw_owned
+    cdef public c_bool allow_software_fallback
