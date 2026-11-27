@@ -99,6 +99,16 @@ proc sizeOfType*(r: Resolver, typeName: string, ptrDepth, arrayLen: int):
   if arrayLen < 0: return (0, 0, false)
   (base.size * arrayLen, base.align, true)
 
+proc isBint*(r: Resolver, f: FieldDecl): bool =
+  ## A `bint` held by value, seen through any ctypedef aliases.
+  if f.ptrDepth > 0: return false
+  var name = simpleName(f.typeName)
+  var hops = 0
+  while r.aliases.hasKey(name) and hops < 8:
+    name = simpleName(r.aliases[name])
+    inc hops
+  name == "bint"
+
 proc baseOfClass(r: Resolver, a: Aggregate): tuple[size, align: int, ok: bool] =
   if a.base.len == 0:
     return (r.target.headSize, r.target.ptrAlign, true)
@@ -130,14 +140,18 @@ proc classBase(r: Resolver, a: Aggregate): tuple[size, align: int, ok, vtab: boo
   (size, align, b.ok, vtab)
 
 proc layoutFields(r: Resolver, a: Aggregate, fields: seq[FieldDecl],
-                  baseSize, baseAlign: int, collectHoles: bool): Layout =
+                  baseSize, baseAlign: int, collectHoles: bool,
+                  narrowBint = false): Layout =
   result.baseSize = baseSize
   result.align = max(1, baseAlign)
   result.complete = true
   var offset = baseSize
 
   for f in fields:
-    let sz = r.sizeOfType(f.typeName, f.ptrDepth, f.arrayLen)
+    # Cython lowers `bint` to a 4-byte int, but a flag fits in a byte.
+    let sz: tuple[size, align: int, ok: bool] =
+      if narrowBint and f.arrayLen >= 0 and r.isBint(f): (f.arrayLen, 1, true)
+      else: r.sizeOfType(f.typeName, f.ptrDepth, f.arrayLen)
     if not sz.ok:
       result.complete = false
       result.unresolved.add f.name & ": " & f.typeName &
@@ -181,11 +195,11 @@ proc layoutAgg*(r: Resolver, a: Aggregate): Layout =
 
 func orderKey(f: LaidField): (int, int) = (-f.align, -f.size)
 
-proc sizeUnder*(r: Resolver, a: Aggregate, order: seq[FieldDecl]):
-    tuple[size: int, ok: bool] =
+proc sizeUnder*(r: Resolver, a: Aggregate, order: seq[FieldDecl],
+                narrowBint = false): tuple[size: int, ok: bool] =
   ## What this aggregate would measure with its fields in the given order.
   let b = r.classBase(a)
-  let lay = r.layoutFields(a, order, b.size, b.align, false)
+  let lay = r.layoutFields(a, order, b.size, b.align, false, narrowBint)
   (lay.size, lay.complete and b.ok)
 
 proc optimize*(r: Resolver, a: Aggregate, lay: Layout): tuple[size: int, order: seq[FieldDecl]] =
@@ -196,10 +210,24 @@ proc optimize*(r: Resolver, a: Aggregate, lay: Layout): tuple[size: int, order: 
   sorted.sort(proc (x, y: LaidField): int = cmp(orderKey(x), orderKey(y)))
   (r.sizeUnder(a, sorted.mapIt(it.decl)).size, sorted.mapIt(it.decl))
 
+proc narrowedSize*(r: Resolver, a: Aggregate, lay: Layout): int =
+  ## The best size with every `bint` field cut to one byte, or 0 when there is
+  ## no `bint` field or the layout is incomplete.
+  if not lay.complete or not lay.fields.anyIt(r.isBint(it.decl)): return 0
+  var order = lay.fields
+  if a.kind != akUnion and not a.packed:
+    for f in order.mitems:
+      if r.isBint(f.decl):
+        f.align = 1
+        f.size = f.decl.arrayLen
+    order.sort(proc (x, y: LaidField): int = cmp(orderKey(x), orderKey(y)))
+  r.sizeUnder(a, order.mapIt(it.decl), narrowBint = true).size
+
 proc analyze*(r: Resolver, a: Aggregate): Finding =
   let lay = r.layoutAgg(a)
   let opt = r.optimize(a, lay)
-  Finding(agg: a, layout: lay, optimalSize: opt.size, order: opt.order)
+  Finding(agg: a, layout: lay, optimalSize: opt.size, order: opt.order,
+          narrowedSize: r.narrowedSize(a, lay))
 
 func names(order: seq[FieldDecl]): seq[string] = order.mapIt(it.name)
 
@@ -209,12 +237,14 @@ proc analyzeAll*(resolvers: seq[Resolver], a: Aggregate): Report =
   ## poor on LLP64 is not a fix; the candidates are each ABI's own best order
   ## plus the declared one, scored by their total size everywhere.
   result.agg = a
+  if resolvers.len > 0:
+    result.bints = a.fields.filterIt(resolvers[0].isBint(it)).mapIt(it.name)
   var candidates = @[a.fields]
   for r in resolvers:
     let f = r.analyze(a)
     result.results.add TargetResult(target: r.target.name, layout: f.layout,
       optimalSize: f.optimalSize, suggested: f.layout.size,
-      unresolved: f.layout.unresolved)
+      narrowed: f.narrowedSize, unresolved: f.layout.unresolved)
     if not f.layout.complete: continue
     inc result.sized
     if a.kind == akUnion or a.packed: continue
