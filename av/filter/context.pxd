@@ -1,4 +1,5 @@
 cimport libav as lib
+from libc.stdbool cimport bool as c_bool
 
 from av.filter.filter cimport Filter
 from av.filter.graph cimport Graph
@@ -8,7 +9,7 @@ cdef class FilterContext:
     cdef lib.AVFilterContext *ptr
     cdef readonly Graph graph
     cdef readonly Filter filter
-    cdef bint inited
+    cdef c_bool inited
     cdef unsigned char _kind
 
 
