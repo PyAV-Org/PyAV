@@ -73,10 +73,3 @@ class Dictionary:
                 self[key] = value
         for key, value in kwds.items():
             self[key] = value
-
-
-@cython.cfunc
-def wrap_dictionary(input_: cython.pointer[lib.AVDictionary]) -> Dictionary:
-    output: Dictionary = Dictionary()
-    output.ptr = input_
-    return output
