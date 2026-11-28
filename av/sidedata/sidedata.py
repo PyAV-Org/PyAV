@@ -101,7 +101,6 @@ class SideData(Buffer):
             raise RuntimeError("cannot manually instantiate SideData")
         self.frame = frame
         self.ptr = frame.ptr.side_data[index]
-        self.metadata = wrap_dictionary(self.ptr.metadata)
 
     @cython.cfunc
     def _buffer_size(self) -> cython.size_t:
